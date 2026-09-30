@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Define Stock Party - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_hrm.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_hrm_reports.css?v=20260929a}"/>
+    <style>
+        table.hrm-grid .pp-cell-btn { height: 20px; min-width: 0; width: auto; padding: 0 8px; font-size: 8pt; line-height: 18px; }
+        table.hrm-grid tr.pp-group td { background: #dfeeee; font-weight: bold; }
+        table.hrm-grid tr.pp-group-total td { background: #f3f7f7; font-style: italic; }
+        .pp-checks { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+    </style>
+</head>
+<!-- Architecture.WinApp.PartyProcessing.frmPartyProcessingDefineSupplier (684) - ClientSize 784 x 411 (AutoScrollMinSize 800 x 450), KeyPreview.
+     toolStrip2: New | Refresh (no handler) | Update (hidden) | Save | 292-Print | ShortCut Keys.  panel5: "Define Stock Party".
+     panel6: Gl Account* cmbglac (100,6) (Leave -> load the party of that account) | City* cmbcity (378,6) | picture box (590,5) /
+     Comp Name* txtcompany (100,35) | Mobile#* txtpermobile (378,35, mask 0000-0000000) /
+     Country* cmbcountry (100,61) | CNIC No txtcnicno (378,63, mask 00000-0000000-0) /
+     Address txtaddress1 (100,89) 466 | Is Active chkactivestatus (572,91, checked) | Browse (647,87).
+     panel8 "History" + ctrlGrdBar1; grdfrm GridEX: Print / Edit buttons (frozen), Id hidden, SupplierName, GlAccount, MobilePersonal,
+     CountryName, CityName, CNIC, Address1. -->
+<body class="pd-body hrm-body" data-pp="stock-party-define" data-screen="684">
+<div class="hrm-form">
+    <div class="win-tool-strip">
+        <button type="button" id="btnnew" class="win-btn-tool" onclick="PpStockParty.btnnew(this)"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+        <button type="button" id="btnRefresh" class="win-btn-tool"><i class="fa fa-refresh"></i> <span><u>R</u>efresh</span></button>
+        <button type="button" id="btnupdate" class="win-btn-tool is-hidden" onclick="PpStockParty.btnupdate(this)"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+        <button type="button" id="btnsave" class="win-btn-tool" onclick="PpStockParty.btnsave(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+        <button type="button" id="btnPrint" class="win-btn-tool" onclick="PpStockParty.btnPrint(this)" data-rpt-own data-rpt="292_01-InvRptSupplierRegister.rpt"><i class="fa fa-print"></i> <span>292-Print</span></button>
+        <button type="button" id="btnShortCut" class="win-btn-tool" onclick="PpStockParty.shortCuts()"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+    </div>
+    <div class="hrm-caption">Define Stock Party</div>
+    <div class="hrm-entry hrm-cols-2">
+        <div class="hrm-field"><label for="cmbglac" class="hrm-req">Gl Account</label><select id="cmbglac" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+        <div class="hrm-field"><label for="cmbcity" class="hrm-req">City</label><select id="cmbcity" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+        <div class="hrm-field"><label for="txtcompany" class="hrm-req">Comp Name</label><input type="text" id="txtcompany" class="win-textbox" autocomplete="off"/></div>
+        <div class="hrm-field"><label for="txtpermobile" class="hrm-req">Mobile#</label><input type="text" id="txtpermobile" class="win-textbox" inputmode="numeric" placeholder="0000-0000000" data-mask="0000-0000000" maxlength="12" autocomplete="off"/></div>
+        <div class="hrm-field"><label for="cmbcountry" class="hrm-req">Country</label><select id="cmbcountry" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+        <div class="hrm-field"><label for="txtcnicno">CNIC No</label><input type="text" id="txtcnicno" class="win-textbox" inputmode="numeric" placeholder="00000-0000000-0" data-mask="00000-0000000-0" maxlength="15" autocomplete="off"/></div>
+        <div class="hrm-field hrm-span-2"><label for="txtaddress1">Address</label>
+            <div class="hrm-inline"><div class="hrm-grow"><input type="text" id="txtaddress1" class="win-textbox" autocomplete="off"/></div>
+                <label class="hrm-check"><input type="checkbox" id="chkactivestatus" checked> Is Active</label>
+                <button type="button" id="browse" class="win-btn-action" style="min-width:0;width:auto;padding:0 10px" onclick="PpStockParty.browse()">Browse</button></div></div>
+    </div>
+    <div class="hrm-grid-box" id="historyBox">
+        <div class="hrm-subcaption"><span>History</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+        <div class="hrm-grid-wrap"><table id="grdfrm"></table></div>
+    </div>
+    <div class="hrm-footer">
+        <div class="hrm-footer-left"><span id="lblStatus"></span></div>
+        <div class="hrm-footer-right"><button type="button" id="btnHistory" class="win-btn-action"><i class="fa fa-history"></i> History</button></div>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_hrm.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_pp_stock_party.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260929a}"></script>
+</body>
+</html>

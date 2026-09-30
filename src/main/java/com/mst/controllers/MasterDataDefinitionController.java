@@ -48,7 +48,7 @@ public class MasterDataDefinitionController {
 
     // ------------------------------------------------------------------ setup / list / by-id
 
-    @GetMapping(API + "/{key}/setup")
+    @GetMapping(API + "/{key:country|province|district|tehsil|city|currency|sea-ports|date-lock|other-items}/setup")
     @ResponseBody
     public ResponseEntity<?> setup(@PathVariable("key") String key) {
         try {
@@ -67,7 +67,7 @@ public class MasterDataDefinitionController {
         } catch (Exception e) { return error(e, "Load failed."); }
     }
 
-    @GetMapping(API + "/{key}/list")
+    @GetMapping(API + "/{key:country|province|district|tehsil|city|currency|sea-ports|date-lock|other-items}/list")
     @ResponseBody
     public ResponseEntity<?> list(@PathVariable("key") String key) {
         try {
@@ -85,7 +85,7 @@ public class MasterDataDefinitionController {
         } catch (Exception e) { return error(e, "Load failed."); }
     }
 
-    @GetMapping(API + "/{key}/by-id")
+    @GetMapping(API + "/{key:country|province|district|tehsil|city|currency|sea-ports|date-lock|other-items}/by-id")
     @ResponseBody
     public ResponseEntity<?> byId(@PathVariable("key") String key, @RequestParam("id") int id) {
         try {
@@ -119,7 +119,7 @@ public class MasterDataDefinitionController {
 
     // ------------------------------------------------------------------ save
 
-    @PostMapping(API + "/{key}/save")
+    @PostMapping(API + "/{key:country|province|district|tehsil|city|currency|sea-ports|date-lock|other-items}/save")
     @ResponseBody
     public ResponseEntity<?> save(@PathVariable("key") String key, @RequestBody Map<String, Object> body) {
         try {

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Shipment Booking - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_hrm.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_imports_impb.css?v=20260930a}"/>
+</head>
+<!-- Architecture.WinApp.Import.Transactions.frmShipmentBooking (785) - ClientSize 1198 x 665, KeyPreview.
+     tabPage1 "Form + History": panel2 (Top 50) tsItemType New | Refresh | Save | Update (hidden) | Attachment | 903-Print | ShortCut Keys,
+     label "Shipment Booking Information"; panel1 (Left 374) groupBox1 "Form Fields"; panel3 (Fill) groupBox3 "History":
+     groupBox2 "Filters" (From / To Date with tick box, Booking No, Invoice No, Shipping Line, Destination Port, Doc / Entry / Modify
+     Date radios, Show) and grdfrm (Print + Edit buttons frozen, Id hidden, NoOfAttachments link). -->
+<body class="pd-body hrm-body" data-screen="785">
+<div class="hrm-form">
+    <div class="win-tool-strip">
+        <button type="button" id="btnnew" class="win-btn-tool" onclick="ImpBBooking.btnnew(this)"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+        <button type="button" id="btnRefresh" class="win-btn-tool" onclick="ImpBBooking.btnRefresh(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+        <button type="button" id="btnsave" class="win-btn-tool" onclick="ImpBBooking.btnsave(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+        <button type="button" id="btnupdate" class="win-btn-tool is-hidden" onclick="ImpBBooking.btnupdate(this)"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+        <button type="button" id="btnAttachment" class="win-btn-tool" onclick="ImpBBooking.btnAttachment(this)"><i class="fa fa-paperclip"></i> <span><u>A</u>ttachment</span></button>
+        <button type="button" id="btnPrint" class="win-btn-tool" onclick="ImpBBooking.btnPrint(this)"><i class="fa fa-print"></i> <span>903-Print</span></button>
+        <button type="button" id="btnShortCutKey" class="win-btn-tool" onclick="ImpBBooking.btnShortCutKey(this)"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+    </div>
+    <div class="hrm-caption">Shipment Booking Information</div>
+    <div class="impb-split">
+        <fieldset class="hrm-group">
+            <legend>Form Fields</legend>
+            <div class="hrm-entry" style="grid-template-columns:1fr;padding:4px 2px">
+                <div class="hrm-field"><label class="hrm-req" for="txtBookingDate">Booking Date &amp; No</label>
+                    <div class="impb-pair"><input type="date" id="txtBookingDate" class="win-textbox"><input type="text" id="txtBookingCRO" class="win-textbox" autocomplete="off" title="Booking No"></div></div>
+                <div class="hrm-field"><label class="hrm-req" for="CmbInvoiceNo">Invoice No</label><select id="CmbInvoiceNo" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field"><label class="hrm-req" for="CmbContainerType">Container Type</label>
+                    <div class="impb-pair"><select id="CmbContainerType" class="win-combo dtcombo" data-dtcombo="single"></select>
+                        <input type="text" id="txtContrsQty" class="win-textbox hrm-al-right" value="0" disabled title="No of Containers"></div></div>
+                <div class="hrm-field"><label class="hrm-req" for="CmbLoadingPort">Loading Port</label><select id="CmbLoadingPort" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field"><label class="hrm-req" for="cmbDestinationPort">Destination Port</label><select id="cmbDestinationPort" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field"><label for="CmbCurrency">Currency &amp; Rate</label>
+                    <div class="impb-pair"><select id="CmbCurrency" class="win-combo dtcombo" data-dtcombo="single"></select>
+                        <input type="text" id="txtBookingRate" class="win-textbox hrm-al-right" value="0" data-guard="decimal" inputmode="decimal" autocomplete="off" title="Rate"></div></div>
+                <div class="hrm-field"><label for="txtVesselName">Vessel Name</label><input type="text" id="txtVesselName" class="win-textbox" autocomplete="off"></div>
+                <div class="hrm-field"><label for="txtVoyageNo">Voyage No</label><input type="text" id="txtVoyageNo" class="win-textbox" autocomplete="off"></div>
+                <div class="hrm-field"><label for="txtETA">ETA &amp; ETD Loading Date</label>
+                    <div class="impb-pair"><input type="date" id="txtETA" class="win-textbox" title="ETA"><input type="date" id="txtETD" class="win-textbox" title="ETD"></div></div>
+                <div class="hrm-field"><label class="hrm-req" for="txtTransitDays">Transit Days &amp; Final ETA</label>
+                    <div class="impb-pair"><input type="text" id="txtTransitDays" class="win-textbox hrm-al-right" value="0" data-guard="integer" inputmode="numeric" autocomplete="off">
+                        <input type="date" id="datFinalEtaDate" class="win-textbox" title="Final ETA"></div></div>
+                <div class="hrm-field"><label class="hrm-req" for="cmbshippingline">Shipping Line</label><select id="cmbshippingline" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field"><label for="txtContainerLocation">Container Loacation</label><textarea id="txtContainerLocation" class="win-textbox" rows="2"></textarea></div>
+                <div class="hrm-field"><label for="txtAddress">Address</label><textarea id="txtAddress" class="win-textbox" rows="2"></textarea></div>
+                <div class="hrm-field"><label class="hrm-req" for="txtFreeDays">Free Days (Destination)</label><input type="text" id="txtFreeDays" class="win-textbox hrm-al-right" value="0" data-guard="integer" inputmode="numeric" autocomplete="off"></div>
+            </div>
+        </fieldset>
+        <fieldset class="hrm-group">
+            <legend>History</legend>
+            <fieldset class="hrm-group" style="margin:0 0 4px 0">
+                <legend>Filters</legend>
+                <div class="hrm-entry hrm-cols-2" style="padding:4px 2px">
+                    <div class="hrm-field"><label for="hFromDate">From Date</label><div class="impb-date-chk"><input type="checkbox" id="hFromChk" checked><input type="date" id="hFromDate" class="win-textbox"></div></div>
+                    <div class="hrm-field"><label for="CmbInvoiceNoHistory">Invoice No</label><select id="CmbInvoiceNoHistory" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="hrm-field"><label for="hToDate">To Date</label><div class="impb-date-chk"><input type="checkbox" id="hToChk" checked><input type="date" id="hToDate" class="win-textbox"></div></div>
+                    <div class="hrm-field"><label for="CmbShippingLinHistory">Shipping Line</label><select id="CmbShippingLinHistory" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="hrm-field"><label for="CmbBookingNoHistory">Booking No</label><select id="CmbBookingNoHistory" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="hrm-field"><label for="CmbDestinationPortHistory">Destination Port</label><select id="CmbDestinationPortHistory" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="hrm-field hrm-span-2"><span class="hrm-lbl"></span>
+                        <div class="hrm-inline"><div class="impb-radios">
+                            <label class="hrm-check"><input type="radio" name="hDateType" value="doc" checked> Doc Date</label>
+                            <label class="hrm-check"><input type="radio" name="hDateType" value="entry"> Entry Date</label>
+                            <label class="hrm-check"><input type="radio" name="hDateType" value="modify"> Modify Date</label></div>
+                            <button type="button" id="btnShowHistory" class="win-btn-action" onclick="ImpBBooking.btnShowHistory(this)">Show</button></div></div>
+                </div>
+            </fieldset>
+            <div class="hrm-grid-box" id="boxHistory">
+                <div class="hrm-subcaption"><span>Filtered Records</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+                <div class="hrm-grid-wrap"><table id="grdfrm"></table></div>
+            </div>
+        </fieldset>
+    </div>
+    <div class="hrm-footer">
+        <div class="hrm-footer-left"><span id="lblStatus"></span></div>
+        <div class="hrm-footer-right"><button type="button" id="btnHistory" class="win-btn-action"><i class="fa fa-history"></i> History</button></div>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_hrm.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_imports_impb_core.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_imports_shipment_booking.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

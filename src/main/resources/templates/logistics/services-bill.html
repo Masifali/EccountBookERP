@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Logistic Purchase Services Bill - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_hrm.css?v=20260929a}"/>
+</head>
+<!-- Architecture.WinApp.Service.lgstcm.frmLogisticPurchaseServicesBill (955, DocumentTypeId 1304).
+     toolStrip1: New | Refresh | Save | Update (hidden) | Delete (hidden) | Attachment | 1304-Print | Voucher-118 | Load Freight Voucher |
+     Load PO | ShortCut Keys; chkVoucher "Preview 118", ChkPreview "Preview 1304". tabControl1: tabPage1 "Form", tabPage3 "History".
+     Service Type / Bill To Party / Service Provider / Fcy Currency / Payment Term / Due Days disabled in the designer; CmbInvoiceNo ReadOnly. -->
+<body class="pd-body hrm-body" data-hrm="lgsb-services-bill" data-screen="955">
+<div class="hrm-form">
+    <div class="win-tool-strip">
+        <button type="button" id="btnnew" class="win-btn-tool" onclick="LgsSB.btnnew(this)"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+        <button type="button" id="btnRefresh" class="win-btn-tool" onclick="LgsSB.btnRefresh(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+        <button type="button" id="btnsave" class="win-btn-tool" onclick="LgsSB.btnsave(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+        <button type="button" id="btnUpdate" class="win-btn-tool is-hidden" onclick="LgsSB.btnUpdate(this)"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+        <button type="button" id="btnDelete" class="win-btn-tool is-hidden" onclick="LgsSB.btnDelete(this)"><i class="fa fa-trash"></i> <span><u>D</u>elete</span></button>
+        <button type="button" id="btnAttachment" class="win-btn-tool" onclick="LgsB.noAttachments()"><i class="fa fa-paperclip"></i> <span><u>A</u>ttachment</span></button>
+        <button type="button" id="btnPrint" class="win-btn-tool" onclick="LgsSB.btnPrint(this)" data-rpt-own data-rpt="1304_ServicesBillHeader_Slip.rpt"><i class="fa fa-print"></i> <span>1304-<u>P</u>rint</span></button>
+        <button type="button" id="btnPrintVoucher" class="win-btn-tool" onclick="LgsSB.btnPrintVoucher(this)" data-rpt-own data-rpt="118-AcRptVoucherSlip.rpt"><i class="fa fa-print"></i> <span>Voucher-118</span></button>
+        <button type="button" id="BtnLoadFreightVoucher" class="win-btn-tool" onclick="LgsSB.BtnLoadFreightVoucher(this)"><i class="fa fa-download"></i> <span>Load Freight Voucher</span></button>
+        <button type="button" id="BtnAgreement" class="win-btn-tool" onclick="LgsSB.BtnAgreement(this)"><i class="fa fa-download"></i> <span>Load PO</span></button>
+        <button type="button" id="btnshortcutkeys" class="win-btn-tool" onclick="LgsSB.btnshortcutkeys(this)"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+        <span class="lgsb-tools-right"><label><input type="checkbox" id="chkVoucher"> Preview 118</label><label><input type="checkbox" id="ChkPreview"> Preview 1304</label></span>
+    </div>
+    <div class="hrm-caption">Purchase Services Bill :</div>
+    <div class="lgsb-desc">A centralized record that supports management of logistics-related purchase Bill</div>
+    <div class="hrm-tabs" data-tabs="main">
+        <button type="button" class="hrm-tab is-active" data-tab="tabPage1">Form</button>
+        <button type="button" class="hrm-tab" data-tab="tabPage3">History</button>
+    </div>
+
+    <!-- ============================================================ Form -->
+    <div class="hrm-tab-page is-active" id="tabPage1" data-tabs-page="main">
+        <fieldset class="hrm-group">
+            <legend>Main Information</legend>
+            <div class="lgsb-row">
+                <div class="hrm-field hrm-stack lgsb-w2"><label>Doc No,Date</label>
+                    <div class="lgsb-sub"><input type="text" id="txtdocno" class="win-textbox" readonly tabindex="-1" style="max-width:90px"/><input type="date" id="txtdocdate" class="win-textbox"/></div></div>
+                <div class="hrm-field hrm-stack"><label for="CmbServiceType" class="hrm-req">Service Type</label><select id="CmbServiceType" class="win-combo dtcombo" disabled></select></div>
+                <div class="hrm-field hrm-stack"><label for="CmbInvoiceNo">Commercial Invoice No</label><select id="CmbInvoiceNo" class="win-combo dtcombo" disabled></select></div>
+                <div class="hrm-field hrm-stack lgsb-w2"><label for="CmbBillToPartyName" class="hrm-req">Bill To Party</label><select id="CmbBillToPartyName" class="win-combo dtcombo" disabled></select></div>
+                <div class="hrm-field hrm-stack lgsb-w2"><label for="CmbServiceProviderOrBrokerAgent" class="hrm-req">Broker Agent / Service Provider</label><select id="CmbServiceProviderOrBrokerAgent" class="win-combo dtcombo" disabled></select></div>
+                <div class="hrm-field hrm-stack"><label for="txtrefbillno">Reference No</label><input type="text" id="txtrefbillno" class="win-textbox" autocomplete="off"/></div>
+                <div class="hrm-field hrm-stack"><label for="CmbPaymentTerm" class="hrm-req">Payment Term</label><select id="CmbPaymentTerm" class="win-combo dtcombo" disabled></select></div>
+                <div class="hrm-field hrm-stack"><label for="txtDueDays" class="hrm-req">Due Days</label><input type="text" id="txtDueDays" class="win-textbox hrm-al-right" data-guard="integer" inputmode="numeric" autocomplete="off" disabled/></div>
+                <div class="hrm-field hrm-stack"><label for="CmbFcyCurrency" class="hrm-req">Fcy Currency</label><select id="CmbFcyCurrency" class="win-combo dtcombo" disabled></select></div>
+                <div class="hrm-field hrm-stack"><label for="txtFcyExchangeRate" class="hrm-req">Fcy Rate</label><input type="text" id="txtFcyExchangeRate" class="win-textbox hrm-al-right" data-guard="decimal" inputmode="decimal" autocomplete="off"/></div>
+                <div class="hrm-field hrm-stack lgsb-w2"><label for="txtRemarksHeader">Remarks</label><input type="text" id="txtRemarksHeader" class="win-textbox" autocomplete="off"/></div>
+                <div class="hrm-field hrm-stack lgsb-glcy"><label for="CmbGlcyCurrency" class="hrm-req">Party Glcy</label><select id="CmbGlcyCurrency" class="win-combo dtcombo" disabled></select></div>
+                <div class="hrm-field hrm-stack lgsb-glcy"><label for="txtGlcyRate" class="hrm-req">Glcy Rate</label><input type="text" id="txtGlcyRate" class="win-textbox hrm-al-right" data-guard="decimal" inputmode="decimal" autocomplete="off"/></div>
+                <div class="hrm-field hrm-stack lgsb-glcy"><label for="txtGlcyAmount">Glcy Amount</label><input type="text" id="txtGlcyAmount" class="win-textbox hrm-al-right" disabled/></div>
+            </div>
+        </fieldset>
+        <fieldset class="hrm-group">
+            <legend>Detail Information</legend>
+            <div class="lgsb-row">
+                <div class="hrm-field hrm-stack"><label for="txtPartyRefDocNo" class="hrm-req">Party Ref Doc No</label><input type="text" id="txtPartyRefDocNo" class="win-textbox" autocomplete="off"/></div>
+                <div class="hrm-field hrm-stack"><label for="txtPartyRefDocDate">Ref Doc Date</label><input type="date" id="txtPartyRefDocDate" class="win-textbox"/></div>
+                <div class="hrm-field hrm-stack"><div class="lgsb-radios"><label><input type="radio" name="radMaster" id="RadMasterItem" checked> Master Item</label><label><input type="radio" name="radMaster" id="RadCategory"> Category</label></div>
+                    <select id="CmbMasterItem" class="win-combo dtcombo"></select></div>
+                <div class="hrm-field hrm-stack lgsb-w2"><div class="lgsb-radios"><b class="hrm-req">Service Item</b><label><input type="radio" name="radItem" id="RadItemNamePackListDetail" checked> Name</label><label><input type="radio" name="radItem" id="RadItemCodePackListDetail"> Code</label></div>
+                    <select id="CmbItemName" class="win-combo dtcombo" data-columns="Service Item Name|ItemCode|MasterItem|ItemCategory"></select></div>
+                <div class="hrm-field hrm-stack"><label for="CmbTransactionCurrencyDetail" class="hrm-req">Transaction Currency</label><select id="CmbTransactionCurrencyDetail" class="win-combo dtcombo" data-columns="CurrencyCode|CurrencyRate"></select></div>
+                <div class="hrm-field hrm-stack"><label for="txtTransactionExchangeRateDetail" class="hrm-req">Exchange Rate</label><input type="text" id="txtTransactionExchangeRateDetail" class="win-textbox hrm-al-right" data-guard="decimal" inputmode="decimal" autocomplete="off"/></div>
+                <div class="hrm-field hrm-stack"><label for="txtServiceRate" class="hrm-req">Service Rate</label><input type="text" id="txtServiceRate" class="win-textbox hrm-al-right" data-guard="decimal" inputmode="decimal" autocomplete="off"/></div>
+                <div class="hrm-field hrm-stack"><label for="CmbRateBaseType" class="hrm-req">Rate Base</label><select id="CmbRateBaseType" class="win-combo dtcombo" data-columns="Name|Equivalent"></select></div>
+                <div class="hrm-field hrm-stack"><label for="txtQty" class="hrm-req">Qty</label><input type="text" id="txtQty" class="win-textbox hrm-al-right" data-guard="decimal" inputmode="decimal" autocomplete="off"/></div>
+                <div class="hrm-field hrm-stack"><label for="txtNetWeight" class="hrm-req">Net Weight</label><input type="text" id="txtNetWeight" class="win-textbox hrm-al-right" data-guard="decimal" inputmode="decimal" autocomplete="off"/></div>
+                <div class="hrm-field hrm-stack"><label for="txtTcyAmount" class="hrm-req">Tcy Amount</label><input type="text" id="txtTcyAmount" class="win-textbox hrm-al-right" disabled/></div>
+                <div class="hrm-field hrm-stack"><label for="txtLcyAmountDetail" class="hrm-req">Lcy Amount</label><input type="text" id="txtLcyAmountDetail" class="win-textbox hrm-al-right" disabled/></div>
+                <div class="hrm-field hrm-stack"><label for="CmbTaxName">Tax Name</label><select id="CmbTaxName" class="win-combo dtcombo" data-columns="Tax Name|TaxPrcnt"></select></div>
+                <div class="hrm-field hrm-stack"><label for="txtTaxPercnt">Tax%</label><input type="text" id="txtTaxPercnt" class="win-textbox hrm-al-right" data-guard="decimal" inputmode="decimal" autocomplete="off"/></div>
+                <div class="hrm-field hrm-stack"><label for="txtTaxAmount">Tax Amount</label><input type="text" id="txtTaxAmount" class="win-textbox hrm-al-right" readonly tabindex="-1"/></div>
+                <div class="hrm-field hrm-stack"><label for="txtTotalAmount" class="hrm-req">Total Tcy Amount</label><input type="text" id="txtTotalAmount" class="win-textbox hrm-al-right" readonly tabindex="-1"/></div>
+                <div class="hrm-field hrm-stack"><label for="CmbLocationType" class="hrm-req">Location Type</label><select id="CmbLocationType" class="win-combo dtcombo"></select></div>
+                <div class="hrm-field hrm-stack"><label for="CmbLocationFrom" class="hrm-req" id="lblLocationFrom">From Location</label><select id="CmbLocationFrom" class="win-combo dtcombo"></select></div>
+                <div class="hrm-field hrm-stack"><label for="CmbLocationTo" class="hrm-req" id="lblLocationTo">To Location</label><select id="CmbLocationTo" class="win-combo dtcombo"></select></div>
+                <div class="hrm-field hrm-stack"><label for="txtRemarksDetail">Remarks</label><input type="text" id="txtRemarksDetail" class="win-textbox" autocomplete="off"/></div>
+                <div class="hrm-field hrm-stack"><label>&nbsp;</label><div class="lgsb-actions">
+                    <button type="button" id="BtnAddCustomer" class="win-btn-action" onclick="LgsSB.BtnAddCustomer(this)">+</button>
+                    <button type="button" id="BtnUpdateCustmer" class="win-btn-action is-hidden" onclick="LgsSB.BtnUpdateCustmer(this)">Update</button>
+                    <button type="button" id="BtnCancelCustomer" class="win-btn-action is-hidden" onclick="LgsSB.BtnCancelCustomer(this)">Cancel</button></div></div>
+            </div>
+        </fieldset>
+        <div class="hrm-grid-box">
+            <div class="hrm-subcaption"><span>Detail</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+            <div class="hrm-grid-wrap"><table id="grdCustomerDetail"></table></div>
+        </div>
+    </div>
+
+    <!-- ============================================================ History -->
+    <div class="hrm-tab-page" id="tabPage3" data-tabs-page="main">
+        <div class="win-tool-strip">
+            <button type="button" id="btnNewHistory" class="win-btn-tool" onclick="LgsSB.btnHistoryRefresh(this)"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="BtnRefreshHistory" class="win-btn-tool" onclick="LgsSB.BtnRefreshHistory(this)"><i class="fa fa-refresh"></i> <span><u>R</u>efresh</span></button>
+        </div>
+        <div class="hrm-caption">Purchase Services Bill History</div>
+        <fieldset class="hrm-group">
+            <legend>Filters</legend>
+            <div class="lgsb-row">
+                <div class="hrm-field hrm-stack lgsb-w2"><label for="cmbDateTypeHistory">Date Type</label><select id="cmbDateTypeHistory" class="win-combo dtcombo"></select></div>
+                <div class="hrm-field hrm-stack"><label><input type="checkbox" id="FromDateHistoryOn" checked> Date From</label><input type="date" id="FromDateHistory" class="win-textbox"/></div>
+                <div class="hrm-field hrm-stack"><label><input type="checkbox" id="ToDateHistoryOn" checked> To</label><input type="date" id="ToDateHistory" class="win-textbox"/></div>
+                <div class="hrm-field hrm-stack"><label for="FromDocNoHistory">Doc From</label><input type="text" id="FromDocNoHistory" class="win-textbox" data-guard="integer" inputmode="numeric" autocomplete="off"/></div>
+                <div class="hrm-field hrm-stack"><label for="ToDocNoHistory">Doc To</label><input type="text" id="ToDocNoHistory" class="win-textbox" data-guard="integer" inputmode="numeric" autocomplete="off"/></div>
+                <div class="hrm-field hrm-stack lgsb-w2"><label for="CmbServiceTypeHistory">Service Type</label><select id="CmbServiceTypeHistory" class="win-combo dtcombo"></select></div>
+                <div class="hrm-field hrm-stack lgsb-w2"><label for="CmbServiceProviderHistory">Service Provider</label><select id="CmbServiceProviderHistory" class="win-combo dtcombo"></select></div>
+                <div class="hrm-field hrm-stack"><label>&nbsp;</label><button type="button" id="btnshow" class="win-btn-action" onclick="LgsSB.btnshow(this)">Show</button></div>
+                <div class="hrm-field hrm-stack lgsb-w2"><label>&nbsp;</label><div class="lgsb-radios">
+                    <label><input type="radio" name="histDateKind" value="doc" checked> Doc Date</label><label><input type="radio" name="histDateKind" value="modify"> Modify Date</label>
+                    <label><input type="radio" name="histDateKind" value="entry"> Entry Date</label><label><input type="radio" name="histDateKind" value="approved"> Approved Date</label></div></div>
+            </div>
+        </fieldset>
+        <div class="hrm-grid-box" id="boxHistory">
+            <div class="hrm-subcaption"><span>Filtered Records</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+            <div class="hrm-grid-wrap"><table id="grdHistory"></table></div>
+        </div>
+        <div class="hrm-grid-box">
+            <div class="hrm-subcaption"><span>Detail of the Above Selected Row</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+            <div class="hrm-grid-wrap"><table id="grdHistoryDetail"></table></div>
+        </div>
+    </div>
+    <div class="hrm-footer">
+        <div class="hrm-footer-left"><span id="lblStatus"></span></div>
+        <div class="hrm-footer-right"><button type="button" id="btnHistory" class="win-btn-action"><i class="fa fa-history"></i> History</button></div>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_hrm.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_logistics_lgsb_common.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_logistics_services_bill.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260929a}"></script>
+</body>
+</html>

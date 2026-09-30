@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Import Sale Contract Schedule - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_hrm.css?v=20260929a}"/>
+    <style>
+        .impa-split { display: grid; grid-template-columns: minmax(0, 415fr) minmax(0, 956fr); gap: 6px; align-items: start; }
+        .impa-split > div { min-width: 0; display: flex; flex-direction: column; }
+        .impa-detail { display: grid; grid-template-columns: 1.4fr 1.9fr 0.9fr 1fr 0.8fr 0.9fr 0.9fr auto; gap: 4px 6px; align-items: end; }
+        .impa-radio { display: inline-flex; gap: 8px; margin-left: 8px; font-weight: normal; }
+        .impa-radio label { font-weight: normal; margin: 0; }
+        .impa-btns { display: flex; gap: 3px; }
+        .impa-btns .win-btn-action { min-width: 0; padding: 0 10px; }
+        .impa-filters { display: grid; grid-template-columns: 120px 120px 1fr 1fr 1fr auto; gap: 4px 6px; align-items: end; }
+        table.hrm-grid .hrm-cell-btn { height: 20px; min-width: 0; width: auto; padding: 0 8px; font-size: 8pt; line-height: 18px; }
+        .hrm-grid-box.impa-grid-sm .hrm-grid-wrap { max-height: 240px; }
+        .hrm-grid-box.impa-grid-lg .hrm-grid-wrap { max-height: 560px; }
+        @media (max-width: 1000px) { .impa-split { grid-template-columns: 1fr; } .impa-detail { grid-template-columns: 1fr 1fr 1fr; } }
+        @media (max-width: 600px) { .impa-detail, .impa-filters { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<!-- Architecture.WinApp.Import.ImLcOrderSchedule (526) - ClientSize 1385 x 661, KeyPreview. tabControl1 (bottom tabs): Form |
+     HistoryNotInUse (removed by the form's Load) | History.
+     Form: panel6 "Import Sale Contract Schedule"; panel10 (Left, 415): toolStrip2 New | Load All | ShortCut Keys, "Sale Contract for
+     Schedule", grdPendingContract (ContractNo link); panel12 (Top, 306): toolStrip1 New | Save/Update | Attechment, "Contract Schedule",
+     grdContractShedule (editable: X, +, SupplierName r/o, NoOfContainers, WeightM_Ton, AttentiveLoadingDate, Destination Port value list,
+     AttentiveProductionDate, AttentiveInspectionDate); panel4: toolStrip3 New | Save/Update, "Contract Schedule Brand Detail Loading Date
+     wise", groupBox1 "Detail" (Attentive Loading Date, Item / Brand Name|Code, Crop Year, Packing Type, No Of Bags, Pack Uom,
+     Weight / M.Ton, M.Ton of the date (disabled), + | Update | Cancel), grd grouped by AttentiveLoadingDate.
+     History: toolStrip4 Load All | Refresh | 239-Print; groupBox2 "Filters" Date From, Date To, Port, Supplier Name, Item, Show;
+     DataGridHistory (Select by Print right, Edit by Update right). -->
+<body class="pd-body hrm-body" data-hrm="lc-order-schedule" data-screen="526">
+<div class="hrm-form">
+    <div class="hrm-tabs" id="tabMain">
+        <button type="button" class="hrm-tab is-active" data-tab="pgForm">Form</button>
+        <button type="button" class="hrm-tab" data-tab="pgHistory">History</button>
+    </div>
+
+    <div class="hrm-tab-page is-active" id="pgForm">
+        <div class="hrm-caption">Import Sale Contract Schedule</div>
+        <div class="impa-split">
+            <div>
+                <div class="win-tool-strip">
+                    <button type="button" id="BtnNewMain" class="win-btn-tool" onclick="ImpASc.BtnNewMain(this)"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+                    <button type="button" id="BtnLoadAllPendingContracts" class="win-btn-tool" onclick="ImpASc.BtnLoadAllPendingContracts(this)"><i class="fa fa-list"></i> <span>Load All</span></button>
+                    <button type="button" id="BtnShortCutkeys" class="win-btn-tool" onclick="ImpASc.BtnShortCutkeys(this)"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+                </div>
+                <div class="hrm-grid-box impa-grid-lg">
+                    <div class="hrm-subcaption"><span>Sale Contract for Schedule</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+                    <div class="hrm-grid-wrap"><table id="grdPendingContract"></table></div>
+                </div>
+            </div>
+            <div>
+                <div class="win-tool-strip">
+                    <button type="button" id="btnnew" class="win-btn-tool" onclick="ImpASc.btnnew(this)"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+                    <button type="button" id="btnsave" class="win-btn-tool" onclick="ImpASc.btnsave(this)"><i class="fa fa-save"></i> <span><u>S</u>ave/Update</span></button>
+                    <button type="button" id="btnattachment" class="win-btn-tool" onclick="ImpASc.btnattachment(this)"><i class="fa fa-paperclip"></i> <span><u>A</u>ttechment</span></button>
+                </div>
+                <div class="hrm-grid-box impa-grid-sm">
+                    <div class="hrm-subcaption"><span>Contract Schedule</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+                    <div class="hrm-grid-wrap"><table id="grdContractShedule"></table></div>
+                </div>
+                <div class="win-tool-strip">
+                    <button type="button" id="btnNewDetailSchedule" class="win-btn-tool" onclick="ImpASc.btnNewDetailSchedule(this)"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+                    <button type="button" id="btnSavedetailSchedule" class="win-btn-tool" onclick="ImpASc.btnSavedetailSchedule(this)"><i class="fa fa-save"></i> <span><u>S</u>ave/Update</span></button>
+                </div>
+                <div class="hrm-subcaption"><span>Contract Schedule Brand Detail Loading Date wise</span></div>
+                <fieldset class="hrm-group">
+                    <legend>Detail</legend>
+                    <div class="impa-detail">
+                        <div class="hrm-field hrm-stack"><label for="cmbAttentiveLoadDateBySchedule">Attentive Loading Date</label><select id="cmbAttentiveLoadDateBySchedule" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                        <div class="hrm-field hrm-stack"><div class="hrm-lbl">Item / Brand <span class="impa-radio">
+                            <label><input type="radio" name="rdItem" id="rdbtnItemName" checked> Name</label>
+                            <label><input type="radio" name="rdItem" id="rdbtnItemCode"> Code</label></span></div>
+                            <select id="cmbItem" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                        <div class="hrm-field hrm-stack"><label for="cmbCropYear">Crop Year</label><select id="cmbCropYear" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                        <div class="hrm-field hrm-stack"><label for="cmbPackingtype">Packing Type</label><select id="cmbPackingtype" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                        <div class="hrm-field hrm-stack"><label for="txtNoOfBagsDetail">No Of Bags</label><input type="text" id="txtNoOfBagsDetail" class="win-textbox hrm-al-right" inputmode="decimal" autocomplete="off"/></div>
+                        <div class="hrm-field hrm-stack"><label for="cmbPackUom">Pack Uom</label><select id="cmbPackUom" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                        <div class="hrm-field hrm-stack"><label for="txtMTonDetail">Weight / M.Ton</label><input type="text" id="txtMTonDetail" class="win-textbox hrm-al-right" inputmode="decimal" autocomplete="off"/></div>
+                        <div class="hrm-field hrm-stack"><input type="text" id="txtMtonOfSelectedDate" class="win-textbox hrm-al-right" disabled title="M.Ton of the selected date"/>
+                            <div class="impa-btns">
+                                <button type="button" id="btnAdd" class="win-btn-action" onclick="ImpASc.btnAdd(this)">+</button>
+                                <button type="button" id="btnGridUpdate" class="win-btn-action is-hidden" onclick="ImpASc.btnGridUpdate(this)">Update</button>
+                                <button type="button" id="btnCancel" class="win-btn-action is-hidden" onclick="ImpASc.btnCancel(this)">Cancel</button>
+                            </div></div>
+                    </div>
+                </fieldset>
+                <div class="hrm-grid-box impa-grid-sm">
+                    <div class="hrm-subcaption"><span></span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+                    <div class="hrm-grid-wrap"><table id="grd"></table></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="hrm-tab-page" id="pgHistory">
+        <div class="win-tool-strip">
+            <button type="button" id="btnLoadAllHistoryNew" class="win-btn-tool" onclick="ImpASc.btnLoadAllHistoryNew(this)"><i class="fa fa-list"></i> <span>Load All</span></button>
+            <button type="button" id="btnRefreshHistoryCombos" class="win-btn-tool" onclick="ImpASc.btnRefreshHistoryCombos(this)"><i class="fa fa-refresh"></i> <span><u>R</u>efresh</span></button>
+            <button type="button" id="BtnHistoryPrint" class="win-btn-tool" onclick="ImpASc.BtnHistoryPrint(this)" data-rpt-own data-rpt="239-ImLcOrderSchedule_FormHistory.rpt"><i class="fa fa-print"></i> <span>239-<u>P</u>rint</span></button>
+        </div>
+        <fieldset class="hrm-group">
+            <legend>Filters</legend>
+            <div class="impa-filters">
+                <div class="hrm-field hrm-stack"><label for="txtdatefrom">Date From</label><input type="date" id="txtdatefrom" class="win-textbox"/></div>
+                <div class="hrm-field hrm-stack"><label for="txtdateto">Date To</label><input type="date" id="txtdateto" class="win-textbox"/></div>
+                <div class="hrm-field hrm-stack"><label for="cmbPort">Port</label><select id="cmbPort" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field hrm-stack"><label for="cmbSupplierName">Supplier Name</label><select id="cmbSupplierName" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field hrm-stack"><label for="CmbItemHistory">Item</label><select id="CmbItemHistory" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div><button type="button" id="btnShow" class="win-btn-action" onclick="ImpASc.btnShow(this)">Show</button></div>
+            </div>
+        </fieldset>
+        <div class="hrm-grid-box impa-grid-lg">
+            <div class="hrm-subcaption"><span>History</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+            <div class="hrm-grid-wrap"><table id="DataGridHistory"></table></div>
+        </div>
+    </div>
+
+    <div class="hrm-footer">
+        <div class="hrm-footer-left"><span id="lblStatus"></span></div>
+        <div class="hrm-footer-right"><button type="button" id="btnHistory" class="win-btn-action"><i class="fa fa-history"></i> History</button></div>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_hrm.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_imports_impa.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_imports_lc_order_schedule.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260929a}"></script>
+</body>
+</html>

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Gate Pass Party Processing - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_hrm.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_hrm_reports.css?v=20260929a}"/>
+    <style>
+        table.hrm-grid .pp-cell-btn { height: 20px; min-width: 0; width: auto; padding: 0 8px; font-size: 8pt; line-height: 18px; }
+        table.hrm-grid tr.pp-group td { background: #dfeeee; font-weight: bold; }
+        table.hrm-grid tr.pp-group-total td { background: #f3f7f7; font-style: italic; }
+        .pp-checks { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+    </style>
+</head>
+<!-- Architecture.WinApp.PartyProcessingReports.frmGatePassPartyProcessing (691) - AutoScrollMinSize 951 x 649, KeyPreview.
+     toolStrip1: Reset | Refresh | 300-Register | ShortCut Keys.  lblCaption "Gate Pass Party Processing".
+     groupBox1 "Filters": Date Type cmbDateType | Stock Party CmbStockParty | GatePass Type cmbGatePassType /
+     Date From & To gpFromDate / gpToDate | Reference Party cmbReferenceParty | Status cmbIsAccept (Open / Accepted / Rejected) /
+     GP No From & To txtGpFrom / txtGPTo | Document Type cmbDocumentType | Show.
+     "History" + grdfrm: Id / DocumentTypeId hidden; ItemQty, SupplierWeight, FactoryWeight, DifferenceWeight summed "#,##0.##". -->
+<body class="pd-body hrm-body" data-pp="gate-pass-report" data-screen="691">
+<div class="hrm-form">
+    <div class="win-tool-strip">
+        <button type="button" id="btnReset" class="win-btn-tool" onclick="PpGatePassRpt.btnReset(this)"><i class="fa fa-eraser"></i> <span><u>R</u>eset</span></button>
+        <button type="button" id="btnRefresh" class="win-btn-tool" onclick="PpGatePassRpt.btnRefresh(this)"><i class="fa fa-refresh"></i> <span><u>R</u>efresh</span></button>
+        <button type="button" id="btnPrint" class="win-btn-tool" onclick="PpGatePassRpt.btnPrint(this)" data-rpt-own data-rpt="300-RptPartyProcessingGatePassRegister.rpt"><i class="fa fa-print"></i> <span><u>3</u>00-Register</span></button>
+        <button type="button" id="btnshortcut" class="win-btn-tool" onclick="PpGatePassRpt.shortCuts()"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+    </div>
+    <div class="hrm-caption">Gate Pass Party Processing</div>
+    <fieldset class="hrm-group"><legend>Filters</legend>
+        <div class="hrm-entry hrm-cols-3">
+            <div class="hrm-field"><label for="cmbDateType">Date Type</label><select id="cmbDateType" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+            <div class="hrm-field"><label for="CmbStockParty">Stock Party</label><select id="CmbStockParty" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+            <div class="hrm-field"><label for="cmbGatePassType">GatePass Type</label><select id="cmbGatePassType" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+            <div class="hrm-field"><label for="gpFromDate">Date From &amp; To</label><div class="hrm-inline" style="flex-wrap:nowrap"><div class="hrm-grow"><input type="date" id="gpFromDate" class="win-textbox"/></div><div class="hrm-grow"><input type="date" id="gpToDate" class="win-textbox"/></div></div></div>
+            <div class="hrm-field"><label for="cmbReferenceParty">Reference Party</label><select id="cmbReferenceParty" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+            <div class="hrm-field"><label for="cmbIsAccept">Status</label><select id="cmbIsAccept" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+            <div class="hrm-field"><label for="txtGpFrom">GP No From &amp; To</label><div class="hrm-inline" style="flex-wrap:nowrap"><div class="hrm-grow"><input type="text" id="txtGpFrom" class="win-textbox" data-guard="integer" inputmode="numeric"/></div><div class="hrm-grow"><input type="text" id="txtGPTo" class="win-textbox" data-guard="integer" inputmode="numeric"/></div></div></div>
+            <div class="hrm-field"><label for="cmbDocumentType">Document Type</label><select id="cmbDocumentType" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+            <div class="hrm-field"><label>&nbsp;</label><div class="hrm-show-cell"><button type="button" id="btnshow" class="win-btn-action" onclick="PpGatePassRpt.btnshow(this)">Show</button></div></div>
+        </div>
+    </fieldset>
+    <div class="hrm-grid-box" id="historyBox">
+        <div class="hrm-subcaption"><span>History</span><span class="hrm-bar-tools"><button type="button" class="hrm-bar-btn" title="Grid Control: Export" onclick="PpGatePassRpt.exportGrid()"><i class="fa fa-file-excel-o"></i> Export</button><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></span></div>
+        <div class="hrm-grid-wrap"><table id="grdfrm"></table></div>
+    </div>
+    <div class="hrm-footer">
+        <div class="hrm-footer-left"><span id="lblStatus"></span></div>
+        <div class="hrm-footer-right"><button type="button" id="btnHistory" class="win-btn-action"><i class="fa fa-history"></i> History</button></div>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_hrm.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_pp_gate_pass_report.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260929a}"></script>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Define Services Item's - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_hrm.css?v=20260929a}"/>
+    <style>
+        .lgsa-si-top { display: grid; grid-template-columns: minmax(0, 330px) minmax(0, 1fr); gap: 6px 10px; align-items: start; padding: 4px 8px; }
+        .lgsa-si-top .hrm-field { grid-template-columns: 100px minmax(0, 1fr); }
+        .lgsa-si-top .hrm-group { margin: 0; }
+        .lgsa-si-top .hrm-grid-box { min-height: 120px; }
+        .lgsa-si-top .hrm-grid-wrap { min-height: 100px; max-height: 150px; }
+        .lgsa-hist-bar { display: flex; gap: 6px; align-items: center; padding: 6px 8px; flex-wrap: wrap; }
+        .lgsa-hist-bar label { font: bold 9pt "Segoe UI", sans-serif; margin: 0; }
+        .lgsa-hist-bar .dtcombo-wrap, .lgsa-hist-bar select { width: 220px; max-width: 100%; }
+        tr.lgsa-group td { background: #e8f0f0; font-weight: bold; color: #044; }
+        @media (max-width: 700px) { .lgsa-si-top { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<!-- Architecture.WinApp.Service.EximServicesDefine (234) - AutoScrollMinSize 900 x 500, KeyPreview.
+     toolStrip1: New | Refresh | Update (hidden) | Save | Attachment | Define Master Item (hidden) | Service Category | ShortCut Keys.
+     panel2 (28) "Define Services Item's"; panel7 (168): Category* cmbItemCategory (106,3) 210 [Leave], Service Code* txtItemCode (ReadOnly),
+     Service Name* txtItemName, Services GL A/C* cmbPurchaseGL (AllColumns), Uom Group* CmbUomGroup 149 + chkstatus "Active" (checked),
+     Master Item CmbMasterItem; groupBox1 "Service Allocation " (322,3) 500x161: grdAllocation (Id hidden, Location 250, Value check + header selector).
+     panel10 (24) "Item History" + ctrlGrdBar1; panel9 (43): Item Category cmbitemcathistory 220 + Search;
+     grdhistory: Id / MasterItem hidden, grouped by MasterItem, GlAccount caption "Services GL A/C", NoOfAttachments link,
+     EntryDate / ModifyDate "dd-MM-yyyy hh:mm tt". -->
+<body class="pd-body hrm-body" data-screen="234">
+<div class="hrm-form">
+    <div class="win-tool-strip">
+        <button type="button" id="btnnew" class="win-btn-tool" onclick="LgsSI.btnnew(this)"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+        <button type="button" id="toolStripButton1" class="win-btn-tool" onclick="LgsSI.refresh(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+        <button type="button" id="btnupdate" class="win-btn-tool is-hidden" onclick="LgsSI.btnupdate(this)"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+        <button type="button" id="btnsave" class="win-btn-tool" onclick="LgsSI.btnsave(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+        <button type="button" id="btnattachment" class="win-btn-tool" onclick="LgsSI.attachment()" title="Attachments are not ported on the web"><i class="fa fa-paperclip"></i> <span><u>A</u>ttachment</span></button>
+        <button type="button" id="BtnDefineMasterItem" class="win-btn-tool is-hidden"><i class="fa fa-list"></i> <span>Define Master Item</span></button>
+        <button type="button" id="btnServiceCategory" class="win-btn-tool" onclick="LgsSI.serviceCategory()"><i class="fa fa-sitemap"></i> <span>Service Category</span></button>
+        <button type="button" id="btnShortCutKey" class="win-btn-tool" onclick="LgsSI.shortcuts()"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+    </div>
+    <div class="hrm-caption">Define Services Item's</div>
+    <div class="lgsa-si-top">
+        <div class="hrm-entry" style="grid-template-columns:1fr;padding:2px 0;gap:4px">
+            <div class="hrm-field"><label for="cmbItemCategory" class="hrm-req">Category</label><select id="cmbItemCategory" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+            <div class="hrm-field"><label for="txtItemCode" class="hrm-req">Service Code</label><input type="text" id="txtItemCode" class="win-textbox" readonly tabindex="-1"/></div>
+            <div class="hrm-field"><label for="txtItemName" class="hrm-req">Service Name</label><input type="text" id="txtItemName" class="win-textbox" autocomplete="off"/></div>
+            <div class="hrm-field"><label for="cmbPurchaseGL" class="hrm-req">Services GL A/C</label><select id="cmbPurchaseGL" class="win-combo dtcombo" data-dtcombo="account2"></select></div>
+            <div class="hrm-field"><label for="CmbUomGroup" class="hrm-req">Uom Group</label>
+                <div class="hrm-inline" style="flex-wrap:nowrap"><div class="hrm-grow"><select id="CmbUomGroup" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <label class="hrm-check"><input type="checkbox" id="chkstatus" checked> Active</label></div></div>
+            <div class="hrm-field"><label for="CmbMasterItem">Master Item</label><select id="CmbMasterItem" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+        </div>
+        <fieldset class="hrm-group">
+            <legend>Service Allocation</legend>
+            <div class="hrm-grid-box"><div class="hrm-grid-wrap"><table id="grdAllocation"></table></div></div>
+        </fieldset>
+    </div>
+    <div class="hrm-grid-box" id="boxHistory">
+        <div class="hrm-subcaption"><span>Item History</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+        <div class="lgsa-hist-bar">
+            <label for="cmbitemcathistory">Item Category</label>
+            <select id="cmbitemcathistory" class="win-combo dtcombo" data-dtcombo="single"></select>
+            <button type="button" id="btnsearch" class="win-btn-action" onclick="LgsSI.search(this)">Search</button>
+        </div>
+        <div class="hrm-grid-wrap"><table id="grdhistory"></table></div>
+    </div>
+    <div class="hrm-footer">
+        <div class="hrm-footer-left"><span id="lblStatus"></span></div>
+        <div class="hrm-footer-right"><button type="button" id="btnHistory" class="win-btn-action"><i class="fa fa-history"></i> History</button></div>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_hrm.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_logistics_define_services_item.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

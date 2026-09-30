@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Fixed Asset Items - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_hrm.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_fixedassets.css?v=20260930a}"/>
+</head>
+<!-- Architecture.WinApp.FixedAsset.frmDefineAssets (356 "Fixed Asset Items") - base.Name "frmDefineAssets", ClientSize 1044 x 561.
+     tabCAddItem: tpItemDefinitionAddItem "Add Asset" | tpItemDefinitionAddItemHistory "History".
+     Add Asset: toolStrip1 New | Refresh | Save | Update (hidden) | Attachment | Item Category | Item Type | Item Uom | Barcode Print |
+       ShortCut Keys; label13 "Add Fixed Assest Item"; groupBox2 "Main Information" (x=126): Item Category, Item Type, Asset Code
+       (txtItemCodeNew ReadOnly), Asset Name, Base UOM, Barcode No, Assets Class, Assets GL A/c, Accumulated Depreciation A/c,
+       Depreciation Expense A/c, Expense Maintenance Account, LeadTime Day + Status (checked), Local (checked) / Import;
+       BrandImages "Asset Images" (picbox1/2 + Browse); groupBox1 "Asset Allocation To Company" grdAllocation (Id hidden, Location 250,
+       Value with header selector). Min/Max/ReOrder boxes are Visible=false.
+     History: toolStrip2 New (btnLoadAll_Click: all rows); label31 "Asset History"; grdhistory (first opening of the tab: 50 rows).
+     API: the existing /api/store/define/fixed-asset-item/... (StoreDefineAssetsExtraController / StoreDefineAssetsExtraService),
+     a complete port of this form, reused. -->
+<body class="pd-body hrm-body" data-fa="define-assets" data-screen="356">
+<div class="hrm-form">
+    <div class="fa-tabs">
+        <button type="button" class="hrm-tab is-active" data-fa-tab="form">Add Asset</button>
+        <button type="button" class="hrm-tab" data-fa-tab="history">History</button>
+    </div>
+
+    <!-- ===================================================================== Add Asset -->
+    <div class="fa-page is-active" data-fa-page="form">
+        <div class="win-tool-strip">
+            <button type="button" id="btnnew" class="win-btn-tool" onclick="FaDef.btnnew(this)"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="BtnRefresh" class="win-btn-tool" onclick="FaDef.BtnRefresh(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+            <button type="button" id="btnsave" class="win-btn-tool" onclick="FaDef.btnsave(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+            <button type="button" id="btnupdate" class="win-btn-tool is-hidden" onclick="FaDef.btnupdate(this)"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+            <button type="button" id="btnattachment" class="win-btn-tool" disabled title="Attachments (DMS) are not available on this page: the desktop copies the files to the configured Attachment Folder Path on the client's share."><i class="fa fa-paperclip"></i> <span><u>A</u>ttachment</span></button>
+            <button type="button" id="BtnDefineCategory" class="win-btn-tool" onclick="FaDef.btnitmcat()"><i class="fa fa-sitemap"></i> <span>Item Category</span></button>
+            <button type="button" id="BtnItemType" class="win-btn-tool" disabled title="The Item Type form (InvDeffrmItemType, FormTypeId 3) has no web page."><i class="fa fa-tags"></i> <span>Item Type</span></button>
+            <button type="button" id="BtnUom" class="win-btn-tool" disabled title="The Item UOM form (InvDeffrmItemItemUom) has no web page."><i class="fa fa-balance-scale"></i> <span>Item Uom</span></button>
+            <button type="button" id="BtnPrintBarCode" class="win-btn-tool" disabled title="Barcode Print (BarcodeGenerate) has no web page."><i class="fa fa-barcode"></i> <span>Barcode Print</span></button>
+            <button type="button" id="BtnShortCutkeys" class="win-btn-tool" onclick="FaDef.BtnShortCutkeys()"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+        </div>
+        <div class="hrm-caption">Add Fixed Assest Item</div>
+        <div class="hrm-entry hrm-cols-2" style="align-items:start">
+            <fieldset class="hrm-group">
+                <legend>Main Information</legend>
+                <div class="hrm-entry" style="grid-template-columns:1fr;padding:4px 0">
+                    <div class="hrm-field"><label for="cmbItemCategory">Item Category</label><select id="cmbItemCategory" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="hrm-field"><label for="cmbItemType">Item Type</label><select id="cmbItemType" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="hrm-field"><label for="txtItemCodeNew">Asset Code</label><input type="text" id="txtItemCodeNew" class="win-textbox" readonly tabindex="-1"/></div>
+                    <div class="hrm-field"><label for="txtItemName">Asset Name</label><input type="text" id="txtItemName" class="win-textbox" autocomplete="off"/></div>
+                    <div class="hrm-field"><label for="cmbBaseUnit">Base UOM</label><select id="cmbBaseUnit" class="win-combo dtcombo" data-columns="UOM Code|Equivalent"></select></div>
+                    <div class="hrm-field"><label for="txtBarcodeNo">Barcode No</label><input type="text" id="txtBarcodeNo" class="win-textbox" autocomplete="off"/></div>
+                    <div class="hrm-field"><label for="cmbAssetsClass">Assets Class</label><select id="cmbAssetsClass" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="hrm-field"><label for="CmbAssetGL">Assets GL A/c</label><select id="CmbAssetGL" class="win-combo dtcombo" data-columns="Assets GL Account|AccountCode|ParentAccountTitle|AccountClass"></select></div>
+                    <div class="hrm-field"><label for="cmbAccumolativeACC">Accumulated Depreciation A/c</label><select id="cmbAccumolativeACC" class="win-combo dtcombo" data-columns="Accumulative Account|AccountCode|ParentAccountTitle|AccountClass"></select></div>
+                    <div class="hrm-field"><label for="cmbDepriGL">Depreciation Expense A/c</label><select id="cmbDepriGL" class="win-combo dtcombo" data-columns="Depreciation Account|AccountCode|ParentAccountTitle|AccountClass"></select></div>
+                    <div class="hrm-field"><label for="CmbExpenseMaintenanceAccount">Expense Maintenance Account</label><select id="CmbExpenseMaintenanceAccount" class="win-combo dtcombo" data-columns="Expense Maintenance Account|AccountCode|ParentAccountTitle|AccountClass"></select></div>
+                    <div class="hrm-field"><label for="txtLeadTimeDay">LeadTime Day</label>
+                        <div class="hrm-inline"><input type="text" id="txtLeadTimeDay" class="win-textbox hrm-grow" data-guard="integer" inputmode="numeric" autocomplete="off"/>
+                            <label class="hrm-check"><input type="checkbox" id="chkstatus" checked/> Status</label></div></div>
+                    <div class="hrm-field"><label>&nbsp;</label>
+                        <div class="hrm-inline"><label class="hrm-check"><input type="radio" name="rdLocalImport" id="rdLocal" checked/> Local</label>
+                            <label class="hrm-check"><input type="radio" name="rdLocalImport" id="rdImport"/> Import</label></div></div>
+                </div>
+            </fieldset>
+            <div style="min-width:0">
+                <fieldset class="hrm-group">
+                    <legend>Asset Images</legend>
+                    <div class="fa-pics">
+                        <div class="fa-pic-cell"><div class="fa-pic" id="picbox1">No picture</div>
+                            <button type="button" id="btnimg1" class="win-btn-action" disabled title="Not available in the browser: the desktop copies the picked picture from the client PC to the configured &quot;Attachment Folder Path&quot; (File.Copy) and stores that Windows path; the web server cannot reach that folder.">Browse</button></div>
+                        <div class="fa-pic-cell"><div class="fa-pic" id="picbox2">No picture</div>
+                            <button type="button" id="btnimg2" class="win-btn-action" disabled title="Not available in the browser: the desktop copies the picked picture from the client PC to the configured &quot;Attachment Folder Path&quot; (File.Copy) and stores that Windows path; the web server cannot reach that folder.">Browse</button></div>
+                    </div>
+                </fieldset>
+                <fieldset class="hrm-group">
+                    <legend>Asset Allocation To Company</legend>
+                    <div class="hrm-grid-wrap" style="min-height:120px;max-height:260px"><table id="grdAllocation"></table></div>
+                </fieldset>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== History -->
+    <div class="fa-page" data-fa-page="history">
+        <div class="win-tool-strip">
+            <button type="button" id="BtnLoadAllT" class="win-btn-tool" onclick="FaDef.btnLoadAll(this)"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+        </div>
+        <div class="hrm-grid-box" id="boxHistory">
+            <div class="hrm-subcaption"><span>Asset History</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+            <div class="hrm-grid-wrap"><table id="grdhistory"></table></div>
+        </div>
+    </div>
+
+    <div class="hrm-footer">
+        <div class="hrm-footer-left"><span id="lblStatus"></span></div>
+        <div class="hrm-footer-right"><button type="button" id="btnHistory" class="win-btn-action"><i class="fa fa-history"></i> History</button></div>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_hrm.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_fixedassets_common.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_fixedassets_define.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

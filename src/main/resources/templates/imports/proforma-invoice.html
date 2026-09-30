@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Proforma Invoice - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_hrm.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_imports_impb.css?v=20260930a}"/>
+</head>
+<!-- Architecture.WinApp.Import.frmProformaInvoice (782) - ClientSize 1096 x 711, KeyPreview.
+     tabPage1 "Form": toolStrip4 New | Refresh | Save | Update (hidden) | Attachment | Print-900 | ShortCut Keys; panel10 "Proforma Invoice",
+     Branch, Preview (checked); HeaderGropBox "Main Header" (Doc No, Validity Upto, Importer/Consignee, Exporter/Shipper, Performa No,Date + define,
+     Goods Origin, Loading Port, Destination Port | Income Term, Net Weight (Kg's), Gross Weight (Kg's), Fcl Qty, Payment Term, Currency Code, Amount |
+     Terms & Conditions); tabControl2 "Detail": Item Name, Item Detail, Lot, Qty/M.Ton, Pack Size, Qty/NoOfBags, Weight(kg), Rate/M.Ton, Rate UOM,
+     Amount, Remarks, + / Update / Cancel and grdDetail (X first). tabPage2 "History": Filters + DataGridHistory (Edit / 900-Slip by right) + detail grid. -->
+<body class="pd-body hrm-body" data-screen="782">
+<div class="hrm-form">
+    <div class="hrm-tabs" data-tabs="tc1">
+        <button type="button" class="hrm-tab is-active" data-tab="tabPage1">Form</button>
+        <button type="button" class="hrm-tab" data-tab="tabPage2">History</button>
+    </div>
+    <div class="hrm-tab-page is-active" id="tabPage1" data-tabs-page="tc1">
+        <div class="win-tool-strip">
+            <button type="button" id="btnNew" class="win-btn-tool" onclick="ImpBProforma.btnNew(this)"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="btnRefresh" class="win-btn-tool" onclick="ImpBProforma.btnRefresh(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+            <button type="button" id="btnsave" class="win-btn-tool" onclick="ImpBProforma.btnsave(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+            <button type="button" id="btnupdate" class="win-btn-tool is-hidden" onclick="ImpBProforma.btnupdate(this)"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+            <button type="button" id="btnAttachment" class="win-btn-tool" onclick="ImpBProforma.btnAttachment(this)"><i class="fa fa-paperclip"></i> <span><u>A</u>ttachment</span></button>
+            <button type="button" id="btnPrint" class="win-btn-tool" onclick="ImpBProforma.btnPrint(this)"><i class="fa fa-print"></i> <span>Print-900</span></button>
+            <button type="button" id="btnShortCutKey" class="win-btn-tool" onclick="ImpBProforma.btnShortCutKey(this)"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+        </div>
+        <div class="impb-caption-row"><span class="impb-title">Proforma Invoice</span>
+            <span class="hrm-inline"><span class="hrm-lbl" id="labelBranchName">Branch</span><span style="min-width:180px"><select id="CmbBranchName" class="win-combo dtcombo" data-dtcombo="single"></select></span></span>
+            <span class="impb-right"><label class="hrm-check"><input type="checkbox" id="ChkPrintPreview" checked> Preview</label></span></div>
+        <fieldset class="hrm-group">
+            <legend>Main Header</legend>
+            <div class="hrm-entry hrm-cols-3" style="padding:4px 2px;align-items:start">
+                <div class="hrm-entry" style="grid-template-columns:1fr;padding:0">
+                    <div class="hrm-field"><label class="hrm-req" for="DocNo">Doc No</label>
+                        <div class="impb-pair"><input type="text" id="DocNo" class="win-textbox" disabled><input type="date" id="datValidityUpto" class="win-textbox" title="Validity Upto"></div></div>
+                    <div class="hrm-field"><label class="hrm-req" for="CmbImporterName">Importer/Consignee</label><select id="CmbImporterName" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="hrm-field"><label class="hrm-req" for="CmbExporterName">Exporter/Shipper</label><select id="CmbExporterName" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="hrm-field"><label class="hrm-req" for="CmbPerformaNo">Performa No,Date</label>
+                        <div class="impb-pair"><select id="CmbPerformaNo" class="win-combo dtcombo" data-dtcombo="single"></select><input type="date" id="txtPerformaDate" class="win-textbox" disabled>
+                            <button type="button" id="BtnDefinePerformaNo" class="win-btn-action impb-btn-sq" title="Define Proforma No" onclick="ImpBProforma.BtnDefinePerformaNo(this)"><i class="fa fa-plus"></i></button></div></div>
+                    <div class="hrm-field"><label class="hrm-req" for="CmbGoodsOrigin">Goods Origin</label><select id="CmbGoodsOrigin" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="hrm-field"><label class="hrm-req" for="cmbLoadingPort">Loading Port</label><select id="cmbLoadingPort" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="hrm-field"><label class="hrm-req" for="cmbDestinationPort">Destination Port</label><select id="cmbDestinationPort" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                </div>
+                <div class="hrm-entry" style="grid-template-columns:1fr;padding:0">
+                    <div class="hrm-field"><label class="hrm-req" for="CmbIncomeTerm">Income Term</label><select id="CmbIncomeTerm" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="hrm-field"><label class="hrm-req" for="txtNetWeightHeader">Net Weight (Kg's)</label><input type="text" id="txtNetWeightHeader" class="win-textbox hrm-al-right" value="0" readonly></div>
+                    <div class="hrm-field"><label class="hrm-req" for="txtGrossWeightHeader">Gross Weight (Kg's)</label><input type="text" id="txtGrossWeightHeader" class="win-textbox hrm-al-right" value="0" data-guard="decimal" inputmode="decimal" autocomplete="off"></div>
+                    <div class="hrm-field"><label class="hrm-req" for="txtNoOfContainerHeader">Fcl Qty</label><input type="text" id="txtNoOfContainerHeader" class="win-textbox hrm-al-right" value="0" data-guard="integer" inputmode="numeric" autocomplete="off"></div>
+                    <div class="hrm-field"><label class="hrm-req" for="CmbPaymentTermsNew">Payment Term</label><select id="CmbPaymentTermsNew" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="hrm-field"><label class="hrm-req" for="CmbFcyCode">Currency Code</label><select id="CmbFcyCode" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="hrm-field"><label class="hrm-req" for="txtfcyAmountHeader">Amount</label><input type="text" id="txtfcyAmountHeader" class="win-textbox hrm-al-right" value="0" readonly></div>
+                </div>
+                <div class="hrm-field hrm-stack"><label for="txtTermsAndConditions">Terms &amp; Conditions</label><textarea id="txtTermsAndConditions" class="win-textbox" rows="9"></textarea></div>
+            </div>
+        </fieldset>
+        <div class="hrm-tabs" data-tabs="tc2"><button type="button" class="hrm-tab is-active" data-tab="tabPage3">Detail</button></div>
+        <div class="hrm-tab-page is-active" id="tabPage3" data-tabs-page="tc2">
+            <div class="hrm-entry hrm-cols-4">
+                <div class="hrm-field hrm-stack"><label for="CmbItemName">Item Name</label><select id="CmbItemName" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field hrm-stack"><label for="txtitemDescription">Item Detail</label><input type="text" id="txtitemDescription" class="win-textbox" autocomplete="off"></div>
+                <div class="hrm-field hrm-stack"><label for="CmbJobLot">Lot</label><select id="CmbJobLot" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field hrm-stack"><label for="txtQtyMTon">Qty/M.Ton</label><input type="text" id="txtQtyMTon" class="win-textbox hrm-al-right" value="0" data-guard="decimal" inputmode="decimal" autocomplete="off"></div>
+                <div class="hrm-field hrm-stack"><label for="CmbPackUom">Pack Size</label><select id="CmbPackUom" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field hrm-stack"><label for="txtNoOfBags">Qty/NoOfBags</label><input type="text" id="txtNoOfBags" class="win-textbox hrm-al-right" value="0" data-guard="decimal" inputmode="decimal" autocomplete="off"></div>
+                <div class="hrm-field hrm-stack"><label for="txtWeightDetail">Weight(kg)</label><input type="text" id="txtWeightDetail" class="win-textbox hrm-al-right" value="0" readonly></div>
+                <div class="hrm-field hrm-stack"><label for="txtCostMTon">Rate/M.Ton</label><input type="text" id="txtCostMTon" class="win-textbox hrm-al-right" value="0" data-guard="decimal" inputmode="decimal" autocomplete="off"></div>
+                <div class="hrm-field hrm-stack"><label for="CmbRateUom">Rate UOM</label><select id="CmbRateUom" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field hrm-stack"><label for="txtAmount">Amount</label><input type="text" id="txtAmount" class="win-textbox hrm-al-right" value="0" readonly></div>
+                <div class="hrm-field hrm-stack hrm-span-2"><label for="txtRemarksDetail">Remarks</label>
+                    <div class="hrm-inline" style="flex-wrap:nowrap"><input type="text" id="txtRemarksDetail" class="win-textbox hrm-grow" autocomplete="off">
+                        <button type="button" id="btnAddinGrid" class="win-btn-action" style="min-width:34px;width:34px" onclick="ImpBProforma.btnAddinGrid(this)">+</button>
+                        <button type="button" id="btnGridUpdate" class="win-btn-action is-hidden" style="min-width:0;width:auto;padding:0 8px" onclick="ImpBProforma.btnGridUpdate(this)">Update</button>
+                        <button type="button" id="btnCancel" class="win-btn-action is-hidden" style="min-width:0;width:auto;padding:0 8px" onclick="ImpBProforma.btnCancel(this)">Cancel</button></div></div>
+            </div>
+            <div class="hrm-grid-box">
+                <div class="hrm-subcaption"><span>Detail</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+                <div class="hrm-grid-wrap"><table id="grdDetail"></table></div>
+            </div>
+        </div>
+    </div>
+    <div class="hrm-tab-page" id="tabPage2" data-tabs-page="tc1">
+        <div class="win-tool-strip">
+            <button type="button" id="btnResetHistory" class="win-btn-tool" onclick="ImpBProforma.btnResetHistory(this)"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="btnRefreshHistory" class="win-btn-tool" onclick="ImpBProforma.btnRefreshHistory(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+        </div>
+        <div class="hrm-caption">Proforma Invoice History</div>
+        <fieldset class="hrm-group">
+            <legend>Filters</legend>
+            <div class="hrm-entry hrm-cols-3" style="padding:4px 2px">
+                <div class="hrm-field"><label for="hFromDate">From Date</label><div class="impb-date-chk"><input type="checkbox" id="hFromChk" checked><input type="date" id="hFromDate" class="win-textbox"></div></div>
+                <div class="hrm-field"><label for="FromDocNoHistory">From Doc No</label><input type="text" id="FromDocNoHistory" class="win-textbox" data-guard="integer" inputmode="numeric" autocomplete="off"></div>
+                <div class="hrm-field"><label for="CmbCustomerHistory">Importer Name</label><select id="CmbCustomerHistory" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field"><label for="hToDate">To Date</label><div class="impb-date-chk"><input type="checkbox" id="hToChk" checked><input type="date" id="hToDate" class="win-textbox"></div></div>
+                <div class="hrm-field"><label for="ToDocNoHistory">To Doc No</label><input type="text" id="ToDocNoHistory" class="win-textbox" data-guard="integer" inputmode="numeric" autocomplete="off"></div>
+                <div class="hrm-field"><span class="hrm-lbl"></span><div class="hrm-inline"><div class="impb-radios">
+                    <label class="hrm-check"><input type="radio" name="hDateType" value="doc" checked> Doc Date</label>
+                    <label class="hrm-check"><input type="radio" name="hDateType" value="entry"> Entry Date</label>
+                    <label class="hrm-check"><input type="radio" name="hDateType" value="modify"> Modify Date</label></div>
+                    <button type="button" id="btnShowHistory" class="win-btn-action" onclick="ImpBProforma.btnShowHistory(this)">Show</button></div></div>
+            </div>
+        </fieldset>
+        <div class="hrm-grid-box" id="boxHistory">
+            <div class="hrm-subcaption"><span>Filtered Records</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+            <div class="hrm-grid-wrap"><table id="DataGridHistory"></table></div>
+        </div>
+        <div class="hrm-grid-box hrm-grid-short">
+            <div class="hrm-subcaption"><span>Detail of the Selected above Row</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+            <div class="hrm-grid-wrap"><table id="gridDetailHistory"></table></div>
+        </div>
+    </div>
+    <div class="hrm-footer">
+        <div class="hrm-footer-left"><span id="lblStatus"></span></div>
+        <div class="hrm-footer-right"><button type="button" id="btnHistory" class="win-btn-action"><i class="fa fa-history"></i> History</button></div>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_hrm.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_imports_impb_core.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_imports_proforma_invoice.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

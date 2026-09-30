@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Add Item - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_hrm.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_hrm_reports.css?v=20260929a}"/>
+    <style>
+        table.hrm-grid .pp-cell-btn { height: 20px; min-width: 0; width: auto; padding: 0 8px; font-size: 8pt; line-height: 18px; }
+        table.hrm-grid tr.pp-group td { background: #dfeeee; font-weight: bold; }
+        table.hrm-grid tr.pp-group-total td { background: #f3f7f7; font-style: italic; }
+        .pp-checks { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+    </style>
+</head>
+<!-- Architecture.WinApp.PartyProcessing.DefineItemPartyProcessing (683) - rights of screen "DefPartProcessingAddItem".
+     tabCAddItem: "Add Item" | "History" (Ctrl+T switches).
+     Add Item: toolStrip1 New | Update (hidden) | Save | Print (no handler) | Attachment | Refresh.  panel2: "Add Item".
+       panel7: Item Category cmbItemCategory (116,4) (Leave -> GenerateCode) | Item Code txtItemCode (428,6, ReadOnly) | Item Name txtItemName (727,6) /
+       Base Unit cmbBaseUnit (116,32) | Item Type cmbItemType (428,33) | Uom Group CmbItemGroup (727,35) | Is Active chkstatus (954,40).
+       groupBox1 "Item Allocation " (13,64) 353x141: grdAllocation Id hidden, Location 250, Value (check, header selector).
+       panel5 (bottom): Item Category | Item Type | Uom | Item Uom Schedule | Crop Year | Item Uom Group / Item Uom Group Schedule |
+       Define JobLots | WareHouse (each opens its own form).
+     History: toolStrip2 "New" (btnLoadAll -> all records); grdhistory GridEX (the tab loads the last 50). -->
+<body class="pd-body hrm-body" data-pp="define-item" data-screen="683">
+<div class="hrm-form">
+    <div class="hrm-tabs" data-tabs="tabCAddItem">
+        <button type="button" class="hrm-tab is-active" data-tab="tpItemDefinitionAddItem">Add Item</button>
+        <button type="button" class="hrm-tab" data-tab="tpItemDefinitionAddItemHistory">History</button>
+    </div>
+    <div class="hrm-tab-page is-active" id="tpItemDefinitionAddItem">
+        <div class="win-tool-strip">
+            <button type="button" id="btnnew" class="win-btn-tool" onclick="PpDefineItem.btnnew(this)"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="btnupdate" class="win-btn-tool is-hidden" onclick="PpDefineItem.btnupdate(this)"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+            <button type="button" id="btnsave" class="win-btn-tool" onclick="PpDefineItem.btnsave(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+            <button type="button" id="btnprint" class="win-btn-tool" data-rpt-own><i class="fa fa-print"></i> <span><u>P</u>rint</span></button>
+            <button type="button" id="btnattachment" class="win-btn-tool" onclick="PpDefineItem.btnattachment(this)"><i class="fa fa-paperclip"></i> <span><u>A</u>ttachment</span></button>
+            <button type="button" id="toolStripButton1" class="win-btn-tool" onclick="PpDefineItem.refresh(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+        </div>
+        <div class="hrm-caption">Add Item</div>
+        <div class="hrm-entry hrm-cols-3">
+            <div class="hrm-field"><label for="cmbItemCategory">Item Category</label><select id="cmbItemCategory" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+            <div class="hrm-field"><label for="txtItemCode">Item Code</label><input type="text" id="txtItemCode" class="win-textbox" readonly tabindex="-1"/></div>
+            <div class="hrm-field"><label for="txtItemName">Item Name</label><input type="text" id="txtItemName" class="win-textbox" maxlength="100" autocomplete="off"/></div>
+            <div class="hrm-field"><label for="cmbBaseUnit">Base Unit</label><select id="cmbBaseUnit" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+            <div class="hrm-field"><label for="cmbItemType">Item Type</label><select id="cmbItemType" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+            <div class="hrm-field"><label for="CmbItemGroup">Uom Group</label>
+                <div class="hrm-inline" style="flex-wrap:nowrap"><div class="hrm-grow"><select id="CmbItemGroup" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <label class="hrm-check"><input type="checkbox" id="chkstatus" checked> Is Active</label></div></div>
+        </div>
+        <fieldset class="hrm-group" style="max-width:420px">
+            <legend>Item Allocation</legend>
+            <div class="hrm-grid-wrap" style="max-height:180px"><table id="grdAllocation"></table></div>
+        </fieldset>
+        <div class="hrm-actions" style="justify-content:flex-start">
+            <button type="button" class="win-btn-action" onclick="PpDefineItem.open('item-category')">Item Category</button>
+            <button type="button" class="win-btn-action" onclick="PpDefineItem.open('item-type')">Item Type</button>
+            <button type="button" class="win-btn-action" onclick="PpDefineItem.open('uom')">Uom</button>
+            <button type="button" class="win-btn-action" onclick="PpDefineItem.open('uom-schedule')">Item Uom Schedule</button>
+            <button type="button" class="win-btn-action" onclick="PpDefineItem.open('crop-year')">Crop Year</button>
+            <button type="button" class="win-btn-action" onclick="PpDefineItem.open('item-group')">Item Uom Group</button>
+            <button type="button" class="win-btn-action" onclick="PpDefineItem.open('item-group-schedule')">Item Uom Group Schedule</button>
+            <button type="button" class="win-btn-action" onclick="PpDefineItem.open('job-lots')">Define JobLots</button>
+            <button type="button" class="win-btn-action" onclick="PpDefineItem.open('warehouse')">WareHouse</button>
+        </div>
+    </div>
+    <div class="hrm-tab-page" id="tpItemDefinitionAddItemHistory">
+        <div class="win-tool-strip">
+            <button type="button" id="btnLoadAll" class="win-btn-tool" onclick="PpDefineItem.btnLoadAll(this)"><i class="fa fa-list"></i> <span><u>N</u>ew</span></button>
+        </div>
+        <div class="hrm-grid-box" id="historyBox">
+            <div class="hrm-subcaption"><span>History</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+            <div class="hrm-grid-wrap"><table id="grdhistory"></table></div>
+        </div>
+    </div>
+    <div class="hrm-footer">
+        <div class="hrm-footer-left"><span id="lblStatus"></span></div>
+        <div class="hrm-footer-right"><button type="button" id="btnHistory" class="win-btn-action"><i class="fa fa-history"></i> History</button></div>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_hrm.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_pp_define_item.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260929a}"></script>
+</body>
+</html>

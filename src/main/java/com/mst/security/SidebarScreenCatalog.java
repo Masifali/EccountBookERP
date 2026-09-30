@@ -233,6 +233,13 @@ public final class SidebarScreenCatalog {
         e.add(new Entry("Tehsil", "Master Data Definition", "/master-data/tehsil", "MDD_TEHSIL", "MASTER_DATA_DEFINITION", 755, 2039));
         e.add(new Entry("District", "Master Data Definition", "/master-data/district", "MDD_DISTRICT", "MASTER_DATA_DEFINITION", 756, 2039));
         e.add(new Entry("Other Items", "Master Data Definition", "/master-data/other-items", "MDD_OTHER_ITEMS", "MASTER_DATA_DEFINITION", 742, 2039));
+        // AppModules 45 "Accounts Definition", the other module of App 19 (412 Account Custom Group opens screen 1's page).
+        e.add(new Entry("Bank", "Master Data Definition", "/master-data/bank", "MDD_BANK", "MASTER_DATA_DEFINITION", 413, 45));
+        e.add(new Entry("BsPl Settings Form", "Master Data Definition", "/master-data/bs-pl-setting", "MDD_BSPL_SETTING", "MASTER_DATA_DEFINITION", 414, 45));
+        e.add(new Entry("PDC Bank", "Master Data Definition", "/master-data/pdc-bank", "MDD_PDC_BANK", "MASTER_DATA_DEFINITION", 427, 45));
+        e.add(new Entry("Tax Lookup", "Master Data Definition", "/master-data/tax-lookup", "MDD_TAX_LOOKUP", "MASTER_DATA_DEFINITION", 428, 45));
+        e.add(new Entry("Document Group", "Master Data Definition", "/master-data/document-group", "MDD_DOCUMENT_GROUP", "MASTER_DATA_DEFINITION", 429, 45));
+        e.add(new Entry("Shipment Documents", "Master Data Definition", "/master-data/shipment-documents", "MDD_SHIPMENT_DOCUMENTS", "MASTER_DATA_DEFINITION", 430, 45));
 
         // EXPORT (App 8, AppModules 11 "Export") - the two screens CompanyRights enables for company 78;
         // ids from the ScreenDefinition dump (GoldenAceDb(0509)t.sql).

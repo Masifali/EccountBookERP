@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Assets Register - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_hrm.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_fixedassets.css?v=20260930a}"/>
+</head>
+<!-- Architecture.WinApp.AssetSchema.frmAssetsRegister (353) - base.Name "frmAssetsRegister", ClientSize 1084 x 539.
+     tabControl1 (Bottom tabs): tabPage1 "Form" | tabPage2 "History".
+     Form: panel2 toolStrip3 New | Refresh | Save | Update (hidden) | ShortCut Keys; label24 "Fixed Assets Register".
+       groupBox1 (739 x 452) left column x=119: Asset Category* (+ btnAssetCategory), Asset Item (+ BtnAssetItemDefine), Brand,
+       Asset Name*, Asset Modal, Assets Condition*, Asset Serial No* (disabled), Asset Deprtment* (+ BtnDefineAssetDepartment),
+       Manufacturer, Make Desc, Asset Loacation, Vendor / Supplier; right column x=504: Purchase Date && Price*, Useable Life Month*
+       (disabled), Expiry Date* (disabled), Current Value*, Depreciation Method* (disabled), Depreciation Rate* (disabled), Asset Status*,
+       GL A/c*, Accomolative A/c*, Depriciation A/c*, Expense Maintenance A/c* (all four disabled).
+       BrandImages "Asset Images": picbox1 + Browse, picbox2 + Browse.
+     History: toolStrip1 New | Refresh; label22 "History"; groupBox2 "Filters": From Date / To Date (ShowCheckBox, dd-MMM-yy),
+       Asset Category, Show, Entry Date (checked) / Modify Date; "Filtered Records"; DatagridHistory. -->
+<body class="pd-body hrm-body" data-fa="assets-register" data-screen="353">
+<div class="hrm-form">
+    <div class="fa-tabs">
+        <button type="button" class="hrm-tab is-active" data-fa-tab="form">Form</button>
+        <button type="button" class="hrm-tab" data-fa-tab="history">History</button>
+    </div>
+
+    <!-- ===================================================================== Form -->
+    <div class="fa-page is-active" data-fa-page="form">
+        <div class="win-tool-strip">
+            <button type="button" id="btnNew" class="win-btn-tool" onclick="FaReg.btnNew(this)"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="BtnRefresh" class="win-btn-tool" onclick="FaReg.BtnRefresh(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+            <button type="button" id="btnSave" class="win-btn-tool" onclick="FaReg.btnSave(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+            <button type="button" id="btnUpdate" class="win-btn-tool is-hidden" onclick="FaReg.btnUpdate(this)"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+            <button type="button" id="BtnShortCutkeys" class="win-btn-tool" onclick="FaReg.BtnShortCutkeys()"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+        </div>
+        <div class="hrm-caption">Fixed Assets Register</div>
+        <div class="hrm-entry hrm-cols-2" style="align-items:start">
+            <fieldset class="hrm-group">
+                <legend>Asset</legend>
+                <div class="hrm-entry hrm-cols-1" style="grid-template-columns:1fr;padding:4px 0">
+                    <div class="hrm-field"><label for="CmbAssetCategory" class="hrm-req">Asset Category</label>
+                        <div class="hrm-inline" style="flex-wrap:nowrap"><div class="hrm-grow"><select id="CmbAssetCategory" class="win-combo dtcombo" data-columns="Category Name|categoryCode"></select></div>
+                            <button type="button" id="btnAssetCategory" class="win-btn-action fa-plus" title="Item Category (Fix Assets)" tabindex="-1" onclick="FaReg.btnAssetCategory()"><i class="fa fa-plus"></i></button></div></div>
+                    <div class="hrm-field"><label for="CmbAssetItem">Asset Item</label>
+                        <div class="hrm-inline" style="flex-wrap:nowrap"><div class="hrm-grow"><select id="CmbAssetItem" class="win-combo dtcombo" data-columns="Item Name|ItemCode"></select></div>
+                            <button type="button" id="BtnAssetItemDefine" class="win-btn-action fa-plus" title="Add Fixed Assest Item" tabindex="-1" onclick="FaReg.BtnAssetItemDefine()"><i class="fa fa-plus"></i></button></div></div>
+                    <div class="hrm-field"><label for="txtBrandName">Brand</label><input type="text" id="txtBrandName" class="win-textbox" autocomplete="off"/></div>
+                    <div class="hrm-field"><label for="txtAssetName" class="hrm-req">Asset Name</label><input type="text" id="txtAssetName" class="win-textbox" autocomplete="off"/></div>
+                    <div class="hrm-field"><label for="txtModelDesc">Asset Modal</label><input type="text" id="txtModelDesc" class="win-textbox" autocomplete="off"/></div>
+                    <div class="hrm-field"><label for="CmbAssetCondition" class="hrm-req">Assets Condition</label><select id="CmbAssetCondition" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="hrm-field"><label for="txtAssetSerialNo" class="hrm-req">Asset Serial No</label><input type="text" id="txtAssetSerialNo" class="win-textbox" readonly tabindex="-1"/></div>
+                    <div class="hrm-field"><label for="CmbDepartment" class="hrm-req">Asset Deprtment</label>
+                        <div class="hrm-inline" style="flex-wrap:nowrap"><div class="hrm-grow"><select id="CmbDepartment" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                            <button type="button" id="BtnDefineAssetDepartment" class="win-btn-action fa-plus" title="Define Department" tabindex="-1" onclick="FaReg.BtnDefineAssetDepartment()"><i class="fa fa-plus"></i></button></div></div>
+                    <div class="hrm-field"><label for="txtManufacturer">Manufacturer</label><input type="text" id="txtManufacturer" class="win-textbox" autocomplete="off"/></div>
+                    <div class="hrm-field"><label for="txtMakeDesc">Make Desc</label><input type="text" id="txtMakeDesc" class="win-textbox" autocomplete="off"/></div>
+                    <div class="hrm-field"><label for="txtAssetLocation">Asset Loacation</label><input type="text" id="txtAssetLocation" class="win-textbox" autocomplete="off"/></div>
+                    <div class="hrm-field"><label for="txtVendor">Vendor / Supplier</label><input type="text" id="txtVendor" class="win-textbox" autocomplete="off"/></div>
+                </div>
+            </fieldset>
+            <fieldset class="hrm-group">
+                <legend>Value &amp; Accounts</legend>
+                <div class="hrm-entry" style="grid-template-columns:1fr;padding:4px 0">
+                    <div class="hrm-field"><label for="txtPurchaseDate" class="hrm-req">Purchase Date &amp; Price</label>
+                        <div class="fa-pair"><input type="date" id="txtPurchaseDate" class="win-textbox"/>
+                            <input type="text" id="txtPurchasePrice" class="win-textbox hrm-al-right" data-guard="decimal" inputmode="decimal" autocomplete="off" aria-label="Purchase Price"/></div></div>
+                    <div class="hrm-field"><label for="txtUseableLifeMonth" class="hrm-req">Useable Life Month</label><input type="text" id="txtUseableLifeMonth" class="win-textbox" readonly tabindex="-1"/></div>
+                    <div class="hrm-field"><label for="txtExpiryDate" class="hrm-req">Expiry Date</label><input type="date" id="txtExpiryDate" class="win-textbox" readonly tabindex="-1"/></div>
+                    <div class="hrm-field"><label for="txtCurrentValue" class="hrm-req">Current Value</label><input type="text" id="txtCurrentValue" class="win-textbox hrm-al-right" data-guard="decimal" inputmode="decimal" autocomplete="off"/></div>
+                    <div class="hrm-field"><label for="CmbDepreciationMethod" class="hrm-req">Depreciation Method</label><select id="CmbDepreciationMethod" class="win-combo dtcombo" data-dtcombo="single" disabled></select></div>
+                    <div class="hrm-field"><label for="txtDepreciationRate" class="hrm-req">Depreciation Rate</label><input type="text" id="txtDepreciationRate" class="win-textbox" readonly tabindex="-1"/></div>
+                    <div class="hrm-field"><label for="CmbAssetStatus" class="hrm-req">Asset Status</label><select id="CmbAssetStatus" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="hrm-field"><label for="CmbGlAccount" class="hrm-req">GL A/c</label><select id="CmbGlAccount" class="win-combo dtcombo" data-columns="Assets GL Account|AccountCode|ParentAccountTitle|AccountClass" disabled></select></div>
+                    <div class="hrm-field"><label for="CmbAccomolativeAcc" class="hrm-req">Accomolative A/c</label><select id="CmbAccomolativeAcc" class="win-combo dtcombo" data-columns="Accumulative Account|AccountCode|ParentAccountTitle|AccountClass" disabled></select></div>
+                    <div class="hrm-field"><label for="cmbDepriciationAcc" class="hrm-req">Depriciation A/c</label><select id="cmbDepriciationAcc" class="win-combo dtcombo" data-columns="Depreciation Account|AccountCode|ParentAccountTitle|AccountClass" disabled></select></div>
+                    <div class="hrm-field"><label for="CmbExpenseMaintenanceAccount" class="hrm-req">Expense Maintenance A/c</label><select id="CmbExpenseMaintenanceAccount" class="win-combo dtcombo" data-columns="Expense Maintenance Account|AccountCode|ParentAccountTitle|AccountClass" disabled></select></div>
+                </div>
+            </fieldset>
+        </div>
+        <fieldset class="hrm-group">
+            <legend>Asset Images</legend>
+            <div class="fa-pics">
+                <div class="fa-pic-cell"><div class="fa-pic" id="picbox1">No picture</div>
+                    <button type="button" id="btnImageBrowse1" class="win-btn-action" disabled title="Not available in the browser: the desktop copies the picked picture from the client PC to the configured &quot;Attachment Folder Path&quot; (File.Copy) and stores that Windows path; the web server cannot reach that folder.">Browse</button></div>
+                <div class="fa-pic-cell"><div class="fa-pic" id="picbox2">No picture</div>
+                    <button type="button" id="btnImageBrowse2" class="win-btn-action" disabled title="Not available in the browser: the desktop copies the picked picture from the client PC to the configured &quot;Attachment Folder Path&quot; (File.Copy) and stores that Windows path; the web server cannot reach that folder.">Browse</button></div>
+            </div>
+        </fieldset>
+    </div>
+
+    <!-- ===================================================================== History -->
+    <div class="fa-page" data-fa-page="history">
+        <div class="win-tool-strip">
+            <button type="button" id="BtnNewHistory" class="win-btn-tool" onclick="FaReg.BtnNewHistory()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="btnRefreshHistory" class="win-btn-tool" onclick="FaReg.btnRefreshHistory(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+        </div>
+        <div class="hrm-caption">History</div>
+        <fieldset class="hrm-group">
+            <legend>Filters</legend>
+            <div class="fa-filters">
+                <div class="hrm-field"><label for="FromDateHistory">From Date</label>
+                    <div class="fa-datechk"><input type="checkbox" id="chkFromDateHistory" checked aria-label="From Date on"/><input type="date" id="FromDateHistory" class="win-textbox"/></div></div>
+                <div class="hrm-field"><label for="ToDateHistory">To Date</label>
+                    <div class="fa-datechk"><input type="checkbox" id="chkToDateHistory" checked aria-label="To Date on"/><input type="date" id="ToDateHistory" class="win-textbox"/></div></div>
+                <div class="hrm-field"><label for="cmbCategoryHistory">Asset Category</label><select id="cmbCategoryHistory" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <button type="button" id="btnShow" class="win-btn-action" style="width:auto;min-width:58px" onclick="FaReg.btnShow(this)">Show</button>
+                <div class="fa-radios">
+                    <label class="hrm-check"><input type="radio" name="rdHistoryDate" id="rdentrydate" checked/> Entry Date</label>
+                    <label class="hrm-check"><input type="radio" name="rdHistoryDate" id="rdmodifydate"/> Modify Date</label>
+                </div>
+            </div>
+        </fieldset>
+        <div class="hrm-grid-box" id="boxHistory">
+            <div class="hrm-subcaption"><span>Filtered Records</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+            <div class="hrm-grid-wrap"><table id="DatagridHistory"></table></div>
+        </div>
+    </div>
+
+    <div class="hrm-footer">
+        <div class="hrm-footer-left"><span id="lblStatus"></span></div>
+        <div class="hrm-footer-right"><button type="button" id="btnHistory" class="win-btn-action"><i class="fa fa-history"></i> History</button></div>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_hrm.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_fixedassets_common.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_fixedassets_register.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

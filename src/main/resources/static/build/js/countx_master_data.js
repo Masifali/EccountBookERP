@@ -1,10 +1,13 @@
 /* ============================================================================================
- * countx_master_data.js - the nine screens of App 19 "Master Data Definition" / module 2039
+ * countx_master_data.js - the screens of App 19 "Master Data Definition" / module 2039
  * "System_Level" (Architecture.WinApp). One script; <body data-mdd="..."> picks the form.
  *
  *   country      DefineCountry.cs        province   DefineProvince.cs      district  DefineDistrict.cs
  *   tehsil       DefineTehsil.cs         city       DefineCity.cs          currency  DefineMultiCurrency.cs
  *   sea-ports    SeaPortsDefine.cs       date-lock  DateLock.cs            other-items InvOtherItems.cs
+ *  module 45 "Accounts Definition" (2026-09-30b):
+ *   pdc-bank PdcBank.cs   document-group DocumentGroup.cs   shipment-documents ExImShipmentDocuments.cs
+ *   tax-lookup Lookups/TaxLookup.cs   bs-pl-setting Account_Definition/BsPlSettingForm.cs   bank AcfrmDefineBank.cs
  *
  * Every handler follows its desktop form line by line - validation wording and order, confirmations,
  * messages, what New / Save / Update / double-click do to the buttons and the grid. Desktop defects are
@@ -613,6 +616,360 @@
         }).catch(function (e) { box(e.message); });
     }
 
+
+    // ============================================================================ 427 PDC Bank (PdcBank.cs)
+    function pdcBank() {
+        var UpdateMood = false;
+        function bindBanks() {   // BindBanks :44 - the procedure's rows (Id hidden, BankName)
+            return getJson(api + '/list').then(function (rows) { setGrid((rows || []).map(function (r) { return { Id: col(r, 'Id'), BankName: col(r, 'BankName') }; })); })
+                .catch(function (e) { box(e.message); });
+        }
+        function formRefresh() { RecId = 0; setVal('txtBankName', ''); focus('txtBankName'); show('btnUpdate', false); }
+        function inset(btn) {   // Inset() :29
+            if (val('txtBankName').trim() === '') { box('Bank Name Field Required'); focus('txtBankName'); return; }
+            var was = RecId;
+            return busy(btn, function () {
+                return postJson(api + '/save', { id: RecId, bankName: val('txtBankName') }).then(function (d) {
+                    var n = netI(d && d.id);
+                    box(was > 0 ? 'Record Update Successfully...[' + n + ']' : 'Record Save Successfully...[' + n + ']');
+                    return bindBanks().then(formRefresh);
+                }).catch(function (e) { box(e.message); });
+            });
+        }
+        M.btnsave = function (btn) { RecId = 0; return inset(btn || 'btnsave'); };
+        M.btnUpdate = function (btn) { return inset(btn || 'btnUpdate'); };
+        M.btnnew = function () { formRefresh(); show('btnUpdate', false); };
+        wireGrid(function (r) {   // grdcropyear_DoubleClick :58
+            show('btnsave', false); UpdateMood = true; RecId = netI(r.Id);
+            getJson(api + '/by-id?id=' + RecId).then(function (b) { setVal('txtBankName', str(col(b, 'BankName'))); }).catch(function (e) { box(e.message); });
+        });
+        keys = function (e, k) {
+            if (e.ctrlKey && k === 'n') { e.preventDefault(); M.btnnew(); }
+            if (e.ctrlKey && k === 's' && !UpdateMood) { e.preventDefault(); M.btnsave(); }
+            if (e.ctrlKey && k === 'u' && UpdateMood) { e.preventDefault(); M.btnUpdate(); }
+        };
+        bindBanks().then(function () { show('btnUpdate', false); focus('txtBankName'); });   // DefineCropYear_Load
+    }
+
+    // ============================================================================ 429 Document Group / 430 Shipment Documents
+    function codeName(cfg) {
+        // cfg: { codeCol, nameCol, listMap } - DocumentGroup.cs and ExImShipmentDocuments.cs are the same form
+        function bindGrid(rows) { if ((rows || []).length) setGrid(rows.map(cfg.listMap)); }   // only when rows came back
+        function reload() { return getJson(api + '/list').then(bindGrid).catch(function (e) { box(e.message); }); }
+        function reset() {   // Reset - RecId is NOT cleared on the desktop
+            setVal('txtDescription', ''); setVal('txtCode', ''); focus('txtCode');
+            $id('btnSave').querySelector('span').textContent = 'Save'; $id('btnAdd').textContent = 'Save';
+        }
+        function save(btn) {   // btnSave_Click - no validation
+            var was = RecId;
+            return busy(btn, function () {
+                return postJson(api + '/save', { id: RecId, code: val('txtCode').trim(), description: val('txtDescription').trim() }).then(function () {
+                    box(was > 0 ? 'Record Update Successfully' : 'Record Save Successfully');
+                    reset();
+                    return reload();
+                }).catch(function (e) { box(e.message); });
+            });
+        }
+        M.btnSave = function (btn) { return save(btn || 'btnSave'); };
+        M.btnAdd = function (btn) { return save(btn || 'btnAdd'); };
+        M.btnRefreshMenu = function () { reset(); };
+        wireGrid(function (r) {   // grdfrm_DoubleClick
+            RecId = netI(r.Id);
+            getJson(api + '/by-id?id=' + RecId).then(function (b) {
+                if (!b) return;
+                $id('btnSave').querySelector('span').textContent = 'Update'; $id('btnAdd').textContent = 'Update';
+                setVal('txtDescription', str(col(b, cfg.nameCol))); setVal('txtCode', str(col(b, cfg.codeCol)));
+            }).catch(function (e) { box(e.message); });
+        });
+        keys = null;   // no KeyDown handler on either form
+        $id('btnSave').querySelector('span').textContent = 'Save'; focus('txtCode');
+        getJson(api + '/setup').then(bindGrid).catch(function (e) { box(e.message); });
+    }
+
+    // ============================================================================ 428 Tax Lookup (Lookups/TaxLookup.cs)
+    function taxLookup() {
+        var UpdateMode = false;
+        function gridBind(rows) {   // GridBind :60 - Type column shows TaxLookUptypesId
+            if ((rows || []).length) setGrid(rows.map(function (r) { return { Id: col(r, 'Id'), Code: col(r, 'Code'), Type: col(r, 'TaxLookUptypesId'), LookUpName: col(r, 'LookUpName') }; }));
+        }
+        function reload() { return getJson(api + '/list').then(gridBind).catch(function (e) { box(e.message); }); }
+        function formReset() {   // FormReset :95
+            setVal('txtCode', ''); setVal('txtLookupName', ''); setValue('cmbLookupTypeId', 0); refreshCombos();
+            show('btnUpdate', false); UpdateMode = false; RecId = 0;
+            return reload().then(function () { focus('cmbLookupTypeId'); });
+        }
+        function formValidation() {
+            if (val('txtCode').trim() === '') { box('Code Field Required'); focus('txtCode'); return false; }
+            if (val('txtLookupName').trim() === '') { box('LookUpName Field Required'); focus('txtLookupName'); return false; }
+            if (comboText('cmbLookupTypeId').trim() === '') { box('ProfileName Field Required'); focus('cmbLookupTypeId'); return false; }
+            return true;
+        }
+        function payload(id) { return { id: id, code: val('txtCode'), lookUpName: val('txtLookupName'), taxLookUptypesId: netI(val('cmbLookupTypeId')) }; }
+        M.btnsave = function (btn) {
+            if (!formValidation()) return;
+            return busy(btn || 'btnsave', function () {
+                return postJson(api + '/save', payload(0)).then(function (d) { if (netI(d && d.id) > 0) { box('Save Successfully'); return formReset(); } })
+                    .catch(function (e) { box(e.message); });
+            });
+        };
+        M.btnUpdate = function (btn) {   // Update returns 0 -> no message, no reset (desktop)
+            if (!formValidation()) return;
+            return busy(btn || 'btnUpdate', function () {
+                return postJson(api + '/save', payload(RecId)).then(function (d) { if (netI(d && d.id) > 0) { box('Update Successfully'); return formReset(); } })
+                    .catch(function (e) { box(e.message); });
+            });
+        };
+        M.btnnew = function () { return formReset(); };
+        wireGrid(function (r) {   // grdlookups_DoubleClick :104
+            RecId = netI(r.Id);
+            getJson(api + '/by-id?id=' + RecId).then(function (b) {
+                setVal('txtCode', str(col(b, 'Code'))); setVal('txtLookupName', str(col(b, 'LookUpName')));
+                setValue('cmbLookupTypeId', netI(col(b, 'TaxLookUptypesId'))); refreshCombos();
+                show('btnsave', false); UpdateMode = true;
+            }).catch(function (e) { box(e.message); });
+        });
+        /* cmbProfileName_Leave :130 - GenerateCode for the chosen type; code > 0 fills the box */
+        $id('cmbLookupTypeId').addEventListener('change', function () {
+            getJson(api + '/code?typeId=' + netI(val('cmbLookupTypeId'))).then(function (d) { var c = netI(d && d.code); if (c > 0) setVal('txtCode', String(c)); })
+                .catch(function (e) { box(e.message); });
+        });
+        keys = function (e, k) {   // frmEduLookups_KeyDown - Enter -> Tab
+            if (e.key === 'Enter' && !e.ctrlKey && e.target && e.target.tagName !== 'BUTTON') {
+                e.preventDefault();
+                var f = Array.prototype.filter.call(document.querySelectorAll('input, select, button'), function (x) { return !x.disabled && x.offsetParent !== null; });
+                var i = f.indexOf(e.target); if (i >= 0 && i + 1 < f.length) f[i + 1].focus();
+            }
+            if (e.ctrlKey && k === 's' && !UpdateMode) { e.preventDefault(); M.btnsave(); }
+            if (e.ctrlKey && k === 'n') { e.preventDefault(); M.btnnew(); }
+            if (e.ctrlKey && k === 'u' && UpdateMode) { e.preventDefault(); M.btnUpdate(); }
+        };
+        getJson(api + '/setup').then(function (d) {   // frmEduLookups_Load: LookupTypeBind, GridBind
+            d = d || {};
+            if (d.typesError) box(d.typesError); else if ((d.types || []).length) fill('cmbLookupTypeId', d.types, 'Id', 'LookupTypeName', false);
+            refreshCombos();
+            if (d.lookupsError) box(d.lookupsError); else gridBind(d.lookups);
+        }).catch(function (e) { box(e.message); });
+    }
+
+    // ============================================================================ 414 BS & PL Setting (BsPlSettingForm.cs)
+    function bsPlSetting() {
+        var ROWS = [], NOTES = [], NROWS = [], TAB = 0;
+        function reqType() { return $id('radBS').checked ? 'BS' : 'PL'; }
+        function classId() { return $id('radAssets').checked ? 2 : ($id('radLiablities').checked ? 3 : 0); }
+        M.tab = function (i) {
+            TAB = i;
+            document.querySelectorAll('.md-tab').forEach(function (t, j) { t.classList.toggle('is-active', j === i); });
+            show('tab1', i === 0); show('tab2', i === 1);
+        };
+        M.radChanged = function () {   // radPL_CheckedChanged :138 - Assets/Liabilities only for BS; BS checks Assets
+            var bs = $id('radBS').checked;
+            $id('classRadios').style.display = bs ? '' : 'none';
+            if (bs) $id('radAssets').checked = true; else { $id('radAssets').checked = false; $id('radLiablities').checked = false; }
+        };
+        function drawBsPl() {   // grdBsPl: NoteTitle is a value-list column (Id -> NoteTitle); the original text is shown until a note is chosen
+            $id('gridBody').innerHTML = ROWS.map(function (r, i) {
+                var opts = '<option value="0">' + esc(r.NoteTitle) + '</option>' + NOTES.map(function (n) { return '<option value="' + esc(col(n, 'Id')) + '"' + (r.noteId === netI(col(n, 'Id')) ? ' selected' : '') + '>' + esc(col(n, 'NoteTitle')) + '</option>'; }).join('');
+                return '<tr data-i="' + i + '"><td style="display:none;">' + esc(r.PlBsId) + '</td><td style="display:none;">' + esc(r.ChartofAccountId) + '</td><td>' + esc(r.AccountTitle) + '</td>'
+                    + '<td><select class="md-cell" data-i="' + i + '">' + opts + '</select></td><td>' + esc(r.NoteRole) + '</td><td style="display:none;">' + esc(r.AccountClassId) + '</td><td>' + esc(r.ClassName) + '</td></tr>';
+            }).join('');
+            document.querySelector('#grdBsPl thead th[data-col="NoteTitle"]').textContent = reqType() === 'PL' ? 'PLNotes' : 'BSNotes';
+        }
+        function gridLoad(btn) {   // GridLoad :150
+            if ($id('radBS').checked && classId() === 0) { box("Please select either the 'Assets' or 'Liabilities' button..."); focus('radAssets'); return; }
+            return busy(btn, function () {
+                return getJson(api + '/load?req=' + reqType() + '&accountClassId=' + classId()).then(function (d) {
+                    d = d || {};
+                    var rows = d.rows || [];
+                    if (!rows.length) return;   // table refilled only when rows came back
+                    NOTES = d.notes || [];
+                    ROWS = rows.map(function (r) { return { PlBsId: col(r, 'PlBsId'), ChartofAccountId: col(r, 'Id'), AccountTitle: col(r, 'AccountTitle'), NoteTitle: col(r, 'NoteTitle'), NoteRole: col(r, 'NoteRole'), AccountClassId: col(r, 'AccountClass'), ClassName: col(r, 'ClassName'), noteId: 0 }; });
+                    drawBsPl();
+                }).catch(function (e) { box(e.message); });
+            });
+        }
+        M.btnShow = function (btn) { return gridLoad(btn || 'btnShow'); };
+        M.btnnew = function () { focus('radPL'); return gridLoad('btnnew'); };
+        M.btnUpdate = function (btn) {   // btnUpdate_Click :213
+            if (!ask('Are you sure to Update?')) return;
+            var rows = ROWS.filter(function (r) { return r.noteId !== 0; }).map(function (r) { return { chartOfAccountId: netI(r.ChartofAccountId), noteId: r.noteId }; });
+            return busy(btn || 'btnUpdate', function () {
+                var p = rows.length ? postJson(api + '/update', { reqType: reqType(), rows: rows }).then(function () { box('Receord Update Successfully'); }) : Promise.resolve();
+                return p.then(function () { return gridLoad(null); }).catch(function (e) { box(e.message); });
+            });
+        };
+        M.BtnShortCutkeys = M.btnSkey = function () {
+            var first = TAB === 0 ? 'For Focus on Radio Button PL' : 'For Focus on Radio Button All';
+            box('Ctrl+S\tFor Show Grid Data\nCtrl+U\tFor Update\nCtrl+E\tFor Close\nCtrl+N\tFor New\nCtrl+F5\t' + first + '\nCtrl+ArrowUp\t' + first + '\nCtrl+T\tFor Tab Transfer\nCtrl+alt\tTo Show ShortCut Keys Form\nCtrl+ArrowDown\tFor Focus On Grid');
+        };
+        $id('gridBody').addEventListener('change', function (e) {
+            var s = e.target.closest('select.md-cell'); if (!s) return;
+            ROWS[+s.getAttribute('data-i')].noteId = netI(s.value);
+        });
+        // ---- tab 2: Change Note Title
+        function noteFilter() { return $id('radBSNote').checked ? 'BS' : ($id('radPLNote').checked ? 'PL' : ''); }
+        function drawNotes() {
+            $id('gridBodyNote').innerHTML = NROWS.map(function (r, i) {
+                return '<tr data-i="' + i + '"><td style="display:none;">' + esc(r.Id) + '</td><td><input class="md-cell" data-i="' + i + '" value="' + esc(r.NoteTitle) + '"/></td><td>' + esc(r.NoteRole) + '</td><td style="display:none;">' + esc(r.AccountClassId) + '</td><td>' + esc(r.ClassName) + '</td></tr>';
+            }).join('');
+        }
+        function gridNoteTitleFill(btn) {   // GridNoteTitleFill :302
+            return busy(btn, function () {
+                return getJson(api + '/notes?note=' + noteFilter()).then(function (rows) {
+                    rows = rows || [];
+                    if (!rows.length) return;
+                    NROWS = rows.map(function (r) { return { Id: col(r, 'Id'), NoteTitle: str(col(r, 'NoteTitle')), original: str(col(r, 'NoteTitle')), NoteRole: col(r, 'NoteRole'), AccountClassId: col(r, 'AccountClass'), ClassName: col(r, 'ClassName') }; });
+                    drawNotes();
+                }).catch(function (e) { box(e.message); });
+            });
+        }
+        M.btnShowNote = function (btn) { return gridNoteTitleFill(btn || 'btnShowNote'); };
+        M.btnNewNote = function () { focus('radPLNote'); return gridNoteTitleFill('btnNewNote'); };
+        M.btnUpdateNote = function (btn) {   // btnUpdateNote_Click :334
+            if (!ask('Are you sure to Update?')) return;
+            var rows = NROWS.filter(function (r) { return netI(r.Id) !== 0 && r.NoteTitle !== r.original; }).map(function (r) { return { id: netI(r.Id), noteTitle: r.NoteTitle }; });
+            return busy(btn || 'btnUpdateNote', function () {
+                var p = rows.length ? postJson(api + '/update-notes', { rows: rows }).then(function () { box('Receord Update Successfully'); }) : Promise.resolve();
+                return p.then(function () { return gridNoteTitleFill(null); }).catch(function (e) { box(e.message); });
+            });
+        };
+        $id('gridBodyNote').addEventListener('input', function (e) {
+            var s = e.target.closest('input.md-cell'); if (!s) return;
+            NROWS[+s.getAttribute('data-i')].NoteTitle = s.value;
+        });
+        keys = function (e, k) {   // DefineCity_KeyDown :60 - Enter -> Tab, Ctrl+S = Show, Ctrl+T = tab transfer
+            if (e.key === 'Enter' && !e.ctrlKey && e.target && e.target.tagName !== 'BUTTON' && !e.target.classList.contains('md-cell')) {
+                e.preventDefault();
+                var f = Array.prototype.filter.call(document.querySelectorAll('input, select, button'), function (x) { return !x.disabled && x.offsetParent !== null; });
+                var i = f.indexOf(e.target); if (i >= 0 && i + 1 < f.length) f[i + 1].focus();
+            }
+            if (e.ctrlKey && k === 'n') { e.preventDefault(); if (TAB === 0) M.btnnew(); else M.btnNewNote(); }
+            if (e.ctrlKey && k === 's') { e.preventDefault(); if (TAB === 0) M.btnShow(); else M.btnShowNote(); }
+            if (e.ctrlKey && k === 'u') { e.preventDefault(); if (TAB === 0) M.btnUpdate(); else M.btnUpdateNote(); }
+            if (e.ctrlKey && k === 't') { e.preventDefault(); M.tab(TAB === 0 ? 1 : 0); }
+            if (e.ctrlKey && (e.key === 'F5' || e.key === 'ArrowUp')) { e.preventDefault(); focus(TAB === 0 ? 'radPL' : 'radAllNote'); }
+            if (e.ctrlKey && e.key === 'ArrowDown') { e.preventDefault(); var t = document.querySelector(TAB === 0 ? '#gridBody .md-cell' : '#gridBodyNote .md-cell'); if (t) t.focus(); }
+            if (e.ctrlKey && e.altKey && !e.repeat && k === 'alt') { e.preventDefault(); M.BtnShortCutkeys(); }
+        };
+        M.radChanged();   // Load: PL checked, Assets/Liabilities hidden, focus PL
+        focus('radPL');
+    }
+
+    // ============================================================================ 413 Bank (AcfrmDefineBank.cs)
+    function bank() {
+        var canSave = true, canUpdate = true;
+        var T = ['txtbankname', 'txtbranchcode', 'txtBankAccountno', 'txtAccountTitle', 'txtBankIBANNo', 'txtcontact1', 'txtcontact2', 'txtcellno', 'txtemail', 'txtemailalternate', 'txtotherinfor', 'txtaddress'];
+        function bindCombos(d) {   // ChequeTempleteFill / CountryComboFill / CityFill (ZeroIndex true) / CombGlAccountNameFill (BindDDL ZeroIndex true)
+            if (d.chequeTemplatesError) box(d.chequeTemplatesError); else if ((d.chequeTemplates || []).length) fill('CmbChequeTemplete', d.chequeTemplates, 'Id', 'type', true);
+            if (d.countriesError) box(d.countriesError); else if ((d.countries || []).length) fill('combcountry', d.countries, 'Id', 'Description', true);
+            if (d.citiesError) box(d.citiesError); else if ((d.cities || []).length) fill('combcity', d.cities, 'Id', 'CityName', true);
+            if (d.glAccountsError) box(d.glAccountsError);
+            else if ((d.glAccounts || []).length) fill('combGlaccount', d.glAccounts, 'Id', 'AccountTitle', true);
+            else { $id('combGlaccount').innerHTML = ''; }
+            refreshCombos();
+        }
+        function bindGrid(rows) {   // BankDefineGridFill :226 - only when rows came back; Edit button when the user has Update
+            if (!(rows || []).length) return;
+            GRID = rows.map(function (r) { return { Edit: '', Id: netI(col(r, 'Id')), BranchName: str(col(r, 'BranchName')), BranchCode: str(col(r, 'BranchCode')), BankAccountNo: str(col(r, 'BankAccountNo')), BankAccountTitle: str(col(r, 'BankAccountTitle')),
+                BankIBANNo: str(col(r, 'BankIBANNo')), 'Phone No (1)': str(col(r, 'Contact1Tel')), 'Phone No (2)': str(col(r, 'Contact2Tel')), 'Mobile No': str(col(r, 'Contact3Mobile')), EmailAlternate: str(col(r, 'emailAlternate')),
+                IsHomeland: str(col(r, 'IsHomeland')), CountryName: str(col(r, 'Country')), CityName: str(col(r, 'City')), Address: str(col(r, 'BranchAddress')), ChequeTemplete: str(col(r, 'ChequeTemplete')), SWIFTCode: str(col(r, 'OtherInfo')),
+                ChartOfAccountId: netI(col(r, 'ChartOfAccountId')), AccountCode: str(col(r, 'AccountCode')), AccountTitle: str(col(r, 'AccountTitle')) }; });
+            CUR = -1; draw();
+            document.querySelector('#GrdBankDefine thead th[data-col="Edit"]').style.display = canUpdate ? '' : 'none';
+            $id('gridBody').querySelectorAll('tr').forEach(function (tr) { var td = tr.firstElementChild; td.style.display = canUpdate ? '' : 'none'; td.innerHTML = '<button type="button" class="md-editbtn" data-act="edit">Edit</button>'; });
+        }
+        function reload() { return getJson(api + '/list').then(bindGrid).catch(function (e) { box(e.message); }); }
+        function refresh() {   // BankFromRefresh :120
+            RecId = 0; setValue('txtishomeland', 0); T.forEach(function (t) { setVal(t, ''); }); setValue('combcountry', 0); setValue('combGlaccount', 0); refreshCombos();
+            show('btnUpdate', false);
+            return reload().then(function () { focus('txtishomeland'); });
+        }
+        function formValidation() {   // FormValidation :95
+            var hl = netI(val('txtishomeland'));
+            if (comboText('txtishomeland').trim() === '' || hl === 0) { box('Home Land Name Field Required'); focus('txtishomeland'); return false; }
+            if (val('txtbankname').trim() === '') { box('Bank Name Field Required'); focus('txtbankname'); return false; }
+            if (val('txtbranchcode').trim() === '') { box('Branch Code Field Required'); focus('txtbranchcode'); return false; }
+            if (val('txtBankAccountno').trim() === '') { box('Bank Account No Field Required'); focus('txtBankAccountno'); return false; }
+            if (val('txtBankIBANNo').trim() === '') { box('BankIBANNo Field Required'); focus('txtBankIBANNo'); return false; }
+            if (hl === 2 && netI(val('CmbChequeTemplete')) === 0) { box('Cheque Template Field Required'); focus('CmbChequeTemplete'); return false; }
+            if (hl === 2 && netI(val('combGlaccount')) === 0) { box('GL Account Field Required'); focus('combGlaccount'); return false; }
+            return true;
+        }
+        function insert(btn) {   // Insert() :150
+            if (!formValidation()) return;
+            if (RecId > 0) { if (!ask('Are you sure to Update?')) return; }
+            else if (!ask('Are you sure to Save?')) return;
+            var was = RecId;
+            var body = { id: RecId, isHomelandId: netI(val('txtishomeland')), isHomelandText: comboText('txtishomeland'), bankName: val('txtbankname'), branchCode: val('txtbranchcode'),
+                bankAccountNo: val('txtBankAccountno'), bankAccountTitle: val('txtAccountTitle'), bankIbanNo: val('txtBankIBANNo'), contact1Tel: val('txtcontact1'), contact2Tel: val('txtcontact2'),
+                contact3Mobile: val('txtcellno'), emailPrimery: val('txtemail'), emailAlternate: val('txtemailalternate'), countryId: netI(val('combcountry')), branchCity: netI(val('combcity')),
+                otherInfo: val('txtotherinfor'), chequeTemplate: comboText('CmbChequeTemplete'), chartOfAccountId: netI(val('combGlaccount')), branchAddress: val('txtaddress') };
+            return busy(btn, function () {
+                return postJson(api + '/save', body).then(function () {
+                    box(was > 0 ? 'Record Update Successfully...' : 'Record Save Successfully...');
+                    return refresh();
+                }).catch(function (e) { box(e.message); });
+            });
+        }
+        function readRow(r) {   // GrdBankDefine_DoubleClick_1 :186
+            RecId = netI(r.Id);
+            return getJson(api + '/by-id?id=' + RecId).then(function (b) {
+                if (!b) return;
+                show('btnsave', false);
+                setText('txtishomeland', str(col(b, 'IsHomeland')));
+                setVal('txtbranchcode', str(col(b, 'BranchCode'))); setVal('txtbankname', str(col(b, 'BranchName')));
+                setVal('txtBankAccountno', str(col(b, 'BankAccountNo'))); setVal('txtAccountTitle', str(col(b, 'BankAccountTitle'))); setVal('txtBankIBANNo', str(col(b, 'BankIBANNo')));
+                setVal('txtcontact1', str(col(b, 'Contact1Tel'))); setVal('txtcontact2', str(col(b, 'Contact2Tel'))); setVal('txtcellno', str(col(b, 'Contact3Mobile')));
+                setVal('txtemail', str(col(b, 'emailPrimery'))); setVal('txtemailalternate', str(col(b, 'emailAlternate')));
+                setValue('combcountry', netI(col(b, 'CountryId'))); setValue('combcity', netI(col(b, 'BranchCity')));
+                setVal('txtotherinfor', str(col(b, 'OtherInfo'))); setText('CmbChequeTemplete', str(col(b, 'ChequeTemplete')));
+                setValue('combGlaccount', netI(col(b, 'ChartOfAccountId'))); setVal('txtaddress', str(col(b, 'BranchAddress')));
+                refreshCombos();
+            }).catch(function (e) { box(e.message); });
+        }
+        function setText(id, text) {   // UltraCombo.Text = x
+            var s = $id(id), t = String(text === null || text === undefined ? '' : text);
+            if (!s) return;
+            for (var i = 0; i < s.options.length; i++) if (t !== '' && s.options[i].value !== '0' && s.options[i].textContent === t) { s.selectedIndex = i; return; }
+            s.value = '0';
+        }
+        M.btnsave = function (btn) { RecId = 0; return insert(btn || 'btnsave'); };
+        M.btnUpdate = function (btn) { return insert(btn || 'btnUpdate'); };
+        M.btnnew = function () { return refresh(); };
+        M.btnRefresh = function (btn) { return busy(btn || 'btnRefresh', function () { return getJson(api + '/combos').then(bindCombos).catch(function (e) { box(e.message); }); }); };
+        M.btnShortCutKeys = function () {
+            box('Ctrl+S\tFor Save\nCtrl+U\tFor Update\nCtrl+N\tFor New\nCtrl+E\tFor Close\nCtrl+R\tFor Refresh\nCtrl+F5\tFor Focus on Is Home Land\nCtrl+Delete\tFor Delete\nCtrl+ArrowDown\tFor Focus On Grid\nCtrl+ArrowUp\tFor Focus on Is Home Land\nCtrl+Enter\tWhen Focus On Grid For Update Record\nCtrl+alt\tTo Show ShortCut Keys Form');
+        };
+        wireGrid(function (r) { readRow(r); });
+        $id('gridBody').addEventListener('click', function (e) { if (e.target.closest('[data-act="edit"]')) { var tr = e.target.closest('tr[data-i]'); readRow(GRID[+tr.getAttribute('data-i')]); } });   // GrdBankDefine_ColumnButtonClick
+        keys = function (e, k) {   // AcfrmDefineBank_KeyDown :300 - Enter -> Tab; Save/Update keys need the right and a visible button
+            if (e.key === 'Enter' && !e.ctrlKey && e.target && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+                var f = Array.prototype.filter.call(document.querySelectorAll('input, select, textarea, button'), function (x) { return !x.disabled && x.offsetParent !== null; });
+                var i = f.indexOf(e.target); if (i >= 0 && i + 1 < f.length) f[i + 1].focus();
+            }
+            if (canSave && e.ctrlKey && k === 's' && visible('btnsave')) { e.preventDefault(); M.btnsave(); }
+            if (canUpdate && e.ctrlKey && k === 'u' && visible('btnUpdate')) { e.preventDefault(); M.btnUpdate(); }
+            if (e.ctrlKey && k === 'n') { e.preventDefault(); M.btnnew(); }
+            if (e.ctrlKey && (e.key === 'F5' || e.key === 'ArrowUp')) { e.preventDefault(); focus('txtishomeland'); }
+            if (e.ctrlKey && k === 'r') { e.preventDefault(); M.btnRefresh(); }
+            if (e.ctrlKey && e.key === 'ArrowDown') { e.preventDefault(); var t = $id('gridBody').querySelector('tr'); if (t) { t.setAttribute('tabindex', '-1'); t.focus(); } }
+            if (e.ctrlKey && e.altKey && !e.repeat && k === 'alt') { e.preventDefault(); M.btnShortCutKeys(); }
+            if (canUpdate && e.ctrlKey && e.key === 'Enter') { e.preventDefault(); var c = current(); if (c) readRow(c); }
+        };
+        getJson(api + '/setup').then(function (d) {   // AcfrmDefineBank_Load :35
+            d = d || {};
+            canSave = d.canSave !== false; canUpdate = d.canUpdate !== false;
+            $id('btnsave').disabled = !canSave; $id('btnUpdate').disabled = !canUpdate;
+            fill('txtishomeland', [{ Id: 1, Name: 'Foreign Country' }, { Id: 2, Name: 'Home Country' }], 'Id', 'Name', true);   // CountryTypeFill
+            bindCombos(d);
+            if (d.banksError) box(d.banksError); else bindGrid(d.banks);
+            show('btnUpdate', false);
+            $id('txtishomeland').selectedIndex = 2;   // Rows[2].Activate() -> "Home Country"
+            refreshCombos();
+            focus('txtishomeland');
+        }).catch(function (e) { box(e.message); });
+    }
+
     // ------------------------------------------------------------------------------ boot
 
     function boot() {
@@ -631,6 +988,12 @@
             case 'sea-ports': seaPorts(); break;
             case 'date-lock': dateLock(); break;
             case 'other-items': otherItems(); break;
+            case 'pdc-bank': pdcBank(); break;
+            case 'document-group': codeName({ codeCol: 'ExImDocGroupCode', nameCol: 'ExImDocGroupName', listMap: function (r) { return { Id: col(r, 'Id'), ExImDocGroupCode: col(r, 'ExImDocGroupCode'), ExImDocGroupName: col(r, 'ExImDocGroupName') }; } }); break;
+            case 'shipment-documents': codeName({ codeCol: 'exImDocCode', nameCol: 'exImDocName', listMap: function (r) { return { Id: col(r, 'Id'), exImDocCode: col(r, 'exImDocCode'), exImDocName: col(r, 'exImDocName') }; } }); break;
+            case 'tax-lookup': taxLookup(); break;
+            case 'bs-pl-setting': bsPlSetting(); break;
+            case 'bank': bank(); break;
         }
         /* Every form with a KeyDown handler has KeyPreview = true; Ctrl+E / Esc close on all of them. */
         document.addEventListener('keydown', function (e) {

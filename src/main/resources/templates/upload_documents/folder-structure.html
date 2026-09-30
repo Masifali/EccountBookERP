@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Folder Structure - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_hrm.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_dms.css?v=20260930a}"/>
+</head>
+<!-- Architecture.WinApp.DMS_FolderHierarchy.CreateFolderStructure (473) - ClientSize 1574 x 1006, Text "CreateFolderStructure".
+     ParentPanel: HeaderFolderPanel (the root-folder box, Create Root Folder button and User Name combo are all Visible=false);
+     TreeViewPanel (323 wide): label6 "Folders" + treeView with the right-click MenuStrip: "Add Child New Folder", "Upload File",
+     "Delete Folder" (AllocationPanel "Customer Allocation" is hidden at Load);
+     FolderInfoPanel (shown when the selected folder has files): TabControl -> "Allocatd Documents" -> "Card View" (Total Files,
+     Total Size (Mbs), cards with Delete) | "Grid View" (GrdDocuments: Delete button first, DocFilePathId / FilePath hidden,
+     FileName link, CreatedDate "Upload Date", UserName "Upload User"). The Un-Allocated Documents panel needs the hidden
+     User Name combo and is never shown. -->
+<body class="pd-body hrm-body" data-screen="473">
+<div class="hrm-form">
+    <div class="hrm-caption"><span>Create Folder Structure</span></div>
+    <div class="dms-note"><i class="fa fa-info-circle"></i>
+        The folders and files live on the Windows share (configuration "RootPathForShareFolderStructure"), which the browser cannot reach.
+        Here the folder tree and the file records in the database are maintained: <b>Add Child New Folder</b> adds the folder record only
+        (the directory is not created on the share), <b>Delete Folder</b> and <b>Delete</b> (file) remove the database records only
+        (the directory / file stays on the share), and <b>Upload File</b>, opening a file, thumbnails, file size and file date are not available.
+    </div>
+    <div class="dms-layout">
+        <div>
+            <div class="hrm-subcaption"><span>Folders</span><button type="button" id="btnReloadTree" class="hrm-fs-btn" title="Reload" onclick="Dms.reload(this)"><i class="fa fa-refresh"></i></button></div>
+            <div class="dms-tree" id="treeView" tabindex="0" aria-label="Folders"></div>
+        </div>
+        <div style="min-width:0">
+        <div class="dms-docs is-hidden" id="FolderInfoPanel">
+            <div class="fa-tabs" style="display:flex;gap:2px;padding:4px 8px 0 8px;border-bottom:1px solid #7a9a9e;background:#f4f4f4;flex-wrap:wrap">
+                <button type="button" class="hrm-tab is-active" data-dms-tab="cards">Card View</button>
+                <button type="button" class="hrm-tab" data-dms-tab="grid">Grid View</button>
+            </div>
+            <div class="dms-bar"><span>Total Files: <span id="lblTotalFiles">0</span></span><span>Total Size (Mbs): <span id="lblTotalSize" title="The file sizes are read from the share on the desktop (FileInfo); not available in the browser.">n/a</span></span>
+                <span id="lblPathOfFolder" style="font-weight:normal;font-size:8.5pt;word-break:break-all"></span></div>
+            <div data-dms-page="cards"><div class="dms-cards" id="DocumentsFlowLayout"></div></div>
+            <div data-dms-page="grid" class="is-hidden">
+                <div class="hrm-grid-box">
+                    <div class="hrm-grid-wrap"><table id="GrdDocuments"></table></div>
+                </div>
+            </div>
+        </div>
+        <div class="dms-empty" id="lblNoFiles">Select a folder to see its documents. Right-click (or long-press) a folder for its menu.</div>
+        </div>
+    </div>
+    <div class="hrm-footer">
+        <div class="hrm-footer-left"><span id="lblStatus"></span></div>
+        <div class="hrm-footer-right"><button type="button" id="btnHistory" class="win-btn-action"><i class="fa fa-history"></i> History</button></div>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_hrm.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_dms_folders.js?v=20260930a}"></script>
+</body>
+</html>

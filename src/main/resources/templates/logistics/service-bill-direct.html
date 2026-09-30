@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Service Bill Direct - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_hrm.css?v=20260929a}"/>
+    <style>
+        .lgsa-row { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 4px 8px; padding: 0 6px; align-items: start; }
+        .lgsa-row .hrm-group { margin: 0; }
+        .lgsa-row .hrm-entry { padding: 2px 0; gap: 4px 12px; }
+        .lgsa-row .hrm-field { grid-template-columns: 112px minmax(0, 1fr); }
+        .lgsa-inv .hrm-entry { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        .lgsa-inv .hrm-field { grid-template-columns: 138px minmax(0, 1fr); }
+        .lgsa-pair { display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 2px; }
+        .lgsa-detail { margin: 4px 6px; }
+        .lgsa-dgrid { display: grid; grid-template-columns: 160px minmax(140px, 1.6fr) repeat(9, minmax(70px, 1fr)); gap: 2px 3px; align-items: end; }
+        .lgsa-dgrid > div { display: flex; flex-direction: column; min-width: 0; }
+        .lgsa-dgrid label { font: bold 8.5pt "Segoe UI", sans-serif; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .lgsa-dgrid .win-textbox, .lgsa-dgrid .dtcombo-wrap, .lgsa-dgrid select { width: 100%; }
+        .lgsa-drow2 { display: flex; gap: 4px; align-items: end; margin-top: 4px; flex-wrap: wrap; }
+        .lgsa-drow2 > .lgsa-desc { flex: 1 1 300px; display: flex; flex-direction: column; min-width: 0; }
+        .lgsa-drow2 > .lgsa-debit { flex: 0 1 290px; display: flex; flex-direction: column; min-width: 0; }
+        .lgsa-drow2 label, .lgsa-radios label { font: bold 8.5pt "Segoe UI", sans-serif; margin: 0; }
+        .lgsa-radios { display: flex; gap: 8px; align-items: center; font: 8.5pt "Segoe UI", sans-serif; }
+        .lgsa-radios label { font-weight: normal; display: inline-flex; gap: 3px; align-items: center; }
+        .lgsa-strip { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 2px 6px; flex-wrap: wrap; }
+        .lgsa-strip .lgsa-title { font: bold 12pt Tahoma, sans-serif; color: teal; }
+        .lgsa-filters { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; padding: 4px 8px; border: 1px solid #c8c8c8; margin: 4px 8px; }
+        .lgsa-filters label { font: bold 9pt "Segoe UI", sans-serif; margin: 0; }
+        .lgsa-filters .lgsa-dt { display: inline-flex; align-items: center; gap: 3px; }
+        .lgsa-filters input[type=text] { width: 90px; }
+        table.hrm-grid .hrm-cell-btn { height: 20px; min-width: 0; width: auto; padding: 0 6px; font-size: 8pt; line-height: 18px; }
+        @media (max-width: 1000px) {
+            .lgsa-row { grid-template-columns: 1fr; }
+            .lgsa-inv .hrm-entry { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .lgsa-dgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        }
+        @media (max-width: 600px) {
+            .lgsa-inv .hrm-entry { grid-template-columns: 1fr; }
+            .lgsa-dgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+    </style>
+</head>
+<!-- Architecture.WinApp.Service.ExImClearingAgentBillDirect (233), DocumentTypeId 155. AutoScrollMinSize 1200 x 800, KeyPreview.
+     tabControl1: "Form" | "History".
+     Form: btn toolStrip New | Refresh | Update (hidden) | Save | Delete (hidden) | Attachment | Voucher-118 | Print-540 | [Load Invoice hidden]
+       | Services Item | ShortCut Keys. panel8 "Service Bill Direct" + ChkPreview "Preview 540", chkVoucher "Preview 118".
+       groupBox2 "Main Information" (298x159): Doc No && Date (txtdocno RO, txtdocdate dd-MMM-yy), Due Days && Date (txtduedate disabled),
+       Reference Bill No, Invoice No (CmbInvoiceNo, Leave), Bill To /Party (CmbPartyName, party list).
+       groupBox1 "Invoice Information" (859x159, every control disabled): Customer Name, Forwarder Name, Lc / Contract, BL No, GD No,
+       Loading Place, Destination Place, Container Received From, Container Dispatched At, Delivered At, Vessel Name, Inco Term,
+       No Of Containers, M.Ton, CRO Rate.
+       groupBox3 "Detail Information": Master Item / Category radios + CmbMasterItem, Name / Code radios, Item Name, QTY, UOM,
+       Charges Rate (Fcy), Fcy Code, FcyAmount (RO), Ex Rate, Lcy Amount (RO), Other Charges (Lcy), Lcy Total Amount (RO); Description,
+       Debit Ac (only with "ServicesBillDebitAmountChargetoSelectedAc"), + / Update / Cancel.
+       grddetailadd: "X" delete button (frozen), Id / UomId / ItemId / CurrencyId / DebitAcId hidden, DebitAc per the configuration.
+     History: toolStrip3 New; "Service Bill Direct History"; Filters From,To Date (check boxes), From,To Doc, Show, Doc / Entry / Modify Date;
+       "Filtered Records"; grdhistory (Id / VoucherHeadId hidden; Slip (Print right), Voucher (Update right), Add Attachment buttons);
+       "Detail of the selected above row" + gridDetailHistory. -->
+<body class="pd-body hrm-body" data-screen="233">
+<div class="hrm-form">
+    <div class="hrm-tabs">
+        <button type="button" class="hrm-tab is-active" data-tab="tabForm">Form</button>
+        <button type="button" class="hrm-tab" data-tab="tabHistory">History</button>
+    </div>
+    <!-- ====================================================================== Form -->
+    <div class="hrm-tab-page is-active" id="tabForm">
+        <div class="win-tool-strip">
+            <button type="button" id="btnNew" class="win-btn-tool" onclick="LgsSB.btnNew(this)"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="btnRefresh" class="win-btn-tool" onclick="LgsSB.btnRefresh(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+            <button type="button" id="btnUpdate" class="win-btn-tool is-hidden" onclick="LgsSB.btnUpdate(this)"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+            <button type="button" id="btnSave" class="win-btn-tool" onclick="LgsSB.btnSave(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+            <button type="button" id="btnDelete" class="win-btn-tool is-hidden" onclick="LgsSB.btnDelete(this)"><i class="fa fa-trash"></i> <span><u>D</u>elete</span></button>
+            <button type="button" id="btnattachment" class="win-btn-tool" onclick="LgsSB.attachment()" title="Attachments are not ported on the web"><i class="fa fa-paperclip"></i> <span><u>A</u>ttachment</span></button>
+            <button type="button" id="btnVoucher" class="win-btn-tool" onclick="LgsSB.btnVoucher(this)"><i class="fa fa-file-text-o"></i> <span>Voucher-118</span></button>
+            <button type="button" id="btnprint" class="win-btn-tool" onclick="LgsSB.btnprint(this)"><i class="fa fa-print"></i> <span><u>P</u>rint-540</span></button>
+            <button type="button" id="btnDefineServices" class="win-btn-tool" onclick="LgsSB.defineServices()"><i class="fa fa-cubes"></i> <span>Services Item</span></button>
+            <button type="button" id="btnShortCutKey" class="win-btn-tool" onclick="LgsSB.shortcuts()"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+        </div>
+        <div class="lgsa-strip">
+            <span class="lgsa-title">Service Bill Direct</span>
+            <span class="hrm-inline">
+                <label class="hrm-check"><input type="checkbox" id="ChkPreview"> Preview 540</label>
+                <label class="hrm-check"><input type="checkbox" id="chkVoucher"> Preview 118</label>
+            </span>
+        </div>
+        <div class="lgsa-row">
+            <fieldset class="hrm-group">
+                <legend>Main Information</legend>
+                <div class="hrm-entry" style="grid-template-columns:1fr">
+                    <div class="hrm-field"><label for="txtdocno">Doc No &amp; Date</label>
+                        <div class="lgsa-pair"><input type="text" id="txtdocno" class="win-textbox" readonly tabindex="-1"/><input type="date" id="txtdocdate" class="win-textbox"/></div></div>
+                    <div class="hrm-field"><label for="txtduedays">Due Days &amp; Date</label>
+                        <div class="lgsa-pair"><input type="text" id="txtduedays" class="win-textbox" data-guard="integer" inputmode="numeric" autocomplete="off"/><input type="date" id="txtduedate" class="win-textbox" disabled/></div></div>
+                    <div class="hrm-field"><label for="txtrefbillno">Reference Bill No</label><input type="text" id="txtrefbillno" class="win-textbox" autocomplete="off"/></div>
+                    <div class="hrm-field"><label for="CmbInvoiceNo">Invoice No</label><select id="CmbInvoiceNo" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="hrm-field"><label for="CmbPartyName">Bill To /Party</label><select id="CmbPartyName" class="win-combo dtcombo" data-dtcombo="party4"></select></div>
+                </div>
+            </fieldset>
+            <fieldset class="hrm-group lgsa-inv">
+                <legend>Invoice Information</legend>
+                <div class="hrm-entry">
+                    <div class="hrm-field"><label for="txtCustomerNameInvoiceData">Customer Name</label><input type="text" id="txtCustomerNameInvoiceData" class="win-textbox" disabled/></div>
+                    <div class="hrm-field"><label for="CmbLoadingPortInvoiceData">Loading Place</label><select id="CmbLoadingPortInvoiceData" class="win-combo dtcombo" data-dtcombo="single" disabled></select></div>
+                    <div class="hrm-field"><label for="txtVesselNameInvoiceData">Vessel Name</label><input type="text" id="txtVesselNameInvoiceData" class="win-textbox" disabled/></div>
+                    <div class="hrm-field"><label for="txtForwarderNameInvoiceData">Forwarder Name</label><input type="text" id="txtForwarderNameInvoiceData" class="win-textbox" disabled/></div>
+                    <div class="hrm-field"><label for="CmbDestinationPortInvoiceData">Destination Place</label><select id="CmbDestinationPortInvoiceData" class="win-combo dtcombo" data-dtcombo="single" disabled></select></div>
+                    <div class="hrm-field"><label for="txtIncoTermInvoiceData">Inco Term</label><input type="text" id="txtIncoTermInvoiceData" class="win-textbox" disabled/></div>
+                    <div class="hrm-field"><label for="CmbContractNoInvoiceData">Lc / Contract</label><select id="CmbContractNoInvoiceData" class="win-combo dtcombo" data-dtcombo="single" disabled></select></div>
+                    <div class="hrm-field"><label for="CmbContainerReceivedFromPortInvoiceData">Container Received From</label><select id="CmbContainerReceivedFromPortInvoiceData" class="win-combo dtcombo" data-dtcombo="single" disabled></select></div>
+                    <div class="hrm-field"><label for="txtNoOfContainerInvoiceData">No Of Containers</label><input type="text" id="txtNoOfContainerInvoiceData" class="win-textbox" disabled/></div>
+                    <div class="hrm-field"><label for="txtBlNoInvoiceData">BL No</label><input type="text" id="txtBlNoInvoiceData" class="win-textbox" disabled/></div>
+                    <div class="hrm-field"><label for="CmbContainerDispatchedAtPortInvoiceData">Container Dispatched At</label><select id="CmbContainerDispatchedAtPortInvoiceData" class="win-combo dtcombo" data-dtcombo="single" disabled></select></div>
+                    <div class="hrm-field"><label for="txtMtonInvoiceData">M.Ton</label><input type="text" id="txtMtonInvoiceData" class="win-textbox" disabled/></div>
+                    <div class="hrm-field"><label for="txtGdNoInvoiceData">GD No</label><input type="text" id="txtGdNoInvoiceData" class="win-textbox" disabled/></div>
+                    <div class="hrm-field"><label for="CmbDeliveredAtInvoiceData">Delivered At</label><select id="CmbDeliveredAtInvoiceData" class="win-combo dtcombo" data-dtcombo="single" disabled></select></div>
+                    <div class="hrm-field"><label for="txtBookingRateInvoiceData">CRO Rate</label><input type="text" id="txtBookingRateInvoiceData" class="win-textbox" disabled/></div>
+                </div>
+            </fieldset>
+        </div>
+        <fieldset class="hrm-group lgsa-detail">
+            <legend>Detail Information</legend>
+            <div class="lgsa-dgrid">
+                <div><span class="lgsa-radios"><label><input type="radio" name="radCatMaster" id="RadMasterItem" checked> Master Item</label><label><input type="radio" name="radCatMaster" id="RadCategory"> Category</label></span>
+                    <select id="CmbMasterItem" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div><span class="lgsa-radios"><label for="CmbItemName" style="font-weight:bold">Item Name</label><label><input type="radio" name="radNameCode" id="RadItemNamePackListDetail" checked> Name</label><label><input type="radio" name="radNameCode" id="RadItemCodePackListDetail"> Code</label></span>
+                    <select id="CmbItemName" class="win-combo dtcombo" data-dtcombo="lgsaItem"></select></div>
+                <div><label for="txtQtyDetail">QTY</label><input type="text" id="txtQtyDetail" class="win-textbox hrm-al-right" data-guard="decimal" inputmode="decimal" autocomplete="off"/></div>
+                <div><label for="CmbUomDetail">UOM</label><select id="CmbUomDetail" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div><label for="txtChargesRateFcyDetail" title="Charges Rate (Fcy)">Charges Rate (Fcy)</label><input type="text" id="txtChargesRateFcyDetail" class="win-textbox hrm-al-right" data-guard="decimal" inputmode="decimal" autocomplete="off"/></div>
+                <div><label for="CmbFcyCodeDetail">Fcy Code</label><select id="CmbFcyCodeDetail" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div><label for="txtFcyAmountDetail">FcyAmount</label><input type="text" id="txtFcyAmountDetail" class="win-textbox hrm-al-right" readonly disabled/></div>
+                <div><label for="txtExchangeRateDetail">Ex Rate</label><input type="text" id="txtExchangeRateDetail" class="win-textbox hrm-al-right" data-guard="decimal" inputmode="decimal" autocomplete="off"/></div>
+                <div><label for="txtLcyAmountDetail">Lcy Amount</label><input type="text" id="txtLcyAmountDetail" class="win-textbox hrm-al-right" readonly disabled/></div>
+                <div><label for="txtOtherChargesFcyDetail" title="Other Charges (Lcy)">Other Charges (Lcy)</label><input type="text" id="txtOtherChargesFcyDetail" class="win-textbox hrm-al-right" data-guard="decimal" inputmode="decimal" autocomplete="off"/></div>
+                <div><label for="txtTotalLcyAmountDetail">Lcy Total Amount</label><input type="text" id="txtTotalLcyAmountDetail" class="win-textbox hrm-al-right" readonly disabled/></div>
+            </div>
+            <div class="lgsa-drow2">
+                <div class="lgsa-desc"><label for="txtdescription">Description</label><input type="text" id="txtdescription" class="win-textbox" autocomplete="off"/></div>
+                <div class="lgsa-debit is-hidden" id="boxDebitAc"><label for="CmbDebitAc" id="lbldebitac">Debit Ac</label><select id="CmbDebitAc" class="win-combo dtcombo" data-dtcombo="account2"></select></div>
+                <button type="button" id="btnplus" class="win-btn-action" style="min-width:44px;width:44px" onclick="LgsSB.btnplus()">+</button>
+                <button type="button" id="btnUpdateDetail" class="win-btn-action is-hidden" style="min-width:61px" onclick="LgsSB.btnUpdateDetail()">Update</button>
+                <button type="button" id="btnCancelUpdateDetial" class="win-btn-action is-hidden" style="min-width:57px" onclick="LgsSB.btnCancelUpdateDetial()">Cancel</button>
+            </div>
+        </fieldset>
+        <div class="hrm-grid-box" id="boxDetail">
+            <div class="hrm-subcaption"><span>Detail</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+            <div class="hrm-grid-wrap"><table id="grddetailadd"></table></div>
+        </div>
+    </div>
+    <!-- ====================================================================== History -->
+    <div class="hrm-tab-page" id="tabHistory">
+        <div class="win-tool-strip">
+            <button type="button" id="btnResetHistory" class="win-btn-tool" onclick="LgsSB.btnResetHistory()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+        </div>
+        <div class="hrm-caption">Service Bill Direct History</div>
+        <div class="lgsa-filters">
+            <label>From,To Date</label>
+            <span class="lgsa-dt"><input type="checkbox" id="chkFromDateHistory" checked title="Use From Date"><input type="date" id="FromDateHistory" class="win-textbox"/></span>
+            <span class="lgsa-dt"><input type="checkbox" id="chkToDateHistory" checked title="Use To Date"><input type="date" id="ToDateHistory" class="win-textbox"/></span>
+            <label>From,To Doc</label>
+            <input type="text" id="FromDocNoHistory" class="win-textbox" data-guard="integer" inputmode="numeric" autocomplete="off"/>
+            <input type="text" id="ToDocNoHistory" class="win-textbox" data-guard="integer" inputmode="numeric" autocomplete="off"/>
+            <button type="button" id="btnShowHistory" class="win-btn-action" onclick="LgsSB.btnShowHistory(this)">Show</button>
+            <span class="lgsa-radios">
+                <label><input type="radio" name="histDate" id="drdocdate" checked> Doc Date</label>
+                <label><input type="radio" name="histDate" id="rdentrydate"> Entry Date</label>
+                <label><input type="radio" name="histDate" id="rdmodifydate"> Modify Date</label>
+            </span>
+        </div>
+        <div class="hrm-grid-box" id="boxHistory">
+            <div class="hrm-subcaption"><span>Filtered Records</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+            <div class="hrm-grid-wrap"><table id="grdhistory"></table></div>
+        </div>
+        <div class="hrm-grid-box hrm-grid-short">
+            <div class="hrm-subcaption"><span>Detail of the selected above row</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+            <div class="hrm-grid-wrap"><table id="gridDetailHistory"></table></div>
+        </div>
+    </div>
+    <div class="hrm-footer">
+        <div class="hrm-footer-left"><span id="lblStatus"></span></div>
+        <div class="hrm-footer-right"><button type="button" id="btnHistory" class="win-btn-action"><i class="fa fa-history"></i> History</button></div>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_hrm.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_logistics_service_bill_direct.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260929a}"></script>
+</body>
+</html>

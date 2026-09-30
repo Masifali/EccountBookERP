@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title th:text="${ppMode == 'gdn'} ? 'Goods Dispatch Notes Party Processing - EccountBookERP' : 'Goods Receipts Notes Party Processing - EccountBookERP'">Goods Receipts Notes Party Processing - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_hrm.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_hrm_reports.css?v=20260929a}"/>
+    <style>
+        table.hrm-grid .pp-cell-btn { height: 20px; min-width: 0; width: auto; padding: 0 8px; font-size: 8pt; line-height: 18px; }
+        table.hrm-grid tr.pp-group td { background: #dfeeee; font-weight: bold; }
+        table.hrm-grid tr.pp-group-total td { background: #f3f7f7; font-style: italic; }
+        .pp-checks { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+    </style>
+</head>
+<!-- Architecture.WinApp.PartyProcessingReports.frmGRNGDNPartyProcessing - one form, two ScreenDefinition rows told apart by Form.Tag:
+     "frmGRNPartyProcessingRegister" (692, ?mode=grn): DocumentTypeId 49, 337_Grn_Register + 338-Grn-Register shown, caption
+     "Goods Receipts Notes Party Processing"; "frmGDNPartyProcessingRegister" (693, ?mode=gdn): DocumentTypeId 89, 338-Gdn_Register shown,
+     caption "Goods Dispatch Notes Party Processing". AutoScrollMinSize 1087 x 649, KeyPreview.
+     toolStrip1: Reset | Refresh | 332-Register | 337_Grn_Register | 338-Grn-Register | 338-Gdn_Register | ShortCut Keys.
+     groupBox1 "Filters": Date Type | Doc No From & To | Stock Party / From & To Date | Reference Party | Item Name | Show.
+     "History" + grdfrm: Id hidden; ItemQty, StockWeight, EBWTotal, AdLsWeight, NetBillWeight, GrossWeight "#,##0.###" and Freight summed. -->
+<body class="pd-body hrm-body" data-pp="grn-register" th:attr="data-mode=${ppMode},data-screen=${ppMode == 'gdn' ? 693 : 692}" data-mode="grn" data-screen="692">
+<div class="hrm-form">
+    <div class="win-tool-strip">
+        <button type="button" id="btnReset" class="win-btn-tool" onclick="PpGrnGdn.btnReset(this)"><i class="fa fa-eraser"></i> <span><u>R</u>eset</span></button>
+        <button type="button" id="btnRefresh" class="win-btn-tool" onclick="PpGrnGdn.btnRefresh(this)"><i class="fa fa-refresh"></i> <span><u>R</u>efresh</span></button>
+        <button type="button" id="btnPrint" class="win-btn-tool" onclick="PpGrnGdn.print(this, 'pp-332')" data-rpt-own data-rpt="332-Sp_InvGrnPartyProcessing_RiceRegister.rpt"><i class="fa fa-print"></i> <span><u>3</u>32-Register</span></button>
+        <button type="button" id="btnGrnRegister337" class="win-btn-tool" th:classappend="${ppMode == 'gdn'} ? 'is-hidden'" onclick="PpGrnGdn.print(this, 'pp-337')" data-rpt-own data-rpt="337-GrnPartyProcessing_RiceRegister-Format-2.rpt"><i class="fa fa-print"></i> <span>337_Grn_Register</span></button>
+        <button type="button" id="btnGrnRegister338" class="win-btn-tool" th:classappend="${ppMode == 'gdn'} ? 'is-hidden'" onclick="PpGrnGdn.print(this, 'pp-338')" data-rpt-own data-rpt="338-GrnPartyProcessing_RiceRegister-Format-3.rpt"><i class="fa fa-print"></i> <span>338-Grn-Register</span></button>
+        <button type="button" id="btnGdnRegister338" class="win-btn-tool" th:classappend="${ppMode != 'gdn'} ? 'is-hidden'" onclick="PpGrnGdn.print(this, 'pp-338gdn')" data-rpt-own data-rpt="338-GdnPartyProcessing_RiceRegister-Format-2.rpt"><i class="fa fa-print"></i> <span>338-Gdn_Register</span></button>
+        <button type="button" id="btnShortCut" class="win-btn-tool" onclick="PpGrnGdn.shortCuts()"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+    </div>
+    <div class="hrm-caption" id="lblCaption" th:text="${ppMode == 'gdn'} ? 'Goods Dispatch Notes Party Processing' : 'Goods Receipts Notes Party Processing'">Goods Receipts Notes Party Processing</div>
+    <fieldset class="hrm-group"><legend>Filters</legend>
+        <div class="hrm-entry hrm-cols-3">
+            <div class="hrm-field"><label for="cmbDateType">Date Type</label><select id="cmbDateType" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+            <div class="hrm-field"><label for="txtFromDocNo">Doc No From &amp; To</label><div class="hrm-inline" style="flex-wrap:nowrap"><div class="hrm-grow"><input type="text" id="txtFromDocNo" class="win-textbox" data-guard="integer" inputmode="numeric"/></div><div class="hrm-grow"><input type="text" id="txtToDocNo" class="win-textbox" data-guard="integer" inputmode="numeric"/></div></div></div>
+            <div class="hrm-field"><label for="CmbStockParty">Stock Party</label><select id="CmbStockParty" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+            <div class="hrm-field"><label for="txtFromDate">From &amp; To Date</label><div class="hrm-inline" style="flex-wrap:nowrap"><div class="hrm-grow"><input type="date" id="txtFromDate" class="win-textbox"/></div><div class="hrm-grow"><input type="date" id="txtToDate" class="win-textbox"/></div></div></div>
+            <div class="hrm-field"><label for="cmbSupplierName">Reference Party</label><select id="cmbSupplierName" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+            <div class="hrm-field"><label for="CmbItemName">Item Name</label><div class="hrm-inline" style="flex-wrap:nowrap"><div class="hrm-grow"><select id="CmbItemName" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <button type="button" id="btnshow" class="win-btn-action" style="min-width:0;width:auto;padding:0 10px" onclick="PpGrnGdn.btnshow(this)">Show</button></div></div>
+        </div>
+    </fieldset>
+    <div class="hrm-grid-box" id="historyBox">
+        <div class="hrm-subcaption"><span>History</span><span class="hrm-bar-tools"><button type="button" class="hrm-bar-btn" title="Grid Control: Export" onclick="PpGrnGdn.exportGrid()"><i class="fa fa-file-excel-o"></i> Export</button><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></span></div>
+        <div class="hrm-grid-wrap"><table id="grdfrm"></table></div>
+    </div>
+    <div class="hrm-footer">
+        <div class="hrm-footer-left"><span id="lblStatus"></span></div>
+        <div class="hrm-footer-right"><button type="button" id="btnHistory" class="win-btn-action"><i class="fa fa-history"></i> History</button></div>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_hrm.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_pp_grn_register.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260929a}"></script>
+</body>
+</html>

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title th:text="${ppMode == 'gdn' ? 'GDN Store Party Processing' : 'GRN Store Party Processing'} + ' - EccountBookERP'">GRN Store Party Processing - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_hrm.css?v=20260929a}"/>
+    <style>
+        table.hrm-grid .ppb-cell-btn { height: 20px; min-width: 0; width: auto; padding: 0 8px; font-size: 8pt; line-height: 18px; }
+        .ppb-caption-right .hrm-check { color: #fff; }
+        .ppb-date-chk { display: flex; align-items: center; gap: 4px; }
+        .ppb-date-chk input[type=date] { flex: 1 1 auto; min-width: 0; }
+        .ppb-radios { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; }
+        .ppb-pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 4px; }
+        .ppb-grids { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; }
+        .ppb-grids .hrm-grid-box { min-height: 180px; }
+        .ppb-grids .hrm-grid-wrap { max-height: 320px; min-height: 120px; }
+    </style>
+</head>
+<!-- Architecture.WinApp.PartyProcessing.frmGrnGdnStorePartyProcessing (679 Tag GRNStorePartyProcessing, DocumentTypeId 44, gate pass 54 /
+     680 Tag GDNStorePartyProcessing, 45, gate pass 55). tabControl1: Form | History.
+     Form: toolStrip1 New | Refresh | Update | Attachment | 332-Print (GRN) | Save | Delete | 332_01-Print (GDN) | ShortCut Keys;
+     caption (lbl) + Preview; groupBox2 "Main": Doc No & Date, Stock Party, Reference Party | Vehicle No, Ref Document, Document No |
+     Bilty No | Remarks; groupBox1 "Detail": WareHouse, Item Name, Pack Uom, Qty, Remarks, + / Update / Cancel;
+     "Detail" grid (X, Edit) and "GatePass" grid (Load).
+     History: toolStrip2 Reset | Refresh; Filters (From / To Date with check boxes, From / To Doc No, Stock Party, Show,
+     Doc / Entry / Modify / Approved Date); grdHistory (Print, Edit) and "Detail Of Above Selected Row". -->
+<body class="pd-body hrm-body" data-hrm="grn-gdn-store" th:attr="data-screen=${ppScreen},data-mode=${ppMode}">
+<div class="hrm-form">
+    <div class="hrm-tabs">
+        <button type="button" class="hrm-tab is-active" data-tab="form">Form</button>
+        <button type="button" class="hrm-tab" data-tab="history">History</button>
+    </div>
+
+    <div class="hrm-tab-page is-active" data-page="form">
+        <div class="win-tool-strip">
+            <button type="button" id="btnnew" class="win-btn-tool" onclick="PpSt.btnnew(this)"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="toolStripButton1" class="win-btn-tool" onclick="PpSt.btnRefresh(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+            <button type="button" id="btnupdate" class="win-btn-tool is-hidden" onclick="PpSt.btnupdate(this)"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+            <button type="button" id="btnAttachment" class="win-btn-tool" disabled title="Attachments are not ported to the web"><i class="fa fa-paperclip"></i> <span><u>A</u>ttachment</span></button>
+            <button type="button" id="btnprint" class="win-btn-tool" onclick="PpSt.btnprint(this)" data-rpt-skip><i class="fa fa-print"></i> <span>332-<u>P</u>rint</span></button>
+            <button type="button" id="btnsave" class="win-btn-tool" onclick="PpSt.btnsave(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+            <button type="button" id="btnDelete" class="win-btn-tool is-hidden" onclick="PpSt.btnDelete(this)"><i class="fa fa-trash"></i> <span>Delete</span></button>
+            <button type="button" id="PrinGdn" class="win-btn-tool" onclick="PpSt.PrinGdn(this)" data-rpt-skip><i class="fa fa-print"></i> <span>332_01-<u>P</u>rint</span></button>
+            <button type="button" id="BtnShortCutkeys" class="win-btn-tool" onclick="PpSt.shortcuts()"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+        </div>
+        <div class="hrm-caption"><span id="lbl" th:text="${ppTitle}">GOODS RECEIVING NOTES PARTY PROCESSING</span>
+            <span class="ppb-caption-right"><label class="hrm-check"><input type="checkbox" id="ChkBox" checked> Preview</label></span></div>
+        <fieldset class="hrm-group">
+            <legend>Main</legend>
+            <div class="hrm-entry hrm-cols-3" style="align-items:start">
+                <div class="hrm-field"><label for="txtDocNo">Doc No &amp; Date</label>
+                    <div class="ppb-pair"><input type="text" id="txtDocNo" class="win-textbox" readonly tabindex="-1"/><input type="date" id="txtDocDate" class="win-textbox"/></div></div>
+                <div class="hrm-field"><label for="txtVehicleNo">Vehicle No</label><input type="text" id="txtVehicleNo" class="win-textbox" autocomplete="off"/></div>
+                <div class="hrm-field"><label for="txtBiltyNo">Bilty No</label><input type="text" id="txtBiltyNo" class="win-textbox" autocomplete="off"/></div>
+                <div class="hrm-field"><label for="cmbStockParty">Stock Party</label><select id="cmbStockParty" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field"><label for="cmbReferenceDocument">Ref Document</label><select id="cmbReferenceDocument" class="win-combo" disabled></select></div>
+                <div class="hrm-field"><label for="txtRemarks">Remarks</label><input type="text" id="txtRemarks" class="win-textbox" autocomplete="off"/></div>
+                <div class="hrm-field"><label for="cmbReferenceParty">Reference Party</label><select id="cmbReferenceParty" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field"><label for="cmbDocumentNo">Document No</label><select id="cmbDocumentNo" class="win-combo" disabled></select></div>
+            </div>
+        </fieldset>
+        <fieldset class="hrm-group">
+            <legend>Detail</legend>
+            <div class="hrm-entry hrm-cols-4" style="align-items:end">
+                <div class="hrm-field hrm-stack"><label for="cmbWareHouse">WareHouse</label><select id="cmbWareHouse" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field hrm-stack"><label for="cmbItem">Item Name</label><select id="cmbItem" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field hrm-stack"><label for="cmbUOM">Pack Uom</label><select id="cmbUOM" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field hrm-stack"><label for="txtQty">Qty</label><input type="text" id="txtQty" class="win-textbox hrm-al-right" inputmode="decimal" autocomplete="off"/></div>
+                <div class="hrm-field hrm-stack hrm-span-2"><label for="txtRemarksDetail">Remarks</label><input type="text" id="txtRemarksDetail" class="win-textbox" autocomplete="off"/></div>
+                <div class="hrm-field hrm-stack"><label>&nbsp;</label>
+                    <div class="hrm-inline">
+                        <button type="button" id="btnAddDetail" class="win-btn-action" onclick="PpSt.btnAddDetail()">+</button>
+                        <button type="button" id="btnUpdateDetail" class="win-btn-action is-hidden" onclick="PpSt.btnUpdateDetail()">Update</button>
+                        <button type="button" id="btnCancelDetail" class="win-btn-action is-hidden" onclick="PpSt.btnCancelDetail()">Cancel</button>
+                    </div></div>
+            </div>
+        </fieldset>
+        <div class="ppb-grids">
+            <div class="hrm-grid-box">
+                <div class="hrm-subcaption"><span>Detail</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+                <div class="hrm-grid-wrap"><table id="grd"></table></div>
+            </div>
+            <div class="hrm-grid-box">
+                <div class="hrm-subcaption"><span>GatePass</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+                <div class="hrm-grid-wrap"><table id="grdGatePass"></table></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="hrm-tab-page" data-page="history">
+        <div class="win-tool-strip">
+            <button type="button" id="btnResetHistory" class="win-btn-tool" onclick="PpSt.btnResetHistory()"><i class="fa fa-plus"></i> <span>Reset</span></button>
+            <button type="button" id="btnRefreshHistory" class="win-btn-tool" onclick="PpSt.btnRefreshHistory(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+        </div>
+        <div class="hrm-caption"><span>History</span></div>
+        <fieldset class="hrm-group">
+            <legend>Filters</legend>
+            <div class="hrm-entry" style="grid-template-columns:repeat(auto-fill,minmax(210px,1fr))">
+                <div class="hrm-field hrm-stack"><label for="FromDateHistory">From Date</label>
+                    <div class="ppb-date-chk"><input type="checkbox" id="chkFromDateHistory" checked title="Use From Date"><input type="date" id="FromDateHistory" class="win-textbox"/></div></div>
+                <div class="hrm-field hrm-stack"><label for="ToDateHistory">To Date</label>
+                    <div class="ppb-date-chk"><input type="checkbox" id="chkToDateHistory" checked title="Use To Date"><input type="date" id="ToDateHistory" class="win-textbox"/></div></div>
+                <div class="hrm-field hrm-stack"><label for="txtFromDocNoHistory">From Doc No</label><input type="text" id="txtFromDocNoHistory" class="win-textbox" inputmode="numeric" autocomplete="off"/></div>
+                <div class="hrm-field hrm-stack"><label for="txtToDocNoHistory">To Doc No</label><input type="text" id="txtToDocNoHistory" class="win-textbox" inputmode="numeric" autocomplete="off"/></div>
+                <div class="hrm-field hrm-stack"><label for="cmbstockpartyhistory">Stock Party</label><select id="cmbstockpartyhistory" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field hrm-stack"><label>&nbsp;</label><button type="button" id="btnShow" class="win-btn-action" onclick="PpSt.btnShow(this)">Show</button></div>
+                <div class="hrm-field hrm-stack hrm-span-2"><label>&nbsp;</label>
+                    <div class="ppb-radios">
+                        <label class="hrm-check"><input type="radio" name="histDateType" value="doc" checked> Doc Date</label>
+                        <label class="hrm-check"><input type="radio" name="histDateType" value="entry"> Entry Date</label>
+                        <label class="hrm-check"><input type="radio" name="histDateType" value="modify"> Modify Date</label>
+                        <label class="hrm-check"><input type="radio" name="histDateType" value="approved"> Approved Date</label>
+                    </div></div>
+            </div>
+        </fieldset>
+        <div class="ppb-grids">
+            <div class="hrm-grid-box">
+                <div class="hrm-subcaption"><span>History</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+                <div class="hrm-grid-wrap"><table id="grdHistory"></table></div>
+            </div>
+            <div class="hrm-grid-box">
+                <div class="hrm-subcaption"><span>Detail Of Above Selected Row</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+                <div class="hrm-grid-wrap"><table id="grdHistoryDetail"></table></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="hrm-footer">
+        <div class="hrm-footer-left"><span id="lblStatus"></span></div>
+        <div class="hrm-footer-right"><button type="button" id="btnHistory" class="win-btn-action"><i class="fa fa-history"></i> History</button></div>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_hrm.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_pp_ppb_common.js?v=20260930b}"></script>
+<script th:src="@{/build/js/countx_pp_grn_gdn_store.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260929a}"></script>
+<script src="/js/print-rpt.js?v=20261001a"></script>
+</body>
+</html>

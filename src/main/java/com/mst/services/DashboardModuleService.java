@@ -201,6 +201,97 @@ public class DashboardModuleService {
         WEB_ROUTES_BY_SCREEN_ID.put(756, "/master-data/district");      // DefineDistrict
         WEB_ROUTES_BY_SCREEN_ID.put(742, "/master-data/other-items");   // frmInvDefineOtherItems -> InvOtherItems
 
+        /* Master Data Definition, App 19, ModuleId 45 "Accounts Definition" (the user's second card). 412 is the same
+           desktop class as screen 1 (Account_Definition.frmAccountCustomGroup) and opens that page; the other six were
+           built on 2026-09-30. Ids confirmed against the ScreenDefinition dump. */
+        WEB_ROUTES_BY_SCREEN_ID.put(412, "/accounts/custom_group");         // frmAccountCustomGroup (= screen 1)
+        WEB_ROUTES_BY_SCREEN_ID.put(413, "/master-data/bank");              // frmBank -> AcfrmDefineBank
+        WEB_ROUTES_BY_SCREEN_ID.put(414, "/master-data/bs-pl-setting");     // BsPlSettingForm
+        WEB_ROUTES_BY_SCREEN_ID.put(427, "/master-data/pdc-bank");          // PdcBank
+        WEB_ROUTES_BY_SCREEN_ID.put(428, "/master-data/tax-lookup");        // Lookups.TaxLookup
+        WEB_ROUTES_BY_SCREEN_ID.put(429, "/master-data/document-group");    // DocumentGroup
+        WEB_ROUTES_BY_SCREEN_ID.put(430, "/master-data/shipment-documents"); // ExImShipmentDocuments
+
+        /* Accounts, dbo.App 2 - AppModules 1 Account Definition, 2 Accounts Transaction, 3 Account Reports,
+           2032 Banking Managment (30-Sep-2026). /accounts/dashboard used to be a hand-written page with invented
+           counts (8/18/27/7) and lists; it now renders App 2 through this renderer like every other hub.
+           Ids and TargetUrls from the ScreenDefinition rows of GoldenAceDb(0509)t.sql; each route is the page the
+           Accounts recheck (claude/ACCOUNTS-MODULE-FULL-RECHECK-56-SCREENS-...) built from that desktop form.
+           Rows sharing one desktop class share its page (28/29 + 703/704 PaymentVoucherNew/ReceiptsVoucherNew,
+           24/44 frmDayBook, 79/706 GeneralLedger, 73/702 BankBalances, 709 = 413 AcfrmDefineBank).
+           84 BSandPLBreakup has no standalone page (only the Balance Sheet breakup dialog), so it stays unbuilt. */
+        WEB_ROUTES_BY_SCREEN_ID.put(1,   "/accounts/custom_group");                    // frmAccountCustomGroup
+        WEB_ROUTES_BY_SCREEN_ID.put(2,   "/accounts/allocation");                      // AcfrmAcAllocation
+        WEB_ROUTES_BY_SCREEN_ID.put(9,   "/accounts/chart_of_accounts");               // AcfrmDefCoa
+        WEB_ROUTES_BY_SCREEN_ID.put(10,  "/accounts/opening_balance");                 // AcfrmOpeningBalance
+        WEB_ROUTES_BY_SCREEN_ID.put(11,  "/accounts/supplier");                        // supfrmDefineSupplier
+        WEB_ROUTES_BY_SCREEN_ID.put(14,  "/accounts/user-coa-management");             // UserChartOfAccountManagement
+        WEB_ROUTES_BY_SCREEN_ID.put(42,  "/accounts/cheque_book");                     // AcfrmChequebookRegistration
+        WEB_ROUTES_BY_SCREEN_ID.put(884, "/accounts/bank-reconciliation-upload-excel"); // frmBankReconciliationUploadExcelSheet
+
+        WEB_ROUTES_BY_SCREEN_ID.put(15,  "/accounts/vouchers/day-book");               // DayBook
+        WEB_ROUTES_BY_SCREEN_ID.put(16,  "/accounts/vouchers/party-payment");          // frmPartyPaymentVoucher
+        WEB_ROUTES_BY_SCREEN_ID.put(17,  "/accounts/vouchers/party-receipt");          // frmPartyReceiptVoucher
+        WEB_ROUTES_BY_SCREEN_ID.put(19,  "/accounts/vouchers/voucher-entry");          // VoucherEntry
+        WEB_ROUTES_BY_SCREEN_ID.put(22,  "/accounts/vouchers/contra");                 // ContraVoucher
+        WEB_ROUTES_BY_SCREEN_ID.put(24,  "/accounts/vouchers/day-book-offset");        // frmDayBook
+        WEB_ROUTES_BY_SCREEN_ID.put(44,  "/accounts/vouchers/day-book-offset");        // DayBookVoucher -> frmDayBook
+        WEB_ROUTES_BY_SCREEN_ID.put(25,  "/accounts/vouchers/premature-receipts");     // AccountsPrematurePaymentsReceipts
+        WEB_ROUTES_BY_SCREEN_ID.put(26,  "/accounts/vouchers/freight");                // FreightVoucher
+        WEB_ROUTES_BY_SCREEN_ID.put(28,  "/accounts/vouchers/cash-payment");           // PaymentVoucherNew
+        WEB_ROUTES_BY_SCREEN_ID.put(29,  "/accounts/vouchers/bank-payment");           // PaymentVoucherNew
+        WEB_ROUTES_BY_SCREEN_ID.put(30,  "/accounts/vouchers/cash-receipt");           // ReceiptsVoucherNew
+        WEB_ROUTES_BY_SCREEN_ID.put(31,  "/accounts/vouchers/bank-receipt");           // ReceiptsVoucherNew
+        WEB_ROUTES_BY_SCREEN_ID.put(34,  "/accounts/vouchers/pdc-payment");            // PostDatedCheqPaymentVouchers
+        WEB_ROUTES_BY_SCREEN_ID.put(38,  "/accounts/vouchers/bills-payables");         // frmBillsPayables
+        WEB_ROUTES_BY_SCREEN_ID.put(39,  "/accounts/vouchers/bills-receivables");      // frmBillsReceivables
+        WEB_ROUTES_BY_SCREEN_ID.put(41,  "/accounts/vouchers/payment-by-invoice");     // PaymentByInvoiceVoucherNew
+        WEB_ROUTES_BY_SCREEN_ID.put(46,  "/accounts/vouchers/expense");                // ExpenseVoucher
+        WEB_ROUTES_BY_SCREEN_ID.put(855, "/accounts/vouchers/contra-tax");             // VouchersWithTax.ContraVoucher
+        WEB_ROUTES_BY_SCREEN_ID.put(860, "/accounts/vouchers/journal");                // VouchersWithTax.JournalVoucher
+        WEB_ROUTES_BY_SCREEN_ID.put(861, "/accounts/vouchers/invoices-adjustment");    // frmInvoicesAdjustmentVoucher
+        WEB_ROUTES_BY_SCREEN_ID.put(863, "/accounts/vouchers/receipt-invoices-adjustment"); // frmReceiptInvoicesAdjustmentVoucher
+        WEB_ROUTES_BY_SCREEN_ID.put(885, "/accounts/banking/bank-reconciliation");     // frmBankReconciliationWithVouchers
+
+        WEB_ROUTES_BY_SCREEN_ID.put(47,  "/accounts/reports/payables-aging-new");      // PayablesAging_New
+        WEB_ROUTES_BY_SCREEN_ID.put(49,  "/accounts/reports/customer-ledger");         // CustomerLedger
+        WEB_ROUTES_BY_SCREEN_ID.put(51,  "/accounts/reports/trial-balance");           // TrialBalance
+        WEB_ROUTES_BY_SCREEN_ID.put(52,  "/accounts/reports/chart-of-accounts-report"); // CoaTitleChange
+        WEB_ROUTES_BY_SCREEN_ID.put(53,  "/accounts/reports/voucher-report");          // VoucherReport
+        WEB_ROUTES_BY_SCREEN_ID.put(61,  "/accounts/reports/inventory-payables-receivables"); // InventoryPayablesandReceivables
+        WEB_ROUTES_BY_SCREEN_ID.put(62,  "/accounts/reports/balance-sheet");           // BalanceSheet
+        WEB_ROUTES_BY_SCREEN_ID.put(64,  "/accounts/reports/profit-and-loss");         // frmProfitLossHararical
+        WEB_ROUTES_BY_SCREEN_ID.put(65,  "/accounts/reports/trade-receivables");       // TradeDebitorsReport
+        WEB_ROUTES_BY_SCREEN_ID.put(66,  "/accounts/reports/trade-payables");          // TradeDebitorsReport (creditors)
+        WEB_ROUTES_BY_SCREEN_ID.put(69,  "/accounts/reports/activity-summary");        // ActicitySummery
+        WEB_ROUTES_BY_SCREEN_ID.put(71,  "/accounts/reports/receivables-receipt-schedule"); // ReceivablesAndReceiptSchedule
+        WEB_ROUTES_BY_SCREEN_ID.put(73,  "/accounts/reports/bank-balances");           // BankBalances
+        WEB_ROUTES_BY_SCREEN_ID.put(74,  "/accounts/reports/cash-balances");           // frmCashBalance
+        WEB_ROUTES_BY_SCREEN_ID.put(78,  "/accounts/reports/payables-payment-schedule"); // PayablesAndPaymentSchedule
+        WEB_ROUTES_BY_SCREEN_ID.put(79,  "/accounts/reports/general-ledger");          // GeneralLedger
+        WEB_ROUTES_BY_SCREEN_ID.put(80,  "/accounts/reports/receivables-report");      // Receivables
+        WEB_ROUTES_BY_SCREEN_ID.put(81,  "/accounts/reports/selected-trial-balance");  // SelectedTrialBalance
+        WEB_ROUTES_BY_SCREEN_ID.put(82,  "/accounts/reports/trial-balances-all-level"); // frmTrialBalancesAllLevel
+        WEB_ROUTES_BY_SCREEN_ID.put(83,  "/accounts/vouchers/voucher-validation");     // VoucherValidation
+        WEB_ROUTES_BY_SCREEN_ID.put(88,  "/accounts/reports/pdc-register");            // PostDatedCheqRegister
+        WEB_ROUTES_BY_SCREEN_ID.put(89,  "/accounts/reports/subsidiary-payables-report"); // SubsidiaryPayableReceiveables
+        WEB_ROUTES_BY_SCREEN_ID.put(769, "/accounts/reports/receivables-new");         // Receivables_New
+        WEB_ROUTES_BY_SCREEN_ID.put(787, "/accounts/reports/all-payables");            // frmPayablesReports
+        WEB_ROUTES_BY_SCREEN_ID.put(872, "/accounts/reports/customer-aging");          // frmReceivableAgingDocumentWise
+        WEB_ROUTES_BY_SCREEN_ID.put(873, "/accounts/reports/supplier-aging");          // frmPayablesAgingDocumentWise
+        WEB_ROUTES_BY_SCREEN_ID.put(886, "/accounts/reports/commission-agent-report"); // CommissionAgentLedger
+        WEB_ROUTES_BY_SCREEN_ID.put(909, "/accounts/reports/payables-report-invoice-wise"); // frmPayablesReportInvoiceWise
+        WEB_ROUTES_BY_SCREEN_ID.put(911, "/accounts/reports/freight-voucher-report");  // FreightVoucherRegister
+        WEB_ROUTES_BY_SCREEN_ID.put(958, "/accounts/reports/monthly-profit-loss");     // frmProfitLossMonthWiseComparison
+
+        WEB_ROUTES_BY_SCREEN_ID.put(700, "/accounts/banking/cheque-printing");         // ChequePrinting.ChequePrinting
+        WEB_ROUTES_BY_SCREEN_ID.put(702, "/accounts/reports/bank-balances");           // BankBalances
+        WEB_ROUTES_BY_SCREEN_ID.put(703, "/accounts/vouchers/bank-payment");           // PaymentVoucherNew
+        WEB_ROUTES_BY_SCREEN_ID.put(704, "/accounts/vouchers/bank-receipt");           // ReceiptsVoucherNew
+        WEB_ROUTES_BY_SCREEN_ID.put(705, "/accounts/bank-balance-manual-entry");       // BankBalanceManualEntry
+        WEB_ROUTES_BY_SCREEN_ID.put(706, "/accounts/reports/general-ledger");          // GeneralLedger
+        WEB_ROUTES_BY_SCREEN_ID.put(709, "/master-data/bank");                         // AcfrmDefineBank (= 413)
+
         /* HRM, App 12 - every ScreenDefinition row of modules 2018-2027, 47 and 29 (GoldenAceDb(0509)t.sql),
            ported 2026-09-30 (project doc HRM-01-...). 650/651 and 662/463 are two rows for one desktop form each. */
         WEB_ROUTES_BY_SCREEN_ID.put(634, "/hrm/employee-group");                          // genEmployeeGroup

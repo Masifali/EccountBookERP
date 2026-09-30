@@ -367,6 +367,9 @@ function loadMasterLookups() {
                 var v = c[p[1]];
                 if (v && $(p[0] + ' option[value="' + v + '"]').length) { $(p[0]).val(String(v)).trigger('change'); }
             });
+            /* EditMethodFromLinked (Register / DocLink): SaleOrder.ReadById(Id) once Load has finished. */
+            var qid = parseInt(new URLSearchParams(location.search).get('id'), 10);
+            if (qid > 0) { loadOrderIntoForm(qid); }
         });
     });
 }

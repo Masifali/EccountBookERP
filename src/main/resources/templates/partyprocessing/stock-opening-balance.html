@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Stock Opening Balance - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_hrm.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_hrm_reports.css?v=20260929a}"/>
+    <style>
+        table.hrm-grid .pp-cell-btn { height: 20px; min-width: 0; width: auto; padding: 0 8px; font-size: 8pt; line-height: 18px; }
+        table.hrm-grid tr.pp-group td { background: #dfeeee; font-weight: bold; }
+        table.hrm-grid tr.pp-group-total td { background: #f3f7f7; font-style: italic; }
+        .pp-checks { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+    </style>
+</head>
+<!-- Architecture.WinApp.PartyProcessing.StockOpeningBalancePartyProcessing (678) - DocumentTypeId 121, AutoScrollMinSize 949 x 788, KeyPreview.
+     toolStrip3: New | Refresh | Save | Update (hidden) | Delete (hidden, Delete right) | Attachment | Print | ShortCut Keys;
+     "Stock Opening Balance" caption with "Print Preview" (ChkBox, checked: print 416_01 after a save).
+     groupBox1: Doc No & Date txtDocNo (ReadOnly) + txtDocdate | Stock Party cmbStockParty | Ref Party CmbRefParty + btnFormReferenceParty |
+     Remarks txtRemarks (383,40) 437x57.
+     groupBox2: WareHouse cmbWarehouse | Item Name cmbItem (Leave -> Pack Uom list) | Crop Year cmbCrop | JobLot cmbJobLot /
+     PackingType CmbPackingType | Pack Uom cmbUOM | Item Qty txtQty | Weight txtWeight (Qty x the Pack Uom's Equivalent).
+     History: groupBox3 Filters From Date / To Date (check boxes) | From / To Doc No | Stock Party | Show | Doc / Entry / Modify /
+     Approved Date radios; DataGridHistory: Edit / Print buttons, Id hidden, DocNo ... Remarks, Qty / Weight summed "#,##0.###". -->
+<body class="pd-body hrm-body" data-pp="stock-opening-balance" data-screen="678">
+<div class="hrm-form">
+    <div class="win-tool-strip">
+        <button type="button" id="BtnNew" class="win-btn-tool" onclick="PpOpening.BtnNew(this)"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+        <button type="button" id="btnRefresh" class="win-btn-tool" onclick="PpOpening.btnRefresh(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+        <button type="button" id="btnSave" class="win-btn-tool" onclick="PpOpening.btnSave(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+        <button type="button" id="btnUpdate" class="win-btn-tool is-hidden" onclick="PpOpening.btnUpdate(this)"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+        <button type="button" id="btnDelete" class="win-btn-tool is-hidden" onclick="PpOpening.btnDelete(this)"><i class="fa fa-trash"></i> <span>Delete</span></button>
+        <button type="button" id="btnAttachment" class="win-btn-tool" onclick="PpOpening.btnAttachment(this)"><i class="fa fa-paperclip"></i> <span><u>A</u>ttachment</span></button>
+        <button type="button" id="btnPrint" class="win-btn-tool" onclick="PpOpening.btnPrint(this)" data-rpt-own><i class="fa fa-print"></i> <span><u>P</u>rint</span></button>
+        <button type="button" id="btnShortCut" class="win-btn-tool" onclick="PpOpening.shortCuts()"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+    </div>
+    <div class="hrm-caption"><span>Stock Opening Balance</span><label class="hrm-check" style="color:#fff"><input type="checkbox" id="ChkBox" checked> Print Preview</label></div>
+    <fieldset class="hrm-group">
+        <div class="hrm-entry hrm-cols-2" style="align-items:start">
+            <div>
+                <div class="hrm-field"><label for="txtDocNo">Doc No &amp; Date</label>
+                    <div class="hrm-inline" style="flex-wrap:nowrap"><input type="text" id="txtDocNo" class="win-textbox" style="width:81px" readonly tabindex="-1"/>
+                        <div class="hrm-grow"><input type="date" id="txtDocdate" class="win-textbox"/></div></div></div>
+                <div class="hrm-field" style="margin-top:6px"><label for="cmbStockParty">Stock Party</label><select id="cmbStockParty" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field" style="margin-top:6px"><label for="CmbRefParty">Ref Party</label>
+                    <div class="hrm-inline" style="flex-wrap:nowrap"><div class="hrm-grow"><select id="CmbRefParty" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                        <button type="button" id="btnFormReferenceParty" class="win-btn-action" style="min-width:0;width:28px;height:23px;padding:0" title="Define LookUp Parties" tabindex="-1" onclick="PpOpening.btnFormReferenceParty()"><i class="fa fa-plus"></i></button></div></div>
+            </div>
+            <div class="hrm-field hrm-stack"><label for="txtRemarks">Remarks</label><textarea id="txtRemarks" class="win-textbox" rows="3"></textarea></div>
+        </div>
+    </fieldset>
+    <fieldset class="hrm-group">
+        <div class="hrm-entry hrm-cols-4">
+            <div class="hrm-field hrm-stack"><label for="cmbWarehouse">WareHouse</label><select id="cmbWarehouse" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+            <div class="hrm-field hrm-stack"><label for="cmbItem">Item Name</label><select id="cmbItem" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+            <div class="hrm-field hrm-stack"><label for="cmbCrop">Crop Year</label><select id="cmbCrop" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+            <div class="hrm-field hrm-stack"><label for="cmbJobLot">JobLot</label><select id="cmbJobLot" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+            <div class="hrm-field hrm-stack"><label for="CmbPackingType">PackingType</label><select id="CmbPackingType" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+            <div class="hrm-field hrm-stack"><label for="cmbUOM">Pack Uom</label><select id="cmbUOM" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+            <div class="hrm-field hrm-stack"><label for="txtQty">Item Qty</label><input type="text" id="txtQty" class="win-textbox hrm-al-right" data-guard="integer" inputmode="numeric" autocomplete="off"/></div>
+            <div class="hrm-field hrm-stack"><label for="txtWeight">Weight</label><input type="text" id="txtWeight" class="win-textbox hrm-al-right" data-guard="decimal" inputmode="decimal" autocomplete="off"/></div>
+        </div>
+    </fieldset>
+    <div class="hrm-subcaption"><span>History</span></div>
+    <fieldset class="hrm-group"><legend>Filters</legend>
+        <div class="hrm-entry hrm-cols-4">
+            <div class="hrm-field"><label for="FromDateHistory"><input type="checkbox" id="chkFromDateHistory" checked title="Use From Date"> From Date</label><input type="date" id="FromDateHistory" class="win-textbox"/></div>
+            <div class="hrm-field"><label for="FromDocNoHistory">From Doc No</label><input type="text" id="FromDocNoHistory" class="win-textbox" data-guard="integer" inputmode="numeric" autocomplete="off"/></div>
+            <div class="hrm-field"><label for="cmbstockpartyhistory">Stock Party</label><select id="cmbstockpartyhistory" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+            <div class="hrm-field"><label>Date Type</label><div class="pp-checks">
+                <label class="hrm-check"><input type="radio" name="histDate" value="doc" id="drdocdate" checked> Doc Date</label>
+                <label class="hrm-check"><input type="radio" name="histDate" value="modify" id="rdmodifydate"> Modify Date</label></div></div>
+            <div class="hrm-field"><label for="ToDateHistory"><input type="checkbox" id="chkToDateHistory" checked title="Use To Date"> To Date</label><input type="date" id="ToDateHistory" class="win-textbox"/></div>
+            <div class="hrm-field"><label for="ToDocNoHistory">To Doc No</label><input type="text" id="ToDocNoHistory" class="win-textbox" data-guard="integer" inputmode="numeric" autocomplete="off"/></div>
+            <div class="hrm-field"><label>&nbsp;</label><div class="hrm-show-cell"><button type="button" id="btnShow" class="win-btn-action" onclick="PpOpening.btnShow(this)">Show</button></div></div>
+            <div class="hrm-field"><label>&nbsp;</label><div class="pp-checks">
+                <label class="hrm-check"><input type="radio" name="histDate" value="entry" id="rdentrydate"> Entry Date</label>
+                <label class="hrm-check"><input type="radio" name="histDate" value="approved" id="rdapproveddate"> Approved Date</label></div></div>
+        </div>
+    </fieldset>
+    <div class="hrm-grid-box" id="historyBox">
+        <div class="hrm-subcaption"><span></span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+        <div class="hrm-grid-wrap"><table id="DataGridHistory"></table></div>
+    </div>
+    <div class="hrm-footer">
+        <div class="hrm-footer-left"><span id="lblStatus"></span></div>
+        <div class="hrm-footer-right"><button type="button" id="btnHistory" class="win-btn-action"><i class="fa fa-history"></i> History</button></div>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_hrm.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_pp_stock_opening_balance.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260929a}"></script>
+</body>
+</html>

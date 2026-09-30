@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Stock Report - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_store.css?v=20260928b}">
+    <style>
+        /* frmStockReport designer geometry (InitializeComponent :1513-3100), 1:1 px. panel1 1084 x 649:
+           panel2 toolStrip (29) | panel5 teal title (31) | panel3 filters (177) | panel4 (25) | grdfrm (Fill). */
+        body { background: #fff; margin: 0; padding-bottom: 12px; }
+        .fx-scroll { overflow-x: auto; }
+        .fx-root { position: relative; font-family: "Microsoft Sans Serif", Tahoma, sans-serif; font-size: 11px; background: #fff; }
+        .fx-abs { position: absolute; box-sizing: border-box; margin: 0; }
+        .fx-rel { position: relative; }
+        .fx-lbl { font-family: "Segoe UI Semibold", "Segoe UI", Tahoma, sans-serif; font-weight: bold; font-size: 12px; white-space: nowrap; line-height: 15px; color: #000; }
+        .fx-cmb { font-family: Verdana, sans-serif; font-size: 13px; height: 26px; border: 1px solid #7a7a7a; background: #fff; padding: 0 2px; }
+        .fx-dt { font-family: Verdana, sans-serif; font-size: 12px; height: 23px; border: 1px solid #7a7a7a; background: #fff; padding: 0 2px; }
+        .fx-chk { display: inline-flex; align-items: center; gap: 3px; font-family: Verdana, sans-serif; font-weight: bold; font-size: 13px; white-space: nowrap; }
+        .fx-chk input { margin: 0; }
+        .fx-teal { background: #008080; position: relative; }
+        .fx-teal-title { position: absolute; font-family: Tahoma, sans-serif; font-size: 16px; font-weight: bold; color: #fff; white-space: nowrap; line-height: 19px; }
+        .fx-strip { height: 29px; display: flex; align-items: center; background: linear-gradient(to bottom, #fcfcfc 0%, #e0e0e0 100%); border-bottom: 1px solid #b5b5b5; box-sizing: border-box; }
+        .fx-tool { font-family: Verdana, sans-serif; font-size: 13px; height: 26px; background: transparent; border: 1px solid transparent; display: inline-flex; align-items: center; gap: 4px; padding: 0 6px; cursor: pointer; white-space: nowrap; color: #000; }
+        .fx-tool:hover:not(:disabled) { background: #ffe4a0; border-color: #e59d00; }
+        .fx-tool:disabled { color: #9a9a9a; cursor: default; }
+        .fx-btn { background: #008080; color: #fff; border: 1px solid #005959; font-family: Verdana, sans-serif; font-size: 13px; font-weight: bold; padding: 0; cursor: pointer; }
+        .fx-btn:hover:not(:disabled) { background: #005959; }
+        .fx-multi { position: relative; }
+        .fx-multi-btn { width: 100%; height: 26px; background: #fff; border: 1px solid #7a7a7a; text-align: left; padding: 0 4px; font-family: Verdana, sans-serif; font-size: 13px; display: flex; justify-content: space-between; align-items: center; overflow: hidden; white-space: nowrap; cursor: pointer; }
+        .fx-multi-list { position: absolute; z-index: 50; top: 26px; left: 0; min-width: 100%; max-height: 260px; overflow: auto; background: #fff; border: 1px solid #7a7a7a; padding: 3px 6px; box-shadow: 0 2px 6px rgba(0,0,0,.2); display: none; }
+        .fx-multi-list label { display: block; white-space: nowrap; font: 12px Verdana, sans-serif; }
+        .fx-grid-host { overflow: auto; border-top: 1px solid #9eb6ce; background: #fff; }
+        .fx-grid-host .win-grid { width: auto; min-width: 100%; font-family: Verdana, sans-serif; font-size: 11px; border-collapse: collapse; }
+        .fx-grid-host .win-grid th { background: linear-gradient(to bottom, #e3efff 0%, #c4dcf8 100%); border: 1px solid #9eb6ce; font-weight: normal; white-space: nowrap; padding: 2px 4px; }
+        .fx-grid-host .win-grid td { border: 1px solid #d5e1f0; white-space: nowrap; padding: 1px 4px; }
+        .fx-grid-host .win-grid td.n { text-align: right; }
+        .fx-grid-host .win-grid tr.grp td { background: #e8eef5; font-weight: bold; }
+        .fx-grid-host .win-grid tr.gtot td { background: #f3f3f3; font-weight: bold; }
+        .fx-grid-host .win-grid tfoot td { background: #e6e6e6; font-weight: bold; text-align: right; }
+        .fx-msg { margin: 4px 8px; font: 12px Verdana, sans-serif; color: #b00000; min-height: 14px; }
+        .is-hidden { display: none !important; }
+    </style>
+</head>
+<body>
+<div class="fx-scroll">
+<div class="fx-root" style="width:1084px;">
+    <!-- panel2 / toolStrip1 -->
+    <div class="fx-strip">
+        <button type="button" class="fx-tool" id="btnRefresh"><i class="fa fa-repeat"></i> Refresh</button>
+        <button type="button" class="fx-tool" id="btnPrint"><i class="fa fa-print"></i> <span id="btnPrintText">Print</span></button>
+        <button type="button" class="fx-tool" id="btnclose" style="margin-left:auto;"><i class="fa fa-times"></i> Close</button>
+    </div>
+    <!-- panel5 -->
+    <div class="fx-teal" style="height:31px;">
+        <span class="fx-teal-title" style="left:7px;top:6px;">Stock Report</span>
+    </div>
+    <!-- panel3 (177) -->
+    <div class="fx-rel" style="height:177px;">
+        <label class="fx-abs fx-lbl" style="left:6px;top:41px;">Branch Name</label>
+        <div class="fx-abs fx-multi" id="cmbBranchName" style="left:104px;top:35px;width:227px;">
+            <button type="button" class="fx-multi-btn"><span id="cmbBranchNameText"></span><i class="fa fa-caret-down"></i></button>
+            <div class="fx-multi-list" id="cmbBranchNameList"></div>
+        </div>
+        <label class="fx-abs fx-lbl" style="left:6px;top:69px;">Date From</label>
+        <input type="date" id="txtDateFrom" class="fx-abs fx-dt" style="left:104px;top:65px;width:227px;">
+        <label class="fx-abs fx-lbl" style="left:6px;top:97px;">Date To</label>
+        <input type="date" id="txtDateTo" class="fx-abs fx-dt" style="left:104px;top:93px;width:227px;">
+        <label class="fx-abs fx-lbl" style="left:6px;top:125px;">Class Group</label>
+        <select id="CmbClassGroup" class="fx-abs fx-cmb win-combo" style="left:104px;top:119px;width:227px;"></select>
+        <label class="fx-abs fx-lbl" style="left:6px;top:153px;">Parent Category</label>
+        <div class="fx-abs fx-multi" id="cmbMainCategory" style="left:104px;top:147px;width:227px;">
+            <button type="button" class="fx-multi-btn"><span id="cmbMainCategoryText"></span><i class="fa fa-caret-down"></i></button>
+            <div class="fx-multi-list" id="cmbMainCategoryList"></div>
+        </div>
+
+        <label class="fx-abs fx-lbl" style="left:337px;top:41px;">Item Category</label>
+        <select id="cmbCategory" class="fx-abs fx-cmb win-combo" style="left:419px;top:35px;width:153px;"></select>
+        <label class="fx-abs fx-lbl" style="left:337px;top:69px;">Item Type </label>
+        <select id="cmbItemType" class="fx-abs fx-cmb win-combo" style="left:419px;top:63px;width:153px;"></select>
+        <label class="fx-abs fx-lbl" style="left:337px;top:101px;">Pack Uom</label>
+        <select id="cmbUOM" class="fx-abs fx-cmb win-combo" style="left:419px;top:91px;width:153px;"></select>
+        <label class="fx-abs fx-lbl" style="left:337px;top:125px;">Crop Year</label>
+        <select id="cmbCropYear" class="fx-abs fx-cmb win-combo" style="left:419px;top:119px;width:153px;"></select>
+        <label class="fx-abs fx-lbl" style="left:337px;top:153px;">Packing Type</label>
+        <select id="cmbPacktype" class="fx-abs fx-cmb win-combo" style="left:419px;top:147px;width:153px;"></select>
+
+        <label class="fx-abs fx-lbl" style="left:578px;top:41px;">Item Name</label>
+        <select id="cmbItem" class="fx-abs fx-cmb win-combo" style="left:651px;top:35px;width:250px;"></select>
+        <label class="fx-abs fx-lbl" style="left:578px;top:69px;">WareHouse</label>
+        <select id="cmbWareHouse" class="fx-abs fx-cmb win-combo" style="left:651px;top:63px;width:250px;"></select>
+        <label class="fx-abs fx-lbl" style="left:578px;top:97px;">Job Lot</label>
+        <select id="cmbJobLot" class="fx-abs fx-cmb win-combo" style="left:651px;top:91px;width:250px;"></select>
+        <label class="fx-abs fx-lbl" style="left:578px;top:125px;">Report Type</label>
+        <select id="cmbReportType" class="fx-abs fx-cmb win-combo" style="left:651px;top:119px;width:250px;"></select>
+        <button type="button" id="btnshow" class="fx-abs fx-btn" style="left:841px;top:147px;width:60px;height:26px;">Show</button>
+
+        <label class="fx-abs fx-chk" style="left:908px;top:39px;"><input type="checkbox" id="chkIncludeWipItem"> Include WIP Item</label>
+        <label class="fx-abs fx-chk" style="left:907px;top:68px;"><input type="checkbox" id="chkSikeZero" checked> Skip Zero</label>
+        <label class="fx-abs fx-chk" style="left:908px;top:95px;"><input type="checkbox" id="ChkItemWiseStock" checked> Item Wise Stock</label>
+    </div>
+    <!-- panel4 (25) -->
+    <div class="fx-teal" style="height:25px;background:#008080;"><span class="fx-teal-title" style="left:4px;top:3px;font-size:13px;line-height:19px;" id="lblRecords"></span></div>
+    <div class="fx-grid-host win-grid-scroll" style="height:418px;">
+        <table class="win-grid" id="grdfrm"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+    </div>
+    <div id="fxMsg" class="fx-msg"></div>
+</div>
+</div>
+<script th:src="@{/build/js/countx_store_common.js?v=20260928b}"></script>
+<script th:src="@{/build/js/countx_inventory_stock_report.js?v=20260930a}"></script>
+</body>
+</html>

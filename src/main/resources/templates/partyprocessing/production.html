@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Production - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_hrm.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_pp_ppc.css?v=20260930a}"/>
+</head>
+<!-- Architecture.WinApp.PartyProcessing.frmProductionPartyProcessing (677). tabControlMain: Input | OutPut | Packing Material |
+     Transaction History.
+     Input (117): Form - toolStrip1 New | Refresh | Save | Delete | Update | 601_01_Print | Define Job Order | Load Input | ShortCut Keys;
+       Main: Doc No,Date, Job Order No | WIP Item (Name / Code), Stock Party | Remarks; grdInput (X) - the Detail group is hidden on
+       the desktop, inputs come from the issuance loader. History - Date From / To, Doc From / To, Job Order, Show, Doc / Entry / Modify
+       Date; grdInputHistoryMain (Print, Edit); grdInputHistoryDetail.
+     OutPut (118): Form - toolStrip6 New | Refresh | Save | Update | Delete | 601_01_Print | ShortCut Keys; Main: Doc No,Date, Job Order No |
+       Remarks | InPut Qty / Weight, OutPut Qty / Weight; Detail: Entry Type, WareHouse, Item (Name / Code), Crop Year, Job Lot,
+       Packing Type / UOM, Quantity, Gross Weight, EbUnit, EbTotal, Net Weight, Remarks, + (Update / Cancel); grdOutPut (X, Edit).
+       History - as Input; grdOutputHistoryMain (Print, Edit); grdOutputHistoryDetail.
+     Packing Material (119): toolStrip4 New | Refresh | Save | Update | Delete | 601_02_Print | ShortCut Keys; Doc No,Date, Job Order No;
+       WareHouse, Item (Name / Code), Item Qty, Remarks; History filters + grdPM (Print, Edit).
+     Transaction History: New | Refresh | 608-SummeryReport | 609-ProductionIssuanceGrnWiseReport; filters; grdTransactionHistoryMain
+       (Print, Edit); grdTransactionhistoryDetail. -->
+<body class="pd-body hrm-body" data-hrm="pp-production" th:attr="data-screen=${ppScreen}">
+<div class="hrm-form">
+    <div class="hrm-tabs" data-tabs="main">
+        <button type="button" class="hrm-tab is-active" data-tab="input">Input</button>
+        <button type="button" class="hrm-tab" data-tab="output">OutPut</button>
+        <button type="button" class="hrm-tab" data-tab="pm">Packing Material</button>
+        <button type="button" class="hrm-tab" data-tab="trans">Transaction History</button>
+    </div>
+
+    <!-- ======================================================== INPUT -->
+    <div class="hrm-tab-page is-active" data-group="main" data-page="input">
+        <div class="hrm-tabs ppc-subtabs" data-tabs="in">
+            <button type="button" class="hrm-tab is-active" data-tab="form">Form</button>
+            <button type="button" class="hrm-tab" data-tab="history">History</button>
+        </div>
+        <div class="hrm-tab-page is-active" data-group="in" data-page="form">
+            <div class="win-tool-strip">
+                <button type="button" id="BtnNewInput" class="win-btn-tool" onclick="PpPr.newInput()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+                <button type="button" id="btnRefreshInput" class="win-btn-tool" onclick="PpPr.refresh(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+                <button type="button" id="btnSaveInput" class="win-btn-tool" onclick="PpPr.saveInput(this, false)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+                <button type="button" id="BtnDeleteInput" class="win-btn-tool is-hidden" onclick="PpPr.deleteInput(this)"><i class="fa fa-trash"></i> <span><u>D</u>elete</span></button>
+                <button type="button" id="btnUpdateInput" class="win-btn-tool is-hidden" onclick="PpPr.saveInput(this, true)"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+                <button type="button" id="BtnPrintInput" class="win-btn-tool" onclick="PpPr.printInput(this)" data-rpt-skip><i class="fa fa-print"></i> <span>601_01_Print</span></button>
+                <button type="button" id="btnJobOrderDefine" class="win-btn-tool" onclick="HRM.open('/party-processing/production-job-order')"><i class="fa fa-file-text-o"></i> <span>Define Job Order</span></button>
+                <button type="button" id="btnLoadInvoices" class="win-btn-tool" onclick="PpPr.loadInput()"><i class="fa fa-download"></i> <span>Load Input</span></button>
+                <button type="button" id="btnShortcutKeysInput" class="win-btn-tool" onclick="PpPr.shortcuts()"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+            </div>
+            <div class="hrm-caption"><span>Production Input</span>
+                <span class="ppc-caption-right"><label class="hrm-check"><input type="checkbox" id="ChkPrintPreviewInput"> Print Preview</label></span></div>
+            <fieldset class="hrm-group">
+                <legend>Main</legend>
+                <div class="hrm-entry hrm-cols-3" style="align-items:start">
+                    <div class="hrm-field"><label for="DocNoInput">Doc No,Date</label>
+                        <div class="ppc-pair"><input type="text" id="DocNoInput" class="win-textbox" readonly tabindex="-1"/><input type="date" id="DocDateInput" class="win-textbox"/></div></div>
+                    <div class="hrm-field"><label for="CmbWIPItemInput">WIP Item</label><select id="CmbWIPItemInput" class="win-combo"></select></div>
+                    <div class="hrm-field hrm-stack" style="grid-row:span 2"><label for="txtRemarks">Remarks</label><textarea id="txtRemarks" class="win-textbox" rows="2"></textarea></div>
+                    <div class="hrm-field"><label for="CmbJobOrderNoInput">Job Order No</label><select id="CmbJobOrderNoInput" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="hrm-field"><label for="CmbStockPartyWIPInput">Stock Party</label><select id="CmbStockPartyWIPInput" class="win-combo"></select></div>
+                </div>
+            </fieldset>
+            <div class="hrm-grid-box">
+                <div class="hrm-subcaption"><span>Detail</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+                <div class="hrm-grid-wrap"><table id="grdInput"></table></div>
+            </div>
+        </div>
+        <div class="hrm-tab-page" data-group="in" data-page="history">
+            <div class="win-tool-strip">
+                <button type="button" id="BtnNewHistoryInput" class="win-btn-tool" onclick="PpPr.newHistory('in')"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+                <button type="button" id="BtnRefreshInputHistory" class="win-btn-tool" onclick="PpPr.refreshHistoryCombos(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+            </div>
+            <div class="hrm-caption"><span>Production Input History</span></div>
+            <fieldset class="hrm-group"><legend>Filters</legend>
+                <div class="hrm-entry" style="grid-template-columns:repeat(auto-fill,minmax(170px,1fr))">
+                    <div class="hrm-field hrm-stack"><label>Date From</label><div class="ppc-date-chk"><input type="checkbox" id="inFromChk" checked><input type="date" id="inFrom" class="win-textbox"/></div></div>
+                    <div class="hrm-field hrm-stack"><label>Date To</label><div class="ppc-date-chk"><input type="checkbox" id="inToChk" checked><input type="date" id="inTo" class="win-textbox"/></div></div>
+                    <div class="hrm-field hrm-stack"><label for="inDocFrom">Doc From</label><input type="text" id="inDocFrom" class="win-textbox" inputmode="numeric" autocomplete="off"/></div>
+                    <div class="hrm-field hrm-stack"><label for="inDocTo">Doc To</label><input type="text" id="inDocTo" class="win-textbox" inputmode="numeric" autocomplete="off"/></div>
+                    <div class="hrm-field hrm-stack"><label for="CmbJobOrderInputHistory">Job Order</label><select id="CmbJobOrderInputHistory" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="hrm-field hrm-stack"><label>&nbsp;</label><button type="button" id="BtnShowInputHistory" class="win-btn-action" onclick="PpPr.showHistory('in', this)">Show</button></div>
+                    <div class="hrm-field hrm-stack"><label>&nbsp;</label><div class="ppc-radios">
+                        <label class="hrm-check"><input type="radio" name="inMode" value="doc" checked> Doc Date</label>
+                        <label class="hrm-check"><input type="radio" name="inMode" value="entry"> Entry Date</label>
+                        <label class="hrm-check"><input type="radio" name="inMode" value="modify"> Modify Date</label></div></div>
+                </div></fieldset>
+            <div class="hrm-grid-box"><div class="hrm-subcaption"><span>Main</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+                <div class="hrm-grid-wrap"><table id="grdInputHistoryMain"></table></div></div>
+            <div class="hrm-grid-box hrm-grid-short"><div class="hrm-subcaption"><span>Detail of the Selected above row</span></div>
+                <div class="hrm-grid-wrap"><table id="grdInputHistoryDetail"></table></div></div>
+        </div>
+    </div>
+
+    <!-- ======================================================== OUTPUT -->
+    <div class="hrm-tab-page" data-group="main" data-page="output">
+        <div class="hrm-tabs ppc-subtabs" data-tabs="out">
+            <button type="button" class="hrm-tab is-active" data-tab="form">Form</button>
+            <button type="button" class="hrm-tab" data-tab="history">History</button>
+        </div>
+        <div class="hrm-tab-page is-active" data-group="out" data-page="form">
+            <div class="win-tool-strip">
+                <button type="button" id="btnNewOutPut" class="win-btn-tool" onclick="PpPr.newOutput()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+                <button type="button" id="btnRefreshOutPut" class="win-btn-tool" onclick="PpPr.refresh(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+                <button type="button" id="btnSaveOutPut" class="win-btn-tool" onclick="PpPr.saveOutput(this, false)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+                <button type="button" id="btnUpdateOutPut" class="win-btn-tool is-hidden" onclick="PpPr.saveOutput(this, true)"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+                <button type="button" id="BtnDeleteOutput" class="win-btn-tool is-hidden" onclick="PpPr.deleteOutput(this)"><i class="fa fa-trash"></i> <span><u>D</u>elete</span></button>
+                <button type="button" id="btnPrintOutPut" class="win-btn-tool" onclick="PpPr.printOutput(this)" data-rpt-skip><i class="fa fa-print"></i> <span>601_01_Print</span></button>
+                <button type="button" id="btnShortcutKeysOutPut" class="win-btn-tool" onclick="PpPr.shortcuts()"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+            </div>
+            <div class="hrm-caption"><span>Production  Output</span>
+                <span class="ppc-caption-right"><label class="hrm-check"><input type="checkbox" id="ChkPrintPreviewOutPut"> Print Preview</label></span></div>
+            <fieldset class="hrm-group"><legend>Main</legend>
+                <div class="hrm-entry hrm-cols-3" style="align-items:start">
+                    <div class="hrm-field"><label for="txtDocNoOutPut">Doc No,Date</label>
+                        <div class="ppc-pair"><input type="text" id="txtDocNoOutPut" class="win-textbox" readonly tabindex="-1"/><input type="date" id="DocDateOutPut" class="win-textbox"/></div></div>
+                    <div class="hrm-field hrm-stack" style="grid-row:span 2"><label for="txtRemarksHeaderOutPut">Remarks</label><textarea id="txtRemarksHeaderOutPut" class="win-textbox" rows="2"></textarea></div>
+                    <div class="hrm-field"><label>InPut Qty / Weight</label><div class="ppc-pair"><input type="text" id="txtInPutTotalQty" class="win-textbox hrm-al-right" readonly tabindex="-1"/><input type="text" id="txtInPutTotalWeight" class="win-textbox hrm-al-right" readonly tabindex="-1"/></div></div>
+                    <div class="hrm-field"><label for="CmbJobOrderNoOutput">Job Order No</label><select id="CmbJobOrderNoOutput" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="hrm-field"><label>OutPut Qty / Weight</label><div class="ppc-pair"><input type="text" id="txtOutPutTotalQty" class="win-textbox hrm-al-right" readonly tabindex="-1"/><input type="text" id="txtOutPutTotalWeight" class="win-textbox hrm-al-right" readonly tabindex="-1"/></div></div>
+                </div></fieldset>
+            <fieldset class="hrm-group"><legend>Detail</legend>
+                <div class="hrm-entry" style="grid-template-columns:repeat(auto-fill,minmax(140px,1fr))">
+                    <div class="hrm-field hrm-stack"><label for="CmbEntryType">Entry Type</label><select id="CmbEntryType" class="win-combo"></select></div>
+                    <div class="hrm-field hrm-stack"><label for="CmbWarehouseOutput">WareHouse</label><select id="CmbWarehouseOutput" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="hrm-field hrm-stack hrm-span-2"><span class="hrm-inline"><label for="CmbItemOutput">Item</label>
+                        <label class="hrm-check" style="margin-left:8px"><input type="radio" name="rdOut" id="rdbtnItemNameOutPut" value="name" checked> Name</label>
+                        <label class="hrm-check"><input type="radio" name="rdOut" id="rdbtnItemCodeOutPut" value="code"> Code</label></span>
+                        <select id="CmbItemOutput" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="hrm-field hrm-stack"><label for="CmbCropYearOutPut">Crop Year</label><select id="CmbCropYearOutPut" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="hrm-field hrm-stack"><label for="CmbLotOutPut">Job Lot</label><select id="CmbLotOutPut" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="hrm-field hrm-stack"><label for="CmbPackTypeOutPut">Packing Type</label><select id="CmbPackTypeOutPut" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="hrm-field hrm-stack"><label for="CmbUomOutPut">UOM</label><select id="CmbUomOutPut" class="win-combo"></select></div>
+                    <div class="hrm-field hrm-stack"><label for="txtQtyOutPut">Quantity</label><input type="text" id="txtQtyOutPut" class="win-textbox hrm-al-right" inputmode="decimal" autocomplete="off"/></div>
+                    <div class="hrm-field hrm-stack"><label for="txtGrossWeight">Gross Weight</label><input type="text" id="txtGrossWeight" class="win-textbox hrm-al-right" inputmode="decimal" autocomplete="off"/></div>
+                    <div class="hrm-field hrm-stack"><label for="txtEbUnit">EbUnit</label><input type="text" id="txtEbUnit" class="win-textbox hrm-al-right" inputmode="decimal" autocomplete="off" value="0"/></div>
+                    <div class="hrm-field hrm-stack"><label for="txtEbTotal">EbTotal</label><input type="text" id="txtEbTotal" class="win-textbox hrm-al-right" inputmode="decimal" autocomplete="off" value="0"/></div>
+                    <div class="hrm-field hrm-stack"><label for="txtNetWeightOutPut">Net Weight</label><input type="text" id="txtNetWeightOutPut" class="win-textbox hrm-al-right" inputmode="decimal" autocomplete="off"/></div>
+                    <div class="hrm-field hrm-stack hrm-span-2"><label for="txtRemarksOutPut">Remarks</label>
+                        <div class="hrm-inline" style="flex-wrap:nowrap"><div class="hrm-grow"><input type="text" id="txtRemarksOutPut" class="win-textbox" autocomplete="off"/></div>
+                            <button type="button" id="btnAddOutPut" class="win-btn-action" style="min-width:0;width:40px" onclick="PpPr.addOutput()">+</button>
+                            <button type="button" id="btnUpdateDetailOutPut" class="win-btn-action is-hidden" onclick="PpPr.updateDetailOutput()">Update</button>
+                            <button type="button" id="btnCancelOutPut" class="win-btn-action is-hidden" onclick="PpPr.resetDetailOutput()">Cancel</button></div></div>
+                </div></fieldset>
+            <div class="hrm-grid-box">
+                <div class="hrm-subcaption"><span>Detail</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+                <div class="hrm-grid-wrap"><table id="grdOutPut"></table></div>
+            </div>
+        </div>
+        <div class="hrm-tab-page" data-group="out" data-page="history">
+            <div class="win-tool-strip">
+                <button type="button" id="BtnNewHistoryOutPut" class="win-btn-tool" onclick="PpPr.newHistory('out')"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+                <button type="button" id="BtnRefreshHistoryOutPut" class="win-btn-tool" onclick="PpPr.refreshHistoryCombos(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+            </div>
+            <div class="hrm-caption"><span>Production Output History</span></div>
+            <fieldset class="hrm-group"><legend>Filters</legend>
+                <div class="hrm-entry" style="grid-template-columns:repeat(auto-fill,minmax(170px,1fr))">
+                    <div class="hrm-field hrm-stack"><label>Date From</label><div class="ppc-date-chk"><input type="checkbox" id="outFromChk" checked><input type="date" id="outFrom" class="win-textbox"/></div></div>
+                    <div class="hrm-field hrm-stack"><label>Date To</label><div class="ppc-date-chk"><input type="checkbox" id="outToChk" checked><input type="date" id="outTo" class="win-textbox"/></div></div>
+                    <div class="hrm-field hrm-stack"><label for="outDocFrom">Doc From</label><input type="text" id="outDocFrom" class="win-textbox" inputmode="numeric" autocomplete="off"/></div>
+                    <div class="hrm-field hrm-stack"><label for="outDocTo">Doc To</label><input type="text" id="outDocTo" class="win-textbox" inputmode="numeric" autocomplete="off"/></div>
+                    <div class="hrm-field hrm-stack"><label for="CmbJobOrderHistoryOutPut">Job Order</label><select id="CmbJobOrderHistoryOutPut" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="hrm-field hrm-stack"><label>&nbsp;</label><button type="button" id="tnShowHistoryOutPut" class="win-btn-action" onclick="PpPr.showHistory('out', this)">Show</button></div>
+                    <div class="hrm-field hrm-stack"><label>&nbsp;</label><div class="ppc-radios">
+                        <label class="hrm-check"><input type="radio" name="outMode" value="doc" checked> Doc Date</label>
+                        <label class="hrm-check"><input type="radio" name="outMode" value="entry"> Entry Date</label>
+                        <label class="hrm-check"><input type="radio" name="outMode" value="modify"> Modify Date</label></div></div>
+                </div></fieldset>
+            <div class="hrm-grid-box"><div class="hrm-subcaption"><span>Main</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+                <div class="hrm-grid-wrap"><table id="grdOutputHistoryMain"></table></div></div>
+            <div class="hrm-grid-box hrm-grid-short"><div class="hrm-subcaption"><span>Detail of the Selected above row</span></div>
+                <div class="hrm-grid-wrap"><table id="grdOutputHistoryDetail"></table></div></div>
+        </div>
+    </div>
+
+    <!-- ======================================================== PACKING MATERIAL -->
+    <div class="hrm-tab-page" data-group="main" data-page="pm">
+        <div class="win-tool-strip">
+            <button type="button" id="btnNewPM" class="win-btn-tool" onclick="PpPr.newPm()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="BtnRefreshPM" class="win-btn-tool" onclick="PpPr.refresh(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+            <button type="button" id="btnSavePM" class="win-btn-tool" onclick="PpPr.savePm(this, false)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+            <button type="button" id="btnUpdatePM" class="win-btn-tool is-hidden" onclick="PpPr.savePm(this, true)"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+            <button type="button" id="BtnDeletePM" class="win-btn-tool is-hidden" onclick="PpPr.deletePm(this)"><i class="fa fa-trash"></i> <span><u>D</u>elete</span></button>
+            <button type="button" id="BtnPrintPM" class="win-btn-tool" onclick="PpPr.printPm(this, 0)" data-rpt-skip><i class="fa fa-print"></i> <span>601_02_Print</span></button>
+            <button type="button" id="btnShortcutKeysPM" class="win-btn-tool" onclick="PpPr.shortcuts()"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+        </div>
+        <div class="hrm-caption"><span>Production Packing Material</span></div>
+        <fieldset class="hrm-group"><legend>Main</legend>
+            <div class="hrm-entry hrm-cols-2">
+                <div class="hrm-field"><label for="txtDocNoPM">Doc No,Date</label>
+                    <div class="ppc-pair"><input type="text" id="txtDocNoPM" class="win-textbox" readonly tabindex="-1"/><input type="date" id="txtdocdatePM" class="win-textbox"/></div></div>
+                <div class="hrm-field"><label for="cmbJobOrderPM">Job Order No</label><select id="cmbJobOrderPM" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+            </div>
+            <div class="hrm-entry" style="grid-template-columns:repeat(auto-fill,minmax(170px,1fr))">
+                <div class="hrm-field hrm-stack"><label for="cmbWarehouse">WareHouse</label><select id="cmbWarehouse" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field hrm-stack"><span class="hrm-inline"><label for="cmbItemPM">Item</label>
+                    <label class="hrm-check" style="margin-left:8px"><input type="radio" name="rdPm" id="rdbtnItemNamePM" value="name" checked> Name</label>
+                    <label class="hrm-check"><input type="radio" name="rdPm" id="rdbtnItemCodePM" value="code"> Code</label></span>
+                    <select id="cmbItemPM" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field hrm-stack"><label for="txtPMQTY">Item Qty</label><input type="text" id="txtPMQTY" class="win-textbox hrm-al-right" inputmode="decimal" autocomplete="off"/></div>
+                <div class="hrm-field hrm-stack hrm-span-2"><label for="txtremarksPM">Remarks</label><input type="text" id="txtremarksPM" class="win-textbox" autocomplete="off"/></div>
+            </div></fieldset>
+        <div class="win-tool-strip">
+            <button type="button" id="BtnNewPMHistory" class="win-btn-tool" onclick="PpPr.newHistory('pm')"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="BtnRefereshPMHistory" class="win-btn-tool" onclick="PpPr.refreshHistoryCombos(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+        </div>
+        <div class="hrm-caption"><span>Production PM History</span></div>
+        <fieldset class="hrm-group"><legend>Filters</legend>
+            <div class="hrm-entry" style="grid-template-columns:repeat(auto-fill,minmax(170px,1fr))">
+                <div class="hrm-field hrm-stack"><label>Date From</label><div class="ppc-date-chk"><input type="checkbox" id="pmFromChk" checked><input type="date" id="pmFrom" class="win-textbox"/></div></div>
+                <div class="hrm-field hrm-stack"><label>Date To</label><div class="ppc-date-chk"><input type="checkbox" id="pmToChk" checked><input type="date" id="pmTo" class="win-textbox"/></div></div>
+                <div class="hrm-field hrm-stack"><label for="pmDocFrom">Doc From</label><input type="text" id="pmDocFrom" class="win-textbox" inputmode="numeric" autocomplete="off"/></div>
+                <div class="hrm-field hrm-stack"><label for="pmDocTo">Doc To</label><input type="text" id="pmDocTo" class="win-textbox" inputmode="numeric" autocomplete="off"/></div>
+                <div class="hrm-field hrm-stack"><label for="CmbJobOrderPMHistory">Job Order</label><select id="CmbJobOrderPMHistory" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field hrm-stack"><label>&nbsp;</label><button type="button" id="BtnShowPMHistory" class="win-btn-action" onclick="PpPr.showHistory('pm', this)">Show</button></div>
+                <div class="hrm-field hrm-stack"><label>&nbsp;</label><div class="ppc-radios">
+                    <label class="hrm-check"><input type="radio" name="pmMode" value="doc" checked> Doc Date</label>
+                    <label class="hrm-check"><input type="radio" name="pmMode" value="entry"> Entry Date</label>
+                    <label class="hrm-check"><input type="radio" name="pmMode" value="modify"> Modify Date</label></div></div>
+            </div></fieldset>
+        <div class="hrm-grid-box"><div class="hrm-subcaption"><span>Filtered Record</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+            <div class="hrm-grid-wrap"><table id="grdPM"></table></div></div>
+    </div>
+
+    <!-- ======================================================== TRANSACTION HISTORY -->
+    <div class="hrm-tab-page" data-group="main" data-page="trans">
+        <div class="win-tool-strip">
+            <button type="button" id="BtnNewTransactionHistory" class="win-btn-tool" onclick="PpPr.newHistory('tr')"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="BtnRefreshTransactionHistory" class="win-btn-tool" onclick="PpPr.refreshHistoryCombos(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+            <button type="button" id="btnSummeryReport" class="win-btn-tool" onclick="PpPr.report('608', this)" data-rpt-skip><i class="fa fa-print"></i> <span>608-SummeryReport</span></button>
+            <button type="button" id="btn609ProductionIssuance" class="win-btn-tool" onclick="PpPr.report('609', this)" data-rpt-skip><i class="fa fa-print"></i> <span>609-ProductionIssuanceGrnWiseReport</span></button>
+            <button type="button" id="btnShortcutKeysTransactionHistory" class="win-btn-tool" onclick="PpPr.shortcuts()"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+        </div>
+        <div class="hrm-caption"><span>Production Input_Output Transaction History</span></div>
+        <fieldset class="hrm-group"><legend>Filters</legend>
+            <div class="hrm-entry" style="grid-template-columns:repeat(auto-fill,minmax(170px,1fr))">
+                <div class="hrm-field hrm-stack"><label>Date From</label><div class="ppc-date-chk"><input type="checkbox" id="trFromChk" checked><input type="date" id="trFrom" class="win-textbox"/></div></div>
+                <div class="hrm-field hrm-stack"><label>Date To</label><div class="ppc-date-chk"><input type="checkbox" id="trToChk" checked><input type="date" id="trTo" class="win-textbox"/></div></div>
+                <div class="hrm-field hrm-stack"><label for="trDocFrom">Doc From</label><input type="text" id="trDocFrom" class="win-textbox" inputmode="numeric" autocomplete="off"/></div>
+                <div class="hrm-field hrm-stack"><label for="trDocTo">Doc To</label><input type="text" id="trDocTo" class="win-textbox" inputmode="numeric" autocomplete="off"/></div>
+                <div class="hrm-field hrm-stack"><label for="CmbJobOrderTransactionHistory">Job Order</label><select id="CmbJobOrderTransactionHistory" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field hrm-stack"><label>&nbsp;</label><button type="button" id="BtnShowTransactionHistory" class="win-btn-action" onclick="PpPr.showHistory('tr', this)">Show</button></div>
+                <div class="hrm-field hrm-stack"><label>&nbsp;</label><div class="ppc-radios">
+                    <label class="hrm-check"><input type="radio" name="trMode" value="doc" checked> Doc Date</label>
+                    <label class="hrm-check"><input type="radio" name="trMode" value="entry"> Entry Date</label>
+                    <label class="hrm-check"><input type="radio" name="trMode" value="modify"> Modify Date</label></div></div>
+                <select id="CmbLanguage" class="win-combo is-hidden"></select>
+            </div></fieldset>
+        <div class="hrm-grid-box"><div class="hrm-subcaption"><span>Filtered Records</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+            <div class="hrm-grid-wrap"><table id="grdTransactionHistoryMain"></table></div></div>
+        <div class="hrm-grid-box hrm-grid-short"><div class="hrm-subcaption"><span>Detail of the Above Selected Row</span></div>
+            <div class="hrm-grid-wrap"><table id="grdTransactionhistoryDetail"></table></div></div>
+    </div>
+
+    <div class="hrm-footer">
+        <div class="hrm-footer-left"><span id="lblStatus"></span></div>
+        <div class="hrm-footer-right"><button type="button" id="btnHistory" class="win-btn-action"><i class="fa fa-history"></i> History</button></div>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_hrm.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_pp_ppc_common.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_pp_production.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260929a}"></script>
+</body>
+</html>

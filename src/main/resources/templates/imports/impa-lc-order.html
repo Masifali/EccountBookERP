@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Import : Lc Order - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_hrm.css?v=20260929a}"/>
+    <style>
+        .impa-main { display: grid; grid-template-columns: 1.15fr 1fr 1fr 1.1fr; gap: 4px 14px; align-items: start; }
+        .impa-col { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+        .impa-col .hrm-field { grid-template-columns: 112px minmax(0, 1fr); }
+        .impa-col.impa-stack .hrm-field { grid-template-columns: 1fr; }
+        .impa-pair { display: flex; gap: 3px; min-width: 0; }
+        .impa-pair > * { min-width: 0; flex: 1 1 0; }
+        .impa-detail { display: grid; grid-template-columns: 2fr 3fr 1.2fr 0.9fr 0.9fr 1.1fr; gap: 4px 6px; align-items: end; }
+        .impa-detail2 { display: grid; grid-template-columns: 1fr 1fr 1.1fr 5fr auto; gap: 4px 6px; align-items: end; margin-top: 4px; }
+        .impa-pay { display: grid; grid-template-columns: 180px 110px 140px auto; gap: 4px 6px; align-items: end; }
+        .impa-radio { display: inline-flex; gap: 8px; font-weight: normal; margin-left: 8px; }
+        .impa-radio label { font-weight: normal; margin: 0; }
+        .impa-btns { display: flex; gap: 3px; }
+        .impa-btns .win-btn-action { min-width: 0; padding: 0 10px; }
+        table.hrm-grid .hrm-cell-btn { height: 20px; min-width: 0; width: auto; padding: 0 8px; font-size: 8pt; line-height: 18px; }
+        .hrm-grid-box.impa-grid-sm .hrm-grid-wrap { max-height: 230px; }
+        @media (max-width: 1100px) { .impa-main { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 700px) {
+            .impa-main, .impa-detail, .impa-detail2, .impa-pay { grid-template-columns: 1fr; }
+            .impa-col .hrm-field { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<!-- Architecture.WinApp.Import.ImLcOrder (525) - ClientSize 1184 x 711, KeyPreview. tabControl1 (bottom tabs) Form | History.
+     panel3 toolStrip2: New | Refresh | Save As (hidden) | Save | Delete (hidden) | Update (hidden) | 231-Print | Attachment |
+       ShortCut Keys | Sea Port | Payment Term | Delivery Term.  panel4 "Import : Lc Order".
+     groupBox2 "Main Information": col 1 (5/100): Doc No & Date, Supplier, Ord.No & Date, Sales Person, Notify Party, Shipped To,
+       Partial Shipment, Trans Shipment, Last Ship Date, Quotation Ref, Inquiry Ref; col 2 (341/429): Expiry Date, Expiry Place,
+       Inspection, Legalization, Importer Bank, Exporter Bank (388 wide), Payment Term, Fcy Amount (disabled), Lcy Code, Exchange Rate,
+       Lcy Amount (read-only); col 3 (577/675): Loading Port, Destination Port, Delivery Term, Gross Weight(kg), Net Weight(kg) (r/o),
+       No Of Containers, Order Status; col 4 (823): Remarks, Commodity Desc, Inspaction Desc, Legalization Desc, Shipping Marks.
+       Branch / Project combos are hidden (Visible false) and never used by Insert().
+     tabControl2 Detail | Payment: groupBox1 "Detail" (Item Name/Code, Description, Packing Type*, Uom*, Qty*, Net Weight* (r/o) /
+       Item Rate (Fcy)*, Rate Uom*, Fcy Amount* (r/o), Remarks, + | Update | Cancel) + grdDetail; panel14 Payment Term, % Of Total,
+       Fcy Amount (disabled), + | Update | Cancel + grdPaymentTerm.
+     History: toolStrip1 Load All; "Import: Lc Contract History" DataGridHistory (Edit / SaveAs / Print by rights) + "Detail of selected Row". -->
+<body class="pd-body hrm-body" data-hrm="lc-order" data-screen="525">
+<div class="hrm-form">
+    <div class="hrm-tabs" id="tabMain">
+        <button type="button" class="hrm-tab is-active" data-tab="pgForm">Form</button>
+        <button type="button" class="hrm-tab" data-tab="pgHistory">History</button>
+    </div>
+
+    <div class="hrm-tab-page is-active" id="pgForm">
+        <div class="win-tool-strip">
+            <button type="button" id="btnNew" class="win-btn-tool" onclick="ImpALc.btnNew(this)"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="btnRefresh" class="win-btn-tool" onclick="ImpALc.btnRefresh(this)"><i class="fa fa-refresh"></i> <span><u>R</u>efresh</span></button>
+            <button type="button" id="BtnSaveAs" class="win-btn-tool is-hidden" onclick="ImpALc.BtnSaveAs(this)"><i class="fa fa-files-o"></i> <span><u>S</u>ave As</span></button>
+            <button type="button" id="btnSave" class="win-btn-tool" onclick="ImpALc.btnSave(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+            <button type="button" id="btnDelete" class="win-btn-tool is-hidden" onclick="ImpALc.btnDelete(this)"><i class="fa fa-trash"></i> <span><u>D</u>elete</span></button>
+            <button type="button" id="btnUpdate" class="win-btn-tool is-hidden" onclick="ImpALc.btnUpdate(this)"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+            <button type="button" id="Print" class="win-btn-tool" onclick="ImpALc.Print(this)" data-rpt-own data-rpt="231-ImLcOrder-Slip.rpt"><i class="fa fa-print"></i> <span>231-<u>P</u>rint</span></button>
+            <button type="button" id="btnAttachment" class="win-btn-tool" onclick="ImpALc.btnAttachment(this)"><i class="fa fa-paperclip"></i> <span><u>A</u>ttachment</span></button>
+            <button type="button" id="BtnShortCutkeys" class="win-btn-tool" onclick="ImpALc.BtnShortCutkeys(this)"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+            <button type="button" id="btnSeaPortDefine" class="win-btn-tool" onclick="ImpALc.btnSeaPortDefine(this)"><span>Sea Port</span></button>
+            <button type="button" id="btnDefinePaymentTerm" class="win-btn-tool" onclick="ImpALc.btnPaymentTerms(this)"><span>Payment Term</span></button>
+            <button type="button" id="toolStripButton2" class="win-btn-tool" onclick="ImpALc.btnDeliveryTerm(this)"><span>Delivery Term</span></button>
+        </div>
+        <div class="hrm-caption">Import : Lc Order</div>
+
+        <fieldset class="hrm-group">
+            <legend>Main Information</legend>
+            <div class="impa-main">
+                <div class="impa-col">
+                    <div class="hrm-field"><label for="txtdocno" class="hrm-req">Doc No &amp; Date</label>
+                        <div class="impa-pair"><input type="text" id="txtdocno" class="win-textbox" readonly tabindex="-1"/><input type="date" id="txtdocdate" class="win-textbox"/></div></div>
+                    <div class="hrm-field"><label for="cmbSupplier" class="hrm-req">Supplier</label><select id="cmbSupplier" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="hrm-field"><label for="txtSupLcOrderNo" class="hrm-req">Ord.No &amp; Date</label>
+                        <div class="impa-pair"><input type="text" id="txtSupLcOrderNo" class="win-textbox" maxlength="50" autocomplete="off"/><input type="date" id="txtSupLcOrderDate" class="win-textbox"/></div></div>
+                    <div class="hrm-field"><label for="cmbSalesPerson" class="hrm-req">Sales Person</label><select id="cmbSalesPerson" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="hrm-field"><label for="cmbNotifyParty">Notify Party</label><select id="cmbNotifyParty" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="hrm-field"><label for="cmbShippedTo">Shipped To</label><select id="cmbShippedTo" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="hrm-field"><label for="cmbPartialShipment">Partial Shipment</label><input type="text" id="cmbPartialShipment" class="win-textbox" maxlength="50" autocomplete="off"/></div>
+                    <div class="hrm-field"><label for="cmbTransShipment">Trans Shipment</label><input type="text" id="cmbTransShipment" class="win-textbox" maxlength="50" autocomplete="off"/></div>
+                    <div class="hrm-field"><label for="txtLastShipmentDate">Last Ship Date</label><input type="date" id="txtLastShipmentDate" class="win-textbox"/></div>
+                    <div class="hrm-field"><label for="txtQuorationRef">Quotation Ref</label><input type="text" id="txtQuorationRef" class="win-textbox" maxlength="50" autocomplete="off"/></div>
+                    <div class="hrm-field"><label for="txtInquiryRef">Inquiry Ref</label><input type="text" id="txtInquiryRef" class="win-textbox" maxlength="50" autocomplete="off"/></div>
+                </div>
+                <div class="impa-col">
+                    <div class="hrm-field"><label for="txtExpiryDate">Expiry Date</label><input type="date" id="txtExpiryDate" class="win-textbox"/></div>
+                    <div class="hrm-field"><label for="txtExpiryPlace">Expiry Place</label><input type="text" id="txtExpiryPlace" class="win-textbox" maxlength="50" autocomplete="off"/></div>
+                    <div class="hrm-field"><label for="cmbInspectionRequired">Inspection</label><select id="cmbInspectionRequired" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="hrm-field"><label for="cmbLegalizationRequired">Legalization</label><select id="cmbLegalizationRequired" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="hrm-field"><label for="CmbImporterBank" class="hrm-req">Importer Bank</label><select id="CmbImporterBank" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="hrm-field"><label for="cmbExporterBanks" class="hrm-req">Exporter Bank</label><select id="cmbExporterBanks" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="hrm-field"><label for="cmbPaymenTerm" class="hrm-req">Payment Term</label><select id="cmbPaymenTerm" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="hrm-field"><label for="txtTotalFcyAmountMain" class="hrm-req">Fcy Amount</label><input type="text" id="txtTotalFcyAmountMain" class="win-textbox hrm-al-right" disabled/></div>
+                    <div class="hrm-field"><label for="cmbCurreny" class="hrm-req">Lcy Code</label><select id="cmbCurreny" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="hrm-field"><label for="txtExchangeRate" class="hrm-req">Exchange Rate</label><input type="text" id="txtExchangeRate" class="win-textbox hrm-al-right" inputmode="decimal" autocomplete="off"/></div>
+                    <div class="hrm-field"><label for="txtLcyAmountMain" class="hrm-req">Lcy Amount</label><input type="text" id="txtLcyAmountMain" class="win-textbox hrm-al-right" readonly tabindex="-1"/></div>
+                </div>
+                <div class="impa-col">
+                    <div class="hrm-field"><label for="cmbLoadingPort" class="hrm-req">Loading Port</label><select id="cmbLoadingPort" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="hrm-field"><label for="cmbDestinationPort" class="hrm-req">Destination Port</label><select id="cmbDestinationPort" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="hrm-field"><label for="cmbDeliveryTerm" class="hrm-req">Delivery Term</label><select id="cmbDeliveryTerm" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="hrm-field"><label for="txtGrossWeightMain" class="hrm-req">Gross Weight(kg)</label><input type="text" id="txtGrossWeightMain" class="win-textbox hrm-al-right" inputmode="decimal" autocomplete="off"/></div>
+                    <div class="hrm-field"><label for="txtNetWeightMain" class="hrm-req">Net Weight(kg)</label><input type="text" id="txtNetWeightMain" class="win-textbox hrm-al-right" readonly tabindex="-1"/></div>
+                    <div class="hrm-field"><label for="txtNoOfContainerMain">No Of Containers</label><input type="text" id="txtNoOfContainerMain" class="win-textbox hrm-al-right" inputmode="numeric" autocomplete="off"/></div>
+                    <div class="hrm-field"><label for="cmbOrderStatus" class="hrm-req">Order Status</label><select id="cmbOrderStatus" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                </div>
+                <div class="impa-col impa-stack">
+                    <div class="hrm-field"><label for="txtRemarksHeader">Remarks</label><textarea id="txtRemarksHeader" class="win-textbox" rows="3"></textarea></div>
+                    <div class="hrm-field"><label for="txtCommodityDescMain">Commodity Desc</label><input type="text" id="txtCommodityDescMain" class="win-textbox" autocomplete="off"/></div>
+                    <div class="hrm-field"><label for="txtInspectionDesc">Inspaction Desc</label><input type="text" id="txtInspectionDesc" class="win-textbox" maxlength="250" autocomplete="off"/></div>
+                    <div class="hrm-field"><label for="txtLegalizationDesc">Legalization Desc</label><input type="text" id="txtLegalizationDesc" class="win-textbox" maxlength="250" autocomplete="off"/></div>
+                    <div class="hrm-field"><label for="txtShippingMarks">Shipping Marks</label><input type="text" id="txtShippingMarks" class="win-textbox" autocomplete="off"/></div>
+                </div>
+            </div>
+        </fieldset>
+
+        <div class="hrm-tabs" id="tabDetail">
+            <button type="button" class="hrm-tab is-active" data-tab="pgDetail">Detail</button>
+            <button type="button" class="hrm-tab" data-tab="pgPayment">Payment</button>
+        </div>
+        <div class="hrm-tab-page is-active" id="pgDetail">
+            <fieldset class="hrm-group">
+                <legend>Detail</legend>
+                <div class="impa-detail">
+                    <div class="hrm-field hrm-stack"><div class="hrm-lbl">Item <span class="impa-radio">
+                        <label><input type="radio" name="rdSearch" id="rdSearchByName" checked> Name</label>
+                        <label><input type="radio" name="rdSearch" id="rdSearchByCode"> Code</label></span></div>
+                        <select id="cmbItem" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="hrm-field hrm-stack"><label for="txtItemDescription">Description</label><input type="text" id="txtItemDescription" class="win-textbox" autocomplete="off"/></div>
+                    <div class="hrm-field hrm-stack"><label for="cmbPackingType" class="hrm-req">Packing Type</label><select id="cmbPackingType" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="hrm-field hrm-stack"><label for="cmbItemUom" class="hrm-req">Uom</label><select id="cmbItemUom" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="hrm-field hrm-stack"><label for="txtQtyDetail" class="hrm-req">Qty</label><input type="text" id="txtQtyDetail" class="win-textbox hrm-al-right" inputmode="decimal" autocomplete="off"/></div>
+                    <div class="hrm-field hrm-stack"><label for="txtWeightDetail" class="hrm-req">Net Weight</label><input type="text" id="txtWeightDetail" class="win-textbox hrm-al-right" readonly disabled tabindex="-1"/></div>
+                </div>
+                <div class="impa-detail2">
+                    <div class="hrm-field hrm-stack"><label for="txtItemRate" class="hrm-req">Item Rate (Fcy)</label><input type="text" id="txtItemRate" class="win-textbox hrm-al-right" inputmode="decimal" autocomplete="off"/></div>
+                    <div class="hrm-field hrm-stack"><label for="cmbRateUom" class="hrm-req">Rate Uom</label><select id="cmbRateUom" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="hrm-field hrm-stack"><label for="txtFcyAmountDetail" class="hrm-req">Fcy Amount</label><input type="text" id="txtFcyAmountDetail" class="win-textbox hrm-al-right" readonly disabled tabindex="-1"/></div>
+                    <div class="hrm-field hrm-stack"><label for="txtRemarksDetail">Remarks</label><input type="text" id="txtRemarksDetail" class="win-textbox" autocomplete="off"/></div>
+                    <div class="impa-btns">
+                        <button type="button" id="btnaddnew" class="win-btn-action" onclick="ImpALc.btnaddnew(this)">+</button>
+                        <button type="button" id="btnGridUpdate" class="win-btn-action is-hidden" onclick="ImpALc.btnGridUpdate(this)">Update</button>
+                        <button type="button" id="btnCancel" class="win-btn-action is-hidden" onclick="ImpALc.btnCancel(this)">Cancel</button>
+                    </div>
+                </div>
+            </fieldset>
+            <div class="hrm-grid-box impa-grid-sm">
+                <div class="hrm-subcaption"><span>Detail</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+                <div class="hrm-grid-wrap"><table id="grdDetail"></table></div>
+            </div>
+        </div>
+        <div class="hrm-tab-page" id="pgPayment">
+            <div class="impa-pay">
+                <div class="hrm-field hrm-stack"><label for="CmbPaymentTermDetail">Payment Term</label><select id="CmbPaymentTermDetail" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field hrm-stack"><label for="PercntOfTotal">% Of Total</label><input type="text" id="PercntOfTotal" class="win-textbox hrm-al-right" inputmode="decimal" autocomplete="off"/></div>
+                <div class="hrm-field hrm-stack"><label for="txtPaymentDetailFcyAmount">Fcy Amount</label><input type="text" id="txtPaymentDetailFcyAmount" class="win-textbox hrm-al-right" disabled/></div>
+                <div class="impa-btns">
+                    <button type="button" id="btnAddPayment" class="win-btn-action" onclick="ImpALc.btnAddPayment(this)">+</button>
+                    <button type="button" id="btnUpdatePayment" class="win-btn-action is-hidden" onclick="ImpALc.btnUpdatePayment(this)">Update</button>
+                    <button type="button" id="btnCancelPayment" class="win-btn-action is-hidden" onclick="ImpALc.btnCancelPayment(this)">Cancel</button>
+                </div>
+            </div>
+            <div class="hrm-grid-box impa-grid-sm">
+                <div class="hrm-subcaption"><span>Payment Detail</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+                <div class="hrm-grid-wrap"><table id="grdPaymentTerm"></table></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="hrm-tab-page" id="pgHistory">
+        <div class="win-tool-strip">
+            <button type="button" id="btnLoadAllHistory" class="win-btn-tool" onclick="ImpALc.btnLoadAllHistory(this)"><i class="fa fa-list"></i> <span><u>L</u>oad All</span></button>
+        </div>
+        <div class="hrm-grid-box">
+            <div class="hrm-subcaption"><span>Import: Lc Contract History</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+            <div class="hrm-grid-wrap"><table id="DataGridHistory"></table></div>
+        </div>
+        <div class="hrm-grid-box impa-grid-sm">
+            <div class="hrm-subcaption"><span>Detail of selected Row</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+            <div class="hrm-grid-wrap"><table id="grdHistoryDetail"></table></div>
+        </div>
+    </div>
+
+    <div class="hrm-footer">
+        <div class="hrm-footer-left"><span id="lblStatus"></span></div>
+        <div class="hrm-footer-right"><button type="button" id="btnHistory" class="win-btn-action"><i class="fa fa-history"></i> History</button></div>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_hrm.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_imports_impa.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_imports_lc_order.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260929a}"></script>
+</body>
+</html>

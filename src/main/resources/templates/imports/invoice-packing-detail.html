@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Invoice Packing Detail - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_hrm.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_imports_impb.css?v=20260930a}"/>
+</head>
+<!-- Architecture.WinApp.Import.Transactions.frmInvoicePackingDetail (784) - ClientSize 875 x 711, KeyPreview.
+     tabPage1 "Form": toolstrip New | Refresh | Save | Update (hidden) | 501-Print | ShortCut Keys; panel28 "Packing Detail By Invoice " +
+     ChkPreview; groupBox1 "Main": Invoice No; tabControl2 "Packing Material Detail": Container No, Item (Name / Code), Description,
+     Job Lot, Pack Uom, Qty, Weight, Remarks, + / Update / Cancel; "Detail" grid (Id, ItemId, JobLotId, PackUomId hidden; Qty / Weight
+     "#,##0.###" totals; X delete). The brand / rate / amount controls sit below the 105 px panel and are never visible - not drawn.
+     tabPage2 "History": New | Refresh; "Invoice History For Packing Detail"; Filters (From / To Date with tick box, From / To Doc No,
+     Exporter, Doc / Entry / Modify Date, Show); DataGridHistory (Edit); "Packing Material Detail of the selected above row". -->
+<body class="pd-body hrm-body" data-screen="784">
+<div class="hrm-form">
+    <div class="hrm-tabs" data-tabs="tc1">
+        <button type="button" class="hrm-tab is-active" data-tab="tabPage1">Form</button>
+        <button type="button" class="hrm-tab" data-tab="tabPage2">History</button>
+    </div>
+    <div class="hrm-tab-page is-active" id="tabPage1" data-tabs-page="tc1">
+        <div class="win-tool-strip">
+            <button type="button" id="btnnew" class="win-btn-tool" onclick="ImpBPacking.btnnew(this)"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="BtnRefresh" class="win-btn-tool" onclick="ImpBPacking.btnRefresh(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+            <button type="button" id="btnSave" class="win-btn-tool" onclick="ImpBPacking.btnSave(this)"><i class="fa fa-save"></i> <span>Save</span></button>
+            <button type="button" id="btnUpdate" class="win-btn-tool is-hidden" onclick="ImpBPacking.btnUpdate(this)"><i class="fa fa-pencil"></i> <span>Update</span></button>
+            <button type="button" id="Print" class="win-btn-tool" onclick="ImpBPacking.Print(this)"><i class="fa fa-print"></i> <span>501-Print</span></button>
+            <button type="button" id="btnShortCutKey" class="win-btn-tool" onclick="ImpBPacking.btnShortCutKey(this)"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+        </div>
+        <div class="impb-caption-row"><span class="impb-title">Packing Detail By Invoice</span>
+            <span class="impb-right"><label class="hrm-check"><input type="checkbox" id="ChkPreview"> Preview</label></span></div>
+        <fieldset class="hrm-group">
+            <legend>Main</legend>
+            <div class="hrm-entry hrm-cols-2" style="padding:4px 2px">
+                <div class="hrm-field"><label class="hrm-req" for="CmbInvoiceNo">Invoice No</label><select id="CmbInvoiceNo" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+            </div>
+        </fieldset>
+        <div class="hrm-tabs" data-tabs="tc2"><button type="button" class="hrm-tab is-active" data-tab="tabPackingMaterialDetail">Packing Material Detail</button></div>
+        <div class="hrm-tab-page is-active" id="tabPackingMaterialDetail" data-tabs-page="tc2">
+            <div class="hrm-entry hrm-cols-4">
+                <div class="hrm-field hrm-stack"><label for="txtContainerNo">Container No</label><input type="text" id="txtContainerNo" class="win-textbox" autocomplete="off"></div>
+                <div class="hrm-field hrm-stack"><div class="hrm-lbl">Item
+                    <span class="impb-radios" style="display:inline-flex;margin-left:8px;font-weight:normal">
+                        <label class="hrm-check"><input type="radio" name="rdPackingItem" id="rdPackingItemName" value="name"> Name</label>
+                        <label class="hrm-check"><input type="radio" name="rdPackingItem" id="rdPackingItemCode" value="code"> Code</label></span></div>
+                    <select id="CmbItem" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field hrm-stack"><label for="txtItemDescription">Description</label><input type="text" id="txtItemDescription" class="win-textbox" autocomplete="off"></div>
+                <div class="hrm-field hrm-stack"><label for="CmbJobLot">Job Lot</label><select id="CmbJobLot" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field hrm-stack"><label for="CmbPackUom">Pack Uom</label><select id="CmbPackUom" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field hrm-stack"><label for="txtQty">Qty</label><input type="text" id="txtQty" class="win-textbox hrm-al-right" value="0" data-guard="decimal" inputmode="decimal" autocomplete="off"></div>
+                <div class="hrm-field hrm-stack"><label for="txtWeight">Weight</label><input type="text" id="txtWeight" class="win-textbox hrm-al-right" value="0" data-guard="decimal" inputmode="decimal" autocomplete="off"></div>
+                <div class="hrm-field hrm-stack"><label for="txtPackingRemarks">Remarks</label>
+                    <div class="hrm-inline" style="flex-wrap:nowrap"><input type="text" id="txtPackingRemarks" class="win-textbox hrm-grow" autocomplete="off">
+                        <button type="button" id="btnPackingAdd" class="win-btn-action" style="min-width:34px;width:34px" onclick="ImpBPacking.btnPackingAdd(this)">+</button>
+                        <button type="button" id="btnPackingUpdate" class="win-btn-action is-hidden" style="min-width:0;width:auto;padding:0 8px" onclick="ImpBPacking.btnPackingUpdate(this)">Update</button>
+                        <button type="button" id="btnPackingCancel" class="win-btn-action is-hidden" style="min-width:0;width:auto;padding:0 8px" onclick="ImpBPacking.btnPackingCancel(this)">Cancel</button></div></div>
+            </div>
+            <div class="hrm-grid-box">
+                <div class="hrm-subcaption"><span>Detail</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+                <div class="hrm-grid-wrap"><table id="grdPackingMaterialDetail"></table></div>
+            </div>
+        </div>
+    </div>
+    <div class="hrm-tab-page" id="tabPage2" data-tabs-page="tc1">
+        <div class="win-tool-strip">
+            <button type="button" id="btnResetHistory" class="win-btn-tool" onclick="ImpBPacking.btnResetHistory(this)"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="btnRefreshHistory" class="win-btn-tool" onclick="ImpBPacking.btnRefreshHistory(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+        </div>
+        <div class="hrm-caption">Invoice History For Packing Detail</div>
+        <fieldset class="hrm-group">
+            <legend>Filters</legend>
+            <div class="hrm-entry hrm-cols-3" style="padding:4px 2px">
+                <div class="hrm-field"><label for="hFromDate">From Date</label><div class="impb-date-chk"><input type="checkbox" id="hFromChk" checked><input type="date" id="hFromDate" class="win-textbox"></div></div>
+                <div class="hrm-field"><label for="FromDocNoHistory">From Doc No</label><input type="text" id="FromDocNoHistory" class="win-textbox" data-guard="integer" inputmode="numeric" autocomplete="off"></div>
+                <div class="hrm-field"><label for="CmbCustomerHistory">Exporter</label><select id="CmbCustomerHistory" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field"><label for="hToDate">To Date</label><div class="impb-date-chk"><input type="checkbox" id="hToChk" checked><input type="date" id="hToDate" class="win-textbox"></div></div>
+                <div class="hrm-field"><label for="ToDocNoHistory">To Doc No</label><input type="text" id="ToDocNoHistory" class="win-textbox" data-guard="integer" inputmode="numeric" autocomplete="off"></div>
+                <div class="hrm-field"><span class="hrm-lbl"></span><div class="hrm-inline"><div class="impb-radios">
+                    <label class="hrm-check"><input type="radio" name="hDateType" value="doc" checked> Doc Date</label>
+                    <label class="hrm-check"><input type="radio" name="hDateType" value="entry"> Entry Date</label>
+                    <label class="hrm-check"><input type="radio" name="hDateType" value="modify"> Modify Date</label></div>
+                    <button type="button" id="btnShowHistory" class="win-btn-action" onclick="ImpBPacking.btnShowHistory(this)">Show</button></div></div>
+            </div>
+        </fieldset>
+        <div class="hrm-grid-box" id="boxHistory">
+            <div class="hrm-subcaption"><span>Filtered Records</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+            <div class="hrm-grid-wrap"><table id="DataGridHistory"></table></div>
+        </div>
+        <div class="hrm-grid-box hrm-grid-short">
+            <div class="hrm-subcaption"><span>Packing Material Detail of the selected above row</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+            <div class="hrm-grid-wrap"><table id="grdPMHistory"></table></div>
+        </div>
+    </div>
+    <div class="hrm-footer">
+        <div class="hrm-footer-left"><span id="lblStatus"></span></div>
+        <div class="hrm-footer-right"><button type="button" id="btnHistory" class="win-btn-action"><i class="fa fa-history"></i> History</button></div>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_hrm.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_imports_impb_core.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_imports_invoice_packing_detail.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

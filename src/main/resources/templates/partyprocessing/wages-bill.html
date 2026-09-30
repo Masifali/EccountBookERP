@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Labour Wages - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_hrm.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_pp_ppc.css?v=20260930a}"/>
+    <style>
+        table.hrm-grid tr.ppc-free td { color: red; }
+    </style>
+</head>
+<!-- Architecture.WinApp.PartyProcessing.frmWagesBillPartyProcessing (614, DocumentTypeId 219). Opened from the menu, or by
+     Production (118), Stock Conversion (176) and Stock Transfer (220) after their save with ?refDocTypeId=&refDocId=&grossWeight=.
+     tabIncomingLabourwages: Form | History. Form: toolStrip1 New | Refresh | Save | Update | 002_01-Print | Wages Schedule |
+     Wages Exempt; caption "Labour Wages"; groupBox1 Main Information: Doc Date & No, Stock Party, Gp No / Ref Doc Type & No,
+     Total Qty, Gross Weight / Remarks; tabControl1: Regular Wages (Apply All, grdwagesDetail) | Other Wages (Apply All, grdStiching);
+     tabControl2: Pending Data For Load (gridPendingWagesSlip, Load) | Wages Detail (grdDataRetrieve).
+     History: toolStrip2 Reset | Refresh; Filters: From / To Date, From / To Doc No, Document Type, Show; DataGridHistory
+     (Slip, Edit, Voucher); GrdHistoryDetail. -->
+<body class="pd-body hrm-body" data-hrm="pp-wages-bill" th:attr="data-screen=${ppScreen}">
+<div class="hrm-form">
+    <div class="hrm-tabs" data-tabs="main">
+        <button type="button" class="hrm-tab is-active" data-tab="form">Form</button>
+        <button type="button" class="hrm-tab" data-tab="history">History</button>
+    </div>
+
+    <div class="hrm-tab-page is-active" data-group="main" data-page="form">
+        <div class="win-tool-strip">
+            <button type="button" id="btnnew" class="win-btn-tool" onclick="PpWb.btnnew()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="btnRefresh" class="win-btn-tool" onclick="PpWb.btnRefresh(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+            <button type="button" id="btnsave" class="win-btn-tool" onclick="PpWb.btnsave(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+            <button type="button" id="btnUpdate" class="win-btn-tool is-hidden" onclick="PpWb.btnUpdate(this)"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+            <button type="button" id="Print" class="win-btn-tool" onclick="PpWb.print(this)" data-rpt-skip><i class="fa fa-print"></i> <span>002_01-<u>P</u>rint</span></button>
+            <button type="button" id="btnWagesSchedule" class="win-btn-tool" disabled title="Opens the Contract Wages Schedule desktop form (not part of this page)"><i class="fa fa-calendar"></i> <span>Wages Schedule</span></button>
+            <button type="button" id="btnWagesExempt" class="win-btn-tool" disabled title="Opens the Wages Exempt Item Schedule desktop form (not part of this page)"><i class="fa fa-ban"></i> <span>Wages Exempt</span></button>
+        </div>
+        <div class="hrm-caption"><span>Labour Wages</span></div>
+        <fieldset class="hrm-group">
+            <legend>Main Information</legend>
+            <div class="hrm-entry hrm-cols-3" style="align-items:start">
+                <div class="hrm-field"><label for="txtDocdate">Doc Date &amp; No</label>
+                    <div class="ppc-pair"><input type="date" id="txtDocdate" class="win-textbox"/><input type="text" id="txtdocnumber" class="win-textbox" readonly tabindex="-1"/></div></div>
+                <div class="hrm-field"><label for="CmbStockParty">Stock Party</label><select id="CmbStockParty" class="win-combo"></select></div>
+                <div class="hrm-field"><label for="txtGpNo">Gp No</label><input type="text" id="txtGpNo" class="win-textbox" readonly tabindex="-1"/></div>
+
+                <div class="hrm-field"><label for="cmbReferenceDocType">Ref Doc Type &amp; No</label>
+                    <div class="ppc-pair"><select id="cmbReferenceDocType" class="win-combo"></select><input type="text" id="txtDocNo" class="win-textbox" readonly tabindex="-1"/></div></div>
+                <div class="hrm-field"><label for="txtQty">Total Qty</label><input type="text" id="txtQty" class="win-textbox hrm-al-right" readonly tabindex="-1"/></div>
+                <div class="hrm-field"><label for="txtGrossWeight">Gross Weight</label><input type="text" id="txtGrossWeight" class="win-textbox hrm-al-right" readonly tabindex="-1"/></div>
+
+                <div class="hrm-field hrm-span-all"><label for="txtRemarks">Remarks</label><input type="text" id="txtRemarks" class="win-textbox" autocomplete="off"/></div>
+                <input type="hidden" id="txtEntryType"/><input type="hidden" id="txtGRNId"/><input type="checkbox" id="chkisapprove" class="is-hidden"/>
+            </div>
+        </fieldset>
+        <div class="hrm-tabs ppc-subtabs" data-tabs="wages">
+            <button type="button" class="hrm-tab is-active" data-tab="regular">Regular Wages</button>
+            <button type="button" class="hrm-tab is-hidden" data-tab="other">Other Wages</button>
+        </div>
+        <div class="hrm-tab-page is-active" data-group="wages" data-page="regular">
+            <div class="hrm-grid-box">
+                <div class="hrm-subcaption"><span>In this Grid User Will add Regular Wages</span>
+                    <span class="hrm-inline"><button type="button" id="btnAddContractorValuesForAllDetailWages" class="win-btn-action" style="width:auto;padding:0 8px" title="Click this button To Apply First Row Values for All other Rows" onclick="PpWb.applyAll('regular')">Apply All</button>
+                        <button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></span></div>
+                <div class="hrm-grid-wrap" data-grid-tag="WagesGrid"><table id="grdwagesDetail"></table></div>
+            </div>
+        </div>
+        <div class="hrm-tab-page" data-group="wages" data-page="other">
+            <div class="hrm-grid-box">
+                <div class="hrm-subcaption"><span>In this Grid User Will add Other Wages (Stiching &amp; OutPut etc)</span>
+                    <span class="hrm-inline"><button type="button" id="btnAddContractorValuesForAllSticingWages" class="win-btn-action" style="width:auto;padding:0 8px" title="Click this button To Apply First Row Values for All other Rows" onclick="PpWb.applyAll('other')">Apply All</button>
+                        <button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></span></div>
+                <div class="hrm-grid-wrap" data-grid-tag="StichingGrid"><table id="grdStiching"></table></div>
+            </div>
+        </div>
+        <div class="hrm-tabs ppc-subtabs" data-tabs="pending">
+            <button type="button" class="hrm-tab is-active" data-tab="pending">Pending Data For Load</button>
+            <button type="button" class="hrm-tab is-hidden" data-tab="previous">Wages Detail</button>
+        </div>
+        <div class="hrm-tab-page is-active" data-group="pending" data-page="pending">
+            <div class="hrm-grid-box hrm-grid-short">
+                <div class="hrm-subcaption"><span>This grid shows the pending data to load for wages entries.</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+                <div class="hrm-grid-wrap"><table id="gridPendingWagesSlip"></table></div>
+            </div>
+        </div>
+        <div class="hrm-tab-page" data-group="pending" data-page="previous">
+            <div class="hrm-grid-box hrm-grid-short">
+                <div class="hrm-subcaption"><span>This grid shows the previous entry details against this document.</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+                <div class="hrm-grid-wrap"><table id="grdDataRetrieve"></table></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="hrm-tab-page" data-group="main" data-page="history">
+        <div class="win-tool-strip">
+            <button type="button" id="btnResetHistory" class="win-btn-tool" onclick="PpWb.btnResetHistory()"><i class="fa fa-undo"></i> <span>Reset</span></button>
+            <button type="button" id="btnRefreshHistory" class="win-btn-tool" onclick="PpWb.btnRefreshHistory(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+        </div>
+        <div class="hrm-caption"><span>Labour Wages History</span></div>
+        <fieldset class="hrm-group">
+            <legend>Filters</legend>
+            <div class="hrm-entry" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr))">
+                <div class="hrm-field hrm-stack"><label for="FromDateHistory">From Date</label>
+                    <div class="ppc-date-chk"><input type="checkbox" id="chkFromDateHistory" checked title="Use From Date"><input type="date" id="FromDateHistory" class="win-textbox"/></div></div>
+                <div class="hrm-field hrm-stack"><label for="ToDateHistory">To Date</label>
+                    <div class="ppc-date-chk"><input type="checkbox" id="chkToDateHistory" checked title="Use To Date"><input type="date" id="ToDateHistory" class="win-textbox"/></div></div>
+                <div class="hrm-field hrm-stack"><label for="txtFromDocNoHistory">From Doc No</label><input type="text" id="txtFromDocNoHistory" class="win-textbox" inputmode="numeric" autocomplete="off"/></div>
+                <div class="hrm-field hrm-stack"><label for="txtToDocNoHistory">To Doc No</label><input type="text" id="txtToDocNoHistory" class="win-textbox" inputmode="numeric" autocomplete="off"/></div>
+                <div class="hrm-field hrm-stack"><label for="CmbDocumentTypeHistory">Document Type</label><select id="CmbDocumentTypeHistory" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field hrm-stack"><label>&nbsp;</label><button type="button" id="btnShow" class="win-btn-action" onclick="PpWb.btnShow(this)">Show</button></div>
+            </div>
+        </fieldset>
+        <div class="hrm-grid-box">
+            <div class="hrm-subcaption"><span>Labour Wages History</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+            <div class="hrm-grid-wrap"><table id="DataGridHistory"></table></div>
+        </div>
+        <div class="hrm-grid-box hrm-grid-short">
+            <div class="hrm-subcaption"><span>This grid shows the Detail of above Selected row</span></div>
+            <div class="hrm-grid-wrap"><table id="GrdHistoryDetail"></table></div>
+        </div>
+    </div>
+
+    <div class="hrm-footer">
+        <div class="hrm-footer-left"><span id="lblStatus"></span></div>
+        <div class="hrm-footer-right"><button type="button" id="btnHistory" class="win-btn-action"><i class="fa fa-history"></i> History</button></div>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_hrm.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_pp_ppc_common.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_pp_wages_bill.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260929a}"></script>
+</body>
+</html>

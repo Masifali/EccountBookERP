@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title th:text="${transporter} ? 'Logistic Rate Negotiation For Transporter - EccountBookERP' : 'Logistic Rate Negotiation - EccountBookERP'">Logistic Rate Negotiation - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_hrm.css?v=20260929a}"/>
+    <style>
+        .lgsa-top { display: grid; grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr); gap: 6px; padding: 0 6px; align-items: stretch; }
+        .lgsa-top .hrm-group { margin: 0 0 4px 0; }
+        .lgsa-main { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px 10px; padding: 2px 0; }
+        .lgsa-main .hrm-field { grid-template-columns: 100px minmax(0, 1fr); }
+        .lgsa-pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 2px; }
+        .lgsa-cells { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 3px 4px; align-items: end; }
+        .lgsa-cells > div { display: flex; flex-direction: column; min-width: 0; }
+        .lgsa-cells .lgsa-w2 { grid-column: span 2; }
+        .lgsa-cells label, .lgsa-radios label { font: bold 8.5pt "Segoe UI", sans-serif; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .lgsa-cells .win-textbox, .lgsa-cells .dtcombo-wrap, .lgsa-cells select { width: 100%; }
+        .lgsa-radios { display: flex; gap: 8px; align-items: center; }
+        .lgsa-radios label { font-weight: normal; display: inline-flex; gap: 3px; align-items: center; }
+        .lgsa-btns { display: flex; gap: 4px; align-items: end; }
+        .lgsa-strip { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 2px 6px; flex-wrap: wrap; }
+        .lgsa-strip .lgsa-title { font: bold 12pt Tahoma, sans-serif; color: teal; }
+        .lgsa-strip small { font: 8pt "Segoe UI", sans-serif; color: #444; }
+        .lgsa-src { display: flex; flex-direction: column; min-width: 0; }
+        .lgsa-src .hrm-grid-box { min-height: 200px; }
+        .lgsa-filters { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: end; padding: 4px 8px; border: 1px solid #c8c8c8; margin: 4px 8px; }
+        .lgsa-filters > div { display: flex; flex-direction: column; min-width: 0; }
+        .lgsa-filters label { font: bold 9pt "Segoe UI", sans-serif; margin: 0; }
+        .lgsa-filters .lgsa-dt { display: inline-flex; align-items: center; gap: 3px; }
+        .lgsa-filters input[type=text] { width: 70px; }
+        .lgsa-filters .dtcombo-wrap, .lgsa-filters select.win-combo { width: 160px; max-width: 100%; }
+        table.hrm-grid .hrm-cell-btn { height: 20px; min-width: 0; width: auto; padding: 0 6px; font-size: 8pt; line-height: 18px; }
+        @media (max-width: 1100px) { .lgsa-top { grid-template-columns: 1fr; } .lgsa-cells { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+        @media (max-width: 800px) { .lgsa-main { grid-template-columns: 1fr; } }
+        @media (max-width: 600px) { .lgsa-cells { grid-template-columns: repeat(2, minmax(0, 1fr)); } .lgsa-cells .lgsa-w2 { grid-column: span 2; } }
+    </style>
+</head>
+<!-- 937 Architecture.WinApp.Service.lgstcm.frmLogisticRateNegotiation (DocumentTypeId 1300) and
+     941 frmLogisticRateNegotiationTransporter (1302). AutoScrollMinSize 1200 x 650, KeyPreview. tabControl1 "Form" | "History".
+     Form: toolStrip1 New | Refresh | Save | SaveAs (hidden) | Update (hidden) | Delete (hidden) | Attachment | 1300-Print (1302-Print) |
+       Define LookUps (hidden) | ShortCut Keys; "Logistic Rate Negotiation and Comparisons :" (+ " For Transporter") + Preview.
+       groupBox2 "Main Information": Doc No,Date; Service Type (disabled); Remarks; Destination Port / Loading Port (937) or City From / CityTo (941);
+       Transaction Currency + Exchange Rate; Fcy Currency (disabled) + Fcy Rate; Deal Status.
+       groupBox3 "Detail Information": Broker / Agent Name (+ define party), Service Provider, Payment Term, Due Days, [937: Vessel Routing Type,
+       Vessel Routing Description], Master Item / Category, Service Item (Name / Code), Transaction Currency (disabled), Service Rate, Rate Base,
+       Tcy Amount, Lcy Amount, Offer Validity (Days), Offer Validity Date, [937: Cargo Cut Off Date, ETD(Sailing) POL, Transit Time (Days),
+       Free Days At POD], Remarks, + / Update / Cancel.
+       panel4 "Source Document Info" grdSourceDocument: X, +, DocumentId (invoice combo), NoOfContainers, MTon (941: editable), BrokerAgentId
+       (agents of the detail grid), Remarks; Id / DocumentTypeId / ServiceProviderId hidden.
+       grdCustomerDetail: X, Edit; editable ServiceRate, OfferValidityDays, OfferValidityDate, Remarks.
+     History: New | Refresh; Filters Date Type, Date From / To (check boxes), Doc From / To, Service Type, Deal Status, Show,
+       Doc / Entry / Modify / Approved Date; grdHistory (Edit, Save As, Print buttons) + "Detail of the Above Selected Row". -->
+<body class="pd-body hrm-body" th:attr="data-screen=${transporter ? '941' : '937'},data-page=${transporter ? 'rate-negotiation-transporter' : 'rate-negotiation'}">
+<div class="hrm-form">
+    <div class="hrm-tabs">
+        <button type="button" class="hrm-tab is-active" data-tab="tabPage1">Form</button>
+        <button type="button" class="hrm-tab" data-tab="tabPage3">History</button>
+    </div>
+    <!-- ====================================================================== Form -->
+    <div class="hrm-tab-page is-active" id="tabPage1">
+        <div class="win-tool-strip">
+            <button type="button" id="btnnew" class="win-btn-tool" onclick="LgsRN.btnnew(this)"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="btnRefresh" class="win-btn-tool" onclick="LgsRN.btnRefresh(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+            <button type="button" id="btnsave" class="win-btn-tool" onclick="LgsRN.btnsave(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+            <button type="button" id="btnSaveAs" class="win-btn-tool is-hidden" onclick="LgsRN.btnSaveAs(this)"><i class="fa fa-files-o"></i> <span>SaveAs</span></button>
+            <button type="button" id="btnUpdate" class="win-btn-tool is-hidden" onclick="LgsRN.btnUpdate(this)"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+            <button type="button" id="btnDelete" class="win-btn-tool is-hidden" onclick="LgsRN.btnDelete(this)"><i class="fa fa-trash"></i> <span><u>D</u>elete</span></button>
+            <button type="button" id="btnAttachment" class="win-btn-tool" onclick="LgsRN.attachment()" title="Attachments are not ported on the web"><i class="fa fa-paperclip"></i> <span><u>A</u>ttachment</span></button>
+            <button type="button" id="btnPrint" class="win-btn-tool" onclick="LgsRN.btnPrint(this)"><i class="fa fa-print"></i> <span th:text="${transporter} ? '1302-Print' : '1300-Print'">1300-Print</span></button>
+            <button type="button" id="BtnDefineLookUps" class="win-btn-tool is-hidden"><i class="fa fa-list"></i> <span>Define LookUps</span></button>
+            <button type="button" id="btnshortcutkeys" class="win-btn-tool" onclick="LgsRN.shortcuts()"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+        </div>
+        <div class="lgsa-strip">
+            <span><span class="lgsa-title" th:text="${transporter} ? 'Logistic Rate Negotiation and Comparisons For Transporter :' : 'Logistic Rate Negotiation and Comparisons :'">Logistic Rate Negotiation and Comparisons :</span>
+                <small>A centralized record for evaluating, negotiating, and approving freight and transportation rates.</small></span>
+            <label class="hrm-check"><input type="checkbox" id="ChkPreview"> Preview</label>
+        </div>
+        <div class="lgsa-top">
+            <div>
+                <fieldset class="hrm-group">
+                    <legend>Main Information</legend>
+                    <div class="lgsa-main">
+                        <div class="hrm-field"><label for="txtdocno">Doc No,Date</label>
+                            <div class="lgsa-pair"><input type="text" id="txtdocno" class="win-textbox" readonly tabindex="-1"/><input type="date" id="txtdocdate" class="win-textbox"/></div></div>
+                        <th:block th:if="${!transporter}">
+                            <div class="hrm-field"><label for="CmbDestinationPort">Destination Port</label><select id="CmbDestinationPort" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                        </th:block>
+                        <th:block th:if="${transporter}">
+                            <div class="hrm-field"><label for="CmbCityFrom">City From</label><select id="CmbCityFrom" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                        </th:block>
+                        <div class="hrm-field"><label for="CmbTransactionCurrency">Transaction Currency</label>
+                            <div class="lgsa-pair"><select id="CmbTransactionCurrency" class="win-combo dtcombo" data-dtcombo="single"></select><input type="text" id="txtTransactionExchangeRate" class="win-textbox hrm-al-right" data-guard="decimal" inputmode="decimal" autocomplete="off" title="Exchange Rate"/></div></div>
+                        <div class="hrm-field"><label for="CmbServiceType">Service Type</label><select id="CmbServiceType" class="win-combo dtcombo" data-dtcombo="single" disabled></select></div>
+                        <th:block th:if="${!transporter}">
+                            <div class="hrm-field"><label for="CmbLoadingPort">Loading Port</label><select id="CmbLoadingPort" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                        </th:block>
+                        <th:block th:if="${transporter}">
+                            <div class="hrm-field"><label for="CmbCityTo">CityTo</label><select id="CmbCityTo" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                        </th:block>
+                        <div class="hrm-field"><label for="CmbFcyCurrency">Fcy Currency</label>
+                            <div class="lgsa-pair"><select id="CmbFcyCurrency" class="win-combo dtcombo" data-dtcombo="single" disabled></select><input type="text" id="txtFcyExchangeRate" class="win-textbox hrm-al-right" data-guard="decimal" inputmode="decimal" autocomplete="off" title="Fcy Rate"/></div></div>
+                        <div class="hrm-field" style="grid-column:span 2"><label for="txtRemarksHeader">Remarks</label><input type="text" id="txtRemarksHeader" class="win-textbox" autocomplete="off"/></div>
+                        <div class="hrm-field"><label for="CmbDealStatus">Deal Status</label><select id="CmbDealStatus" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    </div>
+                </fieldset>
+                <fieldset class="hrm-group">
+                    <legend>Detail Information</legend>
+                    <div class="lgsa-cells">
+                        <div class="lgsa-w2"><label for="CmbBrokerAgentName">Broker / Agent Name</label>
+                            <div class="hrm-inline" style="flex-wrap:nowrap"><div class="hrm-grow"><select id="CmbBrokerAgentName" class="win-combo dtcombo" data-dtcombo="party4"></select></div>
+                                <button type="button" id="BtnReferenceParty" class="win-btn-action" style="min-width:0;width:26px;height:23px;padding:0" title="Define Supplier" tabindex="-1" onclick="LgsRN.referenceParty()"><i class="fa fa-plus"></i></button></div></div>
+                        <div class="lgsa-w2"><label for="CmbServiceProvider">Service Provider</label><select id="CmbServiceProvider" class="win-combo dtcombo" data-dtcombo="party4"></select></div>
+                        <div><label for="CmbPaymentTerm">Payment Term</label><select id="CmbPaymentTerm" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                        <div><label for="txtDueDays">Due Days</label><input type="text" id="txtDueDays" class="win-textbox hrm-al-right" data-guard="integer" inputmode="numeric" autocomplete="off"/></div>
+                        <th:block th:if="${!transporter}">
+                            <div class="lgsa-w2"><label for="CmbVesselRoutingType">Vessel Routing Type</label><select id="CmbVesselRoutingType" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                            <div class="lgsa-w2"><label for="txtVesselRoutingDescription">Vessel Routing Description</label><input type="text" id="txtVesselRoutingDescription" class="win-textbox" autocomplete="off"/></div>
+                        </th:block>
+                        <div><span class="lgsa-radios"><label><input type="radio" name="radCatMaster" id="RadMasterItem" checked> Master Item</label><label><input type="radio" name="radCatMaster" id="RadCategory"> Category</label></span>
+                            <select id="CmbMasterItem" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                        <div class="lgsa-w2"><span class="lgsa-radios"><label for="CmbItemName" style="font-weight:bold">Service Item</label><label><input type="radio" name="radNameCode" id="RadItemNamePackListDetail" checked> Name</label><label><input type="radio" name="radNameCode" id="RadItemCodePackListDetail"> Code</label></span>
+                            <select id="CmbItemName" class="win-combo dtcombo" data-dtcombo="lgsaItem"></select></div>
+                        <div><label for="CmbTransactionCurrencyDetail">Transaction Currency</label><select id="CmbTransactionCurrencyDetail" class="win-combo dtcombo" data-dtcombo="single" disabled></select></div>
+                        <div><label for="txtServiceRate">Service Rate</label><input type="text" id="txtServiceRate" class="win-textbox hrm-al-right" data-guard="decimal" inputmode="decimal" autocomplete="off"/></div>
+                        <div><label for="CmbRateBaseType">Rate Base</label><select id="CmbRateBaseType" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                        <div><label for="txtTcyAmount">Tcy Amount</label><input type="text" id="txtTcyAmount" class="win-textbox hrm-al-right" readonly disabled/></div>
+                        <div><label for="txtLcyAmountDetail">Lcy Amount</label><input type="text" id="txtLcyAmountDetail" class="win-textbox hrm-al-right" readonly disabled/></div>
+                        <div><label for="txtOfferValidityDays">Offer Validity (Days)</label><input type="text" id="txtOfferValidityDays" class="win-textbox hrm-al-right" data-guard="integer" inputmode="numeric" autocomplete="off"/></div>
+                        <div><label for="txtOfferValidityDate">Offer Validity Date</label><input type="date" id="txtOfferValidityDate" class="win-textbox"/></div>
+                        <th:block th:if="${!transporter}">
+                            <div><label for="txtCargoCutOffDate">Cargo Cut Off Date</label><input type="date" id="txtCargoCutOffDate" class="win-textbox"/></div>
+                            <div><label for="txtEtdSailing">ETD(Sailing) POL</label><input type="date" id="txtEtdSailing" class="win-textbox"/></div>
+                            <div><label for="txtTransitDays">Transit Time (Days)</label><input type="text" id="txtTransitDays" class="win-textbox hrm-al-right" data-guard="integer" inputmode="numeric" autocomplete="off"/></div>
+                            <div><label for="txtFreeDaysAtPOD">Free Days At POD</label><input type="text" id="txtFreeDaysAtPOD" class="win-textbox hrm-al-right" data-guard="integer" inputmode="numeric" autocomplete="off"/></div>
+                        </th:block>
+                        <div class="lgsa-w2"><label for="txtRemarksDetail">Remarks</label><input type="text" id="txtRemarksDetail" class="win-textbox" autocomplete="off"/></div>
+                        <div class="lgsa-btns">
+                            <button type="button" id="BtnAddCustomer" class="win-btn-action" style="min-width:39px;width:39px" onclick="LgsRN.BtnAddCustomer()">+</button>
+                            <button type="button" id="BtnUpdateCustmer" class="win-btn-action is-hidden" style="min-width:64px" onclick="LgsRN.BtnUpdateCustmer()">Update</button>
+                            <button type="button" id="BtnCancelCustomer" class="win-btn-action is-hidden" style="min-width:64px" onclick="LgsRN.BtnCancelCustomer()">Cancel</button>
+                        </div>
+                    </div>
+                </fieldset>
+            </div>
+            <div class="lgsa-src">
+                <div class="hrm-grid-box" id="boxSource">
+                    <div class="hrm-subcaption"><span>Source Document Info</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+                    <div class="hrm-grid-wrap"><table id="grdSourceDocument"></table></div>
+                </div>
+            </div>
+        </div>
+        <div class="hrm-grid-box" id="boxDetail">
+            <div class="hrm-subcaption"><span>Broker Agent Detail</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+            <div class="hrm-grid-wrap"><table id="grdCustomerDetail"></table></div>
+        </div>
+    </div>
+    <!-- ====================================================================== History -->
+    <div class="hrm-tab-page" id="tabPage3">
+        <div class="win-tool-strip">
+            <button type="button" id="btnNewHistory" class="win-btn-tool" onclick="LgsRN.btnHistoryRefresh()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="BtnRefreshHistory" class="win-btn-tool" onclick="LgsRN.BtnRefreshHistory(this)"><i class="fa fa-refresh"></i> <span><u>R</u>efresh</span></button>
+        </div>
+        <div class="hrm-caption">Logistic Rate Negotiation and Comparisons History</div>
+        <div class="lgsa-filters">
+            <div><label for="cmbDateTypeHistory">Date Type</label><select id="cmbDateTypeHistory" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+            <div><label>Date From</label><span class="lgsa-dt"><input type="checkbox" id="chkFromDateHistory" checked title="Use Date From"><input type="date" id="FromDateHistory" class="win-textbox"/></span></div>
+            <div><label>Date To</label><span class="lgsa-dt"><input type="checkbox" id="chkToDateHistory" checked title="Use Date To"><input type="date" id="ToDateHistory" class="win-textbox"/></span></div>
+            <div><label for="FromDocNoHistory">Doc From</label><input type="text" id="FromDocNoHistory" class="win-textbox" data-guard="integer" inputmode="numeric" autocomplete="off"/></div>
+            <div><label for="ToDocNoHistory">Doc To</label><input type="text" id="ToDocNoHistory" class="win-textbox" data-guard="integer" inputmode="numeric" autocomplete="off"/></div>
+            <div><label for="CmbServiceTypeHistory">Service Type</label><select id="CmbServiceTypeHistory" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+            <div><label for="CmbDealStatusHistory">Deal Status</label><select id="CmbDealStatusHistory" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+            <div><button type="button" id="btnshow" class="win-btn-action" onclick="LgsRN.btnshow(this)">Show</button></div>
+            <div><span class="lgsa-radios">
+                <label><input type="radio" name="histDate" id="drdocdate" checked> Doc Date</label>
+                <label><input type="radio" name="histDate" id="rdentrydate"> Entry Date</label>
+                <label><input type="radio" name="histDate" id="rdmodifydate"> Modify Date</label>
+                <label><input type="radio" name="histDate" id="rdapproveddate"> Approved Date</label>
+            </span></div>
+        </div>
+        <div class="hrm-grid-box" id="boxHistory">
+            <div class="hrm-subcaption"><span>Filtered Records</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+            <div class="hrm-grid-wrap"><table id="grdHistory"></table></div>
+        </div>
+        <div class="hrm-grid-box hrm-grid-short">
+            <div class="hrm-subcaption"><span>Detail of the Above Selected Row</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+            <div class="hrm-grid-wrap"><table id="grdHistoryDetail"></table></div>
+        </div>
+    </div>
+    <div class="hrm-footer">
+        <div class="hrm-footer-left"><span id="lblStatus"></span></div>
+        <div class="hrm-footer-right"><button type="button" id="btnHistory" class="win-btn-action"><i class="fa fa-history"></i> History</button></div>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_hrm.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_logistics_rate_negotiation.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260929a}"></script>
+</body>
+</html>

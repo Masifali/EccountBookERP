@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Import Invoice - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_hrm.css?v=20260929a}"/>
+    <style>
+        .impa-main { display: grid; grid-template-columns: 1fr 1fr 1fr 1.15fr; gap: 4px 14px; align-items: start; }
+        .impa-col { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+        .impa-col .hrm-field { grid-template-columns: 112px minmax(0, 1fr); }
+        .impa-addless { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr); gap: 4px 14px; margin-top: 4px; }
+        .impa-addless .hrm-field { grid-template-columns: 120px minmax(0, 1fr); }
+        table.hrm-grid .hrm-cell-btn { height: 20px; min-width: 0; width: auto; padding: 0 8px; font-size: 8pt; line-height: 18px; }
+        .hrm-grid-box.impa-grid-sm .hrm-grid-wrap { max-height: 300px; }
+        @media (max-width: 1100px) { .impa-main { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 700px) { .impa-main, .impa-addless { grid-template-columns: 1fr; } .impa-col .hrm-field, .impa-addless .hrm-field { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<!-- Architecture.WinApp.Import.ImCommercialInvoice (221) - ClientSize 1181 x 739, KeyPreview. Dual mode through its public DocumentTypeId:
+     233 against an Import Purchase Order (lblPoNo "Purchase Order", Home Currency read-only), 237 against an Import Contract (?mode=237,
+     lblPoNo "Contract No", warehouse / job-lot value lists in the detail grid). tabControl1 (bottom tabs) Form | History.
+     toolStrip4 New | Save | Update (hidden) | 806-Print; panel6 "IMPORT INVOICE" + close.
+     HeaderGropBox "Main Header": col 1 (6/126) Branch, Project, Doc No (r/o), Doc Date, Invoice No, Supplier Name, Purchase Order / Contract No,
+     Notify Party 1, Notify Party 2; col 2 (301/404) Lot Reference, Payment Term, Importer Bank, Exporter Bank, Delivery Term, Loading Port,
+     Destination Port (all read-only), Carier Type; col 3 (580/699) Fcy Code (r/o), Fcy-Amount (r/o), Home Currency, Exchange Rate,
+     Local Amount, Gross Weight KG, Net Weight KG, No.Of Container (r/o); col 4 (840/924) I-Form No, I-Form Date, Certificate -1,
+     Certificate OF Origion; Add Less Comments (603/721), Add Less Amount (987), Total Amount (888/988, r/o).
+     tabControl2 Detail (grdDetail) | Shipment Expenses (grdShipmentExpenses: Account value list, Remarks, FcAmount, LocalAmount, X, +).
+     History: toolStrip3 New; "Import Invoice History" DataGridHistory (+ Print button column). -->
+<body class="pd-body hrm-body" data-hrm="commercial-invoice" data-screen="221" th:attr="data-mode=${impaMode}">
+<div class="hrm-form">
+    <div class="hrm-tabs" id="tabMain">
+        <button type="button" class="hrm-tab is-active" data-tab="pgForm">Form</button>
+        <button type="button" class="hrm-tab" data-tab="pgHistory">History</button>
+    </div>
+
+    <div class="hrm-tab-page is-active" id="pgForm">
+        <div class="win-tool-strip">
+            <button type="button" id="btnNew" class="win-btn-tool" onclick="ImpACi.btnNew(this)"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="btnsave" class="win-btn-tool" onclick="ImpACi.btnsave(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+            <button type="button" id="btnupdate" class="win-btn-tool is-hidden" onclick="ImpACi.btnupdate(this)"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+            <button type="button" id="btnPrint" class="win-btn-tool" onclick="ImpACi.btnPrint(this)" data-rpt-own data-rpt="806-ImInvoiceSlip.rpt"><i class="fa fa-print"></i> <span>806-Print</span></button>
+        </div>
+        <div class="hrm-caption">IMPORT INVOICE</div>
+
+        <fieldset class="hrm-group">
+            <legend>Main Header</legend>
+            <div class="impa-main">
+                <div class="impa-col">
+                    <div class="hrm-field"><label for="cmbbranches">Branch</label><select id="cmbbranches" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="hrm-field"><label for="cmbproject">Project</label><select id="cmbproject" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="hrm-field"><label for="txtdocno">Doc No</label><input type="text" id="txtdocno" class="win-textbox" readonly tabindex="-1"/></div>
+                    <div class="hrm-field"><label for="txtDocDate">Doc Date</label><input type="date" id="txtDocDate" class="win-textbox"/></div>
+                    <div class="hrm-field"><label for="txtinvoiceno">Invoice No</label><input type="text" id="txtinvoiceno" class="win-textbox" autocomplete="off"/></div>
+                    <div class="hrm-field"><label for="cmbSupCust">Supplier Name</label><select id="cmbSupCust" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="hrm-field"><label for="cmbLcContractNo" id="lblPoNo">Purchase Order</label><select id="cmbLcContractNo" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="hrm-field"><label for="cmbNotifyParty1">Notify Party 1</label><select id="cmbNotifyParty1" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="hrm-field"><label for="cmbNotifyParty2">Notify Party 2</label><select id="cmbNotifyParty2" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                </div>
+                <div class="impa-col">
+                    <div class="hrm-field"><label for="txtLotRef">Lot Reference</label><input type="text" id="txtLotRef" class="win-textbox" autocomplete="off"/></div>
+                    <div class="hrm-field"><label for="cmbPaymentTermsNew">Payment Term</label><select id="cmbPaymentTermsNew" class="win-combo dtcombo" data-dtcombo="single" disabled></select></div>
+                    <div class="hrm-field"><label for="cmbimporterBankNew">Importer Bank</label><select id="cmbimporterBankNew" class="win-combo dtcombo" data-dtcombo="single" disabled></select></div>
+                    <div class="hrm-field"><label for="cmbexporterBankNew">Exporter Bank</label><select id="cmbexporterBankNew" class="win-combo dtcombo" data-dtcombo="single" disabled></select></div>
+                    <div class="hrm-field"><label for="cmbdeliverytermnew">Delivery Term</label><select id="cmbdeliverytermnew" class="win-combo dtcombo" data-dtcombo="single" disabled></select></div>
+                    <div class="hrm-field"><label for="cmbLoadingPort">Loading Port</label><select id="cmbLoadingPort" class="win-combo dtcombo" data-dtcombo="single" disabled></select></div>
+                    <div class="hrm-field"><label for="cmbDestinationPort">Destination Port</label><select id="cmbDestinationPort" class="win-combo dtcombo" data-dtcombo="single" disabled></select></div>
+                    <div class="hrm-field"><label for="cmbcareiertype">Carier Type</label><select id="cmbcareiertype" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                </div>
+                <div class="impa-col">
+                    <div class="hrm-field"><label for="cmbfcycode">Fcy Code</label><select id="cmbfcycode" class="win-combo dtcombo" data-dtcombo="single" disabled></select></div>
+                    <div class="hrm-field"><label for="txtfcyAmount">Fcy-Amount</label><input type="text" id="txtfcyAmount" class="win-textbox hrm-al-right" readonly tabindex="-1" value="0"/></div>
+                    <div class="hrm-field"><label for="CmbHomeCurrency">Home Currency</label><select id="CmbHomeCurrency" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="hrm-field"><label for="txtExRate">Exchange Rate</label><input type="text" id="txtExRate" class="win-textbox hrm-al-right" inputmode="decimal" autocomplete="off" value="0"/></div>
+                    <div class="hrm-field"><label for="txtLocalAmt">Local Amount</label><input type="text" id="txtLocalAmt" class="win-textbox hrm-al-right" readonly tabindex="-1" value="0"/></div>
+                    <div class="hrm-field"><label for="txtGrossWeight">Gross Weight KG</label><input type="text" id="txtGrossWeight" class="win-textbox hrm-al-right" readonly tabindex="-1" value="0"/></div>
+                    <div class="hrm-field"><label for="txtNetWeight">Net Weight KG</label><input type="text" id="txtNetWeight" class="win-textbox hrm-al-right" readonly tabindex="-1" value="0"/></div>
+                    <div class="hrm-field"><label for="txtNoOfContainer">No.Of Container</label><input type="text" id="txtNoOfContainer" class="win-textbox hrm-al-right" readonly tabindex="-1" value="0"/></div>
+                </div>
+                <div class="impa-col">
+                    <div class="hrm-field"><label for="txtIformNo">I-Form No</label><input type="text" id="txtIformNo" class="win-textbox" autocomplete="off"/></div>
+                    <div class="hrm-field"><label for="txtIformDate">I-Form Date</label><input type="date" id="txtIformDate" class="win-textbox"/></div>
+                    <div class="hrm-field"><label for="txtcertificate">Certificate -1</label><textarea id="txtcertificate" class="win-textbox" rows="3"></textarea></div>
+                    <div class="hrm-field"><label for="txtcertificateOfOrigion">Certificate OF Origion</label><textarea id="txtcertificateOfOrigion" class="win-textbox" rows="3"></textarea></div>
+                </div>
+            </div>
+            <div class="impa-addless">
+                <div class="hrm-field"><label for="txtaddlesscommnets">Add Less Comments</label><input type="text" id="txtaddlesscommnets" class="win-textbox" autocomplete="off"/></div>
+                <div class="hrm-field"><label for="txtaddlessamount">Add Less Amount</label><input type="text" id="txtaddlessamount" class="win-textbox hrm-al-right" inputmode="decimal" autocomplete="off" value="0"/></div>
+                <div class="hrm-field"><label for="txtTotalNetAmount">Total Amount</label><input type="text" id="txtTotalNetAmount" class="win-textbox hrm-al-right" readonly tabindex="-1" value="0"/></div>
+            </div>
+        </fieldset>
+
+        <div class="hrm-tabs" id="tabDetail">
+            <button type="button" class="hrm-tab is-active" data-tab="pgDetail">Detail</button>
+            <button type="button" class="hrm-tab" data-tab="pgExpenses">Shipment Expenses</button>
+        </div>
+        <div class="hrm-tab-page is-active" id="pgDetail">
+            <div class="hrm-grid-box impa-grid-sm">
+                <div class="hrm-subcaption"><span>Detail</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+                <div class="hrm-grid-wrap"><table id="grdDetail"></table></div>
+            </div>
+        </div>
+        <div class="hrm-tab-page" id="pgExpenses">
+            <div class="hrm-grid-box impa-grid-sm">
+                <div class="hrm-subcaption"><span>Shipment Expenses</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+                <div class="hrm-grid-wrap"><table id="grdShipmentExpenses"></table></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="hrm-tab-page" id="pgHistory">
+        <div class="win-tool-strip">
+            <button type="button" id="toolStripButton6" class="win-btn-tool" onclick="ImpACi.btnNew(this)"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+        </div>
+        <div class="hrm-grid-box">
+            <div class="hrm-subcaption"><span>Import Invoice History</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+            <div class="hrm-grid-wrap"><table id="DataGridHistory"></table></div>
+        </div>
+    </div>
+
+    <div class="hrm-footer">
+        <div class="hrm-footer-left"><span id="lblStatus"></span></div>
+        <div class="hrm-footer-right"><button type="button" id="btnHistory" class="win-btn-action"><i class="fa fa-history"></i> History</button></div>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_hrm.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_imports_impa.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_imports_commercial_invoice.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260929a}"></script>
+</body>
+</html>

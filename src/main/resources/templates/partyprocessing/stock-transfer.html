@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Stock Transfer - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_hrm.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_pp_ppc.css?v=20260930a}"/>
+</head>
+<!-- Architecture.WinApp.PartyProcessing.StockTransfer (603, DocumentTypeId 220). tabControl1: Form | History.
+     Form: toolStrip1 New | Refresh | Update | Save | 220-Print | Attachment | Loader | ShortCut Keys; panel12 "Stock Transfer" + Preview;
+     groupBox1 Main: Doc No, Doc Date | Ticket No, Factory Weight | Remarks (branch / project combos are hidden);
+     groupBox2 Detail: Stock Party From / To, WareHouse From / To, Job Lot From / To / Crop Year, Item Name, Packing Type,
+     Pack Uom, Qty, Gross Weight, EbUnit, EbTotal, Ad/Ls Wt, Stock Weight, Available Stock / Remarks, + (Update / Cancel);
+     tabControl2 Detail: Stock Party / WareHouse / JobLot checks + Update Same In All Rows; grd (X).
+     History: toolStrip2 Reset | Load All; Filters: From / To Date, From / To Doc No, Show, Doc / Entry / Modify Date;
+     grdhistory (Edit, Print); GridDetailHistory. -->
+<body class="pd-body hrm-body" data-hrm="pp-stock-transfer" th:attr="data-screen=${ppScreen}">
+<div class="hrm-form">
+    <div class="hrm-tabs" data-tabs="main">
+        <button type="button" class="hrm-tab is-active" data-tab="form">Form</button>
+        <button type="button" class="hrm-tab" data-tab="history">History</button>
+    </div>
+
+    <div class="hrm-tab-page is-active" data-group="main" data-page="form">
+        <div class="win-tool-strip">
+            <button type="button" id="btnnew" class="win-btn-tool" onclick="PpSt.btnnew()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="btnRefresh" class="win-btn-tool" onclick="PpSt.btnRefresh(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+            <button type="button" id="btnupdate" class="win-btn-tool is-hidden" onclick="PpSt.btnupdate(this)"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+            <button type="button" id="btnsave" class="win-btn-tool" onclick="PpSt.btnsave(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+            <button type="button" id="btnprint" class="win-btn-tool" onclick="PpSt.btnprint(this)" data-rpt-skip><i class="fa fa-print"></i> <span>220-Print</span></button>
+            <button type="button" id="btnAttachment" class="win-btn-tool" disabled title="Attachments are not ported to the web"><i class="fa fa-paperclip"></i> <span>Attachment</span></button>
+            <button type="button" id="btnLoadInvoices" class="win-btn-tool" onclick="PpSt.btnLoadInvoices()"><i class="fa fa-download"></i> <span>Loader</span></button>
+            <button type="button" id="BtnShortCutkeys" class="win-btn-tool" onclick="PpSt.shortcuts()"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+        </div>
+        <div class="hrm-caption"><span>Stock Transfer</span>
+            <span class="ppc-caption-right"><label class="hrm-check"><input type="checkbox" id="ChkBoxPrintPreview" checked> Preview</label></span></div>
+        <fieldset class="hrm-group">
+            <legend>Main</legend>
+            <div class="hrm-entry hrm-cols-3" style="align-items:start">
+                <div class="hrm-field"><label for="txtdocno">Doc No</label><input type="text" id="txtdocno" class="win-textbox" readonly tabindex="-1"/></div>
+                <div class="hrm-field"><label for="cmbTicketNo">Ticket No</label><select id="cmbTicketNo" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field hrm-stack" style="grid-row:span 2"><label for="txtRemarksHead">Remarks</label><textarea id="txtRemarksHead" class="win-textbox" rows="2"></textarea></div>
+                <div class="hrm-field"><label for="DocDate">Doc Date</label><input type="date" id="DocDate" class="win-textbox"/></div>
+                <div class="hrm-field"><label for="txtHeadNetWeight">Factory Weight</label><input type="text" id="txtHeadNetWeight" class="win-textbox hrm-al-right" inputmode="decimal" autocomplete="off"/></div>
+            </div>
+        </fieldset>
+        <fieldset class="hrm-group">
+            <legend>Detail</legend>
+            <div class="hrm-entry" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr))">
+                <div class="hrm-field hrm-stack"><label for="CmbStockPartyFrom">Stock Party From</label><select id="CmbStockPartyFrom" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field hrm-stack"><label for="CmbStockPartyTo">Stock Party To</label><select id="CmbStockPartyTo" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field hrm-stack"><label for="CmbWareHouseFrom">WareHouse From</label><select id="CmbWareHouseFrom" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field hrm-stack"><label for="cmbWareHouseTo">WareHouse To</label><select id="cmbWareHouseTo" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field hrm-stack"><label for="cmbJobLot">Job Lot From</label><select id="cmbJobLot" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field hrm-stack"><label for="CmbJobLotTo">Job Lot To</label><select id="CmbJobLotTo" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field hrm-stack"><label for="cmbCropYear">Crop Year</label><select id="cmbCropYear" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field hrm-stack hrm-span-2"><label for="cmbItemName">Item Name</label><select id="cmbItemName" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field hrm-stack"><label for="cmbPackingType">Packing Type</label><select id="cmbPackingType" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="hrm-field hrm-stack"><label for="CmbPackUom">Pack Uom</label><select id="CmbPackUom" class="win-combo"></select></div>
+                <div class="hrm-field hrm-stack"><label for="txtQty">Qty</label><input type="text" id="txtQty" class="win-textbox hrm-al-right" inputmode="decimal" autocomplete="off"/></div>
+                <div class="hrm-field hrm-stack"><label for="txtGrossWeight">Gross Weight</label><input type="text" id="txtGrossWeight" class="win-textbox hrm-al-right" inputmode="decimal" autocomplete="off"/></div>
+                <div class="hrm-field hrm-stack"><label for="txtEbUnit">EbUnit</label><input type="text" id="txtEbUnit" class="win-textbox hrm-al-right" inputmode="decimal" autocomplete="off" value="0"/></div>
+                <div class="hrm-field hrm-stack"><label for="txtEbTotal">EbTotal</label><input type="text" id="txtEbTotal" class="win-textbox hrm-al-right" inputmode="decimal" autocomplete="off" value="0"/></div>
+                <div class="hrm-field hrm-stack"><label for="txtAdLsWeight">Ad/Ls Wt</label><input type="text" id="txtAdLsWeight" class="win-textbox hrm-al-right" inputmode="decimal" autocomplete="off" value="0"/></div>
+                <div class="hrm-field hrm-stack"><label for="txtDetailNetWeight">Stock Weight</label><input type="text" id="txtDetailNetWeight" class="win-textbox hrm-al-right" inputmode="decimal" autocomplete="off"/></div>
+                <div class="hrm-field hrm-stack"><label for="txtAvailableStock">Available Stock</label><input type="text" id="txtAvailableStock" class="win-textbox hrm-al-right" readonly tabindex="-1"/></div>
+                <div class="hrm-field hrm-stack hrm-span-all"><label for="txtRemarksDetail">Remarks</label>
+                    <div class="hrm-inline" style="flex-wrap:nowrap"><div class="hrm-grow"><input type="text" id="txtRemarksDetail" class="win-textbox" autocomplete="off"/></div>
+                        <button type="button" id="btnplus" class="win-btn-action" style="min-width:0;width:40px" onclick="PpSt.btnplus()">+</button>
+                        <button type="button" id="btnUpdateDetail" class="win-btn-action is-hidden" onclick="PpSt.btnUpdateDetail()">Update</button>
+                        <button type="button" id="btnCancelUpdateDetial" class="win-btn-action is-hidden" onclick="PpSt.btnCancelUpdateDetial()">Cancel</button></div></div>
+            </div>
+        </fieldset>
+        <div class="hrm-grid-box">
+            <div class="hrm-subcaption"><span>Detail</span>
+                <span class="hrm-inline" style="font-weight:normal">
+                    <label class="hrm-check"><input type="checkbox" id="chkUpdateStockParty"> Stock Party</label>
+                    <label class="hrm-check"><input type="checkbox" id="chkUpdateWareHouse"> WareHouse</label>
+                    <label class="hrm-check"><input type="checkbox" id="chkUpdateJobLot"> JobLot</label>
+                    <button type="button" id="BtnSameUpdateWarehouse" class="win-btn-action" style="width:auto;padding:0 8px" onclick="PpSt.btnSameUpdate()">Update Same In All Rows</button>
+                    <button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></span></div>
+            <div class="hrm-grid-wrap"><table id="grd"></table></div>
+        </div>
+    </div>
+
+    <div class="hrm-tab-page" data-group="main" data-page="history">
+        <div class="win-tool-strip">
+            <button type="button" id="btnNewHistory" class="win-btn-tool" onclick="PpSt.btnNewHistory()"><i class="fa fa-undo"></i> <span><u>R</u>eset</span></button>
+            <button type="button" id="btnAllLoad" class="win-btn-tool" onclick="PpSt.btnshowHistory(this)"><i class="fa fa-list"></i> <span>Load All</span></button>
+        </div>
+        <div class="hrm-caption"><span>Stock Transfer Party Processing History</span></div>
+        <fieldset class="hrm-group">
+            <legend>Filters</legend>
+            <div class="hrm-entry" style="grid-template-columns:repeat(auto-fill,minmax(190px,1fr))">
+                <div class="hrm-field hrm-stack"><label for="FromDateHistory">From Date</label>
+                    <div class="ppc-date-chk"><input type="checkbox" id="chkFromDateHistory" checked title="Use From Date"><input type="date" id="FromDateHistory" class="win-textbox"/></div></div>
+                <div class="hrm-field hrm-stack"><label for="ToDateHistory">To Date</label>
+                    <div class="ppc-date-chk"><input type="checkbox" id="chkToDateHistory" checked title="Use To Date"><input type="date" id="ToDateHistory" class="win-textbox"/></div></div>
+                <div class="hrm-field hrm-stack"><label for="txtFromDocNoHistory">From Doc No</label><input type="text" id="txtFromDocNoHistory" class="win-textbox" inputmode="numeric" autocomplete="off"/></div>
+                <div class="hrm-field hrm-stack"><label for="txtToDocNoHistory">To Doc No</label><input type="text" id="txtToDocNoHistory" class="win-textbox" inputmode="numeric" autocomplete="off"/></div>
+                <div class="hrm-field hrm-stack"><label>&nbsp;</label><button type="button" id="btnshowHistory" class="win-btn-action" onclick="PpSt.btnshowHistory(this)">Show</button></div>
+                <div class="hrm-field hrm-stack"><label>&nbsp;</label>
+                    <div class="ppc-radios">
+                        <label class="hrm-check"><input type="radio" name="histDateMode" value="doc" checked> Doc Date</label>
+                        <label class="hrm-check"><input type="radio" name="histDateMode" value="entry"> Entry Date</label>
+                        <label class="hrm-check"><input type="radio" name="histDateMode" value="modify"> Modify Date</label>
+                    </div></div>
+            </div>
+        </fieldset>
+        <div class="hrm-grid-box">
+            <div class="hrm-subcaption"><span>Stock Transfer Party Processing History</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+            <div class="hrm-grid-wrap"><table id="grdhistory"></table></div>
+        </div>
+        <div class="hrm-grid-box hrm-grid-short">
+            <div class="hrm-subcaption"><span>Detail Information Of Above Selected Row</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+            <div class="hrm-grid-wrap"><table id="GridDetailHistory"></table></div>
+        </div>
+    </div>
+
+    <div class="hrm-footer">
+        <div class="hrm-footer-left"><span id="lblStatus"></span></div>
+        <div class="hrm-footer-right"><button type="button" id="btnHistory" class="win-btn-action"><i class="fa fa-history"></i> History</button></div>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_hrm.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_pp_ppc_common.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_pp_stock_transfer.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260929a}"></script>
+</body>
+</html>

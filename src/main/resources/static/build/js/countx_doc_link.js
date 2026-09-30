@@ -229,6 +229,10 @@
         /* countx_direct_invoice.js:61 - load(id). */
         'Purchase.InvfrmPurchasedirectInvoice|InvfrmPurchasedirectInvoice': { q: '/purchase/purchase-invoice-direct' },
         /* These dedicated pages read ?id= only after their own initial lookups complete. */
+        /* countx_sale_order_full.js - ?id= -> loadOrderIntoForm(id) after master lookups + config defaults. */
+        'Sale.SaleOrder|SaleOrder': { q: '/sale/sale-order' },
+        /* countx_sale_invoice_return.js:752 - ?id= -> readById(id) after init. */
+        'Sale.InvfrmSaleInvoiceReturn|InvfrmSaleInvoiceReturn': { q: '/sale/sale-invoice-return' },
         'Sale.OutwardGatePass|OutwardGatePass': { q: '/sale/outward-gate-pass' },
         'Sale.DeliveryOrder|DeliveryOrder': { q: '/sale/delivery-order' },
         'Sale.InvFrmGDN|InvFrmGDN': { q: '/sale/gdn' },
