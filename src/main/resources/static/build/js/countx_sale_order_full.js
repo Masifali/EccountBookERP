@@ -1676,6 +1676,8 @@ function btnSave_Click() {
                 if (res.docNo != null) { $('#txtDocNo').val(res.docNo); $('#txtDocPrefix').val('SO-' + res.docNo); }
                 alert(res.message || 'Sale Order saved successfully!');
                 loadOrderIntoForm(res.id);
+                /* :3157-3160 - "Print Preview" (ChkBox) ticked -> SaleOrderReports273(success) after the save. */
+                if ($('#chkPrintPreview').is(':checked')) { btnPrintReport('273', res.id); }
             } else {
                 alert('Error: ' + (res.message || 'Failed to save Sale Order.'));
             }
@@ -1686,13 +1688,17 @@ function btnSave_Click() {
     });
 }
 
-function btnPrintReport(reportCode) {
-    var id = currentEditingOrderId || 0;
+/* btnprint_Click / BtnPrintII_Click (SaleOrder.cs:4623-4645): CommonServices.SaleOrderReports273(RecId) and
+   SaleOrderReports273_01(RecId) - the real .rpt through ReportRegistry keys so-273 / so-273-01 (@Id = the order). */
+function btnPrintReport(reportCode, orderId) {
+    var id = orderId || currentEditingOrderId || 0;
     if (!id) {
         alert('Save or load a Sale Order before printing.');
         return;
     }
-    window.print();
+    var key = String(reportCode) === '273_01' ? 'so-273-01' : 'so-273';
+    if (!window.CrystalPrint) { alert('Print helper not loaded. Please Refresh.'); return; }
+    return window.CrystalPrint.open(key, { id: id });
 }
 
 function formatDateValue(value) {

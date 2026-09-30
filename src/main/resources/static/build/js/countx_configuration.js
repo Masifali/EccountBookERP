@@ -612,8 +612,10 @@
     // (verified: Configuration.cs ControlEventHandler, "AutoRemarksForPaymentThroughBank" branch)
     function applyAutoRemarksCoupling() {
         var enabled = $("#chkAutoRemarksForPaymentThroughBank").is(":checked");
-        var $fieldset = $("#fieldsetAutoRemarks");
-        $fieldset.find(".cfg-autoremarks-child").prop("disabled", !enabled);
+        // GroupBoxAutoRemarks.Enabled - the children may have been moved into the desktop-geometry
+        // canvas (countx_configuration_layout.js), so they are found by class, not by container.
+        var $fieldset = $("#fieldsetAutoRemarks, #desk_GroupBoxAutoRemarks");
+        $(".cfg-autoremarks-child").prop("disabled", !enabled);
         $fieldset.toggleClass("cfg-disabled-group", !enabled);
     }
 
