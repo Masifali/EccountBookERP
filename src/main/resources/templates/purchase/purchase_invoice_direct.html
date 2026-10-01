@@ -1,54 +1,273 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Direct Purchase Invoice</title>
-<link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css}"><link rel="stylesheet" th:href="@{/build/css/countx_purchase_request.css}"><link rel="stylesheet" th:href="@{/build/css/countx_direct_invoice.css}"></head><body>
-<nav class="invoice-tools"><button id="btnNew" onclick="directInvoice.newRecord(this)">New</button><button id="btnRefresh" onclick="directInvoice.refresh(this)">Refresh</button><button id="btnSave" onclick="directInvoice.save(this)" disabled>Save</button><button id="btnDelete" onclick="directInvoice.remove(this)" hidden>Delete</button><button id="btnAttachments" onclick="directInvoice.attachments(this)">Attachments</button><button id="btnSlip" type="button" onclick="directInvoice.printSlip()">Slip</button><button id="btnPrint" type="button" onclick="directInvoice.printVoucher()">Print</button><label><input id="chkBok" type="checkbox"> Voucher</label><label><input id="chkPrintSlip" type="checkbox"> Print Slip</label><button id="btnHistory" onclick="directInvoice.history(this)">History</button><a href="/purchase">Purchase</a></nav>
-<h1>Purchase Invoice Direct <span id="lblVoucherDisplayHeader"></span></h1><div id="invoiceMessage" role="status"></div><input id="txtId" type="hidden" value="0">
-<main><section id="invoiceHeader" class="invoice-panel"><div class="invoice-fields"><label class="invoice-field" style="width:73px">Doc No<input id="txtDocNo" type="text"  style="height:23px" readonly/></label>
-<label class="invoice-field" style="width:128px">Doc Date<input id="txtDocDate" type="date"  style="height:23px" /></label>
-<label class="invoice-field" style="width:61px">Branch No<input id="txtBranchSrNo" type="text"  style="height:23px" readonly/></label>
-<label class="invoice-field" style="width:264px">Supplier<select id="cmbSupplier" class="win-combo" style="height:26px" ><option value="">Select</option></select></label>
-<label class="invoice-field" style="width:264px">Bill No<input id="txtBillNo" type="text"  style="height:23px" /></label>
-<label class="invoice-field" style="width:136px">Delivery Term<select id="cmbDeliveryTerm" class="win-combo" style="height:26px" ><option value="">Select</option></select></label>
-<label class="invoice-field" style="width:136px">Payment Terms<select id="cmbPaymentTerms" class="win-combo" style="height:26px" ><option value="">Select</option></select></label>
-<label class="invoice-field" style="width:137px">Due Days<input id="txtDueDays" type="number" step="any" style="height:23px" /></label>
-<label class="invoice-field" style="width:136px">Due Date<input id="txtDueDate" type="date"  style="height:23px" /></label>
-<label class="invoice-field" style="width:264px">Supplier Reference<input id="txtSupplierReference" type="text"  style="height:23px" /></label></div><label class="invoice-remarks">Remarks<input id="txtRemarks"></label></section>
-<section id="lineEditor" class="invoice-panel"><div class="invoice-fields"><label class="invoice-field" style="width:156px">Warehouse<select id="cmbWarehouse" class="win-combo" style="height:26px" ><option value="">Select</option></select></label>
-<label class="invoice-field" style="width:199px">Item<select id="cmbItem" class="win-combo" style="height:26px" ><option value="">Select</option></select></label>
-<label class="invoice-field" style="width:121px">Crop Year<select id="cmbCropYear" class="win-combo" style="height:26px" ><option value="">Select</option></select></label>
-<label class="invoice-field" style="width:118px">Job Lot<select id="cmbJobLot" class="win-combo" style="height:26px" ><option value="">Select</option></select></label>
-<label class="invoice-field" style="width:122px">Packing Type<select id="cmbPackingType" class="win-combo" style="height:26px" ><option value="">Select</option></select></label>
-<label class="invoice-field" style="width:68px">Pack UOM<select id="cmbPackUom" class="win-combo" style="height:26px" ><option value="">Select</option></select></label>
-<label class="invoice-field" style="width:81px">Quantity<input id="txtQty" type="number" step="any" style="height:23px" /></label>
-<label class="invoice-field" style="width:101px">Gross Weight<input id="txtGrossWeight" type="number" step="any" style="height:23px" /></label>
-<label class="invoice-field" style="width:64px">Empty Bag Unit<input id="txtEmptybagsUnit" type="number" step="any" style="height:23px" /></label>
-<label class="invoice-field" style="width:75px">Empty Bag Total<input id="txtEmptyBagsTotal" type="number" step="any" style="height:23px" /></label>
-<label class="invoice-field" style="width:49px">Weight Cut<input id="txtWeightCut" type="number" step="any" style="height:23px" /></label>
-<label class="invoice-field" style="width:79px">Weight Cut Total<input id="txtWeightCutTotal" type="number" step="any" style="height:23px" /></label>
-<label class="invoice-field" style="width:58px">Add/Less<input id="txtAddLss" type="number" step="any" style="height:23px" /></label>
-<label class="invoice-field" style="width:95px">Net Bill Weight<input id="txtNetBillWeight" type="number" step="any" style="height:23px" readonly/></label>
-<label class="invoice-field" style="width:96px">Stock Weight<input id="txtStockWeight" type="number" step="any" style="height:23px" /></label>
-<label class="invoice-field" style="width:85px">Rate<input id="txtRate" type="number" step="any" style="height:23px" /></label>
-<label class="invoice-field" style="width:69px">Rate UOM<select id="cmbRateUom" class="win-combo" style="height:26px" ><option value="">Select</option></select></label>
-<label class="invoice-field" style="width:54px">Rate Cut<input id="txtRateCut" type="number" step="any" style="height:23px" /></label>
-<label class="invoice-field" style="width:86px">Rate Cut Amount<input id="txtRateCutAmount" type="number" step="any" style="height:23px" readonly/></label>
-<label class="invoice-field" style="width:117px">Amount<input id="txtAmount" type="number" step="any" style="height:23px" readonly/></label>
-<label class="invoice-field" style="width:104px">GP Date<input id="txtGpDate" type="date"  style="height:23px" /></label>
-<label class="invoice-field" style="width:50px">GP No<input id="txtGpNo" type="number" step="any" style="height:23px" /></label>
-<label class="invoice-field" style="width:79px">Vehicle No<input id="txtVehicleNo" type="text"  style="height:23px" /></label>
-<label class="invoice-field" style="width:95px">Lab Analysis No<input id="txtLabNo" type="number" step="any" style="height:23px" /></label></div><div class="invoice-tools"><button id="btnAddRow" onclick="directInvoice.add(this)" disabled>Add</button><button id="btnCancelRow" onclick="directInvoice.cancelEdit()" hidden>Cancel Update</button></div></section>
-<section class="invoice-panel"><h2>Invoice Details</h2><div class="invoice-scroll"><table><thead id="invoiceDetailHead"></thead><tbody id="invoiceDetailBody"></tbody></table></div><div class="invoice-totals"><span id="invoiceTotals"></span><label>Bill Amount <input id="txtBillAmount" readonly></label></div></section>
-<section class="invoice-panel"><div class="invoice-fields"><label class="invoice-field" style="width:242px">Commission Agent<select id="cmbCommissionAgent" class="win-combo" style="height:26px" ><option value="">Select</option></select></label>
-<label class="invoice-field" style="width:81px">Commission Type<select id="cmbCommissionType" class="win-combo" style="height:26px" ><option value="">Select</option></select></label>
-<label class="invoice-field" style="width:88px">Commission Rate<input id="txtCommRate" type="number" step="any" style="height:23px" /></label>
-<label class="invoice-field" style="width:81px">Commission UOM<select id="cmbCommUom" class="win-combo" style="height:26px" ><option value="">Select</option></select></label>
-<label class="invoice-field" style="width:90px">Commission Amount<input id="txtCommAmount" type="number" step="any" style="height:23px" readonly/></label>
-<label class="invoice-field" style="width:242px">Commission Remarks<input id="txtCommissionRemarks" type="text"  style="height:23px" /></label>
-<label class="invoice-field" style="width:229px">Broker Account<select id="cmbBroker" class="win-combo" style="height:26px" ><option value="">Select</option></select></label>
-<label class="invoice-field" style="width:85px">Brokery Type<select id="cmbBrokeryType" class="win-combo" style="height:26px" ><option value="">Select</option></select></label>
-<label class="invoice-field" style="width:68px">Brokery Rate<input id="txtBrokeryRate" type="number" step="any" style="height:23px" /></label>
-<label class="invoice-field" style="width:85px">Brokery UOM<select id="cmbBrokeryUom" class="win-combo" style="height:26px" ><option value="">Select</option></select></label>
-<label class="invoice-field" style="width:68px">Brokery Amount<input id="txtBrokeryAmount" type="number" step="any" style="height:23px" readonly/></label></div></section>
-<section id="invoiceSupplements" class="invoice-panel"></section>
-<section id="invoiceHistoryPanel" class="invoice-panel" hidden><h2>History</h2><div class="invoice-fields"><label class="invoice-field" style="width:120px">From Date<input id="historyFrom" type="date"  style="height:23px" /></label><label class="invoice-field" style="width:120px">To Date<input id="historyTo" type="date"  style="height:23px" /></label><label class="invoice-field" style="width:120px">From No<input id="historyFromNo" type="number" step="any" style="height:23px" /></label><label class="invoice-field" style="width:120px">To No<input id="historyToNo" type="number" step="any" style="height:23px" /></label><label class="invoice-field">Date Type<select id="historyDateType"><option value="DocDate">Doc Date</option><option value="EntryDate">Entry Date</option><option value="ModifyDate">Modify Date</option><option value="ApprovedDate">Approved Date</option></select></label><button onclick="directInvoice.history(this)">Show</button></div><div class="invoice-scroll"><table><thead id="historyHead"></thead><tbody id="historyBody"></tbody></table></div></section></main>
-<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script><script th:src="@{/build/js/countx_desktop_combo.js}"></script><script th:src="@{/build/js/countx_purchase_request.js}"></script><script th:src="@{/build/js/countx_invoice_attachments.js}"></script><script th:src="@{/build/js/countx_direct_invoice.js(v=20260930a)}"></script></body></html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Purchase Invoice Direct - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_purchase_request.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_direct_invoice.css(v=20261001a)}">
+</head>
+<body>
+<!-- InvfrmPurchasedirectInvoice (screen 117, DocumentTypeId 57) - InitializeComponent :6145-10410, 1:1 in px.
+     tabControl1 (Alignment Bottom): tabPage1 "Form" = toolStrip1 (27) + panel3 (167) + panel4 (132) + tabControl2 (fill);
+     tabPage2 "History" = toolStrip2 + panel6 + panel18 (Filters) + panel7 (grdHistory) + panel9 (grdDetail). -->
+<div class="fx-scroll">
+<div class="fx-root">
+
+    <!-- =========================================================== tabPage1 "Form" -->
+    <div id="tabForm" class="fx-pane is-active">
+        <!-- toolStrip1 (:9795) -->
+        <div class="fx-strip">
+            <button type="button" class="fx-tool" id="btnNew"><i class="fa fa-plus-circle" style="color:#2e7d32"></i> New</button>
+            <button type="button" class="fx-tool" id="btnRefresh"><i class="fa fa-repeat"></i> Refresh</button>
+            <span class="fx-sep"></span>
+            <button type="button" class="fx-tool" id="btnSave" disabled><i class="fa fa-save"></i> Save</button>
+            <button type="button" class="fx-tool" id="btnUpdate" hidden><i class="fa fa-pencil"></i> Update</button>
+            <button type="button" class="fx-tool" id="btnDelete" hidden><i class="fa fa-trash"></i> Delete</button>
+            <span class="fx-sep"></span>
+            <button type="button" class="fx-tool" id="btnAttachment"><i class="fa fa-paperclip"></i> Attachment</button>
+            <span class="fx-sep"></span>
+            <button type="button" class="fx-tool" id="btnSlip" disabled><i class="fa fa-print"></i> 225-Slip</button>
+            <button type="button" class="fx-tool" id="btn225PartySlip" disabled><i class="fa fa-print"></i> 225-PartySlip</button>
+            <button type="button" class="fx-tool" id="btnPrint"><i class="fa fa-print"></i> 118-Voucher</button>
+            <span class="fx-sep"></span>
+            <button type="button" class="fx-tool" id="btnPurchaseOrderLoader"><i class="fa fa-download"></i> LoadOrder</button>
+            <button type="button" class="fx-tool" id="BtnSpecialRights"><i class="fa fa-key"></i> Special Rights</button>
+            <span class="fx-sep"></span>
+            <a class="fx-tool" href="/purchase" style="margin-left:auto;text-decoration:none;">Purchase</a>
+        </div>
+        <div id="fxMsg" class="fx-msg" role="status" aria-live="polite"></div>
+
+        <!-- panel3 (0,27) 1304 x 167, panel12 teal strip (25) on top -->
+        <div class="fx-rel" style="height:167px;">
+            <div class="fx-teal fx-abs" style="left:0;top:0;right:0;height:25px;">
+                <span class="fx-teal-title" style="left:6px;top:3px;">PURCHASE DIRECT INVOICE <span id="lblDocCode" style="font-size:12px;"></span></span>
+                <label class="fx-abs fx-chk fx-white" style="right:425px;top:3px;"><input type="checkbox" id="chkCustomAccounts"> Custom Accounts</label>
+                <label class="fx-abs fx-chk fx-white" style="right:291px;top:3px;"><input type="checkbox" id="ChkPrintSlip"> Item Slip-225</label>
+                <label class="fx-abs fx-chk fx-white" style="right:146px;top:3px;"><input type="checkbox" id="chkPartySlip"> Party Slip-225A</label>
+                <label class="fx-abs fx-chk fx-white" style="right:6px;top:3px;"><input type="checkbox" id="ChkBok"> Print Voucher</label>
+            </div>
+            <label class="fx-abs fx-lbl" style="left:5px;top:34px;">Doc No &amp; Date</label>
+            <input type="text" id="txtdocno" class="fx-abs fx-txt" style="left:96px;top:30px;width:73px;" readonly aria-label="Doc No">
+            <input type="text" id="txtBranchSrNo" class="fx-abs fx-txt" style="left:170px;top:30px;width:61px;" readonly aria-label="Branch Sr No">
+            <input type="date" id="DocDate" class="fx-abs fx-dt" style="left:232px;top:30px;width:128px;" aria-label="Doc Date">
+            <label class="fx-abs fx-lbl" style="left:5px;top:62px;">Supplier Name</label>
+            <select id="comsupplier" class="fx-abs fx-cmb win-combo" data-dtcombo="party4" data-dtcombo-caption="Supplier Name" style="left:96px;top:56px;width:264px;" aria-label="Supplier Name"></select>
+            <label class="fx-abs fx-lbl" style="left:5px;top:90px;">Manual Bill No</label>
+            <input type="text" id="txtbillno" class="fx-abs fx-txt" style="left:96px;top:86px;width:264px;" aria-label="Manual Bill No">
+            <label class="fx-abs fx-lbl" style="left:5px;top:117px;">Sup Reference</label>
+            <input type="text" id="txtSupplierReference" class="fx-abs fx-txt" style="left:96px;top:113px;width:264px;" aria-label="Sup Reference">
+            <label class="fx-abs fx-lbl" style="left:5px;top:143px;">Remarks</label>
+            <input type="text" id="txtremarks" class="fx-abs fx-txt" style="left:96px;top:139px;width:1170px;" aria-label="Remarks">
+
+            <label class="fx-abs fx-lbl" style="left:369px;top:34px;">Payment Terms</label>
+            <select id="combpttrm" class="fx-abs fx-cmb win-combo" data-dtcombo-caption="Payment Term" style="left:461px;top:28px;width:136px;" aria-label="Payment Terms"></select>
+            <label class="fx-abs fx-lbl" style="left:369px;top:62px;">Due Days</label>
+            <input type="text" id="txtduedays" class="fx-abs fx-txt r" data-keys="int" style="left:461px;top:58px;width:137px;" value="0" aria-label="Due Days">
+            <label class="fx-abs fx-lbl" style="left:369px;top:90px;">Due Date</label>
+            <input type="date" id="duedate" class="fx-abs fx-dt" style="left:461px;top:86px;width:136px;" aria-label="Due Date">
+            <label class="fx-abs fx-lbl" style="left:369px;top:117px;">Delivery Term</label>
+            <select id="combdeliverytrm" class="fx-abs fx-cmb win-combo" data-dtcombo-caption="Delivery Term" style="left:461px;top:111px;width:136px;" aria-label="Delivery Term"></select>
+
+            <label class="fx-abs fx-lbl" style="left:598px;top:34px;">Comm Agent</label>
+            <select id="combcommAgent" class="fx-abs fx-cmb win-combo" data-dtcombo="party4" data-dtcombo-caption="Commission Agent" style="left:707px;top:28px;width:242px;" aria-label="Comm Agent"></select>
+            <label class="fx-abs fx-lbl" style="left:598px;top:62px;">Comm Type</label>
+            <select id="combCommType" class="fx-abs fx-cmb win-combo" data-dtcombo-caption="CommissionType" style="left:707px;top:56px;width:81px;" aria-label="Comm Type"></select>
+            <label class="fx-abs fx-lbl" style="left:788px;top:62px;">Comm Rate</label>
+            <input type="text" id="txtcommrate" class="fx-abs fx-txt r" data-keys="dec" style="left:859px;top:58px;width:88px;" aria-label="Comm Rate">
+            <label class="fx-abs fx-lbl" style="left:598px;top:90px;">Rate UOM</label>
+            <select id="combcommUOM" class="fx-abs fx-cmb win-combo" data-dtcombo-caption="UOM" style="left:707px;top:84px;width:81px;" aria-label="Commission Rate UOM"></select>
+            <label class="fx-abs fx-lbl" style="left:788px;top:90px;">Amount</label>
+            <input type="text" id="txtcommamount" class="fx-abs fx-txt r" style="left:859px;top:86px;width:90px;" readonly aria-label="Commission Amount">
+            <label class="fx-abs fx-lbl" style="left:598px;top:117px;">Comm Remarks</label>
+            <input type="text" id="txtCommissionRemarks" class="fx-abs fx-txt fx-inactive" style="left:707px;top:113px;width:242px;" aria-label="Comm Remarks">
+
+            <label class="fx-abs fx-lbl" style="left:955px;top:34px;">Brokery Agent</label>
+            <select id="CmbBrokeryAc" class="fx-abs fx-cmb win-combo" data-dtcombo="party4" data-dtcombo-caption="BrokerAc" style="left:1037px;top:28px;width:229px;" aria-label="Brokery Agent"></select>
+            <label class="fx-abs fx-lbl" style="left:955px;top:62px;">Brokery Type</label>
+            <select id="CmbBrokeryType" class="fx-abs fx-cmb win-combo" data-dtcombo-caption="BrokeryType" style="left:1037px;top:56px;width:85px;" aria-label="Brokery Type"></select>
+            <label class="fx-abs fx-lbl" style="left:1125px;top:62px;">Brokery Rate</label>
+            <input type="text" id="txtBrokeryRate" class="fx-abs fx-txt r" data-keys="dec" style="left:1198px;top:58px;width:68px;" aria-label="Brokery Rate">
+            <label class="fx-abs fx-lbl" style="left:955px;top:90px;">Rate UOM</label>
+            <select id="CmbBrokeryRateUom" class="fx-abs fx-cmb win-combo" data-dtcombo-caption="UOM" style="left:1037px;top:84px;width:85px;" aria-label="Brokery Rate UOM"></select>
+            <label class="fx-abs fx-lbl" style="left:1125px;top:90px;">Amount</label>
+            <input type="text" id="txtBrokeryAmount" class="fx-abs fx-txt r" style="left:1198px;top:86px;width:68px;" readonly aria-label="Brokery Amount">
+            <label class="fx-abs fx-lbl" style="left:955px;top:117px;">Bill Amount</label>
+            <input type="text" id="txtBillAmount" class="fx-abs fx-txt r fx-bill" style="left:1037px;top:111px;width:229px;height:27px;" readonly aria-label="Bill Amount">
+        </div>
+
+        <!-- panel4 (0,194) 1304 x 132: groupBox1 "Detail" (7,4) 1291 x 123 -->
+        <div class="fx-rel" style="height:132px;">
+            <div class="fx-gb" style="left:7px;top:4px;width:1291px;height:123px;">
+                <span class="fx-cap">Detail</span>
+                <label class="fx-abs fx-dl" style="left:12px;top:15px;">Po #</label>
+                <select id="CmbOrderNo" class="fx-abs fx-cmb win-combo" data-dtcombo-caption="PurchaseOrderNo" style="left:11px;top:37px;width:83px;" aria-label="Po #"></select>
+                <label class="fx-abs fx-dl" style="left:99px;top:15px;">Item Name</label>
+                <label class="fx-abs fx-dl fx-radio" style="left:128px;top:13px;"><input type="radio" name="itemSearch" id="rdSearchByName" checked> Name</label>
+                <label class="fx-abs fx-dl fx-radio" style="left:187px;top:13px;"><input type="radio" name="itemSearch" id="rdSearchByCode"> Code</label>
+                <select id="CmbItemName" class="fx-abs fx-cmb win-combo" data-dtcombo="item" data-dtcombo-caption="Item Name" style="left:97px;top:37px;width:199px;" aria-label="Item Name"></select>
+                <label class="fx-abs fx-dl" style="left:300px;top:15px;">Crop Year</label>
+                <select id="CmbCropYear" class="fx-abs fx-cmb win-combo" data-dtcombo-caption="Crop Year" style="left:298px;top:37px;width:121px;" aria-label="Crop Year"></select>
+                <label class="fx-abs fx-dl" style="left:424px;top:15px;">Job Lot</label>
+                <select id="CmbJobLot" class="fx-abs fx-cmb win-combo" data-dtcombo-caption="JobLot" style="left:422px;top:37px;width:118px;" aria-label="Job Lot"></select>
+                <label class="fx-abs fx-dl" style="left:543px;top:15px;">Packing Type</label>
+                <select id="CmbPackingType" class="fx-abs fx-cmb win-combo" data-dtcombo-caption="Packing Type" style="left:543px;top:37px;width:122px;" aria-label="Packing Type"></select>
+                <label class="fx-abs fx-dl" style="left:668px;top:15px;">Pack UOM</label>
+                <select id="comPackUOM" class="fx-abs fx-cmb win-combo" data-dtcombo-caption="Pack Uom" style="left:669px;top:37px;width:68px;" aria-label="Pack UOM"></select>
+                <label class="fx-abs fx-dl" style="left:738px;top:15px;">Qty</label>
+                <input type="text" id="txtQty" class="fx-abs fx-txt r" data-keys="dec" data-commas="1" style="left:741px;top:38px;width:81px;" aria-label="Qty">
+                <label class="fx-abs fx-dl" style="left:822px;top:15px;">Gross Weight</label>
+                <input type="text" id="txtGrossWeight" class="fx-abs fx-txt r" data-keys="dec" data-commas="1" style="left:825px;top:38px;width:101px;" aria-label="Gross Weight">
+                <label class="fx-abs fx-dl" style="left:927px;top:15px;">PMW/Unit</label>
+                <input type="text" id="txtEmptybagsUnit" class="fx-abs fx-txt r" data-keys="dec" style="left:930px;top:38px;width:64px;" aria-label="PMW/Unit">
+                <label class="fx-abs fx-dl" style="left:1002px;top:15px;">PMW Total</label>
+                <input type="text" id="txtEmptyBagsTotal" class="fx-abs fx-txt r" data-keys="dec" style="left:998px;top:38px;width:75px;" aria-label="PMW Total">
+                <label class="fx-abs fx-dl" style="left:1077px;top:15px;">Wt.Cut</label>
+                <input type="text" id="txtwtcut" class="fx-abs fx-txt r" data-keys="dec" style="left:1077px;top:38px;width:49px;" aria-label="Wt.Cut">
+                <label class="fx-abs fx-dl" style="left:1132px;top:15px;">Cut Total</label>
+                <input type="text" id="txtWeightCutTotal" class="fx-abs fx-txt r" data-keys="dec" style="left:1129px;top:38px;width:79px;" aria-label="Cut Total">
+                <label class="fx-abs fx-dl" style="left:1207px;top:15px;">AD/LS</label>
+                <input type="text" id="txtAddLss" class="fx-abs fx-txt r" data-keys="decminus" style="left:1210px;top:38px;width:58px;" aria-label="AD/LS">
+
+                <label class="fx-abs fx-dl" style="left:8px;top:70px;">Net Bill Weight</label>
+                <input type="text" id="txtNetBillWeight" class="fx-abs fx-txt r fx-ro" style="left:9px;top:89px;width:95px;" readonly aria-label="Net Bill Weight">
+                <label class="fx-abs fx-dl" style="left:102px;top:70px;">Stock Weight</label>
+                <input type="text" id="txtStockWeight" class="fx-abs fx-txt r fx-ro" data-commas="1" style="left:107px;top:89px;width:96px;" readonly aria-label="Stock Weight">
+                <label class="fx-abs fx-dl" style="left:211px;top:70px;">Rate</label>
+                <input type="text" id="txtRate" class="fx-abs fx-txt r" data-keys="dec" data-commas="1" style="left:209px;top:89px;width:85px;" aria-label="Rate">
+                <label class="fx-abs fx-dl" style="left:298px;top:70px;">Rate UOM</label>
+                <select id="comRateUOM" class="fx-abs fx-cmb win-combo" data-dtcombo-caption="Rate Uom" style="left:297px;top:88px;width:69px;" aria-label="Rate UOM"></select>
+                <label class="fx-abs fx-dl" style="left:368px;top:70px;">Rate Cut</label>
+                <input type="text" id="txtratecut" class="fx-abs fx-txt r" data-keys="dec" style="left:371px;top:89px;width:54px;" aria-label="Rate Cut">
+                <label class="fx-abs fx-dl" style="left:426px;top:70px;">Rate Cut Total</label>
+                <input type="text" id="txtratecuttotal" class="fx-abs fx-txt r fx-ro" style="left:428px;top:89px;width:86px;" readonly aria-label="Rate Cut Total">
+                <label class="fx-abs fx-dl" style="left:518px;top:70px;">Amount</label>
+                <input type="text" id="txtAmount" class="fx-abs fx-txt r fx-ro" style="left:516px;top:89px;width:117px;" readonly aria-label="Amount">
+                <label class="fx-abs fx-dl" style="left:633px;top:70px;">WareHouse</label>
+                <select id="CmbWarehouse" class="fx-abs fx-cmb win-combo" data-dtcombo-caption="WareHouse Name" style="left:636px;top:88px;width:156px;" aria-label="WareHouse"></select>
+                <label class="fx-abs fx-dl" style="left:792px;top:70px;">Lab Analysis #</label>
+                <input type="text" id="txtlabanalysisno" class="fx-abs fx-txt" style="left:795px;top:89px;width:95px;" aria-label="Lab Analysis #">
+                <label class="fx-abs fx-dl" style="left:890px;top:70px;">GP Date</label>
+                <input type="date" id="txtgpdate" class="fx-abs fx-dt" style="left:891px;top:89px;width:104px;" aria-label="GP Date">
+                <label class="fx-abs fx-dl" style="left:1004px;top:70px;">GP #</label>
+                <input type="text" id="txtgatepassno" class="fx-abs fx-txt" style="left:998px;top:89px;width:50px;" aria-label="GP #">
+                <label class="fx-abs fx-dl" style="left:1050px;top:70px;">Vehicle No</label>
+                <input type="text" id="txtvehicleno" class="fx-abs fx-txt" style="left:1050px;top:89px;width:79px;text-transform:uppercase;" aria-label="Vehicle No">
+                <button type="button" id="btnAdd" class="fx-abs fx-btn" style="left:1131px;top:88px;width:27px;height:25px;" aria-label="Add detail row">+</button>
+                <button type="button" id="btnUpdateDetail" class="fx-abs fx-btn" style="left:1160px;top:88px;width:62px;height:25px;" hidden>Update</button>
+                <button type="button" id="btnCancelUpdateDetial" class="fx-abs fx-btn" style="left:1224px;top:88px;width:59px;height:25px;" hidden>Cancel</button>
+            </div>
+        </div>
+
+        <!-- tabControl2 (0,326) fill: Detail / Charge to Product / Other Expenses ... / Supplier AddLess / EmptyBags -->
+        <div class="fx-subtabs" data-tabs="grids">
+            <button type="button" class="is-active" data-pane="tabDetail" data-index="0">Detail</button>
+            <button type="button" data-pane="tabFreight" data-index="1">Charge to Product</button>
+            <button type="button" data-pane="tabOtherExpense" data-index="2">Other Expenses Credit to Supplier &amp; Charge to Product</button>
+            <button type="button" data-pane="tabSupplierAddLess" data-index="3">Supplier AddLess</button>
+            <button type="button" data-pane="tabEmptyBags" data-index="4">EmptyBags</button>
+        </div>
+        <div id="tabDetail" class="fx-pane is-active">
+            <div class="fx-bar" style="height:20px;line-height:20px;"></div>
+            <div class="fx-grid-host fx-grid-main" tabindex="-1"><table id="grd"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        </div>
+        <div id="tabFreight" class="fx-pane">
+            <div class="fx-bar">Charge to Product</div>
+            <div class="fx-grid-host fx-grid-main" tabindex="-1"><table id="grdFreight"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        </div>
+        <div id="tabOtherExpense" class="fx-pane">
+            <div class="fx-bar">Other Expenses Credit to Supplier &amp; Charge to Product</div>
+            <div class="fx-grid-host fx-grid-main" tabindex="-1"><table id="grdInvExp"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        </div>
+        <div id="tabSupplierAddLess" class="fx-pane">
+            <div class="fx-bar">Supplier AddLess</div>
+            <div class="fx-grid-host fx-grid-main" tabindex="-1"><table id="grdGLedger"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        </div>
+        <div id="tabEmptyBags" class="fx-pane">
+            <div class="fx-bar">Empty Bags</div>
+            <div class="fx-grid-host fx-grid-main" tabindex="-1"><table id="grdEmptyBags"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        </div>
+    </div>
+
+    <!-- =========================================================== tabPage2 "History" -->
+    <div id="tabHistory" class="fx-pane">
+        <!-- toolStrip2: Reset, Refresh (LoadAll Visible=false) -->
+        <div class="fx-strip">
+            <button type="button" class="fx-tool" id="btnNewHistory"><i class="fa fa-plus-circle" style="color:#2e7d32"></i> Reset</button>
+            <button type="button" class="fx-tool" id="btnRefreshHistory"><i class="fa fa-repeat"></i> Refresh</button>
+        </div>
+        <div class="fx-teal" style="height:23px;"><span class="fx-teal-title" style="left:3px;top:2px;">PURCHASE INVOICE HISTORY</span></div>
+        <div id="historyMsg" class="fx-msg" role="status" aria-live="polite"></div>
+        <!-- panel18 (75): groupBox3 "Filters" (5,3) 1181 x 69 -->
+        <div class="fx-rel" style="height:75px;">
+            <div class="fx-gb" style="left:5px;top:3px;width:1181px;height:69px;">
+                <span class="fx-cap">Filters</span>
+                <label class="fx-abs fx-lbl" style="left:6px;top:21px;">Branch Name</label>
+                <div class="fx-abs fx-multi" id="cmbBranchName" style="left:6px;top:37px;width:204px;">
+                    <button type="button" class="fx-multi-btn" aria-haspopup="listbox"><span id="cmbBranchNameText"></span><i class="fa fa-caret-down"></i></button>
+                    <div class="fx-multi-list" id="cmbBranchNameList" hidden></div>
+                </div>
+                <label class="fx-abs fx-lbl" style="left:211px;top:18px;">From Date</label>
+                <div class="fx-abs fx-dtc" style="left:214px;top:39px;width:116px;"><input type="checkbox" id="chkFromDateHistory" checked aria-label="Use From Date"><input type="date" id="FromDateHistory" aria-label="From Date"></div>
+                <label class="fx-abs fx-lbl" style="left:332px;top:18px;">To Date</label>
+                <div class="fx-abs fx-dtc" style="left:335px;top:39px;width:113px;"><input type="checkbox" id="chkToDateHistory" checked aria-label="Use To Date"><input type="date" id="ToDateHistory" aria-label="To Date"></div>
+                <label class="fx-abs fx-lbl" style="left:450px;top:18px;">From Doc No</label>
+                <input type="text" id="txtFromDocNoHistory" class="fx-abs fx-txt" data-keys="int" style="left:450px;top:39px;width:100px;" inputmode="numeric" aria-label="From Doc No">
+                <label class="fx-abs fx-lbl" style="left:552px;top:18px;">To Doc No</label>
+                <input type="text" id="txtToDocNoHistory" class="fx-abs fx-txt" data-keys="int" style="left:552px;top:39px;width:100px;" inputmode="numeric" aria-label="To Doc No">
+                <label class="fx-abs fx-lbl" style="left:653px;top:18px;">Supplier Name</label>
+                <select id="cmbSupplierNameHistory" class="fx-abs fx-cmb win-combo" data-dtcombo-caption="Supplier Name" style="left:653px;top:37px;width:240px;" aria-label="Supplier Name (History)"></select>
+                <button type="button" id="btnshow" class="fx-abs fx-btn fx-show" style="left:896px;top:37px;width:69px;height:26px;">Show</button>
+                <label class="fx-abs fx-chk" style="left:971px;top:21px;"><input type="radio" name="histDate" value="DocDate" checked> Doc Date</label>
+                <label class="fx-abs fx-chk" style="left:971px;top:41px;"><input type="radio" name="histDate" value="EntryDate"> Entry Date</label>
+                <label class="fx-abs fx-chk" style="left:1052px;top:21px;"><input type="radio" name="histDate" value="ModifyDate"> Modify Date</label>
+                <label class="fx-abs fx-chk" style="left:1052px;top:41px;"><input type="radio" name="histDate" value="ApprovedDate"> Approved Date</label>
+            </div>
+        </div>
+        <div class="fx-grid-host" style="height:292px;" tabindex="-1"><table id="grdHistory"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        <div class="fx-teal" style="height:24px;"><span class="fx-teal-title" style="left:3px;top:2px;font-size:13px;">Detail Information Of Above Selected Row</span></div>
+        <div class="fx-grid-host" style="height:226px;"><table id="grdDetail"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+    </div>
+</div>
+</div>
+
+<!-- tabControl1 (Alignment Bottom) + History button on the right of the footer -->
+<div class="fx-footer">
+    <div class="fx-tabs" data-tabs="main">
+        <button type="button" class="is-active" data-pane="tabForm">Form</button>
+        <button type="button" data-pane="tabHistory">History</button>
+    </div>
+    <button type="button" class="fx-btn fx-footer-history" id="btnFooterHistory"><i class="fa fa-history"></i> <span>History</span></button>
+</div>
+
+<!-- LoadPurchaseOrder (DocumentTypeId 41, btnPurchaseOrderLoader_Click :5246) -->
+<section id="dlgLoadOrder" class="fx-dialog" hidden role="dialog" aria-label="Load Purchase Order" style="width:1100px;">
+    <div class="fx-dialog-head"><span>Load Purchase Order</span><button type="button" id="ldrClose" aria-label="Close">&times;</button></div>
+    <div class="fx-rel" style="height:52px;background:#f0f0f0;">
+        <label class="fx-abs fx-lbl" style="left:5px;top:5px;">Supplier</label>
+        <select id="ldrSupplier" class="fx-abs fx-cmb win-combo" data-dtcombo="party4" data-dtcombo-caption="Supplier Name" style="left:5px;top:22px;width:250px;" aria-label="Loader Supplier"></select>
+        <label class="fx-abs fx-lbl" style="left:260px;top:5px;">From Date</label>
+        <input type="date" id="ldrFromDate" class="fx-abs fx-dt" style="left:260px;top:23px;width:128px;" aria-label="Loader From Date">
+        <label class="fx-abs fx-lbl" style="left:392px;top:5px;">To Date</label>
+        <input type="date" id="ldrToDate" class="fx-abs fx-dt" style="left:392px;top:23px;width:128px;" aria-label="Loader To Date">
+        <label class="fx-abs fx-lbl" style="left:524px;top:5px;">From Doc No</label>
+        <input type="text" id="ldrFromDocNo" class="fx-abs fx-txt" data-keys="int" style="left:524px;top:23px;width:80px;" aria-label="Loader From Doc No">
+        <label class="fx-abs fx-lbl" style="left:608px;top:5px;">To Doc No</label>
+        <input type="text" id="ldrToDocNo" class="fx-abs fx-txt" data-keys="int" style="left:608px;top:23px;width:80px;" aria-label="Loader To Doc No">
+        <button type="button" id="ldrSearch" class="fx-abs fx-btn" style="left:694px;top:22px;width:62px;height:25px;">Search</button>
+        <button type="button" id="ldrLoad" class="fx-abs fx-btn" style="left:758px;top:22px;width:61px;height:25px;">Load</button>
+    </div>
+    <div id="ldrMsg" class="fx-msg" role="status" aria-live="polite"></div>
+    <div class="fx-grid-host" style="height:min(60vh,420px);"><table id="ldrGrid"><thead></thead><tbody></tbody></table></div>
+</section>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_desktop_combo.js}"></script>
+<script th:src="@{/build/js/countx_purchase_request.js}"></script>
+<script th:src="@{/build/js/countx_invoice_attachments.js}"></script>
+<script th:src="@{/build/js/countx_special_rights.js?v=20260930t}"></script>
+<script th:src="@{/build/js/countx_direct_invoice.js(v=20261001a)}"></script>
+</body>
+</html>

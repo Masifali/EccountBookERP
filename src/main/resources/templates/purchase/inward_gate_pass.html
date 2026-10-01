@@ -124,7 +124,24 @@
             margin-bottom: 4px;
             border-bottom: 1px solid #d0d0d0;
             padding-bottom: 2px;
+            /* the caption always sits in its own line above the box content (the Weights box caption was reported hidden
+               under the top of its box): never overlapped by the table below it, never clipped */
+            position: relative; z-index: 3; display: block; line-height: 15px; min-height: 17px; white-space: nowrap;
+            overflow: visible; background: inherit;
         }
+        .section-box { position: relative; overflow: visible; }
+        .wt-table { position: relative; z-index: 0; table-layout: fixed; }
+        .wt-table th:first-child, .wt-table td:first-child { width: 86px; white-space: nowrap; }
+        .lab-info-row { display: grid; grid-template-columns: auto 1fr auto 1fr; gap: 4px 6px; align-items: center; }
+        .lab-info-row .form-label { text-align: right; padding-right: 0; }
+        .lab-info-row .form-control { width: 100%; min-width: 0; }
+        .driver-info-row { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px 4px; }
+        .driver-info-row label { display: flex; flex-direction: column; font-size: 10px; font-weight: bold; color: #333; min-width: 0; }
+        .driver-info-row .form-control { width: 100%; min-width: 0; }
+        @media (max-width: 1250px) { .driver-info-row { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+        .igp-modal { position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 9500; display: none; align-items: center; justify-content: center; }
+        .igp-modal-box { background: #fff; border: 1px solid #716f64; min-width: 360px; max-width: 90vw; max-height: 80vh; overflow: auto; box-shadow: 2px 2px 10px rgba(0,0,0,.4); }
+        .igp-modal-title { background: #005a5b; color: #fff; font-weight: bold; padding: 4px 8px; display: flex; justify-content: space-between; align-items: center; }
 
         .grid-3col {
             display: grid;
@@ -143,7 +160,7 @@
         .breakup-panel .tool-btn { width:20px; padding:0; justify-content:center; }
         .breakup-panel .data-grid td { padding:1px; }
         .breakup-panel tfoot { position:sticky; bottom:0; background:#f0f0f0; font-weight:bold; text-align:right; }
-        @media(max-width:1500px) { .entry-layout { display:block; } .breakup-panel { margin:6px 0; } }
+        @media(max-width:1500px) { .entry-layout { display:block; } .breakup-panel { margin:6px 0; } .breakup-panel .grid-wrap { height:auto; max-height:200px; } }
         @media(max-width:1080px) { .grid-3col { grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); } .section-box { min-width:0; overflow-x:auto; } }
 
         .form-row {
@@ -286,6 +303,7 @@
         /* Bottom Mode Bar */
         .bottom-mode-bar {
             display: flex;
+            justify-content: flex-end;   /* History on the right of the footer */
             background-color: #d4d0c8;
             border-top: 1px solid #999;
             padding: 2px 6px;
@@ -394,6 +412,9 @@
                    class="igp-link" title="Open Freight Voucher">Freight Voucher</a></label>
             <!-- ChkIsApproved "Is Approve": checked on Load, visible only with the Approve right (InwardGatePass_Load :653/:668) -->
             <label id="lblIsApproved" style="margin-left: auto; display:none;"><input type="checkbox" id="ChkIsApproved" checked> Is Approve</label>
+            <!-- chkDriverInfoForm "Open Driver Bio Form": designer Visible = false and never shown; when checked, btnsave_Click (:3585)
+                 opens frmDriverBio (RefDocumentTypeId 51) with the saved gate pass selected. Kept hidden as on the desktop. -->
+            <label id="lblDriverInfoForm" style="display:none;"><input type="checkbox" id="chkDriverInfoForm"> Open Driver Bio Form</label>
             <!-- ChkBox "Preview": after a successful Save/Update the desktop prints 251 for the saved gate pass -->
             <label style="margin-left: 8px;"><input type="checkbox" id="chkPreview" checked> Preview</label>
         </div>
@@ -592,11 +613,11 @@
                 <!-- Lab Info -->
                 <div class="section-box">
                     <div class="section-title">Lab Info</div>
-                    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                        <label class="form-label">Analyst Name <input type="text" id="txtAnaylstName" class="form-control" style="width: 120px;" readonly /></label>
-                        <label class="form-label">Report No <input type="text" id="txtLabReportNo" class="form-control" style="width: 90px;" readonly /></label>
-                        <label class="form-label">Report Status <input type="text" id="txtReportStatus" class="form-control" style="width: 100px;" readonly /></label>
-                        <label class="form-label" style="flex: 1;">Remarks <input type="text" id="txtLabRemarks" class="form-control" style="width: 100%;" readonly /></label>
+                    <div class="lab-info-row">
+                        <label class="form-label" for="txtAnaylstName">Analyst Name</label><input type="text" id="txtAnaylstName" class="form-control" readonly />
+                        <label class="form-label" for="txtLabReportNo">Report No</label><input type="text" id="txtLabReportNo" class="form-control" readonly />
+                        <label class="form-label" for="txtReportStatus">Report Status</label><input type="text" id="txtReportStatus" class="form-control" readonly />
+                        <label class="form-label" for="txtLabRemarks">Remarks</label><input type="text" id="txtLabRemarks" class="form-control" readonly />
                     </div>
                 </div>
 
@@ -604,16 +625,17 @@
                 <div class="section-box">
                     <div class="section-title" style="display:flex; justify-content:space-between; align-items:center;">
                         <span>Driver Information</span>
-                        <button class="tool-btn" style="height:18px; padding:0 6px; font-size:10px;" onclick="resetDriverInfoFields()" title="Reset Driver Fields">Reset Driver Info</button>
+                        <button id="btnResetDriverInfo" class="tool-btn" style="height:18px; padding:0 6px; font-size:10px;" onclick="withButtonLoading(this, refreshDriversAndReset)" title="Reset Driver Fields">Reset Driver Info</button>
                     </div>
-                    <div style="display: flex; gap: 4px; flex-wrap: wrap;">
-                        <input type="text" id="txtCNIC" class="form-control" placeholder="CNIC #" style="width: 110px;" onchange="lookupDriverByCnic()" />
-                        <input type="text" id="txtDriverCellNo" class="form-control" placeholder="Driver Cell #" style="width: 100px;" onchange="lookupDriverByCell()" />
-                        <input type="text" id="txtWhatsAppNo" class="form-control" placeholder="WhatsApp #" style="width: 100px;" />
-                        <input type="text" id="txtAlternateCellNo" class="form-control" placeholder="Alternate Cell#" style="width: 100px;" />
-                        <input type="text" id="txtDriverName" class="form-control" placeholder="Driver Name" style="width: 110px;" />
-                        <input type="text" id="txtFatherName" class="form-control" placeholder="Father Name" style="width: 110px;" />
-                        <input type="text" id="txtFatherCNIC" class="form-control" placeholder="Father CNIC" style="width: 110px;" />
+                    <!-- groupBox6: MaskedTextBoxes (CNIC 00000-0000000-0, cells 000-000-0000000, default "0923" = 092-3); Leave of CNIC / cell looks the driver up -->
+                    <div class="driver-info-row">
+                        <label>CNIC#<input type="text" id="txtCNIC" class="form-control" placeholder="00000-0000000-0" maxlength="15" inputmode="numeric" oninput="onMaskedInput(this)" onblur="lookupDriverByCnic()" /></label>
+                        <label>Driver Cell #<input type="text" id="txtDriverCellNo" class="form-control" value="092-3" placeholder="000-000-0000000" maxlength="15" inputmode="numeric" oninput="onMaskedInput(this)" onblur="lookupDriverByCell()" /></label>
+                        <label>WhatsApp #<input type="text" id="txtWhatsAppNo" class="form-control" value="092-3" placeholder="000-000-0000000" maxlength="15" inputmode="numeric" oninput="onMaskedInput(this)" /></label>
+                        <label>Alternate Cell#<input type="text" id="txtAlternateCellNo" class="form-control" value="092-3" placeholder="000-000-0000000" maxlength="15" inputmode="numeric" oninput="onMaskedInput(this)" /></label>
+                        <label>Driver Name<input type="text" id="txtDriverName" class="form-control" /></label>
+                        <label>Father Name<input type="text" id="txtFatherName" class="form-control" /></label>
+                        <label>Father CNIC<input type="text" id="txtFatherCNIC" class="form-control" placeholder="00000-0000000-0" maxlength="15" inputmode="numeric" oninput="onMaskedInput(this)" /></label>
                     </div>
                 </div>
             </div>
@@ -640,7 +662,7 @@
                     <div style="font-weight: bold; color: #005a5b; margin-bottom: 4px;">
                         This Grid Show the Vehicles Present In The Factory, Pending For Acceptance Or Rejection
                     </div>
-                    <div class="grid-wrap">
+                    <div class="grid-wrap" id="wrapMainHistory">
                         <table class="data-grid" id="grdMainHistory">
                             <thead>
                             <tr>
@@ -729,7 +751,7 @@
                                     <input type="number" id="txtExpiryDaysPoInfo" class="form-control" style="width: 130px; text-align: center; font-weight: bold; background-color: #ffffcc;" value="7" data-guard="integer" />
                                 </div>
                                 <div style="display: flex; flex-direction: column; gap: 4px;">
-                                    <button id="btnResetPoInfo" class="tool-btn" style="background-color: #006600; color: white; border: 1px solid #004400; padding: 2px 14px; font-weight: bold;" onclick="resetPoInfoFilters()">Reset</button>
+                                    <button id="btnResetPoInfo" class="tool-btn" style="background-color: #006600; color: white; border: 1px solid #004400; padding: 2px 14px; font-weight: bold;" onclick="onResetPoInfo(this)">Reset</button>
                                     <button id="btnSearchPoInfo" class="tool-btn" style="background-color: #006600; color: white; border: 1px solid #004400; padding: 2px 14px; font-weight: bold;" onclick="withButtonLoading(this, loadPoInfoGrid)">Show</button>
                                 </div>
                             </div>
@@ -750,7 +772,7 @@
                     </div>
 
                     <!-- PO Info Grid -->
-                    <div class="grid-wrap" style="max-height: 340px;">
+                    <div class="grid-wrap" id="wrapPoInfo" style="max-height: 340px;">
                         <table class="data-grid" id="grdPoInfo">
                             <thead>
                             <tr>
@@ -829,7 +851,7 @@
 
         <!-- Full History Grid -->
         <div style="padding: 0 6px 6px 6px;">
-            <div class="grid-wrap" style="max-height: 480px;">
+            <div class="grid-wrap" id="wrapFullHistory" style="max-height: 480px;">
                 <table class="data-grid" id="grdFullHistory">
                     <thead>
                     <tr>
@@ -882,14 +904,16 @@
 
 
     <!-- Bottom Mode Bar -->
-    <div class="bottom-mode-bar">
+    <!-- tabControl1 Form / History. Replaced by the fixed footer of countx_purchase_page_chrome.js (History on the right) when it loads. -->
+    <div class="bottom-mode-bar" id="bottomModeBar">
         <button id="btnModeForm" class="mode-btn active" onclick="switchViewMode('Form')">Form</button>
         <button id="btnModeHistory" class="mode-btn" onclick="switchViewMode('History')">History</button>
     </div>
 </div>
 
 <script th:src="@{/build/js/countx_purchase_request.js?v=20260923a}"></script>
-<script th:src="@{/build/js/countx_inward_gate_pass.js?v=20261001c}"></script>
+<script th:src="@{/build/js/countx_purchase_page_chrome.js?v=20261001a}"></script>
+<script th:src="@{/build/js/countx_inward_gate_pass.js?v=20261001n}"></script>
 
     <script th:src="@{/build/js/countx_desktop_combo.js?v=20260927b}"></script>
     <script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>

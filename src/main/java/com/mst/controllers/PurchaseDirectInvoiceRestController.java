@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 
+/** InvfrmPurchasedirectInvoice (screen 117, DocumentTypeId 57). Tenancy always from the session. */
 @RestController
 @RequestMapping("/api/purchase/purchase-direct-invoice")
 public class PurchaseDirectInvoiceRestController {
@@ -36,37 +37,67 @@ public class PurchaseDirectInvoiceRestController {
         int compId = currentUserContext.currentCompanyId();
         int branchId = currentUserContext.currentBranchId();
         int yearId = currentUserContext.currentFinancialYearId();
-        int nextNo = purchaseDirectInvoiceService.generateNextDocNo(orgId, compId, branchId, yearId);
         Map<String, Object> res = new HashMap<>();
-        res.put("docNo", nextNo);
+        res.put("docNo", purchaseDirectInvoiceService.generateNextDocNo(orgId, compId, branchId, yearId));
         res.put("branchSrNo",purchaseDirectInvoiceService.generateNextBranchNo(orgId,compId,branchId,yearId));
         return ResponseEntity.ok(res);
     }
 
-    @RequestMapping(value = "/history", method = {RequestMethod.GET, RequestMethod.POST})
-    public ResponseEntity<?> getHistory(@RequestBody(required = false) Map<String, Object> bodyParams,
+    /** GetAll :4676 - the ticked History branches, the date pair of the ticked radio, doc numbers and supplier. */
+    @GetMapping("/history")
+    public ResponseEntity<?> getHistory(@RequestParam(required = false) String branchIds,
                                          @RequestParam(required = false) String fromDate,
                                          @RequestParam(required = false) String toDate,
                                          @RequestParam(required = false) Integer supplierId,
                                          @RequestParam(required = false) Integer fromDocNo,
                                          @RequestParam(required = false) Integer toDocNo,
                                          @RequestParam(required = false) String dateType) {
-        int orgId = currentUserContext.currentOrganizationId();
-        int compId = currentUserContext.currentCompanyId();
-        int branchId = currentUserContext.currentBranchId();
-        int yearId = currentUserContext.currentFinancialYearId();
+        return ResponseEntity.ok(purchaseDirectInvoiceService.history(branchIds, fromDate, toDate, supplierId, fromDocNo, toDocNo, dateType));
+    }
 
-        if (bodyParams != null) {
-            if (fromDate == null && bodyParams.get("fromDate") != null) fromDate = bodyParams.get("fromDate").toString();
-            if (toDate == null && bodyParams.get("toDate") != null) toDate = bodyParams.get("toDate").toString();
-            if (supplierId == null && bodyParams.get("supplierId") != null) supplierId = ((Number) bodyParams.get("supplierId")).intValue();
-            if (fromDocNo == null && bodyParams.get("fromDocNo") != null) fromDocNo = ((Number) bodyParams.get("fromDocNo")).intValue();
-            if (toDocNo == null && bodyParams.get("toDocNo") != null) toDocNo = ((Number) bodyParams.get("toDocNo")).intValue();
-            if (dateType == null && bodyParams.get("dateType") != null) dateType = bodyParams.get("dateType").toString();
-        }
+    @GetMapping("/history-detail/{id}")
+    public ResponseEntity<?> historyDetail(@PathVariable("id") int id, @RequestParam(required = false) String branchIds) {
+        return ResponseEntity.ok(purchaseDirectInvoiceService.historyDetail(id, branchIds));
+    }
 
-        List<Map<String, Object>> history = purchaseDirectInvoiceService.getHistory(orgId, compId, branchId, yearId, fromDate, toDate, supplierId, fromDocNo, toDocNo, dateType);
-        return ResponseEntity.ok(history);
+    @GetMapping("/history-suppliers")
+    public ResponseEntity<?> historySuppliers(@RequestParam(required = false) String branchIds) {
+        return ResponseEntity.ok(purchaseDirectInvoiceService.historySuppliers(branchIds));
+    }
+
+    @GetMapping("/history-refresh")
+    public ResponseEntity<?> historyRefresh() {
+        return ResponseEntity.ok(purchaseDirectInvoiceService.historyRefresh());
+    }
+
+    /** LoadPurchaseOrder dialog list (DocumentTypeId 41). */
+    @GetMapping("/order-loader")
+    public ResponseEntity<?> orderLoader(@RequestParam(required = false) Integer supplierId,
+                                         @RequestParam(required = false) String fromDate,
+                                         @RequestParam(required = false) String toDate,
+                                         @RequestParam(required = false) Integer fromDocNo,
+                                         @RequestParam(required = false) Integer toDocNo,
+                                         @RequestParam(required = false) String excludeIds) {
+        return ResponseEntity.ok(purchaseDirectInvoiceService.pendingOrders(supplierId, fromDate, toDate, fromDocNo, toDocNo, excludeIds));
+    }
+
+    /** LoadInGridDetail :5277 for the checked orders. */
+    @GetMapping("/order-load")
+    public ResponseEntity<?> orderLoad(@RequestParam(required = false) String orderIds) {
+        return ResponseEntity.ok(purchaseDirectInvoiceService.loadOrders(orderIds));
+    }
+
+    /** GetEmptyBagsInformationFromOrder :1607. */
+    @GetMapping("/order-empty-bags")
+    public ResponseEntity<?> orderEmptyBags(@RequestParam(required = false) String orderIds) {
+        return ResponseEntity.ok(purchaseDirectInvoiceService.orderEmptyBags(orderIds));
+    }
+
+    /** DeleteDetailrow :2240 - StockInReferenceValidationReferredOrNot for a stored detail row. */
+    @PostMapping("/{id}/detail-row-check/{detailId}")
+    public ResponseEntity<?> detailRowCheck(@PathVariable("id") int id, @PathVariable("detailId") int detailId) {
+        purchaseDirectInvoiceService.detailRowCheck(id, detailId);
+        return ResponseEntity.ok(Map.of("success", true));
     }
 
     @GetMapping("/{id}")

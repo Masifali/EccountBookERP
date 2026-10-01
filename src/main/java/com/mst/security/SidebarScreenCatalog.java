@@ -202,8 +202,11 @@ public final class SidebarScreenCatalog {
         e.add(new Entry("Inward Gate Pass", "Purchase", "/purchase/inward-gate-pass", "INWARD_GATE_PASS", "PURCHASE", 134, 5));
         e.add(new Entry("Goods Receipt Notes", "Purchase", "/purchase/goods-receipt-notes", "GOODS_RECEIPT_NOTES", "PURCHASE", 121, 5));
         e.add(new Entry("Goods Receipt Notes Direct", "Purchase", "/purchase/grn-direct", "GOODS_RECEIPT_NOTES_DIRECT", "PURCHASE", 129, 5));
+        e.add(new Entry("GRN Direct Against Order", "Purchase", "/purchase/grn-direct-against-order", "GRN_DIRECT_AGAINST_ORDER", "PURCHASE", 133, 5));
+        e.add(new Entry("Purchase Invoice Against Grn Order", "Purchase", "/purchase/purchase-invoice-against-grn-order", "PURCHASE_INVOICE_GRN_ORDER", "PURCHASE", 132, 5));
+        e.add(new Entry("Purchase Invoice For Upload", "Purchase", "/purchase/purchase-invoice-for-upload", "PURCHASE_INVOICE_FOR_UPLOAD", "PURCHASE", 910, 5));
         /* Was 37 - that is GRN's old web DocumentTypeId, not a screen; the real ScreenDefinition row is 866. */
-        e.add(new Entry("GRN (Sale Return)", "Purchase", "/purchase/grn-sale-return", "GRN_SALE_RETURN", "PURCHASE", 866, 5));
+        e.add(new Entry("Grn (Sale Return)", "Purchase", "/purchase/grn-sale-return", "GRN_SALE_RETURN", "PURCHASE", 866, 5));
         e.add(new Entry("Stock In Transit", "Purchase", "/purchase/stock-in-transit", "STOCK_IN_TRANSIT", "PURCHASE", 868, 5));
         e.add(new Entry("Purchase Invoice", "Purchase", "/purchase/purchase-invoice", "PURCHASE_INVOICE", "PURCHASE", 122, 5));
         e.add(new Entry("Purchase Invoice Again GRN Direct", "Purchase", "/purchase/purchase-invoice-again-grn-direct", "PURCHASE_INVOICE_GRN_DIRECT", "PURCHASE", 131, 5));
@@ -254,6 +257,42 @@ public final class SidebarScreenCatalog {
         // ids from the ScreenDefinition dump (GoldenAceDb(0509)t.sql).
         e.add(new Entry("Gd Break Up By Invoice", "Export", "/export/gd-break-up-by-invoice", "EXP_GD_BREAK_UP_BY_INVOICE", "EXPORT", 881, 11));
         e.add(new Entry("Export Invoice Packing List", "Export", "/export/invoice-packing-list", "EXP_INVOICE_PACKING_LIST", "EXPORT", 882, 11));
+        e.add(new Entry("5011 Receivable By Due Report", "Export", "/export/receivable-by-due-date", "EXP_RECEIVABLE_BY_DUE_DATE", "EXPORT", 235, 17));
+        e.add(new Entry("5003 Contract Schedule Periodic", "Export", "/export/contract-schedule-periodic", "EXP_CONTRACT_SCHEDULE_PERIODIC", "EXPORT", 236, 17));
+        e.add(new Entry("5006 Shipment Costing Detail", "Export", "/export/shipment-costing", "EXP_SHIPMENT_COSTING", "EXPORT", 238, 17));
+        e.add(new Entry("5008 Shipments Document Status Report", "Export", "/export/shipments-document-status", "EXP_SHIPMENTS_DOCUMENT_STATUS", "EXPORT", 239, 17));
+        e.add(new Entry("Export Detail History (Not Use)", "Export", "/export/detail-history", "EXP_DETAIL_HISTORY", "EXPORT", 249, 17));
+        e.add(new Entry("5015 Delivery Order Report", "Export", "/export/delivery-order-report", "EXP_DELIVERY_ORDER_REPORT", "EXPORT", 250, 17));
+        e.add(new Entry("5001 Contract Report", "Export", "/export/contract-register", "EXP_CONTRACT_REGISTER", "EXPORT", 251, 17));
+        e.add(new Entry("5014 Shipment Tracking Follow up", "Export", "/export/shipment-tracking-follow-up", "EXP_SHIPMENT_TRACKING_FOLLOW_UP", "EXPORT", 254, 17));
+        e.add(new Entry("5016 Export Shipment Weight Audit", "Export", "/export/shipment-weight-audit", "EXP_SHIPMENT_WEIGHT_AUDIT", "EXPORT", 261, 17));
+        e.add(new Entry("5013 Loading Sheet", "Export", "/export/loading-sheet", "EXP_LOADING_SHEET", "EXPORT", 262, 17));
+        e.add(new Entry("5010 Shipment CRO Booking Report", "Export", "/export/shipment-cro-booking-report", "EXP_SHIPMENT_CRO_BOOKING_REPORT", "EXPORT", 266, 17));
+        e.add(new Entry("5012 Forwarding Report", "Export", "/export/forwarding-report", "EXP_FORWARDING_REPORT", "EXPORT", 269, 17));
+        e.add(new Entry("5004 Sale Report", "Export", "/export/sale-report", "EXP_SALE_REPORT", "EXPORT", 270, 17));
+        e.add(new Entry("5007 Sale Comparisons Report", "Export", "/export/sale-comparisons-report", "EXP_SALE_COMPARISONS_REPORT", "EXPORT", 759, 17));
+        e.add(new Entry("Service Bill Register", "Export", "/export/service-bill-register", "EXP_SERVICE_BILL_REGISTER", "EXPORT", 912, 17));
+        e.add(new Entry("Export Forwarding (Costing Report)", "Export", "/export/forwarding-costing-report", "EXP_FORWARDING_COSTING_REPORT", "EXPORT", 913, 17));
+        e.add(new Entry("5005 Shipment Costing Summary", "Export", "/export/shipment-costing-summary", "EXP_SHIPMENT_COSTING_SUMMARY", "EXPORT", 919, 17));
+        e.add(new Entry("5017 FI Utilization Report", "Export", "/export/fi-utilization-report", "EXP_FI_UTILIZATION_REPORT", "EXPORT", 935, 17));
+        e.add(new Entry("5017 Fcy Receipts Report", "Export", "/export/fcy-receipts-summary-register", "EXP_FCY_RECEIPTS_SUMMARY_REGISTER", "EXPORT", 241, 133));
+        e.add(new Entry("Shipment data For Brokery Tax", "Export", "/export/shipment-data-for-brokery-tax", "EXP_SHIPMENT_DATA_FOR_BROKERY_TAX", "EXPORT", 242, 133));
+        e.add(new Entry("Export Packing List Register", "Export", "/export/packing-list-register", "EXP_PACKING_LIST_REGISTER", "EXPORT", 243, 133));
+        e.add(new Entry("Pending Forwarding For Commercial Invoice", "Export", "/export/pending-forwarding-for-commercial-invoice", "EXP_PENDING_FORWARDING_FOR_COMMERCIAL_INVOICE", "EXPORT", 244, 133));
+        e.add(new Entry("GD BreakUp and Realized_Register", "Export", "/export/gd-break-up-and-realized-register", "EXP_GD_BREAK_UP_AND_REALIZED_REGISTER", "EXPORT", 245, 133));
+        e.add(new Entry("FI Balance Summary", "Export", "/export/fi-balance-summary", "EXP_FI_BALANCE_SUMMARY", "EXPORT", 246, 133));
+        e.add(new Entry("Comm Agent Fcy Ledger", "Export", "/export/commission-agent-fcy-ledger", "EXP_COMMISSION_AGENT_FCY_LEDGER", "EXPORT", 256, 133));
+        e.add(new Entry("EEReport", "Export", "/export/ee-report-export-gd", "EXP_EE_REPORT_EXPORT_GD", "EXPORT", 257, 133));
+        e.add(new Entry("Commercial Invoice Shipments", "Export", "/export/commercial-invoice-shipments", "EXP_COMMERCIAL_INVOICE_SHIPMENTS", "EXPORT", 258, 133));
+        e.add(new Entry("5009 Consignment Follow Up Report", "Export", "/export/consignment-follow-up", "EXP_CONSIGNMENT_FOLLOW_UP", "EXPORT", 203, 11));
+        e.add(new Entry("Third Party Inspection Lot Tracking Report", "Export", "/export/third-party-inspection-lot-tracking-report", "EXP_THIRD_PARTY_INSPECTION_LOT_TRACKING_REPORT", "EXPORT", 859, 136));
+        e.add(new Entry("DocDue Color Schedule", "Export", "/export/doc-due-color-schedule", "EXP_DOC_DUE_COLOR_SCHEDULE", "EXPORT", 619, 130));
+        e.add(new Entry("Define Chart Of Document", "Export", "/export/define-chart-of-document", "EXP_DEFINE_CHART_OF_DOCUMENT", "EXPORT", 620, 130));
+        e.add(new Entry("Define Custom Group", "Export", "/export/define-custom-group", "EXP_DEFINE_CUSTOM_GROUP", "EXPORT", 621, 130));
+        e.add(new Entry("Client Assign To Group", "Export", "/export/client-assign-to-group", "EXP_CLIENT_ASSIGN_TO_GROUP", "EXPORT", 622, 130));
+        e.add(new Entry("Document Assign To Group", "Export", "/export/document-assign-to-group", "EXP_DOCUMENT_ASSIGN_TO_GROUP", "EXPORT", 623, 130));
+        e.add(new Entry("Shipment Doc Schedule", "Export", "/export/shipment-doc-schedule", "EXP_SHIPMENT_DOC_SCHEDULE", "EXPORT", 624, 130));
+        e.add(new Entry("Export Document Tracking Report", "Export", "/export/document-tracking-report", "EXP_DOCUMENT_TRACKING_REPORT", "EXPORT", 625, 130));
 
         // 7. PRODUCTION REPORTS (module 21)
         // Ids, ScreenName and ScreenAlias all read from reconciliation-input.json, the live dump

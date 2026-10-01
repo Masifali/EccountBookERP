@@ -31,12 +31,15 @@ public class InwardGatePassRecordRepository {
     }
 
     /** CommonServices.SetRightsValueInRightsObject("InwardGatePass"): tblUserRights rows of this screen. */
-    public boolean hasRight(String right) {
+    public boolean hasRight(String right) { return hasScreenRight("InwardGatePass", right); }
+
+    /** The same tblUserRights lookup for another ScreenName (e.g. "frmDriverBioForInWard", which BtnDriverForm_Click checks). */
+    public boolean hasScreenRight(String screenName, String right) {
         String role=context.currentRoleName();
         boolean admin="Admin".equalsIgnoreCase(role)||"Administrator".equalsIgnoreCase(role);
         if (admin && !"Delete".equals(right) && !"View".equals(right)) return true;
         return jdbc.queryForList("EXEC dbo.Sp_tblUserRights_GetAllMethod @UserId=?,@ScreenName=?,"
-                + "@RightName=?,@CompanyId=?,@Activity=?",context.currentUserId(),"InwardGatePass",
+                + "@RightName=?,@CompanyId=?,@Activity=?",context.currentUserId(),screenName,
                 role==null?"":role,context.currentCompanyId(),"GetByUserId").stream()
                 .anyMatch(r->right.equalsIgnoreCase(Objects.toString(r.get("RightName"),"").trim())
                         && (Boolean.TRUE.equals(r.get("Value"))||"1".equals(Objects.toString(r.get("Value"),""))));

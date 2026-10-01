@@ -31,5 +31,23 @@ const PurchaseInvoiceAttachments=(()=>{
         function reset(){++generation;rows=[];files=[];removed=new Set();changed=loaded=false;if(dialog){dialog.hidden=true;render();}}
         return {open,reset,settled:()=>pending,payload:()=>changed?{files:files.slice(),removeAttachmentIds:[...removed]}:undefined};
     }
-    return {create};
+    /* History / loader "NoOfAttachments" link (CommonServices.GetNoofAttachmentsByRefDocumentTypeID): read-only list of the
+       record's attachments with download links. The button (optional) stays busy while the list loads. */
+    let viewer;
+    async function view({type,id,message,button}){
+        const say=message||(t=>alert(t));
+        try{await PurchaseRequest.run(button||null,async()=>{
+            const response=await fetch('/api/purchase/invoice-attachments/'+Number(type)+'/'+Number(id),{credentials:'same-origin',headers:{Accept:'application/json'}});
+            if(response.redirected||response.status===401)throw Error('Please sign in to continue');
+            const text=await response.text();let data=null;try{data=text?JSON.parse(text):null;}catch(x){data={message:text};}
+            if(!response.ok)throw Error((data&&(data.message||data.detail))||'Attachments could not be loaded');
+            if(!viewer){viewer=document.createElement('section');viewer.className='invoice-attachments';viewer.setAttribute('role','dialog');viewer.setAttribute('aria-label','Attachments');
+                viewer.innerHTML='<h2>Attachments<button type="button" data-close>Close</button></h2><div class="invoice-scroll"><table><thead><tr><th>#</th><th>File</th></tr></thead><tbody></tbody></table></div>';
+                document.body.appendChild(viewer);viewer.querySelector('[data-close]').addEventListener('click',()=>{viewer.hidden=true;});}
+            const rows=Array.isArray(data)?data:[];
+            viewer.querySelector('tbody').innerHTML=rows.length?rows.map((r,i)=>`<tr><td>${i+1}</td><td><a href="/api/purchase/invoice-attachments/${Number(type)}/${Number(id)}/${Number(r.Id)}">${esc(r.Attachment)}</a></td></tr>`).join(''):'<tr><td colspan="2">No attachment</td></tr>';
+            viewer.hidden=false;
+        });}catch(error){say(error.message);}
+    }
+    return {create,view};
 })();

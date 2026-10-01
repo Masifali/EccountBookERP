@@ -24,6 +24,8 @@ public class PurchaseInvoiceFullService {
 
     public Map<String, Object> getDropdowns(int orgId, int compId) { return lookups.all(); }
 
+    public void requireView(){records.requireRight(56,"View");}
+
     public int generateNextBranchNo(){return numbering.nextBranch(context.currentOrganizationId(),context.currentCompanyId(),context.currentFinancialYearId(),context.currentBranchId(),56);}
 
     @SuppressWarnings("unchecked")
@@ -72,7 +74,10 @@ public class PurchaseInvoiceFullService {
 
     @SuppressWarnings("unchecked")
     public Map<String, Object> getById(int id) {
-        var data=records.load(id,56);data.put("rateUoms",lookups.rateUoms((List<Map<String,Object>>)data.get("details")));
+        // grdHistory Edit / double-click -> ReadById(id): GetByID has no branch filter, so an invoice of another branch listed in the
+        // history (the Branch Name combo's allocation list) opens too; it is read-only here (Update would move it to this branch, :3590).
+        var historyBranches=new HashSet<Integer>();for(var b:lookups.historyBranches())historyBranches.add(PurchaseInvoiceFinancialRules.i(PurchaseInvoiceFinancialRules.copy(b),"BranchId"));
+        var data=records.loadViewable(id,56,historyBranches::contains);data.put("rateUoms",lookups.rateUoms((List<Map<String,Object>>)data.get("details")));
         // ReadById:4131 VoucherHeadIdGet -> CommonServices.GetVoucherHeadId (DAL 0243:244) for the 103/104 prints.
         var voucher=jdbcTemplate.queryForList("EXEC dbo.Sp_Vouchers_GetMethods @Activity='GetVoucherHeadIdByReferenceDocumentTypeIdandRefEntryId',@OrganizationId=?,@CompanyId=?,@DocumentTypeId=?,@DocumentTypeSrNo=?",context.currentOrganizationId(),context.currentCompanyId(),56,id);
         data.put("VoucherHeadId",voucher.isEmpty()?0:PurchaseInvoiceFinancialRules.i(PurchaseInvoiceFinancialRules.copy(voucher.get(0)),"Id"));

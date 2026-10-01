@@ -2294,6 +2294,8 @@ public class PurchaseOrderFullService {
         out.put("amountDecimals", decimalPoints(orgId, compId, "Default NoofDecimal Points For Amount", 0));
         out.put("rateDecimals", decimalPoints(orgId, compId, "Default NoofDecimal Points For Rate", 2));
         out.put("rights", rights());
+        /* HistoryBranchComboFill :4631 - cmbBranchName.Text = UserAccount.BranchName: the user's own branch starts ticked. */
+        out.put("branchId", currentUserContext.currentBranchId());
         return out;
     }
 

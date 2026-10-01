@@ -31,7 +31,7 @@ public final class PurchaseInvoiceFinancialRules {
         row.put("BranchesId",d.get("BranchId"));
     }
     public static Voucher calculate(Map<String,Object> h,List<Map<String,Object>> details,List<Map<String,Object>> freight,List<Map<String,Object>> journal,List<Map<String,Object>> bags,Accounts accounts){
-        int type=i(h,"DocumentTypeId");if(type!=56&&type!=57)throw new IllegalArgumentException("Weighted purchase voucher conversion supports types 56 and 57");
+        int type=i(h,"DocumentTypeId");if(type!=56&&type!=57&&type!=172)throw new IllegalArgumentException("Weighted purchase voucher conversion supports types 56, 57 and 172");
         if(details.isEmpty())throw new IllegalArgumentException("Detail list not found");
         if(accounts.stockAgainst()<=0)throw new IllegalArgumentException("Stock AgainstAc configuration not found");
         int supplier=i(h,"SupplierCustomerId"),supplierGl=i(party(accounts,supplier),"GlAccountId"),commissionGl=0,brokerGl=0;
@@ -75,7 +75,7 @@ public final class PurchaseInvoiceFinancialRules {
             }
             lastText=text;if(n(d,"CommissionAmount")>0)commissionSum+=n(d,"CommissionAmount");if(n(d,"FreightAmount")>0)freightSum+=n(d,"FreightAmount");
             var dr=entry(ac,supplierGl,n(d,"ItemAmount"),0,text);mainFields(dr,d);againstSubsidiary(dr,supplier);out.add(dr);
-            var cr=entry(supplierGl,ac,0,n(d,"ItemAmount"),text);mainFields(cr,d);subsidiary(cr,supplier);out.add(cr);
+            var cr=entry(supplierGl,ac,0,n(d,"ItemAmount"),text);mainFields(cr,d);if(type==172)cr.put("SupplierCustomerId",supplier);else subsidiary(cr,supplier);out.add(cr); // 0614:788-793 SubsidiaryAccountId only for 56/57
             if(n(d,"ExpenseAmount")>0){
                 dr=entry(ac,supplierGl,n(d,"ExpenseAmount"),0,auto?text:"Other Expenses");lineIds(dr,d);out.add(dr);
                 cr=entry(supplierGl,ac,0,n(d,"ExpenseAmount"),auto?text:"Other Expenses");lineIds(cr,d);subsidiary(cr,supplier);out.add(cr);

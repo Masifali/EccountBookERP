@@ -25,11 +25,21 @@
     async function withButtonLoading(btn,work) {
         try { return await PurchaseRequest.run(btn,work); } catch(error) { showRequestError(error); }
     }
+    /* tabControl1 "Form" / "History": the History button sits on the RIGHT of a fixed footer (countx_purchase_page_chrome.js,
+       as on the other Supplier Purchases forms); the grids get a full-screen toggle and scroll inside themselves. */
+    function installChrome() {
+        if (!window.PurchaseChrome) return;
+        const isHistory=()=>field('viewHistory').style.display!=='none';
+        PurchaseChrome.footer({ isHistory, toggle:()=>switchViewMode(isHistory()?'Form':'History'), watch:'#viewHistory' });
+        field('bottomModeBar').style.display='none';
+        for (const [box,caption] of [['#wrapMainHistory','open gate passes'],['#wrapPoInfo','purchase orders'],['#wrapFullHistory','history']]) PurchaseChrome.fullscreen(box,caption);
+    }
     document.addEventListener('DOMContentLoaded',async()=>{
+        installChrome();
         try {
             setDefaultDates(); await loadDropdowns();
             const id=Number(new URLSearchParams(location.search).get('id'));
-            if(id>0) await loadRecordAndEdit(id); else { await onNewRecord(); field('cmbWeighBridge').disabled=true; /* designer: Enabled=false until Reset */ }
+            if(id>0) await loadRecordAndEdit(id); else { await onNewRecord(true); field('cmbWeighBridge').disabled=true; /* designer: Enabled=false until Reset */ }
             await loadMainHistoryGrid();
         } catch(error) { showRequestError(error); }
     });
@@ -64,12 +74,16 @@
                 bindSelect('CmbStatus', data.statuses, 'id', 'name');
                 bindSelect('cmbTransitVehicle', data.transitVehicles, 'id', 'name');
                 bindSelect('cmbHistSupplier', data.historySuppliers, 'id', 'name');        // HistoryComboFill
+                // Load: ItemNameFill() then gatepasstype() -> cmbgptype_Leave while CmbOrderType is still unbound (Value 0),
+                // so CmbVariety gets every item (ReadAllItemsIncludedPM) with no row selected.
+                if (!field('CmbVariety').options.length || field('CmbVariety').options.length<=1) bindSelect('CmbVariety', data.items, 'id', 'name');
                 bindSelect('cmbSupplierNamePoInfo', data.poSuppliers, 'id', 'name');      // OrderInformationComboFill
                 bindSelect('CmbDocumentTypePoInfo', data.documentTypes, 'id', 'name');
                 field('tabBtnPoInfo').style.display=data.poInfoDocumentTypeId?'':'none';  // tabPage4 only for 41/1500
                 field('PanelBreakup').style.display=data.showPurchaseBreakup?'':'none';   // PanelBreakup only for 105
                 field('lblIsApproved').style.display=data.canApprove?'':'none';          // ChkIsApproved.Visible
                 field('btnsave').disabled=!data.canSave; field('btnupdate').disabled=!data.canUpdate; field('btnPrint').disabled=!data.canPrint;
+                field('BtnDriverForm').dataset.allowed=data.canDriverBio?'1':'0';   // View right of "frmDriverBioForInWard"
 
                 if(field('cmbgptype').options.length>2) field('cmbgptype').selectedIndex=2;          // gatepasstype(): Rows[2]
                 if(field('cmbcity').options.length>1) field('cmbcity').selectedIndex=1;              // CityFill(): Rows[1]
@@ -98,20 +112,23 @@
         const history = mode === 'History';
         field('viewForm').style.display = history ? 'none' : 'block';
         field('viewHistory').style.display = history ? 'block' : 'none';
-        field('btnModeForm').classList.toggle('active', !history);
-        field('btnModeHistory').classList.toggle('active', history);
+        field('btnModeForm')?.classList.toggle('active', !history);
+        field('btnModeHistory')?.classList.toggle('active', history);
         field('lblFormHeaderTitle').textContent = history ? 'Inward Gate Pass History' : 'Inward Gate Pass';
         if (history) field('txtHistFromDate').focus();   // tabControl1_SelectedIndexChanged: focus only, no search
     }
 
     function onSwitchToFormNew() { switchViewMode('Form'); return onNewRecord(); }
 
-    /* Reset() :2900 */
-    function onNewRecord() {
+    /* Reset() :2900 (btnnew). firstLoad = InwardGatePass_Load :643, which binds every item and leaves ChkIsApproved checked. */
+    function onNewRecord(firstLoad) {
+        if (firstLoad!==true) firstLoad=false;
         const generation=++formGeneration; ++orderGeneration;
         loadedHeader={}; loadedBreakups=[emptyBreakup()]; driverBioId=0; breakupLocked=false; netPaidEdited=false; poId=0; actionIdForSpecialApproval=0;
         renderBreakups(); bindSelect('cmbTransitVehicle',[],'id','name'); transitRows=[];
-        document.querySelectorAll('#viewForm input:not([type="radio"]):not([type="checkbox"])').forEach(input=>input.value=input.defaultValue||'');
+        // The searchable combos (countx_desktop_combo.js) draw a text input.dtcombo-input over each <select>; clearing those
+        // blanked G.P Type / City / Vehicle Type although the selects still held Rows[2] / Rows[1] (the reported blank combos).
+        document.querySelectorAll('#viewForm input:not([type="radio"]):not([type="checkbox"]):not(.dtcombo-input)').forEach(input=>input.value=input.defaultValue||'');
         setDefaultDates();
         field('txtId').value='0';
         for (const id of ['txtqty','txtPackUnit','txtfreight','txtAdvanceByParty','txtAdvanceByFactory','txtTotalPayablesFreight','txtNetPaid',
@@ -121,10 +138,13 @@
         field('rowWeightDiffRemarks').style.display='none';
         for (const id of ['txtSupplierNetWeight','txtfreight','txtNetPaid','txtAdvanceByFactory','txtAdvanceByParty','CmbOrderType','txtPackUnit','CmbOrderno','cmbWeighBridge','txtvehicleno','txtSupplierFirstWeight','txtSupplierSecondWeight']) field(id).disabled=false;
         field('cmbTransitVehicle').disabled=true;
-        field('RadGrnFormToOpenOnInsert').style.display='none';
-        if (field('RadGrnFormToOpenOnInsert').checked) document.querySelector('input[name="formMode"][value="None"]').checked=true;
-        field('ChkIsApproved').checked=true; field('ChkIsApproved').disabled=false;
+        field('RadGrnFormToOpenOnInsert').style.display='none';   // Reset(): Visible = false; its Checked is cleared after Save/Update (below)
+        // ChkIsApproved: Load sets Checked = true (:653); Reset() does not touch it, so it keeps the operator's / loaded value.
+        if (firstLoad) field('ChkIsApproved').checked=true;
+        field('ChkIsApproved').disabled=false;                  // txtAccessWeight.Text = "" -> txtAccessWeight_TextChanged
         resetDriverInfoFields();
+        // Reset(): CmbVariety.DataSource = null and cmbsupp.DataSource = null; CmbOrderType_Leave (below) rebinds them per type.
+        if (!firstLoad) bindSelect('CmbVariety',[],'id','name');
         if(field('CmbOrderType').options.length>1) field('CmbOrderType').selectedIndex=1;
         if(field('CmbStatus').options.length) field('CmbStatus').value='Open';
         if(field('cmbWeighBridge').options.length>1) field('cmbWeighBridge').selectedIndex=1;
@@ -188,6 +208,16 @@
     }
 
     const driverFields=['txtCNIC','txtDriverCellNo','txtWhatsAppNo','txtAlternateCellNo','txtDriverName','txtFatherName','txtFatherCNIC'];
+    /* MaskedTextBox masks of the designer: txtCNIC / txtFatherCNIC "00000-0000000-0", the three cell numbers "000-000-0000000"
+       (designer Text "0923" and ResetDriverFields "092-3-" both show as 092-3). Digits only; the dashes are the mask literals. */
+    const DRIVER_MASKS={txtCNIC:'00000-0000000-0',txtFatherCNIC:'00000-0000000-0',txtDriverCellNo:'000-000-0000000',txtWhatsAppNo:'000-000-0000000',txtAlternateCellNo:'000-000-0000000'};
+    function maskText(value,mask) {
+        const digits=String(value??'').replace(/\D/g,''); let out='', i=0;
+        for (const ch of mask) { if (i>=digits.length) break; if (ch==='0') out+=digits[i++]; else out+=ch; }
+        return out;
+    }
+    function onMaskedInput(input) { const mask=DRIVER_MASKS[input.id]; if (mask) input.value=maskText(input.value,mask); }
+    const CELL_DEFAULT='092-3';
     function setDriverLocked(locked) { driverFields.forEach(id=>field(id).disabled=locked); }
     /* txtCNIC_Leave :5671 / txtDriverCellNo_Leave :5698 */
     async function lookupDriver(kind,control) {
@@ -199,7 +229,7 @@
             if(!bio || !Number(bio.Id)) { setDriverLocked(false); return; }
             driverBioId=Number(bio.Id); setDriverLocked(true);
             const map={txtCNIC:'CnicNo',txtDriverCellNo:'DriverCellNo',txtWhatsAppNo:'WhatsappNo',txtAlternateCellNo:'AlternateCellNo',txtDriverName:'DriverName',txtFatherName:'FatherName',txtFatherCNIC:'FatherCnicNo'};
-            for(const [id,key] of Object.entries(map)) field(id).value=bio[key]||'';
+            for(const [id,key] of Object.entries(map)) field(id).value=DRIVER_MASKS[id]?maskText(bio[key]||'',DRIVER_MASKS[id]):(bio[key]||'');
         } catch(error) { showRequestError(error); }
     }
     function lookupDriverByCnic() { return lookupDriver('cnic','txtCNIC'); }
@@ -209,7 +239,11 @@
     function resetDriverInfoFields() {
         driverBioId=0; ++driverGeneration; setDriverLocked(false);
         driverFields.forEach(id=>field(id).value='');
+        for (const id of ['txtDriverCellNo','txtWhatsAppNo','txtAlternateCellNo']) field(id).value=CELL_DEFAULT;   // "092-3-"
     }
+
+    /* btnResetDriverInfo_Click: driverBiodata.ReadAll (the web looks drivers up on the server at each Leave) + reset */
+    function refreshDriversAndReset() { resetDriverInfoFields(); field('txtCNIC').focus(); }
 
     /* ---------------- Purchase type / gate-pass type / order number ---------------- */
 
@@ -244,7 +278,7 @@
         if (type!==105) { field('txtAdvanceByFactory').disabled=false; field('txtAdvanceByParty').disabled=false; }
         else { field('txtAdvanceByFactory').value='0'; field('txtAdvanceByParty').value='0'; field('txtAdvanceByFactory').disabled=true; field('txtAdvanceByParty').disabled=true; calculateFreight(); }
         if (type===41) field('cmbTransitVehicle').disabled=false;
-        if (!fromReset) loadTransitVehicles().catch(showRequestError);
+        // CmbOrderType_Leave does not call PreBillNoFill; the transit list follows cmbsupp_Leave / CmbOrderno_Leave only.
     }
     function onOrderTypeChange() { ++orderGeneration; applyOrderType(false); }
 
@@ -423,6 +457,9 @@
         await loadMainHistoryGrid();
         igpOpenLinkedFormAfterSave(data.igpId, updating?status:'');   // btnsave passes "" as status
         if (field('chkPreview').checked) printSlip251(data.igpId);    // ChkBox.Checked -> GatePassInwardSlipAndRegisterReport(success)
+        // btnsave_Click :3585 (insert only): chkDriverInfoForm.Checked -> frmDriverBio { RefDocumentTypeId = 51, cmbGatePass.Value = success }.
+        if (!updating && field('chkDriverInfoForm').checked) openDriverBio(Number(data.igpId)||0, "You Don't Have View-right Of This Driver-Bio For Inward..");
+        if (field('RadGrnFormToOpenOnInsert').checked) document.querySelector('input[name="formMode"][value="None"]').checked=true;   // both buttons
     }
 
     /* ---------------- grids ---------------- */
@@ -435,6 +472,47 @@
     function fmtDay(v) { if (!v) return ''; const d = new Date(String(v).replace(' ', 'T')); return isNaN(d) ? escapeHtml(v) : pad(d.getDate()) + '-' + pad(d.getMonth() + 1) + '-' + d.getFullYear(); }
     const accessColor = v => Number(v) === 0 ? 'green' : (Number(v) > 0 ? 'red' : '');                       // grd_FormattingRow
     const approvalColor = v => v === 'Not Approved' ? 'red' : (v === 'Approved' ? 'green' : '');
+
+    /* grd / grdhistory rows: click selects (CurrentRow), double-click = grd_DoubleClick / grdhistory_DoubleClick (ReadById),
+       Ctrl+Space / Ctrl+Enter on a focused row = the Edit button (grd_KeyDown :5175, grdhistory_KeyDown :5202,
+       InwardGatePass_KeyDown Ctrl+Enter). The Gp No is a link to the same record. */
+    function gridRow(id, history) {
+        const tr=document.createElement('tr');
+        tr.tabIndex=-1; tr.dataset.id=id;
+        tr.onclick=()=>selectGridRow(tr);
+        tr.ondblclick=()=>withButtonLoading(null,()=>loadRecordAndEdit(id));          // grdhistory_DoubleClick has no Reset()
+        tr.onkeydown=event=>{
+            if(event.ctrlKey && event.key===' ') { event.preventDefault(); event.stopPropagation(); withButtonLoading(null,()=>history?editFromHistory(id):loadRecordAndEdit(id)); }   // Ctrl+Space = Edit column
+            else if(event.ctrlKey && event.key==='Enter') { event.preventDefault(); event.stopPropagation(); withButtonLoading(null,()=>loadRecordAndEdit(id)); if(!history) field('txtgpdate').focus(); }
+            else if(event.key==='ArrowDown'||event.key==='ArrowUp') { event.preventDefault(); const next=event.key==='ArrowDown'?tr.nextElementSibling:tr.previousElementSibling; if(next){selectGridRow(next);next.focus();} }
+        };
+        return tr;
+    }
+    function selectGridRow(tr) { tr.parentElement.querySelectorAll('tr.selected').forEach(r=>r.classList.remove('selected')); tr.classList.add('selected'); }
+    function focusGrid(bodyId) { const body=field(bodyId); const tr=body.querySelector('tr.selected')||body.querySelector('tr'); if(tr){selectGridRow(tr);tr.focus();} }
+    function loadSelectedRow(bodyId) { const tr=field(bodyId).querySelector('tr.selected'); if(!tr) return; const id=Number(tr.dataset.id); withButtonLoading(null,()=>loadRecordAndEdit(id)); }
+    function codeLink(id, text, history) {
+        return `<a href="#" class="code-link" title="Open this gate pass" onclick="event.stopPropagation();withButtonLoading(null,()=>${history?'editFromHistory':'loadRecordAndEdit'}(${Number(id)}));return false;">${escapeHtml(text ?? '')}</a>`;
+    }
+    /* grdhistory Edit (:4656) calls Reset() before ReadById; grd Edit does not. */
+    async function editFromHistory(id) { await onNewRecord(); return loadRecordAndEdit(id); }
+
+    /* NoOfAttachments (ColumnType Link): grd_LinkClicked -> GetNoofAttachmentsByRefDocumentTypeID(Id, 51);
+       grdhistory_LinkClicked -> DMSAttachments.GetByID(Id, "InwardGatePass") -> AttachmentView. Read only here. */
+    function attachmentLink(id, count, history) {
+        const n=Number(count)||0;
+        return `<a href="#" class="code-link" title="View attachments" onclick="event.stopPropagation();withButtonLoading(null,()=>showAttachments(${Number(id)},${history}));return false;">${escapeHtml(count ?? 0)}</a>`;
+    }
+    async function showAttachments(id, history) {
+        const rows=await (await igpFetch('/api/inward-gate-pass/'+Number(id)+'/attachments?history='+(history?'true':'false'))).json();
+        let box=field('igpAttachmentView');
+        if(!box) { box=document.createElement('div'); box.id='igpAttachmentView'; box.className='igp-modal'; document.body.appendChild(box); }
+        box.innerHTML='<div class="igp-modal-box" role="dialog" aria-label="Attachments"><div class="igp-modal-title">Attachments<button type="button" class="tool-btn" onclick="this.closest(\'.igp-modal\').style.display=\'none\'">X</button></div>'
+            +(rows.length?'<table class="data-grid"><thead><tr><th>#</th><th>Attachment</th></tr></thead><tbody>'
+                +rows.map((r,i)=>`<tr><td>${i+1}</td><td><a class="code-link" href="/api/inward-gate-pass/${Number(id)}/attachments/${Number(r.Id)}?history=${history?'true':'false'}">${escapeHtml(r.Attachment)}</a></td></tr>`).join('')+'</tbody></table>'
+                :'<div style="padding:8px;">No attachments.</div>')+'</div>';
+        box.style.display='flex';
+    }
 
     /* grdfrmfill :2053 - ReadByGPDate, "Vehicles Present In The Factory" */
     function loadMainHistoryGrid() {
@@ -451,18 +529,17 @@
                     totalSupWt += parseFloat(row.SupplierWeight) || 0;
                     totalDiff += parseFloat(row.DifferenceWeight) || 0;
                     const id = Number(row.Id);
-                    const tr = document.createElement('tr');
-                    tr.ondblclick = function() { withButtonLoading(null, () => loadRecordAndEdit(id)); };
+                    const tr = gridRow(id, false);
                     tr.innerHTML =
-                        `<td><button class="tool-btn" style="padding:1px 4px;" onclick="event.stopPropagation();onPrintReport(${id})">Print</button></td>`
+                        `<td><button class="tool-btn" style="padding:1px 4px;" onclick="event.stopPropagation();withButtonLoading(this,()=>onPrintReport(${id}))">Print</button></td>`
                       + `<td><button class="tool-btn" style="padding:1px 4px;" onclick="event.stopPropagation();withButtonLoading(this,()=>loadRecordAndEdit(${id}))">Edit</button></td>`
-                      + num(row.GpSrNo) + `<td>${fmtDay(row.GpDate)}</td>` + txt(row.GatepassType) + txt(row.OrderType) + txt(row.SupplierName)
+                      + `<td style="text-align:right;">${codeLink(id, row.GpSrNo, false)}</td>` + `<td>${fmtDay(row.GpDate)}</td>` + txt(row.GatepassType) + txt(row.OrderType) + txt(row.SupplierName)
                       + txt(row.OrderNo) + txt(row.VehicleType) + txt(row.VehicleNo) + txt(row.BiltyNo)
                       + num(row.ItemQty) + num(row.PackUnit) + num(row.WeightComparedToPoWt) + num(row.SupplierFirstWeight) + num(row.SupplierSecondWeight)
                       + num(row.SupplierWeight) + num(row.FactoryWeight) + num(row.DifferenceWeight)
                       + `<td style="text-align:right; color:${accessColor(row.AccessWeight)};">${escapeHtml(row.AccessWeight ?? '')}</td>`
                       + num(row.NetPaid) + txt(row.VarietyName) + txt(row.CityName) + `<td>${fmtTime(row.InTime)}</td>`
-                      + num(row.NoOfAttachments) + txt(row.OtherRemarks)
+                      + `<td style="text-align:right;">${attachmentLink(id, row.NoOfAttachments, false)}</td>` + txt(row.OtherRemarks)
                       + `<td style="color:${approvalColor(row.ApprovalStatus)};">${escapeHtml(row.ApprovalStatus ?? '')}</td>` + txt(row.Status);
                     tbody.appendChild(tr);
                 });
@@ -493,12 +570,11 @@
                 const txt = v => '<td>' + escapeHtml(v ?? '') + '</td>';
                 data.forEach(row => {
                     const id = Number(row.Id);
-                    const tr = document.createElement('tr');
-                    tr.ondblclick = function() { withButtonLoading(null, () => loadRecordAndEdit(id)); };
+                    const tr = gridRow(id, true);
                     tr.innerHTML =
-                        `<td><button class="tool-btn" style="padding:1px 4px;" onclick="event.stopPropagation();onPrintReport(${id})">Print</button></td>`
-                      + `<td><button class="tool-btn" style="padding:1px 4px;" onclick="event.stopPropagation();withButtonLoading(this,()=>loadRecordAndEdit(${id}))">Edit</button></td>`
-                      + `<td>${escapeHtml(row.GpSrNo ?? '')}</td>` + `<td>${fmtDay(row.GpDate)}</td>`
+                        `<td><button class="tool-btn" style="padding:1px 4px;" onclick="event.stopPropagation();withButtonLoading(this,()=>onPrintReport(${id}))">Print</button></td>`
+                      + `<td><button class="tool-btn" style="padding:1px 4px;" onclick="event.stopPropagation();withButtonLoading(this,()=>editFromHistory(${id}))">Edit</button></td>`
+                      + `<td>${codeLink(id, row.GpSrNo, true)}</td>` + `<td>${fmtDay(row.GpDate)}</td>`
                       + txt(row.GatepassType) + txt(row.OrderType) + num(row.OrderNo) + txt(row.CompanyName) + txt(row.Description)
                       + txt(row.VehicleType) + txt(row.VehicleNo) + `<td>${fmtDay(row.BiltyDate)}</td>` + txt(row.BiltyNo) + txt(row.VarietyName)
                       + num(row.ItemQty) + num(row.PackUnit) + num(row.WeightComparedToPoWt) + num(row.SupplierFirstWeight) + num(row.SupplierSecondWeight)
@@ -506,7 +582,7 @@
                       + num(row.Freight) + num(row.AdvanceByParty) + num(row.AdvanceByFactory) + num(row.TotalPayableFreight) + num(row.NetPaid)
                       + `<td>${fmtDateTime(row.InTime)}</td><td>${fmtDateTime(row.OutTime)}</td>` + txt(row.Status) + txt(row.UserName) + `<td>${fmtDateTime(row.EntryDate)}</td>`
                       + txt(row.ModifyUserName) + `<td>${fmtDateTime(row.ModifyDate)}</td>`
-                      + num(row.NoOfAttachments)
+                      + `<td style="text-align:right;">${attachmentLink(id, row.NoOfAttachments, true)}</td>`
                       + txt(row.OtherRemarks) + `<td style="color:${approvalColor(row.ApprovalStatus)};">${escapeHtml(row.ApprovalStatus ?? '')}</td>`
                       + `<td style="text-align:right; color:${accessColor(row.AccessWeight)};">${escapeHtml(row.AccessWeight ?? '')}</td>`
                       + txt(row.PackingType);
@@ -534,6 +610,7 @@
 
     /* BtnResetOrderInfo_Click :2881 - dates to today, doc numbers and supplier cleared, grid cleared, combos refilled.
        The desktop sets drdocdate (the History tab's radio) here, not the PO tab's; the PO radio is left as it was. */
+    function onResetPoInfo(btn) { return withButtonLoading(btn, resetPoInfoFilters); }
     function resetPoInfoFilters() {
         const today = localStamp().split('T')[0];
         field('txtFromPoDate').value = today;
@@ -664,7 +741,7 @@
             resetDriverInfoFields(); driverBioId=Number(h.driverBioDataId)||0;
             if (driverBioId>0) {
                 const map={txtCNIC:'DriverCNICNO',txtDriverCellNo:'DriverMobileNo',txtWhatsAppNo:'whatsappNo',txtAlternateCellNo:'AlternateCellNo',txtDriverName:'DriverName',txtFatherName:'FatherName',txtFatherCNIC:'fatherCnicNo'};
-                for(const [control,key] of Object.entries(map)) field(control).value=h[key]??'';
+                for(const [control,key] of Object.entries(map)) field(control).value=h[key]??'';   // saved text as stored
                 setDriverLocked(true);
             }
             // purchase breakup: a saved list is read-only
@@ -701,9 +778,20 @@
         const list=[241,204].includes(type)?lookupData.allSupplierCustomers:(type===98?lookupData.saleInvoiceParties:lookupData.suppliers);
         bindSelect('cmbsupp',list,'id','name'); field('cmbsupp').value=keep;
     }
-    function onDefineCity() { alert('The Define City form (DefineCity) has not been ported to the web yet.'); }
+    /* toolStripButton3_Click :4947 - new DefineCity(UserAccount).Show(): the web DefineCity page (screen 750) in a new tab;
+       Refresh (CityFill) then brings the new city into cmbcity, as on the desktop. */
+    function onDefineCity() { if(!window.open('/master-data/city','_blank')) alert('The browser blocked the Define City window. Allow pop-ups for this site and retry.'); }
     function onDefineVehicle() { alert('The Vehicle Type definition form (VehicleType) has not been ported to the web yet.'); }
-    function onOpenDriverForm() { alert('The Driver Bio form (frmDriverBio, screen frmDriverBioForInWard) has not been ported to the web yet.'); }
+    /* BtnDriverForm_Click :5321 - View right on ScreenName "frmDriverBioForInWard", then frmDriverBio { RefDocumentTypeId = 51 }.Show()
+       (non-modal, so a new tab here). The server checks the same right again when the page and its data are requested. */
+    function openDriverBio(gatePassId, message) {
+        if (field('BtnDriverForm').dataset.allowed!=='1') { alert(message); return false; }
+        const url='/purchase/driver-bio'+(gatePassId>0?'?gatePassId='+encodeURIComponent(gatePassId):'');
+        const opened=window.open(url,'_blank');
+        if (!opened) alert('The browser blocked the Driver Bio window. Allow pop-ups for this site and retry.');
+        return false;
+    }
+    function onOpenDriverForm() { return openDriverBio(0, "You Don't Have View-right Of Of This Driver-Bio For Inward.."); }
     function onOpenAttachments() { alert('Gate pass attachments (DMS attachments of InwardGatePass) have not been ported to this page yet.'); }
 
     /* ---------------- printing: the same .rpt through the shared print runtime ---------------- */
@@ -729,6 +817,15 @@
     /* InwardGatePass_KeyDown :4971 */
     document.addEventListener('keydown',event=>{
         const key=event.key.toLowerCase(), history=field('viewHistory').style.display!=='none';
+        // e.KeyData == Keys.Return -> SendKeys("{TAB}"): Enter moves to the next field (not on buttons, links, grid rows or open combos).
+        if(event.key==='Enter' && !event.ctrlKey && !event.altKey && !event.shiftKey) {
+            const t=event.target;
+            if(t && t.tagName==='INPUT' && !['button','submit','checkbox','radio'].includes(t.type) && !t.closest('.dtcombo-wrap.dtcombo-open') && t.id!=='CmbOrderno') {
+                const list=Array.from(document.querySelectorAll(history?'#viewHistory input, #viewHistory select':'#viewForm input, #viewForm select'))
+                    .filter(el=>!el.disabled && !el.readOnly && el.offsetParent!==null && el.type!=='hidden' && el.tabIndex>=0 && !el.classList.contains('dtcombo-native'));
+                const i=list.indexOf(t); if(i>=0 && list[i+1]) { event.preventDefault(); list[i+1].focus(); }
+            }
+        }
         if(event.ctrlKey && event.altKey && (key==='control'||key==='alt')) { onShowShortcuts(); return; }
         if(event.ctrlKey && key==='t'){ event.preventDefault(); if(history){switchViewMode('Form');field('txtgpdate').focus();} else switchViewMode('History'); return; }
         if(!history) {
@@ -738,11 +835,18 @@
             if(event.ctrlKey && key==='n'){ event.preventDefault(); withButtonLoading(field('btnnew'),onNewRecord); }
             if(event.ctrlKey && event.key==='F5'){ event.preventDefault(); field('txtgpdate').focus(); }
             if(event.altKey && key==='r'){ event.preventDefault(); withButtonLoading(field('btnRefresh'),onRefreshForm); }
+            if(event.ctrlKey && event.key==='ArrowDown' && !event.target.closest?.('tbody')){ event.preventDefault(); focusGrid('grdMainHistoryBody'); }                  // grd.Focus()
+            if(event.ctrlKey && event.key==='Enter' && !event.target.closest?.('tbody')){ event.preventDefault(); loadSelectedRow('grdMainHistoryBody'); field('txtgpdate').focus(); }   // grd_DoubleClick
+            if(event.ctrlKey && (event.key==='ArrowLeft'||event.key==='ArrowRight') && field('tabBtnPoInfo').style.display!=='none'){   // tabControl2 pages
+                event.preventDefault(); switchMainSubTab(field('tabPoInfo').classList.contains('active')?'tabGridHistory':'tabPoInfo');
+            }
         } else {
             if(event.ctrlKey && key==='s'){ event.preventDefault(); withButtonLoading(field('btnHistShow'),executeFullHistorySearch); }
             if(event.ctrlKey && key==='n'){ event.preventDefault(); onHistoryNew(); }
             if(event.ctrlKey && event.key==='F5'){ event.preventDefault(); field('txtHistFromDate').focus(); }
             if(event.altKey && key==='r'){ event.preventDefault(); withButtonLoading(field('btnHistRefresh'),onHistoryRefresh); }
+            if(event.ctrlKey && event.key==='ArrowDown' && !event.target.closest?.('tbody')){ event.preventDefault(); focusGrid('grdFullHistoryBody'); }
+            if(event.ctrlKey && event.key==='Enter' && !event.target.closest?.('tbody')){ event.preventDefault(); loadSelectedRow('grdFullHistoryBody'); }   // grdhistory_DoubleClick
         }
     });
 

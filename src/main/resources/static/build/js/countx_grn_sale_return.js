@@ -84,7 +84,12 @@
         var sel = $(id); if (!sel) return;
         opts = opts || {};
         var keep = opts.keep !== undefined ? String(opts.keep) : sel.value;
-        var html = opts.noBlank ? '' : '<option value="0"></option>';
+        /* InfragisticsHelper.BindAndRetainSelection (InfragisticsHelper.cs :15): insertDefaultRow puts a "-- Select --" row (value 0)
+           first; when the previous value is not in the list the row at activateRowIndex is activated - 0 by default, so a combo
+           bound WITHOUT a default row (Transporter :861, Vehicle Type :877) shows its first record, and Item Name (:927, index 1)
+           shows the first item. An empty source clears the combo (:17). */
+        var hasRows = !!(rows && rows.length);
+        var html = opts.noBlank ? '' : '<option value="0">' + (opts.defaultRow && hasRows ? '-- Select --' : '') + '</option>';
         (rows || []).forEach(function (r) {
             var attrs = opts.attrs ? opts.attrs(r) : '';
             html += '<option value="' + esc(col(r, valueKey)) + '"' + attrs + '>' + esc(col(r, textKey)) + '</option>';
@@ -92,8 +97,11 @@
         sel.innerHTML = html;
         sel._rows = rows || [];
         if (keep && Array.prototype.some.call(sel.options, function (o) { return o.value === keep; })) sel.value = keep;
+        else if (opts.activate !== undefined && sel.options.length > opts.activate) sel.selectedIndex = opts.activate;
         else sel.value = opts.noBlank && sel.options.length ? sel.options[0].value : '0';
     }
+    /* Janus shows a column key with a space before each capital ("GrossWight" -> "Gross Wight", "GpSrNo" -> "Gp Sr No"). */
+    function cap(k) { return String(k).replace(/([a-z])([A-Z])/g, '$1 $2'); }
     function setSel(id, v) {
         var sel = $(id); if (!sel) return;
         var s = String(v === undefined || v === null ? '0' : v);
@@ -119,6 +127,12 @@
         dtdetail: [], dtEmptyBag: [], emptyBagsPlus: true, gpRows: [], historyRows: [],
         curDetail: -1, curGp: -1, curHistory: -1, itemRows: [], gdnRows: []
     };
+    /* the Attachment form (AT) - btnAttachment_Click, saved with Insert() (:1300 / :1462-1471) */
+    var AT = global.PurchaseDocAttachments ? global.PurchaseDocAttachments.create({
+        type: 143, getId: function () { return S.RecId; },
+        canEdit: function () { return S.RecId > 0 ? !!S.rights.Update : !!S.rights.Save; },
+        message: function (m) { msg(m); }
+    }) : null;
     function cfgBool(n) { var v = String(S.configs[n] || '').trim().toLowerCase(); return v === '1' || v === 'true'; }
     function cfgInt(n) { return toI(S.configs[n]); }
     function cfgDbl(n) { return toD(S.configs[n]); }
@@ -155,7 +169,7 @@
     }
     function bindTransporters() {
         /* TransporterDtFillFromGlobal :816 / TransporterAcFill :857 - Id, AccountTitle, AccountCode, [SupplierCustomerId]. */
-        fill('CmbTransport', S.lists.transporters, 'id', 'name', { attrs: function (r) {
+        fill('CmbTransport', S.lists.transporters, 'id', 'name', { activate: 1, attrs: function (r) {
             var code = col(r, 'AccountCode'); if (code === undefined) code = col(r, 'PartyCode');
             return ' data-code="' + esc(code) + '" data-supcust="' + esc(S.subsidiary ? col(r, 'Id') : 0) + '"';
         } });
@@ -164,7 +178,7 @@
         /* PackUomFromGlobalBind :995 - UomSchedule of the item, selection retained by text (Packuom = CmbUom.Text). */
         var keepText = selText('CmbUom');
         var rows = (S.lists.uoms || []).filter(function (u) { return toI(col(u, 'ItemId')) === toI(itemId); });
-        fill('CmbUom', rows, 'Id', 'UOMCode', { keep: '0', attrs: function (u) {
+        fill('CmbUom', rows, 'Id', 'UOMCode', { keep: '0', defaultRow: true, attrs: function (u) {
             return ' data-eq="' + esc(col(u, 'Equivalent')) + '" data-base="' + esc(col(u, 'BaseRateUom')) + '" data-base-pack="' + esc(col(u, 'BasePackUom')) + '"';
         } });
         if (keepText) setSelByText('CmbUom', keepText);
@@ -173,7 +187,7 @@
     function bindItems() {
         /* ItemDetailBind :921 - display member ItemName or ItemCode by radio. */
         var byName = $('rdSearchByName').checked;
-        fill('CmbItemName', S.itemRows, 'Id', byName ? 'ItemName' : 'ItemCode', { attrs: function (r) { return ' data-item-code="' + esc(col(r, 'ItemCode')) + '" data-item-name="' + esc(col(r, 'ItemName')) + '"'; } });
+        fill('CmbItemName', S.itemRows, 'Id', byName ? 'ItemName' : 'ItemCode', { defaultRow: true, activate: 1, attrs: function (r) { return ' data-item-code="' + esc(col(r, 'ItemCode')) + '" data-item-name="' + esc(col(r, 'ItemName')) + '"'; } });
         CmbItemName_Leave();
     }
     async function ItemDtFillDbCall(partyId) {
@@ -182,11 +196,11 @@
     }
     function bindStatic() {
         fill('CmbVehicleType', S.lists.vehicleTypes, 'id', 'name', { noBlank: true });
-        fill('CmbWareHouseName', S.lists.warehouses, 'id', 'name');
-        fill('CmbCropYear', S.lists.cropYears, 'id', 'name');
-        fill('CmbJobLot', S.lists.jobLots, 'id', 'name');
-        fill('CmbPackingType', S.lists.packingTypes, 'id', 'name');
-        fill('CmbCity', S.lists.cities, 'id', 'name');
+        fill('CmbWareHouseName', S.lists.warehouses, 'id', 'name', { defaultRow: true });
+        fill('CmbCropYear', S.lists.cropYears, 'id', 'name', { defaultRow: true });
+        fill('CmbJobLot', S.lists.jobLots, 'id', 'name', { defaultRow: true });
+        fill('CmbPackingType', S.lists.packingTypes, 'id', 'name', { defaultRow: true });
+        fill('CmbCity', S.lists.cities, 'id', 'name', { defaultRow: true });
         fill('cmbSupplierNameHistory', S.lists.historySuppliers, 'id', 'name');
         fill('gdnCustomer', S.lists.suppliers, 'id', 'name');
     }
@@ -334,7 +348,7 @@
     }
     function renderDetail() {
         var gdn = anyGdn(), cols = grdColumns();
-        var head = '<thead><tr><th>Delete</th><th>Add</th>' + cols.map(function (c) { return '<th>' + esc(GRD_COMBOS[c] ? GRD_COMBOS[c].caption : c) + '</th>'; }).join('') + '</tr></thead>';
+        var head = '<thead><tr><th>X</th><th>+</th>' + cols.map(function (c) { return '<th>' + esc(GRD_COMBOS[c] ? GRD_COMBOS[c].caption : cap(c)) + '</th>'; }).join('') + '</tr></thead>';
         var body = S.dtdetail.map(function (r, i) {
             return '<tr data-row="' + i + '"' + (i === S.curDetail ? ' class="cur"' : '') + '><td class="btncell"><button type="button" data-act="del" data-row="' + i + '">X</button></td><td class="btncell"><button type="button" data-act="add" data-row="' + i + '">+</button></td>' +
                 cols.map(function (c) {
@@ -344,8 +358,13 @@
                     return '<td' + (num ? ' class="n"' : '') + '>' + esc(num ? cs(v) : v) + '</td>';
                 }).join('') + '</tr>';
         }).join('');
-        $('grd').innerHTML = head + '<tbody>' + (body || '') + '</tbody>';
-        if (!S.dtdetail.length) $('grd').insertAdjacentHTML('beforeend', '<tbody><tr><td class="empty" colspan="' + (cols.length + 2) + '"></td></tr></tbody>');
+        /* grdSettings :2379 - the Janus total row is always shown (0 on an empty grid, desktop screenshot). */
+        var SUMS = ['Qty', 'GrossWight', 'EbUnit', 'EbTotal', 'WtCut', 'WtCutTotal', 'AddLesswt', 'NetWeight', 'StockWeight'];
+        var foot = '<tfoot><tr><td></td><td></td>' + cols.map(function (c) {
+            return SUMS.indexOf(c) >= 0 ? '<td class="n">' + esc(S.dtdetail.length ? cs(S.dtdetail.reduce(function (t, r) { return t + toD(r[c]); }, 0)) : '0') + '</td>' : '<td></td>';
+        }).join('') + '</tr></tfoot>';
+        $('grd').innerHTML = head + '<tbody>' + (body || '') + '</tbody>' + foot;
+        if ($('grdNav')) $('grdNav').textContent = (S.dtdetail.length ? Math.max(S.curDetail, 0) + 1 : 0) + ' Of ' + S.dtdetail.length;
     }
     /* grdSettings :2379 */
     function grdSettings() {
@@ -476,7 +495,7 @@
         return html + '</select>';
     }
     function renderEmptyBags() {
-        var head = '<thead><tr>' + (S.emptyBagsPlus ? '<th>Add</th>' : '') + '<th>EmptyBagsType</th><th>Item Name</th><th>Bags_Condition</th><th>RecQty</th><th>PurQty</th><th>Remarks</th></tr></thead>';
+        var head = '<thead><tr>' + (S.emptyBagsPlus ? '<th>+</th>' : '') + '<th>EmptyBagsType</th><th>Item Name</th><th>Bags_Condition</th><th>Rec Qty</th><th>Pur Qty</th><th>Remarks</th></tr></thead>';
         var body = S.dtEmptyBag.map(function (r, i) {
             return '<tr>' + (S.emptyBagsPlus ? '<td class="btncell"><button type="button" data-bagadd="' + i + '">+</button></td>' : '') +
                 '<td>' + bagCombo('Type', 'emptyBagTypes', r, i) + '</td><td>' + bagCombo('ItemId', 'emptyBagItems', r, i) + '</td><td>' + bagCombo('Condition', 'bagConditions', r, i) + '</td>' +
@@ -502,7 +521,7 @@
     function GatepassGridFill(rows) {        /* :2801 / GRNGridSetting :2877 */
         S.gpRows = rows || [];
         if (!S.gpRows.length) { $('grdGp').innerHTML = ''; FillCountFromGpGrid(); return; }
-        var head = '<thead><tr><th>Load</th>' + GP_COLS.map(function (c) { return '<th>' + c + '</th>'; }).join('') + '</tr></thead>';
+        var head = '<thead><tr><th>Load</th>' + GP_COLS.map(function (c) { return '<th>' + cap(c) + '</th>'; }).join('') + '</tr></thead>';
         var body = S.gpRows.map(function (r, i) {
             return '<tr data-gp="' + i + '"' + (i === S.curGp ? ' class="cur"' : '') + '><td class="btncell"><button type="button" data-gpload="' + i + '">Load</button></td>' + GP_COLS.map(function (c) {
                 var v = col(r, c);
@@ -574,6 +593,7 @@
         $('txtsuppwt').readOnly = true;
         $('CmbTransport').disabled = false; $('txtcarramount').disabled = false;
         S.RecId = 0;
+        if (AT) AT.reset();
         $('CmbGpNo').innerHTML = '';
         S.EmptyBagsWeightCutStatus = 0;
         ['txtGrnWeight', 'txtTicketnos', 'txtAnaylstName', 'txtDeductionKg', 'txtcarramount', 'txtsuppwt', 'txtfctwt', 'txtDiffWeight', 'txtvehno', 'txtbltyno', 'txtremarks',
@@ -684,6 +704,8 @@
                 return { PurchaseOrderId: toI(b.OrderId), TypeId: toI(b.Type), ItemId: toI(b.ItemId), BagsCondition: toI(b.Condition), ReceivedQty: toD(b.RecQty), PurchaseQty: toD(b.PurQty), Remarks: b.Remarks };
             })
         };
+        var attached = AT ? AT.payload() : undefined;
+        if (attached) body.attachments = attached;
         var res = await post('/save', body);
         msg(res.message);
         /* FormHelper.ShowWagesBillIfNeeded (:1478) opens the contractor wages bill on the desktop; not available on the web yet. */
@@ -776,12 +798,12 @@
     }
     function renderHistory() {               /* HistoryGridSettings :3188 */
         if (!S.historyRows.length) { $('GrdHistory').innerHTML = ''; return; }
-        var head = '<thead><tr><th>Edit</th><th>Print</th>' + H_COLS.map(function (c) { return '<th>' + c + '</th>'; }).join('') + '</tr></thead>';
+        var head = '<thead><tr><th>Edit</th><th>Print</th>' + H_COLS.map(function (c) { return '<th>' + cap(c) + '</th>'; }).join('') + '</tr></thead>';
         var body = S.historyRows.map(function (r, i) {
             return '<tr data-h="' + i + '"' + (i === S.curHistory ? ' class="cur"' : '') + '><td class="btncell"><button type="button" data-hedit="' + i + '">Edit</button></td><td class="btncell"><button type="button" data-hprint="' + i + '">Print</button></td>' +
                 H_COLS.map(function (c) {
                     var v = col(r, c);
-                    if (c === 'GpNo' || c === 'WagesNo' || c === 'NoOfAttachments') return '<td><a class="lnk" data-hlink="' + c + '" data-h2="' + i + '">' + esc(v) + '</a></td>';
+                    if (c === 'GpNo' || c === 'WagesNo' || c === 'NoOfAttachments') return '<td><a class="lnk" tabindex="0" data-hlink="' + c + '" data-h2="' + i + '">' + esc(v) + '</a></td>';
                     if (c === 'DocDate') return '<td>' + esc(dateText(v)) + '</td>';
                     if (c === 'EntryDate' || c === 'ModifyDate') return '<td>' + esc(dateTimeText(v)) + '</td>';
                     return '<td' + (typeof v === 'number' ? ' class="n"' : '') + '>' + esc(typeof v === 'number' ? cs(v) : v) + '</td>';
@@ -805,7 +827,7 @@
         var r = S.historyRows[i]; if (!r) return;
         if (key === 'GpNo') return printPdf('/reports/print/251-inward-gate-pass-slip', { id: toI(col(r, 'InwardGatePassId')) });
         if (key === 'WagesNo') return printPdf('/reports/print/002-contractor-wages-slip', { id: toI(col(r, 'WagesId')) });
-        if (key === 'NoOfAttachments') msg('The attachments viewer is not available on the web page yet.');
+        if (key === 'NoOfAttachments' && AT) return AT.view(toI(col(r, 'Id')));   /* GetNoofAttachmentsByScreenName */
     }
     function btnNewHistory_Click() {         /* :3333 */
         $('FromDateHistory').value = today(); $('ToDateHistory').value = today();
@@ -817,7 +839,18 @@
         S.lists.historySuppliers = await api('/history-suppliers');
         fill('cmbSupplierNameHistory', S.lists.historySuppliers, 'id', 'name');
     }
-    function btnGrnFormHistory_Click() { global.open('/purchase/reports/grn-register', '_blank'); }  /* :3298 frmGRNHistory */
+    /* :3298 frmGRNHistory - opened only with its View right (ScreenViewReights), else "Please Check Screen Rights". */
+    function btnGrnFormHistory_Click() {
+        var w = global.open('about:blank', '_blank');
+        var ask = fetch('/api/purchase/screen-view-right/frmGRNHistory', { credentials: 'same-origin', headers: { Accept: 'application/json' } })
+            .then(function (r) { return r.ok ? r.json() : { view: false }; });
+        return (global.PurchaseRequest ? global.PurchaseRequest.track(function () { return ask; }) : ask)
+            .then(function (d) {
+                if (d && d.view) { if (w) w.location.href = '/purchase/reports/grn-register'; else global.open('/purchase/reports/grn-register', '_blank'); }
+                else { if (w) w.close(); msg('Please Check Screen Rights'); }
+            }).catch(function (e) { if (w) w.close(); fail(e); });
+    }
+    function btnAttachment_Click(button) { return AT ? AT.open(button || $('btnAttachment')) : null; }
 
     /* ------------------------------------------------------------------ toolbar */
     async function btnRefresh_Click() {      /* toolStripButton1_Click :1804 - re-read the global lists and rebind */
@@ -879,7 +912,7 @@
             else if (c && k === 'ArrowUp') focusCombo('CmbWareHouseName');
             else if (c && k === 'ArrowRight') { var a = doc.activeElement; (a === $('grdWrap') ? $('grdEmptyBagsWrap') : a === $('grdEmptyBagsWrap') ? $('grdGpWrap') : $('grdWrap')).focus(); }
             else if (c && k === 'F5') $('DocDate').focus();
-            else if (c && k === 'F10') msg('The attachments viewer is not available on the web page yet.');
+            else if (c && k === 'F10') btnAttachment_Click();
             else handled = false;
         }
         if (handled) e.preventDefault();
@@ -948,6 +981,18 @@
             run(null, function () { return ReadById(toI(col(S.historyRows[toI(tr.getAttribute('data-h'))], 'Id'))); });
         });
         doc.addEventListener('keydown', onKey);
+        /* GrdHistory_KeyDown / grdGp_KeyDown - Ctrl+Space (or Enter) on a focused link cell runs the link. */
+        doc.addEventListener('keydown', function (e) {
+            var a = e.target.closest && e.target.closest('a.lnk[tabindex]');
+            if (a && ((e.ctrlKey && e.code === 'Space') || (e.key === 'Enter' && !e.ctrlKey))) { e.preventDefault(); a.click(); return; }
+            /* grd_KeyDown :3799 / grdGp_KeyDown :3867 / grdEmptyBags_KeyDown :3899 / GrdHistory_KeyDown :3920 - Ctrl+Space on a button cell */
+            var b = e.ctrlKey && e.code === 'Space' && e.target.closest && e.target.closest('#grd button, #grdGp button, #grdEmptyBags button, #GrdHistory button');
+            if (b) { e.preventDefault(); b.click(); }
+        });
+        if (global.PurchaseChrome) {
+            global.PurchaseChrome.footer({ isHistory: function () { return !$('tabPage2').hidden; }, toggle: function () { selectTab($('tabPage2').hidden ? 1 : 0); }, watch: $('tabPage2') });
+            ['grdWrap', 'grdGpWrap', 'GrdHistoryWrap', 'GrdHistoryDetailWrap'].forEach(function (id) { global.PurchaseChrome.fullscreen($(id)); });
+        }
     }
 
     /* ------------------------------------------------------------------ start-up (InitializeComponentMethod :545) */
@@ -992,7 +1037,7 @@
     global.SRG = {
         run: run, selectTab: selectTab, btnNew_Click: btnNew_Click, btnRefresh_Click: btnRefresh_Click, btnSave_Click: btnSave_Click,
         btnUpdate_Click: btnUpdate_Click, btnDelete_Click: btnDelete_Click, printToolStripButton_Click: printToolStripButton_Click,
-        btnSlip257_Click: btnSlip257_Click, CityDefine_Click: CityDefine_Click, btnLoadGdn_Click: btnLoadGdn_Click, BtnShortCutkeys_Click: BtnShortCutkeys_Click,
+        btnSlip257_Click: btnSlip257_Click, CityDefine_Click: CityDefine_Click, btnAttachment_Click: btnAttachment_Click, btnLoadGdn_Click: btnLoadGdn_Click, BtnShortCutkeys_Click: BtnShortCutkeys_Click,
         Add_Click: Add_Click, btnUpdateDetail_Click: btnUpdateDetail_Click, ResetDetail: ResetDetail,
         btnNewHistory_Click: btnNewHistory_Click, btnRefreshHistory_Click: btnRefreshHistory_Click, btnGrnFormHistory_Click: btnGrnFormHistory_Click,
         btnshow_Click: HistoryGridFill, searchGdn: searchGdn, closeGdnLoader: closeGdnLoader, loadSelectedGdn: loadSelectedGdn,

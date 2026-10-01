@@ -109,11 +109,12 @@ const purchaseInvoice = (() => {
         if (key === 'ItemRate' || key === 'EquivalentPoRate') return type === 2 || ([3, 4].includes(type) && !!flags.RateEditableOnPurchaseInvoice_InGatePurchase);
         return false;
     }
-    const link = (path, id, caption) => id > 0 ? `<a href="${path}?id=${id}" target="_blank" rel="noopener">${esc(caption)}</a>` : esc(caption);
+    // Codes open their own record through DocLink (CommonServices.EditMethodFromLinked): GRN = type 46, purchase order = type 41.
+    const link = (type, id, caption) => id > 0 ? `<a href="#" class="fx-link" data-doclink="${type}" data-docid="${id}">${esc(caption)}</a>` : esc(caption);
     function cellText(r, [, key, kind]) {
         const v = get(r, key);
-        if (kind === 'grn') return link('/purchase/goods-receipt-notes', num(r, 'InvGrnId'), v);
-        if (kind === 'po') return link('/purchase/purchase-order', num(r, 'PurchaseOrderId'), v);
+        if (kind === 'grn') return link(46, num(r, 'InvGrnId'), v);
+        if (kind === 'po') return link(41, num(r, 'PurchaseOrderId'), v);
         if (kind === 'd') return esc(date(v));
         if (kind === 'n' || kind === 'r') return esc(fmt(v));
         return esc(v);
@@ -197,13 +198,14 @@ const purchaseInvoice = (() => {
     function renderParts() { for (const g of Object.keys(GRIDS)) renderGrid(g); }
 
     // ------------------------------------------------------------------ rights / buttons
-    function allowed() { return state.rights[state.id ? 'Update' : 'Save'] === true; }
+    // An invoice of another branch opened from History is read-only here (desktop Update would move it to this branch, Insert :3590).
+    function allowed() { return !state.otherBranch && state.rights[state.id ? 'Update' : 'Save'] === true; }
     function rights() {
         const r = state.rights, loaded = state.id > 0, print = r.Print === true;
         el('btnSave').hidden = loaded; el('btnUpdate').hidden = !loaded; el('btnDelete').hidden = !loaded;
         el('btnSave').disabled = r.Save !== true || PurchaseRequest.isBusy(el('btnSave'));
-        el('btnUpdate').disabled = r.Update !== true || PurchaseRequest.isBusy(el('btnUpdate'));
-        el('btnDelete').disabled = r.Delete !== true || PurchaseRequest.isBusy(el('btnDelete'));
+        el('btnUpdate').disabled = r.Update !== true || !!state.otherBranch || PurchaseRequest.isBusy(el('btnUpdate'));
+        el('btnDelete').disabled = r.Delete !== true || !!state.otherBranch || PurchaseRequest.isBusy(el('btnDelete'));
         for (const id of ['btnSlipDetail', 'btnSlip220A', 'btn220bSummary', 'btnPrint', 'btn104Voucher']) el(id).disabled = !print || PurchaseRequest.isBusy(el(id));
         el('cmbsuppliername').disabled = loaded || state.details.length > 0;
         el('txtGrnNo').disabled = loaded;
@@ -231,6 +233,7 @@ const purchaseInvoice = (() => {
         state.id = saved ? num(data, 'Id') : 0; state.h = data; state.details = data.details || [];
         state.invoiceType = num(data, 'InvoiceTypeId') || 1; state.approved = get(data, 'IsApproved') === true || get(data, 'IsApproved') === 1;
         state.voucherHeadId = num(data, 'VoucherHeadId'); state.error = null; state.paymentByPercent = true;
+        state.otherBranch = !!saved && (get(data, 'OtherBranch') === true);
         for (const g of Object.keys(GRIDS)) state.parts[g] = (data[g] || []).map(r => ({ ...r }));
         for (const r of state.parts.emptyBags) if (get(r, 'CustomRemarks') === undefined) r.CustomRemarks = get(r, 'Remarks') ?? '';
         for (const r of state.parts.expenses) if (get(r, 'CustomRemarks') === undefined) r.CustomRemarks = get(r, 'Remarks') ?? '';
@@ -254,7 +257,8 @@ const purchaseInvoice = (() => {
     async function load(id) {
         const version = ++state.generation, data = await api('/' + Number(id));
         if (version !== state.generation) return;
-        display(data, true); showTab('main', 'tabForm'); message();
+        display(data, true); showTab('main', 'tabForm');
+        message(state.otherBranch ? 'This invoice belongs to another branch (' + (get(data, 'BranchName') || get(state.details[0], 'BranchName') || '') + '). It is shown read-only; open it in that branch to update or delete it.' : '');
         window.history.replaceState(null, '', route + '?id=' + state.id);
     }
     async function bill(generation = state.generation) {
@@ -311,16 +315,17 @@ const purchaseInvoice = (() => {
     }
 
     // ------------------------------------------------------------------ prints (GeneratereportSlip:6547, CommonServices 103/220A, GenerateReportVoucher104:6479)
-    function print(rpt, args) {
+    // The clicked button stays disabled (busy) until the PDF has arrived or the request failed.
+    function print(rpt, args, button) {
         const w = window.open('', '_blank'); try { if (w) w.document.write('<p style="font:13px Segoe UI">Preparing report...</p>'); } catch (x) { /* popup blocked */ }
-        fetch('/api/print/by-template/' + encodeURIComponent(rpt) + '/pdf', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', Accept: 'application/pdf, text/plain' }, body: JSON.stringify(args || {}) })
+        return PurchaseRequest.run(button || null, () => fetch('/api/print/by-template/' + encodeURIComponent(rpt) + '/pdf', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', Accept: 'application/pdf, text/plain' }, body: JSON.stringify(args || {}) })
             .then(r => (r.ok && (r.headers.get('Content-Type') || '').includes('application/pdf')) ? r.blob().then(b => { const u = URL.createObjectURL(b); if (w) w.location.href = u; else window.open(u, '_blank'); })
                 : r.text().then(t => { if (w) w.close(); message(t || ('Print failed (' + r.status + ')'), true); }))
-            .catch(e => { if (w) w.close(); fail(e); });
+            .catch(e => { if (w) w.close(); fail(e); })).finally(rights);
     }
-    function slip(id, rpt) { if (!(id > 0)) { message('Record Id Not Found', true); return; } print(rpt, { id }); }
-    function voucher103(voucherId) { if (!(voucherId > 0)) { message('Not Record Found For Display', true); return; } print('103-AcRptPurchaseSalesVoucherSlip.rpt', { id: voucherId, documentTypeId: DOC_TYPE }); }
-    function voucher104(voucherId) { if (!(voucherId > 0)) { message('VoucherId Not Found', true); return; } print('104-AcRptGeneralJournalAcAndInventoryDetailSlip.rpt', { id: voucherId, documentTypeId: DOC_TYPE }); }
+    function slip(id, rpt, button) { if (!(id > 0)) { message('Record Id Not Found', true); return; } print(rpt, { id }, button); }
+    function voucher103(voucherId, button) { if (!(voucherId > 0)) { message('Not Record Found For Display', true); return; } print('103-AcRptPurchaseSalesVoucherSlip.rpt', { id: voucherId, documentTypeId: DOC_TYPE }, button); }
+    function voucher104(voucherId, button) { if (!(voucherId > 0)) { message('VoucherId Not Found', true); return; } print('104-AcRptGeneralJournalAcAndInventoryDetailSlip.rpt', { id: voucherId, documentTypeId: DOC_TYPE }, button); }
 
     // ------------------------------------------------------------------ template (ChangeTemplate:1290)
     function changeTemplate(t) {
@@ -399,19 +404,27 @@ const purchaseInvoice = (() => {
 
     // ------------------------------------------------------------------ GRN loader (frmLoadGRN) and txtGrnNo_Leave
     const LOADER_COLS = [['BranchName', 'BranchName'], ['DocDate', 'DocDate', 'd'], ['DocNo', 'DocNo', 'grnLink'], ['SupplierCustomer', 'SupplierCustomer'], ['DeliveryTerm', 'DeliveryTerm'], ['GpNO', 'GpNO'], ['GpDate', 'GpDate', 'd'], ['BiltyNo', 'BiltyNo'], ['VehicleNo', 'VehicleNo'], ['PurchaseOrder', 'PurchaseOrder', 'po'], ['PurchaseAgainst', 'PurchaseAgainst'], ['GrnStatus', 'GrnStatus']];
-    const LOADER_DETAIL = [['Order', 'PurchaseOrder'], ['Item', 'ItemName'], ['CropYear', 'CropYear'], ['Job', 'JobLotDescription'], ['PackingType', 'PackTypeDesc'], ['UOM', 'UOMCode'], ['Qty', 'ItemQty', 'n'], ['GrossWight', 'GrossWeight', 'n'], ['EbUnit', 'EBWPerUnit', 'n'], ['EbTotal', 'EBWTotal', 'n'], ['EbPurAgainstWeight', 'EbPurAgainstWeight', 'n'], ['WtCut', 'WtCut', 'n'], ['WtCutTotal', 'WtCutTotal', 'n'], ['AddLesswt', 'AdLsWeight', 'n'], ['NetWeight', 'NetBillWeight', 'n'], ['StockWeight', 'StockWeight', 'n'], ['WareHouse', 'WareHouseName'], ['LabNo', 'LabReportRef'], ['City', 'AreaCity']];
+    // frmLoadGRN.grd_SelectionChanged: dthistorydetail is filled from the InvGrnDetail model, i.e. the ReadByInvGrnID columns
+    // Item, JobLot, PackingType, UOM (= UOM.Equivalent) and WarehouseId (the desktop shows the warehouse id in "WareHouse").
+    const LOADER_DETAIL = [['Order', 'PurchaseOrder'], ['Item', 'Item'], ['CropYear', 'CropYear'], ['Job', 'JobLot'], ['PackingType', 'PackingType'], ['UOM', 'UOM'], ['Qty', 'ItemQty', 'n'], ['GrossWight', 'GrossWeight', 'n'], ['EbUnit', 'EBWPerUnit', 'n'], ['EbTotal', 'EBWTotal', 'n'], ['EbPurAgainstWeight', 'EbPurAgainstWeight', 'n'], ['WtCut', 'WtCut', 'n'], ['WtCutTotal', 'WtCutTotal', 'n'], ['AddLesswt', 'AdLsWeight', 'n'], ['NetWeight', 'NetBillWeight', 'n'], ['StockWeight', 'StockWeight', 'n'], ['WareHouse', 'WarehouseId'], ['LabNo', 'LabReportRef'], ['City', 'AreaCity']];
     async function openLoader(button) {
         // BtnLoader_Click:6039 - in the loaded (Update) state the button resets the form instead.
         if (state.id) { await newRecord(button); return; }
         await run(button, async () => {
             await settled();
             el('frmLoadGRN').hidden = false;
-            if (!state.loaderBranches) { state.loaderBranches = await request('/api/grn-loader/branches?docTypeId=46'); multi('ldrBranch', state.loaderBranches, state.config.PurchaseInvoiceBranchWise); }
-            if (!el('ldrFromDate').value) resetLoaderDates();
+            // BtnLoader_Click creates a new frmLoadGRN each time: From = ActiveYr.Start_Period, To = today, the user's branch ticked.
+            if (!state.loaderBranches) state.loaderBranches = await request('/api/grn-loader/branches?docTypeId=46');
+            multi('ldrBranch', state.loaderBranches, state.config.PurchaseInvoiceBranchWise);
+            resetLoaderDates();
             await showGrns(null);
         });
     }
     function resetLoaderDates() { choose('ldrFromDate', state.lists.financialYearStart || today()); choose('ldrToDate', today()); }
+    function loaderReset() {
+        el('ldrFromDate').focus(); choose('ldrFromDate', state.lists.financialYearStart || today());
+        state.loaderRows = []; for (const t of ['ldrGrid', 'ldrDetail']) { el(t).tHead.innerHTML = ''; el(t).tBodies[0].innerHTML = ''; }
+    }
     async function showGrns(button) {
         await run(button, async () => {
             const branches = multiValue('ldrBranch'); if (!branches) throw Error('Select branch first');
@@ -420,7 +433,7 @@ const purchaseInvoice = (() => {
             state.loaderRows = await request('/api/grn-loader/pending?' + q); state.loaderSelected = 0;
             const t = el('ldrGrid');
             t.tHead.innerHTML = '<tr><th><input type="checkbox" id="ldrAll" aria-label="Select all GRNs"></th>' + LOADER_COLS.map(c => `<th>${c[0]}</th>`).join('') + '</tr>';
-            t.tBodies[0].innerHTML = state.loaderRows.map((r, i) => `<tr data-ldr="${i}"><td class="c"><input type="checkbox" data-grn-id="${num(r, 'Id')}" aria-label="Select GRN ${esc(get(r, 'DocNo'))}"></td>` + LOADER_COLS.map(c => '<td>' + (c[2] === 'grnLink' ? link('/purchase/goods-receipt-notes', num(r, 'Id'), get(r, c[1])) : c[2] === 'po' ? link('/purchase/purchase-order', num(r, 'PurchaseOrderId'), get(r, c[1])) : c[2] === 'd' ? esc(date(get(r, c[1]))) : esc(get(r, c[1]))) + '</td>').join('') + '</tr>').join('');
+            t.tBodies[0].innerHTML = state.loaderRows.map((r, i) => `<tr data-ldr="${i}"><td class="c"><input type="checkbox" data-grn-id="${num(r, 'Id')}" aria-label="Select GRN ${esc(get(r, 'DocNo'))}"></td>` + LOADER_COLS.map(c => '<td>' + (c[2] === 'grnLink' ? link(46, num(r, 'Id'), get(r, c[1])) : c[2] === 'po' ? link(41, num(r, 'PurchaseOrderId'), get(r, c[1])) : c[2] === 'd' ? esc(date(get(r, c[1]))) : esc(get(r, c[1]))) + '</td>').join('') + '</tr>').join('');
             el('ldrDetail').tHead.innerHTML = ''; el('ldrDetail').tBodies[0].innerHTML = '';
             message(state.loaderRows.length + ' pending GRNs', false, 'ldrMsg');
         }, 'ldrMsg');
@@ -436,7 +449,7 @@ const purchaseInvoice = (() => {
     }
     async function draft(ids, grnNo) {
         const generation = ++state.generation;
-        const data = await api('/load-grns', ids.map(Id => ({ Id })));
+        const data = ids ? await api('/load-grns', ids.map(Id => ({ Id }))) : await api('/grn-by-no?docNo=' + encodeURIComponent(grnNo));
         if (generation !== state.generation) return;
         const code = { DocNo: el('txtdocno').value, BranchSrNo: el('txtBranchCode').value };
         const keepLocation = el('cmbLocationType').value;
@@ -453,16 +466,11 @@ const purchaseInvoice = (() => {
             await draft(ids);
         }, 'ldrMsg');
     }
-    // txtGrnNo_Leave:6002 - GRN (type 46) by DocNo in the active year.
+    // txtGrnNo_Leave:6002 - GetGrnIdAndInvoiceTypeId (InvGrn.GetGRNIdByDocNo: type 46, active year, any branch, not yet invoiced)
+    // then LoadInGridDetail(GrnId, InvoiceTypeId). The loader's selection checks do not run on this path (desktop).
     async function grnByNumber() {
         const no = Number(el('txtGrnNo').value); if (!no || state.id || state.details.some(d => num(d, 'GrnNo') === no)) return;
-        await run(null, async () => {
-            await settled();
-            const rows = await request('/api/grn-loader/pending?docTypeId=46');
-            const found = rows.filter(r => num(r, 'DocNo') === no);
-            if (found.length !== 1) throw Error(found.length ? 'Choose this GRN in the branch-filtered loader' : 'Record Not Found For Loader');
-            await draft([num(found[0], 'Id')], no);
-        });
+        await run(null, async () => { await settled(); await draft(null, no); });
     }
 
     // ------------------------------------------------------------------ multi-select branch combos (UltraCombo CheckedList)
@@ -510,7 +518,7 @@ const purchaseInvoice = (() => {
             t.tHead.innerHTML = '<tr><th>View</th><th>PartySlip</th><th>Voucher</th><th>SummaryReport</th><th>Edit</th>' + cols.map(c => `<th>${c[0]}</th>`).join('') + '<th>AddAttachment</th></tr>';
             const pr = state.rights.Print === true ? '' : ' disabled';
             t.tBodies[0].innerHTML = state.historyRows.map((r, i) => `<tr data-hist="${i}"><td><button type="button" data-hact="View"${pr}>Item Slip</button></td><td><button type="button" data-hact="PartySlip"${pr}>PartySlip</button></td><td><button type="button" data-hact="Voucher"${pr}>Voucher</button></td><td><button type="button" data-hact="SummaryReport"${pr}>SummaryReport</button></td><td><button type="button" data-hact="Edit">Edit</button></td>`
-                + cols.map(c => `<td${c[2] === 'n' ? ' class="n"' : ''}>${c[2] === 'd' ? esc(date(get(r, c[1]))) : c[2] === 'dt' ? esc(dt(get(r, c[1]))) : c[2] === 'n' ? esc(fmt(get(r, c[1]))) : esc(get(r, c[1]))}</td>`).join('') + '<td><button type="button" data-hact="AddAttachment">Add Attachment</button></td></tr>').join('');
+                + cols.map(c => `<td${c[2] === 'n' ? ' class="n"' : ''}>${c[2] === 'doc' ? `<a href="#" class="fx-link" data-hact="Edit">${esc(get(r, c[1]))}</a>` : c[1] === 'NoOfAttachments' ? `<a href="#" class="fx-link" data-hact="NoOfAttachments">${esc(get(r, c[1]))}</a>` : c[2] === 'd' ? esc(date(get(r, c[1]))) : c[2] === 'dt' ? esc(dt(get(r, c[1]))) : c[2] === 'n' ? esc(fmt(get(r, c[1]))) : esc(get(r, c[1]))}</td>`).join('') + '<td><button type="button" data-hact="AddAttachment">Add Attachment</button></td></tr>').join('');
             t.tFoot.innerHTML = '';
             el('grdDetail').tHead.innerHTML = ''; el('grdDetail').tBodies[0].innerHTML = ''; el('grdDetail').tFoot.innerHTML = '';
             message(state.historyRows.length + ' records', false, 'historyMsg');
@@ -538,20 +546,28 @@ const purchaseInvoice = (() => {
             t.tFoot.innerHTML = totals(cols, rows);
         }, 'historyMsg');
     }
-    function historyAction(action, index) {
+    function historyAction(action, index, button) {
         const r = state.historyRows[index]; if (!r) return; const id = num(r, 'Id');
-        if (action === 'Edit') { run(null, () => load(id), 'historyMsg'); return; }
-        if (action === 'Voucher') { voucher103(num(r, 'VoucherHeadId')); return; }
-        if (action === 'View') { slip(id, '220-InvRptPurchaseBillSupplierRiceSlip.rpt'); return; }
-        if (action === 'PartySlip') { slip(id, '220A-InvRptPurchaseBillSupplierRiceSlip.rpt'); return; }
-        if (action === 'SummaryReport') { slip(id, '220B-InvRptPurchaseBillSupplierRiceSummary.rpt'); return; }
-        if (action === 'AddAttachment') { run(null, () => load(id), 'historyMsg').then(() => { if (state.id === id) attachmentEditor.open(el('btnAttachment')); }); }
+        if (action === 'Edit') { run(button, () => load(id), 'historyMsg'); return; }
+        // grdHistory_LinkClicked:5213 - CommonServices.GetNoofAttachmentsByRefDocumentTypeID(Id, 56).
+        if (action === 'NoOfAttachments') { PurchaseInvoiceAttachments.view({ type: DOC_TYPE, id, button, message: t => message(t, true, 'historyMsg') }); return; }
+        if (action === 'Voucher') { voucher103(num(r, 'VoucherHeadId'), button); return; }
+        if (action === 'View') { slip(id, '220-InvRptPurchaseBillSupplierRiceSlip.rpt', button); return; }
+        if (action === 'PartySlip') { slip(id, '220A-InvRptPurchaseBillSupplierRiceSlip.rpt', button); return; }
+        if (action === 'SummaryReport') { slip(id, '220B-InvRptPurchaseBillSupplierRiceSummary.rpt', button); return; }
+        if (action === 'AddAttachment') { run(button, () => load(id), 'historyMsg').then(() => { if (state.id === id) attachmentEditor.open(el('btnAttachment')); }); }
     }
 
     // ------------------------------------------------------------------ tabs / shortcuts
     function showTab(group, pane) {
         const bar = document.querySelector(`[data-tabs="${group}"]`);
-        for (const b of bar.querySelectorAll('button')) { const on = b.dataset.pane === pane; b.classList.toggle('is-active', on); el(b.dataset.pane).classList.toggle('is-active', on); }
+        for (const b of bar.querySelectorAll('button[data-pane]')) { const on = b.dataset.pane === pane; b.classList.toggle('is-active', on); el(b.dataset.pane).classList.toggle('is-active', on); }
+        if (group === 'main') {
+            // Footer History button (right side): shows "Form" while the History page is open.
+            const h = pane === 'tabHistory'; el('btnFooterHistory').querySelector('span').textContent = h ? 'Form' : 'History';
+            el('btnFooterHistory').querySelector('i').className = h ? 'fa fa-file-text-o' : 'fa fa-history';
+            if (h) el('FromDateHistory').focus();   // tabControl1_SelectedIndexChanged:4867
+        }
     }
     const SHORTCUTS = [['Ctrl+E', 'For Close'], ['Ctrl+N', 'For New'], ['Ctrl+R', 'For Refresh'], ['Ctrl+S', 'Save (Form) Or Show Record (History)'], ['Ctrl+U', 'For Update'], ['Ctrl+T', 'For Transfer Tab'], ['Ctrl+F5', 'For Focus on Doc Date(Form) Or Branch Name (History)'], ['Ctrl+F10', 'For Open Attachments'], ['Ctrl+L', 'For Load Records Of GRN'], ['ALT+1', 'For 220 Slip'], ['ALT+2', 'For 220A Slip'], ['ALT+3', 'For 220B Slip'], ['ALT+4', 'For 103 Slip'], ['ALT+5', 'For 104 Slip'], ['Ctrl+2', 'Template Change'], ['Ctrl+Delete', 'Freight,Expense,PartyAddLess Grids delete row '], ['Ctrl+D', 'Freight,Expense,PartyAddLess Grids Add new row '], ['Ctrl+Right', 'To Toggle between form grids'], ['Ctrl+ArrowDown', 'For Focus On detail grid (Form) Or Main Grid (History)'], ['Ctrl+ArrowUp', 'For Focus On Date From Date (history)'], ['Ctrl+Shift+Delete', 'For Delete Record in update case'], ['Ctrl+alt', 'To Show ShortCut Keys Form']];
     function shortcuts() { el('shortcutRows').innerHTML = SHORTCUTS.map(s => `<tr><td>${s[0]}</td><td>${s[1]}</td></tr>`).join(''); el('dlgShortcuts').hidden = false; }
@@ -584,7 +600,8 @@ const purchaseInvoice = (() => {
             t: () => showTab('main', onHistory() ? 'tabForm' : 'tabHistory'),
             l: () => !onHistory() && openLoader(el('BtnLoader')),
             e: () => { window.location.href = '/purchase/dashboard'; },
-            enter: () => onHistory() && state.historyRows[state.historySelected] && run(null, () => load(num(state.historyRows[state.historySelected], 'Id')), 'historyMsg')
+            // grdHistory_KeyDown:5818 - Ctrl+Enter edits only with the Update right.
+            enter: () => onHistory() && state.rights.Update === true && state.historyRows[state.historySelected] && run(null, () => load(num(state.historyRows[state.historySelected], 'Id')), 'historyMsg')
         }[k];
         if (act) { e.preventDefault(); act(); }
     }
@@ -607,17 +624,23 @@ const purchaseInvoice = (() => {
     const attachmentEditor = PurchaseInvoiceAttachments.create({ type: DOC_TYPE, getId: () => state.id, canEdit: allowed, message });
     function initEvents() {
         for (const bar of document.querySelectorAll('[data-tabs]')) bar.addEventListener('click', e => { const b = e.target.closest('button[data-pane]'); if (b) showTab(bar.dataset.tabs, b.dataset.pane); });
+        el('btnFooterHistory').addEventListener('click', () => showTab('main', onHistory() ? 'tabForm' : 'tabHistory'));
+        // Clickable codes (GRN no / order no) -> DocLink.open (EditMethodFromLinked).
+        document.addEventListener('click', e => { const a = e.target.closest('a[data-doclink]'); if (!a) return; e.preventDefault(); if (window.DocLink) DocLink.open(Number(a.dataset.doclink), Number(a.dataset.docid), { message: t => message(t, true) }); });
+        // KeyPress: txtGrnNo / history doc nos OnlytextNumberFunction; commission / brokery rate and freight deduction OnlytextdecimelFunction.
+        for (const id of ['txtGrnNo', 'txtFromDocNoHistory', 'txtToDocNoHistory']) el(id).addEventListener('keydown', e => { if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !/\d/.test(e.key)) e.preventDefault(); });
+        for (const id of ['txtcommrate', 'txtBrokeryRate', 'txtFreightDeduction']) el(id).addEventListener('keydown', e => { if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !/[\d.]/.test(e.key)) e.preventDefault(); });
         el('btnNew').addEventListener('click', () => newRecord(el('btnNew')));
         el('btnFrmRefresh').addEventListener('click', () => refresh(el('btnFrmRefresh')));
         el('btnSave').addEventListener('click', () => save(el('btnSave')));
         el('btnUpdate').addEventListener('click', () => save(el('btnUpdate')));
         el('btnDelete').addEventListener('click', () => remove(el('btnDelete')));
         el('btnAttachment').addEventListener('click', () => attachmentEditor.open(el('btnAttachment')));
-        el('btnSlipDetail').addEventListener('click', () => slip(state.id, '220-InvRptPurchaseBillSupplierRiceSlip.rpt'));
-        el('btnSlip220A').addEventListener('click', () => slip(state.id, '220A-InvRptPurchaseBillSupplierRiceSlip.rpt'));
-        el('btn220bSummary').addEventListener('click', () => slip(state.id, '220B-InvRptPurchaseBillSupplierRiceSummary.rpt'));
-        el('btnPrint').addEventListener('click', () => voucher103(state.voucherHeadId));
-        el('btn104Voucher').addEventListener('click', () => voucher104(state.voucherHeadId));
+        el('btnSlipDetail').addEventListener('click', () => slip(state.id, '220-InvRptPurchaseBillSupplierRiceSlip.rpt', el('btnSlipDetail')));
+        el('btnSlip220A').addEventListener('click', () => slip(state.id, '220A-InvRptPurchaseBillSupplierRiceSlip.rpt', el('btnSlip220A')));
+        el('btn220bSummary').addEventListener('click', () => slip(state.id, '220B-InvRptPurchaseBillSupplierRiceSummary.rpt', el('btn220bSummary')));
+        el('btnPrint').addEventListener('click', () => voucher103(state.voucherHeadId, el('btnPrint')));
+        el('btn104Voucher').addEventListener('click', () => voucher104(state.voucherHeadId, el('btn104Voucher')));
         el('BtnLoader').addEventListener('click', () => openLoader(el('BtnLoader')));
         el('btnShortcutKeys').addEventListener('click', shortcuts);
         el('BtnSpecialRights').addEventListener('click', () => { if (window.SpecialRights) window.SpecialRights.open(SCREEN_ID); });
@@ -649,15 +672,18 @@ const purchaseInvoice = (() => {
         el('ldrClose').addEventListener('click', () => { el('frmLoadGRN').hidden = true; });
         el('ldrSearch').addEventListener('click', () => showGrns(el('ldrSearch')));
         el('ldrLoad').addEventListener('click', () => loadSelectedGrns(el('ldrLoad')));
-        el('ldrReset').addEventListener('click', () => { resetLoaderDates(); showGrns(el('ldrReset')); });
+        // frmLoadGRN.btnReset_Click: From Date back to ActiveYr.Start_Period and both grids cleared (no new search).
+        el('ldrReset').addEventListener('click', () => loaderReset());
+        // rdRegularGrn_Click -> PendingGrnLoad (rdMarketGrn is Visible=false).
+        document.querySelector('input[name=ldrKind]').addEventListener('click', () => showGrns(null));
         el('ldrGrid').addEventListener('change', e => { if (e.target.id === 'ldrAll') for (const x of document.querySelectorAll('#ldrGrid [data-grn-id]')) x.checked = e.target.checked; });
         el('ldrGrid').addEventListener('click', e => { const tr = e.target.closest('tr[data-ldr]'); if (tr && !e.target.closest('a,input')) { for (const r of el('ldrGrid').tBodies[0].rows) r.classList.toggle('sel', r === tr); loaderDetail(Number(tr.dataset.ldr)); } });
-        el('frmLoadGRN').addEventListener('keydown', e => { if (!e.ctrlKey) return; const k = e.key.toLowerCase(); if (k === 's') { e.preventDefault(); e.stopPropagation(); showGrns(el('ldrSearch')); } if (k === 'l') { e.preventDefault(); e.stopPropagation(); loadSelectedGrns(el('ldrLoad')); } if (k === 'n') { e.preventDefault(); e.stopPropagation(); resetLoaderDates(); } if (k === 'e') { e.preventDefault(); e.stopPropagation(); el('frmLoadGRN').hidden = true; } });
+        el('frmLoadGRN').addEventListener('keydown', e => { if (!e.ctrlKey) return; const k = e.key.toLowerCase(); if (k === 's') { e.preventDefault(); e.stopPropagation(); showGrns(el('ldrSearch')); } if (k === 'l') { e.preventDefault(); e.stopPropagation(); loadSelectedGrns(el('ldrLoad')); } if (k === 'n') { e.preventDefault(); e.stopPropagation(); loaderReset(); } if (e.key === 'F5') { e.preventDefault(); e.stopPropagation(); el('ldrFromDate').focus(); } if (k === 'e') { e.preventDefault(); e.stopPropagation(); el('frmLoadGRN').hidden = true; } });
         // History.
         el('btnshow').addEventListener('click', () => history(el('btnshow')));
         el('btnNewHistory').addEventListener('click', resetHistory);
         el('btnRefreshHistory').addEventListener('click', () => refreshHistory(el('btnRefreshHistory')));
-        el('grdHistory').addEventListener('click', e => { const b = e.target.closest('[data-hact]'), tr = e.target.closest('tr[data-hist]'); if (!tr) return; if (b) historyAction(b.dataset.hact, Number(tr.dataset.hist)); else historyDetail(Number(tr.dataset.hist)); });
+        el('grdHistory').addEventListener('click', e => { const b = e.target.closest('[data-hact]'), tr = e.target.closest('tr[data-hist]'); if (!tr) return; if (b) { e.preventDefault(); historyAction(b.dataset.hact, Number(tr.dataset.hist), b.tagName === 'BUTTON' ? b : null); } else historyDetail(Number(tr.dataset.hist)); });
         el('grdHistory').addEventListener('dblclick', e => { const tr = e.target.closest('tr[data-hist]'); if (tr && !e.target.closest('button')) run(null, () => load(num(state.historyRows[Number(tr.dataset.hist)], 'Id')), 'historyMsg'); });
         document.addEventListener('keydown', keydown);
     }

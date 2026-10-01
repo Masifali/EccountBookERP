@@ -12,8 +12,8 @@ import static org.springframework.http.HttpStatus.*;
 /** InvPurchaseInvoice BLL 0581 FormHistory/GetByID and DAL 0434 GetDate. */
 @Repository
 public class PurchaseInvoiceRecordRepository {
-    private static final Map<Integer,String> SCREENS=Map.of(56,"InvfrmPurchaseInvoice",57,"InvfrmPurchasedirectInvoice",59,"InvfrmPurchaseReturn",61,"frmPurchaseInvoiceDirectStore",138,"PurchaseInvoiceAgainstGrnDirect",98,"InvfrmSaleInvoiceReturn");
-    private static final Map<Integer,String> ROUTES=Map.of(56,"/purchase/purchase-invoice",57,"/purchase/purchase-invoice-direct",59,"/purchase/purchase-invoice-return",61,"/purchase/purchase-invoice-store-management",138,"/purchase/purchase-invoice-again-grn-direct",98,"/sale/sale-invoice-return");
+    private static final Map<Integer,String> SCREENS=Map.of(56,"InvfrmPurchaseInvoice",57,"InvfrmPurchasedirectInvoice",59,"InvfrmPurchaseReturn",61,"frmPurchaseInvoiceDirectStore",138,"PurchaseInvoiceAgainstGrnDirect",98,"InvfrmSaleInvoiceReturn",172,"PurchaseInvoiceAgainstGrnOrder");
+    private static final Map<Integer,String> ROUTES=Map.of(56,"/purchase/purchase-invoice",57,"/purchase/purchase-invoice-direct",59,"/purchase/purchase-invoice-return",61,"/purchase/purchase-invoice-store-management",138,"/purchase/purchase-invoice-again-grn-direct",98,"/sale/sale-invoice-return",172,"/purchase/purchase-invoice-against-grn-order");
     private final JdbcTemplate jdbc;
     private final CurrentUserContext context;
     public PurchaseInvoiceRecordRepository(JdbcTemplate jdbc,CurrentUserContext context) {this.jdbc=jdbc;this.context=context;}
@@ -51,8 +51,31 @@ public class PurchaseInvoiceRecordRepository {
         }
         return mapped;
     }
+    /**
+     * The desktop forms' ReadById (GetByID) has no branch filter: History Edit/double-click opens an invoice of any branch the
+     * form's history lists. Same checks as require() except the branch, which must be the current one or pass branchAllowed.
+     */
+    public Map<String,Object> requireViewable(int id,int type,java.util.function.IntPredicate branchAllowed) {
+        screen(type);
+        var rows=jdbc.queryForList("SELECT * FROM dbo.InvPurchaseInvoice WHERE Id=? AND DocumentTypeId=? AND OrganizationId=? AND CompanyId=? AND FinancialYearId=?",id,type,context.currentOrganizationId(),context.currentCompanyId(),context.currentFinancialYearId());
+        int branch=rows.isEmpty()?0:number(rows.get(0).get("BranchesId"));
+        if(rows.isEmpty()||(branch!=context.currentBranchId()&&!branchAllowed.test(branch)))throw new ResponseStatusException(NOT_FOUND,"Invoice not found in your current company, branch and financial year");
+        requireRight(type,"View");var row=rows.get(0);
+        if(number(row.get("EntryUser"))!=context.currentUserId()&&!hasRight(type,"CanView AllRecord"))throw new ResponseStatusException(NOT_FOUND,"Invoice not found in your accessible records");
+        return row;
+    }
+    /** load() for requireViewable(); "OtherBranch" is true when the invoice is not of the current branch (read-only on the web). */
+    public Map<String,Object> loadViewable(int id,int type,java.util.function.IntPredicate branchAllowed) {
+        var row=requireViewable(id,type,branchAllowed);
+        var result=readRecord(id,type);
+        result.put("OtherBranch",number(row.get("BranchesId"))!=context.currentBranchId());
+        return result;
+    }
     public Map<String,Object> load(int id,int type) {
         require(id,type);
+        return readRecord(id,type);
+    }
+    private Map<String,Object> readRecord(int id,int type) {
         var result=aliases(jdbc.queryForMap("EXEC dbo.Sp_InvPurchaseInvoice_GetAllMethod @Id=?,@Activity='ReadById' WITH RECOMPILE",id));
         result.put("supplierName",result.get("SupplierCustomerName"));
         if(type==61)result.put("details",jdbc.queryForList("EXEC dbo.USP_InvPurchaseInvoiceDetail_ReadById @Id=?",id));

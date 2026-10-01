@@ -79,6 +79,21 @@ function noRecordOnForm() { return !loadedHeaderSelection && !recordRequested &&
 $(document).ready(function() {
     initForm();
     bindKeyboardShortcuts();
+    bindGridKeys();
+    /* txtRate_Leave :4584 - txtRate.Text = ToDouble(txtRate.Text).ToString(DecimalRateFormate) */
+    $('#txtRate').on('blur', function () {
+        const v = String($(this).val() || '').trim();
+        if (v === '') return;
+        const dp = (historyMeta && typeof historyMeta.rateDecimals === 'number') ? historyMeta.rateDecimals : 2;
+        $(this).val((parseFloat(v) || 0).toFixed(dp));
+        calcLineAmount();
+    });
+    if (window.PurchaseChrome) {
+        PurchaseChrome.footer({ isHistory: () => $('#mainViewHistory').is(':visible'),
+                                toggle: () => switchMainView($('#mainViewHistory').is(':visible') ? 'form' : 'history'),
+                                watch: '#mainViewHistory' });
+        document.querySelectorAll('.win-grid-container').forEach(el => PurchaseChrome.fullscreen(el));
+    }
     const recordId = new URLSearchParams(location.search).get('id');
     if (recordId && /^[1-9]\d*$/.test(recordId)) loadSelectedOrder(parseInt(recordId, 10), 'edit');
 });
@@ -630,6 +645,13 @@ function loadHistoryParties() {
        parameter, which the endpoint reproduces. No branch is not an error here. */
     const branchId = $('#cmbHistoryBranch').val() || '';
     const qs = (branchId && branchId !== '0') ? ('?branchesIds=' + encodeURIComponent(branchId)) : '';
+    /* cmbBranchName_Leave :1849-1859 - with no branch row chosen the supplier list is emptied and nothing is read. */
+    const noBranch = Array.isArray(branchId) ? !branchId.filter(v => v && v !== '0').length : (!branchId || branchId === '0');
+    if (noBranch && historyBranchesLoaded) {
+        fillHistoryPartySelect('#cmbHistorySupplier', [], '-- All Suppliers --');
+        fillHistoryPartySelect('#cmbHistoryBookingPerson', [], '-- All Booking Persons --');
+        return;
+    }
 
     $.get('/api/purchase-order/history-parties' + qs, function (data) {
         fillHistoryPartySelect('#cmbHistorySupplier', (data && data.suppliers) || [],
@@ -675,6 +697,29 @@ function refreshHistoryLists() {
     loadHistoryParties();
 }
 
+let historyBranchesLoaded = false;
+/* cmbBranchName is a checked-list combo (HistoryBranchComboFill :4617-4630: a "Selected" bool column with a header
+   check box, values joined with ","). The <select multiple> keeps the value the history query reads; this draws
+   the check boxes over it. */
+function renderBranchChecks() {
+    const sel = $('#cmbHistoryBranch');
+    if (!sel.length) return;
+    let box = $('#cmbHistoryBranchChecks');
+    if (!box.length) {
+        box = $('<div id="cmbHistoryBranchChecks" class="win-textbox" style="height:auto; max-height:92px; overflow:auto; padding:2px 4px;"></div>');
+        sel.after(box).hide();
+        box.on('change', 'input', function () {
+            if (this.hasAttribute('data-all')) sel.find('option').each(function () { if (this.value && this.value !== '0') this.selected = !!$('#cmbHistoryBranchChecks input[data-all]').prop('checked'); });
+            else { const o = sel.find(`option[value="${this.value}"]`)[0]; if (o) o.selected = this.checked; }
+            renderBranchChecks();
+            sel.trigger('change');                        /* cmbBranchName_Leave -> HistorySupplierComboFill */
+        });
+    }
+    const opts = sel.find('option').filter(function () { return this.value && this.value !== '0'; });
+    const all = opts.length > 0 && opts.filter(function () { return this.selected; }).length === opts.length;
+    box.html('<label style="display:block; margin:0; font-weight:bold;"><input type="checkbox" data-all' + (all ? ' checked' : '') + '> (All)</label>'
+        + opts.map(function () { return '<label style="display:block; margin:0; font-weight:normal;"><input type="checkbox" value="' + escapeHtml(this.value) + '"' + (this.selected ? ' checked' : '') + '> ' + escapeHtml($(this).text()) + '</label>'; }).get().join(''));
+}
 function loadHistoryBranches() {
     /* The branch is a parameter of the history-party call, so changing it re-runs that call -
        HistorySupplierComboFill reads cmbBranchName every time (:4654-4667). */
@@ -700,7 +745,15 @@ function loadHistoryBranches() {
         const firstReal = sel.find('option').filter(function () {
             return $(this).val() && $(this).val() !== '0';
         }).first();
-        if (firstReal.length && !(sel.val() || []).length) sel.val([firstReal.val()]);
+        /* :4631 - the user's own branch is the one ticked at load (screen-defaults branchId); else the first. */
+        const own = screenCfg && screenCfg.branchId ? sel.find(`option[value="${screenCfg.branchId}"]`) : $();
+        if (!(sel.val() || []).length) {
+            if (own.length) sel.val([own.val()]);
+            else if (firstReal.length) sel.val([firstReal.val()]);
+        }
+        renderBranchChecks();
+        historyBranchesLoaded = true;
+        loadHistoryParties();                 /* HistorySupplierComboFill for the branch now chosen (:4654) */
 
         if ($.fn.select2) sel.trigger('change.select2');
     });
@@ -908,6 +961,7 @@ function preloadSearchData() {
 
     $.get('/api/purchase-order/cities', function(data) {
         allCities = (data || []).map(c => ({ id: c.id, name: (c.cityName || '').trim() })).filter(c => c.name.length > 0);
+        fillCityCombo();
         if (!loadedHeaderSelection && !(parseInt($('#hidLoadingCityId').val() || '0', 10) > 0)) applyCityDefault();
     });
 }
@@ -1136,6 +1190,7 @@ function onItemSearchModeChange() {
     if (allItems && allItems.length && $('#modalItemSearch').hasClass('in')) {
         renderItemModalGrid(itemsForPicker());
     }
+    fillItemCombo();                                   /* rdSearchByName_CheckedChanged :1820 - same rows, other display member */
 }
 
 /* FromDateHistory / ToDateHistory each carry their own enable checkbox, :4715-4756 */
@@ -1740,6 +1795,42 @@ function rebuildItemCategoryList() {
     /* Retain the selection when it is still offered - BindAndRetainSelection's whole purpose. */
     if (keep > 0 && sel.find(`option[value="${keep}"]`).length) sel.val(String(keep));
     else sel.val('0');
+    fillItemCombo();                                   /* ItemNameBind :1313 after every re-bind */
+}
+
+/* combitem - ItemNameBind :1313: the (category / type narrowed) items, displayed by ItemName or ItemCode. */
+function fillItemCombo() {
+    const sel = $('#cmbItem');
+    if (!sel.length) return;
+    const byCode = $('#radItemCode').is(':checked');
+    sel.find('option:gt(0)').remove();
+    itemsForPicker().forEach(function (i) {
+        sel.append(`<option value="${i.id}" data-code="${escapeHtml(i.itemCode || '')}">${escapeHtml(byCode ? (i.itemCode || '') : (i.itemName || ''))}</option>`);
+    });
+    syncItemCombo();
+}
+/* The combo shows hidItemId; a line being edited whose item is outside the narrowed list is shown as it was saved. */
+function syncItemCombo() {
+    const sel = $('#cmbItem');
+    if (!sel.length) return;
+    sel.find('option[data-adhoc]').remove();
+    const id = String(parseInt($('#hidItemId').val() || '0', 10) || 0);
+    if (id !== '0' && !sel.find(`option[value="${id}"]`).length) {
+        sel.append(`<option value="${id}" data-adhoc="1">${escapeHtml($('#txtItemDisplay').val() || id)}</option>`);
+    }
+    sel.val(id);
+}
+function focusItemCombo() {
+    const el = document.getElementById('cmbItem');
+    if (!el) return;
+    const w = el.__dtcombo, inp = w && w.input;
+    (inp || el).focus();
+}
+function onItemComboChange() {
+    const id = parseInt($('#cmbItem').val() || '0', 10) || 0;
+    if (id === (parseInt($('#hidItemId').val() || '0', 10) || 0)) return;
+    if (id > 0) selectItem(id);
+    else { $('#hidItemId').val('0'); $('#txtItemDisplay').val(''); }
 }
 
 /* The items the picker should show: everything the endpoint returned, narrowed by the
@@ -1755,6 +1846,9 @@ function itemsForPicker() {
 function onItemCategoryModeChange() {
     /* Switching Category <-> Type rebuilds the list from the SAME loaded items and drops the old
        selection, because an ItemCategoryId and an ItemTypeId are not comparable. */
+    /* RadCategory_CheckedChanged :1789-1799 also re-generates Cat No (GenerateOrderCategoryCodebyId) when a
+       header category is chosen. */
+    if (parseInt($('#cmbParentCategory').val() || '0', 10) > 0) fetchNextCategorySrNo();
     $('#cmbItemCategory').val('0');
     rebuildItemCategoryList();
     onItemCategoryChange();
@@ -1770,6 +1864,7 @@ function onItemCategoryChange() {
         $('#hidItemId').val('0');
         $('#txtItemDisplay').val('');
     }
+    fillItemCombo();
     if ($('#modalItemSearch').hasClass('in')) renderItemModalGrid(itemsForPicker());
 }
 
@@ -1831,6 +1926,7 @@ function selectItem(itemId) {
         : `${item.itemName} (${item.itemCode || 'N/A'})`;
     $('#txtItemDisplay').val(displayText);
     $('#modalItemSearch').modal('hide');
+    syncItemCombo();
 
     // Real per-item UOM schedule, ditto desktop's bindRateUomAndItemPackUom() fired on the Item
     // combo's Leave/selection-committed event - populates both Pack UOM and Rate UOM from the same
@@ -1939,7 +2035,7 @@ function commitDetailRow(isUpdate) {
     const remarks = String($('#txtLineRemarks').val() || '').trim();
 
     /* FormDetailValidation() :1999-2050 - eight checks, in this order, with these messages. */
-    if (itemId <= 0) { alert("Item Field is Required"); $('#txtItemDisplay').focus(); return; }
+    if (itemId <= 0) { alert("Item Field is Required"); focusItemCombo(); return; }
     if (cropYearId <= 0) { alert("CropYear Field is Required"); $('#cmbCropYear').focus(); return; }
     if (jobLotId <= 0) { alert("JobLot Field is Required"); $('#cmbJobLot').focus(); return; }
     if (packUomId <= 0) { alert("UOM Field is Required"); $('#cmbPackUom').focus(); return; }
@@ -2106,6 +2202,7 @@ function renderLabGrid() {
 function clearItemInputs() {
     $('#hidItemId').val('0');
     $('#txtItemDisplay').val('');
+    syncItemCombo();
     $('#txtQty').val('');
     $('#txtWeight').val('');
     $('#txtMoisture').val('');
@@ -2128,6 +2225,7 @@ function editDetailRow(idx) {
     $('#hidItemId').val(item.itemId);
     const byCode = $('#radItemCode').is(':checked');
     $('#txtItemDisplay').val(byCode ? `${item.itemCode} - ${item.itemName}` : `${item.itemName} (${item.itemCode || 'N/A'})`);
+    syncItemCombo();
     bindItemUom(item.itemId, false);                 /* bindRateUomAndItemPackUom(DetailPoId) */
     applyComboDefaults();                             /* :2719-2730 config Job/Lot + Crop Year first */
     const sampleId = parseInt(item.labSampleId || 0, 10);
@@ -2143,6 +2241,7 @@ function editDetailRow(idx) {
     $('#cmbJobLot').val(String(item.jobLotId || 0));
     $('#hidLoadingCityId').val(item.loadingLocationCityId || 0);
     $('#txtLoadingCityDisplay').val(item.loadingLocationCityName || '');
+    syncCityCombo();
     $('#cmbCropYear').val(String(item.cropYearId || 0));
     if (parseInt(item.cropYearId || '0') <= 0 && item.cropYear) {
         $('#cmbCropYear option').filter(function () { return $(this).text() === item.cropYear; }).prop('selected', true);
@@ -2349,15 +2448,38 @@ function selectCity(cityId) {
     $('#hidLoadingCityId').val(city.id);
     $('#txtLoadingCityDisplay').val(city.name);
     $('#modalCitySearch').modal('hide');
+    syncCityCombo();
 }
 
-/** Real "Define City" popup, ditto desktop's DefineCity.cs form (opened from the same toolbar
- *  action). Kept as its own small modal (city name only) rather than replicating the desktop's full
- *  Tehsil-assignment grid screen, which is out of scope for the Purchase Order Detail tab fix this
- *  serves - see the Desktop-vs-Java report for that documented gap. */
+/* cmbCityFill() :1542-1576 - combcityarea bound to SP_City_GetAllMethod GetAll (Id / CityName); a chosen city
+   that is still in the list stays chosen, otherwise the combo is cleared. */
+function fillCityCombo() {
+    const sel = $('#cmbLoadingCity');
+    if (!sel.length) return;
+    sel.find('option:gt(0)').remove();
+    (allCities || []).forEach(c => sel.append(`<option value="${c.id}">${escapeHtml(c.name)}</option>`));
+    const id = parseInt($('#hidLoadingCityId').val() || '0', 10) || 0;
+    if (id > 0 && !(allCities || []).some(c => c.id === id)) { $('#hidLoadingCityId').val('0'); $('#txtLoadingCityDisplay').val(''); }
+    syncCityCombo();
+}
+/* The combo shows what the two hidden fields hold (every writer of hidLoadingCityId calls this). */
+function syncCityCombo() {
+    const sel = $('#cmbLoadingCity');
+    if (!sel.length) return;
+    const id = String(parseInt($('#hidLoadingCityId').val() || '0', 10) || 0);
+    sel.val(sel.find(`option[value="${id}"]`).length ? id : '0');
+}
+function onCityComboChange() {
+    const id = parseInt($('#cmbLoadingCity').val() || '0', 10) || 0;
+    const city = (allCities || []).find(c => c.id === id);
+    $('#hidLoadingCityId').val(city ? city.id : 0);
+    $('#txtLoadingCityDisplay').val(city ? city.name : '');
+}
+
+/* btnDefineCity_Click :5337 - new DefineCity(UserAccount).ShowDialog(): the ported Define City screen (750,
+   /master-data/city, Sp_City_Insert with its Tehsil). The toolbar Refresh re-reads the City list afterwards. */
 function openDefineCityModal() {
-    $('#modalDefineCity').modal('show');
-    setTimeout(() => $('#txtNewCityName').focus(), 300);
+    window.open('/master-data/city', '_blank');
 }
 
 function saveNewCity_Click() {
@@ -2375,6 +2497,7 @@ function saveNewCity_Click() {
             if (res && res.success) {
                 $('#hidLoadingCityId').val(res.id);
                 $('#txtLoadingCityDisplay').val(res.cityName);
+                syncCityCombo();
                 $('#txtNewCityName').val('');
                 $('#modalDefineCity').modal('hide');
                 // Refresh the City Search modal's list immediately, ditto desktop's
@@ -2383,6 +2506,7 @@ function saveNewCity_Click() {
                 $.get('/api/purchase-order/cities', function(data) {
                     allCities = (data || []).map(c => ({ id: c.id, name: (c.cityName || '').trim() }))
                         .filter(c => c.name.length > 0);
+                    fillCityCombo();
                 });
                 alert(res.message);
             } else {
@@ -2806,7 +2930,7 @@ function renderChargeGrid() {
     const tbody = $('#tblChargesTbody');
     tbody.empty();
     if (!chargeToProductItems || chargeToProductItems.length === 0) {
-        tbody.html('<tr><td colspan="7" style="text-align: center; padding: 15px; color: #777;">No product account charges specified.</td></tr>');
+        tbody.html('<tr><td colspan="8" style="text-align: center; padding: 15px; color: #777;">No product account charges specified.</td></tr>');
         return;
     }
     chargeToProductItems.forEach((row, idx) => {
@@ -2839,7 +2963,8 @@ function renderChargeGrid() {
                 <td><input type="number" step="0.01" class="win-textbox" data-charge-cell="rate" style="text-align: right;" value="${row.rate}" onchange="onChargeQtyRateChange(${idx}, 'rate', this.value)"/></td>
                 <td><input type="number" step="0.01" class="win-textbox win-textbox-readonly" data-charge-cell="amount" style="text-align: right;" value="${(row.amount || 0).toFixed(2)}" readonly/></td>
                 <td><input type="text" class="win-textbox" data-charge-cell="remarks" value="${escapeHtml(row.remarks || '')}" onchange="chargeToProductItems[${idx}].remarks = this.value;"/></td>
-                <td style="text-align: center;"><button type="button" class="btn btn-danger btn-xs" onclick="removeChargeRow(${idx})">&times;</button></td>
+                <td style="text-align: center;"><button type="button" class="btn btn-danger btn-xs" data-grid-act="delete" onclick="removeChargeRow(${idx})">X</button></td>
+                <td style="text-align: center;"><button type="button" class="btn btn-default btn-xs" data-grid-act="add" onclick="btnAddChargeRow_Click()">+</button></td>
             </tr>
         `);
     });
@@ -3009,7 +3134,7 @@ function loadPaymentTermsOptions() {
 }
 
 function addDefaultPaymentRow() {
-    const today = $('#txtDocDate').val() || ymdLocal(new Date());
+    const today = ymdLocal(new Date());                    /* AddRowInPaymentGrid :2348 - DueDate = DateTime.Now */
     paymentTermsDetailItems.push({ paymentTermId: 0, paymentTerm: '', dueDays: 0, dueDate: today, prcntOfTotal: 0, amount: 0, remarks: '' });
 }
 
@@ -3047,7 +3172,7 @@ function renderSchedGrid() {
     tbody.empty();
 
     if (!paymentTermsDetailItems || paymentTermsDetailItems.length === 0) {
-        tbody.html('<tr><td colspan="7" style="text-align: center; padding: 15px; color: #777;">No payment terms added yet.</td></tr>');
+        tbody.html('<tr><td colspan="8" style="text-align: center; padding: 15px; color: #777;">No payment terms added yet.</td></tr>');
         $('#lblSchedTotalPercent').text('0.00%');
         $('#lblSchedTotalAmount').text('0.00');
         return;
@@ -3069,13 +3194,14 @@ function renderSchedGrid() {
         ).join('');
         tbody.append(`
             <tr>
+                <td style="text-align: center;"><button type="button" class="btn btn-danger btn-xs" data-grid-act="delete" onclick="removeSchedRow(${idx})">X</button></td>
+                <td style="text-align: center;"><button type="button" class="btn btn-default btn-xs" data-grid-act="add" onclick="btnAddPaymentRow_Click()">+</button></td>
                 <td><select class="win-combo dtcombo" data-dtcombo="term2" data-dtcombo-caption="Payment Term" onchange="onSchedTermChange(${idx}, this.value)"><option value="0">-- Select --</option>${options}</select></td>
                 <td><input type="number" class="win-textbox" style="text-align: center;" value="${row.dueDays}" onchange="onSchedDueDaysChange(${idx}, this.value)"/></td>
                 <td><input type="date" class="win-datepicker" value="${row.dueDate}" onchange="onSchedDueDateChange(${idx}, this.value)"/></td>
                 <td><input type="number" step="0.01" class="win-textbox" style="text-align: right;" value="${row.prcntOfTotal}" onchange="onSchedPercentChange(${idx}, this.value)"/></td>
                 <td><input type="number" step="0.0001" class="win-textbox" style="text-align: right;" value="${(row.amount || 0).toFixed(4)}" onchange="onSchedAmountChange(${idx}, this.value)"/></td>
                 <td><input type="text" class="win-textbox" value="${escapeHtml(row.remarks || '')}" onchange="paymentTermsDetailItems[${idx}].remarks = this.value;"/></td>
-                <td style="text-align: center;"><button type="button" class="btn btn-danger btn-xs" onclick="removeSchedRow(${idx})">&times;</button></td>
             </tr>
         `);
     });
@@ -3346,6 +3472,7 @@ function btnNew_Click(afterSave) {
     $('#txtRemarksHeader').val('');
     $('#hidLoadingCityId').val('0');
     $('#txtLoadingCityDisplay').val('');
+    syncCityCombo();
     clearItemInputs();
 
     lineItems = [];
@@ -3386,6 +3513,7 @@ function applyCityDefault() {
         $('#hidLoadingCityId').val(city.id);
         $('#txtLoadingCityDisplay').val((city.name || city.cityName || '').trim());
     }
+    syncCityCombo();
 }
 
 /* toolStripButton1_Click (Refresh) :4022-4062 - re-reads the configuration and the lists; it
@@ -3627,9 +3755,9 @@ const PO_PRINTS = {
     '203_01': '/reports/print/203-01-purchase-order-rice-slip',
     '203_02': '/reports/print/203-02-purchase-order-rice-slip'
 };
-function btnPrintReport(reportType) {
+function btnPrintReport(reportType, button) {
     if (!poRights.print) return;
-    printPurchaseOrder(reportType, currentPoMasterId);
+    return PurchaseRequest.run(button || null, function () { return printPurchaseOrder(reportType, currentPoMasterId); });
 }
 function printPurchaseOrder(reportType, id) {
     const url = PO_PRINTS[reportType];
@@ -3639,7 +3767,7 @@ function printPurchaseOrder(reportType, id) {
     const h = { 'Content-Type': 'application/json', 'Accept': 'application/pdf, text/plain' };
     const t = document.querySelector('meta[name="_csrf"]'), n = document.querySelector('meta[name="_csrf_header"]');
     if (t && n && t.getAttribute('content') && n.getAttribute('content')) h[n.getAttribute('content')] = t.getAttribute('content');
-    fetch(url, { method: 'POST', credentials: 'same-origin', headers: h, body: JSON.stringify({ id: id || 0 }) })
+    return fetch(url, { method: 'POST', credentials: 'same-origin', headers: h, body: JSON.stringify({ id: id || 0 }) })
         .then(function (r) {
             const type = r.headers.get('Content-Type') || '';
             if (r.ok && type.indexOf('application/pdf') >= 0) return r.blob().then(function (b) {
@@ -3738,12 +3866,35 @@ function bindKeyboardShortcuts() {
             loadSelectedOrderFromHistory(parseInt(hcol(currentHistoryRecords[selectedHistoryRecordIdx], 'Id') || 0, 10), 'edit');
         }
         else if (key === 'ArrowDown') { e.preventDefault(); (onHistory ? $('#grdHistoryTable') : $('#tblItemsTbody')).find('tr:first').attr('tabindex', '-1').focus(); }
-        else if (key === 'ArrowUp') { e.preventDefault(); if (onHistory) $('#txtHistoryFromDate').focus(); else $('#txtItemDisplay').focus(); }
-        else if (key === 'ArrowLeft') { e.preventDefault(); switchTab('tabDetail'); $('#txtItemDisplay').focus(); }
+        else if (key === 'ArrowUp') { e.preventDefault(); if (onHistory) $('#txtHistoryFromDate').focus(); else focusItemCombo(); }
+        else if (key === 'ArrowLeft') { e.preventDefault(); switchTab('tabDetail'); focusItemCombo(); }
         else if (key === 'ArrowRight') {
             e.preventDefault();
             const cur = TAB_ORDER.findIndex(t => $('#' + t).is(':visible'));
             switchTab(TAB_ORDER[(cur + 1) % TAB_ORDER.length]);
+        }
+    });
+}
+
+/* The grids' own keys:
+     grd_KeyDown :5500                        Ctrl+Space on the X button deletes the line (the button's own click);
+     grdExpensesChargeToProduct_KeyDown :5824  Ctrl+Space on X / +, Ctrl+Delete (asks), Ctrl+D adds a row;
+     grdPaymentDetail_KeyDown :2523            Ctrl+Space on X / +, Ctrl+Delete (no question), Ctrl+D adds a row. */
+function bindGridKeys() {
+    $(document).on('keydown', '#tblItemsTbody, #tblChargesTbody, #tblSchedTbody', function (e) {
+        if (!e.ctrlKey) return;
+        const body = this.id;
+        const btn = $(e.target).closest('button');
+        if (e.code === 'Space' && btn.length) { e.preventDefault(); btn[0].click(); return; }
+        if (body === 'tblItemsTbody') return;
+        const idx = $(e.target).closest('tr').index();
+        if (e.key === 'Delete' && idx >= 0) {
+            e.preventDefault();
+            if (body === 'tblChargesTbody') { if (confirm("Are you sure to Delete?")) removeChargeRow(idx); }
+            else removeSchedRow(idx);
+        } else if ((e.key === 'd' || e.key === 'D')) {
+            e.preventDefault();
+            if (body === 'tblChargesTbody') btnAddChargeRow_Click(); else btnAddPaymentRow_Click();
         }
     });
 }
@@ -3754,11 +3905,13 @@ function switchMainView(view) {
         $('#tabBtnHistory').removeClass('active').css({ 'background': '#ece9d8', 'color': '#555' });
         $('#mainViewForm').show();
         $('#mainViewHistory').hide();
+        $('#txtDocDate').trigger('focus');                 /* tabControl1_SelectedIndexChanged :5134 */
     } else if (view === 'history') {
         $('#tabBtnHistory').addClass('active').css({ 'background': '#fff', 'color': '#000' });
         $('#tabBtnForm').removeClass('active').css({ 'background': '#ece9d8', 'color': '#555' });
         $('#mainViewForm').hide();
         $('#mainViewHistory').show();
+        $('#txtHistoryFromDate').trigger('focus');         /* tabControl1_SelectedIndexChanged :5140 */
         loadPurchaseOrderHistory();
     }
 }
@@ -4031,7 +4184,7 @@ function renderHistoryMasterGrid() {
         const allowed = { 'Edit': poRights.update, 'SaveAs': poRights.save };
         const buttons = HISTORY_BUTTONS.map(b => `<td style="text-align:center;" class="action-col">`
             + ((allowed[b.key] !== undefined ? allowed[b.key] : poRights.print)
-                ? `<button type="button" class="win-btn-action" onclick="event.stopPropagation(); onHistoryButtonClick('${b.key}', ${poId})">${escapeHtml(b.label)}</button>`
+                ? `<button type="button" class="win-btn-action" onclick="event.stopPropagation(); onHistoryButtonClick('${b.key}', ${poId}, this)">${escapeHtml(b.label)}</button>`
                 : '')
             + `</td>`).join('');
 
@@ -4062,7 +4215,7 @@ function renderHistoryMasterGrid() {
 /* :5063 grdhistory_ColumnButtonClick. Only Edit is wired; the five print variants and the
    attachment dialog are separate desktop report/dialog paths that are NOT built, and saying so
    is better than a button that silently does nothing. */
-function onHistoryButtonClick(key, poId) {
+function onHistoryButtonClick(key, poId, button) {
     if (key === 'Edit')   { loadSelectedOrderFromHistory(poId, 'edit');   return; }
     if (key === 'SaveAs') { loadSelectedOrderFromHistory(poId, 'saveas'); return; }
     if (key === 'AddAttachment' || key === 'NoOfAttachments') {
@@ -4072,7 +4225,7 @@ function onHistoryButtonClick(key, poId) {
     }
     /* :5105-5120 - Print 203, Print-A 203A, PrintII 203_01, PrintIII 203_02 of that row. */
     const map = { 'Print': '203', 'Print-A': '203A', 'PrintII': '203_01', 'PrintIII': '203_02' };
-    if (map[key] && poRights.print) printPurchaseOrder(map[key], poId);
+    if (map[key] && poRights.print) return PurchaseRequest.run(button || null, function () { return printPurchaseOrder(map[key], poId); });
 }
 
 function onHistoryRowClick(idx) {
@@ -4212,7 +4365,13 @@ function loadSelectedOrderFromHistory(poId, mode) {
  * ============================================================ */
 /* btnDefineBookingPerson_Click :6312 opens DefineReferenceParties; its Party Type list comes from
    the database (ReadAllReferencePartyType), not from four literals. */
+/* btnDefineBookingPerson_Click :6312 - new DefineReferenceParties(UserAccount).Show(): the ported Reference Parties
+   screen (689, /party-processing/reference-parties). The toolbar Refresh re-reads the Booking Person list. */
 function openDefineLookUpPartiesModal() {
+    window.open('/party-processing/reference-parties', '_blank');
+}
+/* The earlier in-page simplification of that form (kept, no longer opened). */
+function openDefineLookUpPartiesModalInline() {
     $.get('/api/purchase-order/lookup-party-types', function (rows) {
         const sel = $('#cmbLookupPartyType');
         const keep = sel.val() || '5';

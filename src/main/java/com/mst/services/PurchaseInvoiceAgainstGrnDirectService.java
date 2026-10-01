@@ -102,6 +102,9 @@ public class PurchaseInvoiceAgainstGrnDirectService {
         out.put("otherItems", repository.otherItems());
         out.put("historySuppliers", repository.historySuppliers());
         out.put("lastTransport", repository.lastTransportAndBroker());
+        // frmLoadGRN_Load: From Date = clsGlobalVariables.ActiveYr.Start_Period; BranchesFill ticks UserAccount.BranchName.
+        out.put("financialYearStart", repository.financialYearStart());
+        out.put("currentBranchId", context.currentBranchId());
         var cfg = new LinkedHashMap<String, Object>();
         cfg.put("baseCurrency", config("Base Currency"));
         cfg.put("baseCurrencyRate", config("BaseCurrencyRate"));
@@ -282,7 +285,9 @@ public class PurchaseInvoiceAgainstGrnDirectService {
     // ------------------------------------------------------------------------------------------------ read
     /** ReadById :2127-2213. */
     public Map<String, Object> getById(int id) {
-        var stored = records.require(id, TYPE);
+        // ReadById :2127 -> GetByID has no branch filter and this form's history (FormHistory without BranchesIds) lists every
+        // branch, so any branch's invoice opens; one of another branch is read-only on the web (Update would move it here).
+        var stored = records.requireViewable(id, TYPE, branch -> true);
         var h = copy(repository.header(id));
         var out = new LinkedHashMap<String, Object>();
         out.put("Id", id);
@@ -308,6 +313,7 @@ public class PurchaseInvoiceAgainstGrnDirectService {
         out.put("DueDays", i(h, "DueDays"));
         out.put("IsApproved", Boolean.TRUE.equals(stored.get("IsApproved")) || "1".equals(Objects.toString(stored.get("IsApproved"))));
         out.put("VoucherHeadId", repository.voucherHeadId(id));
+        out.put("OtherBranch", i(copy(stored), "BranchesId") != context.currentBranchId());
         var details = new ArrayList<Map<String, Object>>();
         var grnIds = new LinkedHashSet<Integer>();
         for (var raw : repository.read(id, "DirectPurchaseDetailReadByInvPurchaseInvoiceId")) {
@@ -375,12 +381,13 @@ public class PurchaseInvoiceAgainstGrnDirectService {
 
     /** GetDetailGrdByHeadId :1014-1074 - the lower grid of the History tab. */
     public List<Map<String, Object>> historyDetail(int id) {
-        records.require(id, TYPE);
+        records.requireViewable(id, TYPE, branch -> true);   // grdHistory_SelectionChanged: GetByID, no branch filter
         var out = new ArrayList<Map<String, Object>>();
         for (var raw : repository.read(id, "DirectPurchaseDetailReadByInvPurchaseInvoiceId")) {
             var d = copy(raw);
             var m = new LinkedHashMap<String, Object>();
             m.put("Id", i(d, "Id")); m.put("OrderNo", d.get("PurchaseOrder")); m.put("GrnDate", dateText(d.get("GrnDate"))); m.put("GrnNo", d.get("GrnNo"));
+            m.put("InvGrnId", i(d, "InvGrnId")); m.put("OrderId", i(d, "PurchaseOrderId"));
             m.put("Warehouse", d.get("WareHouseName")); m.put("ItemName", d.get("ItemName")); m.put("CropYear", d.get("CropYear"));
             m.put("PackType", d.get("PackTypeDesc")); m.put("PackUom", d.get("UOMCodeItem")); m.put("ItemQty", n(d, "ItemQty"));
             m.put("GrossWeight", n(d, "GrossWeight")); m.put("EbUnit", n(d, "EBWeight")); m.put("EbTotal", n(d, "EBTotalWt"));

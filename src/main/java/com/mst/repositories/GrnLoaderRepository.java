@@ -15,7 +15,7 @@ import static com.mst.services.PurchaseInvoiceFinancialRules.*;
 public class GrnLoaderRepository {
     private final JdbcTemplate jdbc;private final CurrentUserContext context;private final PurchaseInvoiceRecordRepository rights;private final PurchaseInvoiceWriteRepository config;
     public GrnLoaderRepository(JdbcTemplate jdbc,CurrentUserContext context,PurchaseInvoiceRecordRepository rights,PurchaseInvoiceWriteRepository config){this.jdbc=jdbc;this.context=context;this.rights=rights;this.config=config;}
-    private void access(int type){if(type==46)rights.requireRight(56,"View");else if(type==137)rights.requireRight(138,"View");}
+    private void access(int type){if(type==46)rights.requireRight(56,"View");else if(type==137)rights.requireRight(138,"View");else if(type==169)rights.requireRight(172,"View");}
     private SqlParameterValue date(String text){try{return new SqlParameterValue(Types.DATE,text==null||text.isBlank()?null:java.sql.Date.valueOf(text));}catch(IllegalArgumentException invalid){throw new IllegalArgumentException("Use a valid GRN filter date");}}
     private SqlParameterValue positive(Integer id){return new SqlParameterValue(Types.INTEGER,id!=null&&id>0?id:null);}
     public List<Map<String,Object>> getUserBranches(int ignoredOrg,int ignoredCompany,int ignoredUser,int type){

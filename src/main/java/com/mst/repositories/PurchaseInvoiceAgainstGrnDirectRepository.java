@@ -62,6 +62,12 @@ public class PurchaseInvoiceAgainstGrnDirectRepository {
     /** CreditAccountForEmptyBag :733 - CoaAllocationAccountTitleByAccountTypeIds("10"); Id / AccountTitle. */
     public List<Map<String, Object>> bagCreditAccounts() { return coa("10", null); }
 
+    /** clsGlobalVariables.ActiveYr.Start_Period (frmLoadGRN From Date default). */
+    public String financialYearStart() {
+        var r = jdbc.queryForList("SELECT Start_Period FROM dbo.FinancialYear WHERE Id=?", context.currentFinancialYearId());
+        return r.isEmpty() || r.get(0).get("Start_Period") == null ? java.time.LocalDate.now().toString() : String.valueOf(r.get(0).get("Start_Period")).substring(0, 10);
+    }
+
     /** LocationTypeFill :493 - VoucherHead.GetLocationType -> usp_getLocationType (no parameters). */
     public List<Map<String, Object>> locationTypes() { return jdbc.queryForList("EXEC dbo.usp_getLocationType"); }
 

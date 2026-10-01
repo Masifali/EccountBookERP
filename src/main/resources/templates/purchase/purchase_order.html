@@ -58,8 +58,11 @@
         .win-nav-tabs { border-bottom: 1px solid #999999; background-color: #ece9d8; display: flex; gap: 2px; padding-left: 4px; }
         .win-nav-tabs li { list-style: none; }
         .win-nav-tabs li a { display: block; padding: 4px 12px; font-size: 9pt; font-weight: 600; color: #000000; background-color: #d4d0c8; border: 1px solid #999999; border-bottom: none; border-radius: 3px 3px 0 0; text-decoration: none; cursor: pointer; }
+        /* tabControl2_DrawItem (PurchsaeOrder.cs :827-838): every tab is painted white, the selected tab's text black,
+           every other tab's text red. */
+        .win-nav-tabs li a { background-color: #ffffff; color: #cc0000; }
         .win-nav-tabs li a.win-tab-red { color: #cc0000 !important; font-weight: bold; }
-        .win-nav-tabs li.active a { background-color: #ffffff !important; border-bottom: 1px solid #ffffff !important; color: #008080 !important; font-weight: bold !important; }
+        .win-nav-tabs li.active a { background-color: #ffffff !important; border-bottom: 1px solid #ffffff !important; color: #000000 !important; font-weight: bold !important; }
         .win-tab-content { border: 1px solid #999999; border-top: none; background-color: #ffffff; padding: 8px; min-height: 260px; }
 
         /* Grid Styling */
@@ -96,6 +99,7 @@
            the strip reads as the two tight rows the desktop draws rather than a stacked grid.
            --------------------------------------------------------------------------------- */
         .po-lineentry { position: relative; width: 1165px; height: 118px; margin: 4px 0 6px 0; }
+        .po-lineentry-scroll { max-width: 100%; overflow-x: auto; overflow-y: hidden; }
         .po-lineentry .lbl { position: absolute; font-size: 8.25pt; line-height: 15px; white-space: nowrap; }
         .po-lineentry .ctl { position: absolute; height: 23px; box-sizing: border-box;
                              font-family: Verdana, Tahoma, sans-serif; font-size: 8.25pt;
@@ -134,10 +138,10 @@
         <button type="button" id="btnSave" class="win-btn-tool win-btn-tool-save" onclick="btnSave_Click()"><i class="fa fa-save"></i> Save</button>
         <button type="button" id="btnUpdate" class="win-btn-tool" style="display:none;" onclick="btnUpdate_Click()"><i class="fa fa-pencil"></i> Update</button>
         <div class="win-sep"></div>
-        <button type="button" id="btnPrint203" class="win-btn-tool" onclick="btnPrintReport('203')" data-rpt="203-InvRptPurchaseOrderRiceSlip.rpt"><i class="fa fa-print"></i> 203-Print</button>
-        <button type="button" id="btnPrint203A" class="win-btn-tool" onclick="btnPrintReport('203A')" data-rpt="203A_PurchaseOrderSlip.rpt"><i class="fa fa-print"></i> 203A_Print</button>
-        <button type="button" id="btnPrint203_01" class="win-btn-tool" onclick="btnPrintReport('203_01')" data-rpt="203_01_PurchaseOrderRiceSlip.rpt"><i class="fa fa-print"></i> 203_01-Print</button>
-        <button type="button" id="btnPrint203_02" class="win-btn-tool" onclick="btnPrintReport('203_02')" data-rpt="203_02_PurchaseOrderRiceSlip.rpt"><i class="fa fa-print"></i> 203_02-Print</button>
+        <button type="button" id="btnPrint203" class="win-btn-tool" onclick="btnPrintReport('203', this)" data-rpt="203-InvRptPurchaseOrderRiceSlip.rpt"><i class="fa fa-print"></i> 203-Print</button>
+        <button type="button" id="btnPrint203A" class="win-btn-tool" onclick="btnPrintReport('203A', this)" data-rpt="203A_PurchaseOrderSlip.rpt"><i class="fa fa-print"></i> 203A_Print</button>
+        <button type="button" id="btnPrint203_01" class="win-btn-tool" onclick="btnPrintReport('203_01', this)" data-rpt="203_01_PurchaseOrderRiceSlip.rpt"><i class="fa fa-print"></i> 203_01-Print</button>
+        <button type="button" id="btnPrint203_02" class="win-btn-tool" onclick="btnPrintReport('203_02', this)" data-rpt="203_02_PurchaseOrderRiceSlip.rpt"><i class="fa fa-print"></i> 203_02-Print</button>
         <div class="win-sep"></div>
         <button type="button" class="win-btn-tool" onclick="openAttachmentsModal()"><i class="fa fa-paperclip"></i> Attachment</button>
         <div class="win-sep"></div>
@@ -503,7 +507,7 @@
      "Item Selection *", "Line Remarks"). Element ids and handlers are unchanged, so the existing
      JavaScript keeps working.
      ========================================================================================== -->
-<div class="po-lineentry">
+<div class="po-lineentry-scroll"><div class="po-lineentry">
     <!-- row 1 -->
     <span class="lbl" style="left:8px;  top:20px;">Item</span>
     <span class="radios" style="left:39px; top:15px; width:136px;">
@@ -518,8 +522,13 @@
         <label><input type="radio" name="itemSearchMode" id="radItemName" checked onchange="onItemSearchModeChange()">Name</label>
         <label><input type="radio" name="itemSearchMode" id="radItemCode" onchange="onItemSearchModeChange()">Code</label>
     </span>
-    <input type="text" id="txtItemDisplay" class="win-textbox ctl" style="left:180px; top:39px; width:205px;"
-           readonly onclick="openItemSearchModal()" placeholder="">
+    <!-- combitem: an UltraCombo on the desktop (ItemdtFillFromAll :1288 / ItemNameBind :1313, display ItemName or
+         ItemCode by the Name/Code radio) - a searchable drop-down here; the hidden fields are what the page reads. -->
+    <select id="cmbItem" class="win-combo dtcombo ctl" style="left:180px; top:39px; width:205px;"
+            data-dtcombo="single" data-dtcombo-caption="Item" onchange="onItemComboChange()">
+        <option value="0">...Select Any Value...</option>
+    </select>
+    <input type="hidden" id="txtItemDisplay" value="">
     <input type="hidden" id="hidItemId" value="0">
 
     <span class="lbl" style="left:387px; top:19px;">Crop Year</span>
@@ -561,8 +570,13 @@
             data-dtcombo="single" data-dtcombo-caption="Job / Lot"></select>
 
     <span class="lbl" style="left:180px; top:67px;">City Name</span>
-    <input type="text" id="txtLoadingCityDisplay" class="win-textbox ctl" style="left:180px; top:86px; width:205px;"
-           readonly onclick="openCitySearchModal()" placeholder="">
+    <!-- combcityarea: an UltraCombo on the desktop (cmbCityFill :1542, SP_City_GetAllMethod GetAll) - a searchable
+         drop-down here; the two hidden fields are what the rest of the page reads. -->
+    <select id="cmbLoadingCity" class="win-combo dtcombo ctl" style="left:180px; top:86px; width:205px;"
+            data-dtcombo="single" data-dtcombo-caption="City Name" onchange="onCityComboChange()">
+        <option value="0">...Select Any Value...</option>
+    </select>
+    <input type="hidden" id="txtLoadingCityDisplay" value="">
     <input type="hidden" id="hidLoadingCityId" value="0">
 
     <span class="lbl" style="left:385px; top:67px;">Moisture %</span>
@@ -587,7 +601,7 @@
             onclick="btnAddDetailRow_Click()" title="Add">+</button>
     <button type="button" id="btnUpdateDetail" class="po-line-btn" style="left:1029px; top:86px; width:64px; display:none;" onclick="btnUpdateDetail_Click()">Update</button>
     <button type="button" id="btnCancelUpdateDetial" class="po-line-btn" style="left:1095px; top:86px; width:61px; display:none;" onclick="btnCancelUpdateDetial_Click()">Cancel</button>
-</div>
+</div></div>
 
 
                 <!-- ITEMS MAIN GRID -->
@@ -739,19 +753,15 @@
                                     <th style="width: 90px; text-align: right;">Item Rate</th>
                                     <th style="width: 110px; text-align: right;">Amount</th>
                                     <th>Remarks</th>
-                                    <th style="width: 40px;">X</th>
+                                    <th style="width: 24px; text-align: center;" title="Delete (Ctrl+Delete)">X</th>
+                                    <th style="width: 24px; text-align: center;" title="Add (Ctrl+D)">+</th>
                                 </tr>
                             </thead>
+                            <!-- grdChargeToProductSetting :3172-3183 - "X" and "+" button columns after the data columns;
+                                 grdExpensesChargeToProduct_KeyDown :5824 Ctrl+Space / Ctrl+Delete / Ctrl+D. -->
                             <tbody id="tblChargesTbody">
-                                <tr><td colspan="7" style="text-align: center; padding: 15px; color: #777;">No product account charges specified.</td></tr>
+                                <tr><td colspan="8" style="text-align: center; padding: 15px; color: #777;">No product account charges specified.</td></tr>
                             </tbody>
-                            <tfoot>
-                                <tr>
-                                    <td colspan="7" style="text-align: left;">
-                                        <button type="button" class="win-btn-action" onclick="btnAddChargeRow_Click()"><i class="fa fa-plus"></i> Add Row</button>
-                                    </td>
-                                </tr>
-                            </tfoot>
                         </table>
                     </div>
                 </div>
@@ -811,26 +821,27 @@
                         <table class="win-grid">
                             <thead>
                                 <tr>
+                                    <th style="width: 24px; text-align: center;" title="Delete (Ctrl+Delete)">X</th>
+                                    <th style="width: 24px; text-align: center;" title="Add (Ctrl+D)">+</th>
                                     <th style="width: 160px;">Payment Term</th>
                                     <th style="width: 80px; text-align: center;">Due Days</th>
                                     <th style="width: 120px; text-align: center;">Due Date</th>
                                     <th style="width: 90px; text-align: right;">%Of Total</th>
                                     <th style="width: 110px; text-align: right;">Amount</th>
                                     <th>Remarks</th>
-                                    <th style="width: 40px;">X</th>
                                 </tr>
                             </thead>
+                            <!-- gridPaymentTermSetting - AddButton "Delete" (X) at 0 and "Add" (+) at 1;
+                                 grdPaymentDetail_KeyDown :2523 Ctrl+Space / Ctrl+Delete / Ctrl+D. -->
                             <tbody id="tblSchedTbody">
-                                <tr><td colspan="7" style="text-align: center; padding: 15px; color: #777;">No payment terms added yet.</td></tr>
+                                <tr><td colspan="8" style="text-align: center; padding: 15px; color: #777;">No payment terms added yet.</td></tr>
                             </tbody>
                             <tfoot>
                                 <tr style="background-color: #e0f2f1; font-weight: bold; color: #004d40;">
-                                    <td colspan="3" style="text-align: right;">
-                                        <button type="button" class="win-btn-action" onclick="btnAddPaymentRow_Click()"><i class="fa fa-plus"></i> Add Row</button>
-                                    </td>
+                                    <td colspan="5"></td>
                                     <td id="lblSchedTotalPercent" style="text-align: right;">0.00%</td>
                                     <td id="lblSchedTotalAmount" style="text-align: right;">0.00</td>
-                                    <td colspan="2"></td>
+                                    <td></td>
                                 </tr>
                             </tfoot>
                         </table>
@@ -1375,7 +1386,8 @@
     <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
     <script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
     <script th:src="@{/build/js/countx_purchase_request.js?v=20260923c}"></script>
-    <script th:src="@{/build/js/countx_purchase_order_full.js?v=20260930apo}"></script>
+    <script th:src="@{/build/js/countx_purchase_page_chrome.js?v=20260930o1}"></script>
+    <script th:src="@{/build/js/countx_purchase_order_full.js?v=20260930o1}"></script>
     <script th:src="@{/build/js/countx_desktop_combo.js?v=20260927b}"></script>
     <script th:src="@{/build/js/countx_input_guards.js?v=20260921d}"></script>
 <script src="/js/print-rpt.js?v=20261001a"></script>

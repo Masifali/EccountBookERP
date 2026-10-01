@@ -222,12 +222,20 @@
         'Purchase.PurchsaeOrder|PurchsaeOrder': { q: '/purchase/purchase-order' },
         /* countx_market_grn.js:78 - loadRecord(id). */
         'Purchase.InvFrmGRN|InvFrmGRN': { q: '/purchase/goods-receipt-notes' },
+        /* countx_grn_direct.js load() - ?id= -> readById(id) after /setup. */
+        'Purchase.InvFrmGRNDirect|InvFrmGRNDirect': { q: '/purchase/grn-direct' },
         /* countx_inward_gate_pass.js:28 - loadRecordAndEdit(id). */
         'Purchase.InwardGatePass|InwardGatePass': { q: '/purchase/inward-gate-pass' },
         /* countx_purchase_invoice.js:82 - load(id). */
         'Purchase.InvfrmPurchaseInvoice|InvfrmPurchaseInvoice': { q: '/purchase/purchase-invoice' },
         /* countx_direct_invoice.js:61 - load(id). */
         'Purchase.InvfrmPurchasedirectInvoice|InvfrmPurchasedirectInvoice': { q: '/purchase/purchase-invoice-direct' },
+        /* countx_purchase_invoice_return.js load() - ?id= -> ReadById(id) after /init. */
+        'Purchase.InvfrmInvPurchaseInvoiceReturn|InvfrmPurchaseReturn': { q: '/purchase/purchase-invoice-return' },
+        /* countx_pi_grn_direct.js init() - ?id= -> readById(id) after /init. */
+        'Purchase.frmPurchaseInvoiceAgaintGrnDirect|PurchaseInvoiceAgainstGrnDirect': { q: '/purchase/purchase-invoice-again-grn-direct' },
+        /* countx_pi_against_grn_order.js init() - ?id= -> readById(id) after /init (DocumentTypeId 172). */
+        'Purchase.PurchaseInvoiceAgainstGrnOrder|PurchaseInvoiceAgainstGrnOrder': { q: '/purchase/purchase-invoice-against-grn-order' },
         /* These dedicated pages read ?id= only after their own initial lookups complete. */
         /* countx_sale_order_full.js - ?id= -> loadOrderIntoForm(id) after master lookups + config defaults. */
         'Sale.SaleOrder|SaleOrder': { q: '/sale/sale-order' },

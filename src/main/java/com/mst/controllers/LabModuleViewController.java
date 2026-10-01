@@ -33,9 +33,8 @@ public class LabModuleViewController {
 
     @GetMapping({"", "/", "/dashboard"})
     public String labDashboard(Model model) {
-        model.addAttribute("activeMenu", "lab");
-        model.addAttribute("moduleTitle", "Lab");
-        return "lab/lab_dashboard";
+        /* Module 7 through the generic renderer (dbo.App 4 "Quality Control"), not a hand-written page. */
+        return "forward:/app/QualityControl?module=7";
     }
 
     /** Screen 156 - desktop InvLabAnalysisItems.cs. */

@@ -21,8 +21,27 @@ public class PurchaseInvoiceGrnService {
     public Map<String,Object> preview(List<Map<String,Object>> requested){
         var validation=selection.validateAndSelectGrns(requested,46,lookups.enabled("AcceptAccessWtVehiclesandHoldForSpecialApprovalOn1stWt"));
         if(!Boolean.TRUE.equals(validation.get("success")))throw new IllegalArgumentException(Objects.toString(validation.get("message")));
-        var selected=(List<Map<String,Object>>)validation.get("grns");var ids=selected.stream().map(r->i(copy(r),"Id")).toList();var source=repository.read(ids);
-        var first=copy(source.get("details").get(0));int invoiceType=i(copy(selected.get(0)),"GrnType"),supplier=i(first,"SupplierCustomerId"),order=i(first,"PurchaseOrderId");boolean subsidiary=lookups.subsidiary();
+        var selected=(List<Map<String,Object>>)validation.get("grns");var ids=selected.stream().map(r->i(copy(r),"Id")).toList();
+        return build(ids,i(copy(selected.get(0)),"GrnType"));
+    }
+    /**
+     * txtGrnNo_Leave:6002 -> GetGrnIdAndInvoiceTypeId:5974 (InvGrn.GetGRNIdByDocNo, BLL 0576:288: Sp_InvGRN_GetAllMethod 'GetGRNIdByDocNo',
+     * DocumentTypeId 46, active financial year, no branch; the procedure skips GRNs already on an invoice) -> LoadInGridDetail(GrnId, type).
+     * The Grn No path does not go through frmLoadGRN, so none of the loader's selection checks run (desktop).
+     */
+    public Map<String,Object> previewByDocNo(int docNo){
+        var rows=jdbc.queryForList("EXEC dbo.Sp_InvGRN_GetAllMethod @OrganizationId=?,@CompanyId=?,@DocumentTypeId=46,@DocNo=?,@FinancialYearId=?,@Activity='GetGRNIdByDocNo'",
+                context.currentOrganizationId(),context.currentCompanyId(),docNo,context.currentFinancialYearId());
+        if(rows.isEmpty())throw new IllegalArgumentException("Record Not Found For Loader");
+        var r=copy(rows.get(0));int type=i(r,"RefDocumentTypeId");
+        // :6014-6028 - 41 -> 1, 105 -> 2, 106 -> 3, 217 -> 4; any other value is kept as it is.
+        type=switch(type){case 41->1;case 105->2;case 106->3;case 217->4;default->type;};
+        return build(List.of(i(r,"Id")),type);
+    }
+    @SuppressWarnings("unchecked")
+    private Map<String,Object> build(List<Integer> ids,int invoiceType){
+        var source=repository.read(ids);
+        var first=copy(source.get("details").get(0));int supplier=i(first,"SupplierCustomerId"),order=i(first,"PurchaseOrderId");boolean subsidiary=lookups.subsidiary();
         var party=copy(jdbc.queryForMap("SELECT GlAccountId,CompanyName FROM dbo.SupplierCustomer WHERE Id=? AND OrganizationId=? AND CompanyId=?",supplier,context.currentOrganizationId(),context.currentCompanyId()));int gl=i(party,"GlAccountId");
         var h=row("Id",0,"InvoiceTypeId",invoiceType,"SupplierCustomerId",supplier,"CommissionAgentId",i(first,"BrokerAgentSupCustId")>0?i(first,"BrokerAgentSupCustId"):supplier,"DueDays",i(first,"OrderDueDays"),"DocDate",lookups.enabled("ValidateGrnAndInvoiceDateWithGpDate")?s(first,"DocDate").substring(0,10):LocalDate.now().toString());
         for(String key:List.of("CommissionType","CommRate","UomScheduleIdCmRate","CommAmount","CommissionRemarks","RemarksHeader","BrokerAgentId","BrokeryType","BrokeryUom","BrokeryRate","BrokeryAmount","PaymentTermsId","DeliveryTerm"))h.put(key,first.get(key));

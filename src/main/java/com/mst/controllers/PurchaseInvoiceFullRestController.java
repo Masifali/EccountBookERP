@@ -24,6 +24,10 @@ public class PurchaseInvoiceFullRestController {
     @PostMapping("/load-grns")
     public Map<String,Object> loadGrns(@RequestBody List<Map<String,Object>> selected){return grnTransfer.preview(selected);}
 
+    /** txtGrnNo_Leave:6002 - the GRN (type 46) with this DocNo in the active year that is not on an invoice yet. */
+    @GetMapping("/grn-by-no")
+    public Map<String,Object> grnByNo(@RequestParam int docNo){purchaseInvoiceFullService.requireView();return grnTransfer.previewByDocNo(docNo);}
+
     @PostMapping("/payment-row")
     @SuppressWarnings("unchecked")
     public Map<String,Object> paymentRow(@RequestBody Map<String,Object> body){return purchaseInvoiceFullService.paymentRow(body);}

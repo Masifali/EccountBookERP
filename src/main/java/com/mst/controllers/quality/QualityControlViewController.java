@@ -1,129 +1,51 @@
 package com.mst.controllers.quality;
 
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+/**
+ * dbo.App 4 "Quality Control" through the generic App / Module / Screen renderer (AppMenuController),
+ * like the Accounts, Purchase, Production, HRM and Taxation hubs: the module cards (AppModules 7 "Lab",
+ * 1011 "Lab Report") and their counts come from the user's CompanyRights + ScreenRights rows, as the
+ * desktop frmMenue builds them.
+ *
+ * The old quality_control/dashboard.html was hand-written: typed counts "10" and "6", two tiles for
+ * screens that do not exist on the desktop ("Lab Master", "Lab Report") and its own look. For company 78
+ * the seeder enables 8 screens in module 7 (155, 156, 157, 158, 159, 160, 162, 163) and 6 reports in
+ * module 1011 (626, 629, 630, 631, 632, 633).
+ *
+ * Every screen route that used to live here (all mock-ups whose Save returned a typed "success") now
+ * belongs to its own controller in com.mst.controllers.lab, ported from the desktop form (2026-09-30).
+ */
 @Controller
-@RequestMapping("/quality")
+@RequestMapping({"/quality", "/quality_control", "/quality-control"})
 public class QualityControlViewController {
 
     @GetMapping({"", "/", "/dashboard"})
-    public String dashboard(Model model) {
-        model.addAttribute("activeMenu", "quality");
-        return "quality_control/dashboard";
+    public String dashboard() {
+        return "forward:/app/QualityControl";
     }
 
-    @GetMapping("/lab")
-    public String labMaster(Model model) {
-        model.addAttribute("activeMenu", "quality");
-        model.addAttribute("moduleTitle", "Lab Master Definition");
-        return "quality_control/lab";
+    @GetMapping("/setup")
+    public String labModule() {
+        return "forward:/app/QualityControl?module=7";
     }
 
-    @GetMapping("/lab-report")
-    public String labReport(Model model) {
-        model.addAttribute("activeMenu", "quality");
-        model.addAttribute("moduleTitle", "Lab Report");
-        return "quality_control/lab_report";
+    @GetMapping("/reports")
+    public String labReports() {
+        return "forward:/app/QualityControl?module=1011";
     }
 
+    /** Screen 156 is served by LabModuleViewController; the old URL is kept for existing links. */
     @GetMapping("/item-analysis-parameter")
-    public String itemAnalysisParameter(Model model) {
-        model.addAttribute("activeMenu", "quality");
-        model.addAttribute("moduleTitle", "Item Analysis Parameter");
-        return "quality_control/item_analysis_parameter";
+    public String itemAnalysisParameter() {
+        return "redirect:/lab/item-analysis-parameter";
     }
 
-    @GetMapping("/analysis-group")
-    public String analysisGroup(Model model) {
-        model.addAttribute("activeMenu", "quality");
-        model.addAttribute("moduleTitle", "Analysis Group Definition");
-        return "quality_control/analysis_group";
-    }
-
-    @GetMapping("/group-analysis-standards")
-    public String groupAnalysisStandards(Model model) {
-        model.addAttribute("activeMenu", "quality");
-        model.addAttribute("moduleTitle", "Group Analysis Standards");
-        return "quality_control/group_analysis_standards";
-    }
-
-    @GetMapping("/sample-log-register")
-    public String sampleLogRegister(Model model) {
-        model.addAttribute("activeMenu", "quality");
-        model.addAttribute("moduleTitle", "Sample Log Register");
-        return "quality_control/sample_log_register";
-    }
-
-    @GetMapping("/sample-analysis")
-    public String sampleAnalysis(Model model) {
-        model.addAttribute("activeMenu", "quality");
-        model.addAttribute("moduleTitle", "Sample Analysis");
-        return "quality_control/sample_analysis";
-    }
-
-    @GetMapping("/purchase-analysis")
-    public String purchaseAnalysis(Model model) {
-        model.addAttribute("activeMenu", "quality");
-        model.addAttribute("moduleTitle", "Purchase Analysis");
-        return "quality_control/purchase_analysis";
-    }
-
-    @GetMapping("/inprocess-analysis-steps")
-    public String inprocessAnalysisSteps(Model model) {
-        model.addAttribute("activeMenu", "quality");
-        model.addAttribute("moduleTitle", "InProcess Analysis Steps Schedule");
-        return "quality_control/inprocess_analysis_steps";
-    }
-
-    @GetMapping("/inprocess-analysis")
-    public String inprocessAnalysis(Model model) {
-        model.addAttribute("activeMenu", "quality");
-        model.addAttribute("moduleTitle", "In-Process Analysis");
-        return "quality_control/inprocess_analysis";
-    }
-
-    @GetMapping("/reports/inprocess-analysis-report")
-    public String inprocessAnalysisReport(Model model) {
-        model.addAttribute("activeMenu", "quality");
-        model.addAttribute("moduleTitle", "In-Process Analysis Report");
-        return "quality_control/reports/inprocess_analysis_report";
-    }
-
-    @GetMapping("/reports/lab-sample-analysis-report")
-    public String labSampleAnalysisReport(Model model) {
-        model.addAttribute("activeMenu", "quality");
-        model.addAttribute("moduleTitle", "Lab Sample Analysis Report");
-        return "quality_control/reports/lab_sample_analysis_report";
-    }
-
-    @GetMapping("/reports/sample-analysis-register")
-    public String sampleAnalysisRegister(Model model) {
-        model.addAttribute("activeMenu", "quality");
-        model.addAttribute("moduleTitle", "Sample Analysis Register");
-        return "quality_control/reports/sample_analysis_register";
-    }
-
-    @GetMapping("/reports/purchase-analysis-by-vehicle")
-    public String purchaseAnalysisByVehicle(Model model) {
-        model.addAttribute("activeMenu", "quality");
-        model.addAttribute("moduleTitle", "Purchase Analysis By Vehicle");
-        return "quality_control/reports/purchase_analysis_by_vehicle";
-    }
-
-    @GetMapping("/reports/purchase-analysis-report")
-    public String purchaseAnalysisReport(Model model) {
-        model.addAttribute("activeMenu", "quality");
-        model.addAttribute("moduleTitle", "Purchase Analysis Report");
-        return "quality_control/reports/purchase_analysis_report";
-    }
-
-    @GetMapping("/reports/lab-purchase-analysis-periodic-report")
-    public String labPurchaseAnalysisPeriodicReport(Model model) {
-        model.addAttribute("activeMenu", "quality");
-        model.addAttribute("moduleTitle", "Lab Purchase Analysis Periodic Report");
-        return "quality_control/reports/lab_purchase_analysis_periodic_report";
+    /** "Lab Master" and "Lab Report" were invented tiles - no such screens in ScreenDefinition. */
+    @GetMapping({"/lab", "/lab-report"})
+    public String inventedScreens() {
+        return "redirect:/quality";
     }
 }

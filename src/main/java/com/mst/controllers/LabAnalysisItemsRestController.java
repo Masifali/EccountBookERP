@@ -1,19 +1,26 @@
 package com.mst.controllers;
 
 import com.mst.services.LabAnalysisItemsService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
  * Screen 156 - Item Analysis Parameter.
  *
- * Five endpoints, one per thing the desktop form does. No delete: the desktop grid sets
- * AllowDelete off (grdfrmSetting, :255) and the form has no delete button, so there is nothing to
- * port - and inventing one would let a crafted request remove a parameter that existing
- * PurchaseOrderLabDeduction and InvLabGroupAnalysisStandards rows point at.
+ * One endpoint per thing the desktop form does. No delete and no print: the desktop grid sets
+ * AllowDelete = False (grdfrmSetting, InvLabAnalysisItems.cs:258) and the toolstrip (:876) holds
+ * only New, Update and Save.
+ *
+ * Validation refusals are IllegalArgumentException (400, ApiExceptionAdvice); rights are
+ * AccessDeniedException (403). A database error is what the desktop shows as
+ * MessageBox(ex.Message) (:178-181), so it is answered as a 400 with that text.
  *
  * Nothing here accepts an organization, company or user id from the caller. Every read and write
  * derives them from the session inside the service.
@@ -22,10 +29,18 @@ import java.util.Map;
 @RequestMapping("/api/lab/item-analysis-parameter")
 public class LabAnalysisItemsRestController {
 
+    private static final Logger LOG = LoggerFactory.getLogger(LabAnalysisItemsRestController.class);
+
     private final LabAnalysisItemsService service;
 
     public LabAnalysisItemsRestController(LabAnalysisItemsService service) {
         this.service = service;
+    }
+
+    /** Rights of ScreenName InvLabAnalysisItems; 403 without the View right. */
+    @GetMapping("/rights")
+    public ResponseEntity<Map<String, Boolean>> rights() {
+        return ResponseEntity.ok(service.rights());
     }
 
     /** gridfill() - the always-visible grid. */
@@ -66,6 +81,20 @@ public class LabAnalysisItemsRestController {
                 body.getId(), body.getDescription(), Boolean.TRUE.equals(body.getIsSub()),
                 body.getParentParameterId(), body.getMasterParId(),
                 body.getMinValue(), body.getMaxValue()));
+    }
+
+    @ExceptionHandler(DataAccessException.class)
+    public ResponseEntity<Map<String, Object>> database(DataAccessException e) {
+        Throwable r = e;
+        while (r.getCause() != null && r.getCause() != r) r = r.getCause();
+        String text = r.getMessage() == null || r.getMessage().trim().isEmpty() ? "Database Error" : r.getMessage().trim();
+        LOG.warn("Item Analysis Parameter database refusal: {}", text);
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("success", false);
+        m.put("status", "ERROR");
+        m.put("message", text);
+        m.put("error", text);
+        return ResponseEntity.badRequest().body(m);
     }
 
     /** The posted body. Deliberately carries no tenancy fields for the server to trust. */

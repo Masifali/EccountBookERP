@@ -19,6 +19,11 @@ function escapeHtml(v) {
         .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 let lineItems = [], loadedHeader = {}, editLine = -1, lookupVersion = 0, historyRows = [], printContext = {};
+/* the Attachment form (AT) - btnAttachment_Click :6355, saved with Insert() (:3905-3914) */
+const grnAttachments = window.PurchaseDocAttachments ? PurchaseDocAttachments.create({
+    type: 46, getId: () => numeric('txtId'),
+    canEdit: () => { const b = document.getElementById(numeric('txtId') > 0 ? 'btnUpdate' : 'btnSave'); return !!b && b.dataset[numeric('txtId') > 0 ? 'canUpdate' : 'canSave'] !== 'false'; },
+    message: m => alert(m) }) : null;
 const grn = { ref: 0, freightId: 0, gpId: 0, gpNo: '', gpDate: '', gpQty: 0, purchaseOrderId: 0, purchaseOrderNo: 0, cfg: {}, items: [],
               lab: null, labRows: [], previousData: [], poEmptyBags: [], preBills: [], chargeToParty: 0, subsidiary: false, wages: false,
               pending: [], invoiceId: 0 };
@@ -78,7 +83,32 @@ $(document).ready(async function () {
     $('#cmbSupplier').on('change', combsupplierLeave);
     $('input[name="itemSearchMode"]').on('change', itemNameBind);
     $('#grdItemsBody').on('dblclick', 'tr[data-line]', function () { grdDoubleClick(Number(this.dataset.line)); })
-                      .on('click', 'tr[data-line]', function () { $('#grdItemsBody tr').removeClass('selected'); $(this).addClass('selected'); });
+                      .on('click', 'tr[data-line]', function () { $('#grdItemsBody tr').removeClass('selected'); $(this).addClass('selected'); $('#grdItemsWrap').trigger('focus'); });
+    /* grd_KeyDown :6483 - Ctrl+Space: "Are you sure to Delete?" then the current row goes (no Reset check); Ctrl+Enter edits. */
+    $('#grdItemsWrap').on('keydown', function (e) {
+        const tr = document.querySelector('#grdItemsBody tr.selected'); if (!tr || !e.ctrlKey) return;
+        if (e.code === 'Space') { e.preventDefault(); if (!confirm('Are you sure to Delete?')) return; lineItems.splice(Number(tr.dataset.line), 1); scaleShortageProportion(); supplierShortageProportion(); freightProportion(); renderItemsGrid(); }
+    });
+    /* grdPurchaseBrakup_KeyDown :6699 - Ctrl+Delete (asks) removes the current breakup row, Ctrl+D adds one
+       (Ctrl+Space on the X / + buttons is handled by countx_grn_supplements.js). */
+    document.addEventListener('keydown', function (e) {
+        if (!e.ctrlKey || !e.target.closest) return;
+        const tr = e.target.closest('#grdPurchaseBreakupsBody tr'); if (!tr) return;
+        if (e.key === 'Delete') { e.preventDefault(); withButtonLoading(null, () => deletePurchaseBreakup(Array.prototype.indexOf.call(tr.parentNode.children, tr))); }
+        else if (e.key === 'd' || e.key === 'D') { e.preventDefault(); withButtonLoading(null, addPurchaseBreakup); }
+    });
+    /* GrdHistory_KeyDown / grdGp_KeyDown :6566-6697 - Ctrl+Space (or Enter) on a focused link cell runs its link. */
+    document.addEventListener('keydown', function (e) {
+        const a = e.target.closest && e.target.closest('a[tabindex]');
+        if (a && ((e.ctrlKey && e.code === 'Space') || (e.key === 'Enter' && !e.ctrlKey))) { e.preventDefault(); a.click(); return; }
+        /* grdGp_KeyDown "Load" / GrdHistory_KeyDown "Edit" / "Print" - Ctrl+Space on a focused button cell */
+        const b = e.ctrlKey && e.code === 'Space' && e.target.closest && e.target.closest('#grdPendingBody button, #grdHistoryBody button, #grdLoaderBody button');
+        if (b) { e.preventDefault(); b.click(); }
+    });
+    if (window.PurchaseChrome) {
+        PurchaseChrome.footer({ isHistory: () => $('#viewHistory').is(':visible'), toggle: () => switchMode($('#viewHistory').is(':visible') ? 'Form' : 'History'), watch: '#viewHistory' });
+        ['#grdItemsWrap', '#grdPendingWrap', '#grdHistoryWrap'].forEach(id => PurchaseChrome.fullscreen(id));
+    }
     $('#grdHistoryBody').on('click', 'tr[data-id]', function () { grdHistorySelectionChanged(this); })
                         .on('dblclick', 'tr[data-id]', function () { loadRecord(Number(this.dataset.id)); });
     document.addEventListener('keydown', onFormKeyDown);
@@ -751,7 +781,7 @@ function renderPendingHead() {
 }
 function pendingCell(g, c) {
     const v = g[c[0]];
-    if (c[2] === 'link') return '<td><a data-gp-print="' + Number(g.Id) + '" data-detail-count="' + (Number(g.DetailIdsCount) || 0) + '">' + escapeHtml(v) + '</a></td>';
+    if (c[2] === 'link') return '<td><a tabindex="0" data-gp-print="' + Number(g.Id) + '" data-detail-count="' + (Number(g.DetailIdsCount) || 0) + '">' + escapeHtml(v) + '</a></td>';
     if (c[2] === 'date') return '<td>' + escapeHtml(displayDate(v)) + '</td>';
     if (c[2] === 'excess') return '<td class="text-end ' + ((Number(v) || 0) > 0 ? 'excess-pos' : (Number(v) || 0) === 0 ? 'excess-zero' : '') + '">' + escapeHtml(v ?? '') + '</td>';
     if (c[2] === 'num') return '<td class="text-end">' + escapeHtml(v ?? '') + '</td>';
@@ -784,8 +814,22 @@ $(document).on('click', 'a[data-gp-print]', function () {
     const id = Number(this.dataset.gpPrint);
     openPrint(Number(this.dataset.detailCount) > 0 ? '256-GatePassInward_WithDetailSlip.rpt' : '251-InvRptInwardGatePassSlip.rpt', { id });
 });
-/* GrdHistory_LinkClicked OrderNo → PurchaseOrderSlipReport203 */
-$(document).on('click', 'a[data-po]', function () { openPrint('203-InvRptPurchaseOrderRiceSlip.rpt', { id: Number(this.dataset.po) }); });
+/* ScreenViewReights: the target screen's View right, else "Please Check Screen Rights" (the window is opened first so
+   the pop-up blocker lets it through, then pointed at the page or closed). */
+async function openIfViewRight(screen, url) {
+    const w = window.open('about:blank', '_blank');
+    try {
+        const r = await api('/api/purchase/screen-view-right/' + screen);
+        if (r && r.view) { if (w) w.location.href = url; else window.open(url, '_blank'); }
+        else { if (w) w.close(); alert('Please Check Screen Rights'); }
+    } catch (e) { if (w) w.close(); alert(e.message); }
+}
+/* GrdHistory_LinkClicked OrderNo :6030 → PurchsaeOrder View right, then PurchaseOrderSlipReport203 */
+$(document).on('click', 'a[data-po]', function () {
+    openIfViewRight('PurchsaeOrder', '/api/print/by-template/' + encodeURIComponent('203-InvRptPurchaseOrderRiceSlip.rpt') + '/pdf?id=' + Number(this.dataset.po));
+});
+/* btnGrnFormHistory_Click :5739 → frmGRNHistory (screen 477) when its View right is granted */
+function btnGrnFormHistory_Click() { return openIfViewRight('frmGRNHistory', '/purchase/reports/grn-register'); }
 
 /* btnLoadGatePass_Click :3029 */
 function btnLoadGatePass_Click() {
@@ -923,6 +967,8 @@ async function insert() {
         advanceByPartyFreight: numeric('txtAdvParty'), advanceByFactoryFreight: numeric('txtAdvFactory'), supplierDispatchId: numeric('cmbPreBillNo'),
         chargeToPartyAmountFV: numeric('txtChargeToParty'),
         scaleShortWeightApply: $('#chkScaleDeduct').prop('checked'), supplierShortWeightApply: $('#chkSupplierDeduct').prop('checked'), details };
+    const attached = grnAttachments ? grnAttachments.payload() : undefined;
+    if (attached) payload.attachments = attached;
     const data = await api('/api/purchase/market-grn/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
     alert((updating ? 'Record Update Successfully [' : 'Record Save Successfully [') + (data.docNo ?? payload.docNo) + ']');
     /* :3920 — frmwagesBillHeader for this GRN when ContractorWagesCompulsoryBeforeInvoices and wages are active for 46 */
@@ -944,8 +990,9 @@ async function onDeleteRecord() {
     alert(data.message || 'Delete Record Successfully');
     await onNewRecord(); refreshPendingGrid();
 }
-function onAttachment() {
-    alert('Attachments (DMS) for Goods Receipt Notes are not available on the web page yet.');
+/* btnAttachment_Click :6355 - AT.Show(); the changes are posted with Save / Update. */
+function onAttachment(button) {
+    if (grnAttachments) return grnAttachments.open(button || document.getElementById('btnAttachment'));
 }
 
 function resetGrnState() {
@@ -954,6 +1001,7 @@ function resetGrnState() {
 /* reset :4280 (+ btnNew_Click :4424 stock E.b boxes to 0) */
 async function onNewRecord() {
     lookupVersion++; loadedHeader = {}; lineItems = []; editLine = -1; resetGrnState(); renderSupplements({});
+    if (grnAttachments) grnAttachments.reset();
     document.querySelectorAll('#viewForm input').forEach(input => {
         if (input.type === 'radio' || input.id === 'chkPreviewAfterSave') return;
         if (input.type === 'checkbox') input.checked = false; else if (input.id === 'txtId' || input.id === 'cmbGatePassNo') input.value = 0; else input.value = '';
@@ -1023,17 +1071,19 @@ async function btnshow_Click() {
     $('#grdHistoryBody').html(historyRows.map(r => '<tr data-id="' + Number(r.Id) + '" data-ref="' + (Number(r.RefDocumentTypeId) || 0) + '">'
         + '<td><button type="button" class="tool-btn" style="height:17px;padding:0 5px" onclick="event.stopPropagation();loadRecord(' + Number(r.Id) + ')">Edit</button></td>'
         + '<td><button type="button" class="tool-btn" style="height:17px;padding:0 5px" data-rpt="211-InvRptGoodsReceiptsNotesRiceSlip.rpt" data-rpt-need="id" data-print-id="' + Number(r.Id) + '">Print</button></td>'
-        + txt(r.OrderType) + '<td>' + (Number(r.OrderId) > 0 ? '<a data-po="' + Number(r.OrderId) + '">' + escapeHtml(r.OrderNo) + '</a>' : escapeHtml(r.OrderNo ?? '')) + '</td>'
+        + txt(r.OrderType) + '<td>' + (Number(r.OrderId) > 0 ? '<a tabindex="0" data-po="' + Number(r.OrderId) + '">' + escapeHtml(r.OrderNo) + '</a>' : escapeHtml(r.OrderNo ?? '')) + '</td>'
         + num(r.InvoiceNo) + num(r.DocNo) + txt(displayDate(r.docDate ?? r.DocDate)) + txt(r.DeliveryTerm) + txt(r.SupplierName)
-        + '<td>' + (Number(r.InwardGatePassId) > 0 ? '<a data-gp-print="' + Number(r.InwardGatePassId) + '" data-detail-count="' + (Number(r.DetailIdsCount) || 0) + '">' + escapeHtml(r.GpNo) + '</a>' : escapeHtml(r.GpNo ?? '')) + '</td>'
+        + '<td>' + (Number(r.InwardGatePassId) > 0 ? '<a tabindex="0" data-gp-print="' + Number(r.InwardGatePassId) + '" data-detail-count="' + (Number(r.DetailIdsCount) || 0) + '">' + escapeHtml(r.GpNo) + '</a>' : escapeHtml(r.GpNo ?? '')) + '</td>'
         + txt(r.VehicleNo) + txt(r.BiltyNo)
-        + '<td>' + (Number(r.WagesId) > 0 ? '<a data-wages="' + Number(r.WagesId) + '">' + escapeHtml(r.WagesNo) + '</a>' : escapeHtml(r.WagesNo ?? '')) + '</td>'
+        + '<td>' + (Number(r.WagesId) > 0 ? '<a tabindex="0" data-wages="' + Number(r.WagesId) + '">' + escapeHtml(r.WagesNo) + '</a>' : escapeHtml(r.WagesNo ?? '')) + '</td>'
         + num(r.FactoryWeight) + num(r.PartyWeight) + txt(r.Transporter) + num(r.CarriageAmount) + txt(r.RemarksHeader)
         + txt(displayDateTime(r.EntryDate)) + txt(r.EntryUser) + txt(displayDateTime(r.ModifyDate)) + txt(r.ModifyUser) + txt(displayDateTime(r.PostDate)) + txt(r.ApprovedUser)
-        + num(r.NoOfAttachments) + '</tr>').join(''));
+        + '<td class="text-end"><a tabindex="0" data-attach="' + Number(r.Id) + '">' + escapeHtml(r.NoOfAttachments ?? '') + '</a></td></tr>').join(''));
     $('#historyCount').text(historyRows.length);
     $('#grdHistoryDetailBody,#grdHistoryEbBody').empty();
 }
+/* NoOfAttachments link → CommonServices.GetNoofAttachmentsByScreenName (the record's attachment list) */
+$(document).on('click', 'a[data-attach]', function () { if (grnAttachments) grnAttachments.view(Number(this.dataset.attach)); });
 /* WagesNo link → ContractorWagesBill_SlipandRegister_002 */
 $(document).on('click', 'a[data-wages]', function () { openPrint('002-ContractorWagesSlip.rpt', { id: Number(this.dataset.wages) }); });
 function historyDetailTab(tab) {
@@ -1079,6 +1129,7 @@ async function loadRecord(id, propagate = false) {
     try {
         const version = ++lookupVersion; const data = await api('/api/purchase/market-grn/' + Number(id)); if (version !== lookupVersion) return;
         resetGrnState(); cancelEditLine();
+        if (grnAttachments) grnAttachments.reset();
         grn.ref = Number(data.RefDocumentTypeId) || 0; grn.freightId = Number(data.FreightId) || 0; grn.gpId = Number(data.InwardGatePassId) || 0;
         grn.invoiceId = Number(data.InvoiceId) || 0; grn.gpNo = String(data.GpNo ?? '');
         renderSupplements(data); loadedHeader = data; lineItems = (data.details || []).map(normalizeLine); editLine = -1;
@@ -1173,8 +1224,9 @@ function onFormKeyDown(e) {
         else if (k === 'n') btnNewHistory_Click();
         else if (k === 'r') clickIfEnabled('btnHistoryRefresh');
         else if (k === 'p') { const tr = document.querySelector('#grdHistoryBody tr.selected'); if (tr) openPrint('211-InvRptGoodsReceiptsNotesRiceSlip.rpt', { id: Number(tr.dataset.id), documentTypeId: 46 }); }
-        else if (k === 'h') clickIfEnabled('btnGrnHistory');
+        else if (k === 'h') btnGrnFormHistory_Click();
         else if (k === 'arrowup') $('#txtHistoryFrom').trigger('focus');
+        else if (k === 'enter') { const tr = document.querySelector('#grdHistoryBody tr.selected'); if (tr) loadRecord(Number(tr.dataset.id)); else handled = false; }   /* GrdHistory_KeyDown :6688 */
         else handled = false;
     } else {
         if (k === 'n') clickIfEnabled('btnNew');

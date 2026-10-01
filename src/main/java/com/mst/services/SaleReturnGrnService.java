@@ -203,6 +203,7 @@ public class SaleReturnGrnService {
         clean.put("details",details);
         clean.put("emptyBags",bags);
         clean.put("purchaseBreakups",new ArrayList<>()); // GRN.InvGrnPurchaseBreakUplist = new List (:1299)
+        if(in.get("attachments")!=null)clean.put("attachments",in.get("attachments")); // AT changes (:1462), saved with the GRN
         var saved=new LinkedHashMap<String,Object>(persistence.save(clean,TYPE));
         // :1468/:1476 - the desktop shows the number that was in txtdocno, not the one the procedure assigned.
         saved.put("message",(updating?"Record Update Successfully [":"Record Save Successfully [")+num(in.get("DocNo"))+"]");

@@ -19,6 +19,8 @@ public class PurchaseGrnPersistenceService {
     private final JdbcTemplate jdbc;
     private final PurchaseGrnSupplementService supplements;
     private final PurchaseGrnSaveRules saveRules;
+    /* DMS attachments of 46 / 143 (Attachment form), written inside this transaction. */
+    @org.springframework.beans.factory.annotation.Autowired private PurchaseDocAttachmentService attachments;
     public PurchaseGrnPersistenceService(PurchaseGrnRecordRepository records,PurchaseGrnWriteRepository writes,CurrentUserContext context,JdbcTemplate jdbc,PurchaseGrnSupplementService supplements,PurchaseGrnSaveRules saveRules) {
         this.records=records; this.writes=writes; this.context=context; this.jdbc=jdbc; this.supplements=supplements; this.saveRules=saveRules;
     }
@@ -40,6 +42,8 @@ public class PurchaseGrnPersistenceService {
         for(String field:List.of("IsApproved","PostUser","PostDate","AttachmentsValues","CustomAttachmentsValues"))
             header.put(field,updating?existing.get(field):("IsApproved".equals(field)?false:"PostUser".equals(field)?0:null));
         header.put("ScreenName",type==46?"InvFrmGRN":"SaleReturnGrn");
+        // InvGrn.Save (BLL 0576 :66 insert / :74 update) sets ActionId 1 / 2; the stored column must not be carried over.
+        if(type==46)header.put("ActionId",updating?2:1);
         if(!updating && !dto.header.containsKey("DocDate"))header.put("DocDate",java.sql.Date.valueOf(java.time.LocalDate.now()));
         int gp=number(header.get("InwardGatePassId"));
         if(gp>0 && jdbc.queryForObject("SELECT COUNT(*) FROM dbo.GatePassInward WHERE Id=? AND OrganizationId=? AND CompanyId=? AND BranchesId=? AND FinancialYearId=? AND DocumentTypeId=51",Integer.class,gp,org,company,branch,year)!=1)
@@ -50,6 +54,9 @@ public class PurchaseGrnPersistenceService {
         if(details.isEmpty())throw new IllegalArgumentException("Detail list not found");
         var emptyBags=dto.emptyBags!=null?dto.emptyBags:updating?writes.emptyBags(id):List.<Map<String,Object>>of();
         var breakups=dto.purchaseBreakups!=null?dto.purchaseBreakups:updating?writes.breakups(id):List.<Map<String,Object>>of();
+        // BLL 0576 Save :67 - insert refuses detail rows that already carry an Id.
+        if(type==46 && !updating && details.stream().anyMatch(r->number(r.get("Id"))>0))
+            throw new IllegalArgumentException("Record cannot be inserted because detailId greater than zero");
         Map<Integer,Map<String,Object>> originals=new HashMap<>();
         for(var row:storedDetails)originals.put(number(row.get("Id")),row);
         for(var row:details) {
@@ -79,11 +86,19 @@ public class PurchaseGrnPersistenceService {
             supplements.validateEmptyBagLookups(emptyBags);
         }
 
+        // Attachment form changes (46/143): AttachmentsValues = the kept + new file names (DAL 0429 SetData :84-85).
+        PurchaseDocAttachmentService.Prepared attached=null;
+        if((type==46||type==143)&&attachments!=null) {
+            attached=attachments.prepare(id,type,payload.get("attachments"));
+            if(attached!=null&&attached.changed()) { header.put("AttachmentsValues",attached.names()); header.put("CustomAttachmentsValues",attached.storedNames()); }
+        }
+
         // Sp_InvGrn_Update rebuilds children; capture all collections before invoking it.
         id=writes.saveHeader(header,updating); int line=1;
         for(var row:details)writes.saveDetail(row,originals.get(number(row.get("Id"))),id,line++);
         for(var row:emptyBags)writes.saveEmptyBag(row,id);
         for(var row:breakups)writes.saveBreakup(row,id);
+        if(attached!=null)attachments.persist(id,type,number(header.get("SupplierCustomerId")),attached);   // DAL 0429 :143-177
         writes.validateAndPost(org,company,type,id,gp,user);
         return Map.of("success",true,"id",id,"docNo",writes.finalNumber(id),"message",(type==46?"Market GRN":"Sale Return GRN")+" saved successfully");
     }

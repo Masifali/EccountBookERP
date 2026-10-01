@@ -159,10 +159,10 @@ public class InwardGatePassRepository {
                 orgId,compId,branchId,yearId,docTypeId,
                 new org.springframework.jdbc.core.SqlParameterValue(java.sql.Types.DATE,date(fromDate)),
                 new org.springframework.jdbc.core.SqlParameterValue(java.sql.Types.DATE,date(toDate)),
-                positive(fromDocNo),positive(toDocNo),positive(supplierId),canViewAll,canViewAll?null:userId);
+                positive(fromDocNo),positive(toDocNo),positive(supplierId),canViewAll,new org.springframework.jdbc.core.SqlParameterValue(java.sql.Types.INTEGER,canViewAll?null:userId));
     }
     private static Object positive(Number v) { return new org.springframework.jdbc.core.SqlParameterValue(java.sql.Types.INTEGER,v!=null && v.doubleValue()>0?v.intValue():null); }
-    private static java.sql.Date date(String v) { return v==null || v.isBlank()?null:java.sql.Date.valueOf(v); }
+    private static java.sql.Date date(String v) { return v==null || v.isBlank()?null:java.sql.Date.valueOf(v.trim().length()>=10?v.trim().substring(0,10):v.trim()); }
     private static List<Map<String,Object>> options(List<Map<String,Object>> rows,String id,String label) {
         List<Map<String,Object>> result=new ArrayList<>();
         for (var row:rows) { var option=new LinkedHashMap<String,Object>(row); option.put("id",row.get(id)); option.put("name",row.get(label)); result.add(option); }
@@ -371,6 +371,15 @@ public class InwardGatePassRepository {
         if (gatePassId!=0) { sql+=",@GpId=?"; args.add(gatePassId); }
         if (date!=null && !date.isBlank()) { sql+=",@GpDate=?"; args.add(new org.springframework.jdbc.core.SqlParameterValue(java.sql.Types.DATE,date(date))); }
         return jdbcTemplate.queryForList(sql+",@Activity='SupplierByPurchaseOrderNo'",args.toArray());
+    }
+
+    /** CommonServices.GetNoofAttachmentsByRefDocumentTypeID(Id, RefDocumentTypeId). */
+    public List<Map<String,Object>> attachmentsByRefDocumentType(int id,int refDocumentTypeId) {
+        return jdbcTemplate.queryForList("EXEC dbo.Sp_DMSAttachments_GetAllMethod @RefDocumentTypeId=?,@Id=?,@Activity='ReadAttachmentsbyRefDocumentTypeId'",refDocumentTypeId,id);
+    }
+    /** BLL DMSAttachments.GetByID(Id, ScreenName). */
+    public List<Map<String,Object>> attachmentsByScreen(int id,String screenName) {
+        return jdbcTemplate.queryForList("EXEC dbo.Sp_DMSAttachments_GetAllMethod @ScreenName=?,@Id=?,@Activity='ReadById'",screenName,id);
     }
 
     /** clsGlobalVariables.configrationsAllocation lookup by ConfigDescription (ConfigKey, "" when not allocated). */

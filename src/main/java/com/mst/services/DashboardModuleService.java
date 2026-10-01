@@ -160,6 +160,9 @@ public class DashboardModuleService {
         WEB_ROUTES_BY_SCREEN_ID.put(134, "/purchase/inward-gate-pass");                // InwardGatePass (51)
         WEB_ROUTES_BY_SCREEN_ID.put(121, "/purchase/goods-receipt-notes");             // InvFrmGRN (46)
         WEB_ROUTES_BY_SCREEN_ID.put(129, "/purchase/grn-direct");                      // InvFrmGRNDirect (137)
+        WEB_ROUTES_BY_SCREEN_ID.put(133, "/purchase/grn-direct-against-order");        // GRNDirectAgainstOrder (169)
+        WEB_ROUTES_BY_SCREEN_ID.put(132, "/purchase/purchase-invoice-against-grn-order"); // PurchaseInvoiceAgainstGrnOrder (172)
+        WEB_ROUTES_BY_SCREEN_ID.put(910, "/purchase/purchase-invoice-for-upload");     // DataSyncing.frmPendingPurchaseInvoiceForUpload
         WEB_ROUTES_BY_SCREEN_ID.put(866, "/purchase/grn-sale-return");                 // SaleReturnGrn (143)
         WEB_ROUTES_BY_SCREEN_ID.put(122, "/purchase/purchase-invoice");                // InvfrmPurchaseInvoice (56)
         WEB_ROUTES_BY_SCREEN_ID.put(131, "/purchase/purchase-invoice-again-grn-direct"); // frmPurchaseInvoiceAgaintGrnDirect (138)
@@ -206,6 +209,43 @@ public class DashboardModuleService {
            2026-09-29 (ExportModuleController); ids confirmed against the ScreenDefinition dump. */
         WEB_ROUTES_BY_SCREEN_ID.put(881, "/export/gd-break-up-by-invoice");   // frmGdBreakUpByInvoice
         WEB_ROUTES_BY_SCREEN_ID.put(882, "/export/invoice-packing-list");     // frmExportInvoicePackingList
+        /* Export reports / document tracking / bank-GD groups built 2026-09-30 by the Export port agents A-D. */
+        WEB_ROUTES_BY_SCREEN_ID.put(235, "/export/receivable-by-due-date");
+        WEB_ROUTES_BY_SCREEN_ID.put(236, "/export/contract-schedule-periodic");
+        WEB_ROUTES_BY_SCREEN_ID.put(238, "/export/shipment-costing");
+        WEB_ROUTES_BY_SCREEN_ID.put(239, "/export/shipments-document-status");
+        WEB_ROUTES_BY_SCREEN_ID.put(249, "/export/detail-history");
+        WEB_ROUTES_BY_SCREEN_ID.put(250, "/export/delivery-order-report");
+        WEB_ROUTES_BY_SCREEN_ID.put(251, "/export/contract-register");
+        WEB_ROUTES_BY_SCREEN_ID.put(254, "/export/shipment-tracking-follow-up");
+        WEB_ROUTES_BY_SCREEN_ID.put(261, "/export/shipment-weight-audit");
+        WEB_ROUTES_BY_SCREEN_ID.put(262, "/export/loading-sheet");
+        WEB_ROUTES_BY_SCREEN_ID.put(266, "/export/shipment-cro-booking-report");
+        WEB_ROUTES_BY_SCREEN_ID.put(269, "/export/forwarding-report");
+        WEB_ROUTES_BY_SCREEN_ID.put(270, "/export/sale-report");
+        WEB_ROUTES_BY_SCREEN_ID.put(759, "/export/sale-comparisons-report");
+        WEB_ROUTES_BY_SCREEN_ID.put(912, "/export/service-bill-register");
+        WEB_ROUTES_BY_SCREEN_ID.put(913, "/export/forwarding-costing-report");
+        WEB_ROUTES_BY_SCREEN_ID.put(919, "/export/shipment-costing-summary");
+        WEB_ROUTES_BY_SCREEN_ID.put(935, "/export/fi-utilization-report");
+        WEB_ROUTES_BY_SCREEN_ID.put(241, "/export/fcy-receipts-summary-register");
+        WEB_ROUTES_BY_SCREEN_ID.put(242, "/export/shipment-data-for-brokery-tax");
+        WEB_ROUTES_BY_SCREEN_ID.put(243, "/export/packing-list-register");
+        WEB_ROUTES_BY_SCREEN_ID.put(244, "/export/pending-forwarding-for-commercial-invoice");
+        WEB_ROUTES_BY_SCREEN_ID.put(245, "/export/gd-break-up-and-realized-register");
+        WEB_ROUTES_BY_SCREEN_ID.put(246, "/export/fi-balance-summary");
+        WEB_ROUTES_BY_SCREEN_ID.put(256, "/export/commission-agent-fcy-ledger");
+        WEB_ROUTES_BY_SCREEN_ID.put(257, "/export/ee-report-export-gd");
+        WEB_ROUTES_BY_SCREEN_ID.put(258, "/export/commercial-invoice-shipments");
+        WEB_ROUTES_BY_SCREEN_ID.put(203, "/export/consignment-follow-up");
+        WEB_ROUTES_BY_SCREEN_ID.put(859, "/export/third-party-inspection-lot-tracking-report");
+        WEB_ROUTES_BY_SCREEN_ID.put(619, "/export/doc-due-color-schedule");
+        WEB_ROUTES_BY_SCREEN_ID.put(620, "/export/define-chart-of-document");
+        WEB_ROUTES_BY_SCREEN_ID.put(621, "/export/define-custom-group");
+        WEB_ROUTES_BY_SCREEN_ID.put(622, "/export/client-assign-to-group");
+        WEB_ROUTES_BY_SCREEN_ID.put(623, "/export/document-assign-to-group");
+        WEB_ROUTES_BY_SCREEN_ID.put(624, "/export/shipment-doc-schedule");
+        WEB_ROUTES_BY_SCREEN_ID.put(625, "/export/document-tracking-report");
 
         /* Master Data Definition, App 19, ModuleId 2039 "System_Level" - all nine confirmed against the
            ScreenDefinition dump (GoldenAceDb(0509)t.sql) on 2026-09-30. */
@@ -402,10 +442,25 @@ public class DashboardModuleService {
         WEB_ROUTES_BY_SCREEN_ID.put(458, "/store/reports/store-issuance-history"); // StoreIssuenceHistory
         WEB_ROUTES_BY_SCREEN_ID.put(460, "/store/reports/general-gate-pass");      // frmGatePassGeneral
 
-        /* Lab, ModuleId 7. Only 156 is built; the other seven screens of the module (155, 157,
-           158, 159, 160, 162, 163) are intentionally left unmapped so the hub keeps showing them
-           as not built rather than sending them to a page that is not theirs. */
-        WEB_ROUTES_BY_SCREEN_ID.put(156, "/lab/item-analysis-parameter");      // InvLabAnalysisItems
+        /* Quality Control (dbo.App 4): AppModules 7 "Lab" and 1011 "Lab Report". Every ScreenDefinition
+           row of both modules is mapped to its own page (ported from Architecture.WinApp.Lab / QCL /
+           Export / Lookups). These lines were lost once when another change overwrote this file
+           (2026-09-30 17:59) - keep them when merging. */
+        WEB_ROUTES_BY_SCREEN_ID.put(155, "/quality/sample-log-register");        // InvLabSampleLogRegister
+        WEB_ROUTES_BY_SCREEN_ID.put(156, "/lab/item-analysis-parameter");        // InvLabAnalysisItems
+        WEB_ROUTES_BY_SCREEN_ID.put(157, "/quality/analysis-group");             // InvLabAnalysisGroup
+        WEB_ROUTES_BY_SCREEN_ID.put(158, "/quality/group-analysis-standards");   // InvLabGroupAnalysisStandards
+        WEB_ROUTES_BY_SCREEN_ID.put(159, "/quality/sample-analysis");            // InvLabSampleAnalysis (302)
+        WEB_ROUTES_BY_SCREEN_ID.put(160, "/quality/purchase-analysis");          // InvLabPurchaseAnalysis
+        WEB_ROUTES_BY_SCREEN_ID.put(162, "/quality/inprocess-analysis");         // InvLabAnalysisInProcess
+        WEB_ROUTES_BY_SCREEN_ID.put(163, "/quality/inprocess-analysis-steps");   // LabInProcessAnalysisStepAndParameterSchedule
+        WEB_ROUTES_BY_SCREEN_ID.put(626, "/quality/reports/purchase-analysis-by-vehicle");          // LabDataVehicleWiseByParent
+        WEB_ROUTES_BY_SCREEN_ID.put(629, "/quality/reports/lab-sample-analysis-report");            // InvLabSampleRegister
+        WEB_ROUTES_BY_SCREEN_ID.put(630, "/quality/reports/lab-purchase-analysis-periodic-report"); // LabPurchaseAnalyticPeriodic
+        WEB_ROUTES_BY_SCREEN_ID.put(631, "/quality/reports/inprocess-analysis-report");             // InProcessLabAnalysisRegister
+        WEB_ROUTES_BY_SCREEN_ID.put(632, "/quality/reports/sample-analysis-register");              // SampleAnalysisRegister (InvLabSampleRegister)
+        WEB_ROUTES_BY_SCREEN_ID.put(633, "/quality/reports/purchase-analysis-report");              // InvLabPurchaseRegister
+        /*QC-NEW-ROUTES*/
         WEB_ROUTES_BY_SCREEN_ID.put(498, "/packing-material/purchase-order"); // PurchsaeOrderPmNew (Architecture.WinApp.PackingMaterial_Store)
         WEB_ROUTES_BY_SCREEN_ID.put(500, "/packing-material/grn"); // GrnPackingMaterial (Architecture.WinApp.PackingMaterial_Store)
         WEB_ROUTES_BY_SCREEN_ID.put(501, "/packing-material/purchase-invoice"); // PurchaseInvoicePackingMaterial

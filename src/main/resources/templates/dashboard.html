@@ -332,6 +332,32 @@
         .dbs-ttl { font-weight:700; color:#0f5959; font-size:12px; margin:10px 0 2px;
                    padding-bottom:3px; border-bottom:1px solid #b0bec5; }
     </style>
+
+    <style>
+        /* ---- frmMenue colours (desktop): title strip #0B6E6E, card head #008080, form #EEEEEE ---- */
+        body { background-color:#eeeeee; }
+        .win-title-bar { background-color:#0b6e6e; border-bottom:0; padding:10px 18px;
+                         font-family:Cambria, "Times New Roman", serif; font-size:26px; font-weight:700; }
+        .hub-meta { font-size:10px; color:#889; padding:2px 6px; display:flex; justify-content:space-between; }
+        .hub-meta a { color:#0b6e6e; }
+        .dbm-wrap { gap:20px; padding:6px 6px 14px; }
+        .dbm-card { width:188px; border:1px solid #5a5a5a; border-radius:0; box-shadow:none; color:#000; }
+        .dbm-card:hover { color:#000; box-shadow:0 2px 8px rgba(0,0,0,.25); }
+        .dbm-count { background:#008080; font-size:15px; padding:9px 0; letter-spacing:0; }
+        .dbm-body i { color:#1fc59f; font-size:26px; }
+        .dbm-body { min-height:112px; gap:12px; }
+        .dbm-name { font-size:15px; font-weight:700; color:#000; }
+        .dbm-card.dbm-sel { outline:2px solid #008080; }
+        .dbs-ttl { color:#0b6e6e; font-family:Cambria, "Times New Roman", serif; font-size:16px; border-bottom:1px solid #9bb; }
+        .dbs-wrap { gap:16px; }
+        .dbs-card { width:188px; min-height:112px; border:1px solid #5a5a5a; border-radius:0; box-shadow:none; color:#000; }
+        .dbs-card i { font-size:24px; }
+        .dbs-card.ok i { color:#1fc59f; }
+        .dbs-card .n { font-size:13px; font-weight:700; color:#000; }
+        .dbs-card.np { opacity:.75; }
+        .dbs-card.np .f { display:block; }
+        .dbs-card.ok .f { display:none; }
+    </style>
     <link th:if="${appRoute == '/app/packing-material'}" rel="stylesheet" th:href="@{/build/css/packing_material_menu.css?v=20260927-1}">
 </head>
 <body th:classappend="${appRoute == '/app/packing-material'} ? 'packing-material-menu' : ''">
@@ -352,20 +378,14 @@
      The second showed every module the user has across every application, which is frmModules'
      job, not this screen's; that view still exists, at /dashboard/all.
      ========================================================================== -->
-<div class="win-title-bar" th:text="${appRoute == '/app/packing-material' ? appName : moduleTitle}">DashBoard</div>
+<div class="win-title-bar" th:text="${appName != null ? appName : moduleTitle}">DashBoard</div>
 <div class="win-sub-header"><span th:text="${appRoute == '/app/packing-material'} ? 'Screens > Packing Material' : '📁 Screens > DashBoard'">Screens &gt; DashBoard</span></div>
 
 <div class="dashboard-content" style="padding:10px;">
 
-    <div class="totals-bar" style="margin-bottom:4px;">
-        <span>
-            <span th:text="${cardCount}">0</span> modules
-            <span th:if="${screenCount != null}">
-                &nbsp;|&nbsp; <span th:text="${screenCount}">0</span> screens
-                &nbsp;|&nbsp; built on the web: <b th:text="${builtCount}">0</b>
-            </span>
-        </span>
-        <a href="/dashboard/all" style="color:#0f5959; font-size:11px;">All modules &rsaquo;</a>
+    <div class="hub-meta">
+        <span><span th:text="${cardCount}">0</span> modules<span th:if="${screenCount != null}"> &middot; <span th:text="${screenCount}">0</span> screens &middot; <span th:text="${builtCount}">0</span> on the web</span></span>
+        <a href="/dashboard/all">All modules &rsaquo;</a>
     </div>
 
     <div th:if="${loadError != null}" class="db-empty">
@@ -431,7 +451,7 @@
             <span class="dbm-body">
                 <i class="fa fa-university"></i>
                 <span class="dbm-name" th:text="${c['title']}">Module</span>
-                <span class="dbm-built">
+                <span class="dbm-built" th:if="${c['built'] != c['count']}">
                     <b th:text="${c['built']}">0</b> of <span th:text="${c['count']}">0</span> built
                 </span>
             </span>
@@ -446,9 +466,9 @@
             <a class="dbs-card" th:each="sc : ${screens}" th:href="${sc['route']}"
                th:classappend="${sc['built']} ? 'ok' : 'np'"
                th:title="${appRoute == '/app/packing-material' ? sc['title'] : (sc['built'] ? sc['route'] : sc['desktopForm'])}">
-                <i class="fa" th:classappend="${appRoute == '/app/packing-material' or sc['built']} ? 'fa-star-o' : 'fa-wrench'"></i>
+                <i class="fa" th:classappend="${appRoute == '/app/packing-material' or sc['built']} ? 'fa-university' : 'fa-wrench'"></i>
                 <span class="n" th:text="${sc['title']}">Screen</span>
-                <span class="f" th:text="${sc['built']} ? ${sc['route']} : ${sc['desktopForm']}">x</span>
+                <span class="f" th:text="${sc['built']} ? ${sc['route']} : 'not on the web yet'">x</span>
             </a>
         </div>
     </div>

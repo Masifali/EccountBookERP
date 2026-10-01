@@ -2,6 +2,7 @@ package com.mst.services;
 
 import com.mst.repositories.LabAnalysisItemsRepository;
 import com.mst.security.CurrentUserContext;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,91 +12,90 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Screen 156 - Item Analysis Parameter. Desktop: <code>InvLabAnalysisItems.cs</code>.
+ * Screen 156 "Item Analysis Parameter" (Lab, module 7) — desktop InvLabAnalysisItems.cs. Line
+ * references (:n) are Architecture.WinApp.Lab/InvLabAnalysisItems.cs unless a BLL file is named.
  *
- * The form is small enough to port whole: formvalidation(), Insert(), gridfill(),
- * grdfrm_DoubleClick(), MasterParameters(), refresh(), ChkIsSub_CheckedChanged().
+ * WHAT Insert() (:128-182) WRITES — nine assignments, then BLL Save:
+ *     CompanyId / OrganizationId        = UserAccount                       (:151-152)
+ *     AnalysisParameterCode             = txtdescription.Text               (:153)  <- the SAME box
+ *     AnalysisParameterDescription      = txtdescription.Text               (:154)
+ *     IsSub                             = ChkIsSub.Checked                  (:155)
+ *     MasterParId                       = Conversion.ToInt(CmbMasterParameter.Value)   (:156; no selection = 0)
+ *     MinValue / MaxValue               = Conversion.ToDouble(text)         (:157-158; "" = 0)
+ *     ParentParameterId                 = IsSub ? ToInt(CmbParentParameter.Value) : 0  (:159-166)
+ * The description is sent as typed (not trimmed). RecId > 0 routes to Sp_..._Update, else _Insert
+ * (BLL 0402:17-21).
  *
- * ---------------------------------------------------------------------------------------------
- * WHAT THE DESKTOP WRITES, AND WHY EVERY FIELD IS ALWAYS SENT
- * ---------------------------------------------------------------------------------------------
- * Insert() (:128-183) assigns nine properties before calling Save, with no conditionals except
- * one - ParentParameterId, which has an explicit else that sets 0:
+ * RIGHTS. The desktop form never calls CommonServices.SetRightsValueInRightsObject — it has no
+ * in-form Save/Update/Delete/Print check, and no Delete or Print button (toolstrip :876 = New,
+ * Update, Save; the grid is AllowDelete = False, :258). The only gate is the menu. So the server
+ * enforces the View right of ScreenName "InvLabAnalysisItems" (seed_screendef.txt id 156) on every
+ * call and does not invent a Save/Update gate the desktop does not have.
  *
- *     obj.CompanyId                     = UserAccount.CompanyId
- *     obj.OrganizationId                = UserAccount.OrganizationId
- *     obj.AnalysisParameterCode         = txtdescription.Text      <- the SAME box as below
- *     obj.AnalysisParameterDescription  = txtdescription.Text
- *     obj.IsSub                         = ChkIsSub.Checked
- *     obj.MasterParId                   = Conversion.ToInt(CmbMasterParameter.Value)
- *     obj.MinValue                      = Conversion.ToDouble(txtMinValue.Text)
- *     obj.MaxValue                      = Conversion.ToDouble(txtMaxValue.Text)
- *     obj.ParentParameterId             = IsSub ? cmb : 0
- *
- * Code and Description both take txtdescription - there is one textbox on the form and it fills
- * both columns. That is deliberate, not a transcription slip, and it is reproduced: writing a
- * generated code into AnalysisParameterCode would diverge from every row the desktop has written.
- *
- * Conversion.ToInt(null) is 0 and Conversion.ToDouble("") is 0, so an untouched combo or an empty
- * numeric box still sends 0 - never NULL. Each is sent unconditionally here for the same reason.
- *
- * ---------------------------------------------------------------------------------------------
- * SAVE vs UPDATE
- * ---------------------------------------------------------------------------------------------
- * The desktop has one Insert() for both. btnsave_Click sets RecId = 0 first; btnupdate_Click does
- * not. RecId > 0 sets obj.Id and the BLL routes to Sp_..._Update, otherwise Sp_..._Insert. The
- * web keeps that shape: an id of 0 (or absent) inserts, anything else updates.
- *
- * RecId is NOT taken from the client. A posted id decides which row gets overwritten, so it is
- * re-read against this organization and company before any update - otherwise a crafted request
- * could rewrite another tenant's parameter. The desktop cannot do that because RecId can only be
- * set by double-clicking a row in a grid that was already filtered to the user's own company.
+ * TENANCY. Organization and company come from the session only. A posted id is re-read against
+ * them before the update, because Sp_InvLabAnalysisItems_Update filters on Id alone; on the desktop
+ * RecId can only come from a row of the company-filtered grid (:284-285).
  */
 @Service
 public class LabAnalysisItemsService {
 
+    /** seed_screendef.txt: (156, N'InvLabAnalysisItems', N'Item Analysis Parameter', 7, ...) */
+    public static final int SCREEN_ID = 156;
+    public static final String SCREEN_NAME = "InvLabAnalysisItems";
+
     private final LabAnalysisItemsRepository repository;
     private final CurrentUserContext currentUserContext;
+    private final StoreScreenRights rights;
 
     public LabAnalysisItemsService(LabAnalysisItemsRepository repository,
-                                   CurrentUserContext currentUserContext) {
+                                   CurrentUserContext currentUserContext,
+                                   StoreScreenRights rights) {
         this.repository = repository;
         this.currentUserContext = currentUserContext;
+        this.rights = rights;
+    }
+
+    private Map<String, Boolean> requireView() {
+        Map<String, Boolean> r = rights.of(SCREEN_NAME);
+        if (!Boolean.TRUE.equals(r.get("view"))) {
+            throw new AccessDeniedException("You do not have the View right for Item Analysis Parameter.");
+        }
+        return r;
+    }
+
+    /** The rights of this screen (View is required to get an answer at all). */
+    public Map<String, Boolean> rights() {
+        return requireView();
     }
 
     /**
-     * gridfill() (:214-252). The desktop projects the procedure's columns into a seven-column
-     * table and shows five of them - Id and MasterParId are present but hidden (grdfrmSetting,
-     * :253-271), because the double-click needs Id and the combo needs MasterParId. The same
-     * seven are returned here; the page hides the same two.
-     *
-     * ParentParameter and MasterParameterName are resolved by the procedure's own LEFT JOINs, so
-     * a row whose parent or master no longer exists shows blank rather than disappearing.
+     * gridfill() (:214-251). The desktop projects the procedure's rows into a seven-column table
+     * (:228-234, :237): Id, AnalysisParameter, ParentParameter, MasterParId, MasterParameter,
+     * MinValue, MaxValue — Id and MasterParId hidden (:259-260).
      */
     public List<Map<String, Object>> grid() {
+        requireView();
         int org = currentUserContext.currentOrganizationId();
         int company = currentUserContext.currentCompanyId();
         List<Map<String, Object>> out = new ArrayList<>();
         for (Map<String, Object> r : repository.readAll(org, company)) {
             Map<String, Object> m = new LinkedHashMap<>();
-            m.put("id", r.get("Id"));
-            m.put("analysisParameter", r.get("AnalysisParameterDescription"));
-            m.put("parentParameter", r.get("ParentParameter"));
-            m.put("masterParId", r.get("MasterParId"));
-            m.put("masterParameter", r.get("MasterParameterName"));
-            m.put("minValue", r.get("MinValue"));
-            m.put("maxValue", r.get("MaxValue"));
+            m.put("id", ci(r, "Id"));
+            m.put("analysisParameter", ci(r, "AnalysisParameterDescription"));
+            m.put("parentParameter", ci(r, "ParentParameter"));
+            m.put("masterParId", ci(r, "MasterParId"));
+            m.put("masterParameter", ci(r, "MasterParameterName"));
+            m.put("minValue", ci(r, "MinValue"));
+            m.put("maxValue", ci(r, "MaxValue"));
             out.add(m);
         }
         return out;
     }
 
     /**
-     * The Parent Parameter combo. The desktop does NOT query for it - gridfill() binds the combo
-     * from the very table it just built (DDL.BindDDLNew(table, CmbParentParameter, "Id",
-     * "AnalysisParameter", ...), :246-249), and only when that table has rows. So the parent list
-     * is exactly the grid: every existing parameter, itself included. Reproduced by serving the
-     * same rows rather than issuing a second read.
+     * The Parent Parameter combo. The desktop does not query for it: gridfill() binds it from the
+     * grid's own table — DDL.BindDDLNew(table, CmbParentParameter, "Id", "AnalysisParameter",
+     * "Parent Parameter", false) (:241) — so the list is exactly the grid (the row itself included).
      */
     public List<Map<String, Object>> parentParameters() {
         List<Map<String, Object>> out = new ArrayList<>();
@@ -108,24 +108,23 @@ public class LabAnalysisItemsService {
         return out;
     }
 
-    /** MasterParameters() (:305-320) - usp_getLabMasterParms, bound Id / MasterParameterName. */
+    /** MasterParameters() (:305-319) — usp_getLabMasterParms, bound "Id" / "MasterParameterName", caption "Master Parameter". */
     public List<Map<String, Object>> masterParameters() {
+        requireView();
         List<Map<String, Object>> out = new ArrayList<>();
         for (Map<String, Object> r : repository.masterParameters()) {
             Map<String, Object> m = new LinkedHashMap<>();
-            m.put("id", r.get("Id"));
-            m.put("description", r.get("MasterParameterName"));
+            m.put("id", ci(r, "Id"));
+            m.put("description", ci(r, "MasterParameterName"));
             out.add(m);
         }
         return out;
     }
 
-    /**
-     * grdfrm_DoubleClick (:273-304) - loads one row into the entry fields and flips Save to
-     * Update. Tenancy is part of the read, exactly as the desktop's model carries
-     * OrganizationId/CompanyId into GetAllOrById.
-     */
+    /** grdfrm_DoubleClick (:273-303) — GetAllOrById with Id; the six fields the form fills (:290-295). */
     public Map<String, Object> readById(int id) {
+        requireView();
+        if (id <= 0) return null;
         List<Map<String, Object>> rows = repository.readById(
                 currentUserContext.currentOrganizationId(),
                 currentUserContext.currentCompanyId(), id);
@@ -134,78 +133,80 @@ public class LabAnalysisItemsService {
         }
         Map<String, Object> r = rows.get(0);
         Map<String, Object> m = new LinkedHashMap<>();
-        m.put("id", r.get("Id"));
-        m.put("description", r.get("AnalysisParameterDescription"));
-        m.put("parentParameterId", r.get("ParentParameterId"));
-        m.put("masterParId", r.get("MasterParId"));
-        m.put("isSub", r.get("IsSub"));
-        m.put("minValue", r.get("MinValue"));
-        m.put("maxValue", r.get("MaxValue"));
+        m.put("id", ci(r, "Id"));
+        m.put("description", ci(r, "AnalysisParameterDescription"));
+        m.put("parentParameterId", ci(r, "ParentParameterId"));
+        m.put("masterParId", ci(r, "MasterParId"));
+        m.put("isSub", toBool(ci(r, "IsSub")));
+        m.put("minValue", ci(r, "MinValue"));
+        m.put("maxValue", ci(r, "MaxValue"));
         return m;
     }
 
     /**
-     * formvalidation() (:88-103) - both refusals, in the desktop's order and wording.
+     * Insert() (:128-182) — one entry point for Save (RecId = 0, :188) and Update.
      *
-     * The second one is the reason IsSub matters at save time: the desktop only demands a parent
-     * when Is Sub is ticked, and when it is not ticked it stores 0 rather than whatever the combo
-     * happened to hold. Validating on the server as well as in the page is what stops a posted
-     * body from writing a sub-parameter with no parent.
+     * formvalidation (:88-103), in desktop order with the desktop's text:
+     *   1. txtdescription.Text.Trim() == ""                      -> "Please Insert Description"
+     *   2. ChkIsSub.Checked && CmbParentParameter.ActiveRow==null -> "Parent Parameter Field is Required"
+     * The "Are you sure to Save?/Update?" prompt (:141/:147) depends on no server state; the page
+     * asks it before posting. One procedure call in one transaction (DAL SetDate, 0358:14).
      */
-    private String validate(String description, boolean isSub, int parentParameterId) {
-        if (description == null || description.trim().isEmpty()) {
-            return "Please Insert Description";
-        }
-        if (isSub && parentParameterId <= 0) {
-            return "Parent Parameter Field is Required";
-        }
-        return null;
-    }
-
-    /** Insert() (:128-183) - one entry point for both save and update, as the desktop has. */
     @Transactional
     public Map<String, Object> save(Integer id, String description, boolean isSub,
                                     Integer parentParameterId, Integer masterParId,
                                     Double minValue, Double maxValue) {
-        Map<String, Object> response = new LinkedHashMap<>();
+        requireView();
 
-        int parent = isSub ? (parentParameterId == null ? 0 : parentParameterId) : 0;   // :158-165
-        int master = masterParId == null ? 0 : masterParId;                             // ToInt(null) == 0
-        double min = minValue == null ? 0d : minValue;                                  // ToDouble("") == 0
-        double max = maxValue == null ? 0d : maxValue;
+        int posted = parentParameterId == null ? 0 : parentParameterId;
+        int master = masterParId == null ? 0 : masterParId;               // :156 ToInt(null) == 0
+        double min = minValue == null ? 0d : minValue;                    // :157 ToDouble("") == 0
+        double max = maxValue == null ? 0d : maxValue;                    // :158
 
-        String refusal = validate(description, isSub, parent);
-        if (refusal != null) {
-            response.put("success", false);
-            response.put("message", refusal);
-            return response;
+        if (description == null || description.trim().isEmpty()) {
+            throw new IllegalArgumentException("Please Insert Description");
         }
+        if (isSub && posted <= 0) {
+            throw new IllegalArgumentException("Parent Parameter Field is Required");
+        }
+        int parent = isSub ? posted : 0;                                  // :159-166
 
-        String text = description.trim();
         int org = currentUserContext.currentOrganizationId();
         int company = currentUserContext.currentCompanyId();
+        Map<String, Object> response = new LinkedHashMap<>();
 
         if (id != null && id > 0) {
-            /* The posted id is only honoured once it is proven to belong to this tenant. */
             if (repository.readById(org, company, id).isEmpty()) {
-                response.put("success", false);
-                response.put("message", "That analysis parameter does not belong to this company.");
-                return response;
+                throw new AccessDeniedException("This Analysis Parameter does not belong to the current company.");
             }
-            repository.update(id, text, text, company, org, parent, isSub, master, min, max);
+            repository.update(id, description, description, company, org, parent, isSub, master, min, max);
             response.put("success", true);
             response.put("id", id);
-            response.put("message", "Update Successfully");      // :172, desktop wording
+            response.put("message", "Update Successfully");               // :174
             return response;
         }
 
-        Integer newId = repository.insert(text, text, company, org, parent, isSub, master, min, max);
-        if (newId == null || newId <= 0) {
-            throw new IllegalStateException("Analysis parameter save returned no Id.");
-        }
+        Integer newId = repository.insert(description, description, company, org, parent, isSub, master, min, max);
         response.put("success", true);
         response.put("id", newId);
-        response.put("message", "Save Successfully");            // :168, desktop wording
+        response.put("message", "Save Successfully");                     // :170 (shown whatever Save returned)
         return response;
+    }
+
+    private static Object ci(Map<String, Object> row, String name) {
+        if (row.containsKey(name)) return row.get(name);
+        for (Map.Entry<String, Object> e : row.entrySet()) {
+            if (e.getKey() != null && e.getKey().equalsIgnoreCase(name)) return e.getValue();
+        }
+        return null;
+    }
+
+    /** Conversion.ToBool — true / non-zero / "1" / "true". */
+    private static boolean toBool(Object v) {
+        if (v instanceof Boolean) return (Boolean) v;
+        if (v instanceof Number) return ((Number) v).intValue() != 0;
+        if (v == null) return false;
+        String s = String.valueOf(v).trim();
+        return "1".equals(s) || "true".equalsIgnoreCase(s);
     }
 }

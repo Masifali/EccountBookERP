@@ -39,7 +39,7 @@ public class InwardGatePassRestController {
         return service.generateNextNumbers(orgId, compId, branchId, yearId, docTypeId, gatepassType);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:[0-9]+}")
     public Map<String, Object> getById(@PathVariable Integer id) {
         return service.getById(id);
     }
@@ -53,6 +53,21 @@ public class InwardGatePassRestController {
     public Map<String,Object> getLabData(@PathVariable int id) {
         Map<String,Object> row=service.getLabData(id);
         return row==null?Map.of():row;
+    }
+
+    /** NoOfAttachments link: history=false -> grd (by RefDocumentTypeId 51), history=true -> grdhistory (by ScreenName). */
+    @GetMapping("/{id:[0-9]+}/attachments")
+    public List<Map<String,Object>> getAttachments(@PathVariable int id,@RequestParam(defaultValue="false") boolean history) {
+        return service.getAttachments(id,history);
+    }
+
+    @GetMapping("/{id:[0-9]+}/attachments/{attachmentId:[0-9]+}")
+    public org.springframework.http.ResponseEntity<byte[]> getAttachment(@PathVariable int id,@PathVariable int attachmentId,@RequestParam(defaultValue="false") boolean history) {
+        var file=service.getAttachmentFile(id,attachmentId,history);
+        return org.springframework.http.ResponseEntity.ok().contentType(org.springframework.http.MediaType.APPLICATION_OCTET_STREAM)
+                .header("X-Content-Type-Options","nosniff")
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION,org.springframework.http.ContentDisposition.attachment().filename(file.name(),java.nio.charset.StandardCharsets.UTF_8).build().toString())
+                .cacheControl(org.springframework.http.CacheControl.noStore()).body(file.bytes());
     }
 
     @GetMapping("/history-suppliers")

@@ -52,6 +52,8 @@ public class InwardGatePassService {
         map.put("canUpdate", records.hasRight("Update"));
         map.put("canPrint", records.hasRight("Print"));
         map.put("canApprove", records.hasRight("Approve"));
+        // BtnDriverForm_Click :5321 / btnsave_Click :3587: View right of ScreenName "frmDriverBioForInWard".
+        map.put("canDriverBio", records.hasScreenRight("frmDriverBioForInWard","View"));
         // InwardGatePass_Load: cmbcity.Value = ConfigKey of "City Area"; ChkIsApproved.Enabled uses
         // "AcceptAccessWtVehiclesandHoldForSpecialApprovalOn1stWt" (txtAccessWeight_TextChanged).
         String city=repository.config(orgId,compId,"City Area");
@@ -97,6 +99,49 @@ public class InwardGatePassService {
         return repository.getOrderPartyItems(context.currentOrganizationId(),context.currentCompanyId(),context.currentBranchId(),context.currentFinancialYearId(),documentTypeId,number,date,gatePassId);
     }
 
+    @Autowired private DesktopAttachmentStore attachmentStore;
+
+    /**
+     * NoOfAttachments links. grd_LinkClicked :2306 -> CommonServices.GetNoofAttachmentsByRefDocumentTypeID(Id, 51)
+     * (Sp_DMSAttachments_GetAllMethod 'ReadAttachmentsbyRefDocumentTypeId'); grdhistory_LinkClicked :4609 ->
+     * DMSAttachments.GetByID(Id, "InwardGatePass") (Sp_DMSAttachments_GetAllMethod 'ReadById' by ScreenName). Read only:
+     * rows of another organization/company are dropped.
+     */
+    public List<Map<String,Object>> getAttachments(int gatePassId, boolean byScreenName) {
+        records.require(gatePassId);
+        List<Map<String,Object>> rows=byScreenName
+                ?repository.attachmentsByScreen(gatePassId,"InwardGatePass")
+                :repository.attachmentsByRefDocumentType(gatePassId,51);
+        List<Map<String,Object>> out=new ArrayList<>();
+        for (Map<String,Object> row:rows) {
+            if (rowInt(row,"OrganizationId")!=context.currentOrganizationId() || rowInt(row,"CompanyId")!=context.currentCompanyId()) continue;
+            Map<String,Object> item=new LinkedHashMap<>();
+            item.put("Id",rowInt(row,"Id"));
+            item.put("Attachment",Objects.toString(row.get("Attachment"),""));
+            item.put("UploadedFileCustomName",Objects.toString(row.get("UploadedFileCustomName"),""));
+            item.put("EntryDate",row.get("EntryDate"));
+            out.add(item);
+        }
+        return out;
+    }
+
+    public record AttachmentFile(String name, byte[] bytes) {}
+    public AttachmentFile getAttachmentFile(int gatePassId, int attachmentId, boolean byScreenName) {
+        for (Map<String,Object> row:getAttachments(gatePassId,byScreenName)) {
+            if (rowInt(row,"Id")!=attachmentId) continue;
+            String original=baseName(Objects.toString(row.get("Attachment"),""));
+            String custom=Objects.toString(row.get("UploadedFileCustomName"),"");
+            String stored=custom.isBlank()?original:baseName(custom);
+            return new AttachmentFile(original.isBlank()?stored:original, attachmentStore.read(context.requireAccountingUser(),stored));
+        }
+        throw new IllegalArgumentException("Attachment not found");
+    }
+    private static String baseName(String value) {
+        String name=value==null?"":value.replace('\\','/'); name=name.substring(name.lastIndexOf('/')+1);
+        if (!name.isEmpty()) DesktopAttachmentStore.validateName(name);
+        return name;
+    }
+
     /** LabDataGetByGpId(RecId) - called by every Edit path before ReadById. */
     public Map<String,Object> getLabData(int gatePassId) {
         records.require(gatePassId);
@@ -131,6 +176,10 @@ public class InwardGatePassService {
      * USP_GatePassInwardPurchaseBreakUp_Insert per grid row). MessageBox confirmations that depend on server data come
      * back as {confirmKey, message}; the page asks and resends with the key in `confirmed`.
      */
+    public Map<String, Object> saveRecord(InwardGatePass obj) {
+        return saveRecord(obj, Collections.emptySet(), false);
+    }
+
     @Transactional
     public Map<String, Object> saveRecord(InwardGatePass obj, Set<String> confirmed, boolean isApprovedChecked) {
         boolean updating=obj.getId()!=null && obj.getId()>0;

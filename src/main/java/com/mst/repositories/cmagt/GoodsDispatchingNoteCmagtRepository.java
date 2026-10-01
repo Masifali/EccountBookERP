@@ -199,25 +199,43 @@ public class GoodsDispatchingNoteCmagtRepository {
                                                  int entryUserId, String fromDate, String toDate,
                                                  String dateType, int commissionAgentId, int buyerId,
                                                  int deliverToPartyId, String shipToAddress) {
-        /* BLL 0487 FormHistory :127-304 - optional parameters are only added when set. */
-        MapSqlParameterSource p = new MapSqlParameterSource();
-        p.addValue("OrganizationId", organizationId);
-        p.addValue("CompanyId", companyId);
-        p.addValue("BranchesId", branchId);
-        p.addValue("FinancialYearId", financialYearId);
-        p.addValue("CanViewAllRecord", canViewAllRecord ? 1 : 0);
-        if (!canViewAllRecord) p.addValue("EntryUserId", entryUserId);
-        String fromKey = "FromDate", toKey = "ToDate";                       // drdocdate
-        if ("entry".equalsIgnoreCase(dateType)) { fromKey = "EntryFromDate"; toKey = "EntryToDate"; }      // rdentrydate
-        else if ("modify".equalsIgnoreCase(dateType)) { fromKey = "ModifyFromDate"; toKey = "ModifyToDate"; } // rdmodifydate
-        if (notBlank(fromDate)) p.addValue(fromKey, parseDate(fromDate));
-        if (notBlank(toDate))   p.addValue(toKey, parseDate(toDate));
-        if (commissionAgentId != 0) p.addValue("CommissionAgentId", commissionAgentId);
-        if (buyerId != 0) p.addValue("BuyerId", buyerId);
-        if (deliverToPartyId != 0) p.addValue("DeliveryToPartyId", deliverToPartyId);
-        if (notBlank(shipToAddress)) p.addValue("ShipToAddress", shipToAddress);
-        p.addValue("Activity", "FormHistory");
-        return datesToText(firstList(call(PROC_GET_ALL).execute(p)));
+        StringBuilder sql = new StringBuilder("EXEC [cmagt].[usp_gdnBuyerDispatchMaster_GetAllMethod] ");
+        sql.append("@OrganizationId=?, @CompanyId=?, @BranchesId=?, @FinancialYearId=?, @CanViewAllRecord=?, @Activity='FormHistory'");
+        List<Object> args = new ArrayList<>(List.of(organizationId, companyId, branchId, financialYearId, canViewAllRecord ? 1 : 0));
+
+        if (!canViewAllRecord) {
+            sql.append(", @EntryUserId=?");
+            args.add(entryUserId);
+        }
+        String fromKey = "@FromDate", toKey = "@ToDate";
+        if ("entry".equalsIgnoreCase(dateType)) { fromKey = "@EntryFromDate"; toKey = "@EntryToDate"; }
+        else if ("modify".equalsIgnoreCase(dateType)) { fromKey = "@ModifyFromDate"; toKey = "@ModifyToDate"; }
+
+        if (notBlank(fromDate)) {
+            sql.append(", ").append(fromKey).append("=?");
+            args.add(new org.springframework.jdbc.core.SqlParameterValue(java.sql.Types.DATE, parseDate(fromDate)));
+        }
+        if (notBlank(toDate)) {
+            sql.append(", ").append(toKey).append("=?");
+            args.add(new org.springframework.jdbc.core.SqlParameterValue(java.sql.Types.DATE, parseDate(toDate)));
+        }
+        if (commissionAgentId != 0) {
+            sql.append(", @CommissionAgentId=?");
+            args.add(commissionAgentId);
+        }
+        if (buyerId != 0) {
+            sql.append(", @BuyerId=?");
+            args.add(buyerId);
+        }
+        if (deliverToPartyId != 0) {
+            sql.append(", @DeliveryToPartyId=?");
+            args.add(deliverToPartyId);
+        }
+        if (notBlank(shipToAddress)) {
+            sql.append(", @ShipToAddress=?");
+            args.add(shipToAddress);
+        }
+        return datesToText(jdbcTemplate.queryForList(sql.toString(), args.toArray()));
     }
 
     /** DAL 0539 GetData: header by 'ReadById', then the three child reads by header id. */
