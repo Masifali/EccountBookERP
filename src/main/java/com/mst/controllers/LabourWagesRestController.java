@@ -56,20 +56,34 @@ public class LabourWagesRestController {
         return ResponseEntity.ok(labourWagesService.getFormHistory(noOfRecords));
     }
 
-    /** GetHistory(), BLL :618+ - the History tab's own filters. */
+    /** bindHistory() -> FormHistoryNew -> USP_ContractorWagesBillHeader_FormHistory - the History tab. */
     @GetMapping("/history")
     public ResponseEntity<List<Map<String, Object>>> getHistory(
             @RequestParam(required = false) String fromDate,
             @RequestParam(required = false) String toDate,
             @RequestParam(required = false) Integer fromDocNo,
-            @RequestParam(required = false) Integer toDocNo) {
-        return ResponseEntity.ok(labourWagesService.getHistory(fromDate, toDate, fromDocNo, toDocNo));
+            @RequestParam(required = false) Integer toDocNo,
+            @RequestParam(required = false) Integer refDocumentTypeId) {
+        return ResponseEntity.ok(labourWagesService.getHistory(fromDate, toDate, fromDocNo, toDocNo, refDocumentTypeId));
+    }
+
+    /** DocumentTypeFillForCombo() - the History tab's Document Type combo. */
+    @GetMapping("/history-document-types")
+    public ResponseEntity<List<Map<String, Object>>> getHistoryDocumentTypes() {
+        return ResponseEntity.ok(labourWagesService.getHistoryDocumentTypes());
+    }
+
+    /** History "Voucher" - VoucherHeadIdGet(Id, 101). */
+    @GetMapping("/voucher-head/{id}")
+    public ResponseEntity<Map<String, Object>> getVoucherHead(@PathVariable int id) {
+        return ResponseEntity.ok(Map.of("voucherHeadId", labourWagesService.getVoucherHeadId(id)));
     }
 
     /** Grid dropdowns - contractor list and the activities allowed for this reference doc type. */
     @GetMapping("/grid-lookups")
-    public ResponseEntity<Map<String, Object>> getGridLookups(@RequestParam int refDocumentTypeId) {
-        return ResponseEntity.ok(labourWagesService.getGridLookups(refDocumentTypeId));
+    public ResponseEntity<Map<String, Object>> getGridLookups(@RequestParam int refDocumentTypeId,
+                                                              @RequestParam(required = false) String otherIds) {
+        return ResponseEntity.ok(labourWagesService.getGridLookups(refDocumentTypeId, otherIds));
     }
 
     /** CommonServices.GetWagesRate (form :977). */

@@ -63,6 +63,9 @@
     }
     /** Busy panel + button lock (countx_purchase_request.js); a refusal is shown as the desktop's MessageBox. */
     function act(button, work) {
+        /* Rule 5 (countx_lab_page_kit.js): the button is disabled at once, carries a spinner (btn-busy), ignores
+           further clicks while the request is in flight and is re-enabled in finally - success or failure. */
+        if (window.LabKit) return window.LabKit.act(button || null, work);
         var runner = window.PurchaseRequest ? window.PurchaseRequest.run.bind(window.PurchaseRequest) : function (b, w) { return w(); };
         return runner(button || null, async function () {
             try { await work(); } catch (e) { alert(msg(e)); }
@@ -119,7 +122,11 @@
         }).join('') + '</tr>';
         t.tBodies[0].innerHTML = visibleRows().map(function (r) {
             return '<tr data-id="' + esc(r.id) + '"' + (String(r.id) === String(st.sel) ? ' class="is-sel"' : '') + '><td class="ind"></td>'
-                + COLS.map(function (c) { return '<td>' + esc(r[c[2]]) + '</td>'; }).join('') + '</tr>';
+                + COLS.map(function (c) {
+                    /* Rule 4: the parameter (code = description on this form, :153-154) is a link that opens the record. */
+                    if (c[0] === 'AnalysisParameter') return '<td><a class="lab-open" data-open="1" title="Open this record">' + esc(r[c[2]]) + '</a></td>';
+                    return '<td>' + esc(r[c[2]]) + '</td>';
+                }).join('') + '</tr>';
         }).join('');
         /* TotalRow = True (:632) with no aggregate defined on any column: an empty total row. */
         t.tFoot.innerHTML = '<tr><td class="ind"></td>' + COLS.map(function () { return '<td></td>'; }).join('') + '</tr>';
@@ -222,7 +229,7 @@
     }
     function btnsave_Click() { st.recId = 0; return Insert($('btnsave')); }  // :184-195
     function btnupdate_Click() { return Insert($('btnupdate')); }            // :197-207
-    function btnnew_Click() { return refresh(); }                            // :209-212
+    function btnnew_Click() { return act($('btnnew'), refresh); }            // :209-212
 
     /** grdfrm_DoubleClick (:273-303) */
     function grdfrm_DoubleClick(id) {
@@ -307,7 +314,10 @@
                 renderGrid(); return;
             }
             var tr = e.target.closest('tr[data-id]');
-            if (tr) select(tr.getAttribute('data-id'), false);
+            if (tr) {
+                select(tr.getAttribute('data-id'), false);
+                if (e.target.closest('a.lab-open')) grdfrm_DoubleClick(tr.getAttribute('data-id'));
+            }
         });
         t.addEventListener('dblclick', function (e) {
             var tr = e.target.closest('tr[data-id]');

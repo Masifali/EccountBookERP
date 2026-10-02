@@ -1,574 +1,206 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Labour Wages</title>
-
-    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Contractor Labour Wages</title>
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
-    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
-
-<style>
-        body {
-            font-family: "Segoe UI", "Tahoma", "Geneva", "Verdana", sans-serif;
-            background-color: #e4e9ed;
-            font-size: 11px;
-            color: #222;
-            margin: 0;
-            padding: 0;
-        }
-
-        .win-sub-header {
-            font-size: 10px;
-            color: #4f5d65;
-            padding: 2px 10px;
-            background: #d8e0e6;
-            border-bottom: 1px solid #b0bec5;
-        }
-
-        .win-toolbar {
-            background: linear-gradient(to bottom, #ffffff 0%, #e3e8ee 100%);
-            border-bottom: 1px solid #b0bec5;
-            padding: 3px 8px;
-            display: flex;
-            gap: 4px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .win-btn {
-            background: #ffffff;
-            border: 1px solid #90a4ae;
-            border-radius: 2px;
-            padding: 3px 10px;
-            font-size: 11px;
-            font-weight: 600;
-            color: #263238;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            box-shadow: 0 1px 1px rgba(0,0,0,0.05);
-            height: 25px;
-        }
-        .win-btn:hover { background: #e0f2f1; border-color: #0f5959; color: #004d40; }
-        .win-btn-teal { background: #0f5959; color: #ffffff; border-color: #083b3b; }
-        .win-btn-teal:hover { background: #083b3b; color: #ffffff; }
-
-        .win-title-bar {
-            background-color: #0f5959;
-            color: #ffffff;
-            padding: 6px 12px;
-            font-size: 14px;
-            font-weight: bold;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid #083b3b;
-        }
-
-        .win-form-card {
-            background: #ffffff;
-            border: 1px solid #b0bec5;
-            margin: 6px;
-            padding: 8px;
-            border-radius: 2px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-        }
-
-        .win-group-box {
-            border: 1px solid #cbd5e1;
-            border-radius: 3px;
-            padding: 12px 10px 8px 10px;
-            margin-bottom: 8px;
-            background-color: #ffffff;
-            position: relative;
-        }
-
-        .win-group-title {
-            font-weight: bold;
-            font-size: 11px;
-            color: #0f5959;
-            background: #ffffff;
-            padding: 0 6px;
-            position: absolute;
-            top: -9px;
-            left: 10px;
-        }
-
-        .win-label {
-            font-weight: 600;
-            color: #334155;
-            margin-bottom: 2px;
-            font-size: 11px;
-            white-space: nowrap;
-        }
-
-        .win-input {
-            border: 1px solid #94a3b8;
-            border-radius: 2px;
-            padding: 2px 6px;
-            font-size: 11px;
-            height: 24px;
-            width: 100%;
-            background-color: #ffffff;
-            box-sizing: border-box;
-        }
-        .win-input:focus { border-color: #0f5959; outline: none; box-shadow: 0 0 2px rgba(15,89,89,0.4); }
-
-        .win-textarea {
-            border: 1px solid #94a3b8;
-            border-radius: 2px;
-            padding: 4px 6px;
-            font-size: 11px;
-            width: 100%;
-            height: 98px;
-            resize: none;
-            box-sizing: border-box;
-        }
-
-        /* Select2 styling override for WinForms ERP look */
-        .select2-container--default .select2-selection--single {
-            height: 24px !important;
-            line-height: 22px !important;
-            font-size: 11px !important;
-            border: 1px solid #94a3b8 !important;
-            border-radius: 2px !important;
-        }
-        .select2-container--default .select2-selection--single .select2-selection__rendered {
-            line-height: 22px !important;
-            padding-left: 6px !important;
-            color: #222 !important;
-        }
-        .select2-container--default .select2-selection--single .select2-selection__arrow {
-            height: 22px !important;
-        }
-        .select2-dropdown {
-            border: 1px solid #0f5959 !important;
-            font-size: 11px !important;
-        }
-
-        .detail-entry-bar {
-            background-color: #ffffff;
-            border: 1px solid #cbd5e1;
-            padding: 6px 10px;
-            margin-bottom: 6px;
-            border-radius: 2px;
-        }
-
-        .win-grid-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 11px;
-            background: #ffffff;
-        }
-        .win-grid-table th {
-            background-color: #0f5959;
-            color: #ffffff;
-            font-weight: 700;
-            padding: 4px 8px;
-            border: 1px solid #083b3b;
-            text-align: left;
-        }
-        .win-grid-table td {
-            padding: 4px 8px;
-            border: 1px solid #cbd5e1;
-            vertical-align: middle;
-        }
-        .win-grid-table tbody tr:hover { background-color: #e0f2f1; }
-
-        .btn-add-green {
-            background-color: #00796b;
-            color: white;
-            border: 1px solid #004d40;
-            height: 24px;
-            width: 28px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 2px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .btn-add-green:hover { background-color: #004d40; }
-
-        .totals-bar {
-            background: #e0f2f1;
-            font-weight: bold;
-            color: #0f5959;
-            font-size: 12px;
-            padding: 4px 12px;
-            border: 1px solid #0f5959;
-            border-radius: 2px;
-            display: flex;
-            justify-content: space-between;
-            margin-top: 6px;
-        }
-
-        .win-tab-bar {
-            background: #d1d5db;
-            border-bottom: 1px solid #b0bec5;
-            padding: 2px 8px 0 8px;
-            display: flex;
-            gap: 3px;
-        }
-        .win-tab-btn {
-            background: #e5e7eb;
-            border: 1px solid #9ca3af;
-            border-bottom: none;
-            border-radius: 3px 3px 0 0;
-            padding: 4px 14px;
-            font-size: 11px;
-            font-weight: bold;
-            color: #374151;
-            cursor: pointer;
-        }
-        .win-tab-btn.active {
-            background: #ffffff;
-            color: #0f5959;
-            border-color: #b0bec5;
-            border-bottom: 2px solid #ffffff;
-            margin-bottom: -1px;
-        }
-    </style>
-    <style>
-        /* select2 sized to the desktop combo height so the two sit on one line */
-        .select2-container--default .select2-selection--single { height: 24px; border: 1px solid #7f9db9; border-radius: 0; }
-        .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 22px; font-size: 11px; padding-left: 4px; }
-        .select2-container--default .select2-selection--single .select2-selection__arrow { height: 22px; }
-
-        /* Button busy state: disabled + spinner while a request is in flight. */
-        .btn-busy { position: relative; color: transparent !important; pointer-events: none; }
-        .btn-busy::after {
-            content: ""; position: absolute; top: 50%; left: 50%; width: 11px; height: 11px;
-            margin: -6px 0 0 -6px; border: 2px solid rgba(0,0,0,.25); border-top-color: #00564C;
-            border-radius: 50%; animation: btnspin .6s linear infinite;
-        }
-        @keyframes btnspin { to { transform: rotate(360deg); } }
-
-        /* Large table: scrolls inside its own container, never the page. */
-        .cw-grid-scroll { max-height: 420px; overflow: auto; border: 1px solid #b5b5b5; background: #fff; }
-        .cw-grid-scroll thead th { position: sticky; top: 0; z-index: 2; }
-        .cw-grid-scroll table { margin: 0; }
-        #grdWagesAccount tbody tr { cursor: pointer; }
-        #grdWagesAccount tbody tr.selected { background: #cde6f7; }
-        #cwMessage { display: none; margin: 4px 0; padding: 4px 8px; font-size: 11px; font-weight: bold; }
-        #cwMessage.ok  { display: block; background: #e6f4ea; color: #0a6b2e; border: 1px solid #a8d5b5; }
-        #cwMessage.err { display: block; background: #fdecea; color: #a3160b; border: 1px solid #f0b3ad; }
-        .cw-fullscreen { position: fixed; inset: 0; z-index: 3000; background: #fff; padding: 10px; overflow: auto; }
-        .cw-fullscreen .cw-grid-scroll { max-height: calc(100vh - 90px); }
-    </style>
-
-    <style>
-        .lw-tabwrap { padding: 0 8px; }
-        .lw-grid-wide { width: 100%; }
-        .lw-note { font-size: 10px; color: #555; margin: 2px 0 4px 0; font-style: italic; }
-        .win-grid-table td input, .win-grid-table td select { width: 100%; border: 1px solid #b6c3cc; font-size: 11px; height: 20px; box-sizing: border-box; }
-        .win-grid-table td input[readonly] { background: #f2f4f6; color: #555; }
-        .lw-row-btn { border: 1px solid #90a4ae; background: #fff; border-radius: 2px; padding: 0 6px; height: 20px; cursor: pointer; font-size: 11px; }
-        .lw-footer { position: sticky; bottom: 0; background: linear-gradient(to bottom,#ffffff 0%,#e3e8ee 100%); border-top: 1px solid #b0bec5; padding: 5px 8px; display: flex; align-items: center; gap: 6px; }
-        .lw-docno-link { color: #00564C; font-weight: bold; text-decoration: underline; cursor: pointer; }
-        .lw-totals input { text-align: right; }
-    </style>
+    <link rel="stylesheet" th:href="@{/build/css/countx_wages_schedule.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_labour_wages.css?v=20261001a}"/>
 </head>
 <body>
-
 <!-- ==========================================================================
-     Labour Wages  -  ditto Architecture.WinApp.Contractor_Wages\frmwagesBillHeader.cs (5,407 lines)
-     Title bar is label15 "Labour Wages" (:4953). DocumentTypeId 101 (:479); the bill is always
-     raised AGAINST another document, so Ref Doc Type drives the whole screen.
-     Tabs: tabPage1 "Form", tabPage5 "Pending Data For Load", tabPage6 "Wages Detail",
-           tabPage3 "Regular Wages", tabPage4 "Other Wages", tabPage2 "History".
+     frmwagesBillHeader.cs - "Contractor Labour Wages", ClientSize 1137 x 715, DocumentTypeId 101.
+     tabIncomingLabourwages (Fill): tabPage1 "Form" / tabPage2 "History".
+     Form page, top to bottom (all Dock = Top, panel5 Fill):
+       panel2  29  toolStrip1 - New, Refresh, Save, Update, Print-002, Wages Schedule, Wages Exempt Item
+       panel3  31  Teal, label15 "Labour Wages"
+       panel4 138  groupBox1 "Main Information" 940 x 132 at (1,4)
+       panel6 291  tabControl1 - tabPage3 "Regular Wages" / tabPage4 "Other Wages"
+       panel5 fill tabControl2 - tabPage5 "Pending Data For Load" / tabPage6 "Wages Detail"
+     Other Wages and Wages Detail are removed at load (:338-339) and come back only when the
+     loaded document calls for them - the script shows / hides the two tab buttons.
      ========================================================================== -->
-<div class="win-title-bar">Labour Wages</div>
+<div class="ws-form lw" id="frmwagesBillHeader">
+    <div class="tabs">
+        <span class="tabbtn act" id="tabForm" onclick="lwTab('form')">Form</span>
+        <span class="tabbtn" id="tabHistory" onclick="lwTab('history')">History</span>
+    </div>
 
-<!-- btnnew, btnRefresh, btnsave, btnUpdate, btnWagesSchedule, btnWagesExempt (:4973-5010) -->
-<div class="win-toolbar">
-    <button type="button" class="win-btn" id="btnNew"     onclick="lwNewClick()"><i class="fa fa-plus-circle" style="color:#1e88e5;"></i> <u>N</u>ew</button>
-    <button type="button" class="win-btn" id="btnRefresh" onclick="lwRefresh()"><i class="fa fa-refresh"></i> Refresh</button>
-    <button type="button" class="win-btn" id="btnSave"    onclick="lwSave()"><i class="fa fa-floppy-o" style="color:#1565c0;"></i> <u>S</u>ave</button>
-    <button type="button" class="win-btn" id="btnUpdate"  onclick="lwUpdate()" style="display:none;"><i class="fa fa-check-circle" style="color:#2e7d32;"></i> <u>U</u>pdate</button>
-    <button type="button" class="win-btn" id="btnPrint002" onclick="lwPrint002()" data-rpt="002-ContractorWagesSlip.rpt"><i class="fa fa-print" style="color:#1976d2;"></i> <u>P</u>rint-002</button>
-    <button type="button" class="win-btn" id="btnWagesSchedule" onclick="window.open('/accounts/vouchers/wages-rate-schedule','_blank')">Wages Schedule</button>
-    <button type="button" class="win-btn" id="btnWagesExempt" onclick="window.open('/production/wages-exempt-item-schedule','_blank')">Wages Exempt Item</button>
-</div>
+    <!-- ================================================================ tabPage1 "Form" -->
+    <div class="tabpage" id="viewForm">
+        <div class="tool" id="toolStrip1">
+            <button type="button" id="btnNew" onclick="lwNewClick()"><i class="fa fa-plus-circle ic-new"></i><span><u>N</u>ew</span></button>
+            <button type="button" id="btnRefresh" onclick="lwRefresh()"><i class="fa fa-refresh"></i>Refresh</button>
+            <button type="button" id="btnSave" onclick="lwSave()"><i class="fa fa-floppy-o ic-save"></i><span><u>S</u>ave</span></button>
+            <button type="button" id="btnUpdate" class="is-hidden" onclick="lwUpdate()"><i class="fa fa-check-circle ic-upd"></i><span><u>U</u>pdate</span></button>
+            <button type="button" id="btnPrint002" onclick="lwPrint002()" data-rpt="002-ContractorWagesSlip.rpt"><i class="fa fa-print ic-print"></i><span><u>P</u>rint-002</span></button>
+            <button type="button" id="btnWagesSchedule" onclick="window.open('/accounts/vouchers/wages-rate-schedule','_blank')"><i class="fa fa-calendar"></i>Wages Schedule</button>
+            <button type="button" id="btnWagesExempt" onclick="window.open('/production/wages-exempt-item-schedule','_blank')"><i class="fa fa-ban"></i>Wages Exempt Item</button>
+        </div>
+        <div class="teal band31"><span class="ttl" style="left:3px; top:3px;">Labour Wages</span></div>
 
-<div class="win-tab-bar">
-    <div class="win-tab-btn active" id="tabForm"     onclick="lwTab('form')">Form</div>
-    <div class="win-tab-btn"        id="tabPending"  onclick="lwTab('pending')">Pending Data For Load</div>
-    <div class="win-tab-btn"        id="tabDetail"   onclick="lwTab('detail')">Wages Detail</div>
-    <div class="win-tab-btn"        id="tabRegular"  onclick="lwTab('regular')">Regular Wages</div>
-    <div class="win-tab-btn"        id="tabOther"    onclick="lwTab('other')">Other Wages</div>
-    <div class="win-tab-btn"        id="tabHistory"  onclick="lwTab('history')">History</div>
-</div>
+        <!-- panel4 - groupBox1 "Main Information" (940 x 132 at 1,4); controls at the designer's x / y -->
+        <div class="panel4">
+            <div class="gbx" id="groupBox1" style="left:1px; top:4px; width:940px; height:132px;">
+                <div class="gbx-b"></div><span class="gbx-cap">Main Information</span>
 
-<div id="cwMessage"></div>
+                <span class="g lbl" style="left:9px; top:23px;">Doc Date &amp; No</span>
+                <input type="date" id="txtDocDate" class="g dt" style="left:119px; top:19px; width:174px;" disabled>
+                <input type="text" id="txtDocNo" class="g tx" style="left:297px; top:19px; width:101px;" readonly tabindex="-1">
 
-<!-- ============================ FORM TAB ============================ -->
-<div id="viewForm" class="lw-tabwrap" style="padding-top:8px;">
-    <div class="win-form-card">
-        <div class="win-group-box">
-            <!-- groupBox1 "Main Information" (:4731) -->
-            <div class="win-group-title">Main Information</div>
-            <div class="detail-entry-bar">
-                <div class="row g-2">
-                    <!-- label1 "Doc Date && No" - txtdocdate + txtdocno -->
-                    <div class="col-md-3">
-                        <label class="win-label">Doc Date &amp; No</label>
-                        <div style="display:flex; gap:4px;">
-                            <input type="date" id="txtDocDate" class="win-input"/>
-                            <input type="number" id="txtDocNo" class="win-input win-textbox-readonly" style="width:90px;" readonly/>
-                        </div>
-                    </div>
-                    <!-- label11 "Ref Doc Type && No" - cmbRefDocType + txtRefDocNo -->
-                    <div class="col-md-4">
-                        <label class="win-label">Ref Doc Type &amp; No</label>
-                        <div style="display:flex; gap:4px;">
-                            <select id="cmbRefDocType" class="win-input lw-select2" style="flex:1;" onchange="lwRefDocTypeChanged()">
-                                <option value="">...Select Any Value...</option>
-                            </select>
-                            <input type="number" id="txtRefDocNo" class="win-input" style="width:100px;" onchange="lwLoadRefDoc()"/>
-                        </div>
-                    </div>
-                    <!-- label27 "Gp No" -->
-                    <div class="col-md-1">
-                        <label class="win-label">Gp No</label>
-                        <input type="number" id="txtGpNo" class="win-input"/>
-                    </div>
-                    <!-- label4 "EntryType" -->
-                    <div class="col-md-2">
-                        <label class="win-label">EntryType</label>
-                        <input type="text" id="txtEntryType" class="win-input win-textbox-readonly" readonly/>
-                    </div>
-                    <!-- label3 "GRN Id" -->
-                    <div class="col-md-2">
-                        <label class="win-label">GRN Id</label>
-                        <input type="number" id="txtGrnId" class="win-input win-textbox-readonly" readonly/>
-                    </div>
+                <span class="g lbl" style="left:9px; top:50px;">Ref Doc Type &amp; No</span>
+                <select id="cmbRefDocType" class="g win-combo" style="left:119px; top:44px; width:174px;" tabindex="1"></select>
+                <input type="text" id="txtRefDocNo" class="g tx" style="left:297px; top:46px; width:101px;" disabled>
+
+                <span class="g lbl" style="left:9px; top:77px;">Total Qty</span>
+                <input type="text" id="txtTotalQty" class="g tx" style="left:119px; top:73px; width:98px;" disabled>
+                <span class="g lbl" style="left:219px; top:77px;">Gross Weight</span>
+                <input type="text" id="txtGrossWeight" class="g tx" style="left:297px; top:73px; width:101px;" disabled>
+
+                <span class="g lbl" style="left:9px; top:103px;">Gp No</span>
+                <input type="text" id="txtGpNo" class="g tx" style="left:119px; top:99px; width:98px;" disabled>
+
+                <span class="g capbar" style="left:404px; top:19px; width:530px; height:23px;">Other Remarks</span>
+                <textarea id="txtOtherRemarks" class="g rt" style="left:404px; top:46px; width:530px; height:76px;" tabindex="2"></textarea>
+            </div>
+            <!-- txtEntryType / txtGRNId / chkisapprove are Visible = false on the desktop; they only carry values -->
+            <input type="hidden" id="txtEntryType">
+            <input type="hidden" id="txtGrnId">
+        </div>
+
+        <!-- panel6 - tabControl1 -->
+        <div class="itab t1" id="tabControl1">
+            <div class="tabs">
+                <span class="tabbtn act" id="tabRegular" onclick="lwTab('regular')">Regular Wages</span>
+                <span class="tabbtn is-hidden" id="tabOther" onclick="lwTab('other')">Other Wages</span>
+            </div>
+            <div class="ipage" id="viewRegular">
+                <div class="teal band27">
+                    <span class="band-l" style="left:3px; top:6px;">In this Grid User Will add Regular Wages</span>
+                    <button type="button" class="btn-apply" style="left:359px; top:0; width:84px; height:26px;" onclick="lwApplyAll('regular')">Apply All</button>
+                    <span class="band-s" style="left:449px; top:6px;">Click this button To Apply First Row Values for All other Rows</span>
+                    <span class="gear"><i class="fa fa-cog"></i> <i class="fa fa-caret-down"></i></span>
                 </div>
-
-                <div class="row g-2 lw-totals" style="margin-top:6px;">
-                    <!-- label29 "Gross Weight" / label9 "Total Qty" - the two the save validates against -->
-                    <div class="col-md-2">
-                        <label class="win-label">Gross Weight</label>
-                        <input type="number" step="0.001" id="txtGrossWeight" class="win-input win-textbox-readonly" value="0" readonly/>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="win-label">Total Qty</label>
-                        <input type="number" step="0.001" id="txtTotalQty" class="win-input win-textbox-readonly" value="0" readonly/>
-                    </div>
-                    <div class="col-md-2" style="display:flex; align-items:flex-end;">
-                        <!-- chkisapprove "Is Approved" (:4758) - read-only here; approval is its own action -->
-                        <label class="win-radio-inline m-0"><input type="checkbox" id="chkIsApproved" disabled> Is Approved</label>
-                    </div>
-                    <!-- label6 "Other Remarks" -->
-                    <div class="col-md-6">
-                        <label class="win-label">Other Remarks</label>
-                        <input type="text" id="txtOtherRemarks" class="win-input"/>
-                    </div>
+                <div class="grid-wrap" id="wrapRegular" data-grid="regular" tabindex="3">
+                    <table class="grid" id="grdRegular">
+                        <thead><tr id="grdRegularHead"></tr></thead>
+                        <tbody id="grdRegularBody"></tbody>
+                        <tfoot><tr id="grdRegularFoot"></tr></tfoot>
+                    </table>
                 </div>
-                <div class="row g-2" style="margin-top:4px;">
-                    <div class="col-md-12">
-                        <span id="lblEditing" style="font-size:10px; color:#0f5959; font-weight:bold;"></span>
-                    </div>
+            </div>
+            <div class="ipage is-hidden" id="viewOther">
+                <div class="teal band25">
+                    <span class="band-l" style="left:3px; top:3px;">In this Grid User Will add Other Wages (Stiching &amp; OutPut etc)</span>
+                    <button type="button" class="btn-apply" style="left:402px; top:-1px; width:84px; height:27px;" onclick="lwApplyAll('other')">Apply All</button>
+                    <span class="band-s" style="left:491px; top:3px;">Click this button To Apply First Row Values for All other Rows</span>
+                    <span class="gear"><i class="fa fa-cog"></i> <i class="fa fa-caret-down"></i></span>
+                </div>
+                <div class="grid-wrap" id="wrapOther" data-grid="other" tabindex="4">
+                    <table class="grid" id="grdOther">
+                        <thead><tr id="grdOtherHead"></tr></thead>
+                        <tbody id="grdOtherBody"></tbody>
+                        <tfoot><tr id="grdOtherFoot"></tr></tfoot>
+                    </table>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="totals-bar">
-        <span>Regular Wages rows: <b id="lblRegularCount">0</b> &nbsp;|&nbsp; Other Wages rows: <b id="lblOtherCount">0</b></span>
-        <span>Wages Amount: <b id="lblGrandAmount">0.00</b></span>
-    </div>
-</div>
-
-<!-- ============================ PENDING TAB ============================ -->
-<div id="viewPending" class="lw-tabwrap" style="display:none; padding-top:8px;">
-    <div class="win-form-card">
-        <div class="win-group-box">
-            <div class="win-group-title">Pending Data For Load</div>
-            <!-- label7 (:4462) -->
-            <div class="lw-note">This grid shows the pending data to load for wages entries.</div>
-            <div style="display:flex; gap:6px; margin-bottom:6px;">
-                <button type="button" class="win-btn" id="btnLoadAll" onclick="lwLoadAllPending()" style="display:none;">Load All</button>
-                <button type="button" class="win-btn" id="btnCancelPending" onclick="lwCancelPending()" style="display:none;">Cancel Records</button>
+        <!-- panel5 - tabControl2 -->
+        <div class="itab t2" id="tabControl2">
+            <div class="tabs">
+                <span class="tabbtn act" id="tabPending" onclick="lwTab('pending')">Pending Data For Load</span>
+                <span class="tabbtn is-hidden" id="tabDetail" onclick="lwTab('detail')">Wages Detail</span>
             </div>
-            <div class="cw-grid-scroll">
-                <table class="win-grid-table lw-grid-wide" id="grdPending">
-                    <thead>
-                        <tr>
-                            <th style="width:34px; text-align:center;"><input type="checkbox" id="chkPendingAll" onclick="lwTogglePendingAll(this)"></th>
-                            <th style="width:150px;">Document Type Description</th>
-                            <th style="width:95px;">Doc Date</th>
-                            <th style="width:80px;">Doc No</th>
-                            <th style="width:200px;">Supplier Customer</th>
-                            <th style="width:70px;">Gp No</th>
-                            <th style="width:100px;">Vehicle No</th>
-                            <th style="width:100px;">Bilty No</th>
-                            <th style="width:100px; text-align:right;">Gross Weight</th>
-                            <th style="width:90px; text-align:right;">Total Qty</th>
-                            <th style="width:70px;">Load</th>
-                        </tr>
-                    </thead>
-                    <tbody id="grdPendingBody">
-                        <tr><td colspan="11" style="text-align:center; padding:14px; color:#777;">Choose a Ref Doc Type to list pending documents.</td></tr>
-                    </tbody>
-                </table>
+            <div class="ipage" id="viewPending">
+                <div class="teal band25">
+                    <span class="band-l" style="left:3px; top:3px;">This grid shows the pending data to load for wages entries.</span>
+                    <button type="button" class="btn-cancel is-hidden" id="btnCancelPending" onclick="lwCancelPending()">Cancel Records</button>
+                    <span class="gear"><i class="fa fa-cog"></i> <i class="fa fa-caret-down"></i></span>
+                </div>
+                <div class="grid-wrap" id="wrapPending" tabindex="5">
+                    <table class="grid" id="grdPending">
+                        <thead><tr id="grdPendingHead"></tr></thead>
+                        <tbody id="grdPendingBody"></tbody>
+                    </table>
+                </div>
             </div>
-        </div>
-    </div>
-</div>
-
-<!-- ============================ REGULAR WAGES TAB ============================ -->
-<div id="viewRegular" class="lw-tabwrap" style="display:none; padding-top:8px;">
-    <div class="win-form-card" id="lwRegularCard">
-        <div class="win-group-box">
-            <div class="win-group-title">Regular Wages</div>
-            <!-- label2 (:4616) / label12 + btnAddContractorValuesForAllDetailWages (:4587-4596) -->
-            <div class="lw-note">In this Grid User Will add Regular Wages</div>
-            <div style="display:flex; gap:6px; margin-bottom:6px; align-items:center;">
-                <button type="button" class="win-btn win-btn-teal" onclick="lwApplyAll('regular')">Apply All</button>
-                <span class="lw-note" style="margin:0;">Click this button To Apply First Row Values for All other Rows</span>
-            </div>
-            <div class="cw-grid-scroll">
-                <table class="win-grid-table lw-grid-wide" id="grdRegular" data-grid="regular" tabindex="0">
-                    <thead><tr id="grdRegularHead"></tr></thead>
-                    <tbody id="grdRegularBody"></tbody>
-                    <tfoot><tr id="grdRegularFoot"></tr></tfoot>
-                </table>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- ============================ OTHER WAGES TAB ============================ -->
-<div id="viewOther" class="lw-tabwrap" style="display:none; padding-top:8px;">
-    <div class="win-form-card" id="lwOtherCard">
-        <div class="win-group-box">
-            <div class="win-group-title">Other Wages</div>
-            <!-- label5 (:4697) / label13 + btnAddContractorValuesForAllSticingWages (:4668-4677) -->
-            <div class="lw-note">In this Grid User Will add Other Wages (Stiching &amp; OutPut etc)</div>
-            <div style="display:flex; gap:6px; margin-bottom:6px; align-items:center;">
-                <button type="button" class="win-btn win-btn-teal" onclick="lwApplyAll('other')">Apply All</button>
-                <span class="lw-note" style="margin:0;">Click this button To Apply First Row Values for All other Rows</span>
-            </div>
-            <div class="cw-grid-scroll">
-                <table class="win-grid-table lw-grid-wide" id="grdOther" data-grid="other" tabindex="0">
-                    <thead><tr id="grdOtherHead"></tr></thead>
-                    <tbody id="grdOtherBody"></tbody>
-                    <tfoot><tr id="grdOtherFoot"></tr></tfoot>
-                </table>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- ============================ WAGES DETAIL TAB ============================ -->
-<div id="viewDetail" class="lw-tabwrap" style="display:none; padding-top:8px;">
-    <div class="win-form-card">
-        <div class="win-group-box">
-            <div class="win-group-title">Wages Detail</div>
-            <!-- label8 (:4520) -->
-            <div class="lw-note">This grid shows the previous entry details against this document</div>
-            <div class="cw-grid-scroll">
-                <table class="win-grid-table lw-grid-wide" id="grdPrevDetail">
-                    <thead><tr id="grdPrevDetailHead"></tr></thead>
-                    <tbody id="grdPrevDetailBody">
-                        <tr><td style="text-align:center; padding:14px; color:#777;">Load a document to see its previous wages entries.</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- ============================ HISTORY TAB ============================ -->
-<div id="viewHistory" class="lw-tabwrap" style="display:none; padding-top:8px;">
-    <div class="win-form-card">
-        <div class="win-group-box">
-            <!-- groupBox2 "Filters" (:5119) -->
-            <div class="win-group-title">Filters</div>
-            <div class="detail-entry-bar">
-                <div class="row g-2">
-                    <!-- label54/53 Date, label52/51 Doc No, label50 Document Type -->
-                    <div class="col-md-2">
-                        <label class="win-label">From Date</label>
-                        <input type="date" id="histFromDate" class="win-input"/>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="win-label">To Date</label>
-                        <input type="date" id="histToDate" class="win-input"/>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="win-label">From Doc No</label>
-                        <input type="number" id="histFromDocNo" class="win-input"/>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="win-label">To Doc No</label>
-                        <input type="number" id="histToDocNo" class="win-input"/>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="win-label">Document Type</label>
-                        <select id="cmbHistDocType" class="win-input lw-select2">
-                            <option value="">...Select Any Value...</option>
-                        </select>
-                    </div>
-                    <div class="col-md-2" style="display:flex; align-items:flex-end; gap:4px;">
-                        <button type="button" class="win-btn win-btn-teal" id="btnShowHistory" onclick="lwShowHistory()">Show</button>
-                        <button type="button" class="win-btn" id="btnResetHistory" onclick="lwResetHistory()">Reset</button>
-                    </div>
+            <div class="ipage is-hidden" id="viewDetail">
+                <div class="teal band27">
+                    <span class="band-l" style="left:3px; top:3px;">This grid shows the previous entry details against this document</span>
+                    <span class="gear"><i class="fa fa-cog"></i> <i class="fa fa-caret-down"></i></span>
+                </div>
+                <div class="grid-wrap" id="wrapDetail">
+                    <table class="grid" id="grdPrevDetail">
+                        <thead><tr id="grdPrevDetailHead"></tr></thead>
+                        <tbody id="grdPrevDetailBody"></tbody>
+                    </table>
                 </div>
             </div>
         </div>
+
+        <div class="lw-foot">
+            <button type="button" id="btnFormHistory" onclick="lwFormHistory()"><i class="fa fa-history"></i> History</button>
+        </div>
     </div>
 
-    <div class="win-form-card" id="lwHistoryCard">
-        <div class="win-group-box">
-            <!-- label26 "Labour Wages History" (:5288) -->
-            <div class="win-group-title">Labour Wages History</div>
-            <div class="totals-bar"><span>Filtered Records</span><span id="histCount">0</span></div>
-            <div class="cw-grid-scroll" style="margin-top:6px;">
-                <table class="win-grid-table lw-grid-wide" id="grdHistory">
-                    <thead><tr id="grdHistoryHead"><th>Press Show to load.</th></tr></thead>
-                    <tbody id="grdHistoryBody">
-                        <tr><td style="text-align:center; padding:14px; color:#777;">No records.</td></tr>
-                    </tbody>
-                </table>
+    <!-- ================================================================ tabPage2 "History" -->
+    <div class="tabpage is-hidden" id="viewHistory">
+        <!-- panel9 - toolStrip2: Reset, Refresh (Load All is Visible = false) -->
+        <div class="tool" id="toolStrip2">
+            <span class="sep"></span>
+            <button type="button" id="btnResetHistory" onclick="lwResetHistory()"><i class="fa fa-plus-circle ic-new"></i>Reset</button>
+            <button type="button" id="btnRefreshHistory" onclick="lwRefreshHistory()"><i class="fa fa-refresh"></i>Refresh</button>
+        </div>
+        <!-- panel10 -->
+        <div class="teal band27"><span class="ttl" style="left:6px; top:3px;">Labour Wages History</span><span class="gear"><i class="fa fa-cog"></i> <i class="fa fa-caret-down"></i></span></div>
+        <!-- panel11 - groupBox2 "Filters" (762 x 68 at 5,3) -->
+        <div class="panel11">
+            <div class="gbx" id="groupBox2" style="left:5px; top:3px; width:762px; height:68px;">
+                <div class="gbx-b"></div><span class="gbx-cap">Filters</span>
+                <span class="g lbl" style="left:5px; top:19px;">From Date</span>
+                <input type="date" id="histFromDate" class="g dt" style="left:5px; top:40px; width:143px;" tabindex="20">
+                <span class="g lbl" style="left:149px; top:19px;">To Date</span>
+                <input type="date" id="histToDate" class="g dt" style="left:149px; top:40px; width:138px;" tabindex="21">
+                <span class="g lbl" style="left:289px; top:19px;">From Doc No</span>
+                <input type="text" id="histFromDocNo" class="g tx" style="left:289px; top:40px; width:81px;" inputmode="numeric" tabindex="22">
+                <span class="g lbl" style="left:372px; top:19px;">To Doc No</span>
+                <input type="text" id="histToDocNo" class="g tx" style="left:372px; top:40px; width:85px;" inputmode="numeric" tabindex="23">
+                <span class="g lbl" style="left:459px; top:19px;">Document Type</span>
+                <select id="cmbHistDocType" class="g win-combo" style="left:459px; top:38px; width:236px;" tabindex="24"></select>
+                <button type="button" id="btnShowHistory" class="g show" style="left:698px; top:38px; width:58px; height:26px;" onclick="lwShowHistory()" tabindex="25">Show</button>
             </div>
-            <!-- label10 (:5069) -->
-            <div class="lw-note" style="margin-top:6px;">This grid shows the Detail of above Selected row</div>
-            <div class="cw-grid-scroll">
-                <table class="win-grid-table lw-grid-wide" id="grdHistoryDetail">
-                    <thead><tr id="grdHistoryDetailHead"><th>Select a history row.</th></tr></thead>
-                    <tbody id="grdHistoryDetailBody">
-                        <tr><td style="text-align:center; padding:12px; color:#777;">&nbsp;</td></tr>
-                    </tbody>
-                </table>
-            </div>
+        </div>
+        <!-- panel14 - DataGridHistory -->
+        <div class="grid-wrap hist-top" id="wrapHistory" tabindex="26">
+            <table class="grid" id="grdHistory">
+                <thead><tr id="grdHistoryHead"></tr></thead>
+                <tbody id="grdHistoryBody"></tbody>
+                <tfoot><tr id="grdHistoryFoot"></tr></tfoot>
+            </table>
+        </div>
+        <!-- panel12 -->
+        <div class="teal band25"><span class="band-l" style="left:3px; top:4px;">This grid shows the Detail of above Selected row</span></div>
+        <!-- panel21 - GrdHistoryDetail -->
+        <div class="grid-wrap hist-bot" id="wrapHistoryDetail">
+            <table class="grid" id="grdHistoryDetail">
+                <thead><tr id="grdHistoryDetailHead"></tr></thead>
+                <tbody id="grdHistoryDetailBody"></tbody>
+                <tfoot><tr id="grdHistoryDetailFoot"></tr></tfoot>
+            </table>
         </div>
     </div>
 </div>
 
-<!-- Footer - History on the RIGHT, per the brief -->
-<div class="lw-footer">
-    <span style="font-size:10px; color:#666;">Ctrl+S save &nbsp; Ctrl+U update &nbsp; Ctrl+N new</span>
-    <span style="flex:1;"></span>
-    <button type="button" class="win-btn win-btn-teal" id="btnFormHistory" onclick="lwFormHistory()">
-        <i class="fa fa-history"></i> History
-    </button>
-</div>
-
-<!-- Form History modal (the footer button) -->
-<div id="lwFormHistoryModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:3200;">
-    <div style="background:#fff; margin:30px auto; max-width:96%; padding:10px; border:1px solid #7a9a9e;">
-        <div style="display:flex; align-items:center; margin-bottom:6px;">
-            <b style="color:#0f5959;">Labour Wages &mdash; Form History</b>
-            <span style="flex:1;"></span>
-            <button type="button" class="win-btn" onclick="lwCloseFormHistory()">Close</button>
-        </div>
-        <div class="cw-grid-scroll" style="max-height:70vh;">
-            <table class="win-grid-table lw-grid-wide" id="grdFormHistory">
+<!-- Form History window (the footer button) -->
+<div id="lwFormHistoryModal" class="lw-modal lw is-hidden">
+    <div class="dlg">
+        <div class="cap"><span>Labour Wages - Form History</span><button type="button" onclick="lwCloseFormHistory()">Close</button></div>
+        <div class="grid-wrap">
+            <table class="grid" id="grdFormHistory" style="table-layout:auto;">
                 <thead><tr id="grdFormHistoryHead"></tr></thead>
                 <tbody id="grdFormHistoryBody"></tbody>
             </table>
@@ -576,10 +208,8 @@
     </div>
 </div>
 
-<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
-<script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
 <script th:src="@{/build/js/countx_crystal_print.js?v=20260924a}"></script>
-<script th:src="@{/build/js/countx_labour_wages.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_labour_wages.js?v=20261001a}"></script>
 <script src="/js/print-rpt.js?v=20261001a"></script>
 </body>
 </html>

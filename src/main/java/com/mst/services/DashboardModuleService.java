@@ -246,6 +246,40 @@ public class DashboardModuleService {
         WEB_ROUTES_BY_SCREEN_ID.put(623, "/export/document-assign-to-group");
         WEB_ROUTES_BY_SCREEN_ID.put(624, "/export/shipment-doc-schedule");
         WEB_ROUTES_BY_SCREEN_ID.put(625, "/export/document-tracking-report");
+        WEB_ROUTES_BY_SCREEN_ID.put(951, "/export/custom-invoice");
+        WEB_ROUTES_BY_SCREEN_ID.put(952, "/export/gd-bank-invoice-mapping");
+        WEB_ROUTES_BY_SCREEN_ID.put(953, "/export/fcy-receipt-gd-utilization");
+        WEB_ROUTES_BY_SCREEN_ID.put(197, "/export/gd-bank-request");
+        WEB_ROUTES_BY_SCREEN_ID.put(198, "/export/gd-break-up-manual");
+        WEB_ROUTES_BY_SCREEN_ID.put(206, "/export/parties-define");
+        WEB_ROUTES_BY_SCREEN_ID.put(213, "/export/bill-of-lading");
+        WEB_ROUTES_BY_SCREEN_ID.put(214, "/export/shipping-booking-info");
+        WEB_ROUTES_BY_SCREEN_ID.put(205, "/export/container-inspection");
+        WEB_ROUTES_BY_SCREEN_ID.put(188, "/export/pre-shipment-inspection");
+        WEB_ROUTES_BY_SCREEN_ID.put(907, "/export/multi-invoices-allocate-to-gdn");
+        WEB_ROUTES_BY_SCREEN_ID.put(915, "/export/advance-utilize-against-invoice");
+        WEB_ROUTES_BY_SCREEN_ID.put(209, "/export/sales-contract");
+        WEB_ROUTES_BY_SCREEN_ID.put(879, "/export/contract-iii");
+        WEB_ROUTES_BY_SCREEN_ID.put(216, "/export/contract-schedule");
+        WEB_ROUTES_BY_SCREEN_ID.put(240, "/export/packing-detail-by-contract");
+        WEB_ROUTES_BY_SCREEN_ID.put(211, "/export/commercial-invoice");
+        WEB_ROUTES_BY_SCREEN_ID.put(880, "/export/commercial-invoice-iii");
+        WEB_ROUTES_BY_SCREEN_ID.put(192, "/export/pre-invoice");
+        WEB_ROUTES_BY_SCREEN_ID.put(193, "/export/packing-detail");
+        WEB_ROUTES_BY_SCREEN_ID.put(194, "/export/opening-balance");
+        WEB_ROUTES_BY_SCREEN_ID.put(215, "/export/proforma-invoice");
+        WEB_ROUTES_BY_SCREEN_ID.put(212, "/export/forwarding");
+        WEB_ROUTES_BY_SCREEN_ID.put(793, "/export/forwarding-new");
+        WEB_ROUTES_BY_SCREEN_ID.put(208, "/export/delivery-order");
+        WEB_ROUTES_BY_SCREEN_ID.put(195, "/export/forwarding-direct");
+        WEB_ROUTES_BY_SCREEN_ID.put(196, "/export/forwarding-without-weighbridge");
+        WEB_ROUTES_BY_SCREEN_ID.put(210, "/export/lc-order");
+        WEB_ROUTES_BY_SCREEN_ID.put(217, "/export/eform-registration");
+        WEB_ROUTES_BY_SCREEN_ID.put(218, "/export/financial-instrument");
+        WEB_ROUTES_BY_SCREEN_ID.put(219, "/export/packing-material-requirement");
+        WEB_ROUTES_BY_SCREEN_ID.put(857, "/export/third-party-inspection");
+        WEB_ROUTES_BY_SCREEN_ID.put(858, "/export/lab-against-third-party-inspection");
+        WEB_ROUTES_BY_SCREEN_ID.put(794, "/export/fcy-receipts");
 
         /* Master Data Definition, App 19, ModuleId 2039 "System_Level" - all nine confirmed against the
            ScreenDefinition dump (GoldenAceDb(0509)t.sql) on 2026-09-30. */
@@ -460,6 +494,13 @@ public class DashboardModuleService {
         WEB_ROUTES_BY_SCREEN_ID.put(631, "/quality/reports/inprocess-analysis-report");             // InProcessLabAnalysisRegister
         WEB_ROUTES_BY_SCREEN_ID.put(632, "/quality/reports/sample-analysis-register");              // SampleAnalysisRegister (InvLabSampleRegister)
         WEB_ROUTES_BY_SCREEN_ID.put(633, "/quality/reports/purchase-analysis-report");              // InvLabPurchaseRegister
+        WEB_ROUTES_BY_SCREEN_ID.put(161, "/quality/sale-analysis"); // InvLabSaleAnalysis (304)
+        WEB_ROUTES_BY_SCREEN_ID.put(164, "/quality/lab-deduction-policy-for-purchase"); // QCL.frmQcDeductionPolicy
+        WEB_ROUTES_BY_SCREEN_ID.put(166, "/quality/lab-standard-policy-for-deduction"); // InvLabStandardPolicyForDeduction
+        WEB_ROUTES_BY_SCREEN_ID.put(168, "/quality/export-pre-shipment-analysis"); // Export.EximPreProductionLab
+        WEB_ROUTES_BY_SCREEN_ID.put(809, "/quality/vci-parameter"); // Lookups.ExImVCIParameter
+        WEB_ROUTES_BY_SCREEN_ID.put(627, "/quality/reports/lab-purchase-analysis-report-old"); // InvLabPurchaseReport
+        WEB_ROUTES_BY_SCREEN_ID.put(628, "/quality/reports/lab-sale-analysis-report"); // InvLabSaleRegister
         /*QC-NEW-ROUTES*/
         WEB_ROUTES_BY_SCREEN_ID.put(498, "/packing-material/purchase-order"); // PurchsaeOrderPmNew (Architecture.WinApp.PackingMaterial_Store)
         WEB_ROUTES_BY_SCREEN_ID.put(500, "/packing-material/grn"); // GrnPackingMaterial (Architecture.WinApp.PackingMaterial_Store)

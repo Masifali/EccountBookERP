@@ -80,9 +80,9 @@ public class GearMenuController {
                 "/configurations", null));
         /* btnadminpaneluserright_Click -> frmUserRights. Despite the caption this form is the
            user MASTER (tabs "User Define" and "User History", frmUserRights.cs:1521/1602) - it
-           defines users, it does not allocate rights. Not ported. */
-        items.add(item("User Rights", "frmUserRights", null,
-                "User master (User Define / User History) - not ported yet."));
+           defines users, it does not allocate rights. Ported 2026-10-01: UserDefineController. */
+        items.add(item("User Rights", "frmUserRights",
+                "/user-management/user-define", null));
         /* btnScreenRights_Click -> UserRightsByCompany, which IS the ported rights screen: its
            first tab is captioned "Screens Allocate To User". */
         items.add(item("Screen Allocate To User", "UserRightsByCompany",

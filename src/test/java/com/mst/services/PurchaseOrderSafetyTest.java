@@ -14,9 +14,11 @@ import static org.mockito.Mockito.*;
 
 class PurchaseOrderSafetyTest {
     @Test void otherDocumentTypesAreRejectedBeforeDatabaseAccess() {
-        var service=new PurchaseOrderFullService(); var jdbc=mock(JdbcTemplate.class);
+        var service=new PurchaseOrderFullService(); var jdbc=mock(JdbcTemplate.class); var context=mock(CurrentUserContext.class);
+        when(context.currentRoleName()).thenReturn("Admin");
         ReflectionTestUtils.setField(service,"jdbcTemplate",jdbc);
-        var dto=new PurchaseOrderFullDto(); assertEquals(1052,dto.getDocumentTypeId()); dto.setDocumentTypeId(9999);
+        ReflectionTestUtils.setField(service,"currentUserContext",context);
+        var dto=new PurchaseOrderFullDto(); assertEquals(41,dto.getDocumentTypeId()); dto.setDocumentTypeId(9999);
         assertEquals(false,service.savePurchaseOrder(dto,null).get("success")); verifyNoInteractions(jdbc);
     }
     @Test void desktopUnsupportedDeleteCannotRemoveRows() {

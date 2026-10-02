@@ -698,28 +698,150 @@ function refreshHistoryLists() {
 }
 
 let historyBranchesLoaded = false;
-/* cmbBranchName is a checked-list combo (HistoryBranchComboFill :4617-4630: a "Selected" bool column with a header
-   check box, values joined with ","). The <select multiple> keeps the value the history query reads; this draws
-   the check boxes over it. */
-function renderBranchChecks() {
-    const sel = $('#cmbHistoryBranch');
-    if (!sel.length) return;
-    let box = $('#cmbHistoryBranchChecks');
-    if (!box.length) {
-        box = $('<div id="cmbHistoryBranchChecks" class="win-textbox" style="height:auto; max-height:92px; overflow:auto; padding:2px 4px;"></div>');
-        sel.after(box).hide();
-        box.on('change', 'input', function () {
-            if (this.hasAttribute('data-all')) sel.find('option').each(function () { if (this.value && this.value !== '0') this.selected = !!$('#cmbHistoryBranchChecks input[data-all]').prop('checked'); });
-            else { const o = sel.find(`option[value="${this.value}"]`)[0]; if (o) o.selected = this.checked; }
-            renderBranchChecks();
-            sel.trigger('change');                        /* cmbBranchName_Leave -> HistorySupplierComboFill */
-        });
+/* cmbBranchName is an Infragistics UltraCombo in CHECKED-LIST mode (HistoryBranchComboFill :4617-4630):
+   DDL.BindDDL(dtBranch, cmbBranchName, "Id", "BranchName", "Branch Name", ZeroIndex: true) gives the drop
+   grid a "Branch Name" header column and a zero row "...Select Any Value..."; then a bool "Selected" column
+   is added at VisiblePosition 0 with a header check box (HeaderCheckBoxVisibility = Always), the editor
+   text is the checked names joined with "," (EditorValueSource = CheckedItems, ListSeparator = ","). So the
+   CLOSED control is an ordinary one-line combo whose text is the ticked branch names; OPEN it is a grid with
+   a header row, the zero row and one check-box row per branch. Changing the ticks is followed by
+   cmbBranchName_Leave -> HistorySupplierComboFill (:1849), reproduced here as a 'change' on close.
+
+   The <select multiple> stays the value the history query reads (:3958) - this draws the combo over it,
+   using the shared dtcombo look (build/css/countx_desktop_combo.css) so it matches the Supplier Name combo. */
+const HistoryBranchCombo = (function () {
+    const ZERO_TEXT = '...Select Any Value...';
+    let wrap = null, input = null, pop = null, openedWith = '';
+
+    function sel() { return document.getElementById('cmbHistoryBranch'); }
+    function realOptions() {
+        return Array.prototype.filter.call(sel().options, function (o) { return o.value && o.value !== '0'; });
     }
-    const opts = sel.find('option').filter(function () { return this.value && this.value !== '0'; });
-    const all = opts.length > 0 && opts.filter(function () { return this.selected; }).length === opts.length;
-    box.html('<label style="display:block; margin:0; font-weight:bold;"><input type="checkbox" data-all' + (all ? ' checked' : '') + '> (All)</label>'
-        + opts.map(function () { return '<label style="display:block; margin:0; font-weight:normal;"><input type="checkbox" value="' + escapeHtml(this.value) + '"' + (this.selected ? ' checked' : '') + '> ' + escapeHtml($(this).text()) + '</label>'; }).get().join(''));
-}
+    function checkedText() {
+        return realOptions().filter(function (o) { return o.selected; }).map(function (o) { return o.text; }).join(',');
+    }
+    function signature() {
+        return realOptions().filter(function (o) { return o.selected; }).map(function (o) { return o.value; }).join(',');
+    }
+
+    function ensure() {
+        const s = sel();
+        if (!s) return false;
+        if (wrap && wrap.parentNode) return true;
+        /* same shell as DesktopCombo: hidden native select, .dtcombo-wrap with the read-only text and a caret */
+        s.classList.add('dtcombo-native');
+        s.setAttribute('tabindex', '-1');
+        wrap = document.createElement('div');
+        wrap.className = 'dtcombo-wrap win-combo ckcombo-wrap';
+        input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'dtcombo-input ckcombo-input';
+        input.readOnly = true;
+        input.setAttribute('aria-haspopup', 'listbox');
+        input.title = 'Branch Name - tick one or more branches';
+        const caret = document.createElement('span');
+        caret.className = 'dtcombo-caret';
+        caret.textContent = '▼';
+        wrap.appendChild(input);
+        wrap.appendChild(caret);
+        s.parentNode.insertBefore(wrap, s.nextSibling);
+        wrap.addEventListener('mousedown', function (e) { e.preventDefault(); toggle(); });
+        input.addEventListener('keydown', function (e) {
+            if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ' || e.key === 'F4') { e.preventDefault(); if (!pop) open(); }
+            else if (e.key === 'Escape') { e.preventDefault(); close(); }
+        });
+        return true;
+    }
+
+    function render() {
+        if (!ensure()) return;
+        input.value = checkedText();
+        if (pop) fillPop();
+    }
+
+    function rowHtml(value, text, checked, extraClass) {
+        return '<div class="dtcombo-row ckcombo-row' + (extraClass || '') + '" data-value="' + escapeHtml(value) + '">'
+            + '<div class="dtcombo-cell dtcombo-check ckcombo-tick"><input type="checkbox" tabindex="-1"' + (checked ? ' checked' : '') + '></div>'
+            + '<div class="dtcombo-cell ckcombo-name">' + escapeHtml(text) + '</div></div>';
+    }
+
+    function fillPop() {
+        const opts = realOptions();
+        const nChecked = opts.filter(function (o) { return o.selected; }).length;
+        const all = opts.length > 0 && nChecked === opts.length;
+        let html = '<div class="dtcombo-header"><div class="dtcombo-cell dtcombo-check ckcombo-tick">'
+            + '<input type="checkbox" class="ckcombo-all" title="Select all" tabindex="-1"' + (all ? ' checked' : '') + '></div>'
+            + '<div class="dtcombo-cell ckcombo-name">Branch Name</div></div><div class="dtcombo-body">';
+        /* ZeroIndex: true - the "...Select Any Value..." row; its box, like the header box, ticks or clears every branch */
+        html += rowHtml('0', ZERO_TEXT, all, ' ckcombo-zero');
+        html += opts.map(function (o) { return rowHtml(o.value, o.text, o.selected); }).join('');
+        if (!opts.length) html += '<div class="dtcombo-empty">No branch allocated to this user for Purchase Orders</div>';
+        html += '</div>';
+        pop.innerHTML = html;
+        const allBox = pop.querySelector('.ckcombo-all');
+        if (allBox) allBox.indeterminate = nChecked > 0 && !all;
+        const zeroBox = pop.querySelector('.ckcombo-zero input');
+        if (zeroBox) zeroBox.indeterminate = nChecked > 0 && !all;
+    }
+
+    function setAll(on) { realOptions().forEach(function (o) { o.selected = !!on; }); }
+
+    function position() {
+        const r = wrap.getBoundingClientRect();
+        pop.style.left = r.left + 'px';
+        pop.style.top = (r.bottom + 1) + 'px';
+        pop.style.minWidth = r.width + 'px';
+        pop.style.width = Math.max(r.width, 220) + 'px';
+    }
+
+    function open() {
+        if (!ensure() || pop) return;
+        openedWith = signature();
+        pop = document.createElement('div');
+        pop.className = 'dtcombo-pop ckcombo-pop';
+        document.body.appendChild(pop);
+        fillPop();
+        position();
+        pop.addEventListener('mousedown', function (e) { e.preventDefault(); });   /* keep focus in the combo */
+        pop.addEventListener('click', function (e) {
+            const allBox = e.target.closest('.ckcombo-all');
+            if (allBox) { setAll(!(realOptions().length && realOptions().every(function (o) { return o.selected; }))); render(); return; }
+            const row = e.target.closest('.ckcombo-row');
+            if (!row) return;
+            const v = row.getAttribute('data-value');
+            if (v === '0') { setAll(!(realOptions().length && realOptions().every(function (o) { return o.selected; }))); }
+            else { const o = sel().querySelector('option[value="' + v.replace(/"/g, '\\"') + '"]'); if (o) o.selected = !o.selected; }
+            render();
+        });
+        document.addEventListener('mousedown', onDocDown, true);
+        document.addEventListener('keydown', onKey, true);
+        window.addEventListener('resize', close);
+        window.addEventListener('scroll', onScroll, true);
+        input.focus();
+    }
+
+    function onDocDown(e) { if (pop && !pop.contains(e.target) && !wrap.contains(e.target)) close(); }
+    function onKey(e) { if (e.key === 'Escape') { e.preventDefault(); close(); } }
+    function onScroll(e) { if (pop && !pop.contains(e.target)) position(); }
+
+    function close() {
+        if (!pop) return;
+        pop.parentNode.removeChild(pop);
+        pop = null;
+        document.removeEventListener('mousedown', onDocDown, true);
+        document.removeEventListener('keydown', onKey, true);
+        window.removeEventListener('resize', close);
+        window.removeEventListener('scroll', onScroll, true);
+        render();
+        /* cmbBranchName_Leave (:1849) - the supplier list follows the branch once the drop-down closes */
+        if (signature() !== openedWith) $(sel()).trigger('change');
+    }
+
+    function toggle() { if (pop) close(); else open(); }
+
+    return { render: render, open: open, close: close };
+})();
+function renderBranchChecks() { HistoryBranchCombo.render(); }
 function loadHistoryBranches() {
     /* The branch is a parameter of the history-party call, so changing it re-runs that call -
        HistorySupplierComboFill reads cmbBranchName every time (:4654-4667). */

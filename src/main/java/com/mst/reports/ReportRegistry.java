@@ -121,6 +121,58 @@ public class ReportRegistry {
                 byKey.get("po-203").params,
                 byKey.get("po-203").subReports));
 
+        /* The four Purchase Order print buttons exactly as the desktop performs them
+           (CommonServices.cs :8332 203, :8384 203A, :8432 203_01, :8485 203_02; BLL 0134
+           PurchaseOrderReports :125-220 and :344-410). All four run Sp_PurchaseOrderSlip_Rpt
+           (@OrganizationId, @CompanyId, @OrderId = the record, @DocumentTypeId = 41;
+           ApprovedFilter "All" means @IsApproved is NOT sent) and differ only in their sub-reports:
+             203    : USP-PurchaseOrderSubReport @PihId (empty bags) + USP_PurchaseOrderSupplierExpense_SubReport @PihId
+             203A   : USP_PurchaseOrder_SupplierDispatchSubReport @PurchaseOrderId
+             203_01 : the 203 pair
+             203_02 : the 203 pair + USP_PurchaseOrderLabSample_SubReport @PihId
+           The sub-report parameter really is @PihId (not @OrderId), and the hyphenated procedure
+           name must be bracketed for EXEC. Registered under the seeded keys (print-contracts.json,
+           what ReportPdfService.keyOf resolves the typed /reports/print/203* endpoints to) so these
+           hand-traced contracts replace the seeded rows, plus po-203a / po-203-02 for /api/reports/{key}. */
+        {
+            List<ReportDefinition.Param> po203Params = ps(
+                   P("@OrganizationId","session:organizationId"),
+                   P("@CompanyId","session:companyId"),
+                   P("@OrderId","arg:id"),
+                   P("@DocumentTypeId","const:41"),
+                   G("@StartOrderDate","arg:fromDate"), G("@EndOrderDate","arg:toDate"),
+                   G("@PoSrFrom","arg:fromDocNo"),      G("@PoSrTo","arg:toDocNo"),
+                   G("@SupplierCustomerId","arg:supplierCustomerId"),
+                   G("@ItemId","arg:itemId"),           G("@Status","arg:status"));
+            ReportDefinition.SubReport emptyBags = new ReportDefinition.SubReport("PurchaseOrderSubReport.rpt",
+                    "[dbo].[USP-PurchaseOrderSubReport]", ps(P("@PihId","arg:id")));
+            ReportDefinition.SubReport supplierExpense = new ReportDefinition.SubReport("PurchaseOrderSupplierExpenseSubReport.rpt",
+                    "[dbo].[USP_PurchaseOrderSupplierExpense_SubReport]", ps(P("@PihId","arg:id")));
+            ReportDefinition.SubReport labSample = new ReportDefinition.SubReport("PurchaseOrderLabSampleSubReport.rpt",
+                    "[dbo].[USP_PurchaseOrderLabSample_SubReport]", ps(P("@PihId","arg:id")));
+            ReportDefinition.SubReport supplierDispatch = new ReportDefinition.SubReport("PurchaseOrder_SupplierDispatchSubReport.rpt",
+                    "[dbo].[USP_PurchaseOrder_SupplierDispatchSubReport]", ps(P("@PurchaseOrderId","arg:id")));
+
+            add(new ReportDefinition("203-invrptpurchaseorderriceslip", "203-InvRptPurchaseOrderRiceSlip.rpt",
+                    "Sp_PurchaseOrderSlip_Rpt", "CommonServices.PurchaseOrderSlipReport203 (CommonServices.cs:8332)",
+                    po203Params, subs(emptyBags, supplierExpense)));
+            add(new ReportDefinition("203a-purchaseorderslip", "203A_PurchaseOrderSlip.rpt",
+                    "Sp_PurchaseOrderSlip_Rpt", "CommonServices.SupplierDispatchSubReport_203A (CommonServices.cs:8384)",
+                    po203Params, subs(supplierDispatch)));
+            add(new ReportDefinition("203-01-purchaseorderriceslip", "203_01_PurchaseOrderRiceSlip.rpt",
+                    "Sp_PurchaseOrderSlip_Rpt", "CommonServices.PurchaseOrderSlipReport203_01 (CommonServices.cs:8432)",
+                    po203Params, subs(emptyBags, supplierExpense)));
+            add(new ReportDefinition("203-02-purchaseorderriceslip", "203_02_PurchaseOrderRiceSlip.rpt",
+                    "Sp_PurchaseOrderSlip_Rpt", "CommonServices.PurchaseOrderSlipReport203_02 (CommonServices.cs:8485)",
+                    po203Params, subs(emptyBags, supplierExpense, labSample)));
+            add(new ReportDefinition("po-203a", "203A_PurchaseOrderSlip.rpt",
+                    "Sp_PurchaseOrderSlip_Rpt", "CommonServices.SupplierDispatchSubReport_203A",
+                    po203Params, subs(supplierDispatch)));
+            add(new ReportDefinition("po-203-02", "203_02_PurchaseOrderRiceSlip.rpt",
+                    "Sp_PurchaseOrderSlip_Rpt", "CommonServices.PurchaseOrderSlipReport203_02",
+                    po203Params, subs(emptyBags, supplierExpense, labSample)));
+        }
+
         // CommonServices.GenerateReport (General Order Slip)
         add(new ReportDefinition("po-201", "201-InvRptPurchaseOrderGeneralSlip.rpt",
                 "Sp_PurchaseOrder_GeneralOrderSlip_Rpt",

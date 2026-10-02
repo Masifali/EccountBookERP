@@ -16,7 +16,8 @@ class DesktopReportRouteTest {
     }
     @Test void desktopReportsTakePrecedenceOverGenericReportRoute() throws Exception {
         var mvc=MockMvcBuilders.standaloneSetup(new DesktopReceivablesController(mock(DesktopReceivablesService.class)),new GenericReport()).build();
-        for(String report:new String[]{"receivables-report","payables-report","receivables-by-due-dates","receivables-receipt-schedule"})
+        for(String report:new String[]{"receivables-report","payables-report","receivables-by-due-dates"})
             mvc.perform(get("/accounts/reports/"+report)).andExpect(status().isOk()).andExpect(view().name("accounts/reports/desktop_receivables")).andExpect(model().attribute("reportKind",report));
+        mvc.perform(get("/accounts/reports/receivables-receipt-schedule")).andExpect(status().isOk()).andExpect(view().name("dashboard/receivables_receipt_schedule"));
     }
 }

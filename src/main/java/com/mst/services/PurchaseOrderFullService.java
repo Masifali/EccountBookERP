@@ -1956,6 +1956,13 @@ public class PurchaseOrderFullService {
         int branchId = currentUserContext.currentBranchId();
         int effUserId = userId != null ? userId : currentUserContext.currentUserId();
 
+        if (dto.getDocumentTypeId() != null && dto.getDocumentTypeId() != PO_DOCUMENT_TYPE_ID) {
+            Map<String, Object> errRes = new LinkedHashMap<>();
+            errRes.put("success", false);
+            errRes.put("message", "Invalid DocumentTypeId for Purchase Order");
+            return errRes;
+        }
+
         /* The document type is this form's, never the caller's (:3295). */
         dto.setDocumentTypeId(PO_DOCUMENT_TYPE_ID);
         int recId = zero(dto.getPurchaseOrderMasterId()) > 0 ? dto.getPurchaseOrderMasterId() : 0;

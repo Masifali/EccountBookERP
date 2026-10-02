@@ -293,6 +293,40 @@ public final class SidebarScreenCatalog {
         e.add(new Entry("Document Assign To Group", "Export", "/export/document-assign-to-group", "EXP_DOCUMENT_ASSIGN_TO_GROUP", "EXPORT", 623, 130));
         e.add(new Entry("Shipment Doc Schedule", "Export", "/export/shipment-doc-schedule", "EXP_SHIPMENT_DOC_SCHEDULE", "EXPORT", 624, 130));
         e.add(new Entry("Export Document Tracking Report", "Export", "/export/document-tracking-report", "EXP_DOCUMENT_TRACKING_REPORT", "EXPORT", 625, 130));
+        e.add(new Entry("Custom / Bank Invoice", "Export", "/export/custom-invoice", "EXP_CUSTOM_INVOICE", "EXPORT", 951, 2047));
+        e.add(new Entry("Goods Declaration (GD) / Bank Invoice & GD Mapping", "Export", "/export/gd-bank-invoice-mapping", "EXP_GD_BANK_INVOICE_MAPPING", "EXPORT", 952, 2047));
+        e.add(new Entry("Fcy Receipts Utilization Against Bank Invoice / GD", "Export", "/export/fcy-receipt-gd-utilization", "EXP_FCY_RECEIPT_GD_UTILIZATION", "EXPORT", 953, 2047));
+        e.add(new Entry("Gd Bank Request", "Export", "/export/gd-bank-request", "EXP_GD_BANK_REQUEST", "EXPORT", 197, 100));
+        e.add(new Entry("GD Break Up Manual", "Export", "/export/gd-break-up-manual", "EXP_GD_BREAK_UP_MANUAL", "EXPORT", 198, 100));
+        e.add(new Entry("Export Parties Define", "Export", "/export/parties-define", "EXP_PARTIES_DEFINE", "EXPORT", 206, 11));
+        e.add(new Entry("Export Bill Of Lading", "Export", "/export/bill-of-lading", "EXP_BILL_OF_LADING", "EXPORT", 213, 11));
+        e.add(new Entry("Export Shipping Booking Info", "Export", "/export/shipping-booking-info", "EXP_SHIPPING_BOOKING_INFO", "EXPORT", 214, 11));
+        e.add(new Entry("Container Inspection", "Export", "/export/container-inspection", "EXP_CONTAINER_INSPECTION", "EXPORT", 205, 11));
+        e.add(new Entry("Pre-Shipment Inspection", "Export", "/export/pre-shipment-inspection", "EXP_PRE_SHIPMENT_INSPECTION", "EXPORT", 188, 11));
+        e.add(new Entry("Multi Invoices Allocate To Gdn", "Export", "/export/multi-invoices-allocate-to-gdn", "EXP_MULTI_INVOICES_ALLOCATE_TO_GDN", "EXPORT", 907, 11));
+        e.add(new Entry("Advance Utilize Against Invoice", "Export", "/export/advance-utilize-against-invoice", "EXP_ADVANCE_UTILIZE_AGAINST_INVOICE", "EXPORT", 915, 11));
+        e.add(new Entry("Export Contract", "Export", "/export/sales-contract", "EXP_SALES_CONTRACT", "EXPORT", 209, 11));
+        e.add(new Entry("Export Contract (III)", "Export", "/export/contract-iii", "EXP_CONTRACT_III", "EXPORT", 879, 11));
+        e.add(new Entry("Export Contract Schedule", "Export", "/export/contract-schedule", "EXP_CONTRACT_SCHEDULE", "EXPORT", 216, 11));
+        e.add(new Entry("Packing Detail By Export Contract", "Export", "/export/packing-detail-by-contract", "EXP_PACKING_DETAIL_BY_CONTRACT", "EXPORT", 240, 11));
+        e.add(new Entry("Export Commercial Invoice", "Export", "/export/commercial-invoice", "EXP_COMMERCIAL_INVOICE", "EXPORT", 211, 11));
+        e.add(new Entry("Commercial Invoice III", "Export", "/export/commercial-invoice-iii", "EXP_COMMERCIAL_INVOICE_III", "EXPORT", 880, 11));
+        e.add(new Entry("Pre Invoice", "Export", "/export/pre-invoice", "EXP_PRE_INVOICE", "EXPORT", 192, 100));
+        e.add(new Entry("Packing Detail", "Export", "/export/packing-detail", "EXP_PACKING_DETAIL", "EXPORT", 193, 100));
+        e.add(new Entry("Export Opening Balance", "Export", "/export/opening-balance", "EXP_OPENING_BALANCE", "EXPORT", 194, 100));
+        e.add(new Entry("Proforma Invoice", "Export", "/export/proforma-invoice", "EXP_PROFORMA_INVOICE", "EXPORT", 215, 100));
+        e.add(new Entry("Export Forwarding", "Export", "/export/forwarding", "EXP_FORWARDING", "EXPORT", 212, 11));
+        e.add(new Entry("Export Forwarding (New)", "Export", "/export/forwarding-new", "EXP_FORWARDING_NEW", "EXPORT", 793, 100));
+        e.add(new Entry("Export Delivery Order", "Export", "/export/delivery-order", "EXP_DELIVERY_ORDER", "EXPORT", 208, 11));
+        e.add(new Entry("Forwarding Direct (Not Use)", "Export", "/export/forwarding-direct", "EXP_FORWARDING_DIRECT", "EXPORT", 195, 11));
+        e.add(new Entry("Forwarding Without WeighBridge (Not Use)", "Export", "/export/forwarding-without-weighbridge", "EXP_FORWARDING_WITHOUT_WEIGHBRIDGE", "EXPORT", 196, 11));
+        e.add(new Entry("Export Lc Order (Not Use)", "Export", "/export/lc-order", "EXP_LC_ORDER", "EXPORT", 210, 11));
+        e.add(new Entry("EFrom Registration (Not Use)", "Export", "/export/eform-registration", "EXP_EFORM_REGISTRATION", "EXPORT", 217, 11));
+        e.add(new Entry("Financial Insturment (Not Use)", "Export", "/export/financial-instrument", "EXP_FINANCIAL_INSTRUMENT", "EXPORT", 218, 11));
+        e.add(new Entry("Packing Material Requirement (Not Use)", "Export", "/export/packing-material-requirement", "EXP_PACKING_MATERIAL_REQUIREMENT", "EXPORT", 219, 11));
+        e.add(new Entry("Third Party Inspection", "Export", "/export/third-party-inspection", "EXP_THIRD_PARTY_INSPECTION", "EXPORT", 857, 136));
+        e.add(new Entry("Lab Against Third Party Inspection", "Export", "/export/lab-against-third-party-inspection", "EXP_LAB_AGAINST_THIRD_PARTY_INSPECTION", "EXPORT", 858, 136));
+        e.add(new Entry("Fcy Receipts", "Export", "/export/fcy-receipts", "EXP_FCY_RECEIPTS", "EXPORT", 794, 100));
 
         // 7. PRODUCTION REPORTS (module 21)
         // Ids, ScreenName and ScreenAlias all read from reconciliation-input.json, the live dump
@@ -408,6 +442,27 @@ public final class SidebarScreenCatalog {
         // Only 156 is built; the rest are deliberately NOT registered, because a registered route
         // with no page behind it is what put unrelated screens behind the same URL elsewhere.
         e.add(new Entry("Item Analysis Parameter", "Lab", "/lab/item-analysis-parameter", "LAB_ITEM_ANALYSIS_PARAMETER", "LAB", 156, 7));
+        // Quality Control (App 4): the rest of module 7 "Lab" and module 1011 "Lab Report", all ported 30-Sep / 01-Oct-2026.
+        e.add(new Entry("Sample Log Register", "Lab", "/quality/sample-log-register", "LAB_SAMPLE_LOG_REGISTER", "LAB", 155, 7));
+        e.add(new Entry("Analysis Group", "Lab", "/quality/analysis-group", "LAB_ANALYSIS_GROUP", "LAB", 157, 7));
+        e.add(new Entry("Group Analysis Standards", "Lab", "/quality/group-analysis-standards", "LAB_GROUP_ANALYSIS_STANDARDS", "LAB", 158, 7));
+        e.add(new Entry("Sample Analysis", "Lab", "/quality/sample-analysis", "LAB_SAMPLE_ANALYSIS", "LAB", 159, 7));
+        e.add(new Entry("Purchase Analysis", "Lab", "/quality/purchase-analysis", "LAB_PURCHASE_ANALYSIS", "LAB", 160, 7));
+        e.add(new Entry("Sale Analysis", "Lab", "/quality/sale-analysis", "LAB_SALE_ANALYSIS", "LAB", 161, 7));
+        e.add(new Entry("In-Process Analysis", "Lab", "/quality/inprocess-analysis", "LAB_INPROCESS_ANALYSIS", "LAB", 162, 7));
+        e.add(new Entry("InProcess Analysis Steps Schedule", "Lab", "/quality/inprocess-analysis-steps", "LAB_INPROCESS_ANALYSIS_STEPS", "LAB", 163, 7));
+        e.add(new Entry("Lab Deduction Policy For Purchase", "Lab", "/quality/lab-deduction-policy-for-purchase", "LAB_QC_DEDUCTION_POLICY", "LAB", 164, 7));
+        e.add(new Entry("Lab Standard Policy For Deduction (Not Use)", "Lab", "/quality/lab-standard-policy-for-deduction", "LAB_STANDARD_POLICY_FOR_DEDUCTION", "LAB", 166, 7));
+        e.add(new Entry("Export Pre Shipment Analysis", "Lab", "/quality/export-pre-shipment-analysis", "LAB_EXPORT_PRE_SHIPMENT_ANALYSIS", "LAB", 168, 7));
+        e.add(new Entry("VCI Parameter", "Lab", "/quality/vci-parameter", "LAB_VCI_PARAMETER", "LAB", 809, 7));
+        e.add(new Entry("Purchase Analysis By Vehicle", "Lab", "/quality/reports/purchase-analysis-by-vehicle", "LAB_RPT_PURCHASE_ANALYSIS_BY_VEHICLE", "LAB", 626, 1011));
+        e.add(new Entry("Lab Purchase Analysis Report (Not Use)", "Lab", "/quality/reports/lab-purchase-analysis-report-old", "LAB_RPT_LAB_PURCHASE_REPORT", "LAB", 627, 1011));
+        e.add(new Entry("Lab Sale Analysis Report", "Lab", "/quality/reports/lab-sale-analysis-report", "LAB_RPT_LAB_SALE_REGISTER", "LAB", 628, 1011));
+        e.add(new Entry("Lab Sample Analysis Report", "Lab", "/quality/reports/lab-sample-analysis-report", "LAB_RPT_LAB_SAMPLE_ANALYSIS", "LAB", 629, 1011));
+        e.add(new Entry("Lab Purchase Analysis Periodic Report", "Lab", "/quality/reports/lab-purchase-analysis-periodic-report", "LAB_RPT_PURCHASE_ANALYSIS_PERIODIC", "LAB", 630, 1011));
+        e.add(new Entry("In-Process Analysis Report", "Lab", "/quality/reports/inprocess-analysis-report", "LAB_RPT_INPROCESS_ANALYSIS", "LAB", 631, 1011));
+        e.add(new Entry("Sample Analysis Register", "Lab", "/quality/reports/sample-analysis-register", "LAB_RPT_SAMPLE_ANALYSIS_REGISTER", "LAB", 632, 1011));
+        e.add(new Entry("Purchase Analylsis Report", "Lab", "/quality/reports/purchase-analysis-report", "LAB_RPT_PURCHASE_ANALYSIS_REGISTER", "LAB", 633, 1011));
 
         return Collections.unmodifiableList(e);
     }

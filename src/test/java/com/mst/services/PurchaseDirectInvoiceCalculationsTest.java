@@ -15,7 +15,7 @@ class PurchaseDirectInvoiceCalculationsTest {
     @Test void billDistributesExpensesByQuantityAndFreightByWeight(){
         var h=copy(Map.of("SupplierCustomerId",5,"CommissionAgentId",5,"CommissionType","Percent","CommRate",10,"BrokerAgentId",6,"BrokeryType","Flat","BrokeryRate",20));
         var a=copy(Map.of("ItemQty",1,"NetBillWeight",40,"ItemAmount",100));var b=copy(Map.of("ItemQty",3,"NetBillWeight",60,"ItemAmount",300));
-        PurchaseDirectInvoiceCalculations.bill(h,List.of(a,b),List.of(Map.of("Amount",40)),List.of(Map.of("TansporterId",7,"FreightAmount",50)),List.of(Map.of("ChartofAccountId",8,"JvDebit",12,"JvCredit",2)),List.of(Map.of("Amount",10)),7,false,2);
+        PurchaseDirectInvoiceCalculations.bill(h,List.of(a,b),List.of(Map.of("Amount",40)),List.of(Map.of("TansporterId",7,"SupplierCustomerId",7,"FreightAmount",50)),List.of(Map.of("ChartofAccountId",8,"JvDebit",12,"JvCredit",2)),List.of(Map.of("Amount",10)),7,false,2);
         assertEquals(530,n(h,"BillAmount"));assertEquals(40,n(h,"CommAmount"));assertEquals(20,n(h,"BrokeryAmount"));assertEquals(10,n(a,"ExpenseAmount"));assertEquals(30,n(b,"ExpenseAmount"));assertEquals(20,n(a,"FreightAmount"));assertEquals(30,n(b,"FreightAmount"));assertEquals(10,n(a,"CommissionAmount"));assertEquals(30,n(b,"CommissionAmount"));
     }
     @Test void supplierJournalEntryIsRefused(){assertThrows(IllegalArgumentException.class,()->PurchaseDirectInvoiceCalculations.bill(copy(null),List.of(),List.of(),List.of(),List.of(Map.of("ChartofAccountId",7)),List.of(),7,false,2));}

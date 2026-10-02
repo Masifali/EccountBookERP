@@ -14,6 +14,10 @@
  *   :2121-2300 LoadDataForWages() - turning a reference document into wages rows
  *   :2572-2600 FormValidation
  *
+ * 2026-10-01 recheck: three tab controls as on the desktop, cmbReferenceDocType bound to the one
+ * loaded document, history from USP_ContractorWagesBillHeader_FormHistory, ReadById split into
+ * Regular / Other, and the stored values of Insert() (:2702-3027) reproduced one by one.
+ *
  * Amount is NOT guessed:  WagesAmountCalculateOnQty ? Quantity * Rate
  *                                                   : (BillWeight / PackSize) * Rate   (:1006)
  * ==========================================================================*/
@@ -33,6 +37,9 @@ var S = {
     pending: [],
     contractors: [],
     activities: [],
+    otherActivities: [],     // dtStichingItems - the Other Wages grid's own activity list
+    otherIds: '35',          // its default ids: "35", or "34" for MoveOrder / fill-in rows
+    isApproved: false,       // chkisapprove (Visible = false) - only ever set by reading a bill back
     cfg: {},
     busy: false,
     formHistoryRows: [],
@@ -58,6 +65,22 @@ function esc(v)  { return txt(v).replace(/&/g, '&amp;').replace(/</g, '&lt;')
 function fmt(v, d) { var n = num(v); return n.toLocaleString(undefined,
                      { minimumFractionDigits: d === undefined ? 2 : d,
                        maximumFractionDigits: d === undefined ? 2 : d }); }
+/* "#,##0.####" - up to d decimals, none forced. */
+function fmtN(v, d) { return num(v).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: d === undefined ? 4 : d }); }
+/* dd-MMM-yyyy [hh:mm tt] without going through toISOString() */
+var MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function dmy(v, withTime) {
+    if (!v) return '';
+    var m = String(v).match(/^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2}))?/);
+    if (!m) return String(v);
+    var out = m[3] + '-' + MON[parseInt(m[2], 10) - 1] + '-' + m[1];
+    if (withTime && m[4] !== undefined) {
+        var h = parseInt(m[4], 10), ap = h >= 12 ? 'PM' : 'AM';
+        h = h % 12; if (h === 0) h = 12;
+        out += ' ' + ('0' + h).slice(-2) + ':' + m[5] + ' ' + ap;
+    }
+    return out;
+}
 function el(id)  { return document.getElementById(id); }
 function val(id) { var e = el(id); return e ? e.value : ''; }
 function setVal(id, v) { var e = el(id); if (e) e.value = (v === null || v === undefined) ? '' : v; }
@@ -88,23 +111,19 @@ function f(row, name) {
     return null;
 }
 
-function msg(text, ok) {
-    var m = el('cwMessage');
-    if (!m) return;
-    m.className = ok ? 'ok' : 'err';
-    m.textContent = text;
-    if (ok) { setTimeout(function () { if (m.textContent === text) m.className = ''; }, 6000); }
-}
-function clearMsg() { var m = el('cwMessage'); if (m) { m.className = ''; m.textContent = ''; } }
+/* Every desktop message is a MessageBox; so is every message here. */
+function msg(text) { window.alert(text); }
+function clearMsg() { }
 
 /* Button click -> disabled + loader immediately, re-enabled on success or failure,
    and a second click while in flight is dropped. */
 function busy(btn, on) {
     S.busy = !!on;
-    if (btn) { btn.disabled = !!on; btn.classList.toggle('btn-busy', !!on); }
+    if (btn) { btn.disabled = !!on; btn.classList.toggle('is-busy', !!on); }
     ['btnSave', 'btnUpdate', 'btnNew', 'btnRefresh'].forEach(function (id) {
         var b = el(id); if (b && b !== btn) b.disabled = !!on;
     });
+    if (!on) applyRights();
 }
 
 function getJson(url) {
@@ -120,15 +139,47 @@ function postJson(url, body) {
 }
 
 /* ---------------------------------------------------------------- tabs */
-var TABS = ['form', 'pending', 'regular', 'other', 'detail', 'history'];
+/* The desktop has THREE tab controls, not one strip:
+ *   tabIncomingLabourwages : Form | History
+ *   tabControl1 (panel6)   : Regular Wages | Other Wages
+ *   tabControl2 (panel5)   : Pending Data For Load | Wages Detail
+ * Other Wages and Wages Detail are removed at load (:338-339) and added back only when the
+ * loaded document calls for them, so they are hidden here until then. */
+var TAB_GROUPS = [['form', 'history'], ['regular', 'other'], ['pending', 'detail']];
+function cap(t) { return t.charAt(0).toUpperCase() + t.slice(1); }
 function lwTab(name) {
-    TABS.forEach(function (t) {
-        var v = el('view' + t.charAt(0).toUpperCase() + t.slice(1));
-        var b = el('tab'  + t.charAt(0).toUpperCase() + t.slice(1));
-        if (v) v.style.display = (t === name) ? '' : 'none';
-        if (b) b.classList.toggle('active', t === name);
+    TAB_GROUPS.forEach(function (g) {
+        if (g.indexOf(name) < 0) return;
+        g.forEach(function (t) {
+            var v = el('view' + cap(t)), b = el('tab' + cap(t));
+            if (v) v.classList.toggle('is-hidden', t !== name);
+            if (b) b.classList.toggle('act', t === name);
+        });
     });
+    if (name !== 'form' && name !== 'history') {
+        var vf = el('viewForm');
+        if (vf && vf.classList.contains('is-hidden')) lwTab('form');
+    }
+    if (name === 'history') { var fd = el('histFromDate'); if (fd) fd.focus(); }   /* :3236 */
 }
+/* TabPages.Add / TabPages.Remove */
+function tabShown(name, on) {
+    var b = el('tab' + cap(name));
+    if (!b) return;
+    b.classList.toggle('is-hidden', !on);
+    if (!on && b.classList.contains('act')) {
+        TAB_GROUPS.forEach(function (g) {
+            if (g.indexOf(name) < 0) return;
+            var other = g[0] === name ? g[1] : g[0];
+            var ob = el('tab' + cap(other));
+            if (ob && !ob.classList.contains('is-hidden')) lwTab(other);
+            else { var v = el('view' + cap(name)); if (v) v.classList.add('is-hidden'); b.classList.remove('act'); }
+        });
+    }
+}
+function onFormTab() { var v = el('viewHistory'); return !v || v.classList.contains('is-hidden'); }
+/* A message box, as the desktop shows one - not a banner that scrolls away. */
+function box(text) { window.alert(text); }
 
 /* ---------------------------------------------------------------- the cap exemptions
  * :896 and every sibling condition: these reference document types are exempt from the
@@ -156,7 +207,7 @@ function addCondition() {
  * "DocTypeValue != 68 || DocTypeValue != 806" (:712), which no number can fail. Reproduced as
  * written so the two screens show the same columns.
  */
-function columns() {
+function columns(which) {
     var cols = [
         { k: 'SupplierId',  c: 'Contractor Name',         t: 'contractor', w: 200 },
         { k: 'WagesId',     c: 'Labour / Wages Activity', t: 'activity',   w: 200 },
@@ -179,60 +230,68 @@ function columns() {
     cols.push({ k: 'jobLot',   c: 'Job Lot',   t: 'text', w: 110 });
     cols.push({ k: 'Crop',     c: 'Crop',      t: 'text', w: 70 });
     cols.push({ k: 'MoveFrom', c: 'Move From', t: 'text', w: 130 });
-    if (addCondition()) cols.push({ k: 'RefLineId', c: 'RowNo', t: 'text', w: 55 });
+    /* Regular grid: AddCondition (:731). Other grid: 112 / 66 only (:1895). */
+    var d = S.refDocTypeId;
+    if (which === 'other' ? (d === 112 || d === 66) : addCondition()) cols.push({ k: 'RefLineId', c: 'RowNo', t: 'text', w: 55 });
     return cols;
 }
 
 /* ---------------------------------------------------------------- grid render */
 function renderGrid(which) {
     var rows = which === 'regular' ? S.regular : S.other;
+    var tbl  = el(which === 'regular' ? 'grdRegular' : 'grdOther');
     var head = el(which === 'regular' ? 'grdRegularHead' : 'grdOtherHead');
     var body = el(which === 'regular' ? 'grdRegularBody' : 'grdOtherBody');
     var foot = el(which === 'regular' ? 'grdRegularFoot' : 'grdOtherFoot');
     if (!head || !body) return;
 
-    var cols = columns();
-
-    head.innerHTML = cols.map(function (c) {
-        return '<th style="width:' + c.w + 'px;' + (c.t === 'num' ? 'text-align:right;' : '') + '">'
-             + esc(c.c) + '</th>';
-    }).join('') + '<th style="width:40px;">Add</th><th style="width:26px;">X</th>';
-
+    /* grdwagesDetail.ClearStructure() - an empty grid has no columns at all. */
     if (!rows.length) {
-        body.innerHTML = '<tr><td colspan="' + (cols.length + 2)
-            + '" style="text-align:center; padding:14px; color:#777;">'
-            + 'Load a reference document from the Pending tab, or press Add Row.</td></tr>';
-        if (foot) foot.innerHTML = '';
+        head.innerHTML = ''; body.innerHTML = ''; if (foot) foot.innerHTML = '';
+        if (tbl) tbl.style.width = '';
         updateTotals();
         return;
     }
 
+    var cols = columns(which);
+    var buttons = !S.isReferred;             /* Add / X columns exist only when !IsReferred (:806, :1930) */
+    var acts = which === 'regular' ? S.activities : S.otherActivities;
+    var width = cols.reduce(function (a, c) { return a + c.w; }, 0) + (buttons ? 60 : 0);
+    if (tbl) tbl.style.width = width + 'px';
+
+    head.innerHTML = cols.map(function (c) {
+        return '<th style="width:' + c.w + 'px;">' + esc(c.c) + '</th>';
+    }).join('') + (buttons ? '<th style="width:40px;">Add</th><th style="width:20px;">X</th>' : '');
+
     body.innerHTML = rows.map(function (row, i) {
         var freeOfCost = txt(row.WagesType) === 'Free Of Cost';
         var tds = cols.map(function (c) {
-            var style = (c.t === 'num' ? 'text-align:right;' : '')
-                      + (c.k === 'WagesType' && freeOfCost ? 'color:#d00; font-weight:bold;' : '');
-            if (c.t === 'contractor') {
-                return '<td>' + selectHtml(which, i, 'SupplierId', row.SupplierId,
-                                           S.contractors, 'Id', 'CompanyName') + '</td>';
+            var cls = c.t === 'num' ? ' class="num"' : '';
+            /* GridEXFormatCondition :819 - a Free Of Cost row's Wages Type is red. */
+            var style = (c.k === 'WagesType' && freeOfCost) ? ' style="color:#f00;"' : '';
+            if (c.t === 'contractor') {          /* editable in both lock states (:634, :664) */
+                return '<td class="ed">' + selectHtml(which, i, 'SupplierId', row.SupplierId,
+                                           S.contractors, 'Id', 'CompanyName', row.ContractorName) + '</td>';
             }
             if (c.t === 'activity') {
-                return '<td>' + selectHtml(which, i, 'WagesId', row.WagesId,
-                                           S.activities, 'Id', 'WagesAccountName') + '</td>';
+                if (S.isReferred) return '<td>' + esc(row.WagesAccount) + '</td>';     /* :663 EditType 0 */
+                return '<td class="ed">' + selectHtml(which, i, 'WagesId', row.WagesId,
+                                           acts, 'Id', 'WagesAccountName', row.WagesAccount) + '</td>';
             }
-            if (c.edit) {
-                return '<td style="' + style + '"><input type="number" step="any" class="win-input lw-cell"'
+            if (c.edit && !S.isReferred) {
+                return '<td class="ed"><input type="text" inputmode="decimal" class="lw-cell"'
                      + ' data-g="' + which + '" data-i="' + i + '" data-k="' + c.k + '"'
-                     + ' style="text-align:right; width:100%;" value="' + esc(row[c.k]) + '"></td>';
+                     + ' value="' + esc(row[c.k]) + '"></td>';
             }
-            var shown = c.t === 'num' ? fmt(row[c.k], c.dec) : esc(row[c.k]);
-            return '<td style="' + style + '">' + shown + '</td>';
+            var shown = c.t === 'num' ? fmtN(row[c.k], c.dec)
+                      : c.k === 'Date' ? esc(dmy(row[c.k])) : esc(row[c.k]);
+            return '<td' + cls + style + '>' + shown + '</td>';
         }).join('');
-        return '<tr>' + tds
-             + '<td style="text-align:center;"><button type="button" class="btn-add-green"'
-             + ' onclick="lwAddRowAfter(\'' + which + '\',' + i + ')" title="Add a copy of this row">+</button></td>'
-             + '<td style="text-align:center;"><button type="button" class="win-btn"'
-             + ' style="padding:1px 6px;" onclick="lwDeleteRow(\'' + which + '\',' + i + ')" title="Remove this row">X</button></td>'
+        return '<tr>' + tds + (buttons
+             ? '<td class="btncell"><button type="button" class="cb"'
+             + ' onclick="lwAddRowAfter(\'' + which + '\',' + i + ')">Add</button></td>'
+             + '<td class="btncell"><button type="button" class="cb"'
+             + ' onclick="lwDeleteRow(\'' + which + '\',' + i + ')">X</button></td>' : '')
              + '</tr>';
     }).join('');
 
@@ -240,8 +299,8 @@ function renderGrid(which) {
         foot.innerHTML = cols.map(function (c) {
             if (!c.sum) return '<td></td>';
             var s = rows.reduce(function (a, r) { return a + num(r[c.k]); }, 0);
-            return '<td style="text-align:right; font-weight:bold;">' + fmt(s, c.dec) + '</td>';
-        }).join('') + '<td></td><td></td>';
+            return '<td class="num">' + fmtN(s, c.dec) + '</td>';
+        }).join('') + (buttons ? '<td></td><td></td>' : '');
     }
 
     /* Edits are bound after the markup exists, never inline, so a re-render cannot
@@ -262,15 +321,21 @@ function renderGrid(which) {
     updateTotals();
 }
 
-function selectHtml(which, i, key, value, list, idField, textField) {
-    var out = '<select class="win-input lw-sel" data-g="' + which + '" data-i="' + i
-            + '" data-k="' + key + '" style="width:100%;">';
-    out += '<option value="">...Select Any Value...</option>';
+function selectHtml(which, i, key, value, list, idField, textField, savedText) {
+    var out = '<select class="lw-sel" data-g="' + which + '" data-i="' + i + '" data-k="' + key + '">';
+    out += '<option value=""></option>';
+    var hit = false;
     for (var n = 0; n < list.length; n++) {
         var id = f(list[n], idField);
         var tx = f(list[n], textField);
-        out += '<option value="' + esc(id) + '"'
-             + (String(id) === String(value) ? ' selected' : '') + '>' + esc(tx) + '</option>';
+        var on = String(id) === String(value);
+        if (on) hit = true;
+        out += '<option value="' + esc(id) + '"' + (on ? ' selected' : '') + '>' + esc(tx) + '</option>';
+    }
+    /* A saved row whose contractor / activity is no longer in the list still shows its name,
+       as the desktop cell does - it is never silently blanked. */
+    if (!hit && num(value) > 0) {
+        out += '<option value="' + esc(value) + '" selected>' + esc(savedText || value) + '</option>';
     }
     return out + '</select>';
 }
@@ -295,9 +360,8 @@ function cellUpdated(which, i, key, value) {
     if (key === 'SupplierId' || key === 'WagesId') {
         row[key] = value === '' ? 0 : parseInt(value, 10);
         if (key === 'WagesId') {
-            var act = S.activities.filter(function (a) { return String(f(a, 'Id')) === String(value); })[0];
+            var act = (which === 'regular' ? S.activities : S.otherActivities).filter(function (a) { return String(f(a, 'Id')) === String(value); })[0];
             row.WagesAccount = act ? txt(f(act, 'WagesAccountName')) : '';
-            row.WagesTypeId  = act ? num(f(act, 'WagesTypeId')) : 0;
         } else {
             var con = S.contractors.filter(function (c) { return String(f(c, 'Id')) === String(value); })[0];
             row.ContractorName = con ? txt(f(con, 'CompanyName')) : '';
@@ -385,7 +449,7 @@ function cellUpdated(which, i, key, value) {
         }
     }
 
-    if (warn) msg(warn, false);
+    if (warn) msg(warn);
 
     /* :976 - free of cost, or a Dryer warehouse, is never rated. */
     if (txt(row.WagesType) === 'Free Of Cost' || txt(row.WarehouseType) === 'Dryer') {
@@ -417,6 +481,7 @@ function fetchRateAndPrice(which, i, row, key) {
             + '&contractorId=' + num(row.SupplierId);
     getJson(url).then(function (d) {
         var rate = num(d && d.wagesRate);
+        if (txt(row.WagesType) === 'Free Of Cost' || txt(row.WarehouseType) === 'Dryer') rate = 0;
         if (rate > 0) {
             row.RateWithoutAddLess = rate;
             row.WagesScheduleId = num(d.scheduleId);
@@ -428,7 +493,7 @@ function fetchRateAndPrice(which, i, row, key) {
         }
         renderGrid(which);
     }).catch(function (e) {
-        msg('Wages rate lookup failed: ' + e.message, false);
+        msg('Wages rate lookup failed: ' + e.message);
         renderGrid(which);
     });
 }
@@ -451,12 +516,12 @@ function priceRow(row, key) {
             if (Math.abs(addLess) > cap) {
                 addLess = addLess > 0 ? cap : -cap;
                 row.RateAddLess = addLess;
-                msg('RateAddLess can not be grater than RateAdLess In config ' + cap, false);
+                msg('RateAddLess can not be grater than RateAdLess In config ' + cap);
             }
         } else {
             addLess = 0;
             row.RateAddLess = 0;
-            msg('Please set RateAddLess Percentage in config first...', false);
+            msg('Please set RateAddLess Percentage in config first...');
         }
     }
 
@@ -504,27 +569,27 @@ function addRowInGrid(which, i) {
     if (S.isReferred) return;
     var rows = which === 'regular' ? S.regular : S.other;
     var cur = rows[i] || rows[rows.length - 1];
-    if (!cur) { msg('Please Check Grid GrossWeight and TotalGrossWeight', false); return; }
+    if (!cur) { msg('Please Check Grid GrossWeight and TotalGrossWeight'); return; }
     var TotalWeight = num(val('txtGrossWeight')), TotalQty = num(val('txtTotalQty'));
     var Weight = 0, WeightCut = 0, Qty = 0;
     rows.forEach(function (r) { Weight += num(r.Weight); WeightCut = num(r.WeightCut); Qty += num(r.Quantity); });
     var GrossWeight = TotalWeight - Weight, GrossQty = TotalQty - Qty;
     var d = S.refDocTypeId;
     var other = which === 'regular' ? addCondition() : (d === 112 || d === 66);
-    if (!(GrossWeight > 0 || GrossQty > 0 || other)) { msg('Please Check Grid GrossWeight and TotalGrossWeight', false); return; }
+    if (!(GrossWeight > 0 || GrossQty > 0 || other)) { msg('Please Check Grid GrossWeight and TotalGrossWeight'); return; }
     var copy = JSON.parse(JSON.stringify(cur)); copy.DetailId = 0;
     if (onQty()) {
         if (GrossQty > 0) {
             var ItemWeight = GrossQty * num(cur.PackSize);
             copy.Weight = r2(ItemWeight); copy.Quantity = r2(GrossQty); copy.BillWeight = ItemWeight;
             copy.Amount = r2(GrossQty * num(cur.Rate));
-        } else if (!other) { msg('Please Check Grid Qty and TotalQty', false); return; }
+        } else if (!other) { msg('Please Check Grid Qty and TotalQty'); return; }
     } else if (GrossWeight > 0) {
         var ItemQty = GrossWeight / num(cur.PackSize);
         var BillWeightPartal = GrossWeight - ItemQty * WeightCut;
         copy.Weight = GrossWeight; copy.Quantity = r2(ItemQty); copy.BillWeight = BillWeightPartal;
         copy.Amount = r2(BillWeightPartal / num(cur.PackSize) * num(cur.Rate));
-    } else if (!other) { msg('Please Check Grid GrossWeight and TotalGrossWeight', false); return; }
+    } else if (!other) { msg('Please Check Grid GrossWeight and TotalGrossWeight'); return; }
     rows.push(copy);                                   /* dtdetail.Rows.Add - appended at the end */
     renderGrid(which);
 }
@@ -534,7 +599,7 @@ window.lwAddRowAfter = function (which, i) { addRowInGrid(which, i); };
 window.lwDeleteRow = function (which, i) {
     if (S.isReferred) return;
     var rows = which === 'regular' ? S.regular : S.other;
-    if (rows.length <= 1) { msg(which === 'regular' ? 'You Can Not Delete All rows' : 'You Can Not Delete All rows....', false); return; }
+    if (rows.length <= 1) { msg(which === 'regular' ? 'You Can Not Delete All rows' : 'You Can Not Delete All rows....'); return; }
     rows.splice(i, 1);
     renderGrid(which);
 };
@@ -543,68 +608,74 @@ window.lwDeleteRow = function (which, i) {
    Only the contractor and the activity are copied; every other cell belongs to its own row. */
 window.lwApplyAll = function (which) {
     var rows = which === 'regular' ? S.regular : S.other;
-    if (!rows.length) { msg('There are no rows to apply to.', false); return; }
+    if (!rows.length) return;                                    /* :3883 - nothing happens */
     var first = rows[0];
-    if (!num(first.SupplierId) || !num(first.WagesId)) {
-        msg('First row contains No values Of Contractor And Wages Account.', false);
+    /* :3889 - either value is enough (the test is OR, not AND) */
+    if (!num(first.SupplierId) && !num(first.WagesId)) {
+        msg('First row contains No values Of Contractor And Wages Account.');
         return;
     }
-    rows.forEach(function (r, i) {
-        if (i === 0) return;
-        r.SupplierId     = first.SupplierId;
-        r.ContractorName = first.ContractorName;
-        r.WagesId        = first.WagesId;
-        r.WagesAccount   = first.WagesAccount;
-        r.WagesTypeId    = first.WagesTypeId;
+    var snap = { SupplierId: first.SupplierId, ContractorName: first.ContractorName,
+                 WagesId: first.WagesId, WagesAccount: first.WagesAccount };
+    rows.forEach(function (r) {
+        r.SupplierId     = snap.SupplierId;
+        r.ContractorName = snap.ContractorName;
+        r.WagesId        = snap.WagesId;
+        r.WagesAccount   = snap.WagesAccount;
     });
     renderGrid(which);
-    /* Each row is then rated on its own date and pack size, as the desktop does at :3920. */
-    rows.forEach(function (r, i) { if (i > 0) fetchRateAndPrice(which, i, r, 'WagesId'); });
+    /* :3899-3990 - every row (the first included) is asked again whether it is free of cost,
+       then rated on its own date and pack size. */
+    rows.forEach(function (r, i) { askFreeOfCost(which, i, r); fetchRateAndPrice(which, i, r, 'WagesId'); });
 };
 
 /* ---------------------------------------------------------------- pending tab */
+/* PendingTicket() :2040-2090 - every pending document of this branch; the reference document
+   type is NOT a filter here (RefDocTypeId / RefDocId are 0 unless the form was opened from a
+   document). */
 function loadPending() {
-    var body = el('grdPendingBody');
-    if (body) {
-        body.innerHTML = '<tr><td colspan="11" style="text-align:center; padding:14px; color:#777;">Loading...</td></tr>';
-    }
-    getJson(API + '/pending?refDocumentTypeId=' + S.refDocTypeId + '&refDocId=0')
+    return getJson(API + '/pending?refDocumentTypeId=0&refDocId=0')
         .then(function (rows) { S.pending = rows || []; renderPending(); })
-        .catch(function (e) {
-            S.pending = [];
-            if (body) {
-                body.innerHTML = '<tr><td colspan="11" style="text-align:center; padding:14px; color:#a3160b;">'
-                    + esc(e.message) + '</td></tr>';
-            }
-        });
+        .catch(function (e) { S.pending = []; renderPending(); msg('Pending documents could not be loaded: ' + e.message); });
 }
 
+/* GridPendingTicketSetting() :2092-2119 - the tick column (Admin only) and Load sit BEFORE
+   Document Type Description and are frozen; Id, DocumentTypeId, RefDocQty, RefDocWeight and
+   RefLineId are hidden. */
+function isAdmin() { return S.cfg.isAdmin === true || S.cfg.isAdmin === 'true'; }
 function renderPending() {
-    var body = el('grdPendingBody');
-    if (!body) return;
-    if (!S.pending.length) {
-        body.innerHTML = '<tr><td colspan="11" style="text-align:center; padding:14px; color:#777;">'
-            + 'No pending documents for this reference document type.</td></tr>';
-        return;
-    }
+    var tbl = el('grdPending'), head = el('grdPendingHead'), body = el('grdPendingBody');
+    if (!head || !body) return;
+    if (!S.pending.length) { head.innerHTML = ''; body.innerHTML = ''; if (tbl) tbl.style.width = ''; return; }   /* DataSource = null */
+    var admin = isAdmin();
+    var cols = [['Document Type Description', 150], ['Doc Date', 85], ['Doc No', 65], ['Supplier Customer', 200],
+                ['Gp No', 65], ['Vehicle No', 110], ['Bilty No', 110], ['Gross Weight', 100], ['Total Qty', 100]];
+    if (tbl) tbl.style.width = (cols.reduce(function (a, c) { return a + c[1]; }, 0) + 50 + (admin ? 30 : 0)) + 'px';
+    head.innerHTML = (admin ? '<th style="width:30px;"><input type="checkbox" id="chkPendingAll" onclick="lwTogglePendingAll(this)"></th>' : '')
+        + '<th style="width:50px;">Load</th>'
+        + cols.map(function (c) { return '<th style="width:' + c[1] + 'px;">' + c[0] + '</th>'; }).join('');
     body.innerHTML = S.pending.map(function (r, i) {
-        return '<tr>'
-          + '<td style="text-align:center;"><input type="checkbox" class="lw-pend" data-i="' + i + '"></td>'
+        return '<tr data-i="' + i + '">'
+          + (admin ? '<td class="btncell"><input type="checkbox" class="lw-pend" data-i="' + i + '"></td>' : '')
+          + '<td class="btncell"><button type="button" class="cb" onclick="lwLoadPending(' + i + ')">Load</button></td>'
           + '<td>' + esc(f(r, 'DocumentTypeDescription')) + '</td>'
-          + '<td>' + esc(ymd(f(r, 'DocDate'))) + '</td>'
-          /* The document code is clickable and opens its own record, per the brief. */
-          + '<td><a href="#" onclick="lwLoadPending(' + i + '); return false;"'
-          + ' style="color:#0f5959; font-weight:bold;">' + esc(f(r, 'DocNo')) + '</a></td>'
+          + '<td>' + esc(dmy(f(r, 'DocDate'))) + '</td>'
+          + '<td class="num">' + esc(f(r, 'DocNo')) + '</td>'
           + '<td>' + esc(f(r, 'SupplierCustomer')) + '</td>'
-          + '<td>' + esc(f(r, 'GpNo')) + '</td>'
+          + '<td class="num">' + esc(f(r, 'GpNo')) + '</td>'
           + '<td>' + esc(f(r, 'VehicleNo')) + '</td>'
           + '<td>' + esc(f(r, 'BiltyNo')) + '</td>'
-          + '<td style="text-align:right;">' + fmt(f(r, 'GrossWeight'), 3) + '</td>'
-          + '<td style="text-align:right;">' + fmt(f(r, 'TotalQty'), 3) + '</td>'
-          + '<td style="text-align:center;"><button type="button" class="win-btn" style="padding:1px 8px;"'
-          + ' onclick="lwLoadPending(' + i + ')">Load</button></td>'
+          + '<td class="num">' + fmtN(f(r, 'GrossWeight'), 3) + '</td>'
+          + '<td class="num">' + fmtN(f(r, 'TotalQty'), 3) + '</td>'
           + '</tr>';
     }).join('');
+    Array.prototype.forEach.call(body.querySelectorAll('tr'), function (tr) {
+        tr.addEventListener('click', function () {
+            S.pendingCur = parseInt(tr.getAttribute('data-i'), 10);
+            Array.prototype.forEach.call(body.querySelectorAll('tr.sel'), function (x) { x.classList.remove('sel'); });
+            tr.classList.add('sel');
+        });
+    });
 }
 
 window.lwTogglePendingAll = function (box) {
@@ -618,7 +689,7 @@ window.lwLoadAllPending = function () { /* btnLoadAll: Visible = false and an em
 /* BtnCancelPendingRecords_Click :4037-4070 - Admin only (:434) */
 window.lwCancelPending = function () {
     var ticked = Array.prototype.filter.call(document.querySelectorAll('.lw-pend'), function (c) { return c.checked; });
-    if (!ticked.length) { msg('Please select check box first', false); return; }
+    if (!ticked.length) { msg('Please select check box first'); return; }
     if (!confirm('Are you sure to Cancel Selected Pending Records?')) return;
     var rows = ticked.map(function (c) {
         var p = S.pending[parseInt(c.getAttribute('data-i'), 10)] || {};
@@ -627,21 +698,35 @@ window.lwCancelPending = function () {
     var btn = el('btnCancelPending'); busy(btn, true);
     postJson(API + '/cancel-pending', { rows: rows }).then(function (res) {
         busy(btn, false);
-        if (!res || !res.success) { msg((res && res.message) || 'Cancel failed.', false); return; }
+        if (!res || !res.success) { msg((res && res.message) || 'Cancel failed.'); return; }
         alert('Record Approve Successfully');
         window.lwNew();                                 /* FormRest() */
-    }).catch(function (e) { busy(btn, false); msg(e.message, false); });
+    }).catch(function (e) { busy(btn, false); msg(e.message); });
 };
 
-/* LoadDataForWages(), :2121-2300 */
+/* cmbReferenceDocType is never a list to choose from: it holds exactly ONE row - the document
+   type of the pending row that was loaded (:2130-2135) or of the bill that was read (:3070-3080)
+   - and is empty after New. */
+function bindRefDocType(id, text) {
+    var sel = el('cmbRefDocType');
+    if (!sel) return;
+    sel.innerHTML = id ? '<option value="' + esc(id) + '">' + esc(text) + '</option>' : '';
+    sel.value = id ? String(id) : '';
+}
+
+/* LoadDataForWages(), :2121-2290 */
 window.lwLoadPending = function (i) {
     var p = S.pending[i];
     if (!p) return;
-    clearMsg();
+    /* :2125 */
+    if (S.id > 0) { msg('Record Not Loaded Please Reset Form First'); return; }
+    if (S.busy) return;
 
+    tabShown('other', false);                                  /* :2136 */
     var docTypeId = num(f(p, 'DocumentTypeId'));
     S.refDocTypeId = docTypeId;
     S.refDocId     = num(f(p, 'Id'));
+    bindRefDocType(docTypeId, txt(f(p, 'DocumentTypeDescription')));
 
     setVal('txtRefDocNo',    f(p, 'DocNo'));
     setVal('txtGrnId',       f(p, 'Id'));
@@ -655,58 +740,51 @@ window.lwLoadPending = function (i) {
         : txt(f(p, 'DocumentTypeDescription')).trim();
     setVal('txtEntryType', S.reqType);
 
-    /* :2166 - 808 sends a numeric ReqType, everything else sends the text. */
-    var reqType = S.reqType;
-    if (docTypeId === 808) {
-        if (S.reqType === 'Input')  reqType = '1';
-        if (S.reqType === 'OutPut') reqType = '2';
+    /* :2162-2174 - ReqType is sent for 66 and 808 only; 808 sends "1" / "2". */
+    var reqType = '';
+    if (docTypeId === 66 || docTypeId === 808) {
+        reqType = S.reqType;
+        if (docTypeId === 808 && S.reqType === 'Input')  reqType = '1';
+        if (docTypeId === 808 && S.reqType === 'OutPut') reqType = '2';
     }
 
-    var sel = el('cmbRefDocType');
-    if (sel) {
-        var found = false;
-        for (var n = 0; n < sel.options.length; n++) {
-            if (String(sel.options[n].value) === String(docTypeId)) {
-                sel.selectedIndex = n; found = true; break;
-            }
-        }
-        if (!found) {
-            var o = document.createElement('option');
-            o.value = docTypeId;
-            o.textContent = txt(f(p, 'DocumentTypeDescription'));
-            sel.appendChild(o);
-            sel.value = String(docTypeId);
-        }
-        if (window.jQuery && jQuery(sel).data('select2')) jQuery(sel).trigger('change.select2');
-    }
+    S.otherIds = ((docTypeId === 68 || docTypeId === 806) && S.reqType === 'MoveOrder') ? '34' : '35';
+    busy(null, true);
 
-    busy(el('btnLoadAll'), true);
-
-    /* :2179 - is this document already billed?  A hit turns the form into an Update. */
+    /* :2181 - is this document already billed?  A hit turns the form into an Update and fills the
+       header from the saved bill (:2189-2201); the ROWS still come fresh from the document. */
     getJson(API + '/by-ref-doc?refDocumentTypeId=' + docTypeId
                 + '&refDocNoId=' + S.refDocId
                 + '&reqType=' + encodeURIComponent(reqType))
     .then(function (d) {
-        if (d && d.id) {
-            S.id = d.id;
-            return getJson(API + '/' + d.id).then(applyExisting);
-        }
-        S.id = 0;
-        return loadDetailRows(docTypeId, S.refDocId, reqType);
+        S.id = (d && d.id) ? num(d.id) : 0;
+        if (!S.id) return null;
+        return getJson(API + '/' + S.id).then(function (b) {
+            var h = (b && b.header) || {};
+            setVal('txtDocDate',      ymd(f(h, 'DocDate')));
+            setVal('txtDocNo',        f(h, 'DocNo'));
+            setVal('txtRefDocNo',     f(h, 'RefDocNo'));
+            setVal('txtGrnId',        f(h, 'RefDocNoId'));
+            setVal('txtOtherRemarks', f(h, 'OtherRemarks'));
+            setVal('txtGpNo',         f(h, 'ScaleSlipNo'));
+            S.reqType = txt(f(h, 'RefDocument'));
+            setVal('txtEntryType', S.reqType);
+            S.isApproved = !!f(h, 'IsAproved');
+        });
     })
+    .then(function () { return loadDetailRows(docTypeId, S.refDocId, reqType); })
+    .then(function () { return loadGridLookups(); })
     .then(function () {
         setSaveMode();
-        return loadGridLookups();
-    })
-    .then(function () {
         renderGrid('regular');
         renderGrid('other');
+        tabShown('other', S.other.length > 0 || ((docTypeId === 68 || docTypeId === 806) && S.reqType === 'MoveOrder'));
         lwTab('regular');
-        busy(el('btnLoadAll'), false);
+        busy(null, false);
     })
     .catch(function (e) {
-        busy(el('btnLoadAll'), false);
-        msg('Could not load the document: ' + e.message, false);
+        busy(null, false);
+        msg('Could not load the document: ' + e.message);
     });
 };
 
@@ -719,7 +797,7 @@ function loadDetailRows(docTypeId, refDocId, reqType) {
         var detail = (d && d.detail) || [];
         S.regular = [];
         S.other = [];
-        if (!detail.length) { msg('This document has no rows to bill.', false); return; }
+        if (!detail.length) return;                 /* :2203 - nothing is bound, nothing is said */
 
         var grossTotal = 0, qtyTotal = 0;
         detail.forEach(function (g, idx) {
@@ -768,8 +846,8 @@ function loadDetailRows(docTypeId, refDocId, reqType) {
 
         /* :2229 - when calculating on quantity the header totals are recomputed from the rows. */
         if (onQty()) {
-            setVal('txtGrossWeight', r2(grossTotal));
-            setVal('txtTotalQty',    r2(qtyTotal));
+            setVal('txtGrossWeight', grossTotal);
+            setVal('txtTotalQty',    qtyTotal);
         }
 
         /* :2240 - a pack size under 100 also goes to the Other Wages grid for 112 and 66;
@@ -786,241 +864,335 @@ function loadDetailRows(docTypeId, refDocId, reqType) {
     });
 }
 
-/* A document that already has a bill: header and rows come back from GetByID. */
-function applyExisting(d) {
-    var h = (d && d.header) || {};
-    setVal('txtDocDate',      ymd(f(h, 'DocDate')));
-    setVal('txtDocNo',        f(h, 'DocNo'));
-    setVal('txtRefDocNo',     f(h, 'RefDocNo'));
-    setVal('txtGrnId',        f(h, 'RefDocNoId'));
-    setVal('txtGpNo',         f(h, 'ScaleSlipNo'));
-    setVal('txtEntryType',    f(h, 'RefDocument'));
-    setVal('txtOtherRemarks', f(h, 'OtherRemarks'));
-    setVal('txtGrossWeight',  f(h, 'WeightTotal'));
-    setVal('txtTotalQty',     f(h, 'QtyTotal'));
-    var ap = el('chkIsApproved'); if (ap) ap.checked = !!f(h, 'IsAproved');
-    S.refDocId = num(f(h, 'RefDocNoId'));
-    S.reqType  = txt(f(h, 'RefDocument'));
-
-    S.regular = ((d && d.details) || []).map(function (x) {
-        var row = blankRow();
-        row.DetailId        = num(f(x, 'Id'));
-        row.SupplierId      = num(f(x, 'ContractorId'));
-        row.WagesId         = num(f(x, 'InvConractorWagesAccountsId'));
-        row.WagesScheduleId = num(f(x, 'InvContractorWagesScheduleId'));
-        row.ItemId          = num(f(x, 'ItemId'));
-        row.jobLotId        = num(f(x, 'JobLotId'));
-        row.packingTypeId   = num(f(x, 'InvPackingTypeId'));
-        row.WagesTypeId     = num(f(x, 'WagesTypeId'));
-        row.MoveFromId      = num(f(x, 'WareHouseFromId'));
-        row.MoveToId        = num(f(x, 'WareHouseToId'));
-        row.RefLineId       = num(f(x, 'RefLineId'));
-        row.Date            = ymd(f(x, 'RefDocDate'));
-        row.RefDocQty       = num(f(x, 'RefDocQty'));
-        row.RefDocWeight    = num(f(x, 'RefDocWeight'));
-        row.PackSize        = num(f(x, 'PackSize'));
-        row.Quantity        = num(f(x, 'Qty'));
-        row.BillQty         = num(f(x, 'BillQty'));
-        row.Weight          = num(f(x, 'Weight'));
-        row.BillWeight      = num(f(x, 'BillWeight'));
-        row.WeightCut       = num(f(x, 'WeightCut'));
-        row.RateWithoutAddLess = num(f(x, 'WageRate'));
-        row.RateAddLess     = num(f(x, 'RateAddLess'));
-        row.Rate            = num(f(x, 'WageRate')) + num(f(x, 'RateAddLess'));
-        row.Amount          = num(f(x, 'WagesAmount'));
-        row.Crop            = txt(f(x, 'Crop'));
-        row.WagesType       = f(x, 'FreeOfCost') ? 'Free Of Cost' : 'Regular';
-        row.ContractorName  = txt(f(x, 'ContractorName'));
-        row.WagesAccount    = txt(f(x, 'WagesAccountName'));
-        row.Item            = txt(f(x, 'ItemName'));
-        row.jobLot          = txt(f(x, 'JobLotDescription'));
-        row.MoveFrom        = txt(f(x, 'WarehouseFrom'));
-        row.MoveTo          = txt(f(x, 'WareHouseTo'));
-        row.WarehouseType   = txt(f(x, 'WarehouseType'));
-        return row;
-    });
-    S.other = [];
-    renderPrevDetail(d && d.details);
-    /* grdDataRetrieve HeaderWeight / HeaderQty = head.WeightTotal / head.QtyTotal (:2318) */
-    var hasPrev = d && d.details && d.details.length;
-    S.prevHeaderWeight = hasPrev ? num(f(h, 'WeightTotal')) : null;
-    S.prevHeaderQty = hasPrev ? num(f(h, 'QtyTotal')) : null;
+/* ReadById(ID), :3054-3183 - History "Edit" / double-click. */
+function detailToRow(x) {
+    var row = blankRow();
+    row.DetailId        = num(f(x, 'Id'));
+    row.SupplierId      = num(f(x, 'ContractorId'));
+    row.ContractorName  = txt(f(x, 'CompanyName') !== null ? f(x, 'CompanyName') : f(x, 'ContractorName'));
+    row.WagesId         = num(f(x, 'InvConractorWagesAccountsId'));
+    row.WagesAccount    = txt(f(x, 'WagesAccountName'));
+    row.WagesTypeId     = num(f(x, 'WagesTypeId'));
+    row.WagesType       = f(x, 'FreeOfCost') ? 'Free Of Cost' : 'Regular';
+    row.Date            = ymd(f(x, 'RefDocDate'));
+    row.packingTypeId   = num(f(x, 'InvPackingTypeId'));
+    row.packingType     = txt(f(x, 'PackTypeDesc'));
+    row.Weight          = num(f(x, 'Weight'));
+    row.PackSize        = num(f(x, 'PackSize'));
+    row.Quantity        = num(f(x, 'Qty'));
+    row.WeightCut       = num(f(x, 'WeightCut'));
+    row.BillQty         = num(f(x, 'BillQty'));
+    row.BillWeight      = num(f(x, 'BillWeight'));
+    /* :3121 - the stored WageRate is the FULL rate; RateWithoutAddLess = WageRate - RateAddLess. */
+    row.RateAddLess     = num(f(x, 'RateAddLess'));
+    row.Rate            = num(f(x, 'WageRate'));
+    row.RateWithoutAddLess = num(f(x, 'WageRate')) - num(f(x, 'RateAddLess'));
+    row.Amount          = num(f(x, 'WagesAmount'));
+    row.ItemId          = num(f(x, 'ItemId'));
+    row.Item            = txt(f(x, 'ItemName'));
+    row.jobLotId        = num(f(x, 'JobLotId'));
+    row.jobLot          = txt(f(x, 'JobLotDescription'));
+    row.Crop            = txt(f(x, 'Crop'));
+    row.MoveFromId      = num(f(x, 'WareHouseFromId'));
+    row.MoveFrom        = txt(f(x, 'WareHouseFrom') !== null ? f(x, 'WareHouseFrom') : f(x, 'WarehouseFrom'));
+    row.MoveToId        = num(f(x, 'WareHouseToId'));
+    row.MoveTo          = txt(f(x, 'WareHouseTo'));
+    row.PurchaseGLAC    = txt(f(x, 'PurchaseGLAC'));
+    row.glUnknown       = f(x, 'PurchaseGLAC') === null;   /* the read did not carry the column at all */
+    row.WarehouseType   = '';
+    row.RefDocQty       = num(f(x, 'RefDocQty'));
+    row.RefDocWeight    = num(f(x, 'RefDocWeight'));
+    row.RefLineId       = num(f(x, 'RefLineId'));
+    row.WagesScheduleId = num(f(x, 'InvContractorWagesScheduleId'));
+    return row;
 }
+/* The blank Other Wages row the desktop adds for a regular row that has none (:3144, :3162). */
+function fillInRow(r) {
+    var o = JSON.parse(JSON.stringify(r));
+    o.DetailId = 0; o.SupplierId = 0; o.ContractorName = ''; o.WagesId = 0; o.WagesAccount = '';
+    o.RateWithoutAddLess = 0; o.RateAddLess = 0; o.Rate = 0; o.Amount = 0; o.WagesScheduleId = 0;
+    return o;
+}
+function readById(id, isReferred) {
+    return getJson(API + '/' + id).then(function (d) {
+        var h = (d && d.header) || null, details = (d && d.details) || [];
+        if (!h || !details.length) return false;               /* :3060 - silently nothing */
+        S.id = id;
+        S.isReferred = !!isReferred;
+        tabShown('detail', false); tabShown('other', false);   /* :3067-3068 */
+        lwTab('form');                                          /* :3069 */
 
-function renderPrevDetail(details) {
-    renderTable('grdPrevDetailHead', 'grdPrevDetailBody', details || []);
+        S.refDocTypeId = num(f(h, 'RefDocumentTypeId'));
+        bindRefDocType(S.refDocTypeId, txt(f(h, 'DocumentTypeDescription')));
+        setVal('txtDocDate',      ymd(f(h, 'DocDate')));
+        setVal('txtDocNo',        f(h, 'DocNo'));
+        setVal('txtRefDocNo',     f(h, 'RefDocNo'));
+        setVal('txtGrnId',        f(h, 'RefDocNoId'));
+        setVal('txtTotalQty',     f(h, 'QtyTotal'));
+        setVal('txtGrossWeight',  f(h, 'WeightTotal'));
+        setVal('txtOtherRemarks', f(h, 'OtherRemarks'));
+        setVal('txtGpNo',         f(h, 'ScaleSlipNo'));
+        S.refDocId = num(f(h, 'RefDocNoId'));
+        S.reqType  = txt(f(h, 'RefDocument'));
+        setVal('txtEntryType', S.reqType);
+        S.isApproved = !!f(h, 'IsAproved');
+
+        /* :3098-3125 - WagesTypeId 2 rows are the Other Wages grid; the rest are Regular, and the
+           Gross Weight box becomes the sum of the regular rows' Weight. */
+        var t = S.refDocTypeId, gross = 0, anyRegular = false;
+        S.regular = []; S.other = []; S.otherIds = '35';
+        details.forEach(function (x) {
+            var row = detailToRow(x);
+            if (num(f(x, 'WagesTypeId')) === 2) {
+                if (t === 68 || t === 806) S.otherIds = '34';
+                row.WarehouseType = txt(f(x, 'WarehouseType'));
+                S.other.push(row);
+            } else {
+                S.regular.push(row);
+                gross += row.Weight; anyRegular = true;
+            }
+        });
+        if (anyRegular) setVal('txtGrossWeight', gross);
+
+        /* :3132-3165 - no Other Wages rows were saved: offer blank ones for the regular rows. */
+        if (!S.other.length && ((t === 66 && S.reqType !== 'Issue') || t === 112)) {
+            S.otherIds = '34';
+            S.other = S.regular.filter(function (r) { return num(r.PackSize) < 100; }).map(fillInRow);
+        } else if (!S.other.length && (t === 68 || t === 806)) {
+            S.otherIds = '34';
+            S.other = S.regular.map(fillInRow);
+        }
+        return loadGridLookups().then(function () {
+            setSaveMode();
+            renderGrid('regular'); renderGrid('other');
+            tabShown('other', S.other.length > 0);              /* :3168 */
+            lwTab('regular');
+            return true;
+        });
+    });
 }
 
 /* ---------------------------------------------------------------- lookups */
 function loadGridLookups() {
-    return getJson(API + '/grid-lookups?refDocumentTypeId=' + S.refDocTypeId)
+    return getJson(API + '/grid-lookups?refDocumentTypeId=' + S.refDocTypeId + '&otherIds=' + encodeURIComponent(S.otherIds || '35'))
         .then(function (d) {
-            S.contractors = (d && d.contractors) || [];
-            S.activities  = (d && d.wagesActivities) || [];
+            S.contractors     = (d && d.contractors) || [];
+            S.activities      = (d && d.wagesActivities) || [];
+            S.otherActivities = (d && d.otherWagesActivities) || [];
         })
         .catch(function (e) {
-            S.contractors = []; S.activities = [];
-            msg('Contractor / activity lists could not be loaded: ' + e.message, false);
+            S.contractors = []; S.activities = []; S.otherActivities = [];
+            msg('Contractor / activity lists could not be loaded: ' + e.message);
         });
 }
 
-function loadDocumentTypes() {
-    return getJson(API + '/document-types').then(function (rows) {
-        rows = rows || [];
-        ['cmbRefDocType', 'cmbHistDocType'].forEach(function (id) {
-            var sel = el(id);
-            if (!sel) return;
-            sel.innerHTML = '<option value="">...Select Any Value...</option>'
-                + rows.map(function (r) {
-                    var v = f(r, 'Id');
-                    if (v === null) v = f(r, 'DocumentTypeId');
-                    var t = f(r, 'ReferenceDocType');
-                    if (t === null) t = f(r, 'DocumentTypeDescription');
-                    if (t === null) t = f(r, 'Description');
-                    return '<option value="' + esc(v) + '">' + esc(t) + '</option>';
-                }).join('');
-        });
-    }).catch(function (e) {
-        msg('Reference document types could not be loaded: ' + e.message, false);
-    });
+/* DocumentTypeFillForCombo() :569-606 - the HISTORY tab's Document Type combo only
+   (Usp_AllComboAgainstContractorWages, Activity = RefDocumentType -> Id / ReferenceName). */
+function loadHistoryDocumentTypes() {
+    return getJson(API + '/history-document-types').then(function (rows) {
+        var sel = el('cmbHistDocType');
+        if (!sel) return;
+        var keep = sel.value;
+        sel.innerHTML = '<option value=""></option>' + (rows || []).map(function (r) {
+            return '<option value="' + esc(f(r, 'Id')) + '">' + esc(f(r, 'name')) + '</option>';
+        }).join('');
+        sel.value = keep;
+    }).catch(function (e) { msg('Document types could not be loaded: ' + e.message); });
 }
 
-window.lwRefDocTypeChanged = function () {
-    S.refDocTypeId = num(val('cmbRefDocType'));
-    S.refDocId = 0;
-    S.id = 0;
-    setSaveMode();
-    generateDocNo();
-    loadGridLookups().then(function () { renderGrid('regular'); renderGrid('other'); });
-    loadPending();
-};
-
-window.lwLoadRefDoc = function () {
-    /* Typing a reference document number finds it in the pending list rather than
-       inventing a second lookup path the desktop does not have. */
-    var no = num(val('txtRefDocNo'));
-    if (!no) return;
-    for (var i = 0; i < S.pending.length; i++) {
-        if (num(f(S.pending[i], 'DocNo')) === no) { window.lwLoadPending(i); return; }
-    }
-    msg('Document ' + no + ' is not in the pending list for this reference document type.', false);
-};
-
+/* GenerateDocNo() :465-491 - RefDocumentTypeId is always 101 here, whatever the document. */
 function generateDocNo() {
-    if (!S.refDocTypeId) { setVal('txtDocNo', ''); return; }
-    getJson(API + '/next-doc-no?refDocumentTypeId=' + S.refDocTypeId)
-        .then(function (d) { setVal('txtDocNo', d && d.docNo ? d.docNo : ''); })
-        .catch(function () { setVal('txtDocNo', ''); });
+    return getJson(API + '/next-doc-no?refDocumentTypeId=101')
+        .then(function (d) { if (d && num(d.docNo) > 0) setVal('txtDocNo', d.docNo); })
+        .catch(function () { /* the box keeps its value, as :480 does on a miss */ });
+}
+
+/* CommonServices.SetRightsValueInRightsObject(base.Name) :344-347 */
+function applyRights() {
+    var r = S.rights;
+    if (!r) return;
+    var s = el('btnSave'), u = el('btnUpdate'), p = el('btnPrint002');
+    if (s && r.save === false)   s.disabled = true;
+    if (u && r.update === false) u.disabled = true;
+    if (p && r.print === false)  p.disabled = true;
 }
 
 function setSaveMode() {
-    var save = el('btnSave'), upd = el('btnUpdate'), lbl = el('lblEditing'), sel = el('cmbRefDocType');
-    if (S.id > 0) {
-        if (save) save.style.display = 'none';
-        if (upd)  upd.style.display = '';
-        if (lbl)  lbl.textContent = 'Editing an existing bill (Id ' + S.id + ') - Save is replaced by '
-                                  + 'Update, and the reference document can no longer be changed.';
-        if (sel)  sel.disabled = true;
-    } else {
-        if (save) save.style.display = '';
-        if (upd)  upd.style.display = 'none';
-        if (lbl)  lbl.textContent = '';
-        if (sel)  sel.disabled = false;
-    }
+    var save = el('btnSave'), upd = el('btnUpdate'), sel = el('cmbRefDocType');
+    if (save) save.classList.toggle('is-hidden', S.id > 0);
+    if (upd)  upd.classList.toggle('is-hidden', !(S.id > 0));
+    if (sel)  sel.disabled = S.id > 0;                 /* cmbReferenceDocType.Enabled = false (:2197, :3086) */
 }
 
 /* ---------------------------------------------------------------- save */
+/* Insert(), :2702-3027 - every check, message and stored value in the form's own order.
+   Returns the payload, or throws an Error carrying the desktop's message. */
 function buildPayload() {
-    var rows = S.regular.concat(S.other);
+    var t = S.refDocTypeId, on = onQty();
+    var stichingCompulsory = t === 112 ? cfgBool('StichingWagesCompulsory')
+                           : t === 66  ? cfgBool('OtherWagesCompulsoryForStockConversion') : false;   /* :442-463 */
+    var details = [];
+    function need(bad, text) { if (bad) throw new Error(text); }
+    function common(r) {
+        var free = txt(r.WagesType) === 'Free Of Cost' || txt(r.WarehouseType) === 'Dryer';
+        var d = {
+            id: num(r.DetailId),
+            contractorId: num(r.SupplierId),
+            wagesAccountId: num(r.WagesId),
+            scheduleId: free ? 0 : num(r.WagesScheduleId),
+            itemId: num(r.ItemId), jobLotId: num(r.jobLotId), packingTypeId: num(r.packingTypeId),
+            warehouseFromId: num(r.MoveFromId), warehouseToId: num(r.MoveToId),
+            wbTransactionsIdDt: 0, jobOrderId: 0,
+            refLineId: num(r.RefLineId), refDocDate: ymd(r.Date),
+            refDocQty: num(r.RefDocQty), refDocWeight: num(r.RefDocWeight),
+            packSize: num(r.PackSize),
+            qty: num(r.Quantity),
+            billQty: num(r.BillQty),                 /* :2877 - the BillQty cell wins over :2799 */
+            weight: num(r.Weight),
+            billWeight: num(r.Weight),               /* :2806 - wd.BillWeight is the WEIGHT cell */
+            weightCut: num(r.WeightCut),
+            /* :2826 - WageRate is the Rate cell, i.e. schedule rate + add/less; RateAddLess is
+               stored beside it, and ReadById takes it off again (:3121). */
+            wageRate: free ? 0 : num(r.Rate),
+            rateAddLess: free ? 0 : num(r.RateAddLess),
+            freeOfCost: txt(r.WagesType) === 'Free Of Cost' || free,
+            isCompany: false,
+            crop: txt(r.Crop), remarksDetail: '',
+            wagesAccountName: txt(r.WagesAccount), itemName: txt(r.Item)
+        };
+        return d;
+    }
+    function amount(d) {                             /* :2846-2852 - from Weight, rounded to 2 */
+        if (d.freeOfCost) return 0;
+        return on ? r2(d.qty * d.wageRate) : r2(d.weight / d.packSize * d.wageRate);
+    }
+
+    need(!S.regular.length, 'Regular Wages Grid... Record Not Found');
+    var docDate = val('txtDocDate');
+    S.regular.forEach(function (r) {
+        docDate = ymd(r.Date) || docDate;            /* :2786 - obj.DocDate follows the row's Date */
+        need(!num(r.WagesId), 'WagesAccount Field required In Regular Wages Grid...');
+        need(!Math.trunc(num(r.Quantity)), 'Quantity Field required In Regular Wages Grid...');
+        need(!num(r.Weight), 'Weight Field required In Regular Wages Grid...');
+        need(!num(r.PackSize), 'PackSize Field required In Regular Wages Grid...');
+        var d = common(r);
+        need(!d.freeOfCost && d.wageRate === 0, 'Rate Field required In Regular Wages Grid...');
+        d.freeOfCost = txt(r.WagesType) === 'Free Of Cost';           /* :2832-2839 */
+        d.wagesAmount = amount(d);
+        need(!num(r.SupplierId), 'ContractorAccount Field required In Regular Wages Grid...');
+        need(!num(r.ItemId), 'Item Name Field required In Regular Wages Grid...');
+        need(!r.glUnknown && !Math.trunc(num(r.PurchaseGLAC)), 'PurchaseGLAC Field required In Regular Wages Grid...');
+        d.wagesTypeId = 0;                           /* :2872 - ToInt of the WagesType TEXT is 0 */
+        details.push(d);
+    });
+
+    /* :2885-2896 */
+    if (!S.other.length && stichingCompulsory && ((t === 66 && S.reqType !== 'Issue') || t === 68 || t === 112 || t === 806)) {
+        need(S.regular.some(function (r) { return num(r.PackSize) < 100; }),
+             'Stitching Wages Grid... Record Not Found\n Stitching Wages Compulsory Configuration is On');
+    }
+    var G = 'Other Wages Grid ...', mo = S.reqType === 'MoveOrder';
+    S.other.forEach(function (r) {
+        /* :2901 - an untouched row is skipped unless the configuration makes it compulsory */
+        if (S.reqType === 'Issue' || (!stichingCompulsory && !num(r.WagesId) && !num(r.SupplierId))) return;
+        /* the desktop's "(type != 68 || type != 806)" is always true, so only MoveOrder exempts */
+        need(!num(r.WagesId) && !mo, 'WagesAccount Field required In ' + G);
+        need(!Math.trunc(num(r.Quantity)) && !mo, 'Quantity Field required In ' + G);
+        need(!num(r.Weight) && !mo, 'Weight Field required In ' + G);
+        need(!num(r.PackSize) && !mo, 'PackSize Field Required In ' + G);
+        var d = common(r);
+        need(!d.freeOfCost && d.wageRate === 0, 'Rate Field required In ' + G);
+        if (!d.freeOfCost) d.wagesAmount = on ? r2(d.qty * d.wageRate) : r2(d.weight / d.packSize * d.wageRate);
+        else d.wagesAmount = 0;
+        need(!num(r.SupplierId) && !mo, 'ContractorAccount Field required In ' + G);
+        need(!num(r.ItemId) && !mo, 'Item Name Field required In ' + G);
+        need(!r.glUnknown && !Math.trunc(num(r.PurchaseGLAC)) && !mo, 'PurchaseGLAC Field required In ' + G);
+        d.billQty = Math.trunc(num(r.BillQty));       /* :2988 ToInt */
+        d.freeOfCost = txt(r.WagesType) === 'Free Of Cost';
+        d.wagesTypeId = 2;                            /* :3000 */
+        details.push(d);
+    });
+
     return {
         id: S.id,
         docNo: num(val('txtDocNo')),
-        docDate: val('txtDocDate'),
+        docDate: docDate,
         refDocumentTypeId: S.refDocTypeId,
         refDocNo: num(val('txtRefDocNo')),
         refDocNoId: num(val('txtGrnId')),
-        refDocument: S.reqType,
-        stockPartyId: 0,
-        jobOrderId: 0,
+        refDocument: txt(val('txtEntryType')).trim(),
+        stockPartyId: 0, jobOrderId: 0,
         scaleSlipNo: num(val('txtGpNo')),
         projectsId: 0,
         otherRemarks: val('txtOtherRemarks'),
-        details: rows.map(function (r) {
-            return {
-                id: num(r.DetailId),
-                contractorId: num(r.SupplierId),
-                wagesAccountId: num(r.WagesId),
-                scheduleId: num(r.WagesScheduleId),
-                itemId: num(r.ItemId),
-                jobLotId: num(r.jobLotId),
-                packingTypeId: num(r.packingTypeId),
-                wagesTypeId: num(r.WagesTypeId),
-                warehouseFromId: num(r.MoveFromId),
-                warehouseToId: num(r.MoveToId),
-                wbTransactionsIdDt: 0,
-                jobOrderId: 0,
-                refLineId: num(r.RefLineId),
-                refDocDate: ymd(r.Date),
-                refDocQty: num(r.RefDocQty),
-                refDocWeight: num(r.RefDocWeight),
-                packSize: num(r.PackSize),
-                qty: num(r.Quantity),
-                billQty: num(r.BillQty),
-                weight: num(r.Weight),
-                billWeight: num(r.BillWeight),
-                weightCut: num(r.WeightCut),
-                /* The procedure's WageRate is the schedule rate BEFORE add/less - the add/less
-                   is its own column (:994-1010). Sending the combined rate would double-count it. */
-                wageRate: num(r.RateWithoutAddLess),
-                rateAddLess: num(r.RateAddLess),
-                wagesAmount: num(r.Amount),
-                freeOfCost: txt(r.WagesType) === 'Free Of Cost',
-                isCompany: false,
-                crop: txt(r.Crop),
-                remarksDetail: '',
-                wagesAccountName: txt(r.WagesAccount),
-                itemName: txt(r.Item)
-            };
-        })
+        qtyTotal: num(val('txtTotalQty')),            /* :3003 */
+        weightTotal: num(val('txtGrossWeight')),      /* :3004 */
+        isApproved: S.isApproved,
+        details: details
     };
 }
 
-/* FormValidation, :2572-2600 - the form's own messages, in its own order. */
-function validate(p) {
-    if (!p.docNo)             return 'document Number Field Required';
-    if (!p.refDocumentTypeId) return 'ReferenceDocType Field Required';
-    if (!p.refDocNo)          return 'Doc No Field Required';
-    if (!p.refDocNoId)        return 'DocNoId Field Required';
-    if (!p.details.length)    return 'First row contains No values Of Contractor And Wages Account.';
-    for (var i = 0; i < p.details.length; i++) {
-        if (!p.details[i].contractorId || !p.details[i].wagesAccountId) {
-            return 'Row ' + (i + 1) + ' has no Contractor or Wages Account.';
-        }
-    }
-    return null;
+/* ValidationforRefRowQty / ValidationforRefRowWeight, :2634-2700 */
+function refRowCheck(rows, gridName) {
+    var on = onQty(), groups = {};
+    rows.forEach(function (r) {
+        var cap = on ? num(r.RefDocQty) : num(r.RefDocWeight);
+        var k = num(r.WagesId) + '|' + num(r.RefLineId) + '|' + cap;
+        if (!groups[k]) groups[k] = { wagesId: num(r.WagesId), line: num(r.RefLineId), cap: cap, total: 0 };
+        groups[k].total += on ? num(r.Quantity) : num(r.BillWeight);
+    });
+    Object.keys(groups).forEach(function (k) {
+        var g = groups[k];
+        if (g.total <= g.cap) return;
+        var a = S.activities.filter(function (x) { return num(f(x, 'Id')) === g.wagesId; })[0];
+        var name = a ? txt(f(a, 'WagesAccountName')) : '';
+        if (on) throw new Error('TotalQty against Reference RowNo and Wages Account Should be Equal to or less than Reference Row Qty\n'
+            + 'Here TotalQty (' + g.total + ') exceeds Reference Row Qty (' + g.cap + ') for WagesAccount (' + name + ') and RowNo ' + g.line + ' in ' + gridName + ' Grid');
+        throw new Error('TotalBillWeight against Reference RowNo and Account Should be Equal to or less than Reference Row Weight\n'
+            + 'Here TotalBillWeight (' + g.total + ') exceeds Reference Row Weight (' + g.cap + ') for WagesAccount (' + name + ') and RowNo ' + g.line + '  in ' + gridName + ' Grid');
+    });
+}
+
+/* FormValidation, :2568-2595 */
+function formValidation() {
+    if (!num(val('txtDocNo')))    { msg('document Number Field Required'); return false; }
+    if (!S.refDocTypeId || !val('cmbRefDocType')) { msg('ReferenceDocType Field Required'); var c = el('cmbRefDocType'); if (c) c.focus(); return false; }
+    if (!num(val('txtRefDocNo'))) { msg('Doc No Field Required'); return false; }
+    if (!num(val('txtGrnId')))    { msg('DocNoId Field Required'); return false; }
+    return true;
 }
 
 function doSave(btn, isUpdate) {
     if (S.busy) return;
-    clearMsg();
-    var p = buildPayload();
-    var err = validate(p);
-    if (err) { msg(err, false); return; }
-    if (!confirm(isUpdate ? 'Are you sure to Update?' : 'Are you sure to Save?')) return;
+    if (!formValidation()) return;
+    var t = S.refDocTypeId;
+    /* :2714 */
+    if (!onQty() && (t === 68 || t === 806)) {
+        var ow = S.other.reduce(function (a, r) { return a + num(r.Weight); }, 0);
+        if (ow !== num(val('txtGrossWeight'))) { msg('OutPut Grid Total Weight and GrossWeight not equal please check!'); return; }
+    }
+    if (!window.confirm(S.id > 0 ? 'Are you sure to Update?' : 'Are you sure to Save?')) return;
+    var p;
+    try {
+        if (addCondition()) {                         /* :2734-2746 */
+            refRowCheck(S.regular, 'Regular_Wages');
+            refRowCheck(S.other, 'Other_Wages');
+        }
+        p = buildPayload();
+    } catch (e) { msg(e.message); return; }
 
     busy(btn, true);
     postJson(API + '/save', p).then(function (res) {
         busy(btn, false);
         if (res && res.success) {
-            S.id = num(res.id) || S.id;
-            setSaveMode();
-            msg(res.message || 'Saved SuccessFully', true);
+            msg((S.id > 0 ? 'Updated SuccessFully  [' : 'Saved SuccessFully  [') + p.docNo + ']');   /* :3008-3013 */
+            window.lwNew();                           /* FormRest() :3020 */
         } else {
-            msg((res && res.message) || 'Save failed.', false);
+            msg((res && res.message) || 'Save failed.');
         }
     }).catch(function (e) {
         busy(btn, false);
-        msg('Save failed: ' + e.message, false);
+        msg('Save failed: ' + e.message);
     });
 }
 
@@ -1028,9 +1200,13 @@ window.lwSave   = function () { doSave(el('btnSave'), false); };
 window.lwUpdate = function () { doSave(el('btnUpdate'), true); };
 /* Print_Click :3817-3827 -> SlipPrint_002(RECID) -> CommonServices.ContractorWagesBill_SlipandRegister_002 */
 window.lwPrint002 = function () {
-    if (!window.CrystalPrint) { msg('countx_crystal_print.js is not loaded.', false); return; }
-    return window.CrystalPrint.open('wages-002', { id: S.id }, 'btnPrint002');
+    return slipPrint002(S.id, 'btnPrint002');
 };
+/* SlipPrint_002(PrintId) :3829 */
+function slipPrint002(id, btn) {
+    if (!window.CrystalPrint) { msg('countx_crystal_print.js is not loaded.'); return; }
+    return window.CrystalPrint.open('wages-002', { id: num(id) }, btn || null);
+}
 /* btnnew_Click :2444 / Ctrl+E - ValidationOnformClose :2597-2632 */
 function validationOnFormClose(resetOrClose) {
     var rows = S.regular;
@@ -1050,44 +1226,151 @@ function validationOnFormClose(resetOrClose) {
 }
 window.lwNewClick = function () { validationOnFormClose('Reset').then(function (ok) { if (ok) window.lwNew(); }); };
 window.lwClose = function () {
-    if (S.refDocTypeId > 0 && S.refDocId > 0) return;    /* :3758 - Ctrl+E/Esc only when not opened from a document */
+    /* :3752 - RefDocTypeId / RefDocId are the form's OPEN arguments; this page is never opened from a document. */
     validationOnFormClose('Close').then(function (ok) { if (ok) window.location.href = '/accounts/vouchers/contractor-wages-dashboard'; });
 };
 
 /* ---------------------------------------------------------------- new / refresh */
+/* FormRest(), :2459-2499 */
 window.lwNew = function () {
-    S.id = 0; S.refDocId = 0; S.reqType = ''; S.isReferred = false;   /* FormRest :2490 IsReferred = false */
-    S.regular = []; S.other = [];
-    setVal('txtDocDate', today());
-    setVal('txtRefDocNo', ''); setVal('txtGpNo', ''); setVal('txtEntryType', '');
-    setVal('txtGrnId', ''); setVal('txtGrossWeight', 0); setVal('txtTotalQty', 0);
-    setVal('txtOtherRemarks', '');
-    var ap = el('chkIsApproved'); if (ap) ap.checked = false;
-    setSaveMode();
-    generateDocNo();
-    renderGrid('regular'); renderGrid('other');
-    renderPrevDetail([]);
+    S.id = 0; S.refDocTypeId = 0; S.refDocId = 0; S.reqType = ''; S.isReferred = false; S.isApproved = false;
+    S.regular = []; S.other = []; S.otherIds = '35';
     S.prevHeaderQty = null; S.prevHeaderWeight = null;
-    loadPending();
-    clearMsg();
-    lwTab('form');
+    bindRefDocType(0, '');
+    setVal('txtRefDocNo', ''); setVal('txtGpNo', ''); setVal('txtOtherRemarks', '');
+    setVal('txtTotalQty', ''); setVal('txtGrossWeight', ''); setVal('txtGrnId', ''); setVal('txtEntryType', '');
+    generateDocNo();
+    setSaveMode();
+    renderGrid('regular'); renderGrid('other');
+    loadPending();                                    /* PendingTicket() */
+    tabShown('other', false); tabShown('detail', false);
+    lwTab('regular'); lwTab('pending');
 };
 
-window.lwRefresh = function () { window.lwNew(); };
-
-window.lwNotImplemented = function (name) {
-    msg(name + ' has not been ported yet. Its desktop form is a separate screen; '
-        + 'nothing here was changed.', false);
-};
-
-window.lwToggleFullscreen = function () {
-    var card = el('viewRegular') && el('viewRegular').style.display !== 'none' ? el('lwRegularCard')
-             : el('viewOther')   && el('viewOther').style.display   !== 'none' ? el('lwOtherCard')
-             : el('lwHistoryCard');
-    if (card) card.classList.toggle('cw-fullscreen');
+/* btnRefresh_Click, :2531-2547 - configuration and the two grid lists are read again; the form
+   and its rows are NOT reset. */
+window.lwRefresh = function () {
+    if (S.busy) return;
+    var btn = el('btnRefresh'); busy(btn, true);
+    getJson(API + '/config-flags').then(function (c) { var adm = S.cfg.isAdmin; S.cfg = c || {}; if (S.cfg.isAdmin === undefined) S.cfg.isAdmin = adm; })
+        .catch(function () { })
+        .then(loadGridLookups)
+        .then(function () { busy(btn, false); renderGrid('regular'); renderGrid('other'); });
 };
 
 /* ---------------------------------------------------------------- history tab */
+/* bindHistory() :3247-3310 + HistoryGridSettings() :3312-3381. Edit, Slip and Voucher are the
+   first three (frozen) columns; Id, DocumentTypeId, RefDocumentTypeId, RefDocNoId, JobOrderId and
+   IsReferred are hidden; the three totals are summed. */
+var HIST_COLS = [
+    { k: 'DocumentTypeDescription', c: 'Document Type', w: 150 },
+    { k: 'DocDate',     c: 'Doc Date',     w: 95,  date: 1 },
+    { k: 'DocNo',       c: 'Doc No',       w: 70,  num: 1, plain: 1 },
+    { k: 'RefDocNo',    c: 'Ref Doc No',   w: 70,  num: 1, plain: 1 },
+    { k: 'QtyTotal',    c: 'Qty Total',    w: 90,  num: 1, sum: 1 },
+    { k: 'WeightTotal', c: 'Weight Total', w: 100, num: 1, sum: 1 },
+    { k: 'WagesAmount', c: 'Wages Amount', w: 110, num: 1, sum: 1 },
+    { k: 'OtherRemarks', c: 'Other Remarks', w: 200 },
+    { k: 'JobOrderNo',  c: 'Job Order No', w: 100 },
+    { k: 'EntryDate',   c: 'Entry Date',   w: 150, date: 2 },
+    { k: 'UserName',    c: 'Entry User',   w: 120 },
+    { k: 'ModifyDate',  c: 'Modify Date',  w: 150, date: 2 },
+    { k: 'ModifyUser',  c: 'Modify User',  w: 120 }
+];
+function renderHistory() {
+    var tbl = el('grdHistory'), head = el('grdHistoryHead'), body = el('grdHistoryBody'), foot = el('grdHistoryFoot');
+    if (!head || !body) return;
+    var rows = S.historyRows || [];
+    if (!rows.length) {                                /* DataGridHistory.ClearStructure() */
+        head.innerHTML = ''; body.innerHTML = ''; if (foot) foot.innerHTML = ''; if (tbl) tbl.style.width = '';
+        renderHistoryDetail(null);
+        return;
+    }
+    if (tbl) tbl.style.width = (HIST_COLS.reduce(function (a, c) { return a + c.w; }, 0) + 140) + 'px';
+    head.innerHTML = '<th style="width:40px;">Edit</th><th style="width:40px;">Slip</th><th style="width:60px;">Voucher</th>'
+        + HIST_COLS.map(function (c) { return '<th style="width:' + c.w + 'px;">' + c.c + '</th>'; }).join('');
+    body.innerHTML = rows.map(function (r, i) {
+        return '<tr data-i="' + i + '">'
+            + '<td class="btncell"><button type="button" class="cb" data-act="Edit">Edit</button></td>'
+            + '<td class="btncell"><button type="button" class="cb" data-act="Slip">Slip</button></td>'
+            + '<td class="btncell"><button type="button" class="cb" data-act="Voucher">Voucher</button></td>'
+            + HIST_COLS.map(function (c) {
+                var v = f(r, c.k);
+                if (c.date) v = dmy(v, c.date === 2);
+                else if (c.num && !c.plain) v = fmtN(v, 0);            /* "#,#" */
+                return '<td' + (c.num ? ' class="num"' : '') + '>' + esc(v) + '</td>';
+            }).join('') + '</tr>';
+    }).join('');
+    if (foot) {
+        foot.innerHTML = '<td></td><td></td><td></td>' + HIST_COLS.map(function (c) {
+            if (!c.sum) return '<td></td>';
+            return '<td class="num">' + fmtN(rows.reduce(function (a, r) { return a + num(f(r, c.k)); }, 0), 0) + '</td>';
+        }).join('');
+    }
+}
+function historySelect(i) {
+    var body = el('grdHistoryBody');
+    Array.prototype.forEach.call(body.querySelectorAll('tr.sel'), function (x) { x.classList.remove('sel'); });
+    var tr = body.querySelector('tr[data-i="' + i + '"]'); if (tr) tr.classList.add('sel');
+    if (S.historyCur === i) return;
+    S.historyCur = i;
+    var r = S.historyRows[i]; if (!r) return;
+    /* DataGridHistory_SelectionChanged :3539 -> HistoryDetailGridBind(Id) */
+    getJson(API + '/' + num(f(r, 'Id'))).then(function (d) { if (S.historyCur === i) renderHistoryDetail((d && d.details) || []); })
+        .catch(function (e) { msg('History detail failed: ' + e.message); });
+}
+/* HistoryDetailGridBind / HistoryDetailGridSettings :3445-3533 */
+function renderHistoryDetail(details) {
+    var tbl = el('grdHistoryDetail'), head = el('grdHistoryDetailHead'), body = el('grdHistoryDetailBody'), foot = el('grdHistoryDetailFoot');
+    if (!head || !body) return;
+    if (!details || !details.length) { head.innerHTML = ''; body.innerHTML = ''; if (foot) foot.innerHTML = ''; if (tbl) tbl.style.width = ''; return; }
+    var al = addLessOn();
+    var cols = [
+        { c: 'Contractor Name', w: 150, v: function (x) { var n = f(x, 'CompanyName'); return txt(n !== null ? n : f(x, 'ContractorName')); } },
+        { c: 'Labour / Wages Activity', w: 200, v: function (x) { return txt(f(x, 'WagesAccountName')); } },
+        { c: 'Packing Type', w: 95, v: function (x) { return txt(f(x, 'PackTypeDesc')); } },
+        { c: 'Weight', w: 90, n: 0, sum: 1, v: function (x) { return num(f(x, 'Weight')); } },
+        { c: 'Pack Size', w: 70, v: function (x) { return txt(f(x, 'PackSize')); } },
+        { c: 'Quantity', w: 80, n: 0, sum: 1, v: function (x) { return num(f(x, 'Qty')); } },
+        { c: 'Weight Cut', w: 70, v: function (x) { return txt(f(x, 'WeightCut')); } },
+        { c: 'Bill Weight', w: 90, n: 0, sum: 1, v: function (x) { return num(f(x, 'BillWeight')); } }
+    ];
+    if (al) {
+        cols.push({ c: 'Rate Without Add Less', w: 100, n: 2, v: function (x) { return num(f(x, 'WageRate')) - num(f(x, 'RateAddLess')); } });
+        cols.push({ c: 'Rate Add Less', w: 80, n: 2, sum: 1, v: function (x) { return num(f(x, 'RateAddLess')); } });
+    }
+    cols.push({ c: 'Rate', w: 80, right: 1, v: function (x) { return txt(f(x, 'WageRate')); } });
+    cols.push({ c: 'Amount', w: 100, n: 0, sum: 1, v: function (x) { return num(f(x, 'WagesAmount')); } });
+    if (tbl) tbl.style.width = cols.reduce(function (a, c) { return a + c.w; }, 0) + 'px';
+    head.innerHTML = cols.map(function (c) { return '<th style="width:' + c.w + 'px;">' + c.c + '</th>'; }).join('');
+    body.innerHTML = details.map(function (x) {
+        return '<tr>' + cols.map(function (c) {
+            var v = c.v(x);
+            return '<td' + ((c.n !== undefined || c.right) ? ' class="num"' : '') + '>' + (c.n !== undefined ? fmtN(v, c.n) : esc(v)) + '</td>';
+        }).join('') + '</tr>';
+    }).join('');
+    if (foot) foot.innerHTML = cols.map(function (c) {
+        if (!c.sum) return '<td></td>';
+        return '<td class="num">' + fmtN(details.reduce(function (a, x) { return a + num(c.v(x)); }, 0), c.n) + '</td>';
+    }).join('');
+}
+function historyEdit(i) {
+    var r = S.historyRows[i]; if (!r) return;
+    /* DataGridHistory_DoubleClick / "Edit" :3383-3443 */
+    readById(num(f(r, 'Id')), num(f(r, 'IsReferred')) === 1)
+        .catch(function (e) { msg('Could not open that bill: ' + e.message); });
+}
+function historyVoucher(i) {
+    var r = S.historyRows[i]; if (!r) return;
+    /* VoucherReport_118(VoucherHeadIdGet(Id, 101)) :3417 */
+    var win = window.CrystalPrint ? CrystalPrint.reserve() : null;
+    getJson(API + '/voucher-head/' + num(f(r, 'Id'))).then(function (d) {
+        var vh = num(d && d.voucherHeadId);
+        if (!vh) { if (window.CrystalPrint) CrystalPrint.release(win); msg('VoucherId Not Found'); return; }
+        CrystalPrint.open('acc-118', { id: vh, documentTypeId: 101 }, null, win);
+    }).catch(function (e) { if (window.CrystalPrint) CrystalPrint.release(win); msg(e.message); });
+}
+
 window.lwShowHistory = function () {
     var btn = el('btnShowHistory');
     if (S.busy) return;
@@ -1095,38 +1378,29 @@ window.lwShowHistory = function () {
     var q = '?fromDate='  + encodeURIComponent(val('histFromDate'))
           + '&toDate='    + encodeURIComponent(val('histToDate'))
           + '&fromDocNo=' + (num(val('histFromDocNo')) || 0)
-          + '&toDocNo='   + (num(val('histToDocNo')) || 0);
+          + '&toDocNo='   + (num(val('histToDocNo')) || 0)
+          + '&refDocumentTypeId=' + (num(val('cmbHistDocType')) || 0);
     getJson(API + '/history' + q).then(function (rows) {
         busy(btn, false);
-        S.historyRows = rows || [];
-        renderTable('grdHistoryHead', 'grdHistoryBody', S.historyRows, function (r, i) {
-            return 'onclick="lwHistoryRow(' + i + ')" style="cursor:pointer;"';
-        });
-        var c = el('histCount'); if (c) c.textContent = S.historyRows.length;
+        S.historyRows = rows || []; S.historyCur = -1;
+        renderHistory();
+        if (S.historyRows.length) historySelect(0);
     }).catch(function (e) {
         busy(btn, false);
-        msg('History failed: ' + e.message, false);
+        msg('History failed: ' + e.message);
     });
 };
 
+/* btnResetHistory_Click :3568-3584 */
 window.lwResetHistory = function () {
-    ['histFromDate', 'histToDate', 'histFromDocNo', 'histToDocNo'].forEach(function (id) { setVal(id, ''); });
+    setVal('histFromDate', today()); setVal('histToDate', today());
+    setVal('histFromDocNo', ''); setVal('histToDocNo', '');
     var s = el('cmbHistDocType'); if (s) s.value = '';
-    S.historyRows = [];
-    renderTable('grdHistoryHead', 'grdHistoryBody', []);
-    renderTable('grdHistoryDetailHead', 'grdHistoryDetailBody', []);
-    var c = el('histCount'); if (c) c.textContent = '0';
+    S.historyRows = []; S.historyCur = -1;
+    renderHistory();
 };
-
-window.lwHistoryRow = function (i) {
-    var r = S.historyRows[i];
-    if (!r) return;
-    var id = num(f(r, 'Id')) || num(f(r, 'HeaderId'));
-    if (!id) { msg('That history row carries no header Id.', false); return; }
-    getJson(API + '/' + id).then(function (d) {
-        renderTable('grdHistoryDetailHead', 'grdHistoryDetailBody', (d && d.details) || []);
-    }).catch(function (e) { msg('History detail failed: ' + e.message, false); });
-};
+/* btnRefreshHistory_Click :3556 */
+window.lwRefreshHistory = function () { loadHistoryDocumentTypes(); };
 
 /* The footer History button (right-hand side, per the brief). */
 window.lwFormHistory = function () {
@@ -1139,33 +1413,23 @@ window.lwFormHistory = function () {
         renderTable('grdFormHistoryHead', 'grdFormHistoryBody', S.formHistoryRows, function (r, i) {
             return 'onclick="lwOpenFromHistory(' + i + ')" style="cursor:pointer;"';
         });
-        var m = el('lwFormHistoryModal'); if (m) m.style.display = 'block';
+        var m = el('lwFormHistoryModal'); if (m) m.classList.remove('is-hidden');
     }).catch(function (e) {
         busy(btn, false);
-        msg('Form history failed: ' + e.message, false);
+        msg('Form history failed: ' + e.message);
     });
 };
 window.lwCloseFormHistory = function () {
-    var m = el('lwFormHistoryModal'); if (m) m.style.display = 'none';
+    var m = el('lwFormHistoryModal'); if (m) m.classList.add('is-hidden');
 };
 window.lwOpenFromHistory = function (i) {
     var r = (S.formHistoryRows || [])[i];
     if (!r) return;
     var id = num(f(r, 'Id'));
-    if (!id) { msg('That row carries no Id.', false); return; }
-    S.isReferred = num(f(r, 'IsReferred')) === 1;        /* DataGridHistory_DoubleClick :3390-3398 */
-    getJson(API + '/' + id).then(function (d) {
-        S.id = id;
-        S.refDocTypeId = num(f((d && d.header) || {}, 'RefDocumentTypeId'));
-        var sel = el('cmbRefDocType'); if (sel) sel.value = String(S.refDocTypeId);
-        applyExisting(d);
-        setSaveMode();
-        return loadGridLookups();
-    }).then(function () {
-        renderGrid('regular'); renderGrid('other');
-        window.lwCloseFormHistory();
-        lwTab('form');
-    }).catch(function (e) { msg('Could not open that bill: ' + e.message, false); });
+    if (!id) { msg('That row carries no Id.'); return; }
+    readById(id, num(f(r, 'IsReferred')) === 1)
+        .then(function () { window.lwCloseFormHistory(); })
+        .catch(function (e) { msg('Could not open that bill: ' + e.message); });
 };
 
 /* Generic table renderer - the History grids show whatever columns the procedure returns,
@@ -1175,8 +1439,7 @@ function renderTable(headId, bodyId, rows, rowAttrs) {
     if (!head || !body) return;
     rows = rows || [];
     if (!rows.length) {
-        head.innerHTML = '<th>No records</th>';
-        body.innerHTML = '<tr><td style="text-align:center; padding:14px; color:#777;">No records.</td></tr>';
+        head.innerHTML = ''; body.innerHTML = '';
         return;
     }
     var keys = Object.keys(rows[0]);
@@ -1196,47 +1459,84 @@ window.lwTab = lwTab;
 /* ---------------------------------------------------------------- boot */
 function boot() {
     setVal('txtDocDate', today());
+    setVal('histFromDate', today()); setVal('histToDate', today());
+
+    /* History grid: one click selects (detail grid follows), double-click edits, buttons act. */
+    var hb = el('grdHistoryBody');
+    if (hb) {
+        hb.addEventListener('click', function (e) {
+            var tr = e.target.closest('tr'); if (!tr) return;
+            var i = parseInt(tr.getAttribute('data-i'), 10);
+            historySelect(i);
+            var a = e.target.getAttribute && e.target.getAttribute('data-act');
+            if (a === 'Edit') historyEdit(i);
+            if (a === 'Slip') slipPrint002(f(S.historyRows[i], 'Id'));
+            if (a === 'Voucher') historyVoucher(i);
+        });
+        hb.addEventListener('dblclick', function (e) {
+            if (e.target.getAttribute && e.target.getAttribute('data-act')) return;
+            var tr = e.target.closest('tr'); if (tr) historyEdit(parseInt(tr.getAttribute('data-i'), 10));
+        });
+    }
+    /* FromDocNoHistory / ToDocNoHistory KeyPress :4013-4035 - digits only */
+    ['histFromDocNo', 'histToDocNo'].forEach(function (id) {
+        var x = el(id); if (x) x.addEventListener('input', function () { x.value = x.value.replace(/[^0-9]/g, ''); });
+    });
 
     /* frmwagesBillHeader_KeyDown :3706-3815 */
     document.addEventListener('keydown', function (e) {
         if (e.defaultPrevented) return;
         var k = String(e.key || '').toLowerCase();
-        var onForm = !el('viewHistory') || el('viewHistory').style.display === 'none';
-        var save = el('btnSave'), upd = el('btnUpdate');
+        var onForm = onFormTab();
+        var save = el('btnSave'), upd = el('btnUpdate'), prt = el('btnPrint002');
+        function live(b) { return b && !b.classList.contains('is-hidden') && !b.disabled; }
         if (e.key === 'Enter' && e.target && /^(INPUT|SELECT)$/.test(e.target.tagName) && e.target.type !== 'button') {
-            var f = Array.prototype.filter.call(document.querySelectorAll('input,select,textarea,button'), function (x) { return !x.disabled && x.offsetParent !== null && x.tabIndex >= 0; });
-            var ix = f.indexOf(e.target); if (ix >= 0 && ix + 1 < f.length) { e.preventDefault(); f[ix + 1].focus(); }
+            var fl = Array.prototype.filter.call(document.querySelectorAll('input,select,textarea,button'), function (x) { return !x.disabled && x.offsetParent !== null && x.tabIndex >= 0; });
+            var ix = fl.indexOf(e.target); if (ix >= 0 && ix + 1 < fl.length) { e.preventDefault(); fl[ix + 1].focus(); }
             return;
         }
         if (!e.ctrlKey && k !== 'escape') return;
-        if (e.ctrlKey && k === 's') { e.preventDefault(); if (onForm) { if (save && save.style.display !== 'none' && !save.disabled) window.lwSave(); } else window.lwShowHistory(); }
+        if (e.ctrlKey && k === 's') { e.preventDefault(); if (onForm) { if (live(save)) window.lwSave(); } else window.lwShowHistory(); }
         if (e.ctrlKey && k === 'n') { e.preventDefault(); if (onForm) window.lwNewClick(); else window.lwResetHistory(); }
-        if (e.ctrlKey && k === 't') { e.preventDefault(); if (onForm) { lwTab('history'); var fd = el('histFromDate'); if (fd) fd.focus(); } else { lwTab('form'); var rd = el('cmbRefDocType'); if (rd) rd.focus(); } }
+        if (e.ctrlKey && k === 't') { e.preventDefault(); if (onForm) lwTab('history'); else { lwTab('form'); var rd = el('cmbRefDocType'); if (rd) rd.focus(); } }
         if ((e.ctrlKey && k === 'e') || k === 'escape') { e.preventDefault(); window.lwClose(); }
-        if (e.ctrlKey && k === 'u') { e.preventDefault(); if (upd && upd.style.display !== 'none' && !upd.disabled) window.lwUpdate(); }
-        if (e.ctrlKey && k === 'p') { e.preventDefault(); window.lwPrint002(); }
+        if (e.ctrlKey && k === 'u') { e.preventDefault(); if (live(upd)) window.lwUpdate(); }
+        if (e.ctrlKey && k === 'p') { e.preventDefault(); if (live(prt)) window.lwPrint002(); }
         if (e.ctrlKey && k === 'd' && onForm && !S.isReferred) {
             e.preventDefault();
             var g = e.target.closest ? e.target.closest('[data-grid]') : null;
             if (g) addRowInGrid(g.getAttribute('data-grid'), -1);
         }
-        if (e.ctrlKey && k === 'l' && onForm) { e.preventDefault(); var t = Array.prototype.filter.call(document.querySelectorAll('.lw-pend'), function (c) { return c.checked; })[0]; if (t) window.lwLoadPending(parseInt(t.getAttribute('data-i'), 10)); }
+        if (e.ctrlKey && k === 'arrowdown') { e.preventDefault(); var gd = el(onForm ? 'wrapPending' : 'wrapHistory'); if (gd) gd.focus(); }
+        if (e.ctrlKey && k === 'arrowup')   { e.preventDefault(); var gu = el(onForm ? 'wrapRegular' : 'histFromDate'); if (gu) gu.focus(); }
         if (e.ctrlKey && k === 'f5' && onForm) { e.preventDefault(); var dd = el('txtDocDate'); if (dd) dd.focus(); }
+        /* Ctrl+L - LoadDataForWages() on the pending grid's current row */
+        if (e.ctrlKey && k === 'l' && onForm) { e.preventDefault(); if (S.pendingCur >= 0) window.lwLoadPending(S.pendingCur); var gr = el('wrapRegular'); if (gr) gr.focus(); }
     });
 
+    /* frmwagesBillHeader_Load :321-440, standalone (no RefDocTypeId / RefDocId) */
+    tabShown('other', false); tabShown('detail', false);
+    S.pendingCur = -1; S.historyCur = -1;
     getJson(API + '/config-flags')
-        .then(function (c) { S.cfg = c || {}; var cb = el('btnCancelPending'); if (cb) cb.style.display = (S.cfg.isAdmin === true || S.cfg.isAdmin === 'true') ? '' : 'none'; })
+        .then(function (c) { S.cfg = c || {}; })
         .catch(function () { S.cfg = {}; })
-        .then(loadDocumentTypes)
         .then(function () {
+            /* :434 - Cancel Records is for Admin, and only when not opened from a document */
+            var cb = el('btnCancelPending'); if (cb) cb.classList.toggle('is-hidden', !isAdmin());
+            /* :344-347 - form rights; an Admin has them all */
+            return getJson('/api/contractor-wages/schedule/rights?screen=frmwagesBillHeader')
+                .then(function (r) { S.rights = isAdmin() ? null : (r || null); })
+                .catch(function () { S.rights = null; });
+        })
+        .then(function () {
+            applyRights();
             setSaveMode();
-            loadPending();
+            generateDocNo();
+            loadGridLookups();
+            loadPending();                              /* PendingTicket() */
+            loadHistoryDocumentTypes();                 /* DocumentTypeFillForCombo() */
             renderGrid('regular');
             renderGrid('other');
-            if (window.jQuery && jQuery.fn.select2) {
-                jQuery('.lw-select2').filter(function () { return !jQuery(this).data('select2'); })
-                    .select2({ dropdownAutoWidth: true, width: '100%' });
-            }
         });
 }
 

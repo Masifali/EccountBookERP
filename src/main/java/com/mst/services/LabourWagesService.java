@@ -149,23 +149,105 @@ public class LabourWagesService {
         }
     }
 
-    /** GetHistory(), BLL :618+ - the History tab's date / bill-serial filters. */
     public List<Map<String, Object>> getHistory(String fromDate, String toDate,
                                                 Integer fromDocNo, Integer toDocNo) {
+        return getHistory(fromDate, toDate, fromDocNo, toDocNo, null);
+    }
+
+    /**
+     * bindHistory(), form :3247-3310 -> InvContractorWagesBillHeader.FormHistoryNew (BLL :1171-1261)
+     * -> [dbo].[USP_ContractorWagesBillHeader_FormHistory]. Parameters and their guards are the
+     * BLL's own: @OrganizationId, @CompanyId, @DocumentTypeId (101) always; @FinancialYearId,
+     * @BranchesId, @FromDocNo, @ToDocNo, @RefDocumentTypeId only when non-zero; @FromDate / @ToDate
+     * only when the picker is ticked (here: when a date was sent). No @Activity.
+     */
+    public List<Map<String, Object>> getHistory(String fromDate, String toDate,
+                                                Integer fromDocNo, Integer toDocNo,
+                                                Integer refDocumentTypeId) {
         try {
+            List<String> names = new ArrayList<>();
+            List<Object> args = new ArrayList<>();
+            names.add("@OrganizationId"); args.add(currentUserContext.currentOrganizationId());
+            names.add("@CompanyId");      args.add(currentUserContext.currentCompanyId());
+            names.add("@DocumentTypeId"); args.add(DOCUMENT_TYPE_ID);
+            int fy = asInt(currentUserContext.currentFinancialYearId());
+            if (fy != 0) { names.add("@FinancialYearId"); args.add(fy); }
+            int branchId = currentUserContext.currentBranchId();
+            if (branchId != 0) { names.add("@BranchesId"); args.add(branchId); }
+            if (nz(fromDate)) { names.add("@FromDate"); args.add(date(fromDate)); }
+            if (nz(toDate))   { names.add("@ToDate");   args.add(date(toDate)); }
+            if (fromDocNo != null && fromDocNo != 0) { names.add("@FromDocNo"); args.add(fromDocNo); }
+            if (toDocNo != null && toDocNo != 0)     { names.add("@ToDocNo");   args.add(toDocNo); }
+            if (refDocumentTypeId != null && refDocumentTypeId != 0) {
+                names.add("@RefDocumentTypeId"); args.add(refDocumentTypeId);
+            }
             return jdbcTemplate.queryForList(
-                    "EXEC " + PROC + " @OrganizationId=?, @CompanyId=?, @BillDateFrom=?, "
-                  + "@BillDateTo=?, @BillSrFrom=?, @BillSrTo=?, @DocumentTypeId=?, @Activity=?",
-                    currentUserContext.currentOrganizationId(),
-                    currentUserContext.currentCompanyId(),
-                    date(fromDate), date(toDate),
-                    (fromDocNo == null || fromDocNo == 0) ? null : fromDocNo,
-                    (toDocNo == null || toDocNo == 0) ? null : toDocNo,
-                    DOCUMENT_TYPE_ID, "GetHistory");
+                    exec("[dbo].[USP_ContractorWagesBillHeader_FormHistory]", names), args.toArray());
         } catch (Exception e) {
             LOG.error("Wages bill history failed", e);
             return Collections.emptyList();
         }
+    }
+
+    /**
+     * DocumentTypeFillForCombo(), form :569-606 -> ComboAgainstContractorWages (BLL :1522-1567)
+     * -> Usp_AllComboAgainstContractorWages @OrganizationId, @CompanyId, @Activity='RefDocumentType',
+     * @BranchesIds. Only the rows whose Activity column is "RefDocumentType" are bound, as
+     * Id / ReferenceName - this is the History tab's Document Type combo.
+     */
+    public List<Map<String, Object>> getHistoryDocumentTypes() {
+        List<Map<String, Object>> out = new ArrayList<>();
+        try {
+            List<Map<String, Object>> rows = jdbcTemplate.queryForList(
+                    "EXEC Usp_AllComboAgainstContractorWages @OrganizationId=?, @CompanyId=?, "
+                  + "@Activity=?, @BranchesIds=?",
+                    currentUserContext.currentOrganizationId(),
+                    currentUserContext.currentCompanyId(),
+                    "RefDocumentType",
+                    String.valueOf(currentUserContext.currentBranchId()));
+            for (Map<String, Object> r : rows) {
+                Object act = null, id = null, name = null;
+                for (Map.Entry<String, Object> e : r.entrySet()) {
+                    String k = e.getKey();
+                    if ("Activity".equalsIgnoreCase(k)) act = e.getValue();
+                    else if ("Id".equalsIgnoreCase(k)) id = e.getValue();
+                    else if ("ReferenceName".equalsIgnoreCase(k)) name = e.getValue();
+                }
+                if (!"RefDocumentType".equals(str(act))) continue;
+                Map<String, Object> m = new LinkedHashMap<>();
+                m.put("Id", id);
+                m.put("name", name);
+                out.add(m);
+            }
+        } catch (Exception e) {
+            LOG.error("Wages history document type combo failed", e);
+        }
+        return out;
+    }
+
+    /**
+     * History "Voucher" button, form :3417 -> CommonServices.VoucherHeadIdGet(Id, 101):
+     * Sp_Vouchers_GetMethods @Activity='GetVoucherHeadIdByReferenceDocumentTypeIdandRefEntryId'.
+     * Returns 0 when the bill has no voucher.
+     */
+    public int getVoucherHeadId(int id) {
+        if (id <= 0) return 0;
+        try {
+            List<Map<String, Object>> r = jdbcTemplate.queryForList(
+                    "EXEC dbo.Sp_Vouchers_GetMethods @Activity=?, @OrganizationId=?, @CompanyId=?, "
+                  + "@DocumentTypeId=?, @DocumentTypeSrNo=?",
+                    "GetVoucherHeadIdByReferenceDocumentTypeIdandRefEntryId",
+                    currentUserContext.currentOrganizationId(),
+                    currentUserContext.currentCompanyId(), DOCUMENT_TYPE_ID, id);
+            if (!r.isEmpty()) {
+                for (Map.Entry<String, Object> e : r.get(0).entrySet()) {
+                    if ("Id".equalsIgnoreCase(e.getKey())) return asInt(e.getValue());
+                }
+            }
+        } catch (Exception e) {
+            LOG.error("Voucher head id lookup failed for wages bill {}", id, e);
+        }
+        return 0;
     }
 
     // ---------------------------------------------------------------- grid lookups
@@ -187,6 +269,10 @@ public class LabourWagesService {
      * The activity list is therefore per reference-document-type, not a single global list.
      */
     public Map<String, Object> getGridLookups(int refDocumentTypeId) {
+        return getGridLookups(refDocumentTypeId, null);
+    }
+
+    public Map<String, Object> getGridLookups(int refDocumentTypeId, String otherDefaultIds) {
         Map<String, Object> out = new LinkedHashMap<>();
         int orgId = currentUserContext.currentOrganizationId();
         int compId = currentUserContext.currentCompanyId();
@@ -200,32 +286,24 @@ public class LabourWagesService {
             LOG.error("Contractor list failed", e);
         }
 
-        String wagesActivityIds = null;
-        try {
-            for (Map<String, Object> r : jdbcTemplate.queryForList(
-                    "EXEC [dbo].[USP_WagesTypeIdsAgainstDocumentType_GetAll]")) {
-                if (asInt(r.get("DocumentTypeId")) == refDocumentTypeId) {
-                    Object v = r.get("WagesActivityIds");
-                    wagesActivityIds = v == null ? null : String.valueOf(v);
-                    break;
-                }
-            }
-        } catch (Exception e) {
-            LOG.error("Wages type ids by document type failed", e);
-        }
+        /* accountName(DocumentTypeId), form :523-550: the form's own defaults per reference
+           document type ("34,36,44" / "33,36,44" / "33,34"), overridden by
+           USP_WagesTypeIdsAgainstDocumentType_GetAll when it has a row for that type. */
+        String wagesActivityIds = wagesActivityIdsFor(refDocumentTypeId);
+        List<Map<String, Object>> activities = wagesAccounts(orgId, compId, wagesActivityIds);
 
-        List<Map<String, Object>> activities = new ArrayList<>();
-        try {
-            activities = jdbcTemplate.queryForList(
-                    "EXEC Sp_InvConractorWagesAccounts_GetAllMethod @OrganizationId=?, @CompanyId=?, "
-                  + "@WagesLookupIds=?, @ActionId=?, @Activity=?",
-                    orgId, compId, wagesActivityIds, 1, "GetWagesItemsByWagesTypeIds");
-        } catch (Exception e) {
-            LOG.error("Wages activity list failed for ref doc type {}", refDocumentTypeId, e);
-        }
+        /* dtStichingItems - the Other Wages grid's own activity list (form :2240-2270, :3103-3160):
+           the caller's default ("35", or "34" for a MoveOrder / fill-in), again overridden by the
+           document type's own row. */
+        String otherIds = nz(otherDefaultIds) ? otherDefaultIds.trim() : "35";
+        String override = wagesActivityIdsOverride(refDocumentTypeId);
+        if (override != null) otherIds = override;
+        List<Map<String, Object>> otherActivities = wagesAccounts(orgId, compId, otherIds);
 
         out.put("contractors", contractors);
         out.put("wagesActivities", activities);
+        out.put("otherWagesActivities", otherActivities);
+        out.put("otherWagesActivityIds", otherIds);
         out.put("wagesActivityIds", wagesActivityIds);
         return out;
     }
@@ -327,8 +405,17 @@ public class LabourWagesService {
         h.put("ScaleSlipNo", asInt(body.get("scaleSlipNo")));
         h.put("ProjectsId", asInt(body.get("projectsId")));
         h.put("OtherRemarks", str(body.get("otherRemarks")));
-        h.put("WeightTotal", weightTotal);
-        h.put("QtyTotal", qtyTotal);
+        /* form :3003-3004 - obj.QtyTotal = txtQty, obj.WeightTotal = txtGrossWeight: the header
+           boxes, not a sum of the grid rows (which would count the Other Wages rows twice). The
+           row sum is only the fallback for a caller that does not send the boxes. */
+        h.put("WeightTotal", body.get("weightTotal") != null ? asDouble(body.get("weightTotal")) : weightTotal);
+        h.put("QtyTotal", body.get("qtyTotal") != null ? asDouble(body.get("qtyTotal")) : qtyTotal);
+        /* form :2766-2774 - chkisapprove (set only by reading an approved bill back) */
+        if (asBool(body.get("isApproved"))) {
+            h.put("IsAproved", true);
+            h.put("ApprovedDate", now);
+            h.put("ApprovedUserId", userId);
+        }
         h.put("EntryUser", userId);
         h.put("ModifyUser", userId);
         h.put("EntryDate", now);
@@ -419,7 +506,10 @@ public class LabourWagesService {
             "ContractorWageComparisonbyActivityForForwarding",
             "ContractorWageComparisonbyActivityForStockTransfer",
             "ContractorWageComparisonbyActivityForProductionInput",
-            "ContractorWageComparisonbyActivityForProductionConsumption"
+            "ContractorWageComparisonbyActivityForProductionConsumption",
+            /* StichingWagesConfig(), form :442-463 */
+            "StichingWagesCompulsory",
+            "OtherWagesCompulsoryForStockConversion"
     };
 
     public Map<String, Object> getConfigFlags() {
@@ -618,6 +708,35 @@ public class LabourWagesService {
             LOG.error("Free-of-cost check failed for item {}", itemId, e);
         }
         return false;
+    }
+
+    /** CommonServices.GetWagesAccount(Ids, 0, 1) - Sp_InvConractorWagesAccounts_GetAllMethod, @ActionId=1. */
+    private List<Map<String, Object>> wagesAccounts(int orgId, int compId, String ids) {
+        try {
+            return jdbcTemplate.queryForList(
+                    "EXEC Sp_InvConractorWagesAccounts_GetAllMethod @OrganizationId=?, @CompanyId=?, "
+                  + "@WagesLookupIds=?, @ActionId=?, @Activity=?",
+                    orgId, compId, ids, 1, "GetWagesItemsByWagesTypeIds");
+        } catch (Exception e) {
+            LOG.error("Wages activity list failed for ids {}", ids, e);
+            return new ArrayList<>();
+        }
+    }
+
+    /** The document type's own row of USP_WagesTypeIdsAgainstDocumentType_GetAll, or null. */
+    private String wagesActivityIdsOverride(int refDocumentTypeId) {
+        try {
+            for (Map<String, Object> r : jdbcTemplate.queryForList(
+                    "EXEC [dbo].[USP_WagesTypeIdsAgainstDocumentType_GetAll]")) {
+                if (asInt(r.get("DocumentTypeId")) == refDocumentTypeId) {
+                    Object v = r.get("WagesActivityIds");
+                    return v == null ? null : String.valueOf(v);
+                }
+            }
+        } catch (Exception e) {
+            LOG.error("Wages type ids by document type failed", e);
+        }
+        return null;
     }
 
     /**
