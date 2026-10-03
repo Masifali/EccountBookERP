@@ -221,8 +221,14 @@ const breakupCount = () => (typeof purchaseBreakupRows !== 'undefined' ? purchas
 function itemNameBind() {
     const byCode = $('input[name="itemSearchMode"]:checked').val() === 'Code';
     const sel = $('#cmbItem'), current = sel.val();
-    sel.empty().append(new Option('-- Select Item --', '0'));
-    for (const it of grn.items) sel.append(new Option(byCode ? (it.ItemCode || '') : it.ItemName, it.ItemId));
+    sel.empty().append(new Option('-- Select --', '0'));
+    for (const it of grn.items) {
+        const o = new Option(byCode ? (it.ItemCode || '') : it.ItemName, it.ItemId);
+        /* dtItem columns drawn by the drop grid (countx_prod_combo family grnItem) */
+        o.setAttribute('data-item-code', it.ItemCode ?? ''); o.setAttribute('data-po-detail', it.PoDetailId ?? it.PODetailId ?? '');
+        o.setAttribute('data-wb-weight', it.ItemWbWeight ?? ''); o.setAttribute('data-moisture', it.Moisture ?? '');
+        sel.append(o);
+    }
     if (current && current !== '0' && grn.items.some(i => String(i.ItemId) === String(current))) sel.val(current);
     else sel.val(grn.items.length ? String(grn.items[0].ItemId) : '0');
     narrowUomToItem();
@@ -245,7 +251,12 @@ async function labNoFill(itemId) {
         try { grn.labRows = await api('/api/purchase/market-grn/form/lab?gpId=' + grn.gpId + '&itemId=' + itemId); } catch (e) { alert(e.message); grn.labRows = []; }
     }
     if (!grn.labRows.length) { sel.append(new Option('', '0')); sel.val('0'); await cmbLabNoLeave(); return; }
-    for (const r of grn.labRows) sel.append(new Option(String(r.LabNo ?? ''), r.Id));
+    for (const r of grn.labRows) {
+        const o = new Option(String(r.LabNo ?? ''), r.Id);
+        o.setAttribute('data-qty-cut', r.QtyForWtCut ?? ''); o.setAttribute('data-wt-cut', r.WtCut ?? '');
+        o.setAttribute('data-cut-on', r.WtCutOn ?? ''); o.setAttribute('data-cut-uom', r.WeightCutUom ?? '');
+        sel.append(o);
+    }
     sel.val(String(grn.labRows[0].Id));
     await cmbLabNoLeave();
 }
@@ -833,7 +844,8 @@ function btnGrnFormHistory_Click() { return openIfViewRight('frmGRNHistory', '/p
 
 /* btnLoadGatePass_Click :3029 */
 function btnLoadGatePass_Click() {
-    if (numeric('txtId') > 0) { alert('Please Reset the form First...'); return; }
+    const save = document.getElementById('btnSave');
+    if (numeric('txtId') > 0 || !save || save.style.display === 'none' || save.disabled) { alert('Please Reset the form First...'); return; }
     $('#grdLoaderBody').html(pendingRowsHtml(grn.pending, LOADER_COLUMNS, true));
     fillCountFromGpGrid();
     bootstrap.Modal.getOrCreateInstance(document.getElementById('loaderModal')).show();
@@ -1002,13 +1014,13 @@ function resetGrnState() {
 async function onNewRecord() {
     lookupVersion++; loadedHeader = {}; lineItems = []; editLine = -1; resetGrnState(); renderSupplements({});
     if (grnAttachments) grnAttachments.reset();
-    document.querySelectorAll('#viewForm input').forEach(input => {
+    document.querySelectorAll('#viewForm input, #viewForm textarea').forEach(input => {
         if (input.type === 'radio' || input.id === 'chkPreviewAfterSave') return;
         if (input.type === 'checkbox') input.checked = false; else if (input.id === 'txtId' || input.id === 'cmbGatePassNo') input.value = 0; else input.value = '';
     });
     document.querySelectorAll('#viewForm select').forEach(select => { $(select).val(select.options.length ? select.options[0].value : ''); });
     const vt = document.getElementById('cmbVehicleType'); if (vt && vt.options.length > 1) vt.selectedIndex = 1;   /* combvehtyp.Rows[1].Activate() */
-    $('#cmbItem').empty().append(new Option('-- Select Item --', '0')); $('#cmbLabNo,#cmbPreBillNo').empty();
+    $('#cmbItem').empty().append(new Option('-- Select --', '0')); $('#cmbLabNo,#cmbPreBillNo').empty();
     $('#txtBiltyFreight,#txtAdvParty,#txtAdvFactory,#txtFreightDeduct,#txtVehicleNo,#txtBiltyNo,#cmbVehicleType').prop('disabled', false);
     $('#cmbDeliveryTerm').prop('disabled', true);
     $('#labParamsPanel').hide(); $('#labParamsBody,#labParamsFoot').empty(); $('#grnTitle').text('Goods Receiving Notes');
@@ -1026,8 +1038,39 @@ async function onNewRecord() {
 async function onRefreshForm() {
     try { grn.cfg = await api('/api/purchase/market-grn/form/config'); } catch (e) { alert(e.message); }
     grn.subsidiary = !!grn.cfg.SubsidiaryAccountAllownOnVouchers; grn.wages = !!grn.cfg.WagesActiveOrInActive;
-    if (numeric('txtId') === 0 && !grn.gpId) applyConfigDefaults();
+    let d = null;
+    try { d = await api('/api/purchase/market-grn/dropdowns'); } catch (e) { alert(e.message); }
+    if (d) rebindLookups(d);
+    applyConfigDefaults();
     await refreshPendingGrid();
+}
+/* BindSupplierName / TransporterAcFill / VehicleTypesBind / Warehouses / Crop / JobLot / PackingType / City / UomSchedule /
+   EmptyBagsGridComboBind - BindAndRetainSelection: the list is rebuilt and the current value kept when it is still there. */
+function rebindLookups(d) {
+    const rebind = (id, rows, first, attrs) => {
+        const sel = document.getElementById(id); if (!sel || !Array.isArray(rows)) return;
+        const cur = sel.value; const $s = $(sel).empty();
+        if (first) $s.append(new Option(first[1], first[0]));
+        for (const r of rows) {
+            const o = new Option(String(r.name ?? ''), r.id);
+            if (attrs) for (const [a, k] of Object.entries(attrs)) { const v = typeof k === 'function' ? k(r) : r[k]; if (v !== undefined && v !== null) o.setAttribute(a, v); }
+            $s.append(o);
+        }
+        $s.val(Array.from(sel.options).some(o => o.value === cur) ? cur : (sel.options.length ? sel.options[0].value : ''));
+    };
+    rebind('cmbSupplier', d.suppliers, ['0', ''], { 'data-code': 'PartyCode', 'data-city': 'CityName', 'data-mobile': 'MobilePersonal' });
+    rebind('cmbTransporter', d.transporters, ['0', '-- Select --'], { 'data-party-id': 'Id', 'data-code': r => r.AccountCode ?? r.PartyCode });
+    rebind('cmbVehicleType', (d.vehicleTypes || []).map(r => Object.assign({}, r, { id: r.Id })), ['0', '-- Select --']);
+    rebind('cmbWarehouse', d.warehouses, ['0', '-- Select --']);
+    rebind('cmbCropYear', d.cropYears, ['0', '-- Select --']);
+    rebind('cmbJobLot', d.jobLots, ['0', '-- Select --']);
+    rebind('cmbPackingType', d.packingTypes, ['0', '-- Select --']);
+    rebind('cmbCity', d.cities, ['0', '-- Select --']);
+    rebind('cmbUom', d.uoms, ['0', '-- Select --'], { 'data-item-id': 'ItemId', 'data-equivalent': 'Equivalent', 'data-eq': 'Equivalent', 'data-base': 'BaseRateUom', 'data-base-pack': 'BasePackUom' });
+    narrowUomToItem();
+    const tpl = (id, rows) => { const t = document.getElementById(id); if (t && Array.isArray(rows)) t.innerHTML = rows.map(r => '<option value="' + escapeHtml(r.id) + '">' + escapeHtml(r.name) + '</option>').join(''); };
+    tpl('grnBagTypeOptions', d.emptyBagTypes); tpl('grnBagItemOptions', d.emptyBagItems); tpl('grnBagConditionOptions', d.bagConditions);
+    if (typeof drawEmptyBags === 'function') drawEmptyBags();
 }
 
 /* tabControl1 */
@@ -1072,7 +1115,7 @@ async function btnshow_Click() {
         + '<td><button type="button" class="tool-btn" style="height:17px;padding:0 5px" onclick="event.stopPropagation();loadRecord(' + Number(r.Id) + ')">Edit</button></td>'
         + '<td><button type="button" class="tool-btn" style="height:17px;padding:0 5px" data-rpt="211-InvRptGoodsReceiptsNotesRiceSlip.rpt" data-rpt-need="id" data-print-id="' + Number(r.Id) + '">Print</button></td>'
         + txt(r.OrderType) + '<td>' + (Number(r.OrderId) > 0 ? '<a tabindex="0" data-po="' + Number(r.OrderId) + '">' + escapeHtml(r.OrderNo) + '</a>' : escapeHtml(r.OrderNo ?? '')) + '</td>'
-        + num(r.InvoiceNo) + num(r.DocNo) + txt(displayDate(r.docDate ?? r.DocDate)) + txt(r.DeliveryTerm) + txt(r.SupplierName)
+        + num(r.InvoiceNo) + '<td class="text-end"><a tabindex="0" data-grn-load="' + Number(r.Id) + '">' + escapeHtml(r.DocNo ?? '') + '</a></td>' + txt(displayDate(r.docDate ?? r.DocDate)) + txt(r.DeliveryTerm) + txt(r.SupplierName)
         + '<td>' + (Number(r.InwardGatePassId) > 0 ? '<a tabindex="0" data-gp-print="' + Number(r.InwardGatePassId) + '" data-detail-count="' + (Number(r.DetailIdsCount) || 0) + '">' + escapeHtml(r.GpNo) + '</a>' : escapeHtml(r.GpNo ?? '')) + '</td>'
         + txt(r.VehicleNo) + txt(r.BiltyNo)
         + '<td>' + (Number(r.WagesId) > 0 ? '<a tabindex="0" data-wages="' + Number(r.WagesId) + '">' + escapeHtml(r.WagesNo) + '</a>' : escapeHtml(r.WagesNo ?? '')) + '</td>'
@@ -1082,6 +1125,8 @@ async function btnshow_Click() {
     $('#historyCount').text(historyRows.length);
     $('#grdHistoryDetailBody,#grdHistoryEbBody').empty();
 }
+/* DocNo link → ReadById (same as the Edit button / Ctrl+Enter) */
+$(document).on('click', 'a[data-grn-load]', function (e) { e.stopPropagation(); loadRecord(Number(this.dataset.grnLoad)); });
 /* NoOfAttachments link → CommonServices.GetNoofAttachmentsByScreenName (the record's attachment list) */
 $(document).on('click', 'a[data-attach]', function () { if (grnAttachments) grnAttachments.view(Number(this.dataset.attach)); });
 /* WagesNo link → ContractorWagesBill_SlipandRegister_002 */
@@ -1213,8 +1258,28 @@ function showShortcutKeys() {
     bootstrap.Modal.getOrCreateInstance(document.getElementById('shortcutModal')).show();
 }
 function clickIfEnabled(id) { const b = document.getElementById(id); if (b && !b.disabled && b.offsetParent !== null) b.click(); }
+const GRID_CYCLE = ['grdItemsWrap', 'grdEmptyBagsBody', 'grdPendingWrap', 'grdPurchaseBreakupsBody'];
+function focusGrid(id) {
+    const el = document.getElementById(id); if (!el) return;
+    const wrap = el.closest('.grid-wrap') || el; if (!wrap.hasAttribute('tabindex')) wrap.setAttribute('tabindex', '0');
+    wrap.focus();
+}
 function onFormKeyDown(e) {
+    const modalOpen = !!document.querySelector('.modal.show'), comboOpen = !!document.querySelector('.dtcombo-pop[style*="block"]');
+    /* KeyData == Return -> SendKeys "{TAB}" (not inside a grid, a button, a textarea or an open drop-down) */
+    if (e.key === 'Enter' && !e.ctrlKey && !e.altKey && !e.shiftKey && !modalOpen && !comboOpen) {
+        const t = e.target;
+        if (t && t.matches && t.matches('input:not([type=button]):not([type=checkbox]):not([type=radio]), .dtcombo-input') && !t.closest('.grid-wrap')) {
+            const all = Array.from(document.querySelectorAll('#viewForm input, #viewForm .dtcombo-input, #viewForm button, #viewHistory input, #viewHistory .dtcombo-input'))
+                .filter(x => x.offsetParent !== null && !x.disabled && x.tabIndex >= 0 && x.type !== 'hidden' && !(x.closest('.grid-wrap')));
+            const i = all.indexOf(t); if (i >= 0 && all[i + 1]) { e.preventDefault(); all[i + 1].focus(); return; }
+        }
+    }
+    /* Escape -> Close() */
+    if (e.key === 'Escape' && !e.ctrlKey && !e.defaultPrevented && !modalOpen && !comboOpen && !document.querySelector('.pc-fs-on')
+        && !(e.target && e.target.closest && e.target.closest('.dtcombo-wrap, .dtcombo-pop, .modal'))) { window.location.href = '/purchase'; return; }
     if (!e.ctrlKey) return;
+    if (e.altKey && (e.key === 'Alt' || e.key === 'Control')) { e.preventDefault(); showShortcutKeys(); return; }
     const k = e.key.toLowerCase(), history = $('#viewHistory').is(':visible');
     let handled = true;
     if (k === 't') switchMode(history ? 'Form' : 'History');
@@ -1226,6 +1291,7 @@ function onFormKeyDown(e) {
         else if (k === 'p') { const tr = document.querySelector('#grdHistoryBody tr.selected'); if (tr) openPrint('211-InvRptGoodsReceiptsNotesRiceSlip.rpt', { id: Number(tr.dataset.id), documentTypeId: 46 }); }
         else if (k === 'h') btnGrnFormHistory_Click();
         else if (k === 'arrowup') $('#txtHistoryFrom').trigger('focus');
+        else if (k === 'arrowdown') $('#grdHistoryWrap').trigger('focus');
         else if (k === 'enter') { const tr = document.querySelector('#grdHistoryBody tr.selected'); if (tr) loadRecord(Number(tr.dataset.id)); else handled = false; }   /* GrdHistory_KeyDown :6688 */
         else handled = false;
     } else {
@@ -1234,7 +1300,13 @@ function onFormKeyDown(e) {
         else if (k === 's') clickIfEnabled('btnSave');
         else if (k === 'u') clickIfEnabled('btnUpdate');
         else if (k === 'delete' && e.shiftKey) clickIfEnabled('btnDelete');
-        else if (k === 'arrowup') $('#cmbWarehouse').trigger('focus');
+        else if (k === 'arrowup') { const w = document.getElementById('cmbWarehouse'); const f = w && w.parentElement && w.parentElement.querySelector('.dtcombo-input'); (f || w).focus(); }
+        else if (k === 'arrowdown') focusGrid('grdItemsWrap');
+        else if (k === 'arrowright') {
+            const at = GRID_CYCLE.findIndex(id => { const el = document.getElementById(id); const w = el && (el.closest('.grid-wrap') || el); return w && w.contains(document.activeElement); });
+            focusGrid(GRID_CYCLE[at < 0 ? 0 : (at + 1) % GRID_CYCLE.length]);
+        }
+        else if (k === 'f5') $('#txtDocDate').trigger('focus');
         else if (k === 'f10') onAttachment();
         else if (k === 'enter') { const tr = document.querySelector('#grdItemsBody tr.selected'); if (tr) grdDoubleClick(Number(tr.dataset.line)); else handled = false; }
         else handled = false;

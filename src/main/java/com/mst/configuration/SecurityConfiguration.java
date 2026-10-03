@@ -26,7 +26,7 @@ import org.springframework.context.annotation.Lazy;
 @EnableGlobalMethodSecurity(securedEnabled = true, prePostEnabled = true)
 @EnableCaching(proxyTargetClass = true)
 //@EnableJpaRepositories(repositoryBaseClass = ExtendedRepositoryImpl.class)
-@PropertySource(value = "classpath:application.properties", ignoreResourceNotFound = true)
+@PropertySource(value = {"file:./application.properties", "file:/application.properties"}, ignoreResourceNotFound = true)
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     @Autowired

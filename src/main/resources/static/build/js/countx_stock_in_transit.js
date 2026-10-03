@@ -19,7 +19,7 @@
     var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     var DEFAULT_TEXT = '-- Select --';
 
-    /* Form-specific combo columns (countx_desktop_combo.js). */
+    /* Form-specific combo columns (countx_prod_combo.js exposes the same DesktopCombo.define API). */
     if (window.DesktopCombo) {
         /* ItemNameBind (:1113) — AllColumns over dtitem (Id, ItemName, ItemCode); display ItemName or ItemCode. */
         window.DesktopCombo.define('sitItem', [
@@ -287,6 +287,7 @@
             for (var k = 1; k < el.options.length; k++) if (el.options[k].textContent === want && want !== '') { hit = k; break; }
             el.selectedIndex = hit >= 0 ? hit : 0;                                   // ActivateRow true, index 0
         });
+        totalAmount();                                                              // CmbRateUomDetail.TextChanged -> combrateuom_TextChanged (:2867)
     }
     function uomEq(id) { return active(id) ? num(selectedAttr(id, 'eq')) : 0; }
 
@@ -436,7 +437,7 @@
     function orderExists() { return st.rows.some(function (r) { return intOf(r.OrderId) > 0; }); }
     function listName(list, id) { for (var i = 0; i < (list || []).length; i++) if (+list[i].Id === +id) return list[i].Name; return ''; }
     function selectHtml(list, value, attrs, textKey) {
-        var h = '<select ' + attrs + '>' + opt('0', '');
+        var h = '<select data-dtcombo="single" ' + attrs + '>' + opt('0', '');
         var found = false;
         (list || []).forEach(function (r) {
             var sel = +r.Id === +value; if (sel) found = true;
@@ -444,6 +445,20 @@
         });
         return h.replace('<option value="0">', '<option value="0"' + (found ? '' : ' selected') + '>') + '</select>';
     }
+
+    /** countx_prod_combo: enhance the cell selects of a re-rendered grid at once (not on its 16 ms rescan),
+        so the caret can be put back into the combo the operator was in. */
+    function enhanceCombos(tableId) {
+        if (window.DesktopCombo && DesktopCombo.init) DesktopCombo.init('#' + tableId + ' select[data-dtcombo]');
+    }
+    /** The data-k / data-act of a focused cell control; a combo's field answers for its hidden select. */
+    function cellKey(a) {
+        if (!a || !a.getAttribute) return null;
+        var w = a.closest && a.closest('.dtcombo-wrap'), s = w && w.querySelector('select');
+        if (s) return s.getAttribute('data-k');
+        return a.getAttribute('data-k') || a.getAttribute('data-act');
+    }
+    function focusCell(el) { if (!el) return; var c = el.__dtcombo && el.__dtcombo.input; (c || el).focus(); }
 
     /** grdSettings (:1599): hidden ids, captions, editable Qty/GrossWeight/EBUnit/AddLss/Remarks, combo columns. */
     function gridColumns() {
@@ -499,6 +514,7 @@
         t.tFoot.innerHTML = st.rows.length ? '<tr>' + cols.map(function (c) {
             return c.tot ? '<td class="n">' + esc(numText(c.n, sum(st.rows, c.k))) + '</td>' : '<td></td>';
         }).join('') + '</tr>' : '';
+        enhanceCombos('grd');
     }
 
     /** UpdateCalculatedFields (:1809) */
@@ -552,17 +568,18 @@
         setTimeout(function () {
             var a = document.activeElement, ai = -1, ak = null;
             var atr = a && a.closest ? a.closest('#grd tbody tr[data-i]') : null;
-            if (atr) { ai = +atr.getAttribute('data-i'); ak = a.getAttribute('data-k') || a.getAttribute('data-act'); }
+            if (atr) { ai = +atr.getAttribute('data-i'); ak = cellKey(a); }
             renderGrid();
             if (ai >= 0 && ak) {
                 var back = $('grd').querySelector('tbody tr[data-i="' + ai + '"] [data-k="' + ak + '"], tbody tr[data-i="' + ai + '"] [data-act="' + ak + '"]');
-                if (back) back.focus();
+                focusCell(back);
             }
         }, 0);
     }
     async function onGridFocusUom(e) {
-        var sel = e.target;
-        if (sel.getAttribute('data-k') !== 'PackUomId') return;
+        var sel = e.target, w = sel.closest && sel.closest('.dtcombo-wrap');
+        if (w) sel = w.querySelector('select');
+        if (!sel || sel.getAttribute('data-k') !== 'PackUomId') return;
         var tr = sel.closest('tr[data-i]'), r = tr && st.rows[+tr.getAttribute('data-i')];
         if (!r || r._uoms) return;
         if (intOf(r.ItemId) <= 0) { alert('Please Select an Item First'); return; }
@@ -734,6 +751,7 @@
         }).join('');
         t.tFoot.innerHTML = '<tr><td></td><td></td><td></td><td class="n">' + esc(fmtHash(sum(st.exp, 'Qty'), 2)) + '</td><td></td><td class="n">'
             + esc(fmtAmt(sum(st.exp, 'Amount'))) + '</td><td></td></tr>';
+        enhanceCombos('grdInvExp');
     }
     function onExpChange(e) {
         var tr = e.target.closest('tr[data-i]'), k = e.target.getAttribute('data-k');
@@ -748,9 +766,9 @@
         setTimeout(function () {
             var a = document.activeElement, ai = -1, ak = null;
             var atr = a && a.closest ? a.closest('#grdInvExp tbody tr[data-i]') : null;
-            if (atr) { ai = +atr.getAttribute('data-i'); ak = a.getAttribute('data-k'); }
+            if (atr) { ai = +atr.getAttribute('data-i'); ak = cellKey(a); }
             renderExp();
-            if (ai >= 0 && ak) { var back = $('grdInvExp').querySelector('tbody tr[data-i="' + ai + '"] [data-k="' + ak + '"]'); if (back) back.focus(); }
+            if (ai >= 0 && ak) { var back = $('grdInvExp').querySelector('tbody tr[data-i="' + ai + '"] [data-k="' + ak + '"]'); focusCell(back); }
         }, 0);
     }
     function onExpClick(e) {                                                          // grdInvExp_ColumnButtonClick (:1897)
@@ -1101,22 +1119,15 @@
     // =========================================================================== history
 
     function historyBranchFill() {                                                   // HistoryBranchComboFill (:787)
-        var list = $('cmbBranchNameList'), rows = L.historyBranches || [];
-        list.innerHTML = rows.length ? '<label><input type="checkbox" data-all> (All)</label>' + rows.map(function (b) {
-            return '<label><input type="checkbox" data-branch="' + esc(b.Id) + '" data-name="' + esc(b.Name) + '"' + (+b.Id === +L.userBranchId ? ' checked' : '') + '> ' + esc(b.Name) + '</label>';
-        }).join('') : '';
-        branchText();
+        /* checked countx_prod_combo (<select multiple data-dtcombo-checked>); Text = UserAccount.BranchName checks the user's branch */
+        var sel = $('cmbBranchName'), rows = L.historyBranches || [];
+        sel.innerHTML = rows.map(function (b) {
+            return '<option value="' + esc(b.Id) + '"' + (+b.Id === +L.userBranchId ? ' selected' : '') + '>' + esc(b.Name) + '</option>';
+        }).join('');
     }
-    function branchText() {
-        var names = [];
-        $('cmbBranchNameList').querySelectorAll('input[data-branch]').forEach(function (c) { if (c.checked) names.push(c.getAttribute('data-name')); });
-        $('cmbBranchNameText').value = names.join(',');
-    }
-    function branchIds() {
-        var ids = [];
-        $('cmbBranchNameList').querySelectorAll('input[data-branch]').forEach(function (c) { if (c.checked) ids.push(c.getAttribute('data-branch')); });
-        return ids.join(',');
-    }
+    function branchPicked() { return Array.prototype.filter.call($('cmbBranchName').options, function (o) { return o.selected; }); }
+    function branchText() { return branchPicked().map(function (o) { return o.textContent; }).join(','); }
+    function branchIds() { return branchPicked().map(function (o) { return o.value; }).join(','); }
     function historyDefaults() {
         var d = intOf(L.defaultDaysToLessFromHistoryFromDate);
         $('FromDateHistory').value = addDaysIso(today(), -(d > 0 ? d : 3));
@@ -1190,6 +1201,7 @@
             }
             return '<td></td>';
         }).join('') + '</tr>' : '';
+        enhanceCombos('grdhistory');
         var all = $('histAll');
         if (all) all.addEventListener('change', function () { var on = this.checked; t.querySelectorAll('input[data-pick]').forEach(function (c) { c.checked = on; }); });
     }
@@ -1199,7 +1211,7 @@
     function showHistory() {
         return act($('btnShow'), async function () {
             var ids = branchIds();
-            if ($('cmbBranchNameText').value === '' || !ids) { $('cmbBranchNameText').focus(); throw new Error('Select branch first'); }
+            if (branchText() === '' || !ids) { focus('cmbBranchName'); throw new Error('Select branch first'); }
             var dateType = document.querySelector('input[name="rdHist"]:checked').value;
             var q = '?branchIds=' + encodeURIComponent(ids) + '&dateType=' + dateType
                 + '&fromChecked=' + $('chkFromDateHistory').checked + '&fromDate=' + encodeURIComponent($('FromDateHistory').value)
@@ -1459,15 +1471,6 @@
             renderHistory();
             var again = $('grdhistory').querySelector('input[data-f="' + f + '"]');
             if (again) { again.focus(); try { again.setSelectionRange(pos, pos); } catch (x) { } }
-        });
-        $('cmbBranchNameText').addEventListener('click', function () { $('cmbBranchName').classList.toggle('is-open'); });
-        document.addEventListener('mousedown', function (e) { if (!$('cmbBranchName').contains(e.target)) $('cmbBranchName').classList.remove('is-open'); });
-        $('cmbBranchNameList').addEventListener('change', function (e) {
-            if (e.target.hasAttribute('data-all')) {
-                var on = e.target.checked;
-                this.querySelectorAll('input[data-branch]').forEach(function (c) { c.checked = on; });
-            }
-            branchText();
         });
         document.addEventListener('keydown', onKey);
         /* grd_KeyDown :4280 / grdInvExp_KeyDown :4364 - Ctrl+Space on a focused X / + button runs it, Ctrl+Delete

@@ -1,922 +1,443 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inward Gate Pass - Eccounting ERP Desktop Copy</title>
+    <title>Inward Gate Pass - EccountBookERP</title>
     <link rel="stylesheet" th:href="@{/build/css/countx_purchase_request.css?v=20260923a}" />
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20261003s}"/>
+    <!--
+        Screen 134 "Inward Gate Pass" - Architecture.WinApp.Purchase/InwardGatePass.cs (DocumentTypeId 51).
+        Rebuilt 2026-10-03 at the designer geometry 1:1 in px: ClientSize 1619 x 737; tabControl1 (Form / History)
+        Alignment Bottom -> the fixed footer of countx_purchase_page_chrome.js (History on the right);
+        tabPage1 1611 x 708: panel2 toolStrip1 (2,2) 1607x29, panel3 teal (2,31) 1607x27, panel4 (2,58) 1607x364
+        [panel6 1052 wide: groupBox2 "Main Information" (4,3) 1040x263, groupBox1 "Lab Info" (3,264) 1041x42,
+        groupBox6 "Driver Information" (4,305) 1040x56; PanelBreakup (1052,0) 555x364], panel9 (2,422) fill:
+        tabControl2 (GatePass History Open Status | Purchase Order Information).
+        Element ids are the ids countx_inward_gate_pass.js uses (desktop name in the comment where they differ):
+        txtFactoryWeight = txtFirstWeight, txtFactoryNetWeight = txtFactoryWeight, txtSupplierNetWeight = txtSupplierWeight,
+        txtWeight = txtWeightCompared, cmbTransitVehicle = CmbSupplierDispatchedPreBillNo, chkPreview = ChkBox.
+        Every combo is countx_prod_combo.js (searchable store design); countx_desktop_combo.js is no longer loaded.
+    -->
     <style>
-        :root {
-            --win-bg: #ece9d8;
-            --win-border: #716f64;
-            --header-bg: #005a5b;
-            --toolbar-bg: linear-gradient(to bottom, #ffffff, #e3e3e3);
-            --btn-bg: #f0f0f0;
-            --btn-border: #707070;
-            --btn-hover: #e0e0e0;
-            --input-border: #7f9db9;
-            --grid-header-bg: #d9e6f2;
-            --grid-border: #a0a0a0;
-            --total-bg: #f5f5f5;
-        }
-
+        [hidden] { display: none !important; }
         * { box-sizing: border-box; }
-        body {
-            font-family: Tahoma, Arial, sans-serif;
-            font-size: 11px;
-            background-color: #d4d0c8;
-            margin: 0;
-            padding: 4px;
-            user-select: none;
-        }
-
-        .win-container {
-            width: 100%;
-            margin: 0 auto;
-            background-color: var(--win-bg);
-            border: 1px solid var(--win-border);
-            box-shadow: 2px 2px 8px rgba(0,0,0,0.4);
-            position: relative;
-        }
-
-        /* Top Banner */
-        .top-banner {
-            background-color: var(--header-bg);
-            color: #ffffff;
-            padding: 4px 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-weight: bold;
-            font-size: 12px;
-        }
-
-        /* Sub-Header Toolbar */
-        .toolbar {
-            background: var(--toolbar-bg);
-            border-bottom: 1px solid #999;
-            padding: 3px 6px;
-            display: flex;
-            gap: 4px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        .tool-btn {
-            height: 24px;
-            padding: 2px 8px;
-            font-size: 11px;
-            font-family: Tahoma, sans-serif;
-            background-color: var(--btn-bg);
-            border: 1px solid var(--btn-border);
-            border-radius: 2px;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            font-weight: bold;
-            color: #000;
-        }
-        .tool-btn:hover { background-color: var(--btn-hover); }
-        .tool-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .spinner {
-            display: inline-block;
-            width: 10px;
-            height: 10px;
-            border: 2px solid rgba(0,0,0,0.3);
-            border-radius: 50%;
-            border-top-color: #000;
-            animation: spin 0.6s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* Secondary Teal Bar */
-        /* The status-strip captions are LinkLabels on the desktop - teal background,
-           white bold text, clickable. Kept visibly clickable here. */
-        .igp-link { color: #ffffff; text-decoration: underline; cursor: pointer; }
+        html, body { margin: 0; padding: 0; background: #fff; }
+        body { font-family: "Microsoft Sans Serif", Tahoma, sans-serif; font-size: 11px; padding-bottom: 40px; user-select: none; }
+        .igp-scroll { overflow-x: auto; overflow-y: hidden; width: 100%; }
+        .igp-root { position: relative; width: 1611px; background: #fff; }
+        .igp-abs { position: absolute; margin: 0; }
+        .igp-rel { position: relative; }
+        /* toolStrip1 / toolStrip2: white, Verdana 9.75pt, icon + text */
+        .igp-strip { height: 29px; display: flex; align-items: center; background: #fff; border-bottom: 1px solid #c8c8c8; padding-left: 2px; }
+        .igp-tool { font-family: Verdana, sans-serif; font-size: 13px; height: 24px; background: transparent; border: 1px solid transparent; display: inline-flex; align-items: center; gap: 4px; padding: 0 5px; cursor: pointer; white-space: nowrap; color: #000; }
+        .igp-tool:hover:not(:disabled) { background: #ffe4a0; border-color: #e59d00; }
+        .igp-tool:disabled { color: #9a9a9a; cursor: default; }
+        .igp-tool .ic { font-size: 14px; line-height: 1; color: #00796b; width: 16px; text-align: center; }
+        .igp-sep { width: 1px; height: 19px; background: #c0c0c0; margin: 0 3px; box-shadow: 1px 0 0 #fff; }
+        /* panel3: teal bar */
+        .igp-teal { background: #008080; position: relative; height: 27px; color: #fff; }
+        .igp-teal-title { position: absolute; font: bold 16px Tahoma, sans-serif; color: #fff; white-space: nowrap; line-height: 19px; }
+        .igp-teal label { position: absolute; display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; cursor: pointer; }
+        .igp-teal input { margin: 0; }
+        .igp-link { position: absolute; font: bold 12px Verdana, sans-serif; color: #fff; text-decoration: underline; cursor: pointer; white-space: nowrap; line-height: 14px; }
         .igp-link:hover { color: #ffe4a0; }
-        .status-strip {
-            background-color: var(--header-bg);
-            color: white;
-            padding: 3px 8px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            font-weight: bold;
-            font-size: 11px;
-        }
-        .status-strip label { cursor: pointer; display: inline-flex; align-items: center; gap: 3px; font-weight: normal; }
-
-        /* Form Body Layout */
-        .form-body {
-            padding: 6px;
-        }
-
-        .section-box {
-            border: 1px solid #a0a0a0;
-            background-color: #fcfcfc;
-            padding: 6px;
-            margin-bottom: 6px;
-            border-radius: 2px;
-        }
-        .section-title {
-            font-weight: bold;
-            color: #003366;
-            margin-bottom: 4px;
-            border-bottom: 1px solid #d0d0d0;
-            padding-bottom: 2px;
-            /* the caption always sits in its own line above the box content (the Weights box caption was reported hidden
-               under the top of its box): never overlapped by the table below it, never clipped */
-            position: relative; z-index: 3; display: block; line-height: 15px; min-height: 17px; white-space: nowrap;
-            overflow: visible; background: inherit;
-        }
-        .section-box { position: relative; overflow: visible; }
-        .wt-table { position: relative; z-index: 0; table-layout: fixed; }
-        .wt-table th:first-child, .wt-table td:first-child { width: 86px; white-space: nowrap; }
-        .lab-info-row { display: grid; grid-template-columns: auto 1fr auto 1fr; gap: 4px 6px; align-items: center; }
-        .lab-info-row .form-label { text-align: right; padding-right: 0; }
-        .lab-info-row .form-control { width: 100%; min-width: 0; }
-        .driver-info-row { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px 4px; }
-        .driver-info-row label { display: flex; flex-direction: column; font-size: 10px; font-weight: bold; color: #333; min-width: 0; }
-        .driver-info-row .form-control { width: 100%; min-width: 0; }
-        @media (max-width: 1250px) { .driver-info-row { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+        .igp-chk-w { font: bold 13px "Segoe UI", Tahoma, sans-serif; color: #fff; }
+        .igp-chk-v { font: bold 12px Verdana, sans-serif; color: #fff; }
+        .igp-chk-s { font: 600 12px "Segoe UI Semibold", "Segoe UI", Tahoma, sans-serif; color: #000; }
+        /* GroupBox */
+        .igp-gb { position: absolute; background: #fff; }
+        .igp-gb::before { content: ""; position: absolute; left: 0; right: 0; top: 7px; bottom: 0; border: 1px solid #d5dfe5; border-radius: 3px; pointer-events: none; }
+        .igp-gb > .igp-cap { position: absolute; left: 6px; top: 0; padding: 0 2px; background: #fff; font: bold 13px Tahoma, sans-serif; line-height: 14px; color: #000; white-space: nowrap; }
+        #groupBox1 > .igp-cap { font: bold 12px "Segoe UI", Tahoma, sans-serif; }
+        #groupBox6 > .igp-cap { font: bold 11px Tahoma, sans-serif; }
+        .igp-lbl { font: 600 12px "Segoe UI Semibold", "Segoe UI", Tahoma, sans-serif; line-height: 15px; color: #000; white-space: nowrap; overflow: visible; }
+        .igp-lbl.igp-hdr { background: #f5f5f5; font: bold 13px "Segoe UI", Tahoma, sans-serif; line-height: 18px; padding-left: 2px; }
+        .igp-req { color: red; font: bold 13px "Microsoft Sans Serif", Tahoma, sans-serif; line-height: 16px; }
+        .igp-txt { font-family: Verdana, sans-serif; font-size: 13px; border: 1px solid #7a7a7a; padding: 1px 3px; background: #fff; color: #000; }
+        .igp-txt.r { text-align: right; }
+        .igp-txt.big { font-size: 13.6px; font-weight: bold; }
+        .igp-txt.fact { color: #0000ff; background: #fff; }
+        .igp-txt.dis, .igp-txt:disabled { background: #f0f0f0; color: #4d4d4d; }
+        .igp-txt.fact.dis { color: #0000ff; }
+        .igp-txt.ro { background: #f0f0f0; }
+        .igp-txt:focus, .igp-dt:focus { outline: 1px solid #3399ff; }
+        .igp-dt { font-family: Verdana, sans-serif; font-size: 12px; border: 1px solid #7a7a7a; background: #fff; padding: 0 2px; }
+        .igp-dt:disabled { background: #f0f0f0; color: #4d4d4d; }
+        .igp-cmb { font-family: Verdana, sans-serif; font-size: 13px; border: 1px solid #7a7a7a; background: #fff; }
+        .igp-pic { border: 1px solid transparent; background: transparent; color: #008080; font: bold 15px Verdana, sans-serif; line-height: 16px; padding: 0; cursor: pointer; }
+        .igp-pic:hover { background: #ffe4a0; border-color: #e59d00; }
+        .igp-btn { background: #0a6e6e; color: #fff; border: 1px solid #005959; font: bold 13px Verdana, sans-serif; cursor: pointer; padding: 0; }
+        .igp-btn.t { background: #008080; }
+        .igp-btn:disabled { background: #7fb3b3; cursor: default; }
+        .igp-radio { display: inline-flex; align-items: center; gap: 3px; font: 600 12px "Segoe UI Semibold", "Segoe UI", Tahoma, sans-serif; white-space: nowrap; height: 19px; }
+        .igp-radio input { margin: 0; }
+        .igp-dtc { display: flex; align-items: center; gap: 2px; border: 1px solid #7a7a7a; background: #fff; padding: 0 2px; }
+        .igp-dtc input[type=checkbox] { margin: 0; }
+        .igp-dtc input[type=date] { border: none; font: 12px Verdana, sans-serif; height: 19px; width: 100%; min-width: 0; padding: 0; }
+        .igp-dtc input[type=date]:disabled { background: #fff; color: #9a9a9a; }
+        /* countx_prod_combo inside the designer layout */
+        .igp-root .pcx-wrap .dtcombo-input.pcx-field { font-family: Verdana, sans-serif; font-size: 13px; height: 100%; }
+        /* panel4 / PanelBreakup */
+        .igp-panel4 { position: relative; height: 364px; background: #fff; }
+        #PanelBreakup { position: absolute; left: 1052px; top: 0; width: 555px; height: 364px; background: #fff; border-left: 1px solid #d0d0d0; }
+        #PanelBreakup .bk-title { height: 26px; padding: 6px 3px; color: teal; font: bold 12px Verdana, sans-serif; background: #fff; }
+        #PanelBreakup .igp-grid { position: absolute; left: 0; top: 26px; width: 555px; height: 338px; }
+        #PanelBreakup input { width: 78px; height: 20px; border: 1px solid #b8c8d8; text-align: right; font: 11px Verdana, sans-serif; }
+        #PanelBreakup input[readonly] { background: #f3f3f3; }
+        #PanelBreakup .gbtn { width: 20px; padding: 0; }
+        /* tabControl2 (top tabs) */
+        .igp-tabs2 { height: 25px; display: flex; align-items: flex-end; padding-left: 2px; border-bottom: 1px solid #a0a0a0; }
+        .igp-tabs2 .tab-btn { display: inline-block; height: 21px; line-height: 19px; padding: 0 8px; border: 1px solid #a0a0a0; border-bottom: none; background: #f0f0f0; font: 13px Verdana, sans-serif; cursor: pointer; margin-right: -1px; }
+        .igp-tabs2 .tab-btn.active { background: #fff; height: 24px; position: relative; top: 1px; }
+        .tab-content { display: none; padding: 3px; }
+        .tab-content.active { display: block; }
+        .igp-gridbar { height: 23px; background: #008080; color: #fff; font: bold 13px Tahoma, sans-serif; line-height: 21px; padding-left: 6px; white-space: nowrap; overflow: hidden; }
+        /* Janus-style grids, scrolling inside their own box */
+        .igp-grid, .grid-wrap { overflow: auto; background: #fff; border: 1px solid #9eb6ce; }
+        .data-grid { border-collapse: collapse; width: auto; min-width: 100%; font: 11px Verdana, sans-serif; }
+        .data-grid th { background: linear-gradient(to bottom, #e3efff 0%, #c4dcf8 100%); border: 1px solid #9eb6ce; font-weight: normal; text-align: center; padding: 2px 4px; white-space: nowrap; position: sticky; top: 0; z-index: 1; }
+        .data-grid td { border: 1px solid #d5e1f0; padding: 1px 3px; white-space: nowrap; height: 20px; }
+        .data-grid tbody tr:hover { background: #fff0cf; cursor: pointer; }
+        .data-grid tbody tr.selected { background: #cfe3ff; }
+        .data-grid tfoot td { font-weight: bold; background: #eef4fb; text-align: right; }
+        .data-grid .tool-btn { font: 11px Verdana, sans-serif; padding: 0 4px; height: 18px; cursor: pointer; border: 1px solid #8aa; background: #f4f4f4; }
+        .code-link { color: #0645ad; text-decoration: underline; cursor: pointer; }
+        .totals-bar { display: flex; justify-content: space-between; padding: 2px 6px; font: bold 11px Verdana, sans-serif; background: #eef4fb; border: 1px solid #9eb6ce; border-top: none; }
+        #wrapMainHistory { height: calc(100vh - 29px - 27px - 364px - 25px - 6px - 23px - 22px - 44px); min-height: 160px; }
+        #wrapPoInfo { height: calc(100vh - 29px - 27px - 364px - 25px - 6px - 80px - 24px - 44px); min-height: 120px; }
+        #wrapFullHistory { height: calc(100vh - 53px - 71px - 44px); min-height: 300px; }
+        /* tool-btn (spinner host of countx_purchase_request.js) */
+        .tool-btn { font-family: Verdana, sans-serif; }
         .igp-modal { position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 9500; display: none; align-items: center; justify-content: center; }
         .igp-modal-box { background: #fff; border: 1px solid #716f64; min-width: 360px; max-width: 90vw; max-height: 80vh; overflow: auto; box-shadow: 2px 2px 10px rgba(0,0,0,.4); }
-        .igp-modal-title { background: #005a5b; color: #fff; font-weight: bold; padding: 4px 8px; display: flex; justify-content: space-between; align-items: center; }
-
-        .grid-3col {
-            display: grid;
-            grid-template-columns: 370px 320px minmax(400px,1fr);
-            gap: 8px;
-        }
-        .entry-layout { display:grid; grid-template-columns:minmax(1106px,2fr) minmax(360px,1fr); gap:6px; }
-        .grid-3col > .section-box { min-width:0; }
-        #txtintime, #txtouttime { flex:1 1 150px; min-width:150px; }
-        .entry-layout > * { min-width:0; }
-        .breakup-panel { border:1px solid #999; background:white; }
-        .breakup-title { height:26px; padding:5px 3px; color:teal; font: bold 12px Verdana,sans-serif; }
-        .breakup-panel .grid-wrap { height:338px; }
-        .breakup-panel input { width:78px; height:23px; border:1px solid #aaa; text-align:right; }
-        .breakup-panel input[readonly] { background:#f3f3f3; }
-        .breakup-panel .tool-btn { width:20px; padding:0; justify-content:center; }
-        .breakup-panel .data-grid td { padding:1px; }
-        .breakup-panel tfoot { position:sticky; bottom:0; background:#f0f0f0; font-weight:bold; text-align:right; }
-        @media(max-width:1500px) { .entry-layout { display:block; } .breakup-panel { margin:6px 0; } .breakup-panel .grid-wrap { height:auto; max-height:200px; } }
-        @media(max-width:1080px) { .grid-3col { grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); } .section-box { min-width:0; overflow-x:auto; } }
-
-        .form-row {
-            display: flex;
-            align-items: center;
-            margin-bottom: 3px;
-        }
-        .form-label {
-            font-size: 11px;
-            color: #000;
-            text-align: right;
-            padding-right: 6px;
-            white-space: nowrap;
-        }
-        .req-star { color: red; margin-left: 2px; }
-
-        .form-control {
-            height: 20px;
-            font-family: Tahoma, sans-serif;
-            font-size: 11px;
-            border: 1px solid var(--input-border);
-            padding: 1px 4px;
-            background-color: #fff;
-        }
-        .form-control[readonly] { background-color: #eef2f5; }
-        select.form-control { height: 21px; }
-
-        /* Searchable Select Container */
-        .search-select-box {
-            position: relative;
-            display: inline-block;
-        }
-        .search-select-box input.search-input {
-            width: 100%;
-            height: 20px;
-            font-size: 11px;
-            border: 1px solid var(--input-border);
-            padding: 1px 4px;
-        }
-
-        /* Factory / Supplier / Difference Table */
-        .wt-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 11px;
-            margin-bottom: 4px;
-        }
-        .wt-table th {
-            background-color: #e3e3e3;
-            border: 1px solid #999;
-            padding: 2px 4px;
-            text-align: center;
-            font-weight: bold;
-        }
-        .wt-table td {
-            border: 1px solid #ccc;
-            padding: 2px 4px;
-        }
-        .wt-table input {
-            width: 100%;
-            height: 18px;
-            border: 1px solid #7f9db9;
-            font-size: 11px;
-            text-align: right;
-            font-weight: bold;
-        }
-
-        /* Bottom TabControl */
-        .tab-container {
-            border: 1px solid #999;
-            background-color: #fff;
-            margin-top: 4px;
-        }
-        .tab-buttons {
-            display: flex;
-            background-color: var(--win-bg);
-            border-bottom: 1px solid #999;
-        }
-        .tab-btn {
-            padding: 4px 12px;
-            cursor: pointer;
-            border: 1px solid transparent;
-            border-bottom: none;
-            background-color: #d4d0c8;
-            font-weight: normal;
-        }
-        .tab-btn.active {
-            background-color: #fff;
-            border-color: #999 #999 #fff #999;
-            font-weight: bold;
-            color: #003366;
-        }
-        .tab-content {
-            display: none;
-            padding: 6px;
-        }
-        .tab-content.active { display: block; }
-
-        /* Data Grids */
-        .grid-wrap {
-            overflow-x: auto;
-            max-height: 380px;
-            border: 1px solid #999;
-            background-color: #fff;
-            width: 100%;
-        }
-        .data-grid {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 11px;
-            white-space: nowrap;
-        }
-        .data-grid th {
-            background-color: var(--grid-header-bg);
-            border: 1px solid #b0c4de;
-            padding: 4px 6px;
-            text-align: left;
-            position: sticky;
-            top: 0;
-            z-index: 2;
-        }
-        .data-grid td {
-            border: 1px solid #e0e0e0;
-            padding: 3px 6px;
-        }
-        .data-grid tr:hover { background-color: #eef6ff; cursor: pointer; }
-        .data-grid tr.selected { background-color: #3399ff; color: #fff; }
-        .code-link { color: #003366; font-weight: bold; text-decoration: underline; cursor: pointer; }
-
-        .totals-bar {
-            background-color: #f0f0f0;
-            border-top: 2px solid #005a5b;
-            padding: 4px 8px;
-            display: flex;
-            justify-content: space-between;
-            font-weight: bold;
-            font-size: 11px;
-        }
-
-        /* Bottom Mode Bar */
-        .bottom-mode-bar {
-            display: flex;
-            justify-content: flex-end;   /* History on the right of the footer */
-            background-color: #d4d0c8;
-            border-top: 1px solid #999;
-            padding: 2px 6px;
-            gap: 4px;
-        }
-        .mode-btn {
-            padding: 2px 12px;
-            border: 1px solid #888;
-            background: #e0e0e0;
-            cursor: pointer;
-            font-size: 11px;
-        }
-        .mode-btn.active { background: #fff; font-weight: bold; color: #003366; }
-
-        /* History Filter Panel */
-        .history-filter-box {
-            border: 1px solid #a0a0a0;
-            background-color: #f5f5f5;
-            padding: 6px;
-            margin: 6px;
-            border-radius: 2px;
-        }
-        .grouping-bar {
-            background-color: #e6e6e6;
-            color: #666;
-            font-style: italic;
-            padding: 3px 8px;
-            border: 1px solid #ccc;
-            margin: 0 6px 4px 6px;
-        }
-
+        .igp-modal-title { background: #008080; color: #fff; font-weight: bold; padding: 4px 8px; display: flex; justify-content: space-between; align-items: center; }
+        .bottom-mode-bar { display: none; }
         @media print {
-            .top-banner, .toolbar, .status-strip, .bottom-mode-bar, button { display: none !important; }
-            body { background: #fff !important; margin: 0 !important; padding: 0 !important; }
-            .win-container { width: 100% !important; border: none !important; box-shadow: none !important; margin: 0 !important; background: #fff !important; }
-            .grid-wrap { max-height: none !important; overflow: visible !important; }
-            .data-grid th, .data-grid td { border: 1px solid #000 !important; color: #000 !important; }
-            .data-grid th { background: #eee !important; color: #000 !important; }
+            .igp-strip, .igp-teal, .pc-footer, button { display: none !important; }
+            .grid-wrap, .igp-grid { max-height: none !important; height: auto !important; overflow: visible !important; }
         }
     </style>
-    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
 </head>
 <body>
+<div class="igp-scroll">
+<div class="igp-root">
 
-<div class="win-container">
-    <!-- Top Banner -->
-    <div class="top-banner">
-        <div id="lblFormHeaderTitle">Inward Gate Pass</div>
-        <div style="font-size: 11px; font-weight: normal;">
-            <span id="txtUserTitle" th:text="${#authentication != null ? #authentication.name : 'User'}">User</span> |
-            <span><span th:replace="~{fragments/company :: name}">Golden Ace Rice Mills (Pvt) Ltd.</span></span> |
-            <span id="txtLiveTime">03:47:54 pm</span> |
-            <span>2026-27</span>
-        </div>
+<!-- ================================================================== tabPage1 "Form" -->
+<div id="viewForm">
+    <!-- panel2 / toolStrip1 - items in designer order (:9340-9456). btnDelete is Visible = false on the desktop and has no handler body for 51. -->
+    <div class="igp-strip">
+        <button type="button" id="btnnew" class="igp-tool tool-btn" onclick="withButtonLoading(this, onNewRecord)" title="Ctrl+N"><span class="ic">&#10010;</span>New</button>
+        <button type="button" id="btnRefresh" class="igp-tool tool-btn" onclick="withButtonLoading(this, onRefreshForm)" title="Alt+R"><span class="ic">&#8635;</span>Refresh</button>
+        <span class="igp-sep"></span>
+        <button type="button" id="btnupdate" class="igp-tool tool-btn" onclick="withButtonLoading(this, onSaveRecord)" style="display:none;" title="Ctrl+U"><span class="ic">&#9998;</span>Update</button>
+        <button type="button" id="btnsave" class="igp-tool tool-btn" onclick="withButtonLoading(this, onSaveRecord)" title="Ctrl+S"><span class="ic">&#128190;</span>Save</button>
+        <span class="igp-sep"></span>
+        <button type="button" id="btnAttachment" class="igp-tool tool-btn" onclick="onOpenAttachments()" title="Ctrl+F10"><span class="ic">&#128206;</span>Attachment</button>
+        <span class="igp-sep"></span>
+        <button type="button" id="btndefvehicle" class="igp-tool tool-btn" onclick="onDefineVehicle()"><span class="ic">&#128666;</span>Define Vehicle</button>
+        <button type="button" id="btndefinecity" class="igp-tool tool-btn" onclick="onDefineCity()"><span class="ic">&#127970;</span>Define City</button>
+        <span class="igp-sep"></span>
+        <button type="button" id="btnPrint" class="igp-tool tool-btn" onclick="onPrintReport()" data-rpt="251-InvRptInwardGatePassSlip.rpt" title="Ctrl+P"><span class="ic">&#128438;</span>251-Print</button>
+        <button type="button" id="btnSlip257" class="igp-tool tool-btn" onclick="onPrintSlip()" data-rpt="257-InwardGatePassWithWbAndLabSlip.rpt"><span class="ic">&#128438;</span>257-GPSlip</button>
+        <button type="button" id="btnLabReport653" class="igp-tool tool-btn" onclick="onLabReport()" data-rpt="653-RptInvLabPurchaseAnalysisSlip.rpt" data-rpt-need="history" data-rpt-need-msg="Open a saved gate pass first."><span class="ic">&#128438;</span>653-LabReport</button>
+        <span class="igp-sep"></span>
+        <button type="button" id="BtnDriverForm" class="igp-tool tool-btn" onclick="onOpenDriverForm()"><span class="ic">&#128100;</span>Driver Bio</button>
+        <button type="button" id="btnShortcutKeys" class="igp-tool tool-btn" onclick="onShowShortcuts()"><span class="ic">&#9000;</span>ShortCut Keys</button>
     </div>
 
-    <!-- ================= VIEW 1: FORM ENTRY VIEW ================= -->
-    <div id="viewForm">
-        <!-- Toolbar Buttons -->
-        <div class="toolbar">
-            <button id="btnnew" class="tool-btn" onclick="withButtonLoading(this, onNewRecord)">+ New</button>
-            <button id="btnRefresh" class="tool-btn" onclick="withButtonLoading(this, onRefreshForm)">Refresh</button>
-            <button id="btnsave" class="tool-btn" onclick="withButtonLoading(this, onSaveRecord)">Save</button>
-            <button id="btnupdate" class="tool-btn" onclick="withButtonLoading(this, onSaveRecord)" style="display:none;">Update</button>
-            <button id="btnAttachment" class="tool-btn" onclick="onOpenAttachments()">Attachment</button>
-            <button id="btndefvehicle" class="tool-btn" onclick="onDefineVehicle()">Define Vehicle</button>
-            <button id="btndefinecity" class="tool-btn" onclick="onDefineCity()">Define City</button>
-            <button id="btnPrint" class="tool-btn" onclick="onPrintReport()" data-rpt="251-InvRptInwardGatePassSlip.rpt">251-Print</button>
-            <button id="btnSlip257" class="tool-btn" onclick="onPrintSlip()" data-rpt="257-InwardGatePassWithWbAndLabSlip.rpt">257-GPSlip</button>
-            <button id="btnLabReport653" class="tool-btn" onclick="onLabReport()" data-rpt="653-RptInvLabPurchaseAnalysisSlip.rpt" data-rpt-need="history" data-rpt-need-msg="Open a saved gate pass first.">653-LabReport</button>
-            <button id="BtnDriverForm" class="tool-btn" onclick="onOpenDriverForm()">Driver Bio</button>
-            <button id="btnShortcutKeys" class="tool-btn" onclick="onShowShortcuts()">Shortcut Keys</button>
-        </div>
-
-        <!-- Status Strip -->
-        <div class="status-strip">
-            <span style="font-size: 12px;">Inward Gate Pass</span>
-            <!-- ==========================================================================
-                 InwardGatePass.cs puts TWO controls side by side for each of these four, and the
-                 web had only the radio - with no handler anywhere, so all five did nothing.
-
-                 1. A LinkLabel whose CAPTION is clickable and opens that screen NOW:
-                      labelLabAnalysisForm.Click  -> RadPurchaseLabFormToOpenOnInsert_Click (:3816)
-                      labelWeightBridgeForm.Click -> RadWBFormToOpenOnInsert_Click          (:3827)
-                      labelGrnForm.Click          -> RadGrnFormToOpenOnInsert_Click         (:3843)
-                      (Freight Voucher)           -> FreightVoucherFormToOpen_Click         (:3865)
-
-                 2. A radio that chooses which screen opens AUTOMATICALLY after a successful
-                    Save - OpenLinkformOnInsert(GatePassId, Status) (:3897-3915), which passes the
-                    NEW gate pass id through so the target opens already filtered to it.
-
-                 So the caption is a link and the radio is a preference. Both are wired below.
-                 ========================================================================== -->
-            <label><input type="radio" name="formMode" value="None" checked> None</label>
-            <label><input type="radio" name="formMode" value="LabAnalysis">
-                <a href="#" onclick="return igpOpenLinkedForm('LabAnalysis');"
-                   class="igp-link" title="Open Lab Purchase Analysis">Lab Analysis Form</a></label>
-            <label><input type="radio" name="formMode" value="WeightBridge">
-                <a href="#" onclick="return igpOpenLinkedForm('WeightBridge');"
-                   class="igp-link" title="Open Weigh Bridge">Weight Bridge Form</a></label>
-            <label><input type="radio" name="formMode" value="Grn" id="RadGrnFormToOpenOnInsert" style="display:none;">
-                <a href="#" onclick="return igpOpenLinkedForm('Grn');"
-                   class="igp-link" title="Open GRN">Grn Form</a></label>
-            <label><input type="radio" name="formMode" value="FreightVoucher">
-                <a href="#" onclick="return igpOpenLinkedForm('FreightVoucher');"
-                   class="igp-link" title="Open Freight Voucher">Freight Voucher</a></label>
-            <!-- ChkIsApproved "Is Approve": checked on Load, visible only with the Approve right (InwardGatePass_Load :653/:668) -->
-            <label id="lblIsApproved" style="margin-left: auto; display:none;"><input type="checkbox" id="ChkIsApproved" checked> Is Approve</label>
-            <!-- chkDriverInfoForm "Open Driver Bio Form": designer Visible = false and never shown; when checked, btnsave_Click (:3585)
-                 opens frmDriverBio (RefDocumentTypeId 51) with the saved gate pass selected. Kept hidden as on the desktop. -->
-            <label id="lblDriverInfoForm" style="display:none;"><input type="checkbox" id="chkDriverInfoForm"> Open Driver Bio Form</label>
-            <!-- ChkBox "Preview": after a successful Save/Update the desktop prints 251 for the saved gate pass -->
-            <label style="margin-left: 8px;"><input type="checkbox" id="chkPreview" checked> Preview</label>
-        </div>
-
-        <!-- Main Form Body -->
-        <div class="form-body">
-            <input type="hidden" id="txtId" value="0" />
-            <div class="entry-layout"><div>
-            <div class="grid-3col">
-
-                <!-- Column 1: Main Information -->
-                <div class="section-box">
-                    <div class="section-title">Main Information</div>
-                    <div class="form-row">
-                        <div class="form-label" style="width: 100px;">G.P Date & No<span class="req-star">*</span></div>
-                        <input type="date" id="txtgpdate" class="form-control" style="width: 120px;" />
-                        <input type="text" id="txtgpno" class="form-control" style="width: 80px; margin-left: 4px;" th:value="${nextDocNo}" readonly />
-                    </div>
-                    <div class="form-row">
-                        <div class="form-label" style="width: 100px;">G.P Type & No<span class="req-star">*</span></div>
-                        <select id="cmbgptype" class="form-control" style="width: 120px;" onchange="onGpTypeChange()" data-dtcombo="single" data-dtcombo-caption="GatePassType">
-                            <option value="">-- Select --</option>
-                            <option th:each="g : ${gatePassTypes}" th:value="${g['id']}" th:text="${g['name']}"></option>
-                        </select>
-                        <input type="text" id="txtgptypeno" class="form-control" style="width: 80px; margin-left: 4px;" th:value="${nextTypeNo}" readonly />
-                    </div>
-                    <div class="form-row">
-                        <div class="form-label" style="width: 100px;">Purchase Type<span class="req-star">*</span></div>
-                        <select id="CmbOrderType" class="form-control" style="width: 120px;" onchange="onOrderTypeChange()" data-dtcombo="single" data-dtcombo-caption="Purchase Type">
-                            <option value="">-- Select --</option>
-                            <option th:each="o : ${orderTypes}" th:value="${o['id']}" th:text="${o['name']}"></option>
-                        </select>
-                        <input type="text" id="CmbOrderno" onblur="onOrderNumberLeave()" onkeydown="if(event.key==='Enter'){event.preventDefault();onOrderNumberLeave();}" class="form-control" style="width: 80px; margin-left: 4px;" placeholder="PO No"  data-guard="integer"/>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-label" style="width: 100px;">Supplier Name<span class="req-star">*</span></div>
-                        <select id="cmbsupp" class="form-control" style="width: 204px;" onchange="onSupplierChange()" data-dtcombo="single" data-dtcombo-caption="Supplier Name">
-                            <option value="">-- Select Supplier --</option>
-                        </select>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-label" style="width: 100px;">City Name<span class="req-star">*</span></div>
-                        <select id="cmbcity" class="form-control" style="width: 204px;" data-dtcombo="single" data-dtcombo-caption="City Name">
-                            <option value="">-- Select City --</option>
-                            <option th:each="c : ${cities}" th:value="${c['id']}" th:text="${c['name']}"></option>
-                        </select>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-label" style="width: 100px;">Item Name<span class="req-star">*</span></div>
-                        <select id="CmbVariety" class="form-control" style="width: 204px;" onchange="onItemChange()" data-dtcombo="single" data-dtcombo-caption="Item Name">
-                            <option value="">-- Select Item --</option>
-                            <option th:each="i : ${items}" th:value="${i['id']}" th:text="${i['itemName']} ?: ${i['name']}"></option>
-                        </select>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-label" style="width: 100px;">Item Qty<span class="req-star">*</span></div>
-                        <input type="number" id="txtqty" class="form-control" style="width: 65px;" value="0" oninput="calculateWeight()"  data-guard="decimal"/>
-                        <span class="form-label" style="width: 60px;">Pack Unit</span>
-                        <input type="number" id="txtPackUnit" class="form-control" style="width: 65px;" value="" oninput="calculateWeight()"  data-guard="decimal"/>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-label" style="width: 100px;">Weight<span class="req-star">*</span></div>
-                        <input type="number" id="txtWeight" class="form-control" style="width: 204px; font-weight: bold;" value="0" readonly />
-                    </div>
-                </div>
-
-                <!-- Column 2: Vehicle & Freight -->
-                <div class="section-box">
-                    <div class="section-title">Vehicle & Freight</div>
-                    <div class="form-row">
-                        <div class="form-label" style="width: 110px;">Vehicle Type</div>
-                        <select id="cmbvehicletype" class="form-control" style="width: 170px;" data-dtcombo="single" data-dtcombo-caption="Vehicle Name">
-                            <option value="">-- Select Vehicle Type --</option>
-                            <option th:each="v : ${vehicleTypes}" th:value="${v['id']}" th:text="${v['name']}"></option>
-                        </select>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-label" style="width: 110px;">Vehicle No<span class="req-star">*</span></div>
-                        <input type="text" id="txtvehicleno" class="form-control" style="width: 170px;" placeholder="e.g. OKB-1254" oninput="onVehicleNoInput(this)" onblur="onVehicleNoLeave()" data-guard="vehicle"/>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-label" style="width: 110px;">Bilty No</div>
-                        <input type="text" id="txtbiltyno" class="form-control" style="width: 170px;" value="" />
-                    </div>
-                    <div class="form-row">
-                        <div class="form-label" style="width: 110px;">Bilty Date</div>
-                        <input type="date" id="txtBiltyDate" class="form-control" style="width: 170px;" />
-                    </div>
-                    <div class="form-row">
-                        <div class="form-label" style="width: 110px;">Bilty Freight</div>
-                        <input type="number" id="txtfreight" class="form-control" style="width: 170px;" value="0" oninput="calculateFreight()"  data-guard="decimal"/>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-label" style="width: 110px;">Advance By Party</div>
-                        <input type="number" id="txtAdvanceByParty" class="form-control" style="width: 170px;" value="0" oninput="calculateFreight()"  data-guard="decimal"/>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-label" style="width: 110px;">Advance By Factory</div>
-                        <input type="number" id="txtAdvanceByFactory" class="form-control" style="width: 170px;" value="0" oninput="calculateFreight()"  data-guard="decimal"/>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-label" style="width: 110px;">Total Payable Freight</div>
-                        <input type="number" id="txtTotalPayablesFreight" class="form-control" style="width: 170px;" value="0" readonly />
-                    </div>
-                    <div class="form-row">
-                        <div class="form-label" style="width: 110px;">Net Paid<span class="req-star">*</span></div>
-                        <input type="number" id="txtNetPaid" class="form-control" style="width: 170px; font-weight: bold;" value="0" oninput="netPaidEdited=true" data-guard="decimal"/>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-label" style="width: 110px;">Remarks Header</div>
-                        <input type="text" id="txtremarks" class="form-control" style="width: 170px;" />
-                    </div>
-                    <!-- lblDiffRemarks / txtWeightDiffRemarks: hidden (designer), shown by btnupdate_Click when factory > supplier weight -->
-                    <div class="form-row" id="rowWeightDiffRemarks" style="display:none;">
-                        <div class="form-label" style="width: 110px;">Wt Diff Remarks</div>
-                        <input type="text" id="txtWeightDiffRemarks" class="form-control" style="width: 170px;" />
-                    </div>
-                </div>
-
-                <!-- Column 3: Weighbridge & Supplier Weights -->
-                <div class="section-box">
-                    <div class="section-title">Weights & Weighbridge</div>
-                    <table class="wt-table">
-                        <thead>
-                        <tr>
-                            <th>Weight Type</th>
-                            <th>Factory</th>
-                            <th>Supplier</th>
-                            <th>Difference</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr>
-                            <td style="font-weight: bold;">Load Weight</td>
-                            <td><input type="number" id="txtFactoryWeight" value="0" readonly /></td>
-                            <td><input type="number" id="txtSupplierFirstWeight" value="0" oninput="calculateNetWeights()"  data-guard="integer"/></td>
-                            <td><input type="number" id="txtFirstWtDifference" value="0" readonly /></td>
-                        </tr>
-                        <tr>
-                            <td style="font-weight: bold;">Tare Weight</td>
-                            <td><input type="number" id="txtsecondWeight" value="0" readonly /></td>
-                            <td><input type="number" id="txtSupplierSecondWeight" value="0" oninput="calculateNetWeights()"  data-guard="integer"/></td>
-                            <td><input type="number" id="txtSecondWtDifference" value="0" readonly /></td>
-                        </tr>
-                        <tr style="background-color: #eef6ff;">
-                            <td style="font-weight: bold; color: #003366;">Net Weight</td>
-                            <td><input type="number" id="txtFactoryNetWeight" value="0" readonly /></td>
-                            <td><input type="number" id="txtSupplierNetWeight" value="0" oninput="onSupplierNetInput()" data-guard="decimal"/></td>
-                            <td><input type="number" id="txtDifferenceWeight" value="0" readonly style="color: red;" /></td>
-                        </tr>
-                        </tbody>
-                    </table>
-
-                    <div class="form-row" style="margin-top: 4px;">
-                        <div class="form-label" style="width: 90px;">W.B Slip No<span class="req-star">*</span></div>
-                        <input type="text" id="txtWeighBridgeSlipNo" class="form-control" style="width: 70px;" value="0" readonly />
-                        <span class="form-label" style="width: 50px;">In Time</span>
-                        <input type="datetime-local" id="txtintime" class="form-control" style="width: 150px;" disabled />
-                    </div>
-                    <div class="form-row">
-                        <div class="form-label" style="width: 90px;">W.B Status<span class="req-star">*</span></div>
-                        <select id="cmbWeighBridge" class="form-control" style="width: 70px;" data-dtcombo="single" data-dtcombo-caption="Status">
-                            <option value="">-- Select --</option>
-                            <option th:each="w : ${weighBridges}" th:value="${w['id']}" th:text="${w['name']}"></option>
-                        </select>
-                        <span class="form-label" style="width: 50px;">Out Time</span>
-                        <input type="datetime-local" id="txtouttime" class="form-control" style="width: 150px;" disabled />
-                    </div>
-                    <div class="form-row">
-                        <div class="form-label" style="width: 90px;">G.P Status<span class="req-star">*</span></div>
-                        <select id="CmbStatus" class="form-control" style="width: 70px;" data-dtcombo="single" data-dtcombo-caption="Status">
-                            <option value="Open">Open</option>
-                            <option value="Accepted">Accepted</option>
-                            <option value="Rejected">Rejected</option>
-                        </select>
-                        <span class="form-label" style="width: 70px;">Packing Type</span>
-                        <select id="CmbPackingType" class="form-control" style="width: 130px;" data-dtcombo="single" data-dtcombo-caption="Packing Type">
-                            <option value="">-- Select --</option>
-                            <option th:each="p : ${packingTypes}" th:value="${p['id']}" th:text="${p['name']}"></option>
-                        </select>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-label" style="width: 90px;">P.O Excess Wt</div>
-                        <input type="number" id="txtAccessWeight" class="form-control" style="width: 70px;" value="0" readonly />
-                        <span class="form-label" style="width: 70px;">Transit Vehicle</span>
-                        <select id="cmbTransitVehicle" class="form-control" style="width: 130px;" onchange="onTransitVehicleChange()" data-dtcombo="single" data-dtcombo-caption="Transit Vehicle">
-                            <option value="">-- Select --</option>
-                            <option th:each="t : ${transitVehicles}" th:value="${t['id']}" th:text="${t['name']}"></option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Secondary Info: Lab & Driver Bio -->
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px;">
-                <!-- Lab Info -->
-                <div class="section-box">
-                    <div class="section-title">Lab Info</div>
-                    <div class="lab-info-row">
-                        <label class="form-label" for="txtAnaylstName">Analyst Name</label><input type="text" id="txtAnaylstName" class="form-control" readonly />
-                        <label class="form-label" for="txtLabReportNo">Report No</label><input type="text" id="txtLabReportNo" class="form-control" readonly />
-                        <label class="form-label" for="txtReportStatus">Report Status</label><input type="text" id="txtReportStatus" class="form-control" readonly />
-                        <label class="form-label" for="txtLabRemarks">Remarks</label><input type="text" id="txtLabRemarks" class="form-control" readonly />
-                    </div>
-                </div>
-
-                <!-- Driver Info -->
-                <div class="section-box">
-                    <div class="section-title" style="display:flex; justify-content:space-between; align-items:center;">
-                        <span>Driver Information</span>
-                        <button id="btnResetDriverInfo" class="tool-btn" style="height:18px; padding:0 6px; font-size:10px;" onclick="withButtonLoading(this, refreshDriversAndReset)" title="Reset Driver Fields">Reset Driver Info</button>
-                    </div>
-                    <!-- groupBox6: MaskedTextBoxes (CNIC 00000-0000000-0, cells 000-000-0000000, default "0923" = 092-3); Leave of CNIC / cell looks the driver up -->
-                    <div class="driver-info-row">
-                        <label>CNIC#<input type="text" id="txtCNIC" class="form-control" placeholder="00000-0000000-0" maxlength="15" inputmode="numeric" oninput="onMaskedInput(this)" onblur="lookupDriverByCnic()" /></label>
-                        <label>Driver Cell #<input type="text" id="txtDriverCellNo" class="form-control" value="092-3" placeholder="000-000-0000000" maxlength="15" inputmode="numeric" oninput="onMaskedInput(this)" onblur="lookupDriverByCell()" /></label>
-                        <label>WhatsApp #<input type="text" id="txtWhatsAppNo" class="form-control" value="092-3" placeholder="000-000-0000000" maxlength="15" inputmode="numeric" oninput="onMaskedInput(this)" /></label>
-                        <label>Alternate Cell#<input type="text" id="txtAlternateCellNo" class="form-control" value="092-3" placeholder="000-000-0000000" maxlength="15" inputmode="numeric" oninput="onMaskedInput(this)" /></label>
-                        <label>Driver Name<input type="text" id="txtDriverName" class="form-control" /></label>
-                        <label>Father Name<input type="text" id="txtFatherName" class="form-control" /></label>
-                        <label>Father CNIC<input type="text" id="txtFatherCNIC" class="form-control" placeholder="00000-0000000-0" maxlength="15" inputmode="numeric" oninput="onMaskedInput(this)" /></label>
-                    </div>
-                </div>
-            </div>
-
-            </div>
-            <section class="breakup-panel" id="PanelBreakup" aria-label="Purchase BreakUp" style="display:none;">
-                <div class="breakup-title">Purchase BreakUp</div>
-                <div class="grid-wrap"><table class="data-grid">
-                    <thead><tr><th>+</th><th>X</th><th>Qty</th><th>UOM</th><th>Gross Weight</th><th>Eb Weight</th><th>EB Total</th><th>Net Weight</th></tr></thead>
-                    <tbody id="grdBreakupBody"></tbody>
-                    <tfoot><tr><td colspan="2">Total</td><td id="breakupTotal-qty"></td><td></td><td id="breakupTotal-grossWeight"></td><td id="breakupTotal-ebWeight"></td><td id="breakupTotal-ebTotal"></td><td id="breakupTotal-netWeight"></td></tr></tfoot>
-                </table></div>
-            </section></div>
-
-            <!-- Main Tab Control -->
-            <div class="tab-container">
-                <div class="tab-buttons">
-                    <div class="tab-btn active" onclick="switchMainSubTab('tabGridHistory')">GatePass History Open Status</div>
-                    <div class="tab-btn" id="tabBtnPoInfo" style="display:none;" onclick="switchMainSubTab('tabPoInfo')">Purchase Order Information</div>
-                </div>
-
-                <!-- Tab 1: GatePass History Grid -->
-                <div id="tabGridHistory" class="tab-content active">
-                    <div style="font-weight: bold; color: #005a5b; margin-bottom: 4px;">
-                        This Grid Show the Vehicles Present In The Factory, Pending For Acceptance Or Rejection
-                    </div>
-                    <div class="grid-wrap" id="wrapMainHistory">
-                        <table class="data-grid" id="grdMainHistory">
-                            <thead>
-                            <tr>
-                                <th>Print</th>
-                                <th>Edit</th>
-                                <th>Gp No</th>
-                                <th>Gp Date</th>
-                                <th>G.Type</th>
-                                <th>Order Type</th>
-                                <th>Supplier Name</th>
-                                <th>Order No</th>
-                                <th>Vehicle Type</th>
-                                <th>Vehicle No</th>
-                                <th>Bilty No</th>
-                                <th>Item Qty</th>
-                                <th>Pack Unit</th>
-                                <th>Weight Comp PO Wt</th>
-                                <th>Supplier Load Wt</th>
-                                <th>Supplier Tare Wt</th>
-                                <th>Supplier Weight</th>
-                                <th>Factory Weight</th>
-                                <th>Difference</th>
-                                <th>Excess Weight</th>
-                                <th>Net Paid</th>
-                                <th>Item Name</th>
-                                <th>City Name</th>
-                                <th>In Time</th>
-                                <th>No Of Attachments</th>
-                                <th>Other Remarks</th>
-                                <th>Approval Status</th>
-                                <th>Status</th>
-                            </tr>
-                            </thead>
-                            <tbody id="grdMainHistoryBody"></tbody>
-                        </table>
-                    </div>
-                    <div class="totals-bar">
-                        <div>Total Records: <span id="lblRecordCount">0</span></div>
-                        <div>Sum Qty: <span id="lblSumQty">0</span> | Sum Supplier Wt: <span id="lblSumSupWt">0</span> | Sum Diff: <span id="lblSumDiff">0</span></div>
-                    </div>
-                </div>
-
-                <!-- Tab 2: Purchase Order Info -->
-                <div id="tabPoInfo" class="tab-content">
-                    <!-- Filters Panel matching desktop screenshot -->
-                    <div class="history-filter-box" style="margin: 2px 0 6px 0;">
-                        <div style="font-weight: bold; color: #003366; margin-bottom: 4px;">Filters</div>
-                        <div style="display: flex; gap: 12px; align-items: flex-start; flex-wrap: wrap;">
-                            <!-- Column 1: Dates & Docs -->
-                            <div style="display: flex; flex-direction: column; gap: 4px;">
-                                <div class="form-row">
-                                    <span class="form-label" style="width: 75px;"><input type="checkbox" id="chkFromPoDate" checked onchange="document.getElementById('txtFromPoDate').disabled=!this.checked"> From Date</span>
-                                    <input type="date" id="txtFromPoDate" class="form-control" style="width: 120px;" />
-                                    <span class="form-label" style="width: 65px; margin-left: 10px;">From Doc</span>
-                                    <input type="number" id="txtFromDocNoPoInfo" class="form-control" style="width: 75px;" data-guard="integer" />
-                                </div>
-                                <div class="form-row">
-                                    <span class="form-label" style="width: 75px;"><input type="checkbox" id="chkToPoDate" checked onchange="document.getElementById('txtToPoDate').disabled=!this.checked"> To Date</span>
-                                    <input type="date" id="txtToPoDate" class="form-control" style="width: 120px;" />
-                                    <span class="form-label" style="width: 65px; margin-left: 10px;">To Doc</span>
-                                    <input type="number" id="txtToDocNoPoInfo" class="form-control" style="width: 75px;" data-guard="integer" />
-                                </div>
-                            </div>
-
-                            <!-- Column 2: Supplier & Document Type -->
-                            <div style="display: flex; flex-direction: column; gap: 4px;">
-                                <div class="form-row">
-                                    <span class="form-label" style="width: 95px;">Supplier Name</span>
-                                    <select id="cmbSupplierNamePoInfo" class="form-control" style="width: 200px;" data-dtcombo="single" data-dtcombo-caption="Supplier Name">
-                                        <option value="">-- Select Supplier --</option>
-                                    </select>
-                                </div>
-                                <div class="form-row">
-                                    <span class="form-label" style="width: 95px;">Document Type</span>
-                                    <select id="CmbDocumentTypePoInfo" class="form-control" style="width: 200px;" data-dtcombo="single" data-dtcombo-caption="Document Type">
-                                        <option value="">-- Select --</option>
-                                        <option th:each="d : ${documentTypes}" th:value="${d['id']}" th:text="${d['name']}"></option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <!-- Column 3: Expired Days & Buttons -->
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <div style="text-align: center;">
-                                    <div style="background-color: #d4e38e; font-weight: bold; padding: 2px 4px; border: 1px solid #a0a0a0; font-size: 10px; line-height: 1.1; max-width: 130px;">Hide Orders Expired<br/>Over Days Ago</div>
-                                    <input type="number" id="txtExpiryDaysPoInfo" class="form-control" style="width: 130px; text-align: center; font-weight: bold; background-color: #ffffcc;" value="7" data-guard="integer" />
-                                </div>
-                                <div style="display: flex; flex-direction: column; gap: 4px;">
-                                    <button id="btnResetPoInfo" class="tool-btn" style="background-color: #006600; color: white; border: 1px solid #004400; padding: 2px 14px; font-weight: bold;" onclick="onResetPoInfo(this)">Reset</button>
-                                    <button id="btnSearchPoInfo" class="tool-btn" style="background-color: #006600; color: white; border: 1px solid #004400; padding: 2px 14px; font-weight: bold;" onclick="withButtonLoading(this, loadPoInfoGrid)">Show</button>
-                                </div>
-                            </div>
-
-                            <!-- Column 4: Date Type Radio Buttons -->
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px; background-color: #eef2f5; padding: 6px 10px; border: 1px solid #ccc; border-radius: 3px;">
-                                <label style="font-weight: bold; font-size: 11px; cursor: pointer;"><input type="radio" name="poDateFilter" value="docDate" checked> Doc Date</label>
-                                <label style="font-weight: bold; font-size: 11px; cursor: pointer;"><input type="radio" name="poDateFilter" value="modifyDate"> Modify Date</label>
-                                <label style="font-weight: bold; font-size: 11px; cursor: pointer;"><input type="radio" name="poDateFilter" value="entryDate"> Entry Date</label>
-                                <label style="font-weight: bold; font-size: 11px; cursor: pointer;"><input type="radio" name="poDateFilter" value="approvedDate"> Approved Date</label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Teal Banner Strip -->
-                    <div style="background-color: #005a5b; color: white; font-weight: bold; padding: 4px 8px; margin-bottom: 4px; font-size: 11px;">
-                        This Grid Show The Un-Completed And Approved Purchase Orders.... Complete.Cancel And Un-Approved Orders Will Not Appear here.
-                    </div>
-
-                    <!-- PO Info Grid -->
-                    <div class="grid-wrap" id="wrapPoInfo" style="max-height: 340px;">
-                        <table class="data-grid" id="grdPoInfo">
-                            <thead>
-                            <tr>
-                                <th>Branch</th><th>Document Type</th><th>Order No</th>
-                                <th>Supplier Name</th>
-                                <th>Item Name</th>
-                                <th>Pack UOM</th><th>Order Qty</th><th>Order Weight</th>
-                                <th>GP Received Qty</th><th>GP Received Weight</th><th>Balance Qty by GP</th><th>Balance Weight by GP</th>
-                                <th>GRN Received Qty</th><th>GRN Received Weight</th><th>Balance Qty by GRN</th><th>Balance Weight by GRN</th>
-                                <th>Remarks</th><th>Approval Status</th><th>Order Status</th><th>Expiry Date</th>
-                            </tr>
-                            </thead>
-                            <tbody id="grdPoInfoBody"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <!-- panel3 (2,31) 1607 x 27, teal. LinkLabel = open that screen now; the radio beside it = open it after Save (OpenLinkformOnInsert). -->
+    <div class="igp-teal">
+        <span class="igp-teal-title" id="lblFormHeaderTitle" style="left:3px;top:4px;">Inward Gate Pass</span>
+        <label class="igp-chk-v" style="left:166px;top:4px;height:18px;"><input type="radio" name="formMode" value="None" checked> None</label>
+        <input type="radio" name="formMode" value="LabAnalysis" class="igp-abs" style="left:229px;top:7px;" title="Open Lab Analysis Form after Save">
+        <a href="#" class="igp-link" style="left:244px;top:6px;" onclick="return igpOpenLinkedForm('LabAnalysis');">Lab Analysis Form</a>
+        <input type="radio" name="formMode" value="WeightBridge" class="igp-abs" style="left:372px;top:7px;" title="Open Weight Bridge Form after Save">
+        <a href="#" class="igp-link" style="left:385px;top:6px;" onclick="return igpOpenLinkedForm('WeightBridge');">Weight Bridge Form</a>
+        <input type="radio" name="formMode" value="Grn" id="RadGrnFormToOpenOnInsert" class="igp-abs" style="left:524px;top:7px;display:none;" title="Open Grn Form after Update (Accepted)">
+        <a href="#" class="igp-link" style="left:538px;top:6px;" onclick="return igpOpenLinkedForm('Grn');">Grn Form</a>
+        <input type="radio" name="formMode" value="FreightVoucher" class="igp-abs" style="left:602px;top:7px;" title="Open Freight Voucher after Save">
+        <a href="#" class="igp-link" style="left:618px;top:6px;" onclick="return igpOpenLinkedForm('FreightVoucher');">Freight Voucher</a>
+        <!-- ChkIsApproved "Is Approve" (979,4): checked on Load, Visible = Approve right -->
+        <label id="lblIsApproved" class="igp-chk-s" style="left:979px;top:4px;height:19px;color:#000;display:none;"><input type="checkbox" id="ChkIsApproved" checked> Is Approve</label>
+        <!-- chkDriverInfoForm (1343,3): designer Visible = false -->
+        <label id="lblDriverInfoForm" class="igp-chk-v" style="left:1343px;top:3px;height:20px;display:none;"><input type="checkbox" id="chkDriverInfoForm"> Open Driver Bio Form</label>
+        <!-- ChkBox "Preview" (1529,2): after Save/Update prints 251 for the saved gate pass -->
+        <label class="igp-chk-w" style="left:1529px;top:2px;height:21px;"><input type="checkbox" id="chkPreview" checked> Preview</label>
     </div>
 
+    <!-- panel4 (2,58) 1607 x 364 -->
+    <div class="igp-panel4">
+        <input type="hidden" id="txtId" value="0" />
+        <div class="igp-gb" id="groupBox2" style="left:4px;top:3px;width:1040px;height:263px;"><span class="igp-cap">Main Information</span>
+            <label class="igp-abs igp-lbl igp-hdr" style="left:650px;top:5px;width:110px;height:18px;">Factory</label>
+            <label class="igp-abs igp-lbl igp-hdr" style="left:761px;top:5px;width:110px;height:18px;">Supplier</label>
+            <label class="igp-abs igp-lbl igp-hdr" style="left:872px;top:5px;width:162px;height:18px;">Difference</label>
+            <span class="igp-abs igp-req" style="left:95px;top:16px;">*</span>
+            <label class="igp-abs igp-lbl" style="left:3px;top:17px;width:84px;height:15px;">G.P Date &amp; No</label>
+            <label class="igp-abs igp-lbl" style="left:343px;top:17px;width:73px;height:15px;">Vehicle Type</label>
+            <label class="igp-abs igp-lbl" style="left:567px;top:28px;width:85px;height:17px;">Load Weight</label>
+            <span class="igp-abs igp-req" style="left:409px;top:42px;">*</span>
+            <span class="igp-abs igp-req" style="left:95px;top:43px;">*</span>
+            <label class="igp-abs igp-lbl" style="left:343px;top:43px;width:64px;height:15px;">Vehicle No</label>
+            <label class="igp-abs igp-lbl" style="left:3px;top:44px;width:87px;height:15px;">G.P Type &amp; No </label>
+            <label class="igp-abs igp-lbl" style="left:567px;top:54px;width:81px;height:17px;">Tare Weight</label>
+            <label class="igp-abs igp-lbl" style="left:3px;top:63px;width:86px;height:30px;white-space:normal;">Purchase Type &amp; No</label>
+            <span class="igp-abs igp-req" style="left:409px;top:66px;">*</span>
+            <label class="igp-abs igp-lbl" style="left:343px;top:67px;width:49px;height:15px;">Bilty No</label>
+            <span class="igp-abs igp-req" style="left:95px;top:70px;">*</span>
+            <label class="igp-abs igp-lbl" style="left:567px;top:81px;width:78px;height:17px;">Net Weight</label>
+            <span class="igp-abs igp-req" style="left:409px;top:90px;">*</span>
+            <label class="igp-abs igp-lbl" style="left:343px;top:91px;width:58px;height:15px;">Bilty Date</label>
+            <span class="igp-abs igp-req" style="left:95px;top:97px;">*</span>
+            <label class="igp-abs igp-lbl" style="left:3px;top:98px;width:86px;height:15px;">Supplier Name</label>
+            <label class="igp-abs igp-lbl" style="left:567px;top:106px;width:70px;height:15px;">W.B Slip No</label>
+            <label class="igp-abs igp-lbl" style="left:761px;top:106px;width:48px;height:15px;">In Time</label>
+            <span class="igp-abs igp-req" style="left:635px;top:109px;">*</span>
+            <span class="igp-abs igp-req" style="left:409px;top:113px;">*</span>
+            <label class="igp-abs igp-lbl" style="left:343px;top:114px;width:70px;height:15px;">Bilty Freight</label>
+            <span class="igp-abs igp-req" style="left:95px;top:124px;">*</span>
+            <label class="igp-abs igp-lbl" style="left:3px;top:125px;width:62px;height:15px;">City Name</label>
+            <label class="igp-abs igp-lbl" style="left:761px;top:130px;width:57px;height:15px;">Out Time</label>
+            <span class="igp-abs igp-req" style="left:632px;top:132px;">*</span>
+            <label class="igp-abs igp-lbl" style="left:567px;top:133px;width:64px;height:15px;">W.B Status</label>
+            <label class="igp-abs igp-lbl" style="left:343px;top:138px;width:99px;height:15px;">Advance By Party</label>
+            <span class="igp-abs igp-req" style="left:95px;top:146px;">*</span>
+            <label class="igp-abs igp-lbl" style="left:3px;top:152px;width:67px;height:15px;">Item Name</label>
+            <label class="igp-abs igp-lbl" style="left:343px;top:152px;width:72px;height:30px;">Advance By <br>Factory</label>
+            <label class="igp-abs igp-lbl" style="left:761px;top:155px;width:77px;height:15px;">Packing Type</label>
+            <span class="igp-abs igp-req" style="left:632px;top:160px;">*</span>
+            <label class="igp-abs igp-lbl" style="left:567px;top:161px;width:61px;height:15px;">G.P Status</label>
+            <label class="igp-abs igp-lbl" style="left:202px;top:172px;width:33px;height:30px;">Pack<br>Uom</label>
+            <span class="igp-abs igp-req" style="left:95px;top:179px;">*</span>
+            <label class="igp-abs igp-lbl" style="left:3px;top:180px;width:54px;height:15px;">Item Qty</label>
+            <label class="igp-abs igp-lbl" style="left:343px;top:181px;width:80px;height:30px;">Total Payable <br>Freight</label>
+            <span class="igp-abs igp-req" style="left:230px;top:182px;">*</span>
+            <label class="igp-abs igp-lbl" style="left:567px;top:187px;width:80px;height:15px;">P.O Excess Wt</label>
+            <span class="igp-abs igp-req" style="left:95px;top:209px;">*</span>
+            <label class="igp-abs igp-lbl" style="left:3px;top:210px;width:46px;height:15px;">Weight</label>
+            <span class="igp-abs igp-req" style="left:409px;top:212px;">*</span>
+            <label class="igp-abs igp-lbl" style="left:343px;top:213px;width:52px;height:15px;">Net Paid</label>
+            <label class="igp-abs igp-lbl" style="left:567px;top:213px;width:83px;height:15px;">Transit Vehicle</label>
+            <label class="igp-abs igp-lbl" style="left:343px;top:238px;width:93px;height:15px;">Remarks Header</label>
+            <input type="date" id="txtgpdate" class="igp-abs igp-dt" style="left:109px;top:13px;width:130px;height:22px;" >
+            <input type="text" id="txtgpno" class="igp-abs igp-txt dis" style="left:240px;top:13px;width:100px;height:23px;" readonly tabindex="-1">
+            <select id="cmbgptype" class="igp-abs igp-cmb" style="left:109px;top:38px;width:130px;height:26px;" onchange="onGpTypeChange()" data-dtcombo="single" data-dtcombo-caption="GatePassType"><option value="">-- Select --</option></select>
+            <input type="text" id="txtgptypeno" class="igp-abs igp-txt dis" style="left:240px;top:40px;width:100px;height:23px;" readonly tabindex="-1">
+            <select id="CmbOrderType" class="igp-abs igp-cmb" style="left:109px;top:65px;width:130px;height:26px;" onchange="onOrderTypeChange()" data-dtcombo="single" data-dtcombo-caption="Purchase Type"><option value="">-- Select --</option></select>
+            <input type="text" id="CmbOrderno" class="igp-abs igp-txt" style="left:240px;top:67px;width:100px;height:23px;" onblur="onOrderNumberLeave()" onkeydown="if(event.key==='Enter'){event.preventDefault();onOrderNumberLeave();}" data-guard="integer">
+            <select id="cmbsupp" class="igp-abs igp-cmb" style="left:109px;top:92px;width:231px;height:26px;" onchange="onSupplierChange()" data-dtcombo="single" data-dtcombo-caption="Supplier Name"></select>
+            <select id="cmbcity" class="igp-abs igp-cmb" style="left:109px;top:119px;width:231px;height:26px;" data-dtcombo="single" data-dtcombo-caption="City Name"></select>
+            <select id="CmbVariety" class="igp-abs igp-cmb" style="left:109px;top:146px;width:231px;height:26px;" onchange="onItemChange()" data-dtcombo="single" data-dtcombo-caption="Item Name"></select>
+            <input type="text" id="txtqty" class="igp-abs igp-txt r" style="left:109px;top:176px;width:90px;height:23px;" oninput="calculateWeight()" data-guard="decimal">
+            <input type="text" id="txtPackUnit" class="igp-abs igp-txt r" style="left:242px;top:176px;width:98px;height:23px;" oninput="calculateWeight()" data-guard="decimal">
+            <input type="text" id="txtWeight" class="igp-abs igp-txt r ro" style="left:109px;top:206px;width:231px;height:23px;" readonly value="0">
+            <div id="rowWeightDiffRemarks" class="igp-abs" style="left:0;top:230px;width:345px;height:30px;display:none;"><label class="igp-abs igp-lbl" for="txtWeightDiffRemarks" style="left:1px;top:8px;width:94px;height:15px;">Wt Diff Remarks</label><input type="text" id="txtWeightDiffRemarks" class="igp-abs igp-txt" style="left:109px;top:4px;width:231px;height:23px;"></div>
+            <select id="cmbvehicletype" class="igp-abs igp-cmb" style="left:441px;top:11px;width:125px;height:26px;" data-dtcombo="single" data-dtcombo-caption="Vehicle Name"></select>
+            <input type="text" id="txtvehicleno" class="igp-abs igp-txt" style="left:441px;top:39px;width:125px;height:23px;" oninput="onVehicleNoInput(this)" onblur="onVehicleNoLeave()" data-guard="vehicle">
+            <input type="text" id="txtbiltyno" class="igp-abs igp-txt" style="left:441px;top:63px;width:125px;height:23px;" >
+            <input type="date" id="txtBiltyDate" class="igp-abs igp-dt" style="left:441px;top:87px;width:125px;height:22px;" >
+            <input type="text" id="txtfreight" class="igp-abs igp-txt r" style="left:441px;top:110px;width:125px;height:23px;" oninput="calculateFreight()" onblur="calculateFreight()" data-guard="decimal">
+            <input type="text" id="txtAdvanceByParty" class="igp-abs igp-txt r" style="left:441px;top:134px;width:125px;height:23px;" oninput="calculateFreight()" data-guard="decimal">
+            <input type="text" id="txtAdvanceByFactory" class="igp-abs igp-txt r" style="left:441px;top:158px;width:125px;height:23px;" oninput="calculateFreight()" data-guard="decimal">
+            <input type="text" id="txtTotalPayablesFreight" class="igp-abs igp-txt r ro" style="left:441px;top:185px;width:125px;height:23px;" readonly>
+            <input type="text" id="txtNetPaid" class="igp-abs igp-txt r" style="left:441px;top:210px;width:125px;height:23px;" oninput="netPaidEdited=(parseFloat(this.value)||0)!==0" data-guard="decimal">
+            <input type="text" id="txtremarks" class="igp-abs igp-txt" style="left:442px;top:234px;width:318px;height:23px;" >
+            <input type="text" id="txtFactoryWeight" class="igp-abs igp-txt r wt fact big" style="left:650px;top:24px;width:110px;height:24px;" readonly tabindex="-1" value="0">
+            <input type="text" id="txtSupplierFirstWeight" class="igp-abs igp-txt r wt big" style="left:761px;top:24px;width:110px;height:24px;" oninput="calculateNetWeights()" data-guard="integer" value="0">
+            <input type="text" id="txtFirstWtDifference" class="igp-abs igp-txt r wt dis big" style="left:872px;top:24px;width:162px;height:24px;" readonly tabindex="-1" value="0">
+            <input type="text" id="txtsecondWeight" class="igp-abs igp-txt r wt fact big" style="left:650px;top:50px;width:110px;height:24px;" readonly tabindex="-1" value="0">
+            <input type="text" id="txtSupplierSecondWeight" class="igp-abs igp-txt r wt big" style="left:761px;top:50px;width:110px;height:24px;" oninput="calculateNetWeights()" data-guard="integer" value="0">
+            <input type="text" id="txtSecondWtDifference" class="igp-abs igp-txt r wt dis big" style="left:872px;top:50px;width:162px;height:24px;" readonly tabindex="-1" value="0">
+            <input type="text" id="txtFactoryNetWeight" class="igp-abs igp-txt r wt fact big" style="left:650px;top:76px;width:110px;height:24px;" readonly tabindex="-1" value="0">
+            <input type="text" id="txtSupplierNetWeight" class="igp-abs igp-txt r wt big" style="left:761px;top:76px;width:110px;height:24px;" oninput="onSupplierNetInput()" data-guard="decimal" value="0">
+            <input type="text" id="txtDifferenceWeight" class="igp-abs igp-txt r wt dis big" style="left:872px;top:76px;width:162px;height:24px;" readonly tabindex="-1" value="0">
+            <input type="text" id="txtWeighBridgeSlipNo" class="igp-abs igp-txt dis" style="left:650px;top:102px;width:110px;height:23px;" readonly tabindex="-1" value="0">
+            <select id="cmbWeighBridge" class="igp-abs igp-cmb" style="left:650px;top:127px;width:110px;height:26px;" data-dtcombo="single" data-dtcombo-caption="Status"></select>
+            <select id="CmbStatus" class="igp-abs igp-cmb" style="left:650px;top:155px;width:110px;height:26px;" data-dtcombo="single" data-dtcombo-caption="Status"><option value="Open">Open</option><option value="Accepted">Accepted</option><option value="Rejected">Rejected</option></select>
+            <input type="text" id="txtAccessWeight" class="igp-abs igp-txt r dis" style="left:650px;top:183px;width:110px;height:23px;" readonly tabindex="-1" value="0">
+            <select id="cmbTransitVehicle" class="igp-abs igp-cmb" style="left:650px;top:207px;width:110px;height:26px;" onchange="onTransitVehicleChange()" data-dtcombo="single" data-dtcombo-caption="Pre Bill No"></select>
+            <input type="datetime-local" id="txtintime" class="igp-abs igp-dt" style="left:851px;top:102px;width:183px;height:22px;" disabled>
+            <input type="datetime-local" id="txtouttime" class="igp-abs igp-dt" style="left:851px;top:126px;width:183px;height:22px;" disabled>
+            <select id="CmbPackingType" class="igp-abs igp-cmb" style="left:851px;top:149px;width:183px;height:26px;" data-dtcombo="single" data-dtcombo-caption="Packing Type"></select>
+            <div id="igpContainers" class="igp-abs" style="left:761px;top:177px;width:273px;height:54px;display:none;"><label class="igp-abs igp-lbl" style="left:0px;top:6px;width:87px;height:15px;">Container No-1</label><select id="cmbContainerNo1" class="igp-abs igp-cmb" style="left:90px;top:0px;width:183px;height:26px;" data-dtcombo="single" data-dtcombo-caption="ContainerNo"></select><label class="igp-abs igp-lbl" style="left:0px;top:34px;width:89px;height:15px;">Container No-2</label><select id="cmbContainerNo2" class="igp-abs igp-cmb" style="left:90px;top:28px;width:183px;height:26px;" data-dtcombo="single" data-dtcombo-caption="ContainerNo"></select></div>
+        </div>
+        <div class="igp-gb" id="groupBox1" style="left:3px;top:264px;width:1041px;height:42px;"><span class="igp-cap">Lab Info</span>
+            <label class="igp-abs igp-lbl" style="left:6px;top:19px;width:81px;height:15px;">Analyst Name</label>
+            <label class="igp-abs igp-lbl" style="left:311px;top:19px;width:61px;height:15px;">Report No</label>
+            <label class="igp-abs igp-lbl" style="left:487px;top:19px;width:78px;height:15px;">Report Status</label>
+            <label class="igp-abs igp-lbl" style="left:680px;top:19px;width:52px;height:15px;">Remarks</label>
+            <input type="text" id="txtAnaylstName" class="igp-abs igp-txt dis" style="left:87px;top:15px;width:220px;height:23px;" readonly tabindex="-1">
+            <input type="text" id="txtLabReportNo" class="igp-abs igp-txt dis" style="left:372px;top:15px;width:113px;height:23px;" readonly tabindex="-1">
+            <input type="text" id="txtReportStatus" class="igp-abs igp-txt dis" style="left:566px;top:15px;width:111px;height:23px;" readonly tabindex="-1">
+            <input type="text" id="txtLabRemarks" class="igp-abs igp-txt dis" style="left:733px;top:15px;width:302px;height:23px;" readonly tabindex="-1">
+        </div>
+        <div class="igp-gb" id="groupBox6" style="left:4px;top:305px;width:1040px;height:56px;"><span class="igp-cap">Driver Information</span>
+            <button type="button" id="btnResetDriverInfo" class="igp-abs igp-pic" style="left:114px;top:9px;width:20px;height:20px;" title="Reset Driver Fields" onclick="withButtonLoading(this, refreshDriversAndReset)">&#8635;</button>
+            <label class="igp-abs igp-lbl" style="left:5px;top:12px;width:41px;height:15px;">CNIC#</label>
+            <label class="igp-abs igp-lbl" style="left:136px;top:12px;width:71px;height:15px;">Driver Cell #</label>
+            <label class="igp-abs igp-lbl" style="left:267px;top:12px;width:73px;height:15px;">WhatsApp #</label>
+            <label class="igp-abs igp-lbl" style="left:400px;top:12px;width:84px;height:15px;">Alternate Cell#</label>
+            <label class="igp-abs igp-lbl" style="left:533px;top:12px;width:74px;height:15px;">Driver Name</label>
+            <label class="igp-abs igp-lbl" style="left:734px;top:12px;width:75px;height:15px;">Father Name</label>
+            <label class="igp-abs igp-lbl" style="left:891px;top:12px;width:70px;height:15px;">Father CNIC</label>
+            <input type="text" id="txtCNIC" class="igp-abs igp-txt" style="left:5px;top:29px;width:129px;height:23px;" placeholder="00000-0000000-0" maxlength="15" inputmode="numeric" oninput="onMaskedInput(this)" onblur="lookupDriverByCnic()">
+            <input type="text" id="txtDriverCellNo" class="igp-abs igp-txt" style="left:135px;top:29px;width:130px;height:23px;" value="092-3" placeholder="000-000-0000000" maxlength="15" inputmode="numeric" oninput="onMaskedInput(this)" onblur="lookupDriverByCell()">
+            <input type="text" id="txtWhatsAppNo" class="igp-abs igp-txt" style="left:266px;top:29px;width:133px;height:23px;" value="092-3" placeholder="000-000-0000000" maxlength="15" inputmode="numeric" oninput="onMaskedInput(this)">
+            <input type="text" id="txtAlternateCellNo" class="igp-abs igp-txt" style="left:400px;top:29px;width:132px;height:23px;" value="092-3" placeholder="000-000-0000000" maxlength="15" inputmode="numeric" oninput="onMaskedInput(this)">
+            <input type="text" id="txtDriverName" class="igp-abs igp-txt" style="left:533px;top:29px;width:200px;height:23px;" >
+            <input type="text" id="txtFatherName" class="igp-abs igp-txt" style="left:734px;top:29px;width:156px;height:23px;" >
+            <input type="text" id="txtFatherCNIC" class="igp-abs igp-txt" style="left:891px;top:29px;width:139px;height:23px;" placeholder="00000-0000000-0" maxlength="15" inputmode="numeric" oninput="onMaskedInput(this)">
+        </div>
+        <!-- PanelBreakup (1052,0) 555 x 364: Visible only when the purchase types include 105 (OrderTypeFill) -->
+        <section id="PanelBreakup" aria-label="Purchase BreakUp" style="display:none;">
+            <div class="bk-title">Purchase BreakUp</div>
+            <div class="igp-grid"><table class="data-grid">
+                <thead><tr><th>+</th><th>X</th><th>Qty</th><th>UOM</th><th>Gross Weight</th><th>Eb Weight</th><th>EB Total</th><th>Net Weight</th></tr></thead>
+                <tbody id="grdBreakupBody"></tbody>
+                <tfoot><tr><td colspan="2" style="text-align:left;">Total</td><td id="breakupTotal-qty"></td><td></td><td id="breakupTotal-grossWeight"></td><td id="breakupTotal-ebWeight"></td><td id="breakupTotal-ebTotal"></td><td id="breakupTotal-netWeight"></td></tr></tfoot>
+            </table></div>
+        </section>
+    </div>
 
-    <!-- ================= VIEW 2: FULL INWARD GATE PASS HISTORY VIEW (MATCHING DESKTOP SCREENSHOT) ================= -->
-    <div id="viewHistory" style="display: none;">
-        <!-- History Toolbar -->
-        <div class="toolbar">
-            <button id="btnNewHistory" class="tool-btn" onclick="onHistoryNew()">+ New</button>
-            <button id="btnHistRefresh" class="tool-btn" onclick="withButtonLoading(this, onHistoryRefresh)">Refresh</button>
+    <!-- panel9 (2,422) fill: tabControl2 -->
+    <div class="tab-container">
+        <div class="igp-tabs2">
+            <div class="tab-btn active" onclick="switchMainSubTab('tabGridHistory')">GatePass History Open Status</div>
+            <div class="tab-btn" id="tabBtnPoInfo" style="display:none;" onclick="switchMainSubTab('tabPoInfo')">Purchase Order Information</div>
         </div>
 
-        <!-- History Teal Status Strip -->
-        <div class="status-strip" style="background-color: #005a5b;">
-            <span style="font-size: 13px;">Inward Gate Pass History</span>
-        </div>
-
-        <!-- Filters Panel matching desktop screenshot -->
-        <div class="history-filter-box">
-            <div style="font-weight: bold; color: #003366; margin-bottom: 4px;">Filters</div>
-            <div class="form-row" style="gap: 10px; flex-wrap: wrap;">
-                <div>
-                    <span class="form-label">From Date</span><br/>
-                    <input type="date" id="txtHistFromDate" class="form-control" style="width: 120px;" />
-                </div>
-                <div>
-                    <span class="form-label">To Date</span><br/>
-                    <input type="date" id="txtHistToDate" class="form-control" style="width: 120px;" />
-                </div>
-                <div>
-                    <span class="form-label">From Doc No</span><br/>
-                    <input type="number" id="txtHistFromDoc" class="form-control" style="width: 90px;"  data-guard="integer"/>
-                </div>
-                <div>
-                    <span class="form-label">To Doc No</span><br/>
-                    <input type="number" id="txtHistToDoc" class="form-control" style="width: 90px;"  data-guard="integer"/>
-                </div>
-                <div>
-                    <span class="form-label">Supplier</span><br/>
-                    <select id="cmbHistSupplier" class="form-control" style="width: 220px;" data-dtcombo="single" data-dtcombo-caption="Supplier">
-                        <option value="">-- Select Supplier --</option>
-                    </select>
-                </div>
-                <div style="display: flex; align-items: flex-end;">
-                    <button id="btnHistShow" class="tool-btn" style="background-color: #005a5b; color: white; height: 22px; padding: 0 16px;" onclick="withButtonLoading(this, executeFullHistorySearch)">Show</button>
-                </div>
-                <div style="display: flex; align-items: flex-end; gap: 8px; padding-left: 10px;">
-                    <label><input type="radio" name="histDateFilter" value="docDate" checked> Doc Date</label>
-                    <label><input type="radio" name="histDateFilter" value="entryDate"> Entry Date</label>
-                    <label><input type="radio" name="histDateFilter" value="modifyDate"> Modify Date</label>
-                </div>
-            </div>
-        </div>
-
-        <!-- Column Grouping Bar -->
-        <div class="grouping-bar">
-            Drag a column header here to group by that column.
-        </div>
-
-        <!-- Full History Grid -->
-        <div style="padding: 0 6px 6px 6px;">
-            <div class="grid-wrap" id="wrapFullHistory" style="max-height: 480px;">
-                <table class="data-grid" id="grdFullHistory">
+        <!-- tabPage3: panel11 teal bar + grd -->
+        <div id="tabGridHistory" class="tab-content active">
+            <div class="igp-gridbar">This Grid Show the  Vehicles Present In The Factory,Pending For Acceptance Or Rejection</div>
+            <div class="grid-wrap" id="wrapMainHistory">
+                <table class="data-grid" id="grdMainHistory">
                     <thead>
                     <tr>
-                        <th>Print</th>
-                        <th>Edit</th>
-                        <th>Gp No</th>
-                        <th>Gp Date</th>
-                        <th>Gp Type</th>
-                        <th>Order Type</th>
-                        <th>Order No</th>
-                        <th>Supplier Name</th>
-                        <th>City Name</th>
-                        <th>Vehicle Type</th>
-                        <th>Vehicle No</th>
-                        <th>Bilty Date</th>
-                        <th>Bilty No</th>
-                        <th>Item Name</th>
-                        <th>Item Qty</th>
-                        <th>Pack Unit</th>
-                        <th>Weight Compared To Po Wt</th>
-                        <th>Supplier Load Weight</th>
-                        <th>Supplier Tare Weight</th>
-                        <th>Supplier Net Weight</th>
-                        <th>Factory Weight</th>
-                        <th>Diff Weight</th>
-                        <th>Freight</th>
-                        <th>Advance By Party</th>
-                        <th>Advance By Factory</th>
-                        <th>Total Payable Freight</th>
-                        <th>Net Paid</th>
-                        <th>In Time</th>
-                        <th>Out Time</th>
-                        <th>Status</th>
-                        <th>Entry User</th>
-                        <th>Entry Date</th>
-                        <th>Modify User</th>
-                        <th>Modify Date</th>
-                        <th>No Of Attachments</th>
-                        <th>Remarks</th>
-                        <th>Approval Status</th>
-                        <th>Excess Weight</th>
-                        <th>Packing Type</th>
+                        <th>Print</th><th>Edit</th><th>Gp No</th><th>Gp Date</th><th>G.Type</th><th>Order Type</th><th>Supplier Name</th>
+                        <th>Order No</th><th>Vehicle Type</th><th>Vehicle No</th><th>Bilty No</th><th>Item Qty</th><th>Pack Unit</th>
+                        <th>Weight Comp PO Wt</th><th>Supplier Load Wt</th><th>Supplier Tare Wt</th><th>Supplier Weight</th><th>Factory Weight</th>
+                        <th>Difference</th><th>Excess Weight</th><th>Net Paid</th><th>Item Name</th><th>City Name</th><th>In Time</th>
+                        <th>No Of Attachments</th><th>Other Remarks</th><th>Approval Status</th><th>Status</th>
                     </tr>
                     </thead>
-                    <tbody id="grdFullHistoryBody"></tbody>
+                    <tbody id="grdMainHistoryBody"></tbody>
+                </table>
+            </div>
+            <div class="totals-bar">
+                <div>Total Records: <span id="lblRecordCount">0</span></div>
+                <div>Sum Qty: <span id="lblSumQty">0</span> | Sum Supplier Wt: <span id="lblSumSupWt">0</span> | Sum Diff: <span id="lblSumDiff">0</span></div>
+            </div>
+        </div>
+
+        <!-- tabPage4 "Purchase Order Information": panel13 groupBox4 "Filters" (3,1) 1025 x 77, panel14 teal bar, grdPurchaseOrder -->
+        <div id="tabPoInfo" class="tab-content">
+            <div class="igp-rel" style="height:80px;">
+                <div class="igp-gb" style="left:3px;top:1px;width:1025px;height:77px;"><span class="igp-cap">Filters</span>
+                    <label class="igp-abs igp-lbl" for="txtFromPoDate" style="left:4px;top:22px;">From Date</label>
+                    <label class="igp-abs igp-lbl" for="txtToPoDate" style="left:4px;top:51px;">To Date</label>
+                    <label class="igp-abs igp-lbl" for="txtFromDocNoPoInfo" style="left:204px;top:22px;">From Doc</label>
+                    <label class="igp-abs igp-lbl" for="txtToDocNoPoInfo" style="left:204px;top:51px;">To Doc</label>
+                    <label class="igp-abs igp-lbl" style="left:334px;top:22px;">Supplier Name</label>
+                    <label class="igp-abs igp-lbl" style="left:334px;top:51px;">Document Type</label>
+                    <span class="igp-abs igp-lbl" style="left:637px;top:14px;width:122px;height:30px;background:#e0e0e0;white-space:normal;text-align:center;line-height:14px;">Hide Orders Expired Over Days Ago</span>
+                    <div class="igp-abs igp-dtc" style="left:64px;top:18px;width:137px;height:23px;"><input type="checkbox" id="chkFromPoDate" checked onchange="document.getElementById('txtFromPoDate').disabled=!this.checked"><input type="date" id="txtFromPoDate"></div>
+                    <input type="text" id="txtFromDocNoPoInfo" class="igp-abs igp-txt" style="left:266px;top:18px;width:65px;height:23px;" data-guard="integer">
+                    <select id="cmbSupplierNamePoInfo" class="igp-abs igp-cmb" style="left:424px;top:16px;width:211px;height:26px;" data-dtcombo="single" data-dtcombo-caption="Supplier Name"></select>
+                    <button type="button" id="btnResetPoInfo" class="igp-abs igp-btn tool-btn" style="left:763px;top:16px;width:62px;height:26px;" onclick="onResetPoInfo(this)">Reset</button>
+                    <label class="igp-abs igp-radio" style="left:829px;top:22px;"><input type="radio" name="poDateFilter" value="docDate" checked> Doc Date</label>
+                    <label class="igp-abs igp-radio" style="left:915px;top:22px;"><input type="radio" name="poDateFilter" value="modifyDate"> Modify Date</label>
+                    <div class="igp-abs igp-dtc" style="left:64px;top:47px;width:137px;height:23px;"><input type="checkbox" id="chkToPoDate" checked onchange="document.getElementById('txtToPoDate').disabled=!this.checked"><input type="date" id="txtToPoDate"></div>
+                    <input type="text" id="txtToDocNoPoInfo" class="igp-abs igp-txt" style="left:266px;top:47px;width:65px;height:23px;" data-guard="integer">
+                    <select id="CmbDocumentTypePoInfo" class="igp-abs igp-cmb" style="left:424px;top:45px;width:211px;height:26px;" data-dtcombo="single" data-dtcombo-caption="Document Type"></select>
+                    <input type="text" id="txtExpiryDaysPoInfo" class="igp-abs igp-txt" style="left:637px;top:47px;width:122px;height:23px;" value="7" data-guard="integer">
+                    <button type="button" id="btnSearchPoInfo" class="igp-abs igp-btn tool-btn" style="left:763px;top:45px;width:62px;height:26px;" onclick="withButtonLoading(this, loadPoInfoGrid)">Show</button>
+                    <label class="igp-abs igp-radio" style="left:829px;top:43px;"><input type="radio" name="poDateFilter" value="entryDate"> Entry Date</label>
+                    <label class="igp-abs igp-radio" style="left:915px;top:43px;"><input type="radio" name="poDateFilter" value="approvedDate"> Approved Date</label>
+                </div>
+            </div>
+            <div class="igp-gridbar" style="height:24px;">This Grid Show The Un-Completed And Approved Purchase Orders.... Complete.Cancel And Un-Approved Orders Will Not Appear here. </div>
+            <div class="grid-wrap" id="wrapPoInfo">
+                <table class="data-grid" id="grdPoInfo">
+                    <thead>
+                    <tr>
+                        <th>Branch</th><th>Document Type</th><th>Order No</th><th>Supplier Name</th><th>Item Name</th>
+                        <th>Pack UOM</th><th>Order Qty</th><th>Order Weight</th>
+                        <th>GP Received Qty</th><th>GP Received Weight</th><th>Balance Qty by GP</th><th>Balance Weight by GP</th>
+                        <th>GRN Received Qty</th><th>GRN Received Weight</th><th>Balance Qty by GRN</th><th>Balance Weight by GRN</th>
+                        <th>Remarks</th><th>Approval Status</th><th>Order Status</th><th>Expiry Date</th>
+                    </tr>
+                    </thead>
+                    <tbody id="grdPoInfoBody"></tbody>
                 </table>
             </div>
         </div>
     </div>
+</div>
 
-
-    <!-- Bottom Mode Bar -->
-    <!-- tabControl1 Form / History. Replaced by the fixed footer of countx_purchase_page_chrome.js (History on the right) when it loads. -->
-    <div class="bottom-mode-bar" id="bottomModeBar">
-        <button id="btnModeForm" class="mode-btn active" onclick="switchViewMode('Form')">Form</button>
-        <button id="btnModeHistory" class="mode-btn" onclick="switchViewMode('History')">History</button>
+<!-- ================================================================== tabPage2 "History" -->
+<div id="viewHistory" style="display: none;">
+    <!-- panel7 (0,0) 1607 x 53 teal: toolStrip2 (white, 27) + label17 (6,30) -->
+    <div style="background:#008080;height:53px;position:relative;">
+        <div class="igp-strip" style="height:27px;">
+            <button type="button" id="btnNewHistory" class="igp-tool tool-btn" onclick="onHistoryNew()" title="Ctrl+N"><span class="ic">&#10010;</span>New</button>
+            <button type="button" id="btnHistRefresh" class="igp-tool tool-btn" onclick="withButtonLoading(this, onHistoryRefresh)" title="Alt+R"><span class="ic">&#8635;</span>Refresh</button>
+        </div>
+        <span class="igp-teal-title" style="left:6px;top:30px;">Inward Gate Pass History</span>
+    </div>
+    <!-- panel17 (0,0) 1607 x 71: groupBox3 "Filters" (6,2) 1092 x 65 -->
+    <div class="igp-rel" style="height:71px;">
+        <div class="igp-gb" style="left:6px;top:2px;width:1092px;height:65px;"><span class="igp-cap">Filters</span>
+            <label class="igp-abs igp-lbl" for="txtHistFromDate" style="left:9px;top:15px;">From Date</label>
+            <label class="igp-abs igp-lbl" for="txtHistToDate" style="left:140px;top:15px;">To Date</label>
+            <label class="igp-abs igp-lbl" for="txtHistFromDoc" style="left:275px;top:15px;">From Doc No</label>
+            <label class="igp-abs igp-lbl" for="txtHistToDoc" style="left:380px;top:15px;">To Doc No</label>
+            <label class="igp-abs igp-lbl" style="left:486px;top:15px;">Supplier</label>
+            <input type="date" id="txtHistFromDate" class="igp-abs igp-dt" style="left:9px;top:34px;width:132px;height:23px;">
+            <input type="date" id="txtHistToDate" class="igp-abs igp-dt" style="left:143px;top:34px;width:131px;height:23px;">
+            <input type="text" id="txtHistFromDoc" class="igp-abs igp-txt" style="left:275px;top:34px;width:104px;height:23px;" data-guard="integer">
+            <input type="text" id="txtHistToDoc" class="igp-abs igp-txt" style="left:380px;top:34px;width:104px;height:23px;" data-guard="integer">
+            <select id="cmbHistSupplier" class="igp-abs igp-cmb" style="left:486px;top:32px;width:261px;height:26px;" data-dtcombo="single" data-dtcombo-caption="Supplier"></select>
+            <button type="button" id="btnHistShow" class="igp-abs igp-btn t tool-btn" style="left:748px;top:32px;width:62px;height:26px;" onclick="withButtonLoading(this, executeFullHistorySearch)" title="Ctrl+S">Show</button>
+            <label class="igp-abs igp-radio" style="left:820px;top:36px;"><input type="radio" name="histDateFilter" value="docDate" checked> Doc Date</label>
+            <label class="igp-abs igp-radio" style="left:901px;top:36px;"><input type="radio" name="histDateFilter" value="entryDate"> Entry Date</label>
+            <label class="igp-abs igp-radio" style="left:987px;top:36px;"><input type="radio" name="histDateFilter" value="modifyDate"> Modify Date</label>
+        </div>
+    </div>
+    <!-- panel18: grdhistory (Dock Fill) -->
+    <div class="grid-wrap" id="wrapFullHistory">
+        <table class="data-grid" id="grdFullHistory">
+            <thead>
+            <tr>
+                <th>Print</th><th>Edit</th><th>Gp No</th><th>Gp Date</th><th>Gp Type</th><th>Order Type</th><th>Order No</th>
+                <th>Supplier Name</th><th>City Name</th><th>Vehicle Type</th><th>Vehicle No</th><th>Bilty Date</th><th>Bilty No</th>
+                <th>Item Name</th><th>Item Qty</th><th>Pack Unit</th><th>Weight Compared To Po Wt</th><th>Supplier Load Weight</th>
+                <th>Supplier Tare Weight</th><th>Supplier Net Weight</th><th>Factory Weight</th><th>Diff Weight</th><th>Freight</th>
+                <th>Advance By Party</th><th>Advance By Factory</th><th>Total Payable Freight</th><th>Net Paid</th><th>In Time</th>
+                <th>Out Time</th><th>Status</th><th>Entry User</th><th>Entry Date</th><th>Modify User</th><th>Modify Date</th>
+                <th>No Of Attachments</th><th>Remarks</th><th>Approval Status</th><th>Excess Weight</th><th>Packing Type</th>
+            </tr>
+            </thead>
+            <tbody id="grdFullHistoryBody"></tbody>
+        </table>
     </div>
 </div>
 
-<script th:src="@{/build/js/countx_purchase_request.js?v=20260923a}"></script>
-<script th:src="@{/build/js/countx_purchase_page_chrome.js?v=20261001a}"></script>
-<script th:src="@{/build/js/countx_inward_gate_pass.js?v=20261001n}"></script>
+<!-- tabControl1 Form / History (Alignment Bottom): replaced by the fixed footer of countx_purchase_page_chrome.js -->
+<div class="bottom-mode-bar" id="bottomModeBar">
+    <button id="btnModeForm" class="mode-btn active" onclick="switchViewMode('Form')">Form</button>
+    <button id="btnModeHistory" class="mode-btn" onclick="switchViewMode('History')">History</button>
+</div>
 
-    <script th:src="@{/build/js/countx_desktop_combo.js?v=20260927b}"></script>
-    <script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</div>
+</div>
+
+<script th:src="@{/build/js/countx_purchase_request.js?v=20260923a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20261003s}"></script>
+<script th:src="@{/build/js/countx_purchase_page_chrome.js?v=20261001a}"></script>
+<script th:src="@{/build/js/countx_inward_gate_pass.js?v=20261003t}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
 <script src="/js/print-rpt.js?v=20261001a"></script>
 <script>
 /* 653: the desktop passes the gate pass id as @Id (traced as "history") */

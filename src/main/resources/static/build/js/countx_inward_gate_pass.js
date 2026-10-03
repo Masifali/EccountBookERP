@@ -96,10 +96,14 @@
             });
     }
 
+    const ZERO_INDEX_COMBOS=new Set(['cmbgptype','CmbOrderType','cmbvehicletype','cmbcity']);   // gatepasstype, OrderTypeFill, vehicleTypefill, CityFill
     function bindSelect(elemId, list, valKey, textKey) {
         const sel = field(elemId);
         if (!sel) return;
-        sel.innerHTML = '<option value="">-- Select --</option>';
+        // DropDownBind.BindDDL / BindDDLNew: ZeroIndex = true inserts "...Select Any Value..." (value 0) at Rows[0]; a combo bound
+        // with ZeroIndex = false has no such row and shows nothing until a row is picked (cmbsupp, CmbVariety, CmbStatus, ...).
+        // The web keeps one empty option in both cases (value '' = 0) so the Rows[n] indexes below stay the desktop's.
+        sel.innerHTML = '<option value="">'+(ZERO_INDEX_COMBOS.has(elemId)?'...Select Any Value...':'')+'</option>';
         (list||[]).forEach(item => {
             const opt = document.createElement('option');
             opt.value = item[valKey];
@@ -149,6 +153,7 @@
         if(field('CmbStatus').options.length) field('CmbStatus').value='Open';
         if(field('cmbWeighBridge').options.length>1) field('cmbWeighBridge').selectedIndex=1;
         field('CmbPackingType').value='';
+        bindSelect('cmbContainerNo1',[],'id','name'); bindSelect('cmbContainerNo2',[],'id','name');   // Reset: cmbContainerNo1/2.Text = ""
         field('btnsave').style.display='inline-flex';
         field('btnupdate').style.display='none';
         applyOrderType(true);               // the operator tabs through CmbOrderType -> CmbOrderType_Leave
@@ -158,6 +163,7 @@
         return Promise.all([
             igpFetch('/api/inward-gate-pass/generate-no?gatepassType='+encodeURIComponent(caption('cmbgptype'))).then(res=>res.json()).then(data=>{
                 if(generation!==formGeneration) return;
+                applyContainerVisibility();   // Load / Reset -> cmbgptype_Leave_1
                 field('txtgpno').value = data.gpSrNo || '';
                 field('txtgptypeno').value = data.gpTypeSrNo || '';
                 if ([105,106,98,52,241,204].includes(numeric('CmbOrderType'))) { field('CmbOrderno').value=field('txtgpno').value; poId=numeric('txtgpno'); }
@@ -289,10 +295,15 @@
         if(!type) return Promise.resolve();
         return igpFetch('/api/inward-gate-pass/generate-no?gatepassType='+encodeURIComponent(type)).then(r=>r.json()).then(data=>{
             if(generation!==formGeneration || type!==caption('cmbgptype')) return;
-            if(Number(data.gpTypeSrNo)>0) field('txtgptypeno').value=data.gpTypeSrNo; else alert('Please GatePass Type Select');
+            if(Number(data.gpTypeSrNo)>0) { field('txtgptypeno').value=data.gpTypeSrNo; applyContainerVisibility(); } else alert('Please GatePass Type Select');
         }).catch(showRequestError);
     }
     function onItemChange() { }
+    /* cmbgptype_Leave_1 :833 - cmbContainerNo1/2 and their labels are visible only for Export, Export Return and Import */
+    function applyContainerVisibility() {
+        const t=caption('cmbgptype');
+        field('igpContainers').style.display=(t==='Export'||t==='Export Return'||t==='Import')?'':'none';
+    }
 
     /* CmbOrderno_Leave :1099 */
     function onOrderNumberLeave() {
@@ -419,7 +430,7 @@
             supplierContractCode: field('CmbOrderno').value,
             purchaseOrderId: poId,
             weightDiffComments: field('txtWeightDiffRemarks').value,
-            container: '', container1: '',
+            container: caption('cmbContainerNo1'), container1: caption('cmbContainerNo2'),   // cmbContainerNo1/2.Text
             driverBioDataId: driverBioId,
             driverName: field('txtDriverName').value,
             driverCNICNO: field('txtCNIC').value,
@@ -678,7 +689,9 @@
             const lab=res.lab||{};
             field('txtAnaylstName').value=lab.AnalystName??''; field('txtLabReportNo').value=lab.DocNo??'';
             field('txtReportStatus').value=lab.LabStatus??''; field('txtLabRemarks').value=lab.RemarksHeader??'';
-            setCaption('cmbgptype',h.GatepassType); bindAllItems();
+            setCaption('cmbgptype',h.GatepassType); bindAllItems(); applyContainerVisibility();
+            // ReadById :3069 - cmbContainerNo1/2.Text = Container / Container1 (the list itself comes only from the Import order lookup)
+            for (const [id,key] of [['cmbContainerNo1','Container'],['cmbContainerNo2','Container1']]) { const t=String(h[key]??''); bindSelect(id,t?[{id:t,name:t}]:[],'id','name'); field(id).value=t; }
             setCaption('cmbWeighBridge',h.DocAttachment);
             field('txtgpdate').value=String(h.GpDate||'').slice(0,10);
             field('txtBiltyDate').value=String(h.BiltyDate||'').slice(0,10);
@@ -822,7 +835,7 @@
             const t=event.target;
             if(t && t.tagName==='INPUT' && !['button','submit','checkbox','radio'].includes(t.type) && !t.closest('.dtcombo-wrap.dtcombo-open') && t.id!=='CmbOrderno') {
                 const list=Array.from(document.querySelectorAll(history?'#viewHistory input, #viewHistory select':'#viewForm input, #viewForm select'))
-                    .filter(el=>!el.disabled && !el.readOnly && el.offsetParent!==null && el.type!=='hidden' && el.tabIndex>=0 && !el.classList.contains('dtcombo-native'));
+                    .filter(el=>!el.disabled && (!el.readOnly || el.classList.contains('dtcombo-input')) && el.offsetParent!==null && el.type!=='hidden' && el.tabIndex>=0 && !el.classList.contains('dtcombo-native') && !el.classList.contains('cx-combo-search'));
                 const i=list.indexOf(t); if(i>=0 && list[i+1]) { event.preventDefault(); list[i+1].focus(); }
             }
         }

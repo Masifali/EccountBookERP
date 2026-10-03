@@ -1,456 +1,571 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Goods Receiving Notes - EccountBook ERP Desktop Copy</title>
+    <title>Goods Receiving Notes - EccountBookERP</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" th:href="@{/build/css/countx_purchase_request.css?v=20260923a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20261003s}"/>
     <!--
-      InvFrmGRN.cs (screen 121, DocumentTypeId 46). Control names, captions, group boxes and positions follow
-      the designer (InitializeComponent :7142-10912); the positions inside the three group boxes are the
-      designer Location/Size values. The page keeps the desktop's AutoScrollMinSize (1470 wide) by scrolling.
+      Screen 121 "Goods Receipt Notes" - Architecture.WinApp.Purchase/InvFrmGRN.cs (DocumentTypeId 46).
+      Rebuilt 2026-10-03 at the designer geometry, 1:1 in px (InitializeComponent :7142-10912):
+        tabControl1 (Dock Fill, Alignment Bottom) -> tabPage1 "Form" 1376 x 763:
+          panel2   (2,2)    1372x56  teal   - toolStrip1 (0,0) 1372x27, label13 (3,31) Tahoma 12 bold, chkScaleShortWeightApply (394,32),
+                                              chkSuppShortWeight (698,31), ChkBox "Preview on save" (1223,31) Anchor Top|Right
+          panel4   (2,58)   1372x201        - groupBox1 "Main Information" (0,0) 1030x201 Dock Left [groupBox4 "Freight Information" (612,9) 417x188],
+                                              PanelBreakupMain (1030,0) 692x201 Dock Left (panel22 title 26 + grdPurchaseBrakup)
+          panel5   (2,259)  1372x138        - groupBox2 "Detail Infomation" (0,0) 1158x138 Dock Left, PanelCurrentLabResult (1158,0) 220x138 (Visible=false)
+          panel10  (2,397)  1372x167        - panel16 teal 25 + grd
+          panel6   (2,564)  Dock Fill       - panel3 559 wide (panel14 teal 35 + grdEmptyBags) | panel9 Fill (panel12 teal 35 + grdGp)
+        tabPage2 "History": panel7 teal 50 (toolStrip2 + label55), panel23 74 (groupBox3 "Filters" (5,2) 891x66 + date-type radios),
+          panel18 teal 25 "Filtered Records", GrdHistory Fill, tabControl2 Dock Bottom 302 (Detail | Empty Bags Detail).
+      Labels: Segoe UI Semibold 9pt; TextBoxes and UltraCombos: Verdana 9.75pt (23 / 26 px high); GroupBox captions Tahoma 9.75 bold
+      (groupBox4 Tahoma 8 bold). Every element id is the id countx_market_grn.js / countx_grn_supplements.js uses (the desktop name is
+      in the comment where they differ). Every combo is countx_prod_combo.js (the searchable store design); countx_desktop_combo.js
+      is no longer loaded on this page.
     -->
     <style>
-        :root {
-            --win-bg: #ece9d8;
-            --win-border: #716f64;
-            --toolbar-bg: linear-gradient(to bottom, #ffffff, #e3e3e3);
-            --btn-bg: #f0f0f0;
-            --btn-border: #707070;
-            --input-border: #7f9db9;
-            --grid-header-bg: #d9e6f2;
-        }
+        [hidden] { display: none !important; }
         * { box-sizing: border-box; }
-        body { font-family: Tahoma, Arial, sans-serif; font-size: 11px; background-color: #d4d0c8; margin: 0; padding: 4px; }
-        .win-container { width: 100%; background-color: var(--win-bg); border: 1px solid var(--win-border); box-shadow: 2px 2px 8px rgba(0,0,0,0.4); }
-        .top-banner { background-color: #005a5b; color: #fff; padding: 3px 8px; font-weight: bold; font-size: 12px; display: flex; justify-content: space-between; align-items: center; }
-        .toolbar { background: var(--toolbar-bg); border-bottom: 1px solid #999; padding: 3px 6px; display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
-        .tool-btn { height: 23px; padding: 1px 7px; font-size: 11px; font-family: Tahoma, sans-serif; background-color: var(--btn-bg); border: 1px solid var(--btn-border); border-radius: 2px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; font-weight: bold; color: #000; }
-        .tool-btn:hover { background-color: #ffe4a0; border-color: #e59d00; }
-        .tool-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .spinner { display: inline-block; width: 10px; height: 10px; border: 2px solid rgba(0,0,0,0.3); border-radius: 50%; border-top-color: #000; animation: spin 0.6s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .title-row { display: flex; align-items: center; gap: 18px; padding: 2px 6px 4px; }
-        .title-row .form-title { font: bold 16px Tahoma, sans-serif; min-width: 260px; }
-        .title-row label { display: inline-flex; align-items: center; gap: 4px; }
-        .teal-strip { background-color: #005a5b; color: #fff; padding: 3px 8px; font-weight: bold; font-size: 11px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-        .scroll-x { overflow-x: auto; }
-        .form-body { padding: 2px; min-width: 1470px; }
-
-        /* group boxes laid out with the designer's own coordinates */
-        fieldset.gb { position: relative; border: 1px solid #a0a0a0; margin: 0; padding: 0; background: #fcfcfc; }
-        fieldset.gb > legend { float: none; width: auto; font-size: 11px; font-weight: bold; color: #003366; margin: 0 0 0 6px; padding: 0 3px; line-height: 12px; }
-        .dk { position: absolute; }
-        .dk-lbl { position: absolute; font-size: 11px; white-space: nowrap; }
-        input.dk, select.dk { height: 21px; font-family: Tahoma, sans-serif; font-size: 11px; border: 1px solid var(--input-border); padding: 1px 3px; background: #fff; }
-        input.dk[readonly], input.dk:disabled, select.dk:disabled { background-color: #eef2f5; color: #222; }
-        input.num { text-align: right; }
-        .row-top { display: flex; }
-        .breakup-panel { flex: 1 1 auto; min-width: 440px; display: flex; flex-direction: column; border: 1px solid #a0a0a0; margin-left: 2px; }
-        .breakup-panel.disabled-panel { opacity: 0.75; }
-        .detail-row { display: flex; margin-top: 2px; }
-
-        /* grids */
-        .grid-wrap { overflow: auto; border: 1px solid #999; background-color: #fff; width: 100%; }
-        .data-grid { width: 100%; border-collapse: collapse; font-size: 10px; white-space: nowrap; }
-        .data-grid th { background-color: var(--grid-header-bg); border: 1px solid #b0c4de; padding: 3px 5px; text-align: left; position: sticky; top: 0; z-index: 2; }
-        .data-grid td { border: 1px solid #e0e0e0; padding: 2px 5px; }
-        .data-grid tbody tr:hover { background-color: #eef6ff; cursor: pointer; }
-        .data-grid tr.selected { background-color: #3399ff; color: #fff; }
-        .data-grid tr.group-row td { background: #e8e8e8; font-weight: bold; color: #003366; }
-        .data-grid tfoot td { background: #f3f3f3; font-weight: bold; }
+        html, body { margin: 0; padding: 0; background: #fff; }
+        body { font-family: Verdana, "DejaVu Sans", sans-serif; font-size: 11px; color: #000; line-height: normal; }
+        .grn-scroll { overflow-x: auto; overflow-y: hidden; width: 100%; }
+        .grn-root { position: relative; min-width: 1376px; width: 100%; background: #fff; padding: 2px 2px 0 2px; }
+        .a { position: absolute; margin: 0; }
+        /* ---------------------------------------------------------------- panel2: toolStrip1 + teal title */
+        .grn-panel2 { position: relative; height: 56px; background: #008080; }
+        .grn-strip { position: absolute; left: 0; top: 0; right: 0; height: 27px; display: flex; align-items: center; padding-left: 2px;
+                     background: linear-gradient(to bottom, #fdfdfd 0%, #eaeef3 100%); border-bottom: 1px solid #c5ccd4; white-space: nowrap; overflow: hidden; }
+        .grn-tool { font: 13px Verdana, "DejaVu Sans", sans-serif; height: 24px; background: transparent; border: 1px solid transparent; display: inline-flex;
+                    align-items: center; gap: 4px; padding: 0 5px; cursor: pointer; white-space: nowrap; color: #000; border-radius: 0; }
+        .grn-tool:hover:not(:disabled) { background: #ffe4a0; border-color: #e59d00; }
+        .grn-tool:disabled { color: #9a9a9a; cursor: default; }
+        .grn-tool .fa { font-size: 14px; width: 16px; text-align: center; color: #00796b; }
+        .grn-tool .fa.p { color: #3a5f8f; } .grn-tool .fa.r { color: #c62828; }
+        .grn-sep { width: 1px; height: 19px; background: #b9c0c8; margin: 0 3px; box-shadow: 1px 0 0 #fff; }
+        .grn-close { margin-left: auto; margin-right: 4px; font: bold 16px Verdana, sans-serif; color: #444; text-decoration: none; padding: 0 6px; }
+        .grn-close:hover { color: #c62828; }
+        .grn-title { position: absolute; left: 3px; top: 31px; font: bold 16px Tahoma, "DejaVu Sans", sans-serif; color: #fff; white-space: nowrap; line-height: 19px; }
+        .grn-wchk { position: absolute; display: inline-flex; align-items: center; gap: 4px; font: bold 13px Verdana, "DejaVu Sans", sans-serif; color: #fff;
+                    white-space: nowrap; height: 20px; cursor: pointer; margin: 0; }
+        .grn-wchk input { margin: 0; }
+        /* ---------------------------------------------------------------- GroupBox (caption on the top border, 7 px down) */
+        .gb { position: absolute; background: #fff; }
+        .gb::before { content: ""; position: absolute; left: 0; right: 0; top: 7px; bottom: 0; border: 1px solid #c9d3dc; border-radius: 3px; pointer-events: none; }
+        .gb > .cap { position: absolute; left: 6px; top: 0; padding: 0 2px; background: #fff; font: bold 13px Tahoma, "DejaVu Sans", sans-serif; line-height: 14px; white-space: nowrap; }
+        .gb.small > .cap { font: bold 11px Tahoma, "DejaVu Sans", sans-serif; line-height: 13px; top: 1px; }
+        /* ---------------------------------------------------------------- labels / boxes */
+        .lbl { position: absolute; font: 600 12px "Segoe UI Semibold", "Segoe UI", Tahoma, "Liberation Sans", sans-serif; line-height: 15px; white-space: nowrap; color: #000; margin: 0; }
+        .lbl.l10 { font-size: 13.3px; line-height: 19px; }
+        .txt { position: absolute; font: 13px Verdana, "DejaVu Sans", sans-serif; height: 23px; border: 1px solid #7a7a7a; padding: 1px 3px; background: #fff; color: #000; margin: 0; border-radius: 0; }
+        .txt.r { text-align: right; }
+        .txt.ms { font: 12px "Microsoft Sans Serif", Tahoma, "Liberation Sans", sans-serif; height: 21px; }
+        .txt.menu, .txt[readonly] { background: #f0f0f0; }
+        .txt:disabled { background: #f0f0f0; color: #6d6d6d; }
+        .txt.bold { font-weight: bold; }
+        .txt:focus { outline: 1px solid #3399ff; outline-offset: -1px; }
+        textarea.txt { resize: none; overflow: hidden; line-height: 14px; }
+        .cmb { position: absolute; height: 26px; font: 13px Verdana, "DejaVu Sans", sans-serif; }
+        .grn-root .pcx-wrap .dtcombo-input.pcx-field { font: 13px Verdana, "DejaVu Sans", sans-serif; height: 100%; padding-left: 3px; }
+        .grn-root #grdEmptyBagsBody .pcx-wrap .dtcombo-input.pcx-field { font: 11px Verdana, "DejaVu Sans", sans-serif; }
+        .btn-teal { position: absolute; background: #008080; color: #fff; border: 1px solid #006666; font: bold 12px Verdana, "DejaVu Sans", sans-serif; cursor: pointer; padding: 0; margin: 0; }
+        .btn-teal:hover:not(:disabled) { background: #006d6d; }
+        .btn-teal:disabled { background: #7fb3b3; cursor: default; }
+        .chk { position: absolute; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; overflow: hidden; margin: 0; cursor: pointer; }
+        .chk input { margin: 0; flex: 0 0 auto; }
+        .chk.vb { font: bold 13px Verdana, "DejaVu Sans", sans-serif; height: 20px; }
+        .rad { position: absolute; display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; margin: 0; cursor: pointer;
+               font: 600 12px "Segoe UI Semibold", "Segoe UI", Tahoma, "Liberation Sans", sans-serif; height: 19px; }
+        .rad input { margin: 0; }
+        .rad.l10 { font-size: 13.3px; height: 23px; }
+        .red { color: red; }
+        /* Desktop z-order: a box is drawn over a caption that runs into it (Segoe UI metrics differ by browser/OS), so a
+           caption can never cross a box - it is cut at the box edge exactly as the WinForms label is. */
+        .lbl { z-index: 0; }
+        .txt, .cmb, .grn-root .dtcombo-wrap, .btn-teal, .chk, .dtc { z-index: 1; }
+        .rad { z-index: 1; background: #fff; padding-right: 2px; }
+        /* an open drop-down lifts its own field above the grids' sticky headers */
+        .grn-root .dtcombo-wrap:focus-within, .grn-root .dtcombo-wrap:has(> .dtcombo-pop[style*="block"]) { z-index: 60; }
+        .grn-panel5, .grn-panel4 { overflow: visible; }
+        .grn-panel4 { clip-path: inset(0 0 -400px 0); }
+        /* ---------------------------------------------------------------- docked panels */
+        .grn-panel4 { position: relative; height: 201px; overflow: hidden; }
+        #groupBox1 { left: 0; top: 0; width: 1030px; height: 201px; }
+        #groupBox4 { left: 612px; top: 9px; width: 417px; height: 188px; }
+        #panelBreakup { position: absolute; left: 1030px; top: 0; width: 692px; height: 201px; background: #fff; }
+        #panelBreakup .bk-title { height: 26px; padding: 5px 3px 0 3px; color: #008080; font: bold 12px Verdana, "DejaVu Sans", sans-serif; background: #fff; white-space: nowrap; }
+        #panelBreakup .grid-wrap { position: absolute; left: 0; top: 26px; width: 692px; height: 175px; }
+        #panelBreakup.disabled-panel .grid-wrap { background: #f4f4f4; }
+        #panelBreakup.disabled-panel input, #panelBreakup.disabled-panel button { pointer-events: none; }
+        #grdPurchaseBreakupsBody input { width: 72px; height: 19px; font: 11px Verdana, "DejaVu Sans", sans-serif; text-align: right; border: 1px solid #b8c8d8; padding: 0 2px; }
+        .grn-panel5 { position: relative; height: 138px; overflow: hidden; }
+        #groupBox2 { left: 0; top: 0; width: 1158px; height: 138px; }
+        #labParamsPanel { position: absolute; left: 1158px; top: 0; width: 220px; height: 138px; background: #fff; }
+        #labParamsPanel .lab-title { height: 19px; padding: 3px 2px 0 2px; color: #008080; font: bold 12px Verdana, "DejaVu Sans", sans-serif; background: #fff; white-space: nowrap; }
+        #labParamsPanel .grid-wrap { position: absolute; left: 0; top: 19px; width: 220px; height: 119px; }
+        .grn-panel10 { position: relative; height: 167px; }
+        .teal-bar { background: #008080; color: #fff; position: relative; overflow: hidden; }
+        .grn-panel6 { position: relative; display: flex; height: calc(100vh - 2px - 56px - 201px - 138px - 167px - 25px - 40px); min-height: 197px; }
+        .grn-panel6 > .p3 { flex: 0 0 559px; width: 559px; display: flex; flex-direction: column; min-width: 0; }
+        .grn-panel6 > .p9 { flex: 1 1 auto; display: flex; flex-direction: column; min-width: 0; }
+        .grn-panel6 .teal-bar { height: 35px; flex: 0 0 35px; }
+        .grn-panel6 .grid-wrap { flex: 1 1 auto; min-height: 0; }
+        /* ---------------------------------------------------------------- GridEX look, each grid scrolls inside itself */
+        .grid-wrap { overflow: auto; background: #fff; border: 1px solid #9eb6ce; }
+        .data-grid { border-collapse: collapse; width: auto; min-width: 100%; font: 11px Verdana, "DejaVu Sans", sans-serif; white-space: nowrap; }
+        .data-grid th { background: linear-gradient(to bottom, #fbfbfb 0%, #e4e8ee 100%); border: 1px solid #b6c2cf; font-weight: normal; text-align: left;
+                        padding: 2px 4px; white-space: nowrap; position: sticky; top: 0; z-index: 2; height: 20px; }
+        .data-grid td { border: 1px solid #e1e6ec; padding: 1px 4px; white-space: nowrap; height: 20px; }
+        .data-grid tbody tr:hover { background: #fff0cf; cursor: pointer; }
+        .data-grid tbody tr.selected { background: #cfe3ff; }
+        .data-grid tbody tr.group-row td { background: #eef1f5; font-weight: bold; color: #003366; }
+        .data-grid tfoot td { font-weight: bold; background: #eef4fb; position: sticky; bottom: 0; border-top: 1px solid #9eb6ce; }
         .data-grid a { color: #0645ad; text-decoration: underline; cursor: pointer; }
-        .data-grid td.excess-zero { color: green; }
-        .data-grid td.excess-pos { color: red; font-weight: bold; }
-        .grid-caption { background: #d4d0c8; padding: 2px 6px; font-weight: bold; display: flex; gap: 14px; align-items: center; }
-        .bottom-dual-grid { display: grid; grid-template-columns: 559px 1fr; gap: 2px; margin-top: 2px; }
-        .bottom-dual-grid > div { min-width: 0; }
+        .data-grid td.excess-zero { color: green; } .data-grid td.excess-pos { color: red; font-weight: bold; }
+        .data-grid .tool-btn { font: 11px Verdana, "DejaVu Sans", sans-serif; padding: 0 5px; height: 18px; line-height: 16px; cursor: pointer; border: 1px solid #8aa0b0; background: #f2f4f6; color: #000; }
+        .data-grid .tool-btn:disabled { color: #999; }
+        .data-grid input.form-control, .data-grid select.form-control { font: 11px Verdana, "DejaVu Sans", sans-serif; height: 20px; padding: 0 3px; border-radius: 0; border: 1px solid #b8c8d8; }
+        #grdEmptyBagsBody input[type=number] { width: 74px; text-align: right; }
+        #grdEmptyBagsBody input:not([type=number]) { width: 150px; }
+        #grdEmptyBagsBody .dtcombo-wrap, #grdEmptyBagsBody select { width: 150px; height: 20px; }
         .col-hidden { display: none; }
-
-        .tabs-bar { display: flex; background-color: #d4d0c8; border-top: 1px solid #999; padding: 2px 6px; gap: 4px; }
-        .mode-btn { padding: 2px 12px; border: 1px solid #888; background: #e0e0e0; cursor: pointer; font-size: 11px; }
-        .mode-btn.active { background: #fff; font-weight: bold; color: #003366; }
-
+        /* ---------------------------------------------------------------- tabControl1 page strip (Alignment Bottom) */
+        .grn-tabs { height: 25px; display: flex; align-items: flex-start; padding-left: 2px; border-top: 1px solid #a0a0a0; background: #fff; }
+        .grn-tabs .mode-btn { height: 21px; line-height: 19px; padding: 0 10px; border: 1px solid #a0a0a0; border-top: none; background: #f0f0f0; font: 13px Verdana, "DejaVu Sans", sans-serif; cursor: pointer; margin-right: -1px; color: #000; }
+        .grn-tabs .mode-btn.active { background: #fff; height: 23px; position: relative; top: -1px; }
+        /* ---------------------------------------------------------------- History page */
+        .grn-panel7 { position: relative; height: 50px; background: #008080; }
+        .grn-panel23 { position: relative; height: 74px; }
+        #groupBox3 { left: 5px; top: 2px; width: 891px; height: 66px; }
+        .dtc { position: absolute; display: flex; align-items: center; gap: 2px; border: 1px solid #7a7a7a; background: #fff; padding: 0 2px; height: 23px; }
+        .dtc input[type=checkbox] { margin: 0; }
+        .dtc input[type=date] { border: none; font: 12px Verdana, "DejaVu Sans", sans-serif; height: 19px; width: 100%; min-width: 0; padding: 0; background: transparent; }
+        .grn-panel18 { height: 25px; background: #008080; color: #fff; position: relative; }
+        .grn-panel18 .t { position: absolute; left: 4px; top: 2px; font: bold 16px Tahoma, "DejaVu Sans", sans-serif; line-height: 19px; }
+        .grn-panel18 .n { position: absolute; left: 160px; top: 4px; font: bold 13px Verdana, "DejaVu Sans", sans-serif; }
+        #grdHistoryWrap { height: calc(100vh - 2px - 50px - 74px - 25px - 302px - 25px - 40px); min-height: 160px; }
+        .grn-tc2 { height: 302px; display: flex; flex-direction: column; }
+        .grn-tc2 .tabs2 { height: 25px; display: flex; align-items: flex-end; padding-left: 2px; border-bottom: 1px solid #a0a0a0; flex: 0 0 25px; }
+        .grn-tc2 .tabs2 .mode-btn { height: 21px; line-height: 19px; padding: 0 8px; border: 1px solid #a0a0a0; border-bottom: none; background: #f0f0f0; font: 13px Verdana, "DejaVu Sans", sans-serif; cursor: pointer; margin-right: -1px; color: #000; }
+        .grn-tc2 .tabs2 .mode-btn.active { background: #fff; height: 24px; position: relative; top: 1px; }
+        .grn-tc2 .pg { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; padding: 3px; }
+        .grn-tc2 .pg .bar { height: 21px; flex: 0 0 21px; background: #008080; color: #fff; font: bold 14.6px Tahoma, "DejaVu Sans", sans-serif; line-height: 19px; padding-left: 3px; white-space: nowrap; }
+        .grn-tc2 .pg .grid-wrap { flex: 1 1 auto; min-height: 0; }
+        /* dialogs */
         #loaderModal .modal-dialog { max-width: 1200px; }
+        .modal-header { background: #008080; color: #fff; }
+        .modal-header .btn-close { filter: invert(1); }
+        .modal-title { font: bold 13px Verdana, "DejaVu Sans", sans-serif; }
+        .modal-cap { background: #008080; color: #fff; font: 600 12px "Segoe UI Semibold", "Segoe UI", Tahoma, sans-serif; padding: 3px 6px; display: flex; gap: 14px; align-items: center; }
         #shortcutModal td { padding: 2px 8px; }
+        @media print { .grn-strip, .pc-footer, button { display: none !important; } }
     </style>
-    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
-    <link rel="stylesheet" th:href="@{/build/css/countx_purchase_request.css?v=20260923a}"/>
 </head>
 <body>
+<div class="grn-scroll">
+<div class="grn-root">
 
-<div class="win-container">
-    <div class="top-banner">
-        <div>ERP AccountBook ERP</div>
-        <div style="font-size: 11px; font-weight: normal;">
-            <span th:text="${#authentication != null ? #authentication.name : 'User'}">User</span> |
-            <span><span th:replace="~{fragments/company :: name}">Company</span></span>
+<!-- ================================================================== tabPage1 "Form" -->
+<div id="viewForm">
+    <!-- panel2: toolStrip1 items in designer order (:10218): btnNew, BtnRefresh, btnSave, btnUpdate (Visible=false), BtnPrint "211-Print",
+         btnSlip257, btnAttachment, btnDelete (Visible=false), separator, CityDefine, BtnShortCutkeys, separator,
+         BtnUpdateEBTotalWithGrossWeight (Visible = EBWtAccordingToGrossWeight :811). -->
+    <div class="grn-panel2">
+        <div class="grn-strip">
+            <button id="btnNew" type="button" class="grn-tool tool-btn" title="Ctrl_N" onclick="withButtonLoading(this, onNewRecord)"><i class="fa fa-plus-circle"></i>New</button>
+            <button id="btnRefresh" type="button" class="grn-tool tool-btn" title="Alt_R" onclick="withButtonLoading(this, onRefreshForm)"><i class="fa fa-refresh"></i>Refresh</button>
+            <button id="btnSave" type="button" class="grn-tool tool-btn" title="Ctrl_S" th:disabled="${!rights['Save']}" th:attr="data-can-save=${rights['Save']}" onclick="withButtonLoading(this, onSaveRecord)"><i class="fa fa-floppy-o p"></i>Save</button>
+            <button id="btnUpdate" type="button" class="grn-tool tool-btn" title="Ctrl_U" style="display:none" th:disabled="${!rights['Update']}" th:attr="data-can-update=${rights['Update']}" onclick="withButtonLoading(this, onUpdateRecord)"><i class="fa fa-pencil p"></i>Update</button>
+            <button id="btnPrint211" type="button" class="grn-tool tool-btn" title="Ctrl_P" th:disabled="${!rights['Print']}" data-rpt="211-InvRptGoodsReceiptsNotesRiceSlip.rpt" data-rpt-need="id" data-rpt-need-msg="Save or open a GRN first."><i class="fa fa-print p"></i>211-Print</button>
+            <button id="btnSlip257" type="button" class="grn-tool tool-btn" data-rpt="257-InwardGatePassWithWbAndLabSlip.rpt" data-rpt-need="id" data-rpt-need-msg="Load a gate pass first."><i class="fa fa-print p"></i>257-GPSlip</button>
+            <button id="btnAttachment" type="button" class="grn-tool tool-btn" title="Alt_A / Ctrl+F10" onclick="onAttachment(this)"><i class="fa fa-paperclip"></i>Attachment</button>
+            <button id="btnDelete" type="button" class="grn-tool tool-btn" style="display:none" th:disabled="${!rights['Delete']}" th:attr="data-can-delete=${rights['Delete']}" onclick="withButtonLoading(this, onDeleteRecord)"><i class="fa fa-trash r"></i>Delete</button>
+            <span class="grn-sep"></span>
+            <button id="btnDefineCity" type="button" class="grn-tool tool-btn" onclick="window.open('/master-data/city','_blank')">Define City</button>
+            <button id="btnShortcuts" type="button" class="grn-tool tool-btn" onclick="showShortcutKeys()"><i class="fa fa-keyboard-o"></i>ShortCut Keys</button>
+            <span class="grn-sep"></span>
+            <button id="btnEbWtByGross" type="button" class="grn-tool tool-btn" style="display:none" onclick="updateEbTotalWithGrossWeight()"><i class="fa fa-balance-scale"></i>E.B Wt According To Gross Weight</button>
+            <a href="/purchase" class="grn-close" title="Close (Ctrl+E / Esc)">&times;</a>
         </div>
+        <span class="grn-title" id="grnTitle">Goods Receiving Notes</span>
+        <label class="grn-wchk" id="lblScaleDeduct" style="left:394px;top:32px"><input type="checkbox" id="chkScaleDeduct"> Scale Short Weight Deduction Apply</label>
+        <label class="grn-wchk" id="lblSupplierDeduct" style="left:698px;top:31px"><input type="checkbox" id="chkSupplierDeduct"> Supplier Short Weight Deduction Apply</label>
+        <label class="grn-wchk" style="right:4px;top:31px"><input type="checkbox" id="chkPreviewAfterSave" checked> Preview on save</label>
     </div>
 
-    <!-- tabPage1 "Form" -->
-    <div id="viewForm">
-        <!-- panel2: toolStrip1, label13, chkScaleShortWeightApply, chkSuppShortWeight, ChkBox -->
-        <div class="toolbar">
-            <button id="btnNew" type="button" class="tool-btn" onclick="withButtonLoading(this, onNewRecord)">New</button>
-            <button id="btnRefresh" type="button" class="tool-btn" onclick="withButtonLoading(this, onRefreshForm)">Refresh</button>
-            <button id="btnSave" type="button" class="tool-btn" th:disabled="${!rights['Save']}" th:attr="data-can-save=${rights['Save']}" onclick="withButtonLoading(this, onSaveRecord)">Save</button>
-            <button id="btnUpdate" type="button" class="tool-btn" style="display:none" th:disabled="${!rights['Update']}" th:attr="data-can-update=${rights['Update']}" onclick="withButtonLoading(this, onUpdateRecord)">Update</button>
-            <button id="btnPrint211" type="button" class="tool-btn" th:disabled="${!rights['Print']}" data-rpt="211-InvRptGoodsReceiptsNotesRiceSlip.rpt" data-rpt-need="id" data-rpt-need-msg="Save or open a GRN first.">211-Print</button>
-            <button id="btnSlip257" type="button" class="tool-btn" data-rpt="257-InwardGatePassWithWbAndLabSlip.rpt" data-rpt-need="id" data-rpt-need-msg="Load a gate pass first.">257-GPSlip</button>
-            <button id="btnAttachment" type="button" class="tool-btn" title="Ctrl+F10" onclick="onAttachment(this)">Attachment</button>
-            <button id="btnDelete" type="button" class="tool-btn" style="display:none" th:disabled="${!rights['Delete']}" th:attr="data-can-delete=${rights['Delete']}" onclick="withButtonLoading(this, onDeleteRecord)">Delete</button>
-            <button id="btnDefineCity" type="button" class="tool-btn" onclick="window.open('/master-data/city','_blank')">Define City</button>
-            <button id="btnShortcuts" type="button" class="tool-btn" onclick="showShortcutKeys()">ShortCut Keys</button>
-            <button id="btnEbWtByGross" type="button" class="tool-btn" style="display:none" onclick="updateEbTotalWithGrossWeight()">E.B Wt According To Gross Weight</button>
-            <a href="/purchase" class="ms-auto text-decoration-none fw-bold text-dark" title="Close (Ctrl+E)">&times;</a>
-        </div>
-        <div class="title-row">
-            <span class="form-title" id="grnTitle">Goods Receiving Notes</span>
-            <label id="lblScaleDeduct"><input type="checkbox" id="chkScaleDeduct"> Scale Short Weight Deduction Apply</label>
-            <label id="lblSupplierDeduct"><input type="checkbox" id="chkSupplierDeduct"> Supplier Short Weight Deduction Apply</label>
-            <label class="ms-auto"><input type="checkbox" id="chkPreviewAfterSave" checked> Preview on save</label>
-        </div>
+    <input type="hidden" id="txtId" value="0" />
+    <!-- GPID: combgatepass is a read-only TextBox holding GpSrNo; the gate pass Id is a form field. -->
+    <input type="hidden" id="cmbGatePassNo" value="0" />
+    <!-- txtGrnWeight (751,246) Visible=false -->
+    <input type="hidden" id="txtGrnWeight" value="" />
 
-        <div class="scroll-x">
-        <div class="form-body">
-            <input type="hidden" id="txtId" value="0" />
-            <!-- GPID: combgatepass is a read-only TextBox holding GpSrNo; the gate pass Id is a form field. -->
-            <input type="hidden" id="cmbGatePassNo" value="0" />
+    <!-- ============================================================ panel4 -->
+    <div class="grn-panel4">
+        <div class="gb" id="groupBox1">
+            <span class="cap">Main Information</span>
+            <span class="lbl" style="left:4px;top:20px">Doc No</span>
+            <input type="text" id="txtDocNo" class="txt bold" style="left:88px;top:16px;width:110px" th:value="${nextDocNo}" readonly />
+            <span class="lbl" style="left:204px;top:20px">Doc Date</span>
+            <input type="date" id="txtDocDate" class="txt" style="left:285px;top:16px;width:114px;height:22px;font-size:12px;padding:0 1px" />
+            <span class="lbl" style="left:403px;top:19px">Delivery Term</span>
+            <!-- txtDeliverTerm: DeliveryTermBind :1126 (six workflow constants); Enabled=false (designer) until LoadGPByRow/ReadById enable it for 106 -->
+            <select id="cmbDeliveryTerm" class="cmb" style="left:503px;top:13px;width:105px;height:26px" data-dtcombo="single" data-dtcombo-caption="Delivery Term" disabled>
+                <option value="">-- Select --</option>
+                <option th:each="term : ${deliveryTerms}" th:value="${term}" th:text="${term}"></option>
+            </select>
 
-            <!-- panel4: groupBox1 "Main Information" (1030 x 201) + PanelBreakupMain -->
-            <div class="row-top">
-                <fieldset class="gb" style="width:1030px;height:205px;flex:0 0 1030px">
-                    <legend>Main Information</legend>
-                    <span class="dk-lbl" style="left:4px;top:20px">Doc No</span>
-                    <input type="text" id="txtDocNo" class="dk" style="left:88px;top:16px;width:110px;font-weight:bold" th:value="${nextDocNo}" readonly />
-                    <span class="dk-lbl" style="left:204px;top:20px">Doc Date</span>
-                    <input type="date" id="txtDocDate" class="dk" style="left:285px;top:16px;width:114px" />
-                    <span class="dk-lbl" style="left:403px;top:19px">Delivery Term</span>
-                    <!-- DeliveryTermBind :1126 — six workflow constants; disabled (designer :3036) until LoadGPByRow/ReadById enable it for 106 -->
-                    <select id="cmbDeliveryTerm" class="dk" style="left:503px;top:13px;width:105px" data-dtcombo="single" data-dtcombo-caption="Delivery Term" disabled>
-                        <option value="">-- Select --</option>
-                        <option th:each="term : ${deliveryTerms}" th:value="${term}" th:text="${term}"></option>
-                    </select>
+            <span class="lbl" style="left:4px;top:47px">Supplier Name</span>
+            <!-- combsupplier: dtSupplier (Id | CompanyName, PartyCode, GlAccountId*, CityId*, CityName, MobileNo; * hidden), no default row; ReadOnly (:789) -->
+            <select id="cmbSupplier" class="cmb" style="left:88px;top:41px;width:311px;height:26px" data-dtcombo="party4" data-dtcombo-caption="SupplierName" disabled>
+                <option value="0"></option>
+                <option th:each="s : ${suppliers}" th:value="${s['id']}" th:text="${s['name']}" th:attr="data-code=${s['PartyCode']},data-city=${s['CityName']},data-mobile=${s['MobilePersonal']}"></option>
+            </select>
+            <span class="lbl" style="left:403px;top:44px">Supplier Weight</span>
+            <input type="number" id="txtSupplierWeight" class="txt r menu" style="left:503px;top:40px;width:105px" readonly />
 
-                    <span class="dk-lbl" style="left:4px;top:47px">Supplier Name</span>
-                    <!-- combsupplier: ReadOnly (:789) except for Market/Gate purchase (FillWeightsAndItems :2958) -->
-                    <select id="cmbSupplier" class="dk" style="left:88px;top:41px;width:311px" data-dtcombo="single" data-dtcombo-caption="SupplierName" disabled>
-                        <option value="0">-- Select Supplier --</option>
-                        <option th:each="s : ${suppliers}" th:value="${s['id']}" th:text="${s['name']}"></option>
-                    </select>
-                    <span class="dk-lbl" style="left:403px;top:44px">Supplier Weight</span>
-                    <input type="number" id="txtSupplierWeight" class="dk num" style="left:503px;top:40px;width:105px" readonly />
+            <span class="lbl" style="left:4px;top:75px">Gate Pass No</span>
+            <input type="text" id="txtGatePassNo" class="txt" style="left:88px;top:71px;width:117px;background:#e0e0e0" readonly />
+            <span class="lbl" style="left:210px;top:75px">Bilty No</span>
+            <input type="text" id="txtBiltyNo" class="txt menu" style="left:289px;top:71px;width:110px" />
+            <span class="lbl" style="left:403px;top:69px">Factory Weight</span>
+            <input type="number" id="txtFactoryWeight" class="txt r menu" style="left:503px;top:65px;width:105px" readonly />
 
-                    <span class="dk-lbl" style="left:4px;top:75px">Gate Pass No</span>
-                    <input type="text" id="txtGatePassNo" class="dk" style="left:88px;top:71px;width:117px" readonly />
-                    <span class="dk-lbl" style="left:210px;top:75px">Bilty No</span>
-                    <input type="text" id="txtBiltyNo" class="dk" style="left:289px;top:71px;width:110px" />
-                    <span class="dk-lbl" style="left:403px;top:69px">Factory Weight</span>
-                    <input type="number" id="txtFactoryWeight" class="dk num" style="left:503px;top:65px;width:105px" readonly />
+            <span class="lbl" style="left:4px;top:103px">Vehicle Type</span>
+            <!-- combvehtyp: VehicleTypesBind :1208 - VehicleType.GetAll() (Sp_VehicleType_GetAllMethod), default row; saved as the combo text -->
+            <select id="cmbVehicleType" class="cmb" style="left:88px;top:97px;width:117px;height:26px" data-dtcombo="single" data-dtcombo-caption="VehicleDescription">
+                <option value="0">-- Select --</option>
+                <option th:each="v : ${vehicleTypes}" th:value="${v['Id']}" th:text="${v['name']}"></option>
+            </select>
+            <span class="lbl" style="left:210px;top:103px">Vehicle No</span>
+            <input type="text" id="txtVehicleNo" class="txt" style="left:289px;top:99px;width:110px" />
+            <span class="lbl" style="left:403px;top:94px">Difference Weight</span>
+            <input type="number" id="txtDiffWeight" class="txt r menu" style="left:503px;top:90px;width:50px;color:red" readonly />
+            <span id="lblDiffWeight" class="a" style="left:557px;top:93px;font:bold 12px 'Microsoft Sans Serif',Tahoma,sans-serif;color:red;white-space:nowrap"></span>
 
-                    <span class="dk-lbl" style="left:4px;top:103px">Vehicle Type</span>
-                    <!-- VehicleTypesBind :1208 — VehicleType.GetAll(); saved as the combo text -->
-                    <select id="cmbVehicleType" class="dk" style="left:88px;top:97px;width:117px" data-dtcombo="single" data-dtcombo-caption="VehicleDescription">
-                        <option value="0">-- Select --</option>
-                        <option th:each="v : ${vehicleTypes}" th:value="${v['Id']}" th:text="${v['name']}"></option>
-                    </select>
-                    <span class="dk-lbl" style="left:210px;top:103px">Vehicle No</span>
-                    <input type="text" id="txtVehicleNo" class="dk" style="left:289px;top:99px;width:110px" />
-                    <span class="dk-lbl" style="left:403px;top:94px">Difference Weight</span>
-                    <input type="number" id="txtDiffWeight" class="dk num" style="left:503px;top:90px;width:50px;color:red" readonly />
-                    <span id="lblDiffWeight" class="dk-lbl fw-bold text-danger" style="left:557px;top:93px"></span>
+            <!-- label8 "Transit Vehicle" is CmbSupplierDispatchedPreBillNo (PreBillNoFill :884) -->
+            <span class="lbl" style="left:4px;top:131px">Transit Vehicle</span>
+            <select id="cmbPreBillNo" class="cmb" style="left:88px;top:125px;width:117px;height:26px" data-dtcombo="single" data-dtcombo-caption="Pre Bill No"></select>
+            <!-- labelExcessWt / txtAccessWeight: Visible = AcceptAccessWtVehiclesandHoldForSpecialApprovalOn1stWt (:813) -->
+            <span class="lbl grn-excess" style="left:210px;top:131px">P.O Excess Wt</span>
+            <input type="number" id="txtAccessWeight" class="txt r grn-excess" style="left:289px;top:127px;width:110px" disabled />
+            <!-- lblBalwt "GRN Weight" / txtBalWeight -->
+            <span class="lbl grn-balwt" style="left:403px;top:119px">GRN Weight</span>
+            <input type="number" id="txtBalWeight" class="txt r menu grn-balwt" style="left:503px;top:115px;width:105px" readonly />
+            <span class="lbl grn-recwt" style="left:403px;top:143px">Received Weight</span>
+            <input type="number" id="txtReceivedWeight" class="txt r menu grn-recwt" style="left:503px;top:139px;width:105px" readonly />
 
-                    <!-- label8 "Transit Vehicle" is CmbSupplierDispatchedPreBillNo (PreBillNoFill :884) -->
-                    <span class="dk-lbl" style="left:4px;top:131px">Transit Vehicle</span>
-                    <select id="cmbPreBillNo" class="dk" style="left:88px;top:125px;width:117px" data-dtcombo="single" data-dtcombo-caption="Pre Bill No"></select>
-                    <span class="dk-lbl grn-excess" style="left:210px;top:131px">P.O Excess Wt</span>
-                    <input type="number" id="txtAccessWeight" class="dk num grn-excess" style="left:289px;top:127px;width:110px" disabled />
-                    <span class="dk-lbl grn-balwt" style="left:403px;top:119px">GRN Weight</span>
-                    <input type="number" id="txtBalWeight" class="dk num grn-balwt" style="left:503px;top:115px;width:105px" readonly />
-                    <input type="hidden" id="txtGrnWeight" value="" />
+            <span class="lbl" style="left:4px;top:155px">AnalystName</span>
+            <input type="text" id="txtAnalystName" class="txt ms menu" style="left:88px;top:152px;width:311px" readonly />
+            <span class="lbl" style="left:403px;top:167px">W.B Ticket Nos.</span>
+            <textarea id="txtWbTickets" class="txt ms" style="left:503px;top:164px;width:105px;height:34px" disabled></textarea>
+            <!-- label24 "Remarks" Segoe UI Semibold 10pt (4,177) 62x19 -->
+            <span class="lbl l10" style="left:4px;top:177px">Remarks</span>
+            <input type="text" id="txtRemarks" class="txt ms" style="left:88px;top:175px;width:311px;height:23px" />
 
-                    <span class="dk-lbl grn-recwt" style="left:403px;top:143px">Received Weight</span>
-                    <input type="number" id="txtReceivedWeight" class="dk num grn-recwt" style="left:503px;top:139px;width:105px" readonly />
-                    <span class="dk-lbl" style="left:4px;top:155px">AnalystName</span>
-                    <input type="text" id="txtAnalystName" class="dk" style="left:88px;top:152px;width:311px" readonly />
-                    <span class="dk-lbl" style="left:403px;top:167px">W.B Ticket Nos.</span>
-                    <input type="text" id="txtWbTickets" class="dk" style="left:503px;top:164px;width:105px;height:34px" disabled />
-                    <span class="dk-lbl" style="left:4px;top:179px">Remarks</span>
-                    <input type="text" id="txtRemarks" class="dk" style="left:88px;top:175px;width:311px" />
-
-                    <!-- groupBox4 "Freight Information" (612,9 417x188) -->
-                    <fieldset class="gb dk" style="left:612px;top:5px;width:417px;height:196px">
-                        <legend>Freight Information</legend>
-                        <span class="dk-lbl" style="left:3px;top:19px">Transporter</span>
-                        <select id="cmbTransporter" class="dk" style="left:106px;top:13px;width:309px" data-dtcombo="single" data-dtcombo-caption="Transporter Name">
-                            <option value="0">-- Select --</option>
-                            <option th:each="t : ${transporters}" th:value="${t['id']}" th:text="${t['name']}" th:attr="data-party-id=${t['Id']}"></option>
-                        </select>
-                        <span class="dk-lbl" style="left:3px;top:44px">Bilty Freight</span>
-                        <input type="number" id="txtBiltyFreight" class="dk num" style="left:106px;top:40px;width:100px" data-guard="integer" />
-                        <span class="dk-lbl" style="left:208px;top:44px">Scale Charges</span>
-                        <input type="number" id="txtScaleCharges" class="dk num" style="left:315px;top:40px;width:100px" disabled />
-                        <span class="dk-lbl" style="left:3px;top:68px">Advance by Party</span>
-                        <input type="number" id="txtAdvParty" class="dk num" style="left:106px;top:64px;width:100px" data-guard="integer" />
-                        <span class="dk-lbl" style="left:208px;top:68px">Advance by Factory</span>
-                        <input type="number" id="txtAdvFactory" class="dk num" style="left:315px;top:64px;width:100px" data-guard="integer" />
-                        <span class="dk-lbl" style="left:3px;top:92px">Other Deduction</span>
-                        <input type="number" id="txtOtherDeduct" class="dk num" style="left:106px;top:88px;width:100px" disabled />
-                        <span class="dk-lbl" style="left:208px;top:92px">Total Freight</span>
-                        <input type="number" id="txtTotalFreight" class="dk num" style="left:315px;top:88px;width:100px" disabled />
-                        <span class="dk-lbl" style="left:3px;top:116px">Shortage Amount</span>
-                        <input type="number" id="txtShortageAmt" class="dk num" style="left:106px;top:112px;width:100px" disabled />
-                        <span class="dk-lbl" style="left:208px;top:116px">Discount Amount</span>
-                        <input type="number" id="txtDiscountAmt" class="dk num" style="left:315px;top:112px;width:100px" disabled />
-                        <span class="dk-lbl" style="left:3px;top:141px">Remaining Freight</span>
-                        <input type="number" id="txtRemainingFreight" class="dk num" style="left:106px;top:137px;width:100px" disabled />
-                        <span class="dk-lbl" style="left:208px;top:141px">Charge To Party</span>
-                        <input type="number" id="txtChargeToParty" class="dk num" style="left:315px;top:137px;width:100px" disabled />
-                        <span class="dk-lbl" style="left:3px;top:165px">Freight Deduction</span>
-                        <input type="number" id="txtFreightDeduct" class="dk num" style="left:106px;top:162px;width:100px" data-guard="integer" />
-                        <span class="dk-lbl" style="left:208px;top:168px">Paid Amount</span>
-                        <input type="number" id="txtPaidAmount" class="dk num fw-bold" style="left:315px;top:162px;width:100px" data-guard="integer" />
-                    </fieldset>
-                </fieldset>
-
-                <!-- PanelBreakupMain: label38 + grdPurchaseBrakup (Enabled only for RefDocumentTypeId 105) -->
-                <div class="breakup-panel" id="panelBreakup">
-                    <div class="teal-strip">Market Purchase Empty Bags Weight BreakUp</div>
-                    <div class="grid-wrap" style="flex:1 1 auto;height:176px">
-                        <table class="data-grid">
-                            <thead>
-                            <tr>
-                                <th style="width:20px">X</th><th style="width:20px">+</th>
-                                <th>Qty</th><th>Gross Pack Size</th><th>GrossWeight</th><th>Eb/ Unit</th><th>EBW Total</th><th>NetPackSize</th><th>NetWeight</th>
-                                <th class="bk-105">Supplier Shortage</th><th class="bk-105">Supplier Received Weight</th><th class="bk-not106">ScaleShortage</th><th class="bk-not106">BillWeight</th>
-                            </tr>
-                            </thead>
-                            <tbody id="grdPurchaseBreakupsBody"></tbody>
-                        </table>
-                    </div>
-                </div>
+            <!-- groupBox4 "Freight Information" (612,9) 417x188, Tahoma 8 bold -->
+            <div class="gb small" id="groupBox4">
+                <span class="cap">Freight Information</span>
+                <span class="lbl" style="left:3px;top:19px">Transporter</span>
+                <!-- CmbTransport: TransporterAcFill :1182 (Id | AccountTitle, AccountCode, SupplierCustomerId*), default row -->
+                <select id="cmbTransporter" class="cmb" style="left:106px;top:13px;width:309px;height:26px" data-dtcombo="transporter" data-dtcombo-caption="Transporter Name">
+                    <option value="0">-- Select --</option>
+                    <option th:each="t : ${transporters}" th:value="${t['id']}" th:text="${t['name']}" th:attr="data-party-id=${t['Id']},data-code=${t['AccountCode'] ?: t['PartyCode']}"></option>
+                </select>
+                <span class="lbl" style="left:3px;top:44px">Bilty Freight</span>
+                <input type="number" id="txtBiltyFreight" class="txt r" style="left:106px;top:40px;width:100px" data-guard="integer" />
+                <span class="lbl" style="left:208px;top:44px">Scale Charges</span>
+                <input type="number" id="txtScaleCharges" class="txt r" style="left:315px;top:40px;width:100px" disabled />
+                <span class="lbl" style="left:3px;top:68px">Advance by Party</span>
+                <input type="number" id="txtAdvParty" class="txt r" style="left:106px;top:64px;width:100px" data-guard="integer" />
+                <span class="lbl" style="left:208px;top:68px">Advance by Factory</span>
+                <input type="number" id="txtAdvFactory" class="txt r" style="left:315px;top:64px;width:100px" data-guard="integer" />
+                <span class="lbl" style="left:3px;top:92px">Other Deduction</span>
+                <input type="number" id="txtOtherDeduct" class="txt r" style="left:106px;top:88px;width:100px" disabled />
+                <span class="lbl" style="left:208px;top:92px">Total Freight</span>
+                <input type="number" id="txtTotalFreight" class="txt r" style="left:315px;top:88px;width:100px" disabled />
+                <span class="lbl" style="left:3px;top:116px">Shortage Amount</span>
+                <input type="number" id="txtShortageAmt" class="txt r" style="left:106px;top:112px;width:100px" disabled />
+                <span class="lbl" style="left:208px;top:116px">Discount Amount</span>
+                <input type="number" id="txtDiscountAmt" class="txt r" style="left:315px;top:112px;width:100px" disabled />
+                <span class="lbl" style="left:3px;top:141px">Remaining Freight</span>
+                <input type="number" id="txtRemainingFreight" class="txt r" style="left:106px;top:137px;width:100px" disabled />
+                <span class="lbl" style="left:208px;top:141px">Charge To Party</span>
+                <input type="number" id="txtChargeToParty" class="txt r" style="left:315px;top:137px;width:100px" disabled />
+                <span class="lbl" style="left:3px;top:165px">Freight Deduction</span>
+                <input type="number" id="txtFreightDeduct" class="txt r" style="left:106px;top:162px;width:100px" data-guard="integer" />
+                <span class="lbl" style="left:208px;top:168px">Paid Amount</span>
+                <!-- txtcarramount (Paid Amount) -->
+                <input type="number" id="txtPaidAmount" class="txt r" style="left:315px;top:162px;width:100px" data-guard="integer" />
             </div>
+        </div>
 
-            <!-- panel5: groupBox2 "Detail Infomation" (1158 x 138) + PanelCurrentLabResult (220 x 138) -->
-            <div class="detail-row">
-                <fieldset class="gb" style="width:1158px;height:142px;flex:0 0 1158px">
-                    <legend>Detail Infomation</legend>
-                    <span class="dk-lbl" style="left:3px;top:19px">Warehouse</span>
-                    <span class="dk-lbl" style="left:178px;top:19px">Item Name</span>
-                    <label class="dk-lbl" style="left:240px;top:17px"><input type="radio" name="itemSearchMode" value="Name" checked> Name</label>
-                    <label class="dk-lbl" style="left:293px;top:17px"><input type="radio" name="itemSearchMode" value="Code"> Code</label>
-                    <span class="dk-lbl" style="left:380px;top:19px">Crop Year</span>
-                    <span class="dk-lbl" style="left:481px;top:19px">Job/Lot</span>
-                    <span class="dk-lbl" style="left:642px;top:19px">Packing Type</span>
-                    <span class="dk-lbl" style="left:782px;top:19px">UOM</span>
-                    <span class="dk-lbl" style="left:863px;top:19px">Item Qty</span>
-                    <span class="dk-lbl" style="left:939px;top:19px">Gross Weight</span>
-                    <span class="dk-lbl" style="left:1030px;top:18px">Avg Uom</span>
-                    <span class="dk-lbl" style="left:1101px;top:18px">E.b / Unit</span>
-
-                    <select id="cmbWarehouse" class="dk" style="left:3px;top:36px;width:170px" data-dtcombo="single" data-dtcombo-caption="WareHouse Name">
-                        <option value="0">-- Select --</option>
-                        <option th:each="w : ${warehouses}" th:value="${w['id']}" th:text="${w['name']}"></option>
-                    </select>
-                    <select id="cmbItem" class="dk" style="left:175px;top:36px;width:200px" data-dtcombo="single" data-dtcombo-caption="Item Name">
-                        <option value="0">-- Select Item --</option>
-                    </select>
-                    <select id="cmbCropYear" class="dk" style="left:377px;top:36px;width:100px" data-dtcombo="single" data-dtcombo-caption="Crop Year">
-                        <option value="0">-- Select --</option>
-                        <option th:each="c : ${cropYears}" th:value="${c['id']}" th:text="${c['name']}"></option>
-                    </select>
-                    <select id="cmbJobLot" class="dk" style="left:479px;top:36px;width:160px" data-dtcombo="single" data-dtcombo-caption="JobLot">
-                        <option value="0">-- Select --</option>
-                        <option th:each="j : ${jobLots}" th:value="${j['id']}" th:text="${j['name']}"></option>
-                    </select>
-                    <!-- PackingTypeDtFillFromGlobalAndBind :1296 — global packing types restricted to Ids 1, 2, 5 -->
-                    <select id="cmbPackingType" class="dk" style="left:641px;top:36px;width:140px" data-dtcombo="single" data-dtcombo-caption="Packing Type">
-                        <option value="0">-- Select --</option>
-                        <option th:each="p : ${packingTypes}" th:value="${p['Id']}" th:text="${p['PackTypeDesc']}"></option>
-                    </select>
-                    <!-- PackUomFromGlobalBind :1313 — the item's own UOM schedule; Equivalent is Cells[2] -->
-                    <select id="cmbUom" class="dk" style="left:782px;top:36px;width:80px" data-dtcombo="single" data-dtcombo-caption="Uom">
-                        <option value="0">-- Select --</option>
-                        <option th:each="u : ${uoms}" th:value="${u['Id']}" th:text="${u['UOMCode']}" th:attr="data-item-id=${u['ItemId']},data-equivalent=${u['Equivalent']}"></option>
-                    </select>
-                    <input type="number" id="txtItemQty" class="dk num" style="left:863px;top:38px;width:75px" data-guard="decimal" />
-                    <input type="number" id="txtGrossWeight" class="dk num" style="left:939px;top:38px;width:90px" data-guard="decimal" />
-                    <input type="text" id="txtAvgWeight" class="dk num" style="left:1030px;top:38px;width:70px" disabled />
-                    <input type="number" id="txtEbUnit" class="dk num" style="left:1101px;top:38px;width:55px" step="any" data-guard="decimal" />
-
-                    <span class="dk-lbl" style="left:3px;top:66px">E.b Total</span>
-                    <span class="dk-lbl" style="left:72px;top:66px">Lab No</span>
-                    <span class="dk-lbl" style="left:143px;top:66px">Wt Cut On</span>
-                    <span class="dk-lbl" style="left:209px;top:66px">Wt Cut</span>
-                    <span class="dk-lbl" style="left:265px;top:66px">Wt Cut Total</span>
-                    <span class="dk-lbl" style="left:336px;top:66px">Add / Less</span>
-                    <span class="dk-lbl" style="left:403px;top:66px">Bill Weight</span>
-                    <span class="dk-lbl" style="left:494px;top:66px" title="Stock E.b / Unit">E.b / Unit</span>
-                    <span class="dk-lbl" style="left:549px;top:66px" title="Stock E.b Total">E.b Total</span>
-                    <span class="dk-lbl" style="left:620px;top:66px">Stock Weight</span>
-                    <span class="dk-lbl" style="left:711px;top:66px">Moisture</span>
-                    <span class="dk-lbl" style="left:782px;top:66px">City/Area</span>
-
-                    <input type="number" id="txtEbTotal" class="dk num" style="left:3px;top:86px;width:68px" step="any" />
-                    <select id="cmbLabNo" class="dk" style="left:72px;top:84px;width:70px" data-dtcombo="single" data-dtcombo-caption="Lab No"></select>
-                    <input type="text" id="txtWtCutOn" class="dk" style="left:143px;top:86px;width:65px" readonly />
-                    <input type="number" id="txtWtCut" class="dk num" style="left:209px;top:86px;width:55px" step="any" data-guard="decimal" />
-                    <input type="number" id="txtWtCutTotal" class="dk num" style="left:265px;top:86px;width:70px" readonly />
-                    <input type="number" id="txtAddLess" class="dk num" style="left:336px;top:86px;width:65px" step="any" />
-                    <input type="number" id="txtBillWeight" class="dk num" style="left:402px;top:86px;width:90px" readonly />
-                    <input type="number" id="txtEbUnitStock" class="dk num" style="left:493px;top:86px;width:55px" step="any" data-guard="decimal" />
-                    <input type="number" id="txtEbTotalStock" class="dk num" style="left:549px;top:86px;width:70px" step="any" data-guard="decimal" />
-                    <input type="number" id="txtStockWeight" class="dk num" style="left:620px;top:86px;width:90px" readonly />
-                    <input type="number" id="txtMoisture" class="dk num" style="left:711px;top:86px;width:70px" disabled />
-                    <select id="cmbCity" class="dk" style="left:782px;top:84px;width:248px" data-dtcombo="single" data-dtcombo-caption="City Name">
-                        <option value="0">-- Select --</option>
-                        <option th:each="c : ${cities}" th:value="${c['id']}" th:text="${c['name']}"></option>
-                    </select>
-                    <button type="button" id="btnAddLine" class="tool-btn dk" style="left:1030px;top:83px;width:36px;height:28px;justify-content:center" onclick="btnAddLine_Click()">+</button>
-                    <button type="button" id="btnUpdateLine" class="tool-btn dk" style="left:1030px;top:84px;width:63px;height:26px;display:none" onclick="btnUpdateDetail_Click()">Update</button>
-                    <button type="button" id="btnCancelLine" class="tool-btn dk" style="left:1095px;top:84px;width:60px;height:26px;display:none" onclick="cancelEditLine()">Cancel</button>
-
-                    <span class="dk-lbl fw-bold text-danger" style="left:6px;top:117px">Selected Lab &nbsp; ----------&gt;</span>
-                    <label class="dk-lbl" style="left:218px;top:115px"><input type="checkbox" id="chkWtCutComp" disabled> Weight Cut Compulsory</label>
-                    <input type="number" id="txtWtCutComp" class="dk num" style="left:420px;top:112px;width:55px" disabled />
-                    <label class="dk-lbl" style="left:479px;top:115px"><input type="checkbox" id="chkRateCutComp" disabled> Rate Cut Compulsory</label>
-                    <input type="number" id="txtRateCutComp" class="dk num" style="left:663px;top:112px;width:55px" disabled />
-                    <button type="button" id="btnLoadGatePass" class="tool-btn dk" style="left:720px;top:110px;width:122px;height:28px;justify-content:center" onclick="btnLoadGatePass_Click()">Load Gate Pass</button>
-                </fieldset>
-                <!-- PanelCurrentLabResult (Visible=false until CmbLabNo_Leave finds parameters) -->
-                <div id="labParamsPanel" style="display:none;width:220px;height:142px;border:1px solid #a0a0a0;margin-left:2px;background:#fff">
-                    <div class="teal-strip">Current Lab Result</div>
-                    <div class="grid-wrap" style="height:119px;border:0">
-                        <table class="data-grid"><thead><tr><th>Parameter</th><th class="text-end">Result</th></tr></thead>
-                            <tbody id="labParamsBody"></tbody><tfoot id="labParamsFoot"></tfoot></table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- panel10: grd -->
-            <div class="grid-wrap" id="grdItemsWrap" tabindex="0" style="height:167px;margin-top:2px">
-                <table class="data-grid" id="grdItems">
+        <!-- PanelBreakupMain: panel22 label38 + grdPurchaseBrakup (Enabled only for RefDocumentTypeId 105, :812) -->
+        <div id="panelBreakup" class="disabled-panel">
+            <div class="bk-title">Market Purchase Empty Bags Weight BreakUp</div>
+            <div class="grid-wrap">
+                <table class="data-grid">
                     <thead>
                     <tr>
-                        <th style="width:20px">X</th>
-                        <th>Order</th><th>WareHouse Name</th><th>Item</th><th>Crop Year</th><th>Job Lot</th><th>Packing Type</th><th>UOM</th><th>Qty</th>
-                        <th>Gross Weight</th><th>EbUnit</th><th>EbTotal</th><th>EbPurAgainstWeight</th><th>LabNo</th><th>QtyForWtCut</th><th>WtCutOn</th><th>WeightCutUom</th>
-                        <th>WtCut</th><th>WtCutTotal</th><th>Add Less</th><th class="gd-not106">ScaleShortWt</th><th class="gd-105">SuppShortWt</th><th>Bill Weight</th>
-                        <th>StockEbUnit</th><th>StockEbTotal</th><th>StockWeight</th><th>City Name</th><th class="gd-105">FreightAmount</th>
+                        <th style="width:22px">X</th><th style="width:22px">+</th>
+                        <th>Qty</th><th>Gross Pack Size</th><th>GrossWeight</th><th>Eb/ Unit</th><th>EBW Total</th><th>NetPackSize</th><th>NetWeight</th>
+                        <th class="bk-105">Supplier Shortage</th><th class="bk-105">Supplier Received Weight</th><th class="bk-not106">ScaleShortage</th><th class="bk-not106">BillWeight</th>
                     </tr>
                     </thead>
-                    <tbody id="grdItemsBody"></tbody>
-                    <tfoot id="grdItemsFoot"></tfoot>
+                    <tbody id="grdPurchaseBreakupsBody"></tbody>
                 </table>
             </div>
-
-            <!-- panel6: panel3 (grdEmptyBags, 559) + panel9 (grdGp) -->
-            <div class="bottom-dual-grid">
-                <div>
-                    <div class="grid-caption">This Grid show Empty Bags Info. User Can Add Empty Bags Info Here</div>
-                    <div class="grid-wrap" style="height:162px">
-                        <table class="data-grid">
-                            <thead>
-                            <tr><th style="width:20px">+</th><th>EmptyBagsType</th><th>Item Name</th><th>Bags_Condition</th><th>Received Qty</th><th>Purchase Qty</th><th>Remarks</th></tr>
-                            </thead>
-                            <tbody id="grdEmptyBagsBody"></tbody>
-                        </table>
-                    </div>
-                </div>
-                <div>
-                    <div class="grid-caption">
-                        <span style="flex:1">This Grid show Pending Gatepases For Grn Entry,User can Load GP With Accepted Status for Entry,GP With Open Status Will Not Load</span>
-                        <span>Accepted Gp <b id="txtAcceptedGpTotal" class="text-success">0</b></span>
-                        <span>Open &nbsp;Gp <b id="txtOpenGpTotal" class="text-danger">0</b></span>
-                    </div>
-                    <div class="grid-wrap" id="grdPendingWrap" style="height:162px">
-                        <table class="data-grid">
-                            <thead><tr id="grdPendingHead"></tr></thead>
-                            <tbody id="grdPendingBody"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
         </div>
     </div>
 
-    <!-- tabPage2 "History" -->
-    <div id="viewHistory" style="display:none">
-        <div class="toolbar">
-            <button type="button" id="btnHistoryReset" class="tool-btn" onclick="btnNewHistory_Click()">Reset</button>
-            <button type="button" id="btnHistoryRefresh" class="tool-btn" onclick="withButtonLoading(this, btnRefreshHistory_Click)">Refresh</button>
-            <button type="button" id="btnGrnHistory" class="tool-btn" title="Ctrl+H" onclick="btnGrnFormHistory_Click()">GrnHistory</button>
+    <!-- ============================================================ panel5 -->
+    <div class="grn-panel5">
+        <div class="gb" id="groupBox2">
+            <span class="cap">Detail Infomation</span>
+            <!-- row 1 captions (y 17-19) -->
+            <span class="lbl" style="left:3px;top:19px">Warehouse</span>
+            <span class="lbl" style="left:178px;top:19px">Item Name</span>
+            <label class="rad" style="left:208px;top:17px"><input type="radio" name="itemSearchMode" value="Name" checked> Name</label>
+            <label class="rad" style="left:261px;top:17px"><input type="radio" name="itemSearchMode" value="Code"> Code</label>
+            <span class="lbl" style="left:380px;top:19px">Crop Year</span>
+            <span class="lbl" style="left:481px;top:19px">Job/Lot</span>
+            <span class="lbl" style="left:642px;top:19px">Packing Type</span>
+            <span class="lbl" style="left:782px;top:19px">UOM</span>
+            <span class="lbl" style="left:863px;top:19px">Item Qty</span>
+            <span class="lbl" style="left:939px;top:19px">Gross Weight</span>
+            <span class="lbl" style="left:1030px;top:18px">Avg Uom</span>
+            <span class="lbl" style="left:1101px;top:18px">E.b / Unit</span>
+            <!-- row 1 controls (y 36-38) -->
+            <select id="cmbWarehouse" class="cmb" style="left:3px;top:36px;width:170px;height:26px" data-dtcombo="single" data-dtcombo-caption="WareHouse Name">
+                <option value="0">-- Select --</option>
+                <option th:each="w : ${warehouses}" th:value="${w['id']}" th:text="${w['name']}"></option>
+            </select>
+            <!-- combitem: dtItem (Id | ItemName, ItemCode, PODetailId, ItemWbWeight, Moisture), filled per gate pass (ItemdtFillFromLab) -->
+            <select id="cmbItem" class="cmb" style="left:175px;top:36px;width:200px;height:26px" data-dtcombo="grnItem" data-dtcombo-caption="Item Name">
+                <option value="0">-- Select --</option>
+            </select>
+            <select id="cmbCropYear" class="cmb" style="left:377px;top:36px;width:100px;height:26px" data-dtcombo="single" data-dtcombo-caption="Crop Year">
+                <option value="0">-- Select --</option>
+                <option th:each="c : ${cropYears}" th:value="${c['id']}" th:text="${c['name']}"></option>
+            </select>
+            <select id="cmbJobLot" class="cmb" style="left:479px;top:36px;width:160px;height:26px" data-dtcombo="single" data-dtcombo-caption="JobLot">
+                <option value="0">-- Select --</option>
+                <option th:each="j : ${jobLots}" th:value="${j['id']}" th:text="${j['name']}"></option>
+            </select>
+            <!-- PackingTypeDtFillFromGlobalAndBind :1296 - global packing types restricted to Ids 1, 2, 5 -->
+            <select id="cmbPackingType" class="cmb" style="left:641px;top:36px;width:140px;height:26px" data-dtcombo="single" data-dtcombo-caption="Packing Type">
+                <option value="0">-- Select --</option>
+                <option th:each="p : ${packingTypes}" th:value="${p['Id']}" th:text="${p['PackTypeDesc']}"></option>
+            </select>
+            <!-- CmbPackUom: PackUomFromGlobalBind :1313 - dtUomFromGloablUomScheduleByItemId (Id | UOMCode, Equivalent, BaseRateUom, BasePackUom) -->
+            <select id="cmbUom" class="cmb" style="left:782px;top:36px;width:80px;height:26px" data-dtcombo="uomCmagt" data-dtcombo-caption="Uom">
+                <option value="0">-- Select --</option>
+                <option th:each="u : ${uoms}" th:value="${u['Id']}" th:text="${u['UOMCode']}" th:attr="data-item-id=${u['ItemId']},data-equivalent=${u['Equivalent']},data-eq=${u['Equivalent']},data-base=${u['BaseRateUom']},data-base-pack=${u['BasePackUom']}"></option>
+            </select>
+            <input type="number" id="txtItemQty" class="txt r" style="left:863px;top:38px;width:75px" data-guard="decimal" />
+            <input type="number" id="txtGrossWeight" class="txt r" style="left:939px;top:38px;width:90px" data-guard="decimal" />
+            <!-- textBox1 (Avg Uom) Enabled=false -->
+            <input type="text" id="txtAvgWeight" class="txt r" style="left:1030px;top:38px;width:70px" disabled />
+            <input type="number" id="txtEbUnit" class="txt r" style="left:1101px;top:38px;width:55px" step="any" data-guard="decimal" />
+
+            <!-- row 2 captions (y 64-66) -->
+            <span class="lbl" style="left:3px;top:66px">E.b Total</span>
+            <span class="lbl" style="left:72px;top:66px">Lab No</span>
+            <span class="lbl" style="left:143px;top:66px">Wt Cut On</span>
+            <span class="lbl" style="left:209px;top:66px">Wt Cut</span>
+            <span class="lbl" style="left:265px;top:66px">Wt Cut Total</span>
+            <span class="lbl" style="left:336px;top:66px">Add / Less</span>
+            <span class="lbl" style="left:403px;top:66px">Bill Weight</span>
+            <span class="lbl" style="left:494px;top:66px" title="Stock E.b / Unit">E.b / Unit</span>
+            <span class="lbl" style="left:549px;top:66px" title="Stock E.b Total">E.b Total</span>
+            <span class="lbl" style="left:620px;top:66px">Stock Weight</span>
+            <span class="lbl l10" style="left:711px;top:64px">Moisture</span>
+            <span class="lbl" style="left:782px;top:66px">City/Area</span>
+            <!-- row 2 controls (y 84-86) -->
+            <!-- txtEmptyBagsTotal -->
+            <input type="number" id="txtEbTotal" class="txt r" style="left:3px;top:86px;width:68px" step="any" />
+            <!-- CmbLabNo: LabNoFillWithGpIdAndItemId :1385 (Id | LabNo, QtyForWtCut, WtCut, WtCutOnId*, WtCutOn, WeightCutUom) -->
+            <select id="cmbLabNo" class="cmb" style="left:72px;top:84px;width:70px;height:26px" data-dtcombo="grnLab" data-dtcombo-caption="Lab No"></select>
+            <input type="text" id="txtWtCutOn" class="txt" style="left:143px;top:86px;width:65px" readonly />
+            <input type="number" id="txtWtCut" class="txt r" style="left:209px;top:86px;width:55px" step="any" data-guard="decimal" />
+            <input type="number" id="txtWtCutTotal" class="txt r" style="left:265px;top:86px;width:70px" readonly />
+            <!-- txtadlswt -->
+            <input type="number" id="txtAddLess" class="txt r" style="left:336px;top:86px;width:65px" step="any" />
+            <!-- txtnetwt (Bill Weight) -->
+            <input type="number" id="txtBillWeight" class="txt r" style="left:402px;top:86px;width:90px" readonly />
+            <input type="number" id="txtEbUnitStock" class="txt r" style="left:493px;top:86px;width:55px" step="any" data-guard="decimal" />
+            <input type="number" id="txtEbTotalStock" class="txt r" style="left:549px;top:86px;width:70px" step="any" data-guard="decimal" />
+            <!-- txtstockwt -->
+            <input type="number" id="txtStockWeight" class="txt r" style="left:620px;top:86px;width:90px" readonly />
+            <input type="number" id="txtMoisture" class="txt r bold" style="left:711px;top:86px;width:70px" value="0" disabled />
+            <!-- CmbCity: CityDtFillFromGlobalAndBind (Id | CityName), default row -->
+            <select id="cmbCity" class="cmb" style="left:782px;top:84px;width:248px;height:26px" data-dtcombo="single" data-dtcombo-caption="City Name">
+                <option value="0">-- Select --</option>
+                <option th:each="c : ${cities}" th:value="${c['id']}" th:text="${c['name']}"></option>
+            </select>
+            <!-- Add "+" (1030,83) 36x28; btnUpdateDetail (1030,84) 63x26 and btnCancelUpdateDetial (1095,84) 60x26, Visible=false -->
+            <button type="button" id="btnAddLine" class="btn-teal" style="left:1030px;top:83px;width:36px;height:28px;font-size:13px" onclick="btnAddLine_Click()">+</button>
+            <button type="button" id="btnUpdateLine" class="btn-teal" style="left:1030px;top:84px;width:63px;height:26px;display:none" onclick="btnUpdateDetail_Click()">Update</button>
+            <button type="button" id="btnCancelLine" class="btn-teal" style="left:1095px;top:84px;width:60px;height:26px;display:none" onclick="cancelEditLine()">Cancel</button>
+
+            <!-- row 3 (y 110-138) -->
+            <span class="a" style="left:6px;top:115px;font:bold 13px Verdana,'DejaVu Sans',sans-serif;color:red;white-space:nowrap;line-height:16px">Selected Lab&nbsp;&nbsp; ----------&gt;</span>
+            <label class="chk vb" style="left:218px;top:113px;width:197px"><input type="checkbox" id="chkWtCutComp" disabled>Weight Cut Compulsory</label>
+            <!-- txtLabWeightCutValue -->
+            <input type="number" id="txtWtCutComp" class="txt r" style="left:420px;top:112px;width:55px" disabled />
+            <label class="chk vb" style="left:479px;top:113px;width:179px"><input type="checkbox" id="chkRateCutComp" disabled>Rate Cut Compulsory</label>
+            <!-- txtLabRateCutValue -->
+            <input type="number" id="txtRateCutComp" class="txt r" style="left:663px;top:112px;width:55px" disabled />
+            <button type="button" id="btnLoadGatePass" class="btn-teal" style="left:720px;top:110px;width:122px;height:28px" onclick="btnLoadGatePass_Click()">Load Gate Pass</button>
         </div>
-        <div class="title-row"><span class="form-title">Goods Receiving Notes &nbsp;History</span></div>
-        <div class="scroll-x">
-            <div style="position:relative;height:74px;min-width:1100px">
-                <fieldset class="gb dk" style="left:5px;top:2px;width:891px;height:70px">
-                    <legend>Filters</legend>
-                    <span class="dk-lbl" style="left:5px;top:20px">From Date</span>
-                    <span class="dk-lbl" style="left:143px;top:19px">To Date</span>
-                    <span class="dk-lbl" style="left:276px;top:19px">From Doc No</span>
-                    <span class="dk-lbl" style="left:378px;top:19px">To Doc No</span>
-                    <span class="dk-lbl" style="left:479px;top:19px">Supplier Name</span>
-                    <input type="checkbox" id="chkHistoryFrom" class="dk" style="left:5px;top:42px" checked title="Use From Date" />
-                    <input type="date" id="txtHistoryFrom" class="dk" style="left:22px;top:38px;width:118px" />
-                    <input type="checkbox" id="chkHistoryTo" class="dk" style="left:143px;top:42px" checked title="Use To Date" />
-                    <input type="date" id="txtHistoryTo" class="dk" style="left:160px;top:38px;width:114px" />
-                    <input type="number" id="txtHistoryFromNo" class="dk num" style="left:276px;top:38px;width:100px" data-guard="integer" />
-                    <input type="number" id="txtHistoryToNo" class="dk num" style="left:378px;top:38px;width:100px" data-guard="integer" />
-                    <select id="cmbHistorySupplier" class="dk" style="left:479px;top:36px;width:240px" data-dtcombo="single" data-dtcombo-caption="Supplier Name">
-                        <option value="0">-- Select --</option>
-                    </select>
-                    <button type="button" id="btnHistoryShow" class="tool-btn dk" style="left:721px;top:36px;width:53px;height:26px;justify-content:center" onclick="withButtonLoading(this, btnshow_Click)">Show</button>
-                    <label class="dk-lbl" style="left:779px;top:9px"><input type="radio" name="histRef" value="" checked> All</label>
-                    <label class="dk-lbl" style="left:779px;top:27px"><input type="radio" name="histRef" value="1"> Reffered</label>
-                    <label class="dk-lbl" style="left:779px;top:45px"><input type="radio" name="histRef" value="2"> Not Reffered</label>
-                </fieldset>
-                <label class="dk-lbl" style="left:900px;top:27px"><input type="radio" name="histDateType" value="docdate" checked> Doc Date</label>
-                <label class="dk-lbl" style="left:981px;top:27px"><input type="radio" name="histDateType" value="modifydate"> Modify Date</label>
-                <label class="dk-lbl" style="left:900px;top:47px"><input type="radio" name="histDateType" value="entrydate"> Entry Date</label>
-                <label class="dk-lbl" style="left:981px;top:47px"><input type="radio" name="histDateType" value="approveddate"> Approved Date</label>
+        <!-- PanelCurrentLabResult (1158,0) 220x138, Visible=false until CmbLabNo_Leave finds parameters -->
+        <div id="labParamsPanel" style="display:none">
+            <div class="lab-title">Current Lab Result</div>
+            <div class="grid-wrap">
+                <table class="data-grid"><thead><tr><th>Parameter</th><th class="text-end">Result</th></tr></thead>
+                    <tbody id="labParamsBody"></tbody><tfoot id="labParamsFoot"></tfoot></table>
             </div>
         </div>
-        <div class="grid-caption"><span>Filtered Records</span><span id="historyCount"></span></div>
-        <div class="grid-wrap" id="grdHistoryWrap" style="height:308px">
-            <table class="data-grid" id="grdHistory">
+    </div>
+
+    <!-- ============================================================ panel10: panel16 teal 25 + grd (widths: grdSettings :2140-2166) -->
+    <div class="grn-panel10">
+        <div class="teal-bar" style="height:25px"></div>
+        <div class="grid-wrap" id="grdItemsWrap" tabindex="0" style="height:142px">
+            <table class="data-grid" id="grdItems">
                 <thead>
                 <tr>
-                    <th>Edit</th><th>Print</th><th>OrderType</th><th>OrderNo</th><th>InvoiceNo</th><th>DocNo</th><th>DocDate</th><th>DeliveryTerm</th><th>SupplierName</th><th>GpNo</th>
-                    <th>VehicleNo</th><th>BiltyNo</th><th>WagesNo</th><th>FactoryWeight</th><th>SuppWeight</th><th>Transporter</th><th>Freight</th><th>RemarksHeader</th>
-                    <th>EntryDate</th><th>EntryUser</th><th>ModifyDate</th><th>ModifyUser</th><th>ApprovedDate</th><th>ApprovedUser</th><th>NoOfAttachments</th>
+                    <th style="min-width:22px">X</th>
+                    <th style="min-width:45px">Order</th><th style="min-width:120px">WareHouse Name</th><th style="min-width:150px">Item</th><th style="min-width:70px">Crop Year</th>
+                    <th style="min-width:80px">Job Lot</th><th style="min-width:100px">Packing Type</th><th style="min-width:45px">UOM</th><th style="min-width:50px">Qty</th>
+                    <th style="min-width:75px">Gross Weight</th><th style="min-width:35px">EbUnit</th><th style="min-width:50px">EbTotal</th><th>EbPurAgainstWeight</th>
+                    <th style="min-width:35px">LabNo</th><th style="min-width:55px">QtyForWtCut</th><th style="min-width:50px">WtCutOn</th><th style="min-width:65px">WeightCutUom</th>
+                    <th style="min-width:35px">WtCut</th><th style="min-width:55px">WtCutTotal</th><th style="min-width:40px">Add Less</th><th class="gd-not106">ScaleShortWt</th>
+                    <th class="gd-105">SuppShortWt</th><th style="min-width:75px">Bill Weight</th><th style="min-width:55px">StockEbUnit</th><th style="min-width:60px">StockEbTotal</th>
+                    <th style="min-width:75px">StockWeight</th><th style="min-width:80px">City Name</th><th class="gd-105" style="min-width:90px">FreightAmount</th>
                 </tr>
                 </thead>
-                <tbody id="grdHistoryBody"></tbody>
+                <tbody id="grdItemsBody"></tbody>
+                <tfoot id="grdItemsFoot"></tfoot>
             </table>
         </div>
-        <!-- tabControl2: Detail / Empty Bags Detail of the selected history row -->
-        <div class="tabs-bar" style="border-top:0">
+    </div>
+
+    <!-- ============================================================ panel6: panel3 (grdEmptyBags, 559) + panel9 (grdGp) -->
+    <div class="grn-panel6">
+        <div class="p3">
+            <div class="teal-bar"><span class="a" style="left:3px;top:4px;font:bold 11px Verdana,'DejaVu Sans',sans-serif;line-height:13px;color:#fff">This Grid show Empty Bags Info.<br>User Can Add Empty Bags Info Here</span></div>
+            <div class="grid-wrap">
+                <table class="data-grid">
+                    <thead>
+                    <tr><th style="width:24px">+</th><th>EmptyBagsType</th><th>Item Name</th><th>Bags_Condition</th><th>Received Qty</th><th>Purchase Qty</th><th>Remarks</th></tr>
+                    </thead>
+                    <tbody id="grdEmptyBagsBody"></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="p9">
+            <div class="teal-bar">
+                <span class="a" style="left:6px;top:2px;width:364px;height:31px;overflow:hidden;font:600 12px 'Segoe UI Semibold','Segoe UI',Tahoma,'Liberation Sans',sans-serif;line-height:15px;color:#fff;white-space:normal">This Grid show Pending Gatepases For Grn Entry,User can Load GP With Accepted Status for Entry,GP With Open Status Will Not Load</span>
+                <span class="a" style="left:385px;top:1px;font:bold 13.3px 'Segoe UI',Tahoma,'Liberation Sans',sans-serif;color:#00f;white-space:nowrap;line-height:17px">Open&nbsp; Gp</span>
+                <span class="a" style="left:466px;top:1px;font:bold 13.3px 'Segoe UI',Tahoma,'Liberation Sans',sans-serif;color:#00f;white-space:nowrap;line-height:17px">Accepted Gp</span>
+                <span id="txtOpenGpTotal" class="a" style="left:407px;top:18px;font:13px Verdana,'DejaVu Sans',sans-serif;color:#fff;line-height:16px">0</span>
+                <span id="txtAcceptedGpTotal" class="a" style="left:491px;top:18px;font:13px Verdana,'DejaVu Sans',sans-serif;color:#fff;line-height:16px">0</span>
+            </div>
+            <div class="grid-wrap" id="grdPendingWrap">
+                <table class="data-grid">
+                    <thead><tr id="grdPendingHead"></tr></thead>
+                    <tbody id="grdPendingBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ================================================================== tabPage2 "History" -->
+<div id="viewHistory" style="display:none">
+    <!-- panel7: toolStrip2 (btnNewHistory "Reset", btnRefreshHistory, btnGrnFormHistory) + label55 -->
+    <div class="grn-panel7">
+        <div class="grn-strip">
+            <button type="button" id="btnHistoryReset" class="grn-tool tool-btn" onclick="btnNewHistory_Click()"><i class="fa fa-plus-circle"></i>Reset</button>
+            <button type="button" id="btnHistoryRefresh" class="grn-tool tool-btn" onclick="withButtonLoading(this, btnRefreshHistory_Click)"><i class="fa fa-refresh"></i>Refresh</button>
+            <button type="button" id="btnGrnHistory" class="grn-tool tool-btn" title="Ctrl+H" onclick="btnGrnFormHistory_Click()"><i class="fa fa-print p"></i>GrnHistory</button>
+            <a href="/purchase" class="grn-close" title="Close (Ctrl+E / Esc)">&times;</a>
+        </div>
+        <span class="grn-title" style="left:0;top:27px">Goods Receiving Notes&nbsp; History</span>
+    </div>
+    <!-- panel23 -->
+    <div class="grn-panel23">
+        <div class="gb" id="groupBox3">
+            <span class="cap">Filters</span>
+            <span class="lbl" style="left:5px;top:20px">From Date</span>
+            <span class="lbl" style="left:143px;top:19px">To Date</span>
+            <span class="lbl" style="left:276px;top:19px">From Doc No</span>
+            <span class="lbl" style="left:378px;top:19px">To Doc No</span>
+            <span class="lbl" style="left:479px;top:19px">Supplier Name</span>
+            <!-- FromDateHistory / ToDateHistory: DateTimePicker ShowCheckBox (:10611, :10621) -->
+            <div class="dtc" style="left:5px;top:38px;width:137px"><input type="checkbox" id="chkHistoryFrom" checked title="Use From Date"><input type="date" id="txtHistoryFrom"></div>
+            <div class="dtc" style="left:143px;top:38px;width:131px"><input type="checkbox" id="chkHistoryTo" checked title="Use To Date"><input type="date" id="txtHistoryTo"></div>
+            <input type="number" id="txtHistoryFromNo" class="txt r" style="left:276px;top:38px;width:100px;font:600 12px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif" data-guard="integer" />
+            <input type="number" id="txtHistoryToNo" class="txt r" style="left:378px;top:38px;width:100px;font:600 12px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif" data-guard="integer" />
+            <!-- cmbSupplierNameHistory: HistoryComboBind :903 (Activity "Supplier" rows of InvGrn.GetDataForDropDownFromGrn) -->
+            <select id="cmbHistorySupplier" class="cmb" style="left:479px;top:36px;width:240px;height:26px" data-dtcombo="single" data-dtcombo-caption="Supplier Name">
+                <option value="0"></option>
+            </select>
+            <button type="button" id="btnHistoryShow" class="btn-teal" style="left:721px;top:36px;width:53px;height:26px;background:#0a6e6e;font:bold 13px 'Segoe UI',Tahoma,sans-serif" onclick="withButtonLoading(this, btnshow_Click)">Show</button>
+            <label class="rad l10" style="left:779px;top:7px"><input type="radio" name="histRef" value="" checked> All</label>
+            <label class="rad l10" style="left:779px;top:25px"><input type="radio" name="histRef" value="1"> Reffered</label>
+            <label class="rad l10" style="left:779px;top:43px"><input type="radio" name="histRef" value="2"> Not Reffered</label>
+        </div>
+        <label class="rad" style="left:900px;top:25px"><input type="radio" name="histDateType" value="docdate" checked> Doc Date</label>
+        <label class="rad" style="left:981px;top:25px"><input type="radio" name="histDateType" value="modifydate"> Modify Date</label>
+        <label class="rad" style="left:900px;top:45px"><input type="radio" name="histDateType" value="entrydate"> Entry Date</label>
+        <label class="rad" style="left:981px;top:45px"><input type="radio" name="histDateType" value="approveddate"> Approved Date</label>
+    </div>
+    <!-- panel18 "Filtered Records" -->
+    <div class="grn-panel18"><span class="t">Filtered Records</span><span class="n" id="historyCount"></span></div>
+    <div class="grid-wrap" id="grdHistoryWrap">
+        <table class="data-grid" id="grdHistory">
+            <thead>
+            <tr>
+                <th>Edit</th><th>Print</th><th>OrderType</th><th>OrderNo</th><th>InvoiceNo</th><th>DocNo</th><th>DocDate</th><th>DeliveryTerm</th><th>SupplierName</th><th>GpNo</th>
+                <th>VehicleNo</th><th>BiltyNo</th><th>WagesNo</th><th>FactoryWeight</th><th>SuppWeight</th><th>Transporter</th><th>Freight</th><th>RemarksHeader</th>
+                <th>EntryDate</th><th>EntryUser</th><th>ModifyDate</th><th>ModifyUser</th><th>ApprovedDate</th><th>ApprovedUser</th><th>NoOfAttachments</th>
+            </tr>
+            </thead>
+            <tbody id="grdHistoryBody"></tbody>
+        </table>
+    </div>
+    <!-- tabControl2 Dock Bottom 302: tabDetailH "Detail" | tabEBH "Empty Bags Detail" -->
+    <div class="grn-tc2">
+        <div class="tabs2">
             <button type="button" id="btnHistTabDetail" class="mode-btn active" onclick="historyDetailTab('Detail')">Detail</button>
             <button type="button" id="btnHistTabEb" class="mode-btn" onclick="historyDetailTab('Eb')">Empty Bags Detail</button>
         </div>
-        <div id="histTabDetail">
-            <div class="grid-caption">Detail of the Selected above row</div>
-            <div class="grid-wrap" style="height:220px">
+        <div id="histTabDetail" class="pg">
+            <div class="bar">Detail of the Selected above row</div>
+            <div class="grid-wrap">
                 <table class="data-grid"><thead><tr id="grdHistoryDetailHead"></tr></thead><tbody id="grdHistoryDetailBody"></tbody></table>
             </div>
         </div>
-        <div id="histTabEb" style="display:none">
-            <div class="grid-caption">Empty bags Detail of the Selected above row</div>
-            <div class="grid-wrap" style="height:220px">
+        <div id="histTabEb" class="pg" style="display:none">
+            <div class="bar">Empty bags Detail of the Selected above row</div>
+            <div class="grid-wrap">
                 <table class="data-grid"><thead><tr><th>Type</th><th>ItemId</th><th>Condition</th><th>RecQty</th><th>PurQty</th><th>Remarks</th></tr></thead><tbody id="grdHistoryEbBody"></tbody></table>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- tabControl1 pages -->
-    <div class="tabs-bar">
-        <button type="button" id="btnModeForm" class="mode-btn active" onclick="switchMode('Form')">Form</button>
-        <button type="button" id="btnModeHistory" class="mode-btn" onclick="switchMode('History')">History</button>
-    </div>
+<!-- tabControl1 pages, Alignment = Bottom (:8022) -->
+<div class="grn-tabs">
+    <button type="button" id="btnModeForm" class="mode-btn active" onclick="switchMode('Form')">Form</button>
+    <button type="button" id="btnModeHistory" class="mode-btn" onclick="switchMode('History')">History</button>
+</div>
+
+</div>
 </div>
 
 <!-- LoadPendingGatePassForGrn "Pending Gate Pass For Grn" -->
@@ -459,10 +574,10 @@
         <div class="modal-content">
             <div class="modal-header py-1"><h6 class="modal-title">Pending Gate Pass For Grn</h6><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
             <div class="modal-body p-1">
-                <div class="grid-caption">
+                <div class="modal-cap">
                     <span style="flex:1">This Grid show Pending Gatepases For Grn Entry,User can Load GP With Accepted Status for Entry,GP With Open Status Will Not Load</span>
-                    <span>Accepted Gp <b id="loaderAcceptedTotal" class="text-success">0</b></span>
-                    <span>Open &nbsp;Gp <b id="loaderOpenTotal" class="text-danger">0</b></span>
+                    <span>Accepted Gp <b id="loaderAcceptedTotal">0</b></span>
+                    <span>Open &nbsp;Gp <b id="loaderOpenTotal">0</b></span>
                 </div>
                 <div class="grid-wrap" style="height:420px">
                     <table class="data-grid"><thead><tr id="grdLoaderHead"></tr></thead><tbody id="grdLoaderBody"></tbody></table>
@@ -487,15 +602,27 @@
 <template id="grnBagTypeOptions"><option th:each="r : ${emptyBagTypes}" th:value="${r['id']}" th:text="${r['name']}"></option></template>
 <template id="grnBagItemOptions"><option th:each="r : ${emptyBagItems}" th:value="${r['id']}" th:text="${r['name']}"></option></template>
 <template id="grnBagConditionOptions"><option th:each="r : ${bagConditions}" th:value="${r['id']}" th:text="${r['name']}"></option></template>
-<style>#grdPurchaseBreakupsBody input{width:72px;height:19px;font-size:10px}#grdEmptyBagsBody select{width:150px}#grdEmptyBagsBody input[type=number]{width:74px}#grdEmptyBagsBody input:not([type=number]){width:150px}</style>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script th:src="@{/build/js/countx_purchase_request.js?v=20260923a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20261003s}"></script>
+<script>
+    /* The desktop drop-down columns of the multi-column UltraCombos (InfragisticsHelper.BindAndRetainSelection AllColumns: column 0 = value, hidden). */
+    if (window.DesktopCombo && DesktopCombo.define) {
+        /* combitem - dtItem (:668-673): ItemName, ItemCode, PODetailId, ItemWbWeight, Moisture */
+        DesktopCombo.define('grnItem', [
+            { caption: 'Item Name', flex: 4 }, { caption: 'ItemCode', flex: 2, key: 'item-code' }, { caption: 'PODetailId', flex: 2, key: 'po-detail', type: 'num' },
+            { caption: 'ItemWbWeight', flex: 2, key: 'wb-weight', type: 'num' }, { caption: 'Moisture', flex: 2, key: 'moisture', type: 'num' }]);
+        /* CmbLabNo - dtLab (:1403-1416): LabNo, QtyForWtCut, WtCut, WtCutOnId (hidden), WtCutOn, WeightCutUom */
+        DesktopCombo.define('grnLab', [
+            { caption: 'Lab No', flex: 1 }, { caption: 'QtyForWtCut', flex: 2, key: 'qty-cut', type: 'num' }, { caption: 'WtCut', flex: 1, key: 'wt-cut', type: 'num' },
+            { caption: 'WtCutOn', flex: 2, key: 'cut-on' }, { caption: 'WeightCutUom', flex: 2, key: 'cut-uom', type: 'num' }]);
+    }
+</script>
 <script th:src="@{/build/js/countx_purchase_page_chrome.js?v=20260930o1}"></script>
 <script th:src="@{/build/js/countx_purchase_doc_attachments.js?v=20260930o1}"></script>
-<script th:src="@{/build/js/countx_market_grn.js?v=20260930o1}"></script>
+<script th:src="@{/build/js/countx_market_grn.js?v=20261003u}"></script>
 <script th:src="@{/build/js/countx_grn_supplements.js?v=20260930c}"></script>
-<script th:src="@{/build/js/countx_desktop_combo.js?v=20260927b}"></script>
 <script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
 <script src="/js/print-rpt.js?v=20261001a"></script>
 <script>if (window.grnPrintRptArgs) window.printRptArgs = window.grnPrintRptArgs;</script>
