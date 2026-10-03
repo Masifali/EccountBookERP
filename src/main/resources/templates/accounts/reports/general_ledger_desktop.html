@@ -37,7 +37,7 @@
     <button type="button" class="win-btn gl-detail-btn" onclick="glPrint('105')"><i class="fa fa-print"></i> Print-105</button>
     <button type="button" class="win-btn gl-detail-btn" onclick="glPrint('106')"><i class="fa fa-print"></i> Print-106</button>
     <button type="button" class="win-btn gl-detail-btn" onclick="glPrint('107')"><i class="fa fa-print"></i> Print-107</button>
-    <button type="button" class="win-btn gl-s1-btn" style="display:none" onclick="glPrint('108')" data-rpt="108-AcRptGeneralLedgerSummery.rpt"><i class="fa fa-print"></i> Print-108</button>
+    <button type="button" class="win-btn gl-s1-btn" style="display:none" onclick="glPrint('108')"><i class="fa fa-print"></i> Print-108</button>
     <button type="button" class="win-btn gl-s2-btn" style="display:none" onclick="glPrint('105A')" data-rpt="105A-GeneralLedgerSummary2.rpt"><i class="fa fa-print"></i> Print-105A</button>
     <button type="button" class="win-btn gl-detail-btn" onclick="glSaveCheckedRows()"><i class="fa fa-save"></i> SaveCheckedRows</button>
     <button type="button" class="win-btn gl-detail-btn" onclick="glCheckAllPrevious()"><i class="fa fa-bookmark"></i> Bookmark All Previous Rows After Last Checked Row</button>
@@ -409,6 +409,18 @@
         const q = new URLSearchParams({ format: format, accountId: acc, fromDate: $('#txtFromDate').val(), toDate: $('#txtToDate').val(),
             includeUnposted: $('#ChkBoxPost').is(':checked') });
         if ($('#CmbLanguage').val()) q.set('languageId', $('#CmbLanguage').val());
+        if (format === '108') {
+            q.delete('format');
+            if (parseInt($('#cmbbranch').val(), 10) > 0) q.set('branchId', $('#cmbbranch').val());
+            if (parseInt($('#CmbCostCenter').val(), 10) > 0) q.set('costCenterId', $('#CmbCostCenter').val());
+            const sub = selectedSub();
+            if (sub) {
+                q.set('subsidiaryAccountId', sub.SubsidiaryAccountId);
+                if (sub.SubsidiaryTypeId) q.set('subsidiaryTypeId', sub.SubsidiaryTypeId);
+            }
+            window.open('/reports/general-ledger-summary?' + q.toString(), '_blank');
+            return;
+        }
         /* 105 / 106 / 107: the desktop's own .rpt layouts, rendered as PDF by Jasper */
         if (format === '105' || format === '106' || format === '107') {
             if (parseInt($('#cmbbranch').val(), 10) > 0) q.set('branchId', $('#cmbbranch').val());
@@ -487,6 +499,6 @@
         } catch (e) { alert(e.message); }
     })(); });
 </script>
-<script src="/js/print-rpt.js?v=20261001a"></script>
+<script src="/js/print-rpt.js?v=20261003erp"></script>
 </body>
 </html>

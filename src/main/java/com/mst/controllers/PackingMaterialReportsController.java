@@ -82,10 +82,7 @@ public class PackingMaterialReportsController {
     public ResponseEntity<byte[]> export(@PathVariable("report") String report,@RequestBody com.mst.services.PackingMaterialReportExportService.Request request) throws Exception {
         return ResponseEntity.ok().header("Content-Type","application/vnd.ms-excel").header("Content-Disposition","attachment; filename="+report+".xls").body(exports.export(report,request));
     }
-    @PostMapping(API + "/{report}/print") @ResponseBody
-    public ResponseEntity<byte[]> print(@PathVariable("report") String report,@RequestBody com.mst.models.PackingReportFilter filter,@RequestParam(name="format",defaultValue="main") String format) throws Exception {
-        return ResponseEntity.ok().header("Content-Type","application/pdf").header("Content-Disposition","inline; filename="+report+".pdf").body(service.print(report,filter,format));
-    }
+
     @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class) @ResponseBody
     public ResponseEntity<?> denied(Exception e) {return ResponseEntity.status(403).body(Map.of("message",e.getMessage()));}
     @ExceptionHandler(IllegalArgumentException.class) @ResponseBody

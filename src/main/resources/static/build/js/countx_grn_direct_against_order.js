@@ -51,7 +51,7 @@
         var h = { 'Content-Type': 'application/json', 'Accept': 'application/pdf, text/plain' };
         var t = document.querySelector('meta[name="_csrf"]'), hn = document.querySelector('meta[name="_csrf_header"]');
         if (t && hn && t.getAttribute('content') && hn.getAttribute('content')) h[hn.getAttribute('content')] = t.getAttribute('content');
-        return fetch('/api/print/by-template/' + encodeURIComponent(rpt) + '/pdf', { method: 'POST', credentials: 'same-origin', headers: h, body: JSON.stringify(args || {}) })
+        return fetch('/reports/print/by-template/' + encodeURIComponent(rpt) + '/pdf', { method: 'POST', credentials: 'same-origin', headers: h, body: JSON.stringify(args || {}) })
             .then(function (r) {
                 if (r.ok && (r.headers.get('Content-Type') || '').indexOf('application/pdf') >= 0) {
                     return r.blob().then(function (b) { var u = URL.createObjectURL(b); if (w) w.location.href = u; else window.open(u, '_blank'); });

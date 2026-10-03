@@ -785,7 +785,7 @@
             if (!dtGrid.length) { HRM.box(NO_REC); return; }
             /* CommonServices.DynamicReportsLoad: the grid (dtGrid) goes into the SalarySheet report - Jasper */
             if (window.printRowsJasper) return window.printRowsJasper('1100-Employee Salary Sheet', dtGrid);
-            HRM.box('Include /js/print-rpt.js to print.');
+            HRM.box('Include /js/print-rpt.js?v=20261003erp to print.');
         };
         P.btn1110SalaryList = function (b) {                                // btn1110SalaryList_Click (cmbDepartment, cmbEmployee)
             /* 1110-EmployeeSalarySlip.rpt is not in the report folder; its procedure (Sp_EmployeeSalarySlip_Rpt,

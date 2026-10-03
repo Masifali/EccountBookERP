@@ -1347,7 +1347,7 @@
         id = int(id) || recId;
         if (id <= 0) { alert('No Data found to display'); return; }
         if (window.printRpt) return window.printRpt('1055_GdnBuyerDispatchSlip.rpt', { id: id });   // Jasper, the GDN slip
-        window.open('/api/print/by-template/1055_GdnBuyerDispatchSlip.rpt/pdf?id=' + id, '_blank');
+        window.open('/reports/print/by-template/1055_GdnBuyerDispatchSlip.rpt/pdf?id=' + id, '_blank');
     }
 
     /* ------------------------------------------------------------------ history */

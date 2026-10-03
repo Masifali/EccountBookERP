@@ -56,29 +56,7 @@ public class ChequePrintingDesktopController {
     }
 
     /** Body: {"bankId": 3, "ids": [376, 377]}. Returns application/pdf, or JSON {message} when nothing was found to print. */
-    @PostMapping("/print")
-    public ResponseEntity<?> print(@RequestBody Map<String, Object> body) {
-        try {
-            int bankId = toInt(body == null ? null : body.get("bankId"));
-            List<Integer> ids = new ArrayList<>();
-            Object raw = body == null ? null : body.get("ids");
-            if (raw instanceof List) for (Object o : (List<?>) raw) ids.add(toInt(o));
-            ChequePrintingDesktopService.PrintResult r = service.print(bankId, ids);
-            if (r.pdf == null) {
-                Map<String, Object> m = new LinkedHashMap<>();
-                m.put("message", r.message);
-                return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(m);
-            }
-            return ResponseEntity.ok()
-                    .contentType(MediaType.APPLICATION_PDF)
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"Cheques.pdf\"")
-                    .body(r.pdf);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().contentType(MediaType.TEXT_PLAIN).body(e.getMessage());
-        } catch (Exception e) {
-            return error(e);
-        }
-    }
+
 
     private static ResponseEntity<String> error(Exception e) {
         return ResponseEntity.status(500).contentType(MediaType.TEXT_PLAIN)

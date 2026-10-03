@@ -12,6 +12,8 @@
  * OrganizationId / CompanyId are never sent - the server takes them from the session.
  */
 (function (w, d) {
+    if (w.erpPrintControllerLoaded) return;
+    w.erpPrintControllerLoaded = true;
     var controlsCache = {};
 
     function byIdCI(id) {
@@ -19,7 +21,7 @@
         var el = d.getElementById(id);
         if (el) return el;
         var low = id.toLowerCase(), all = d.querySelectorAll('[id]');
-        for (var i = 0; i < all.length; i++) if (all[i].id.toLowerCase() === low) return all[i];
+        for (var i = 0; i < all.length; i++) { var aid = all[i].getAttribute('id'); if (aid && aid.toLowerCase() === low) return all[i]; }   /* a <form> with an input named "id" makes form.id an element */
         var named = d.getElementsByName(id);
         return named && named.length ? named[0] : null;
     }
@@ -105,7 +107,7 @@
     function info(rpt) {
         var k = rpt.toLowerCase();
         if (controlsCache[k]) return Promise.resolve(controlsCache[k]);
-        return fetch('/api/print/controls?rpt=' + encodeURIComponent(rpt), { credentials: 'same-origin' })
+        return fetch('/reports/print/controls?rpt=' + encodeURIComponent(rpt), { credentials: 'same-origin' })
             .then(function (r) { return r.ok ? r.json() : { args: [], controls: {} }; })
             .then(function (j) { controlsCache[k] = j; return j; });
     }
@@ -117,7 +119,8 @@
             var miss = btn ? missing(btn, args) : [];
             if (miss.length) { win.close(); alert(btn.getAttribute('data-rpt-need-msg') || 'Select or save a record first.'); return null; }
             Object.keys(args).forEach(function (k) { q.set(k, args[k]); });
-            return fetch('/api/print/by-template/' + encodeURIComponent(rpt) + '/pdf?' + q.toString(), { credentials: 'same-origin' });
+            if (!inf.pdf) throw new Error('No print action is registered for ' + rpt);
+            return fetch(inf.pdf + '?' + q.toString(), { credentials: 'same-origin' });
         }).then(function (r) {
             if (!r) return;
             var type = r.headers.get('Content-Type') || '';
@@ -183,24 +186,36 @@
     /* Grid prints (data-rpt-grid): the desktop hands the SCREEN'S GRID to the .rpt, so the page sends
        the rows it shows - header text -> cell text - to POST /reports/print/grid. */
     function gridRows(tableId) {
-        var t = byIdCI(tableId);
+        var screenSnapshot = !!(tableId && tableId.tagName);
+        var t = tableId && tableId.tagName ? tableId : byIdCI(tableId);
         if (!t) { try { t = d.querySelector(tableId); } catch (x) { t = null; } }   // a CSS selector also works
         if (t && t.tagName !== 'TABLE') t = (t.closest && t.closest('table')) || t.querySelector('table');
         if (!t) return [];
         var heads = [];
-        var hr = t.tHead && t.tHead.rows.length ? t.tHead.rows[t.tHead.rows.length - 1] : t.rows[0];
+        var headerRows = t.tHead ? Array.prototype.slice.call(t.tHead.rows) : [];
+        var hr = headerRows.reverse().find(function (row) {
+            return Array.prototype.some.call(row.cells, function (cell) { return (cell.textContent || '').trim(); });
+        }) || t.rows[0];
         Array.prototype.forEach.call(hr ? hr.cells : [], function (c, i) {
             var h = (c.textContent || '').replace(/\s+/g, ' ').trim();
             heads.push(h || ('Col' + (i + 1)));
         });
         var body = t.tBodies.length ? t.tBodies[0].rows : Array.prototype.slice.call(t.rows, 1);
+        if (screenSnapshot && t.tBodies.length) {
+            body = [];
+            Array.prototype.forEach.call(t.tBodies, function (section) { body = body.concat(Array.prototype.slice.call(section.rows)); });
+            if (t.tFoot) body = body.concat(Array.prototype.slice.call(t.tFoot.rows));
+        }
         var rows = [];
         Array.prototype.forEach.call(body, function (tr) {
+            if (tr.hidden) return;
+            if (screenSnapshot && !tr.getClientRects().length) return;
             if (tr.offsetParent === null && tr.style.display === 'none') return;
             var cells = tr.cells;
             if (!cells.length || (cells.length === 1 && heads.length > 1)) return;   // "no rows" placeholder
             var r = {}, any = false;
             Array.prototype.forEach.call(cells, function (c, i) {
+                if (screenSnapshot && !c.getClientRects().length) return;
                 var inp = c.querySelector('input:not([type=checkbox]),select,textarea'), chk = c.querySelector('input[type=checkbox]');
                 var v = inp ? inp.value : chk ? (chk.checked ? 'Yes' : 'No') : (c.textContent || '').replace(/\s+/g, ' ').trim();
                 var h = heads[i] || ('Col' + (i + 1));
@@ -339,6 +354,34 @@
     w.printRowsJasper = function (title, rows) {
         if (!rows || !rows.length) { alert('No Record Found For Display'); return; }
         var real = nativeOpen.call(w, 'about:blank', '_blank');
-        gridPdf(real, title, rows).then(function (ok) { if (!ok) { try { real.close(); } catch (x) { } alert('Print failed.'); } });
+        if (!real) { alert('Allow pop-ups to open the print preview.'); return; }
+        return gridPdf(real, title, rows).then(function (ok) { if (!ok) { try { real.close(); } catch (x) { } alert('Print failed.'); } });
+    };
+
+    // Page-level Print actions send their visible grids through the same ERP controller.
+    // Buttons inside a generated preview still use the PDF viewer's own Print command.
+    w.print = function () {
+        var grids = [];
+        Array.prototype.forEach.call(d.querySelectorAll('table'), function (table) {
+            if (!table.getClientRects().length || table.closest('.noprint,.no-print,dialog,.modal,[data-no-print]')) return;
+            if (table.querySelector('table')) return; // layout table containing the actual grid
+            var rows = gridRows(table);
+            if (!rows.length) return;
+            var caption = table.caption && table.caption.textContent.trim();
+            grids.push({ rpt: caption || d.title, title: caption || d.title, rows: rows });
+        });
+        if (!grids.length) { alert('No Record Found For Display'); return; }
+        var win = nativeOpen.call(w, 'about:blank', '_blank');
+        if (!win) { alert('Allow pop-ups to open the print preview.'); return; }
+        var headers = { 'Content-Type': 'application/json' };
+        var token = d.querySelector('meta[name="_csrf"]'), header = d.querySelector('meta[name="_csrf_header"]');
+        if (token && header) headers[header.content] = token.content;
+        return fetch('/reports/print/screen', { method: 'POST', credentials: 'same-origin', headers: headers,
+            body: JSON.stringify(grids) }).then(function (response) {
+            if (response.ok && (response.headers.get('Content-Type') || '').indexOf('application/pdf') === 0) {
+                return response.blob().then(function (blob) { win.location = URL.createObjectURL(blob); });
+            }
+            return response.text().then(function (message) { throw new Error(message || 'Print failed.'); });
+        }).catch(function (error) { win.close(); alert(error.message); });
     };
 })(window, document);

@@ -236,7 +236,7 @@ public class CrystalJasperPrinter {
         return out;
     }
 
-    private static Object coerceParam(JasperReport r, String name, Object v) {
+    public static Object coerceParam(JasperReport r, String name, Object v) {
         for (JRParameter p : r.getParameters()) {
             if (p.getName().equals(name)) return coerce(v, p.getValueClass());
         }

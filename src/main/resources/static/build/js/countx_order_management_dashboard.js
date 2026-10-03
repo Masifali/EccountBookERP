@@ -370,7 +370,7 @@ window.omSlip = function (i) {
     var id = num(f(row, 'Id'));
     if (!(id > 0)) { msg('No Record Found For Display', false); return; }
     window.open(OM_POPUP.invoiceType === 1
-        ? '/api/print/by-template/203-InvRptPurchaseOrderRiceSlip.rpt/pdf?id=' + id
+        ? '/reports/print/by-template/203-InvRptPurchaseOrderRiceSlip.rpt/pdf?id=' + id
         : '/api/print/so-273/pdf?id=' + id, '_blank');
 };
 

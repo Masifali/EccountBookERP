@@ -160,6 +160,20 @@ public class ReportPdfService {
         try {
             if (!signedIn()) { text(response, 403, "Sign in to print reports."); return; }
             if (rows == null || rows.isEmpty()) { text(response, 404, "No Record Found For Display"); return; }
+            byte[] pdf = gridPdf(rpt, title, rows);
+            response.setContentType("application/pdf");
+            response.setHeader("Content-Disposition", "inline; filename=\"" + CrystalJasperPrinter.stem(rpt == null ? "Print" : rpt) + ".pdf\"");
+            response.setContentLength(pdf.length);
+            response.getOutputStream().write(pdf);
+        } catch (Exception e) {
+            text(response, 500, msg(e));
+        }
+    }
+
+    /** The same grid PDF as writeGridPdf, for combining several visible grids into one print. */
+    public byte[] gridPdf(String rpt, String title, List<Map<String, Object>> rows) throws Exception {
+            if (!signedIn()) throw new org.springframework.security.access.AccessDeniedException("Sign in to print reports.");
+            if (rows == null || rows.isEmpty()) throw new IllegalArgumentException("No Record Found For Display");
             String name = rpt == null || rpt.isBlank() ? "Print" : rpt;
             /* "450 - Department Request Register" -> 450-RptDepartmentRequestRegister.rpt (the .rpt the desktop
                pushes these rows into); when its converted template reads these columns, print through it. */
@@ -171,13 +185,7 @@ public class ReportPdfService {
                     rp.put("@CompanyName", companyValue("CompName"));
                     rp.put("@CompanyAddress", companyValue("CompAddress"));
                     try { rp.put("@PrintedBy", context.requireAccountingUser().getUserName()); } catch (RuntimeException ignored) { }
-                    byte[] pdf = converted.printPdf(resolved, typed(rows), new LinkedHashMap<>(), rp);
-                    response.setContentType("application/pdf");
-                    response.setHeader("Content-Disposition", "inline; filename=\"" + CrystalJasperPrinter.stem(resolved) + ".pdf\"");
-                    response.setContentLength(pdf.length);
-                    response.getOutputStream().write(pdf);
-                    response.getOutputStream().flush();
-                    return;
+                    return converted.printPdf(resolved, typed(rows), new LinkedHashMap<>(), rp);
                 }
             }
             GeneratedPrintTemplate.Meta m = new GeneratedPrintTemplate.Meta();
@@ -201,15 +209,7 @@ public class ReportPdfService {
             try { params.put("PrintedBy", context.requireAccountingUser().getUserName()); } catch (RuntimeException ignored) { }
             JasperPrint print = JasperFillManager.fillReport(report, params,
                     new JRMapCollectionDataSource(new ArrayList<Map<String, ?>>(CrystalJasperPrinter.normalize(report, typedRows))));
-            byte[] pdf = JasperExportManager.exportReportToPdf(print);
-            response.setContentType("application/pdf");
-            response.setHeader("Content-Disposition", "inline; filename=\"" + m.name + ".pdf\"");
-            response.setContentLength(pdf.length);
-            response.getOutputStream().write(pdf);
-            response.getOutputStream().flush();
-        } catch (Exception e) {
-            text(response, 500, msg(e));
-        }
+            return JasperExportManager.exportReportToPdf(print);
     }
 
     /**

@@ -610,7 +610,7 @@
     async function print657(id) {
         id = intOf(id);
         await api('GET', API + '/' + id + '/print-check');
-        window.open('/api/print/by-template/' + encodeURIComponent(PRINT_RPT) + '/pdf' + (id > 0 ? '?id=' + id : ''), '_blank');
+        window.open('/reports/print/by-template/' + encodeURIComponent(PRINT_RPT) + '/pdf' + (id > 0 ? '?id=' + id : ''), '_blank');
     }
 
     // ============================================================================= history

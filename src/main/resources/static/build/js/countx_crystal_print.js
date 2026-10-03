@@ -7,9 +7,9 @@
  *                               "Record Not Found For Display" runs before the viewer opens).
  *                               Close it with CrystalPrint.release(win) if nothing is printed.
  *
- * POSTs the arg: values to /api/reports/{key}/print.pdf (ReportPrintController), where the
- * traced procedure runs with session tenancy and the real .rpt is rendered by the Crystal
- * bridge. A PDF opens in a new tab; anything else (Crystal disabled, template missing, no rows)
+ * POSTs the filters to /reports/print/by-key/{key} (ErpReportController), where the
+ * existing procedure runs with session tenancy and Jasper renders the report.
+ * A PDF opens in a new tab; anything else (template missing, no rows)
  * comes back as plain text and is shown as the message, never as a broken PDF.
  *
  * The tab is opened BEFORE the request so a popup blocker treats it as part of the click.
@@ -50,7 +50,7 @@
             b.disabled = b.dataset.cpWasDisabled === '1';
         };
         var w = win || reserve();
-        return fetch('/api/reports/' + encodeURIComponent(key) + '/print.pdf', {
+        return fetch('/reports/print/by-key/' + encodeURIComponent(key), {
             method: 'POST',
             credentials: 'same-origin',
             headers: csrfHeaders({ 'Content-Type': 'application/json', 'Accept': 'application/pdf, text/plain' }),

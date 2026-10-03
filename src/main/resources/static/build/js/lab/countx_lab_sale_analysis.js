@@ -471,7 +471,7 @@
         id = intOf(id);
         if (id <= 0) throw new Error('Not Record Found For Display');                                      // W7
         await api('GET', API + '/' + id + '/print-check' + (toolbar ? '?toolbar=true' : ''));
-        window.open('/api/print/by-template/' + encodeURIComponent(PRINT_RPT) + '/pdf?id=' + id, '_blank');
+        window.open('/reports/print/by-template/' + encodeURIComponent(PRINT_RPT) + '/pdf?id=' + id, '_blank');
     }
 
     // ========================================================================== history

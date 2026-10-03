@@ -84,7 +84,14 @@ public class CheqBookDesktopService {
 
         LocalDateTime now = LocalDateTime.now();
         String remarksText = remarks == null ? "" : remarks;
-        int headerId = DesktopProc.setProc(jdbc, "SP_CheqBookHeader_Insert", DesktopProc.params(
+        /* SP_CheqBookHeader_Insert ends with an audit block AFTER "SELECT @Id":
+           @ActivityDescription = '...' + @BankName where @BankName = Bank.BankAccountNo WHERE Bank.Id = @BankId.
+           The desktop passes the COA id (cmbbankac.Value) as BankId, which is never a Bank.Id, so
+           @BankName is NULL, the whole description is NULL and USP_UserAudit_Insert fails with
+           "Cannot insert the value NULL into column 'ActivityDescription'". The desktop's .NET Framework
+           ExecuteScalar has already read the id and never raises that trailing error, so the desktop
+           saves (all CheqBookHeader rows in the DB, no UserAudit row for this screen). Same here. */
+        int headerId = DesktopProc.setProcNetFxScalar(jdbc, "SP_CheqBookHeader_Insert", DesktopProc.params(
                 "PostState", false,
                 "DocDate", docDate != null ? docDate.atTime(now.toLocalTime()) : now,
                 "EntryDate", now, "ModifyDate", now, "PostDate", now,

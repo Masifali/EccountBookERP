@@ -1061,7 +1061,7 @@
     function printDoc(kind, id, docType, btn, win) {
         if (!(int(id) > 0)) { if (win && w.CrystalPrint) w.CrystalPrint.release(win); alert('VoucherId Not Found'); return; }
         if (kind === 3) {
-            var url = '/api/print/by-template/' + encodeURIComponent(RPT3[docType || S.doc]) + '/pdf?id=' + encodeURIComponent(id);
+            var url = '/reports/print/by-template/' + encodeURIComponent(RPT3[docType || S.doc]) + '/pdf?id=' + encodeURIComponent(id);
             if (win) win.location.href = url; else w.open(url, '_blank');
             return;
         }

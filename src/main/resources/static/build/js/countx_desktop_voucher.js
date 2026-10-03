@@ -448,7 +448,7 @@
     DV.printANew102 = function (id) {
         if (!(Number(id) > 0)) return DV.msg('VoucherId Not Found');
         if (typeof window.printRpt === 'function') return window.printRpt('102-ANewAcRptPaymentReceiptsVoucherSlip.rpt', { id: Number(id) });
-        return DV.printPdf('/api/print/by-template/102-ANewAcRptPaymentReceiptsVoucherSlip.rpt/pdf?id=' + encodeURIComponent(id));
+        return DV.printPdf('/reports/print/by-template/102-ANewAcRptPaymentReceiptsVoucherSlip.rpt/pdf?id=' + encodeURIComponent(id));
     };
     /** The forms' KeyDown: e.KeyData == Keys.Return -> SendKeys.Send("{TAB}") - Enter moves to the
      *  next field. A combo / message box that uses Enter itself (preventDefault) keeps it. */

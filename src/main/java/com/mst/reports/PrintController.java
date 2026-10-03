@@ -4,13 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mst.reports.jasper.CrystalJasperPrinter;
 import com.mst.reports.jasper.GeneratedPrintTemplate;
 import com.mst.security.CurrentUserContext;
-import net.sf.jasperreports.engine.JRParameter;
 import net.sf.jasperreports.engine.JasperCompileManager;
-import net.sf.jasperreports.engine.JasperExportManager;
-import net.sf.jasperreports.engine.JasperFillManager;
-import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
-import net.sf.jasperreports.engine.data.JRMapCollectionDataSource;
 import net.sf.jasperreports.engine.xml.JRXmlLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,24 +40,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * One API per desktop print the seeder knows (migration/report-contracts/02_seed_report_contracts.sql,
- * 239 prints), each rendered to PDF with JasperReports - no Crystal, no Windows.
- *
- *   GET  /api/print                         every print: its URL, its arguments, how it is rendered
- *   GET  /api/print/{key}                   one print's contract
- *   POST /api/print/{key}/pdf   {args}      the PDF        (GET with query args also works)
- *   GET  /api/print/{key}/jrxml?args        the Jasper template used for it, as text
- *   POST /api/print/{key}/save-jrxml {args} writes that template to src/main/resources/jasper/converted/<rpt name>.jrxml
- *
- * Which template prints, first match wins:
- *   1. a hand-built conversion on the classpath (/jasper/converted, e.g. 273, 105/106/107)
- *   2. a saved/edited copy in jasper/converted/<rpt name>.jrxml
- *   3. generated from the rows (GeneratedPrintTemplate): orientation and logo from the .rpt,
- *      columns from the procedure.
- *
- * Data is exactly the desktop's: the seeded contract's procedure and parameters through
- * ReportDataService. OrganizationId / CompanyId come from the session, never from the request,
- * even where the seed names them as arguments.
+ * Report metadata and template inspection/editing. All PDF entry points live in the ERPPrint module controllers.
+ * Existing /api/print metadata URLs remain available for the report browser and template editor.
  */
 @RestController
 @RequestMapping("/api/print")
@@ -160,29 +139,6 @@ public class PrintController {
         return null;
     }
 
-    /**
-     * Print by .rpt name: POST /api/print/by-template/105-AcRptGeneralLedger.rpt/pdf {"accountId":..}
-     * (GET with query args too). This is what the screens use - the same name the desktop passes to
-     * ShowReportWithDataTable.
-     */
-    @PostMapping("/by-template/{template}/pdf")
-    public ResponseEntity<byte[]> byTemplatePost(@PathVariable("template") String template,
-                                                 @RequestBody(required = false) Map<String, Object> body) {
-        String key = keyFor(template);
-        if (key == null) return textResponse(HttpStatus.NOT_FOUND, "No print is registered for " + template
-                + " - the desktop never prints it, or its data source is not traced.", "text/plain");
-        return pdf(key, body == null ? new LinkedHashMap<>() : new LinkedHashMap<>(body));
-    }
-
-    @GetMapping("/by-template/{template}/pdf")
-    public ResponseEntity<byte[]> byTemplateGet(@PathVariable("template") String template,
-                                                @RequestParam Map<String, String> query) {
-        String key = keyFor(template);
-        if (key == null) return textResponse(HttpStatus.NOT_FOUND, "No print is registered for " + template
-                + " - the desktop never prints it, or its data source is not traced.", "text/plain");
-        return pdf(key, new LinkedHashMap<>(query));
-    }
-
     // ------------------------------------------------------------------ listing
     @GetMapping
     public ResponseEntity<Map<String, Object>> list() {
@@ -214,8 +170,8 @@ public class PrintController {
         m.put("title", GeneratedPrintTemplate.titleOf(template));
         m.put("procedure", def != null ? def.procedure : f.get("procedure"));
         m.put("desktopCaller", def != null ? def.desktopCaller : f.get("desktopCaller"));
-        m.put("pdf", "/api/print/" + key + "/pdf");
-        m.put("pdfByTemplate", "/api/print/by-template/" + template + "/pdf");
+        m.put("pdf", "/reports/print/by-key/" + key);
+        m.put("pdfByTemplate", "/reports/print/by-template/" + template + "/pdf");
         m.put("traced", f.getOrDefault("traced", "seeder"));
         if (f.get("notes") instanceof List && !((List<?>) f.get("notes")).isEmpty()) m.put("notes", f.get("notes"));
         List<Map<String, Object>> args = new ArrayList<>();
@@ -241,18 +197,7 @@ public class PrintController {
         return m;
     }
 
-    // ------------------------------------------------------------------ printing
-    @PostMapping("/{key}/pdf")
-    public ResponseEntity<byte[]> pdfPost(@PathVariable("key") String key,
-                                          @RequestBody(required = false) Map<String, Object> body) {
-        return pdf(key, body == null ? new LinkedHashMap<>() : new LinkedHashMap<>(body));
-    }
-
-    @GetMapping("/{key}/pdf")
-    public ResponseEntity<byte[]> pdfGet(@PathVariable("key") String key, @RequestParam Map<String, String> query) {
-        return pdf(key, new LinkedHashMap<>(query));
-    }
-
+    // PDF requests are handled by the ERPPrint module controllers. Template inspection stays here.
     @GetMapping("/{key}/jrxml")
     public ResponseEntity<byte[]> jrxml(@PathVariable("key") String key, @RequestParam Map<String, String> query) {
         try {
@@ -289,41 +234,6 @@ public class PrintController {
             return textResponse(HttpStatus.OK, "Saved " + target, "text/plain");
         } catch (Exception e) {
             LOG.warn("save-jrxml for '{}' failed", key, e);
-            return textResponse(HttpStatus.INTERNAL_SERVER_ERROR, msg(e), "text/plain");
-        }
-    }
-
-    private ResponseEntity<byte[]> pdf(String key, Map<String, Object> args) {
-        try {
-            Prepared p = prepare(key, args);
-            if (p.error != null) return p.error;
-            byte[] pdf;
-            if (p.jrxml == null && p.saved == null) {
-                pdf = converted.renderPdf(p.result);                       // hand-built conversion
-            } else {
-                JasperReport report = p.saved != null ? p.saved
-                        : JasperCompileManager.compileReport(JRXmlLoader.load(new ByteArrayInputStream(p.jrxml.getBytes(StandardCharsets.UTF_8))));
-                Map<String, Object> params = new HashMap<>();
-                params.put(JRParameter.REPORT_LOCALE, Locale.US);
-                params.put("CR_VARS", new com.mst.reports.jasper.CR.Vars());
-                Map<String, Object> rp = map(p.result.get("reportParameters"));
-                params.put("CompanyName", rp.get("@CompanyName"));
-                params.put("CompanyAddress", rp.get("@CompanyAddress"));
-                params.put("PrintedBy", printedBy());
-                List<Map<String, Object>> rows = CrystalJasperPrinter.normalize(report, p.rows);
-                JasperPrint jp = JasperFillManager.fillReport(report, params,
-                        new JRMapCollectionDataSource(new ArrayList<Map<String, ?>>(rows)));
-                pdf = JasperExportManager.exportReportToPdf(jp);
-            }
-            HttpHeaders h = new HttpHeaders();
-            h.setContentType(MediaType.APPLICATION_PDF);
-            h.setContentDisposition(ContentDisposition.inline()
-                    .filename(CrystalJasperPrinter.stem(p.def.template) + ".pdf").build());
-            return new ResponseEntity<>(pdf, h, HttpStatus.OK);
-        } catch (IllegalArgumentException e) {
-            return textResponse(HttpStatus.BAD_REQUEST, msg(e), "text/plain");
-        } catch (Exception e) {
-            LOG.warn("Print '{}' failed", key, e);
             return textResponse(HttpStatus.INTERNAL_SERVER_ERROR, msg(e), "text/plain");
         }
     }

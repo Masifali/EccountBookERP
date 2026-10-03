@@ -1,6 +1,14 @@
 package com.mst.services;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.Base64;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -145,6 +153,17 @@ public class SupplierDesktopService {
         if (!cnicExp.isEmpty()) {
             try { cnicExpiry = LocalDate.parse(cnicExp).atTime(now.toLocalTime()); } catch (Exception ignored) { cnicExpiry = now; }
         }
+        /* PictureURL = fileSavePath. browse_Click (:1222) sets it to <Attachment Folder Path>\<name><yyyy_MM_dd_HH_mm_ss><ext>
+           for a newly picked file; ReadById (:1052) sets it to the stored path when that file exists, else "".
+           The path is never taken from the browser: a staged token, or the record's own stored value. */
+        StagedPicture staged = stagedPictures.get(str(f.get("pictureToken")));
+        String pictureUrl;
+        if (staged != null) pictureUrl = staged.target;
+        else if (recId > 0) {
+            Map<String, Object> cur = readById(recId);
+            String stored = cur == null ? "" : str(cur.get("PictureURL"));
+            pictureUrl = !stored.isEmpty() && fileExists(stored) ? stored : "";
+        } else pictureUrl = "";
         String manual = str(f.get("manualPartyCode"));
         int user = ctx.currentUserId();
         Map<String, Object> p = DesktopProc.params(
@@ -187,7 +206,7 @@ public class SupplierDesktopService {
                 "MobilePersonal", str(f.get("mobilePersonal")).trim(),
                 "NTN_No", str(f.get("ntnNo")).trim(),
                 "Phone", str(f.get("phone")).trim(),
-                "PictureURL", recId > 0 ? str(f.get("pictureUrl")) : "",
+                "PictureURL", pictureUrl,
                 "NickName", str(f.get("nickName")).trim(),
                 "ReportingTitle", str(f.get("companyName")).trim(),
                 "STRN_No", str(f.get("strnNo")).trim(),
@@ -204,7 +223,75 @@ public class SupplierDesktopService {
         DesktopProc.setProc(jdbc, recId == 0 ? "Sp_SupplierCustomer_Insert" : "Sp_SupplierCustomer_Update", p);
         DesktopProc.rows(jdbc, "[dbo].[USP_SupplierCustomerTaxSchedule_SyncFromMapping]", DesktopProc.params(
                 "OrganizationId", org(), "CompanyId", company()));
+        /* SaveImageFile() (:790) runs after the save: File.Copy(ofd, fileSavePath, overwrite: true). */
+        if (staged != null) {
+            try {
+                Files.copy(staged.temp, Paths.get(staged.target), StandardCopyOption.REPLACE_EXISTING);
+            } catch (Exception e) {
+                throw new IllegalStateException("The party was saved, but the profile picture could not be copied to "
+                        + staged.target + ": " + e.getMessage());
+            }
+            stagedPictures.remove(str(f.get("pictureToken")));
+            try { Files.deleteIfExists(staged.temp); } catch (Exception ignored) { }
+        }
         return recId > 0 ? "Update Successfully" : "Data Save Successfully";
+    }
+
+    /* ------------------------------------------------------------------ profile picture */
+
+    private static final class StagedPicture {
+        final Path temp; final String target;
+        StagedPicture(Path temp, String target) { this.temp = temp; this.target = target; }
+    }
+    private final Map<String, StagedPicture> stagedPictures = new ConcurrentHashMap<>();
+
+    /**
+     * browse_Click (:1222): definition() reads configuration "Attachment Folder Path" (else "Please Map the Path in
+     * Configuration"); the file dialog allows *.jpg / *.jpeg / *.png; the target name is the file name without extension
+     * + DateTime.Now "yyyy_MM_dd_HH_mm_ss" + extension, combined with that folder. Nothing is copied until Save
+     * (SaveImageFile), so the picked file is held server-side under a token until then.
+     */
+    public Map<String, Object> stagePicture(String fileName, String base64) {
+        Map<String, Boolean> r = rights.of(SCREEN_NAME);
+        if (!Boolean.TRUE.equals(r.get("save")) && !Boolean.TRUE.equals(r.get("update")))
+            throw new IllegalArgumentException("You do not have the Save or Update right for this screen.");
+        String saveDirectory = configValue("Attachment Folder Path");
+        if (saveDirectory.isEmpty()) throw new IllegalArgumentException("Please Map the Path in Configuration");
+        String name = Paths.get(str(fileName)).getFileName().toString();
+        int dot = name.lastIndexOf('.');
+        String exten = dot >= 0 ? name.substring(dot) : "";
+        String base = dot >= 0 ? name.substring(0, dot) : name;
+        if (!exten.matches("(?i)\\.(jpg|jpeg|png)")) throw new IllegalArgumentException("Only *.jpg, *.jpeg and *.png files can be selected.");
+        byte[] bytes;
+        try { bytes = Base64.getDecoder().decode(str(base64)); } catch (IllegalArgumentException e) { throw new IllegalArgumentException("The selected file could not be read."); }
+        if (bytes.length == 0) throw new IllegalArgumentException("The selected file is empty.");
+        if (!Files.isDirectory(Paths.get(saveDirectory)))
+            throw new IllegalArgumentException("Attachment Folder Path \"" + saveDirectory + "\" does not exist on the server.");
+        String target = Paths.get(saveDirectory, base + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")) + exten).toString();
+        try {
+            Path temp = Files.createTempFile("party-picture-", exten);
+            Files.write(temp, bytes);
+            String token = UUID.randomUUID().toString();
+            stagedPictures.put(token, new StagedPicture(temp, target));
+            Map<String, Object> out = new LinkedHashMap<>();
+            out.put("token", token);
+            out.put("pictureUrl", target);
+            return out;
+        } catch (java.io.IOException e) {
+            throw new IllegalStateException("The selected file could not be staged: " + e.getMessage());
+        }
+    }
+
+    /** ReadById (:1052): box.Image = Image.FromFile(PictureURL) when the stored file exists. Company-scoped by readById. */
+    public byte[] picture(int id) {
+        Map<String, Object> row = readById(id);
+        String path = row == null ? "" : str(row.get("PictureURL"));
+        if (path.isEmpty() || !fileExists(path)) return null;
+        try { return Files.readAllBytes(Paths.get(path)); } catch (Exception e) { return null; }
+    }
+
+    private static boolean fileExists(String path) {
+        try { return Files.isRegularFile(Paths.get(path)); } catch (Exception e) { return false; }
     }
 
     /** RegisterGridBind: GeneralReprots.SupplierCustomerRegister (@IsTaxable = false is always sent). */

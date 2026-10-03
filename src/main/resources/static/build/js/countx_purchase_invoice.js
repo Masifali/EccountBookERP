@@ -318,7 +318,7 @@ const purchaseInvoice = (() => {
     // The clicked button stays disabled (busy) until the PDF has arrived or the request failed.
     function print(rpt, args, button) {
         const w = window.open('', '_blank'); try { if (w) w.document.write('<p style="font:13px Segoe UI">Preparing report...</p>'); } catch (x) { /* popup blocked */ }
-        return PurchaseRequest.run(button || null, () => fetch('/api/print/by-template/' + encodeURIComponent(rpt) + '/pdf', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', Accept: 'application/pdf, text/plain' }, body: JSON.stringify(args || {}) })
+        return PurchaseRequest.run(button || null, () => fetch('/reports/print/by-template/' + encodeURIComponent(rpt) + '/pdf', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', Accept: 'application/pdf, text/plain' }, body: JSON.stringify(args || {}) })
             .then(r => (r.ok && (r.headers.get('Content-Type') || '').includes('application/pdf')) ? r.blob().then(b => { const u = URL.createObjectURL(b); if (w) w.location.href = u; else window.open(u, '_blank'); })
                 : r.text().then(t => { if (w) w.close(); message(t || ('Print failed (' + r.status + ')'), true); }))
             .catch(e => { if (w) w.close(); fail(e); })).finally(rights);

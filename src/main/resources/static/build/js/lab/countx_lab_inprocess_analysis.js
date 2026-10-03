@@ -508,7 +508,7 @@
     async function print(id) {
         try {
             await api('GET', API + '/' + intOf(id) + '/print-check');
-            window.open('/api/print/by-template/' + encodeURIComponent(PRINT_RPT) + '/pdf?id=' + intOf(id), '_blank');
+            window.open('/reports/print/by-template/' + encodeURIComponent(PRINT_RPT) + '/pdf?id=' + intOf(id), '_blank');
         } catch (e) { alert(msg(e)); }
     }
 

@@ -591,7 +591,7 @@
     function printRpt(rpt, args, button) {
         var w = window.open('', '_blank'); try { if (w) w.document.write('<p style="font:13px Segoe UI">Preparing report...</p>'); } catch (e) { }
         /* the clicked button stays disabled until the PDF arrived or the request failed */
-        return PurchaseRequest.run(button || null, function () { return fetch('/api/print/by-template/' + encodeURIComponent(rpt) + '/pdf', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', Accept: 'application/pdf, text/plain' }, body: JSON.stringify(args || {}) })
+        return PurchaseRequest.run(button || null, function () { return fetch('/reports/print/by-template/' + encodeURIComponent(rpt) + '/pdf', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', Accept: 'application/pdf, text/plain' }, body: JSON.stringify(args || {}) })
             .then(function (r) {
                 if (r.ok && (r.headers.get('Content-Type') || '').indexOf('application/pdf') >= 0) return r.blob().then(function (b) { var u = URL.createObjectURL(b); if (w) w.location.href = u; else window.open(u, '_blank'); });
                 return r.text().then(function (t) { if (w) w.close(); box(t || ('Print failed (' + r.status + ')')); });

@@ -6,6 +6,15 @@
     <title>Define Parties</title>
     <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <style>
+        /* Form and Register combos are the searchable store combo (type to filter), filling their grid cell */
+        #tabPage2 .dtcombo-wrap { width: 100%; height: 22px; }
+        #tabPage2 .dtcombo-input { height: 22px; font-size: 11px; }
+        .frm .dtcombo-wrap { width: 100%; height: 28px; }
+        .frm .dtcombo-input { height: 28px; font-size: 11px; }
+    </style>
     <style>
         body { font-family: Verdana, "Segoe UI", sans-serif; background: #e0e0e0; font-size: 11px; margin: 0; }
         .tool { background: #f0f0f0; border-bottom: 1px solid #bbb; padding: 3px 8px; display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
@@ -21,7 +30,11 @@
         .frm label { margin: 0; font-weight: normal; }
         .frm .req { color: red; font-weight: bold; text-align: center; }
         .frm input[type=text], .frm input[type=date], .frm select { width: 100%; height: 22px; font-size: 11px; padding: 1px 3px; }
-        .pic { grid-column: 8; grid-row: 1 / span 8; border: 1px solid #bbb; margin-left: 12px; padding: 6px; }
+        .pic { grid-column: 8; grid-row: 1 / span 16; align-self: start; width: 324px; border: 1px solid #bbb; margin-left: 12px; padding: 4px 3px 6px; background:#fff; }
+        .pic .box { width: 319px; height: 162px; border: 1px solid #000; margin: 4px 0 6px; display:flex; align-items:center; justify-content:center; color:#999; overflow:hidden; }
+        .pic .box img { width: 100%; height: 100%; object-fit: fill; }
+        #browse { margin-left: 102px; background: #008080; color: #fff; font: bold 9.75pt Verdana, sans-serif; border: 1px solid #006666; width: 123px; height: 26px; }
+        #browse:disabled { opacity: .6; }
         .grid { width: 100%; border-collapse: collapse; }
         .grid th { background: #e8eef2; border: 1px solid #ccc; padding: 3px 5px; position: sticky; top: 0; white-space: nowrap; }
         .grid td { border: 1px solid #e0e0e0; padding: 2px 5px; white-space: nowrap; }
@@ -49,12 +62,13 @@
 
     <div class="pane active" id="tabPage1">
         <div class="frm">
-            <label>Party Type</label><span class="req">*</span><select id="cmbPartyType"></select><span></span>
-            <label>Discount Type</label><span></span><select id="cmbDiscountType" disabled></select>
+            <label>Party Type</label><span class="req">*</span><select id="cmbPartyType" class="dtcombo" data-dtcombo="single" data-dtcombo-caption="Party Type"></select><span></span>
+            <label>Discount Type</label><span></span><select id="cmbDiscountType" class="dtcombo" data-dtcombo="single" data-dtcombo-caption="Discount Type" disabled></select>
             <div class="pic">
                 <strong>Party - Profile Picture</strong>
-                <div style="height:150px; border:1px dashed #ccc; margin:6px 0; display:flex; align-items:center; justify-content:center; color:#999;">(picture)</div>
-                <button type="button" class="btn btn-default btn-xs" id="browse">Profile Picture</button>
+                <div class="box" id="box"><span>(picture)</span></div>
+                <button type="button" id="browse">Profile Picture</button>
+                <input type="file" id="browseFile" accept=".jpg,.jpeg,.png,image/jpeg,image/png" hidden>
             </div>
 
             <label>Party Code</label><span class="req">*</span><input type="text" id="txtPartyCode" disabled/><span></span>
@@ -69,30 +83,30 @@
             <label>Alias / Nick Name</label><span></span><input type="text" id="txtNickName"/><span></span>
             <label>Phone</label><span></span><input type="text" id="txtphone" placeholder="(999) 000-0000"/>
 
-            <label>General Ledger Account</label><span class="req">*</span><select id="cmbglac"></select><span></span>
+            <label>General Ledger Account</label><span class="req">*</span><select id="cmbglac" class="dtcombo" data-dtcombo="single" data-dtcombo-caption="General Ledger Account"></select><span></span>
             <label>Office Mobile#</label><span></span><input type="text" id="txtofficemobile"/>
 
-            <label>Advance Account</label><span></span><select id="CmbAdvanceAc"></select><span></span>
+            <label>Advance Account</label><span></span><select id="CmbAdvanceAc" class="dtcombo" data-dtcombo="single" data-dtcombo-caption="Advance Account"></select><span></span>
             <label>Mobile#</label><span class="req">*</span><input type="text" id="txtpermobile"/>
 
-            <label>Party Group</label><span class="req">*</span><select id="cmbgroupdetail"></select><span></span>
+            <label>Party Group</label><span class="req">*</span><select id="cmbgroupdetail" class="dtcombo" data-dtcombo="single" data-dtcombo-caption="Party Group"></select><span></span>
             <label>Whats App#</label><span class="req">*</span><input type="text" id="txtWhatsAppNo"/>
 
             <label>Is Sub Party</label><span></span>
             <span style="display:flex; gap:6px; align-items:center;"><input type="checkbox" id="chksubac"/> <span>Total Sub Parties</span> <input type="text" id="txtSubPartyTotal" disabled style="width:60px;"/></span><span></span>
             <label>Email</label><span></span><input type="text" id="txtemail"/>
 
-            <label>Parent Party Name</label><span></span><select id="cmbparentac" disabled></select><span></span>
+            <label>Parent Party Name</label><span></span><select id="cmbparentac" class="dtcombo" data-dtcombo="single" data-dtcombo-caption="Parent Party Name" disabled></select><span></span>
             <label>Website:URL</label><span></span><input type="text" id="txtwebsite"/>
 
-            <label>Is Company / Individuals</label><span class="req">*</span><select id="CmbBusinessType"></select><span></span>
-            <label>Country Name</label><span class="req">*</span><select id="cmbcountry"></select>
+            <label>Is Company / Individuals</label><span class="req">*</span><select id="CmbBusinessType" class="dtcombo" data-dtcombo="single" data-dtcombo-caption="Is Company / Individuals"></select><span></span>
+            <label>Country Name</label><span class="req">*</span><select id="cmbcountry" class="dtcombo" data-dtcombo="single" data-dtcombo-caption="Country Name"></select>
 
             <label>NTN #</label><span class="req" id="LocNTN">*</span><input type="text" id="txtntnno"/><span></span>
             <span></span><span></span><span></span>
 
             <label>CNIC Number</label><span class="req" id="LocCNIC">*</span><input type="text" id="txtcnicno" placeholder="00000-0000000-0"/><span></span>
-            <label>City Name</label><span class="req">*</span><select id="cmbcity"></select>
+            <label>City Name</label><span class="req">*</span><select id="cmbcity" class="dtcombo" data-dtcombo="single" data-dtcombo-caption="City Name"></select>
 
             <label>CNIC Expiry</label><span></span><input type="date" id="txtcnicexp"/><span></span>
             <label>Town</label><span></span><input type="text" id="txttown"/>
@@ -116,10 +130,10 @@
         <fieldset style="border:1px solid #bbb; padding:4px 8px; margin:4px 0;">
             <legend style="font-size:11px; width:auto; border:none; margin:0;">Filters</legend>
             <div style="display:grid; grid-template-columns: 70px 220px 20px 80px 220px 20px auto; row-gap:4px; align-items:center;">
-                <label style="font-weight:normal;">Party Type</label><select id="CmbPartyTypeRegister"></select><span></span>
-                <label style="font-weight:normal;">Party Group</label><select id="CmbPartyGroupRegister"></select><span></span><span></span>
-                <label style="font-weight:normal;">Gl Account</label><select id="CmbGlAccountRegister"></select><span></span>
-                <label style="font-weight:normal;">City Name</label><select id="CmbCityRegister"></select><span></span>
+                <label style="font-weight:normal;">Party Type</label><select id="CmbPartyTypeRegister" class="dtcombo" data-dtcombo="single" data-dtcombo-caption="Party Type"></select><span></span>
+                <label style="font-weight:normal;">Party Group</label><select id="CmbPartyGroupRegister" class="dtcombo" data-dtcombo="single" data-dtcombo-caption="Party Group"></select><span></span><span></span>
+                <label style="font-weight:normal;">Gl Account</label><select id="CmbGlAccountRegister" class="dtcombo" data-dtcombo="single" data-dtcombo-caption="Gl Account"></select><span></span>
+                <label style="font-weight:normal;">City Name</label><select id="CmbCityRegister" class="dtcombo" data-dtcombo="single" data-dtcombo-caption="City Name"></select><span></span>
                 <button type="button" class="btn btn-default btn-xs" id="btnshow" style="width:60px;">Show</button>
             </div>
         </fieldset>
@@ -130,11 +144,12 @@
     </div>
 
     <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+    <script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
     <script>
         /* supfrmDefineSupplier, event for event (see SupplierDesktopService). */
         (function () {
             var BASE = '/accounts/supplier';
-            var L = {}, RecId = 0, GlRecId = 0, saveMode = true, currentPictureUrl = '', registerRows = [];
+            var L = {}, RecId = 0, GlRecId = 0, saveMode = true, currentPictureUrl = '', currentPictureToken = '', registerRows = [];
             function v(r, k) { if (!r) return null; if (r[k] !== undefined) return r[k]; var l = k.toLowerCase(); for (var x in r) if (x.toLowerCase() === l) return r[x]; return null; }
             function s(x) { return x == null ? '' : String(x); }
             function esc(x) { return s(x).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
@@ -149,6 +164,8 @@
                 $(sel).html(html);
                 if (cur && $(sel).find('option[value="' + cur + '"]').length) $(sel).val(cur);
             }
+            /* a searchable combo hides its <select>; focus the field the user sees */
+            function focusCombo(sel) { var w = $(sel).closest('.dtcombo-wrap').find('.dtcombo-input'); (w.length ? w : $(sel)).focus(); }
             function selText(sel) { var o = $(sel).find('option:selected'); return o.length && o.val() !== '' ? o.text() : ''; }
             function setVal(sel, val) { $(sel).val(s(val)); if ($(sel).val() === null) $(sel).val(''); }
 
@@ -190,7 +207,7 @@
                     if (first) {
                         $('#cmbparentac').prop('disabled', true);
                         $('#cmbDiscountType').prop('disabled', true).val('');
-                        $('#cmbPartyType').focus();
+                        focusCombo('#cmbPartyType');
                     }
                 });
             }
@@ -238,14 +255,14 @@
                 $('#txtaddress1, #txtcnicno, #txtcompany, #txtNickName, #txtManualNo, #txtemail, #txtfirstname, #txtlastname, #txtntnno, #txtofficemobile, #txtpermobile, #txtphone, #txtWhatsAppNo, #txtstrnno, #txttitle, #txttown, #txtwebsite, #txtzipcode').val('');
                 $('#cmbglac, #CmbBusinessType, #cmbgroupdetail, #cmbparentac, #CmbAdvanceAc').val('');
                 setMode(true);
-                currentPictureUrl = '';
+                currentPictureUrl = ''; currentPictureToken = ''; showPicture(null);
                 $.get(BASE + '/discount-policies', function (rows) { bind('#cmbDiscountType', rows, 'Id', 'PolicyName'); });
-                $('#cmbPartyType').focus();
+                focusCombo('#cmbPartyType');
             }
 
             function req(sel, label, isCombo) {
                 var ok = isCombo ? toInt($(sel).val()) !== 0 : $.trim($(sel).val()) !== '';
-                if (!ok) { alert(label + ' field is required'); $(sel).focus(); }
+                if (!ok) { alert(label + ' field is required'); focusCombo(sel); }
                 return ok;
             }
 
@@ -288,7 +305,8 @@
                     advanceGlAcId: toInt($('#CmbAdvanceAc').val()),
                     parentsSupCustId: toInt($('#cmbparentac').val()),
                     status: $('#chkactivestatus').is(':checked'),
-                    pictureUrl: currentPictureUrl
+                    pictureUrl: currentPictureUrl,
+                    pictureToken: currentPictureToken
                 };
                 $.ajax({ url: BASE + '/save', type: 'POST', contentType: 'application/json', data: JSON.stringify(body),
                     success: function (res) { alert(res.message); if (res.success) formReset(); },
@@ -296,6 +314,40 @@
             }
 
             /* ReadById */
+            /* box (PictureBox, StretchImage): the stored file is served by /picture/{id}; a missing file shows nothing,
+               as ReadById clears box.Image when File.Exists fails. */
+            function showPicture(src) {
+                var b = document.getElementById('box');
+                if (!src) { b.innerHTML = '<span>(picture)</span>'; return; }
+                var img = new Image();
+                img.onload = function () { b.innerHTML = ''; b.appendChild(img); };
+                img.onerror = function () { b.innerHTML = '<span>(picture)</span>'; if (!currentPictureToken) currentPictureUrl = ''; };
+                img.src = src;
+            }
+            /* browse_Click (:1222): pick *.jpg/*.jpeg/*.png; the server checks "Attachment Folder Path" and builds the
+               target name; the file itself is copied there only by Save/Update (SaveImageFile). */
+            function browsePicked(file) {
+                if (!file) return;
+                var btn = $('#browse');
+                if (btn.prop('disabled')) return;
+                btn.prop('disabled', true).text('Loading...');
+                var rd = new FileReader();
+                rd.onerror = function () { btn.prop('disabled', false).text('Profile Picture'); alert('The selected file could not be read.'); };
+                rd.onload = function () {
+                    var data = String(rd.result || ''); data = data.substring(data.indexOf(',') + 1);
+                    $.ajax({ url: BASE + '/picture', type: 'POST', contentType: 'application/json',
+                        data: JSON.stringify({ fileName: file.name, data: data }),
+                        success: function (res) {
+                            if (!res || !res.success) { alert((res && res.message) || 'The picture could not be selected.'); return; }
+                            currentPictureToken = res.token; currentPictureUrl = res.pictureUrl;
+                            showPicture(URL.createObjectURL(file));
+                        },
+                        error: function (x) { alert('Server error: ' + (x.responseText || x.status)); },
+                        complete: function () { btn.prop('disabled', false).text('Profile Picture'); $('#browseFile').val(''); } });
+                };
+                rd.readAsDataURL(file);
+            }
+
             function readById(id) {
                 RecId = id;
                 $.get(BASE + '/read/' + id, function (res) {
@@ -329,7 +381,8 @@
                         $('#txtstrnno').val(s(v(p, 'STRN_No'))); $('#txtntnno').val(s(v(p, 'NTN_No'))); $('#txtzipcode').val(s(v(p, 'ZipCode')));
                         $('#txtPartyCode').val(s(v(p, 'PartyTypePrefix')));
                         setVal('#CmbAdvanceAc', v(p, 'AdvanceGlAcId'));
-                        currentPictureUrl = s(v(p, 'PictureURL'));
+                        currentPictureUrl = s(v(p, 'PictureURL')); currentPictureToken = '';
+                        showPicture(currentPictureUrl ? BASE + '/picture/' + id + '?t=' + Date.now() : null);
                         subPartyTotal();
                         if (toInt($('#cmbgroupdetail').val()) === 3) {
                             $('#cmbDiscountType').prop('disabled', false);
@@ -378,7 +431,8 @@
                 $('#btnnew').on('click', formReset);
                 $('#btnRefresh').on('click', function () { load(false); });
                 $('.sub-screen').on('click', function () { alert($(this).data('name') + ' is not available in the web application yet.'); });
-                $('#browse').on('click', function () { alert('Profile Picture upload (a copy to the configured "Attachment Folder Path") is not available in the web application yet.'); });
+                $('#browse').on('click', function () { $('#browseFile').val('').trigger('click'); });
+                $('#browseFile').on('change', function () { browsePicked(this.files && this.files[0]); });
 
                 $('#btnshow').on('click', registerBind);
                 $('#BtnRefreshRegister').on('click', function () { $.get(BASE + '/lookups', function (res) { L.registerCombos = res.registerCombos; registerCombos(); }); });
@@ -411,13 +465,13 @@
                         if (e.ctrlKey && e.keyCode === 78) { e.preventDefault(); formReset(); }
                         if (e.ctrlKey && e.keyCode === 85 && !saveMode && !$('#btnupdate').prop('disabled')) { e.preventDefault(); $('#btnupdate').click(); }
                         if (e.ctrlKey && e.keyCode === 38) { e.preventDefault(); $('#txtcompany').focus(); }
-                        if (e.ctrlKey && e.keyCode === 116) { e.preventDefault(); $('#cmbPartyType').focus(); }
+                        if (e.ctrlKey && e.keyCode === 116) { e.preventDefault(); focusCombo('#cmbPartyType'); }
                         return;
                     }
                     if (e.ctrlKey && e.keyCode === 78) { e.preventDefault(); formReset(); }
                     if (e.ctrlKey && e.keyCode === 83) { e.preventDefault(); registerBind(); }
-                    if (e.ctrlKey && e.keyCode === 38) { e.preventDefault(); $('#CmbGlAccountRegister').focus(); }
-                    if (e.ctrlKey && e.keyCode === 116) { e.preventDefault(); $('#CmbPartyTypeRegister').focus(); }
+                    if (e.ctrlKey && e.keyCode === 38) { e.preventDefault(); focusCombo('#CmbGlAccountRegister'); }
+                    if (e.ctrlKey && e.keyCode === 116) { e.preventDefault(); focusCombo('#CmbPartyTypeRegister'); }
                     if ((e.ctrlKey && e.keyCode === 80) || (e.altKey && (e.keyCode === 49 || e.keyCode === 97))) { e.preventDefault(); $('#btnRegister').click(); }
                 });
                 businessTypeChanged();
@@ -425,6 +479,6 @@
             });
         })();
     </script>
-<script src="/js/print-rpt.js?v=20261001a"></script>
+<script src="/js/print-rpt.js?v=20261003erp"></script>
 </body>
 </html>

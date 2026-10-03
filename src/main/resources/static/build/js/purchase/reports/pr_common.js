@@ -11,7 +11,7 @@
  *   PR.Grid                  Janus GridEX: filter row (Contains), sort, group rows + group totals,
  *                            total row, link / button cells, selector column
  *   PR.printGrid             ShowReportWithDataTable(dt, rpt) -> POST /reports/print/grid (the desktop's dt)
- *   PR.printTemplate         a slip by .rpt name -> POST /api/print/by-template/{rpt}/pdf
+ *   PR.printTemplate         a slip by .rpt name -> POST /reports/print/by-template/{rpt}/pdf
  * ============================================================================================ */
 (function (global) {
     'use strict';
@@ -377,7 +377,7 @@
     };
     /** A seeded print by the .rpt name the desktop uses (CommonServices slips). */
     PR.printTemplate = function (rpt, args) {
-        return openPdf(fetch('/api/print/by-template/' + encodeURIComponent(rpt) + '/pdf', { method: 'POST', credentials: 'same-origin',
+        return openPdf(fetch('/reports/print/by-template/' + encodeURIComponent(rpt) + '/pdf', { method: 'POST', credentials: 'same-origin',
             headers: { 'Content-Type': 'application/json', Accept: 'application/pdf, text/plain' }, body: JSON.stringify(args || {}) }));
     };
 

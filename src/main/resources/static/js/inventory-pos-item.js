@@ -45,7 +45,15 @@
  el('BarcodeNo').oninput=()=>{pendingBarcode=null;barcodeVersion++;clearTimeout(barcodeTimer);barcodeTimer=setTimeout(function generateWhenReady(){if(busy){barcodeTimer=setTimeout(generateWhenReady,100);return;}run(null,'Generating barcode…',barcode);},200);};
  el('new').onclick=()=>{if(!busy)reset();};el('refresh').onclick=()=>run(el('refresh'),'Refreshing…',lookup);el('save').onclick=()=>run(el('save'),'Saving…',save);el('update').onclick=()=>run(el('update'),'Updating…',save);
  el('history-button').onclick=()=>run(el('history-button'),'Loading…',()=>history());el('form-button').onclick=()=>tab(false);el('load-all').onclick=()=>run(el('load-all'),'Loading…',()=>history(true));el('search').onclick=()=>run(el('search'),'Searching…',()=>history());
- el('generate-barcode').onclick=()=>run(el('generate-barcode'),'Generating…',exportBarcode);el('print-barcode').onclick=()=>run(el('print-barcode'),'Preparing…',async()=>{await barcode();const source=el('barcode-image').firstElementChild;if(!source)throw Error('Enter a barcode first');el('barcode-print')?.remove();const print=document.createElement('div');print.id='barcode-print';print.hidden=true;print.append(source.cloneNode(true));document.body.append(print);window.print();});
+ el('generate-barcode').onclick=()=>run(el('generate-barcode'),'Generating…',exportBarcode);
+ el('print-barcode').onclick=()=>run(el('print-barcode'),'Preparing…',async()=>{
+  const preview=window.open('about:blank','_blank');if(!preview)throw Error('Allow pop-ups to open the print preview');
+  try{const headers={'Content-Type':'application/json'},token=document.querySelector('meta[name="_csrf"]'),header=document.querySelector('meta[name="_csrf_header"]');if(token&&header)headers[header.content]=token.content;
+   const response=await fetch('/reports/print/item-barcode',{method:'POST',credentials:'same-origin',headers,body:JSON.stringify({code:el('BarcodeNo').value})});
+   if(!response.ok||!(response.headers.get('Content-Type')||'').startsWith('application/pdf'))throw Error((await response.text())||'Barcode print failed');
+   preview.location=URL.createObjectURL(await response.blob());
+  }catch(error){preview.close();throw error;}
+ });
  el('attachments').onclick=()=>{attachmentList();el('attachment-dialog').showModal();};el('close-attachments').onclick=()=>el('attachment-dialog').close();
  el('attachment-files').onchange=()=>run(null,'Reading files…',async()=>{const files=Array.from(el('attachment-files').files);if(files.length+pendingFiles.length>10)throw Error('At most ten new attachments may be uploaded at once');const added=[];for(const file of files)added.push(await fileData(file));pendingFiles.push(...added);el('attachment-files').value='';attachmentList();});
  el('browse-image').onclick=()=>el('image-file').click();el('image-file').onchange=()=>run(null,'Reading image…',async()=>{const file=el('image-file').files[0];if(!file)return;if(!['image/png','image/jpeg','image/gif','image/bmp'].includes(file.type))throw Error('Select a PNG, JPEG, GIF or BMP image');pendingImage=await fileData(file);if(productUrl)URL.revokeObjectURL(productUrl);productUrl=URL.createObjectURL(file);el('product-image').src=productUrl;await el('product-image').decode();});

@@ -65,6 +65,58 @@ public final class DesktopProc {
         return v;
     }
 
+    /**
+     * GenericProvider.SetProc exactly as the .NET Framework desktop runs it: System.Data.SqlClient's
+     * ExecuteScalar reads the first row of the first result set and does NOT raise an error the
+     * procedure produces AFTER that row (e.g. a failing USP_UserAudit_Insert placed after the
+     * procedure's SELECT @Id). The desktop's transaction then continues and commits. Errors raised
+     * before the first row (validation RAISERRORs) are still thrown. Use only where the desktop data
+     * proves it saves through such a trailing error (SP_CheqBookHeader_Insert).
+     */
+    public static int setProcNetFxScalar(JdbcTemplate jdbc, String proc, Map<String, Object> params) {
+        List<Object> args = new ArrayList<>();
+        String sql = sql(proc, params, args);
+        Object[] first = jdbc.execute(sql, (PreparedStatementCallback<Object[]>) ps -> {
+            bind(ps, args);
+            Object[] cell = null;
+            boolean seenResultSet = false;
+            boolean isRs = ps.execute();               // an error before any result set surfaces
+            while (true) {                             // up to and including the first row of the first result set
+                if (isRs) {
+                    try (ResultSet rs = ps.getResultSet()) {
+                        boolean firstSet = !seenResultSet;
+                        seenResultSet = true;
+                        if (firstSet && rs.next()) cell = new Object[] { rs.getObject(1) };
+                        else if (!firstSet) while (rs.next()) { /* drain */ }
+                    } catch (java.sql.SQLException ex) {
+                        if (cell == null) throw ex;
+                    }
+                    if (cell != null) break;
+                } else if (ps.getUpdateCount() == -1) {
+                    return null;
+                }
+                isRs = ps.getMoreResults();
+            }
+            /* after the first row: drain the rest, ignoring errors (ExecuteScalar never raises them) */
+            int errors = 0;
+            for (int guard = 0; guard < 10000 && errors < 50; guard++) {
+                try {
+                    boolean more = ps.getMoreResults();
+                    if (more) { try (ResultSet rs = ps.getResultSet()) { while (rs.next()) { /* drain */ } } }
+                    else if (ps.getUpdateCount() == -1) break;
+                } catch (java.sql.SQLException ex) {
+                    errors++;
+                }
+            }
+            return cell;
+        });
+        if (first == null) return 0;
+        if (first[0] == null) throw new IllegalStateException("Object cannot be cast from DBNull to other types. (" + proc + ")");
+        Integer v = asInt(first[0]);
+        if (v == null) throw new IllegalStateException("Input string was not in a correct format. (" + proc + ")");
+        return v;
+    }
+
     /** {cell} of the first row of the first result set; null when that result set has no row. */
     private static Object[] firstCell(JdbcTemplate jdbc, String proc, Map<String, Object> params) {
         List<Object> args = new ArrayList<>();

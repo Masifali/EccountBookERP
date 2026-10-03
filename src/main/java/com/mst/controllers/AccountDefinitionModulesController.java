@@ -152,6 +152,32 @@ public class AccountDefinitionModulesController {
 		return res;
 	}
 
+	/* Profile Picture (browse_Click / SaveImageFile / ReadById picture box). */
+	@PostMapping("/supplier/picture")
+	@ResponseBody
+	public Map<String, Object> supplierStagePicture(@RequestBody Map<String, Object> body) {
+		Map<String, Object> res = new HashMap<>();
+		try {
+			res.putAll(supplierDesktop.stagePicture(String.valueOf(body.getOrDefault("fileName", "")), String.valueOf(body.getOrDefault("data", ""))));
+			res.put("success", true);
+		} catch (Exception e) {
+			res.put("success", false);
+			res.put("message", e.getMessage());
+		}
+		return res;
+	}
+
+	@GetMapping("/supplier/picture/{id}")
+	@ResponseBody
+	public org.springframework.http.ResponseEntity<byte[]> supplierPicture(@PathVariable("id") int id) {
+		byte[] b = supplierDesktop.picture(id);
+		if (b == null) return org.springframework.http.ResponseEntity.notFound().build();
+		boolean png = b.length > 3 && (b[0] & 0xff) == 0x89 && b[1] == 'P';
+		return org.springframework.http.ResponseEntity.ok()
+				.contentType(png ? org.springframework.http.MediaType.IMAGE_PNG : org.springframework.http.MediaType.IMAGE_JPEG)
+				.header("Cache-Control", "no-store").body(b);
+	}
+
 	@GetMapping("/supplier/register")
 	@ResponseBody
 	public List<Map<String, Object>> supplierRegister(
@@ -567,193 +593,6 @@ public class AccountDefinitionModulesController {
 	}
 
 
-	@GetMapping("/opening_balance/print")
-	@ResponseBody
-	public java.util.Map<String, Object> printOpeningBalance() {
-		/* Session-scoped, never from the request. See the note on the doc-number endpoint: a
-		   tenancy id taken from a query string lets a caller read another company's data, and when
-		   it is omitted the "1" default reports on a company that does not exist here. */
-		Integer organizationId = currentUserContext.currentOrganizationId();
-		Integer companyId      = currentUserContext.currentCompanyId();
-		Integer financialYearId = currentUserContext.currentFinancialYearId();
-
-
-		java.util.Map<String, Object> res = new java.util.HashMap<>();
-		org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AccountDefinitionModulesController.class);
-
-		try {
-			/* BtnPrint.Enabled = formrights.DoHavePrintRights */
-			if (!openingBalanceDesktop.hasPrintRight()) {
-				res.put("success", false);
-				res.put("resultCount", 0);
-				res.put("message", "You do not have the Print right for this screen.");
-				return res;
-			}
-			List<java.util.Map<String, Object>> data = accountOpeningBalanceRepository
-					.getOpeningBalanceReportData(organizationId, companyId, financialYearId);
-
-			int resultCount = (data != null) ? data.size() : 0;
-
-			logger.info("[129-PRINT] Report: 129-OpeningBalanceRpt.rpt, StoredProc: Sp_AccountsOpeningBalance_Slip, OrgId: {}, CompId: {}, FinancialYrId: {}, ResultCount: {}",
-					organizationId, companyId, financialYearId, resultCount);
-
-			if (data == null || data.isEmpty()) {
-				res.put("success", false);
-				res.put("resultCount", 0);
-				res.put("message", "Record Not Found For Display");
-				return res;
-			}
-
-			res.put("success", true);
-			res.put("resultCount", resultCount);
-			res.put("message", "Success");
-			res.put("printUrl", "/accounts/opening_balance/print-view?organizationId=" + organizationId
-					+ "&companyId=" + companyId + "&financialYearId=" + financialYearId);
-		} catch (Exception e) {
-			logger.error("[129-PRINT ERROR] Error executing Sp_AccountsOpeningBalance_Slip: {}", e.getMessage(), e);
-			res.put("success", false);
-			res.put("resultCount", 0);
-			res.put("message", "Database Error: " + e.getMessage());
-		}
-		return res;
-	}
-
-	@GetMapping("/opening_balance/print-view")
-	public String viewOpeningBalanceReport(
-			Model model) {
-		/* Session-scoped, never from the request. See the note on the doc-number endpoint: a
-		   tenancy id taken from a query string lets a caller read another company's data, and when
-		   it is omitted the "1" default reports on a company that does not exist here. */
-		Integer organizationId = currentUserContext.currentOrganizationId();
-		Integer companyId      = currentUserContext.currentCompanyId();
-		Integer financialYearId = currentUserContext.currentFinancialYearId();
-
-
-		List<java.util.Map<String, Object>> reportData = new ArrayList<>();
-		try {
-			List<java.util.Map<String, Object>> rawData = accountOpeningBalanceRepository
-					.getOpeningBalanceReportData(organizationId, companyId, financialYearId);
-			if (rawData != null) {
-				reportData = rawData;
-			}
-		} catch (Exception e) {
-			org.slf4j.LoggerFactory.getLogger(AccountDefinitionModulesController.class)
-					.error("[129-PRINT VIEW ERROR] Error: {}", e.getMessage());
-		}
-
-		double totalDebit = 0.0;
-		double totalCredit = 0.0;
-		String companyName = "Golden Ace Rice Mills (Pvt) Ltd.";
-		String companyAddress = "Factory / Head Office Address";
-		String reportingRemarks = "System Generated Opening Balance Slip";
-
-		if (!reportData.isEmpty()) {
-			java.util.Map<String, Object> firstRow = reportData.get(0);
-			if (firstRow.containsKey("CompAddress") && firstRow.get("CompAddress") != null) {
-				companyAddress = firstRow.get("CompAddress").toString();
-			}
-			if (firstRow.containsKey("ReportingRemarks") && firstRow.get("ReportingRemarks") != null) {
-				reportingRemarks = firstRow.get("ReportingRemarks").toString();
-			}
-			for (java.util.Map<String, Object> row : reportData) {
-				if (row.get("YearObDebit") != null) {
-					totalDebit += ((Number) row.get("YearObDebit")).doubleValue();
-				}
-				if (row.get("YearObCredit") != null) {
-					totalCredit += ((Number) row.get("YearObCredit")).doubleValue();
-				}
-			}
-		}
-
-		try {
-			Company comp = companyRepository.findById(companyId).orElse(null);
-			if (comp != null && comp.getCompanyName() != null) {
-				companyName = comp.getCompanyName();
-			}
-		} catch (Exception ignored) {}
-
-		model.addAttribute("organizationId", organizationId);
-		model.addAttribute("companyId", companyId);
-		model.addAttribute("financialYearId", financialYearId);
-		model.addAttribute("reportData", reportData);
-		model.addAttribute("totalDebit", totalDebit);
-		model.addAttribute("totalCredit", totalCredit);
-		model.addAttribute("companyName", companyName);
-		model.addAttribute("companyAddress", companyAddress);
-		model.addAttribute("reportingRemarks", reportingRemarks);
-
-		return "accounts/reports/129_opening_balance_report";
-	}
-
-	@GetMapping({"/opening_balance/pdf", "/opening_balance/129-OpeningBalanceRpt.pdf"})
-	public org.springframework.http.ResponseEntity<byte[]> exportOpeningBalancePdf() {
-		/* Session-scoped, never from the request. See the note on the doc-number endpoint: a
-		   tenancy id taken from a query string lets a caller read another company's data, and when
-		   it is omitted the "1" default reports on a company that does not exist here. */
-		Integer organizationId = currentUserContext.currentOrganizationId();
-		Integer companyId      = currentUserContext.currentCompanyId();
-		Integer financialYearId = currentUserContext.currentFinancialYearId();
-
-
-		try {
-			List<java.util.Map<String, Object>> reportData = accountOpeningBalanceRepository
-					.getOpeningBalanceReportData(organizationId, companyId, financialYearId);
-
-			if (reportData == null) {
-				reportData = new ArrayList<>();
-			}
-
-			String companyName = "Golden Ace Rice Mills (Pvt) Ltd.";
-			String companyAddress = "Factory / Head Office Address";
-			try {
-				Company comp = companyRepository.findById(companyId).orElse(null);
-				if (comp != null && comp.getCompanyName() != null) {
-					companyName = comp.getCompanyName();
-				}
-			} catch (Exception ignored) {}
-
-			if (!reportData.isEmpty()) {
-				java.util.Map<String, Object> firstRow = reportData.get(0);
-				if (firstRow.containsKey("CompAddress") && firstRow.get("CompAddress") != null) {
-					companyAddress = firstRow.get("CompAddress").toString();
-				}
-			}
-
-			java.util.Map<String, Object> params = new java.util.HashMap<>();
-			params.put("CompanyName", companyName);
-			params.put("CompanyAddress", companyAddress);
-
-			net.sf.jasperreports.engine.data.JRMapCollectionDataSource dataSource =
-					new net.sf.jasperreports.engine.data.JRMapCollectionDataSource((java.util.Collection) reportData);
-
-			java.io.InputStream reportStream = getClass().getResourceAsStream("/jasper/129-OpeningBalanceRpt.jrxml");
-			if (reportStream == null) {
-				reportStream = getClass().getResourceAsStream("/jasper/129-OpeningBalanceRpt.jasper");
-			}
-
-			byte[] pdfBytes;
-			if (reportStream != null) {
-				net.sf.jasperreports.engine.JasperReport jasperReport =
-						net.sf.jasperreports.engine.JasperCompileManager.compileReport(reportStream);
-				net.sf.jasperreports.engine.JasperPrint jasperPrint =
-						net.sf.jasperreports.engine.JasperFillManager.fillReport(jasperReport, params, dataSource);
-				pdfBytes = net.sf.jasperreports.engine.JasperExportManager.exportReportToPdf(jasperPrint);
-			} else {
-				pdfBytes = "Report template 129-OpeningBalanceRpt.jrxml not found".getBytes(java.nio.charset.StandardCharsets.UTF_8);
-			}
-
-			org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
-			headers.setContentType(org.springframework.http.MediaType.APPLICATION_PDF);
-			headers.setContentDispositionFormData("inline", "129-OpeningBalanceRpt.pdf");
-
-			return new org.springframework.http.ResponseEntity<>(pdfBytes, headers, org.springframework.http.HttpStatus.OK);
-		} catch (Exception e) {
-			org.slf4j.LoggerFactory.getLogger(AccountDefinitionModulesController.class)
-					.error("[129-PRINT PDF ERROR] Jasper export failed: {}", e.getMessage(), e);
-			return org.springframework.http.ResponseEntity.status(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(("Error generating PDF report: " + e.getMessage()).getBytes(java.nio.charset.StandardCharsets.UTF_8));
-		}
-	}
 
 	// ==========================================
 	// 8. ACCOUNT CUSTOM GROUP (/accounts/custom_group)

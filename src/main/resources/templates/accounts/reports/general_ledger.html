@@ -172,7 +172,7 @@
         <button type="button" class="win-btn" onclick="printLedger('105')" data-rpt="105-AcRptGeneralLedger.rpt"><i class="fa fa-print"></i> Print-105</button>
         <button type="button" class="win-btn" onclick="printLedger('106')" data-rpt="106-AcRptGeneralLedgerB.rpt"><i class="fa fa-print"></i> Print-106</button>
         <button type="button" class="win-btn" onclick="printLedger('107')" data-rpt="107-AcRptQuantativeLedger.rpt"><i class="fa fa-print"></i> Print-107</button>
-        <button type="button" class="win-btn" onclick="printLedger('108')" data-rpt="108-AcRptGeneralLedgerSummery.rpt"><i class="fa fa-print"></i> Print-108</button>
+        <button type="button" class="win-btn" onclick="printLedger('108')"><i class="fa fa-print"></i> Print-108</button>
         <button type="button" class="win-btn" onclick="printLedger('105A')" data-rpt="105A-GeneralLedgerSummary2.rpt"><i class="fa fa-print"></i> Print-105A</button>
         <button type="button" class="win-btn" onclick="saveCheckedRows()"><i class="fa fa-save text-primary"></i> SaveCheckedRows</button>
         <button type="button" class="win-btn" onclick="bookmarkAllPrevious()"><i class="fa fa-bookmark text-warning"></i> Bookmark All Previous Rows After Last Checked Row</button>
@@ -1175,6 +1175,10 @@
         }
 
         function printLedger(code) {
+            if (code === '108' && activeTab !== 'single') {
+                alert('Select the Single Account Ledger tab to print Summary-I.');
+                return;
+            }
             let accountId = $('#cmbAccountTitle').val();
             if (activeTab === 'multi') {
                 const multiVals = $('#cmbMultiAccounts').val();
@@ -1196,6 +1200,16 @@
             const fromDate = $('#txtFromDate').val() || '';
             const toDate = $('#txtToDate').val() || '';
             const includeUnposted = $('#chkIncludeUnposted').is(':checked');
+
+            if (code === '108') {
+                const query = new URLSearchParams({ accountId, fromDate, toDate, includeUnposted });
+                const filters = new URLSearchParams(window.location.search);
+                ['branchId', 'subsidiaryAccountId', 'subsidiaryTypeId', 'costCenterId', 'languageId'].forEach(function (name) {
+                    if (filters.get(name)) query.set(name, filters.get(name));
+                });
+                window.open('/reports/general-ledger-summary?' + query.toString(), '_blank');
+                return;
+            }
 
             const pdfUrl = `/accounts/reports/general-ledger/pdf?format=${code}&reportCode=${code}&accountId=${accountId || 0}&fromDate=${fromDate}&toDate=${toDate}&includeUnposted=${includeUnposted}`;
             window.open(pdfUrl, '_blank');
@@ -1280,6 +1294,6 @@
         <a href="/accounts/reports/general-ledger" style="background: #ffffff; color: #00796B; font-weight: bold; border: 1px solid #00796B; border-bottom: none; padding: 2px 10px; text-decoration: none; border-radius: 2px 2px 0 0; box-shadow: 0 -1px 2px rgba(0,0,0,0.1);">General Ledger</a>
         <a href="/accounts/reports/customer-ledger" style="background: #d8e0e8; color: #333; font-weight: bold; border: 1px solid #94a3b8; border-bottom: none; padding: 2px 10px; text-decoration: none; border-radius: 2px 2px 0 0;">Party_Ledger</a>
     </div>
-<script src="/js/print-rpt.js?v=20261001a"></script>
+<script src="/js/print-rpt.js?v=20261003erp"></script>
 </body>
 </html>

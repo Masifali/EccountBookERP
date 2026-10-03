@@ -158,6 +158,22 @@ public class GearMenuController {
         return "gear_menu";
     }
 
+    /* ------------------------------------------------------------------------------- the gear button
+
+       fragments/gear_button.html draws the desktop's bottom-left gear (DashboardNew contextMenuStrip3)
+       on the Applications and DashBoard pages. It reads these through the bean, so the button shows
+       exactly the items and the Admin gate of the two pages above. */
+
+    /** btnadminpanel's items for the signed-in user - empty unless RoleName is "Admin" (DashboardNew.cs:1191). */
+    public List<Map<String, Object>> adminItemsForView() {
+        return isDesktopAdmin() ? adminPanelItems() : new ArrayList<>();
+    }
+
+    /** btnUtility's items - shown to everyone, as on the desktop. */
+    public List<Map<String, Object>> utilityItemsForView() {
+        return systemUtilitiesItems();
+    }
+
     /* ------------------------------------------------------------------------------- helpers */
 
     private boolean isDesktopAdmin() {

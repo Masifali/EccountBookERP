@@ -911,7 +911,7 @@
         var w = window.open('about:blank', '_blank');                                   // opened now so a pop-up blocker lets it through
         try {
             await api('GET', API + '/' + intOf(id) + '/print-check');
-            var url = '/api/print/by-template/' + encodeURIComponent(PRINT_RPT) + '/pdf?id=' + intOf(id);
+            var url = '/reports/print/by-template/' + encodeURIComponent(PRINT_RPT) + '/pdf?id=' + intOf(id);
             if (w) w.location.href = url; else window.open(url, '_blank');
         } catch (e) { if (w) w.close(); alert(msg(e)); }
     }

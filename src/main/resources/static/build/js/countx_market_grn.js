@@ -837,7 +837,7 @@ async function openIfViewRight(screen, url) {
 }
 /* GrdHistory_LinkClicked OrderNo :6030 → PurchsaeOrder View right, then PurchaseOrderSlipReport203 */
 $(document).on('click', 'a[data-po]', function () {
-    openIfViewRight('PurchsaeOrder', '/api/print/by-template/' + encodeURIComponent('203-InvRptPurchaseOrderRiceSlip.rpt') + '/pdf?id=' + Number(this.dataset.po));
+    openIfViewRight('PurchsaeOrder', '/reports/print/by-template/' + encodeURIComponent('203-InvRptPurchaseOrderRiceSlip.rpt') + '/pdf?id=' + Number(this.dataset.po));
 });
 /* btnGrnFormHistory_Click :5739 → frmGRNHistory (screen 477) when its View right is granted */
 function btnGrnFormHistory_Click() { return openIfViewRight('frmGRNHistory', '/purchase/reports/grn-register'); }
@@ -1244,7 +1244,7 @@ window.grnPrintRptArgs = window.printRptArgs = function (rpt, a) {
 /* GrnSlipWithSubReports / grid links: the same by-template endpoint, opened directly. */
 function openPrint(rpt, args) {
     const q = new URLSearchParams(); for (const [k, v] of Object.entries(args || {})) if (v !== undefined && v !== null && v !== '') q.set(k, v);
-    const w = window.open('/api/print/by-template/' + encodeURIComponent(rpt) + '/pdf?' + q.toString(), '_blank');
+    const w = window.open('/reports/print/by-template/' + encodeURIComponent(rpt) + '/pdf?' + q.toString(), '_blank');
     if (!w) alert('Allow pop-ups for this site to see the report.');
 }
 
