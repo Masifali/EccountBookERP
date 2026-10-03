@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Packing Material Issuance For Shipment - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_g.css?v=20261003a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_shipment.css?v=20261003a}"/>
+</head>
+<!-- PackingMaterialIssuanceForShipment.cs (Architecture.WinApp.Export), form Text "frmGSIssuance", ClientSize 1227 x 688,
+     InvGsStoreIssuanceHeader DocumentTypeId 213; no ScreenDefinition row (rights by the form name).
+     tabControlGsIssuance "Form" | "History".
+     Form: toolStrip1 New / Refresh / Save / Update (hidden) / Attachment / 118-Voucher / 475-Print / ShortCut Keys;
+       label15 "Packing Material / Consumable Store Consumption For Shipment";
+       groupBox1 "Main": Doc No && Date (txtDocNo read only, txtDocdate dd-MMM-yy, Leave), Invoice No (CmbInvoiceNo, Leave), Remarks;
+       groupBox3 "Invoice Information": Lc / Contract, Schedule No, Customer Name, Loading Place, Destination Place (disabled combos),
+         No Of Containers, M.Ton (read only);
+       groupBox2 "Detail": Item Name (Leave), Warehouse (Leave), Rack Name (Leave), Item Condition (Leave), Stock Qty (ro), Item Qty
+         (TextChanged), Item Rate (ro, TextChanged), Item Amount (ro), Debit Account, Remarks, + / Update / Cancel, Check Stock;
+       panel8 "Detail" + grdDetail (X first, DoubleClick edits, KeyDown).
+     History: toolStrip2 New; groupBox4 "Filters": From Date / To Date (ShowCheckBox), From Doc No, To Doc No, Show;
+       "Filtered Records" DataGridHistory (Edit, Print buttons; SelectionChanged -> grddetailofmain; DoubleClick = ReadById);
+       "Detail Of Above Selected Row" grddetailofmain. -->
+<body class="pd-body">
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="pd-form ex-form exs-form">
+    <div class="win-tabs" data-tabs="main">
+        <button type="button" class="win-tab is-active" data-tab="tabForm">Form</button>
+        <button type="button" class="win-tab" data-tab="tabHistory">History</button>
+    </div>
+
+    <div class="win-tab-panel is-active" id="tabForm">
+        <div class="win-tool-strip">
+            <button type="button" id="btnnew" class="win-btn-tool" accesskey="n"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="btnRefresh" class="win-btn-tool"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+            <button type="button" id="btnsave" class="win-btn-tool" accesskey="s"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+            <button type="button" id="btnUpdate" class="win-btn-tool is-hidden" accesskey="u"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+            <button type="button" id="btnAttachment" class="win-btn-tool"><i class="fa fa-paperclip"></i> <span><u>A</u>ttachment</span></button>
+            <button type="button" id="btnVoucher" class="win-btn-tool"><i class="fa fa-print"></i> <span>118-Voucher</span></button>
+            <button type="button" id="Print" class="win-btn-tool"><i class="fa fa-print"></i> <span>475-Print</span></button>
+            <button type="button" id="btnShortcutkeys" class="win-btn-tool"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+        </div>
+        <div class="pd-caption pd-caption-teal"><span>Packing Material / Consumable Store Consumption For Shipment</span></div>
+        <div class="exs-side">
+            <fieldset class="exs-group"><legend>Main</legend>
+                <div class="exs-entry exs-cols-2">
+                    <div class="ex-field"><label for="txtDocNo">Doc No &amp; Date</label>
+                        <div class="exs-pair"><input type="text" id="txtDocNo" class="win-textbox num" readonly/><input type="date" id="txtDocdate" class="win-date"/></div></div>
+                    <div class="ex-field"><label for="CmbInvoiceNo">Invoice No</label>
+                        <select id="CmbInvoiceNo" class="win-combo dtcombo" data-columns="Invoice No|DocumentTypeId|NoOfContainers|MTon" data-dtcombo-caption="Invoice No"></select></div>
+                    <div class="ex-field exs-span-all"><label for="txtRemarks">Remarks</label><input type="text" id="txtRemarks" class="win-textbox" autocomplete="off"/></div>
+                </div>
+            </fieldset>
+            <fieldset class="exs-group"><legend>Invoice Information</legend>
+                <div class="exs-entry exs-cols-3">
+                    <div class="ex-field"><label for="CmbContractNo">Lc / Contract</label><select id="CmbContractNo" class="win-combo dtcombo" data-dtcombo="single" disabled></select></div>
+                    <div class="ex-field"><label for="CmbScheduleNo">Schedule No</label><select id="CmbScheduleNo" class="win-combo dtcombo" data-dtcombo="single" disabled></select></div>
+                    <div class="ex-field"><label for="CmbCustomer">Customer Name</label><select id="CmbCustomer" class="win-combo dtcombo" data-dtcombo="single" disabled></select></div>
+                    <div class="ex-field"><label for="CmbPortFrom">Loading Place</label><select id="CmbPortFrom" class="win-combo dtcombo" data-dtcombo="single" disabled></select></div>
+                    <div class="ex-field"><label for="CmbPortTo">Destination Place</label><select id="CmbPortTo" class="win-combo dtcombo" data-dtcombo="single" disabled></select></div>
+                    <div class="ex-field"><label for="txtnoofcontainer">No Of Containers</label>
+                        <div class="exs-pair"><input type="text" id="txtnoofcontainer" class="win-textbox num" readonly/><input type="text" id="txtnetweight" class="win-textbox num" readonly title="M.Ton"/></div></div>
+                </div>
+            </fieldset>
+        </div>
+        <fieldset class="exs-group"><legend>Detail</legend>
+            <div class="exs-entry exs-cols-6">
+                <div class="ex-field exs-span-2"><label for="cmbItem">Item Name</label>
+                    <select id="cmbItem" class="win-combo dtcombo" data-columns="Item Name|ItemCode|ItemCategory|LeadTimeDay|WeightCapacity" data-dtcombo-caption="Item Name"></select></div>
+                <div class="ex-field"><label for="CmbWarehouse">Warehouse</label><select id="CmbWarehouse" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Warehouse"></select></div>
+                <div class="ex-field"><label for="CmbRackName">Rack Name</label>
+                    <select id="CmbRackName" class="win-combo dtcombo" data-columns="Rack Name|WarehouseName" data-dtcombo-caption="Rack Name"></select></div>
+                <div class="ex-field"><label for="CmbItemCondition">Item Condition</label><select id="CmbItemCondition" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Condition"></select></div>
+                <div class="ex-field"><label for="txtBalanceQty">Stock Qty</label><input type="text" id="txtBalanceQty" class="win-textbox num" readonly/></div>
+                <div class="ex-field"><label for="txtItemQty">Item Qty</label><input type="text" id="txtItemQty" class="win-textbox num" data-guard="decimal" autocomplete="off"/></div>
+                <div class="ex-field"><label for="txtItemRate">Item Rate</label><input type="text" id="txtItemRate" class="win-textbox num" readonly/></div>
+                <div class="ex-field"><label for="txtItemAmount">Item Amount</label><input type="text" id="txtItemAmount" class="win-textbox num" readonly/></div>
+                <div class="ex-field exs-span-2"><label for="cmbDrAc">Debit Account</label>
+                    <select id="cmbDrAc" class="win-combo dtcombo" data-columns="Debit Account|AccountCode|ParentAccountTitle|AccountClass" data-dtcombo-caption="Debit Account"></select></div>
+                <div class="ex-field"><label for="txtRemarksDetail">Remarks</label><input type="text" id="txtRemarksDetail" class="win-textbox" autocomplete="off"/></div>
+                <div class="exs-btns exs-span-all" style="justify-content:flex-end;">
+                    <button type="button" id="Add" class="win-btn-small" title="Add">+</button>
+                    <button type="button" id="btnUpdateDetail" class="win-btn-small is-hidden">Update </button>
+                    <button type="button" id="btnCancelDetail" class="win-btn-small is-hidden">Cancel</button>
+                    <button type="button" id="BtnStockReport" class="win-btn-small">Check Stock</button>
+                </div>
+            </div>
+        </fieldset>
+        <div class="pd-caption pd-caption-teal pd-history-bar"><span>Detail</span>
+            <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdDetailBox" title="Fullscreen table">&#x26F6;</button></span></div>
+        <div class="ex-grid-box" id="grdDetailBox">
+            <div class="ex-grid-scroll ex-h240">
+                <table class="win-grid" id="grdDetail">
+                    <thead><tr><th class="ctr">X</th><th>Item Name</th><th>Ware House Name</th><th>Rack Name</th><th>Item Condition</th>
+                        <th class="num">Item Qty</th><th class="num">Item Rate</th><th class="num">Item Amount</th><th>Remarks</th><th>Debit Ac</th></tr></thead>
+                    <tbody></tbody><tfoot></tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="win-tab-panel" id="tabHistory">
+        <div class="win-tool-strip">
+            <button type="button" id="btnNewHistory" class="win-btn-tool"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+        </div>
+        <div class="pd-caption pd-caption-teal"><span>History</span></div>
+        <fieldset class="exs-group"><legend>Filters</legend>
+            <div class="ex-filter">
+                <div class="ex-field" style="width:170px;"><label for="FromDateHistory">From Date</label>
+                    <span class="ex-check"><input type="checkbox" id="FromDateHistoryChk" checked/><input type="date" id="FromDateHistory" class="win-date" style="flex:1;"/></span></div>
+                <div class="ex-field" style="width:170px;"><label for="ToDateHistory">To Date</label>
+                    <span class="ex-check"><input type="checkbox" id="ToDateHistoryChk" checked/><input type="date" id="ToDateHistory" class="win-date" style="flex:1;"/></span></div>
+                <div class="ex-field" style="width:120px;"><label for="FromDocNoHistory">From Doc No</label><input type="text" id="FromDocNoHistory" class="win-textbox num" data-guard="integer"/></div>
+                <div class="ex-field" style="width:120px;"><label for="ToDocNoHistory">To Doc No</label><input type="text" id="ToDocNoHistory" class="win-textbox num" data-guard="integer"/></div>
+                <div class="ex-field"><label>&nbsp;</label><button type="button" id="btnShowHistory" class="win-btn-small">Show</button></div>
+            </div>
+        </fieldset>
+        <div class="pd-caption pd-caption-dark pd-history-bar"><span>Filtered Records</span>
+            <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="DataGridHistoryBox" title="Fullscreen table">&#x26F6;</button></span></div>
+        <div class="ex-grid-box" id="DataGridHistoryBox">
+            <div class="ex-grid-scroll ex-h240">
+                <table class="win-grid" id="DataGridHistory">
+                    <thead><tr><th>Edit</th><th>Print</th><th>Doc No</th><th>Doc Date</th><th>Invoice No</th><th>Entry User</th><th>Entry Date</th>
+                        <th>Modify User</th><th>Modify Date</th><th>Remarks</th><th class="num">No Of Attachments</th></tr></thead>
+                    <tbody></tbody><tfoot></tfoot>
+                </table>
+            </div>
+            <div class="ex-grid-empty is-hidden" id="DataGridHistoryEmpty">No record found.</div>
+        </div>
+        <div class="pd-caption pd-caption-dark pd-history-bar"><span>Detail Of Above Selected Row</span></div>
+        <div class="ex-grid-scroll ex-h240">
+            <table class="win-grid" id="grddetailofmain">
+                <thead><tr><th>Item Name</th><th>Warehouse</th><th>Rack Name</th><th>Item Condition</th><th class="num">Item Qty</th>
+                    <th class="num">Item Rate</th><th class="num">Item Amount</th><th>Remarks</th><th>Debit Ac</th></tr></thead>
+                <tbody></tbody><tfoot></tfoot>
+            </table>
+        </div>
+    </div>
+
+    <div class="win-footer-strip">
+        <span class="ex-footer-left">PackingMaterialIssuanceForShipment - Document Type 213</span>
+        <button type="button" class="win-btn-history" id="btnFooterHistory"><i class="fa fa-history"></i> <span>History</span></button>
+    </div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_export_g_common.js?v=20261003a}"></script>
+<script th:src="@{/build/js/countx_export_shipment_common.js?v=20261003a}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20261003a}"></script>
+<script th:src="@{/build/js/countx_export_pm_issuance_for_shipment.js?v=20261003a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

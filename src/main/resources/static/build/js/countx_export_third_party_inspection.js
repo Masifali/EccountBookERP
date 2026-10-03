@@ -777,6 +777,9 @@
         if (!global.CrystalPrint) { box('Printing is not available on this page.'); return; }
         return global.CrystalPrint.open('exp-514', { id: id }, btn);
     }
+    /** BtnStockReservedForm_Click (857): frmStockReservedAgainstThirdPartyInspection(TrackingId) -> /export/stock-reserved-against-tpi. */
+    function stockReservedForm() { global.open('/export/stock-reserved-against-tpi' + (S.recId > 0 ? '?trackingId=' + S.recId : ''), '_blank'); }
+
     /** BtnPrintStockReserved_Click (857): 514_01_InventoryStockReservedSlip.rpt. */
     function printStockReserved(btn) {
         if (S.recId === 0) { box('No Record Found For Display'); return; }
@@ -995,7 +998,7 @@
     function renderParamsHeader() { var all = $id('grdParametersAll'); if (all) all.checked = S.params.length > 0 && S.params.every(function (p) { return p.Checked; }); }
 
     global.ExportTpi = {
-        btnNew: btnNew, btnRefresh: btnRefresh, btnsave: btnsave, btnUpdate: btnUpdate, print: print, printStockReserved: printStockReserved,
+        btnNew: btnNew, btnRefresh: btnRefresh, btnsave: btnsave, btnUpdate: btnUpdate, print: print, printStockReserved: printStockReserved, stockReservedForm: stockReservedForm,
         btnAdd: btnAdd, btnUpdateDetail: btnUpdateDetail, btnCancelDetial: resetDetail, refreshSamplingRows: refreshSamplingRows,
         shortcuts: shortcuts, notPorted: notPorted, openRoute: openRoute,
         historyShow: historyShow, historyReset: historyReset, historyRefresh: historyRefresh, toggleHistory: toggleHistory

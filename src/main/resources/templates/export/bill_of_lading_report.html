@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Bill of Lading Slip and Register - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_rpta.css?v=20260930a}"/>
+</head>
+<!-- frmBillofLadingSlipandRegister.cs (Architecture.WinApp.ExportReports), screen 264 "Bill of Lading Report", ClientSize 924 x 541.
+     toolStrip1: btnnew "&New" / btnRefresh "Refresh" / btnPrintRegister "506-Print Register" / btnShortCutKey "ShortCut Keys"
+     (btnPrintSlip_Click / ShowSlip 505 exists in the code but no button is on the strip - not reachable, not ported).
+     panel3: label3 "Invoice No" InvoiceNo, label4 "Customer Name" BuyerName, label1 "Shipping Line" cmbShippingLine, btnShow "Show" (Teal).
+     panel6 (rgb 10,110,110) "Bill Of Lading" + ctrlGrdBar1. grdHistory (Fill): Id hidden, dates "dd-MMM-yy", EFormValueTotal Σ stringFormatboth.
+     Events: Load (AllComboBind, GridBind), KeyDown (Enter, Ctrl+P, Ctrl+R, Ctrl+N, Ctrl+E/Esc, Ctrl+F5, Ctrl+Enter, Ctrl+Down, Ctrl+Alt),
+     btnnew (Reset), btnRefresh (AllComboBind), btnPrintRegister (506), btnShow (GridBind), btnShortCutKey. -->
+<body class="pd-body" data-export-page="bol">
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="pd-form ex-form">
+    <div class="win-tool-strip">
+        <button type="button" id="btnnew" class="win-btn-tool" accesskey="n" onclick="ExportBol.btnNew(this)"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+        <button type="button" id="btnRefresh" class="win-btn-tool" onclick="ExportBol.refresh(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+        <button type="button" id="btnPrintRegister" class="win-btn-tool" onclick="ExportBol.printRegister(this)" data-rpt="506-ExImBillOfLading_register.rpt"><i class="fa fa-print"></i> <span>506-Print Register</span></button>
+        <button type="button" id="btnShortCutKey" class="win-btn-tool" onclick="ExportBol.shortcuts()"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+    </div>
+    <div class="rpta-filter" id="panel3" style="flex-direction:column;align-items:flex-start;">
+        <div class="ex-field" style="width:300px;"><label for="InvoiceNo" style="width:99px;">Invoice No</label><select id="InvoiceNo" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Invoice No"></select></div>
+        <div class="ex-field" style="width:300px;"><label for="BuyerName" style="width:99px;">Customer Name</label><select id="BuyerName" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Customer Name"></select></div>
+        <div class="ex-field" style="width:370px;"><label for="cmbShippingLine" style="width:99px;">Shipping Line</label><select id="cmbShippingLine" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Shipping Line"></select>
+            <button type="button" id="btnShow" class="win-btn-small" style="width:61px;height:27px;margin-left:4px;background:teal;color:#fff;" onclick="ExportBol.show(this)">Show</button></div>
+    </div>
+    <div class="pd-caption pd-caption-teal pd-history-bar" style="height:27px;"><span>Bill Of Lading</span>
+        <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdHistoryBox" title="Fullscreen table">&#x26F6;</button></span></div>
+    <div class="ex-grid-box" id="grdHistoryBox">
+        <div class="ex-grid-scroll ex-h400"><table class="win-grid" id="grdHistory" tabindex="0"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        <div class="ex-grid-empty is-hidden" id="grdHistoryEmpty">No record found.</div>
+    </div>
+    <div class="win-footer-strip" id="bolFooter">
+        <span class="ex-footer-left">frmBillofLadingSlipandRegister - screen 264 - Print 506</span>
+        <button type="button" class="win-btn-history" id="btnBolFooterHistory" onclick="ExportBol.show(document.getElementById('btnShow'))"><i class="fa fa-history"></i> <span>History</span></button>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260924a}"></script>
+<script th:src="@{/build/js/countx_export_rpta_common.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_export_rptn_common.js?v=20261003a}"></script>
+<script th:src="@{/build/js/countx_export_bill_of_lading_report.js?v=20261003a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

@@ -264,6 +264,8 @@ public class AccountsDefinitionMasterService {
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("canSave", allowed(u, SCREEN_BANK, "Save"));
         out.put("canUpdate", allowed(u, SCREEN_BANK, "Update"));
+        out.put("canGridPrint", allowed(u, SCREEN_BANK, "Grid Print"));
+        out.put("canGridExport", allowed(u, SCREEN_BANK, "Grid Export"));
         try { out.put("chequeTemplates", repo.chequeTemplates()); } catch (Exception e) { out.put("chequeTemplatesError", msg(e)); }
         try { out.put("countries", repo.countries(u)); } catch (Exception e) { out.put("countriesError", msg(e)); }
         try { out.put("cities", repo.cities(u)); } catch (Exception e) { out.put("citiesError", msg(e)); }

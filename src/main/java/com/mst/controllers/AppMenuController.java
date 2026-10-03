@@ -31,8 +31,8 @@ import java.util.Map;
  * the desktop shows two module cards reading **Production 3** and **Production Reports 5**.
  *
  * A hand-written page also means an application nobody has written a page for is simply
- * unreachable, however complete its screens are. (Admin Panel and System Utilities are NOT such
- * applications - they are a fixed gear menu; see GearMenuController.)
+ * unreachable, however complete its screens are. Admin Panel also has seeded application rows
+ * (App 18), independently of the fixed desktop gear menu served by GearMenuController.
  *
  * So the level-2/3 page is made generic here, driven by the same rights rows the desktop reads,
  * and level 1 is added so every application the user is allocated has a way in.
@@ -97,6 +97,9 @@ public class AppMenuController {
     public String app(@PathVariable String appName,
                       @RequestParam(value = "module", required = false) Integer moduleId,
                       Model model) {
+        // Keep the sidebar's Inventory entry on the existing dashboard and its page links.
+        // A forward preserves the module query used by child-page Back buttons.
+        if ("Inventory".equalsIgnoreCase(appName)) return "forward:/inventory/dashboard";
         return renderApp(appName, moduleId, model);
     }
 
@@ -190,11 +193,9 @@ public class AppMenuController {
     }
 
     /*
-     * "Admin Panel" and "System Utilities" USED to be routed from here, as if they were rows in
-     * the App table. They are not. They are contextMenuStrip3 on DashboardNew - a fixed menu
-     * written into the form, whose items open forms directly and have no ScreenDefinition rows at
-     * all. That is why no application named "System Utilities" was ever found. Both now live in
-     * GearMenuController, which reproduces the designer's own item list.
+     * /admin-panel and /system-utilities are the fixed desktop gear menus served by
+     * GearMenuController. The separately seeded Admin Panel application (App 18) remains
+     * available at /app/Admin%20Panel with this user's allocated modules and screens.
      */
 
     /* ------------------------------------------------------------------------- the renderer */

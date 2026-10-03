@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Stock Reserved Register - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_rpto.css?v=20261003a}"/>
+    <style>
+        .srr-multi { position: relative; }
+        .srr-multi-btn { width: 100%; height: 26px; text-align: left; background: #fff; border: 1px solid #7a9a9e; font: 9.75pt Calibri, Verdana, sans-serif; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; padding: 0 22px 0 4px; position: relative; }
+        .srr-multi-btn::after { content: "\25BE"; position: absolute; right: 6px; top: 3px; color: #555; }
+        .srr-multi-pop { position: absolute; z-index: 50; left: 0; top: 27px; width: 100%; min-width: 240px; max-height: 280px; overflow: auto; background: #fff; border: 1px solid #7a9a9e; box-shadow: 0 3px 8px rgba(0,0,0,.2); }
+        .srr-multi-pop input[type=text] { width: 100%; background: #ffffc0; border: none; border-bottom: 1px solid #ccc; height: 24px; padding: 0 4px; }
+        .srr-multi-pop label { display: flex; gap: 6px; align-items: center; margin: 0; padding: 2px 6px; font: 9pt "Segoe UI", sans-serif; cursor: pointer; }
+        .srr-multi-pop label.srr-all { background: #dbe9f7; font-weight: 600; }
+        .srr-head { background: rgb(10,110,110); color: #fff; }
+        .srr-head .win-tool-strip { background: transparent; }
+    </style>
+</head>
+<!-- frmStockReservedRegister.cs (Architecture.WinApp.ExportReports), no ScreenDefinition row; opened by
+     frmStockReservedAgainstThirdPartyInspection.BtnStockReservedRegisterForm_Click (ShowDialog). ClientSize 1067 x 561, Text "Eccount Book ERP".
+     panel1: toolStrip3 (&Reset = btnNew, &Refresh, 225_Register, ShortCut Keys), label23 "Stock Reserved Against third Party Analysis" (white),
+     radios All / Reserved (checked) / Non-Reserved (white). panel2: Ref Date From & To (RefFromDate = ActiveYr.Start_Period, RefTodate; both
+     ShowCheckBox, unchecked), Ref Doc From & To (digits only), Class Group, Parent Category (checked list, "," separated), WareHouse, CropYear,
+     JobLot, Item Name, Party Name, Ref Document, Third Party Analysis No, Skip Zero (checked), Search; Sampling All (checked) / Pending / Complete.
+     panel3: ctrlGrdBar1. grd: the form's DataTable (35 columns, Ids hidden). Combos: Usp_AllComboAgainstInventoryStockReserved split by ActivityType.
+     Events: constructor (start date, async ComboDbCall: "Error occurred during database call."), btngrnlod (Search), btnNew (Reset),
+     btnRefresh, btnRegister (225), btnShortcut, RefDocNoFrom/To KeyPress (digits), KeyDown (Enter, Ctrl+S/N/R/F5/Up/Down, Ctrl+E/Esc, Ctrl+Alt). -->
+<body class="pd-body" data-export-page="srr">
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="pd-form ex-form">
+    <div class="srr-head" id="panel1">
+        <div class="win-tool-strip" id="toolStrip3">
+            <button type="button" id="btnNew" class="win-btn-tool" onclick="ExportSrr.btnNew(this)"><i class="fa fa-undo"></i> <span><u>R</u>eset</span></button>
+            <button type="button" id="btnRefresh" class="win-btn-tool" onclick="ExportSrr.btnRefresh(this)"><i class="fa fa-refresh"></i> <span><u>R</u>efresh</span></button>
+            <button type="button" id="btnRegister" class="win-btn-tool" onclick="ExportSrr.btnRegister(this)"><i class="fa fa-print"></i> <span>225_Register</span></button>
+            <button type="button" id="btnShortcut" class="win-btn-tool" onclick="ExportSrr.shortcuts()"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+        </div>
+        <div class="rpto-titlebar" style="padding:2px 6px 4px 6px;">
+            <span id="label23" style="font:bold 12pt Tahoma, sans-serif;">Stock Reserved Against third Party Analysis</span>
+            <span class="rpto-radios rpto-radios-row">
+                <label><input type="radio" name="rdReserve" id="rdAll" value="0"/> All</label>
+                <label><input type="radio" name="rdReserve" id="rdReserved" value="1" checked/> Reserved</label>
+                <label><input type="radio" name="rdReserve" id="rdNonReserved" value="2"/> Non-Reserved</label>
+            </span>
+        </div>
+    </div>
+    <div class="rpto-filter" id="panel2">
+        <div class="ex-field w255"><label id="label1">Ref Date From &amp; To</label>
+            <div class="rpto-pair">
+                <span class="rpto-datechk"><input type="checkbox" id="RefFromDateChk" title="RefFromDate.Checked"/><input type="date" id="RefFromDate" disabled/></span>
+                <span class="rpto-datechk"><input type="checkbox" id="RefTodateChk" title="RefTodate.Checked"/><input type="date" id="RefTodate" disabled/></span>
+            </div></div>
+        <div class="ex-field w255"><label id="label8">Ref Doc From &amp; To</label>
+            <div class="rpto-pair"><input type="text" id="RefDocNoFrom" class="win-textbox num" inputmode="numeric" autocomplete="off"/><input type="text" id="RefDocNoTo" class="win-textbox num" inputmode="numeric" autocomplete="off"/></div></div>
+        <div class="ex-field w255"><label for="CmbClassGroup" id="label10">Class Group</label><select id="CmbClassGroup" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Class Group"></select></div>
+        <div class="ex-field w255"><label id="label9">Parent Category</label>
+            <div class="srr-multi" id="CmbItemParentCategory"><button type="button" class="srr-multi-btn" id="CmbItemParentCategoryBtn"></button>
+                <div class="srr-multi-pop is-hidden" id="CmbItemParentCategoryPop"></div></div></div>
+        <div class="ex-field w170"><label for="CmbWarehouse" id="label5">WareHouse</label><select id="CmbWarehouse" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="WarehouseName"></select></div>
+        <div class="ex-field w170"><label for="CmbCropYear" id="label7">CropYear</label><select id="CmbCropYear" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="CropYear"></select></div>
+        <div class="ex-field w170"><label for="CmbJobLot" id="label4">JobLot</label><select id="CmbJobLot" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="JobLot"></select></div>
+        <div class="ex-field w170"><label for="CmbItemName" id="label6">Item Name</label><select id="CmbItemName" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Name"></select></div>
+        <div class="ex-field w200"><label for="CmbSupplier" id="label2">Party Name</label><select id="CmbSupplier" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Party Name"></select></div>
+        <div class="ex-field w200"><label for="CmbReferenceDocument" id="label3">Ref Document</label><select id="CmbReferenceDocument" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Ref Document Type"></select></div>
+        <div class="ex-field w170"><label for="CmbLotTrackingNo" id="label11">Third Party Analysis No</label><select id="CmbLotTrackingNo" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Third Party analysis No"></select></div>
+        <label class="ex-check"><input type="checkbox" id="chkSkipZero" checked/> Skip Zero</label>
+        <button type="button" id="btngrnlod" class="win-btn-small rpto-btn-teal" onclick="ExportSrr.show(this)">Search</button>
+        <span class="rpto-radios">
+            <label><input type="radio" name="rdSampling" id="rdAllSamples" value="0" checked/> All</label>
+            <label><input type="radio" name="rdSampling" id="rdSamplingPending" value="1"/> Sampling Pending</label>
+            <label><input type="radio" name="rdSampling" id="rdSamplingComplete" value="2"/> Sampling Complete</label>
+        </span>
+    </div>
+    <div class="pd-caption pd-caption-teal pd-history-bar" id="panel3" style="height:27px;"><span></span>
+        <span class="ex-bar-right"><span id="gbSrr" class="pd-gridbar-mount"></span><button type="button" class="ex-fs-btn" data-fullscreen="grdBox" title="Fullscreen table">&#x26F6;</button></span></div>
+    <div class="ex-grid-box" id="grdBox">
+        <div class="ex-grid-scroll ex-h400"><table class="win-grid rpto-hdr2" id="grd" tabindex="0" data-gridbar="frmStockReservedRegister:grd" data-gridbar-mount="#gbSrr"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        <div class="ex-grid-empty is-hidden" id="grdEmpty">No record found.</div>
+    </div>
+    <div class="win-footer-strip">
+        <span class="ex-footer-left">frmStockReservedRegister - Stock Reserved Register</span>
+        <button type="button" class="win-btn-history" id="btnSrrFooterHistory" onclick="ExportSrr.show(this)"><i class="fa fa-history"></i> <span>History</span></button>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260924a}"></script>
+<script th:src="@{/build/js/countx_export_rpto_common.js?v=20261003a}"></script>
+<script th:src="@{/build/js/countx_export_stock_reserved_register.js?v=20261003a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

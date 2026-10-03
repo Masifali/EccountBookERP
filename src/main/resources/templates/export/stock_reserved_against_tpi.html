@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Stock Reserved Against TPI - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_q.css?v=20261003q}"/>
+</head>
+<!-- frmStockReservedAgainstThirdPartyInspection.cs (Architecture.WinApp.Export), no ScreenDefinition row (opened from 857 / 858
+     "Stock Reserved Form"), ClientSize 1034 x 669, form Text "Eccount Book ERP".
+     toolStrip3: Reset (btnNew_Click), Refresh (btnRefresh_Click), Save (btnsave_Click), Stock Reserved Register (frmStockReservedRegister
+     dialog - not ported), ShortCut Keys.
+     panel1 (Teal) "Stock Reserved Against third Party Analysis"; panel2: From Date (ActiveYr.Start_Period) / To Date (dd-MMM-yy),
+     Party Name, Item Name, CropYear, WareHouse, Ref Document, JobLot, Parent Category (UltraCombos), Search (btngrnlod, Teal),
+     Third Party Analysis No (CmbLotTrackingNo), Selected Weight / Selected Qty (ReadOnly).
+     panel3 (Teal) + ctrlGrdBar1; grd: Select check column (frozen) + dtGrid's visible columns; ItemQty, NetWeight, Remarks editable;
+     CellUpdated (ItemQty -> NetWeight pro-rata, NetWeight -> amount), CellValueChanged / ColumnHeaderClick -> selected totals.
+     KeyDown: Enter -> next control, Ctrl+S Search, Ctrl+N Reset, Ctrl+R Refresh, Ctrl+F5 / Ctrl+Up From Date, Ctrl+Down grid, Ctrl+E / Esc close,
+     Ctrl+Alt shortcuts.
+     Page parameter: ?trackingId=<InvLabPreProductionExportLotInspectionHeader.Id> preselects the Third Party Analysis No. -->
+<body class="pd-body" data-export-page="stock-reserved-against-tpi">
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="pd-form ex-form">
+    <div class="win-tool-strip">
+        <button type="button" id="btnNew" class="win-btn-tool" accesskey="r" onclick="ExportStockReservedTpi.reset(this)"><i class="fa fa-undo"></i> <span><u>R</u>eset</span></button>
+        <button type="button" id="btnRefresh" class="win-btn-tool" onclick="ExportStockReservedTpi.refresh(this)"><i class="fa fa-refresh"></i> <span><u>R</u>efresh</span></button>
+        <button type="button" id="btnsave" class="win-btn-tool" accesskey="s" onclick="ExportStockReservedTpi.save(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+        <button type="button" id="BtnStockReservedRegisterForm" class="win-btn-tool" onclick="ExportStockReservedTpi.register()"><i class="fa fa-list-alt"></i> <span>Stock Reserved Register</span></button>
+        <button type="button" id="btnShortcut" class="win-btn-tool" onclick="ExportStockReservedTpi.shortcuts()"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+    </div>
+    <div class="pd-caption pd-caption-teal">Stock Reserved Against third Party Analysis</div>
+    <div class="ex-entry exq-srv-entry">
+        <div class="ex-field"><label for="FromDate">From Date</label><input type="date" id="FromDate" class="win-date"/></div>
+        <div class="ex-field"><label for="Todate">To Date</label><input type="date" id="Todate" class="win-date"/></div>
+        <div class="ex-field exq-span2"><label for="CmbSupplier">Party Name</label>
+            <select id="CmbSupplier" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Party Name"></select></div>
+        <div class="ex-field exq-span2"><label for="CmbItemName">Item Name</label>
+            <select id="CmbItemName" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Name"></select></div>
+        <div class="ex-field"><label for="CmbCropYear">CropYear</label>
+            <select id="CmbCropYear" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="CropYear"></select></div>
+        <div class="ex-field"><label for="CmbWarehouse">WareHouse</label>
+            <select id="CmbWarehouse" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="WarehouseName"></select></div>
+        <div class="ex-field"><label for="CmbReferenceDocument">Ref Document</label>
+            <select id="CmbReferenceDocument" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Document Type"></select></div>
+        <div class="ex-field"><label for="CmbJobLot">JobLot</label>
+            <select id="CmbJobLot" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="JobLot"></select></div>
+        <div class="ex-field"><label for="CmbItemParentCategory">Parent Category</label>
+            <select id="CmbItemParentCategory" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Parent Categories"></select></div>
+        <div class="ex-field exq-srv-btn"><button type="button" id="btngrnlod" class="win-btn-small" onclick="ExportStockReservedTpi.search(this)">Search</button></div>
+    </div>
+    <div class="exq-srv-totals">
+        <div class="ex-field" style="min-width:320px;"><label for="CmbLotTrackingNo">Third Party Analysis No</label>
+            <select id="CmbLotTrackingNo" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="TrackingNo"></select></div>
+        <div class="ex-field"><label for="txtSelectedStock">Selected Weight</label><input type="text" id="txtSelectedStock" class="win-textbox" readonly value=""/></div>
+        <div class="ex-field"><label for="txtSelectedQty">Selected Qty</label><input type="text" id="txtSelectedQty" class="win-textbox" readonly value=""/></div>
+    </div>
+    <div class="pd-caption pd-caption-teal pd-history-bar" id="gridBar"><span>Available Stock</span>
+        <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdBox" title="Fullscreen table">&#x26F6;</button><span id="gridBarMount" class="pd-gridbar-mount"></span></span></div>
+    <div class="ex-grid-box" id="grdBox">
+        <div class="ex-grid-scroll ex-h400">
+            <table class="win-grid exf-edit-grid" id="grd" tabindex="0" data-gridbar="frmStockReservedAgainstThirdPartyInspection:grd" data-gridbar-mount="#gridBarMount" data-gridbar-reorder="false">
+                <thead><tr id="grdHead"><th class="ctr" title="Select all"><input type="checkbox" id="chkSelectAll"/></th><th data-col="RefDocumentType">RefDocumentType</th><th data-col="DocDate">DocDate</th><th class="num" data-col="DocCodeNo">DocCodeNo</th><th data-col="ManualNo">ManualNo</th><th class="num" data-col="GrnNo">GrnNo</th><th data-col="PartyName">PartyName</th><th data-col="GpNo">GpNo</th><th data-col="VehicleNo">VehicleNo</th><th data-col="BiltyNo">BiltyNo</th><th data-col="Remarks">Remarks</th><th data-col="WareHouse">WareHouse</th><th data-col="ItemName">ItemName</th><th data-col="ItemCode">ItemCode</th><th data-col="CropYear">CropYear</th><th data-col="JobLot">JobLot</th><th data-col="PackingType">PackingType</th><th data-col="PackUom">PackUom</th><th class="num" data-col="ItemQty">ItemQty</th><th class="num" data-col="NetWeight">NetWeight</th><th class="num" data-col="QtyIn">QtyIn</th><th class="num" data-col="QtyOut">QtyOut</th><th class="num" data-col="BalanceQty">BalanceQty</th><th class="num" data-col="WeightIn">WeightIn</th><th class="num" data-col="WeightOut">WeightOut</th><th class="num" data-col="BalanceWeight">BalanceWeight</th></tr></thead>
+                <tbody id="grdBody"></tbody>
+                <tfoot id="grdFoot"></tfoot>
+            </table>
+        </div>
+        <div class="ex-grid-empty is-hidden" id="grdEmpty">No record found.</div>
+    </div>
+    <div class="win-footer-strip">
+        <span class="ex-footer-left">frmStockReservedAgainstThirdPartyInspection - Ref Document Type 204</span>
+        <button type="button" class="win-btn-history" id="btnFooterHistory" onclick="ExportStockReservedTpi.history(this)"><i class="fa fa-history"></i> <span>History</span></button>
+    </div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_export_q_common.js?v=20261003q}"></script>
+<script th:src="@{/build/js/countx_export_stock_reserved_against_tpi.js?v=20261003q}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

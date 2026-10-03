@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Commercial Invoice History - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_rpto.css?v=20261003a}"/>
+</head>
+<!-- ExImCommercialInvoiceHistory.cs (Architecture.WinApp.ExportReports), no ScreenDefinition row; opened by ExportDashboardHeaderInfo
+     ("Total Export": cmbDateType 5, "TotalExportByCurrentMonth": cmbDateType 3 -> here ?dateType=5|3). ClientSize 1124 x 772,
+     Text "frmExportShipingLineBookingRpt". tabControl1 (tabs at the bottom on the desktop):
+     [0] "Invoices History": tsItemType New / Refresh / 522-Print Register / ShortCut Keys; panel7 "Invoices History" (teal) + ctrlGrdBar1;
+         groupBox1 "Filters": Date Type (DateType, Load activates row 1), From & To Date, Invoice No / Customer Name / Farming Type / Trade Type
+         (USP_GetDataForDropDownFromExportInvoice), Show (white), All (checked) / Pending / Completed; grdfrm (2 header lines, centred).
+     [1] "Export History Report": toolStrip1 New / Refresh / 537-ExportDetail / SummaryReport (hidden at Load); label18 "Export History Report"
+         + ctrlGrdBar2; groupBox2 "Filters": Date Type (cmbperemeter, ValueChanged re-binds), From / To Date, Item Category, Item Type, Item Name,
+         Contract No, Customer, Destination Port, Farming Type, Trade Type, Report Type (SpStaticColumnNames 'ExportDetailHistory', row 0),
+         Show; GridForExportHistoryReport (detail DataTable grouped by CustomGroupName [+ the report's own column], or the summary DataTable).
+     Events: Load, cmbDateType_ValueChanged, btnShow (+Leave), btnnew, btnRefreshInvoicesHistory, toolStripButton2 (522), tabControl1
+     SelectedIndexChanged, cmbperemeter_ValueChanged, CmbReportType_Leave, btnShowForExportHistoryReport (+Leave), btnRefreshExportHistory,
+     btnNewForExportHistoryReport, btnReport537, btnSummaryReport538, btnshortcut, KeyDown (per tab). grdfrm_LinkClicked is empty. -->
+<body class="pd-body" data-export-page="cih">
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="pd-form ex-form">
+    <div class="win-tabs" id="tabControl1">
+        <button type="button" class="win-tab is-active" id="InvoicesHistoryBtn" data-tab="InvoicesHistory">Invoices History</button>
+        <button type="button" class="win-tab" id="tabPage2Btn" data-tab="tabPage2">Export History Report</button>
+    </div>
+
+    <!-- ================================================================== tab 0 -->
+    <div class="win-tab-panel is-active" id="InvoicesHistory">
+        <div class="win-tool-strip" id="tsItemType">
+            <button type="button" id="btnnew" class="win-btn-tool" onclick="ExportCih.btnNew(this)"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="btnRefreshInvoicesHistory" class="win-btn-tool" onclick="ExportCih.refreshInvoices(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+            <button type="button" id="toolStripButton2" class="win-btn-tool" onclick="ExportCih.print522(this)"><i class="fa fa-print"></i> <span>522-Print Register</span></button>
+            <button type="button" id="btnshortcut" class="win-btn-tool" onclick="ExportCih.shortcuts()"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+        </div>
+        <div class="pd-caption pd-caption-teal" id="panel7" style="height:24px;"><span id="label6">Invoices History</span></div>
+        <fieldset class="ex-groupbox" id="groupBox1">
+            <legend>Filters</legend>
+            <div class="rpto-filter" style="padding:0;">
+                <div class="ex-field w240"><label for="cmbDateType" id="label3">Date Type</label><select id="cmbDateType" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Parameters"></select></div>
+                <div class="ex-field w240"><label id="label4">From &amp; To Date</label>
+                    <div class="rpto-pair"><input type="date" id="txtdatefrom" class="win-date"/><input type="date" id="txtdateto" class="win-date"/></div></div>
+                <div class="ex-field w240"><label for="cmbInvoiceNo" id="label2">Invoice No</label><select id="cmbInvoiceNo" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Invoice No"></select></div>
+                <div class="ex-field w240"><label for="cmbSupplierName" id="label50">Customer Name</label><select id="cmbSupplierName" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Customer Name"></select></div>
+                <div class="ex-field w240"><label for="CmbFarmingType" id="label15">Farming Type</label><select id="CmbFarmingType" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Trade Type"></select></div>
+                <div class="ex-field w170"><label for="Cmbtradtype" id="label5">Trade Type</label><select id="Cmbtradtype" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Trade Type"></select></div>
+                <button type="button" id="btnShow" class="win-btn-small rpto-btn-teal" onclick="ExportCih.showInvoices(this)">Show</button>
+                <span class="rpto-radios">
+                    <label><input type="radio" name="rbInvoices" id="RBAll" value="0" checked/> All</label>
+                    <label><input type="radio" name="rbInvoices" id="RBInvoicesReceiveables" value="1"/> Pending</label>
+                    <label><input type="radio" name="rbInvoices" id="RBInvoicesClear" value="2"/> Completed</label>
+                </span>
+            </div>
+        </fieldset>
+        <div class="pd-caption pd-caption-teal pd-history-bar" id="panel3" style="height:24px;"><span></span>
+            <span class="ex-bar-right"><span id="gbCih1" class="pd-gridbar-mount"></span><button type="button" class="ex-fs-btn" data-fullscreen="grdfrmBox" title="Fullscreen table">&#x26F6;</button></span></div>
+        <div class="ex-grid-box" id="grdfrmBox">
+            <div class="ex-grid-scroll ex-h400"><table class="win-grid rpto-hdr2" id="grdfrm" tabindex="0" data-gridbar="ExImCommercialInvoiceHistory:grdfrm" data-gridbar-mount="#gbCih1"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+            <div class="ex-grid-empty is-hidden" id="grdfrmEmpty">No record found.</div>
+        </div>
+    </div>
+
+    <!-- ================================================================== tab 1 -->
+    <div class="win-tab-panel" id="tabPage2">
+        <div class="win-tool-strip" id="toolStrip1">
+            <button type="button" id="btnNewForExportHistoryReport" class="win-btn-tool" onclick="ExportCih.btnNewExport(this)"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="btnRefreshExportHistory" class="win-btn-tool" onclick="ExportCih.refreshExport(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+            <button type="button" id="btnReport537" class="win-btn-tool" onclick="ExportCih.print537(this)"><i class="fa fa-print"></i> <span>537-ExportDetail</span></button>
+            <button type="button" id="btnSummaryReport538" class="win-btn-tool is-hidden" onclick="ExportCih.print538(this)"><i class="fa fa-print"></i> <span id="btnSummaryReport538Text">SummaryReport</span></button>
+        </div>
+        <div class="pd-caption pd-caption-teal pd-history-bar" id="panel4" style="height:24px;"><span id="label18">Export History Report</span>
+            <span class="ex-bar-right"><span id="gbCih2" class="pd-gridbar-mount"></span><button type="button" class="ex-fs-btn" data-fullscreen="gridExportBox" title="Fullscreen table">&#x26F6;</button></span></div>
+        <fieldset class="ex-groupbox" id="groupBox2">
+            <legend>Filters</legend>
+            <div class="rpto-filter" style="padding:0;">
+                <div class="ex-field w130"><label for="cmbperemeter" id="label11">Date Type</label><select id="cmbperemeter" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Parameters"></select></div>
+                <div class="ex-field w130"><label for="datFromDate" id="label14">From Date</label><input type="date" id="datFromDate" class="win-date"/></div>
+                <div class="ex-field w130"><label for="datToDate" id="label16">To Date</label><input type="date" id="datToDate" class="win-date"/></div>
+                <div class="ex-field w200"><label for="CmbItemCategory" id="label7">Item Category</label><select id="CmbItemCategory" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Category"></select></div>
+                <div class="ex-field w200"><label for="CmbItemType" id="label8">Item Type</label><select id="CmbItemType" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Type"></select></div>
+                <div class="ex-field w200"><label for="CmbItemName" id="label10">Item Name</label><select id="CmbItemName" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Name"></select></div>
+                <div class="ex-field w200"><label for="CmbContractNo" id="label12">Contract No</label><select id="CmbContractNo" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Contract No"></select></div>
+                <div class="ex-field w200"><label for="CmbCustomerName" id="label13">Customer</label><select id="CmbCustomerName" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Customer Name"></select></div>
+                <div class="ex-field w200"><label for="CmbSeaPort" id="label9">Destination Port</label><select id="CmbSeaPort" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Destination Port"></select></div>
+                <div class="ex-field w255"><label for="CmbFarmingTypeExport" id="label20">Farming Type</label><select id="CmbFarmingTypeExport" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Trade Type"></select></div>
+                <div class="ex-field w255"><label for="CmbTradeTypeExport" id="label19">Trade Type</label><select id="CmbTradeTypeExport" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Trade Type"></select></div>
+                <div class="ex-field w200"><label for="CmbReportType" id="label17">Report Type</label><select id="CmbReportType" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="ReportName"></select></div>
+                <button type="button" id="btnShowForExportHistoryReport" class="win-btn-small rpto-btn-teal" onclick="ExportCih.showExport(this)">Show</button>
+            </div>
+        </fieldset>
+        <div class="ex-grid-box" id="gridExportBox">
+            <div class="ex-grid-scroll ex-h400"><table class="win-grid" id="GridForExportHistoryReport" tabindex="0" data-gridbar="ExImCommercialInvoiceHistory:GridForExportHistoryReport" data-gridbar-mount="#gbCih2"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+            <div class="ex-grid-empty is-hidden" id="gridExportEmpty">No record found.</div>
+        </div>
+    </div>
+
+    <div class="win-footer-strip">
+        <span class="ex-footer-left">ExImCommercialInvoiceHistory - Commercial Invoice History</span>
+        <button type="button" class="win-btn-history" id="btnCihFooterHistory" onclick="ExportCih.history(this)"><i class="fa fa-history"></i> <span>History</span></button>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260924a}"></script>
+<script th:src="@{/build/js/countx_export_rpto_common.js?v=20261003a}"></script>
+<script th:src="@{/build/js/countx_export_commercial_invoice_history.js?v=20261003a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

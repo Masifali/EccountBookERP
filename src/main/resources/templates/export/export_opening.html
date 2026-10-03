@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Export Opening Balance - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_m.css?v=20261003a}"/>
+</head>
+<!-- ExportOpening.cs (Architecture.WinApp.Export), screen 189 "Export Opening Balance" - the desktop form caption is
+     "Commercial Invoice" with the panel title "Commercial Invoice Opening", ClientSize 1184 x 711, DocumentTypeId 212,
+     rights of "EximInvoice" (screen 211).
+     tabControl1: "Form" | "History".
+     Form: toolStrip4 New / Refresh / Save / Update(hidden) / Attachment / Print-521 / Load Sales Contract / Generate Invoice Nos
+       (hidden) / ItemDetail_LookUp / ShortCut Keys, Preview (checked); HeaderGropBox "Main Header" (Branch / Project hidden);
+       tabControl2 "Invoice Detail" (GroupDetail entry panel + grdDetail with X / + columns) | "Other Items" (entry + grdotheritems) |
+       "Payment Detail" (entry + grdpaymentdetail with X column).
+     History: toolStrip3 New / Refresh; groupBox2 "Filters" From / To Date (checkable), From / To Doc No, Customer, Doc Date /
+       Entry Date / Modify Date (/ Approved Date hidden) radios, Show; "Filtered Records" DataGridHistory (Edit / 521-Slip /
+       NoOfAttachments link); "Detail of the Selected above Row" gridDetailHistory.
+     Popup: LoadSalesContractForExportOpening (ShowDialog, ClientSize 920 x 661). -->
+<body class="pd-body exm-page">
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="pd-form ex-form">
+    <div class="win-tabs" data-tabs="eo">
+        <button type="button" class="win-tab is-active" data-tab="eoForm">Form</button>
+        <button type="button" class="win-tab" data-tab="eoHistory">History</button>
+    </div>
+
+    <!-- ===================================================== Form -->
+    <div class="win-tab-panel is-active" id="eoForm">
+        <div class="win-tool-strip">
+            <button type="button" id="btnNew" class="win-btn-tool" onclick="ExportOpening.btnNew(this)"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="btnRefresh" class="win-btn-tool" onclick="ExportOpening.btnRefresh(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+            <button type="button" id="btnsave" class="win-btn-tool" onclick="ExportOpening.save(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+            <button type="button" id="btnupdate" class="win-btn-tool is-hidden" onclick="ExportOpening.update(this)"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+            <button type="button" id="btnAttachment" class="win-btn-tool" onclick="ExportOpening.attachment()"><i class="fa fa-paperclip"></i> <span><u>A</u>ttachment</span></button>
+            <button type="button" id="btnPrint" class="win-btn-tool" onclick="ExportOpening.print(this)"><i class="fa fa-print"></i> <span>Print-521</span></button>
+            <button type="button" id="BtnLoad" class="win-btn-tool" onclick="ExportOpening.loaderOpen(this)"><i class="fa fa-download"></i> <span>Load Sales Contract</span></button>
+            <button type="button" id="btnGenerateInvoiceNos" class="win-btn-tool is-hidden" onclick="ExportOpening.generateInvoiceNos()"><i class="fa fa-list-ol"></i> <span>Generate Invoice Nos</span></button>
+            <button type="button" id="btnItemDetailLookUp" class="win-btn-tool" onclick="ExportOpening.itemDetailLookUp()"><i class="fa fa-search"></i> <span>ItemDetail_LookUp</span></button>
+            <button type="button" id="btnShortCutKey" class="win-btn-tool" onclick="ExportOpening.shortcuts()"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+            <label class="ex-check" style="margin-left:8px;"><input type="checkbox" id="ChkPrintPreview" checked/> Preview</label>
+        </div>
+        <div class="pd-caption pd-caption-teal" style="height:26px;">Commercial Invoice Opening</div>
+        <fieldset class="ex-groupbox">
+            <legend>Main Header</legend>
+            <div class="exm-head" style="--exm-cols:4;">
+                <div class="ex-col">
+                    <div class="ex-field"><label for="txtdocno" class="ex-req">Doc No &amp; Date</label>
+                        <div class="ex-pair"><input type="text" id="txtdocno" class="win-textbox" readonly/><input type="date" id="txtDocDate" class="win-date"/></div></div>
+                    <div class="ex-field"><label for="cmbInvoiceNo" class="ex-req">Invoice No</label><input type="text" id="cmbInvoiceNo" class="win-textbox" autocomplete="off"/></div>
+                    <div class="ex-field"><label for="cmbSupCust" class="ex-req">Customer</label>
+                        <select id="cmbSupCust" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Customer Name" disabled></select></div>
+                    <div class="ex-field"><label for="cmbConsignee">Consignee</label>
+                        <select id="cmbConsignee" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Consignee"></select></div>
+                    <div class="ex-field"><label for="cmbNotifyParty1">Notify Party 1</label>
+                        <select id="cmbNotifyParty1" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Notify Party1"></select></div>
+                    <div class="ex-field"><label for="cmbNotifyParty2">Notify Party 2</label>
+                        <select id="cmbNotifyParty2" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Notify Party2"></select></div>
+                    <div class="ex-field"><label for="cmbimporterBankNew">Importer Bank</label>
+                        <select id="cmbimporterBankNew" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="ImporterBank"></select></div>
+                    <div class="ex-field"><label for="cmbexporterBankNew">Exporter Bank</label>
+                        <select id="cmbexporterBankNew" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="ExporterBank"></select></div>
+                    <div class="ex-field"><label for="txtLotRef">Lot Reference</label><input type="text" id="txtLotRef" class="win-textbox" autocomplete="off"/></div>
+                </div>
+                <div class="ex-col">
+                    <div class="ex-field"><label for="txtIformNo">G.D No</label><input type="text" id="txtIformNo" class="win-textbox" autocomplete="off"/></div>
+                    <div class="ex-field"><label for="txtIformDate">G.D Date</label><input type="date" id="txtIformDate" class="win-date"/></div>
+                    <div class="ex-field"><label for="cmbfcycode" class="ex-req">Fcy Code</label>
+                        <select id="cmbfcycode" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="CurrencyName" disabled></select></div>
+                    <div class="ex-field"><label for="txtExRate" class="ex-req">Exchange Rate</label><input type="text" id="txtExRate" class="win-textbox num" data-guard="decimal" autocomplete="off"/></div>
+                    <div class="ex-field"><label for="txtfcyAmount" class="ex-req">Fcy-Amount</label><input type="text" id="txtfcyAmount" class="win-textbox num" readonly/></div>
+                    <div class="ex-field"><label for="txtLocalAmt">Local Amount</label><input type="text" id="txtLocalAmt" class="win-textbox num" readonly/></div>
+                    <div class="ex-field"><label for="txtaddlessamount">Add Less Amount</label><input type="text" id="txtaddlessamount" class="win-textbox num" data-guard="decimal-signed" autocomplete="off"/></div>
+                    <div class="ex-field"><label for="txtTotalNetAmount" class="ex-req">Total Amount</label><input type="text" id="txtTotalNetAmount" class="win-textbox num" readonly/></div>
+                    <div class="ex-field"><label for="txtaddlesscommnets">Ad/Ls Comments</label><input type="text" id="txtaddlesscommnets" class="win-textbox" autocomplete="off"/></div>
+                </div>
+                <div class="ex-col">
+                    <div class="ex-field"><label for="cmbPaymentTermsNew" class="ex-req">Payment Term</label>
+                        <select id="cmbPaymentTermsNew" class="win-combo dtcombo" data-dtcombo="single" data-columns="lcOrderTerm|Description"></select></div>
+                    <div class="ex-field"><label for="cmbdeliverytermnew" class="ex-req">Delivery Term</label>
+                        <select id="cmbdeliverytermnew" class="win-combo dtcombo" data-dtcombo="single" data-columns="Code|Description"></select></div>
+                    <div class="ex-field"><label for="cmbLoadingPort" class="ex-req">Loading Port</label>
+                        <select id="cmbLoadingPort" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Port Name"></select></div>
+                    <div class="ex-field"><label for="cmbDestinationPort" class="ex-req">Destination Port</label>
+                        <select id="cmbDestinationPort" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Port Name"></select></div>
+                    <div class="ex-field"><label for="cmbcareiertype" class="ex-req">Carier Type</label>
+                        <select id="cmbcareiertype" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Carier type">
+                            <option value="0"></option><option value="1">By Sea</option><option value="2">By Air</option><option value="3">By Road</option></select></div>
+                    <div class="ex-field"><label for="txtNoOfContainer" class="ex-req">No.Of Container</label><input type="text" id="txtNoOfContainer" class="win-textbox num" data-guard="integer" autocomplete="off"/></div>
+                    <div class="ex-field"><label for="txtGrossWeight" class="ex-req">Gross MTon's</label><input type="text" id="txtGrossWeight" class="win-textbox num" data-guard="decimal" autocomplete="off"/></div>
+                    <div class="ex-field"><label for="txtNetWeight" class="ex-req">Net MTon's</label><input type="text" id="txtNetWeight" class="win-textbox num" readonly/></div>
+                </div>
+                <div class="ex-col">
+                    <div class="ex-field"><label for="txtPaymentRemarks">Remarks</label><textarea id="txtPaymentRemarks" class="win-textbox" rows="2"></textarea></div>
+                    <div class="ex-field"><label for="txtDeliveryRemarks">Remarks</label><textarea id="txtDeliveryRemarks" class="win-textbox" rows="2"></textarea></div>
+                    <div class="ex-field"><label for="txtcertificateOfOrigion">Certificate Of Origin</label><input type="text" id="txtcertificateOfOrigion" class="win-textbox" autocomplete="off"/></div>
+                    <div class="ex-field"><label for="txtcertificate">Certificate -1</label><input type="text" id="txtcertificate" class="win-textbox" autocomplete="off"/></div>
+                    <div class="ex-field" id="rowCreditAc"><label for="CmbCreditAccount" class="ex-req" id="lblCreditAc">Credit A/c</label>
+                        <select id="CmbCreditAccount" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="AccountTitle"></select></div>
+                    <div class="ex-field is-hidden" id="rowExportCompany"><label for="CmbExportCompany" class="ex-req" id="labelExportCompany">Export Company</label>
+                        <select id="CmbExportCompany" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Export Company"></select></div>
+                    <div class="ex-field is-hidden"><label for="cmbbranches">Branch</label><select id="cmbbranches" class="win-combo"></select></div>
+                    <div class="ex-field is-hidden"><label for="cmbproject">Project</label><select id="cmbproject" class="win-combo"></select></div>
+                </div>
+            </div>
+        </fieldset>
+
+        <div class="win-tabs exm-subtabs" data-tabs="eoDet">
+            <button type="button" class="win-tab is-active" data-tab="tabPage3">Invoice Detail</button>
+            <button type="button" class="win-tab" data-tab="tabPage4">Other Items</button>
+            <button type="button" class="win-tab" data-tab="tabPage5">Payment Detail</button>
+        </div>
+        <!-- Invoice Detail -->
+        <div class="win-tab-panel is-active" id="tabPage3">
+            <fieldset class="ex-groupbox"><legend>Detail</legend>
+                <div class="exm-entry">
+                    <div class="ex-field w-l"><label for="combitem">Item Name</label><select id="combitem" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item" disabled></select></div>
+                    <div class="ex-field"><label for="CmbFarmingNTrade">Farming N Trade</label><select id="CmbFarmingNTrade" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="FarmingNTrade"></select></div>
+                    <div class="ex-field"><label for="combpcktype">Packing Type</label><select id="combpcktype" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Description"></select></div>
+                    <div class="ex-field"><label for="CmbCropYear">CropYear</label><select id="CmbCropYear" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="CropYear"></select></div>
+                    <div class="ex-field"><label for="CmbJobLot">Job Lot</label><select id="CmbJobLot" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Job Lot"></select></div>
+                    <div class="ex-field w-s"><label for="txtQtyMTon">Qty/M.Ton</label><input type="text" id="txtQtyMTon" class="win-textbox num" data-guard="decimal" value="0" autocomplete="off"/></div>
+                    <div class="ex-field w-s"><label for="CmbPackUom">Pack Size</label><select id="CmbPackUom" class="win-combo dtcombo" data-dtcombo="single" data-columns="UOMCode|Equivalent"></select></div>
+                    <div class="ex-field w-s"><label for="txtNoOfBags">No Of Bags</label><input type="text" id="txtNoOfBags" class="win-textbox num" value="0" readonly/></div>
+                    <div class="ex-field w-s"><label for="txtCostMTon">Cost/M.Ton</label><input type="text" id="txtCostMTon" class="win-textbox num" data-guard="decimal" value="0" readonly/></div>
+                    <div class="ex-field w-s"><label for="CmbRateUom">Cost UOM</label><select id="CmbRateUom" class="win-combo dtcombo" data-dtcombo="single" data-columns="UOMCode|Equivalent"></select></div>
+                    <div class="ex-field w-s"><label for="txtAmount">Amount</label><input type="text" id="txtAmount" class="win-textbox num" value="0" readonly/></div>
+                    <div class="ex-field"><label for="CmbHSCode">HS Code</label><select id="CmbHSCode" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="HSCode"></select></div>
+                    <div class="ex-field w-l"><label for="txtitemdetail">Item Detail</label><input type="text" id="txtitemdetail" class="win-textbox" autocomplete="off"/></div>
+                    <div class="ex-field w-l"><label for="txtpackingdetail">Packing Detail</label><input type="text" id="txtpackingdetail" class="win-textbox" autocomplete="off"/></div>
+                    <div class="ex-field ex-actions"><label>&nbsp;</label>
+                        <span><button type="button" id="btnAddinGrid" class="win-btn-small" onclick="ExportOpening.btnAddinGrid()">+</button>
+                        <button type="button" id="btnGridUpdate" class="win-btn-small is-hidden" onclick="ExportOpening.btnGridUpdate()">Update</button>
+                        <button type="button" id="btnCancel" class="win-btn-small is-hidden" onclick="ExportOpening.btnCancel()">Cancel</button></span></div>
+                </div>
+            </fieldset>
+            <div class="pd-caption pd-caption-teal pd-history-bar" style="height:24px;"><span>Invoice Detail</span>
+                <span class="ex-bar-right"><span class="exm-note" id="eoDetailNote">Double-click a row to edit it in the Detail panel</span><button type="button" class="ex-fs-btn" data-fullscreen="grdDetailBox" title="Fullscreen table">&#x26F6;</button></span></div>
+            <div class="ex-grid-box" id="grdDetailBox"><div class="ex-grid-scroll ex-h240"><table class="win-grid" id="grdDetail"></table></div></div>
+        </div>
+        <!-- Other Items -->
+        <div class="win-tab-panel" id="tabPage4">
+            <div class="exm-entry">
+                <div class="ex-field w-l"><label for="CmbOtherItem">Item Name</label><select id="CmbOtherItem" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Name"></select></div>
+                <div class="ex-field w-s"><label for="txtoQty">Qty</label><input type="text" id="txtoQty" class="win-textbox num" data-guard="decimal" value="0" autocomplete="off"/></div>
+                <div class="ex-field w-s"><label for="txtoRate">Rate</label><input type="text" id="txtoRate" class="win-textbox num" value="0" readonly/></div>
+                <div class="ex-field w-s"><label for="txtoAmount">Amount</label><input type="text" id="txtoAmount" class="win-textbox num" value="0" readonly/></div>
+                <div class="ex-field w-l"><label for="txtoRemarks">Remarks</label><input type="text" id="txtoRemarks" class="win-textbox" autocomplete="off"/></div>
+                <div class="ex-field ex-actions"><label>&nbsp;</label>
+                    <span><button type="button" id="btnoadd" class="win-btn-small" onclick="ExportOpening.btnoadd()">+</button>
+                    <button type="button" id="btnoUpdate" class="win-btn-small is-hidden" onclick="ExportOpening.btnoUpdate()">Update</button>
+                    <button type="button" id="btnoCancel" class="win-btn-small is-hidden" onclick="ExportOpening.btnoCancel()">Cancel</button></span></div>
+            </div>
+            <div class="pd-caption pd-caption-teal pd-history-bar" style="height:24px;"><span>Other Items</span>
+                <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdotheritemsBox" title="Fullscreen table">&#x26F6;</button></span></div>
+            <div class="ex-grid-box" id="grdotheritemsBox"><div class="ex-grid-scroll ex-h240"><table class="win-grid" id="grdotheritems"></table></div></div>
+        </div>
+        <!-- Payment Detail -->
+        <div class="win-tab-panel" id="tabPage5">
+            <div class="exm-entry">
+                <div class="ex-field w-l"><label for="dcmbpaymentterm" class="ex-req">Payment Term</label><select id="dcmbpaymentterm" class="win-combo dtcombo" data-dtcombo="single" data-columns="lcOrderTerm|Description"></select></div>
+                <div class="ex-field w-l"><label for="CmbFinInstruments">Financial Instruments No</label><select id="CmbFinInstruments" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="FI No"></select></div>
+                <div class="ex-field w-s"><label for="txtBalanceFI">Balance</label><input type="text" id="txtBalanceFI" class="win-textbox num" value="0" readonly/></div>
+                <div class="ex-field w-s"><label for="dtxtpercentoftotal" class="ex-req">% of Total</label><input type="text" id="dtxtpercentoftotal" class="win-textbox num" data-guard="decimal" value="0" autocomplete="off"/></div>
+                <div class="ex-field w-s"><label for="dtxtfcyamount" class="ex-req">Fcy Amount</label><input type="text" id="dtxtfcyamount" class="win-textbox num" data-guard="decimal" value="0" autocomplete="off"/></div>
+                <div class="ex-field w-s"><label for="dtxtdueday">Due Days</label><input type="text" id="dtxtdueday" class="win-textbox num" data-guard="integer" value="0" autocomplete="off"/></div>
+                <div class="ex-field w-l"><label for="txtPaymentRemarksDetail">Remarks</label><input type="text" id="txtPaymentRemarksDetail" class="win-textbox" autocomplete="off"/></div>
+                <div class="ex-field ex-actions"><label>&nbsp;</label>
+                    <span><button type="button" id="btndadd" class="win-btn-small" onclick="ExportOpening.btndadd()">+</button>
+                    <button type="button" id="btndupdate" class="win-btn-small is-hidden" onclick="ExportOpening.btndupdate()">Update</button>
+                    <button type="button" id="btndcancel" class="win-btn-small is-hidden" onclick="ExportOpening.btndcancel()">Cancel</button></span></div>
+            </div>
+            <div class="pd-caption pd-caption-teal pd-history-bar" style="height:24px;"><span>Payment Detail</span>
+                <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdpaymentdetailBox" title="Fullscreen table">&#x26F6;</button></span></div>
+            <div class="ex-grid-box" id="grdpaymentdetailBox"><div class="ex-grid-scroll ex-h240"><table class="win-grid" id="grdpaymentdetail"></table></div></div>
+        </div>
+    </div>
+
+    <!-- ===================================================== History -->
+    <div class="win-tab-panel" id="eoHistory">
+        <div class="win-tool-strip">
+            <button type="button" id="btnResetHistory" class="win-btn-tool" onclick="ExportOpening.historyReset()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="btnRefreshHistory" class="win-btn-tool" onclick="ExportOpening.historyRefresh(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+        </div>
+        <div class="pd-caption pd-caption-teal" style="height:24px;">History</div>
+        <fieldset class="ex-groupbox"><legend>Filters</legend>
+            <div class="ex-filter">
+                <div class="ex-field" style="width:190px;"><label for="FromDateHistory">From Date</label>
+                    <span class="ex-check"><input type="checkbox" id="FromDateHistoryChk" checked/><input type="date" id="FromDateHistory" class="win-date" style="flex:1;"/></span></div>
+                <div class="ex-field" style="width:190px;"><label for="ToDateHistory">To Date</label>
+                    <span class="ex-check"><input type="checkbox" id="ToDateHistoryChk" checked/><input type="date" id="ToDateHistory" class="win-date" style="flex:1;"/></span></div>
+                <div class="ex-field" style="width:110px;"><label for="FromDocNoHistory">From Doc No</label><input type="text" id="FromDocNoHistory" class="win-textbox num" data-guard="integer" autocomplete="off"/></div>
+                <div class="ex-field" style="width:110px;"><label for="ToDocNoHistory">To Doc No</label><input type="text" id="ToDocNoHistory" class="win-textbox num" data-guard="integer" autocomplete="off"/></div>
+                <div class="ex-field" style="width:260px;"><label for="CmbCustomerHistory">Customer</label>
+                    <select id="CmbCustomerHistory" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Party"></select></div>
+                <div class="ex-field" style="width:auto;"><label>&nbsp;</label>
+                    <span class="ex-check" style="gap:10px;">
+                        <label class="ex-check"><input type="radio" name="eoDateKind" id="drdocdate" value="doc" checked/> Doc Date</label>
+                        <label class="ex-check"><input type="radio" name="eoDateKind" id="rdentrydate" value="entry"/> Entry Date</label>
+                        <label class="ex-check"><input type="radio" name="eoDateKind" id="rdmodifydate" value="modify"/> Modify Date</label>
+                        <label class="ex-check is-hidden"><input type="radio" name="eoDateKind" id="rdapproveddate" value="approved"/> Approved Date</label>
+                    </span></div>
+                <div class="ex-field"><label>&nbsp;</label><button type="button" id="btnShowHistory" class="win-btn-small" style="width:62px;height:26px;" onclick="ExportOpening.historyShow(this)">Show</button></div>
+            </div>
+        </fieldset>
+        <div class="pd-caption pd-caption-teal pd-history-bar" style="height:26px;"><span>Filtered Records</span>
+            <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="DataGridHistoryBox" title="Fullscreen table">&#x26F6;</button></span></div>
+        <div class="ex-grid-box" id="DataGridHistoryBox"><div class="ex-grid-scroll ex-h300"><table class="win-grid" id="DataGridHistory"></table></div>
+            <div class="ex-grid-empty is-hidden" id="DataGridHistoryEmpty">No record found.</div></div>
+        <div class="pd-caption pd-caption-teal pd-history-bar" style="height:24px;"><span>Detail of the Selected above Row</span>
+            <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="gridDetailHistoryBox" title="Fullscreen table">&#x26F6;</button></span></div>
+        <div class="ex-grid-box" id="gridDetailHistoryBox"><div class="ex-grid-scroll ex-h240"><table class="win-grid" id="gridDetailHistory"></table></div></div>
+    </div>
+
+    <div class="win-footer-strip">
+        <span class="ex-footer-left" id="eoFooterInfo"></span>
+        <button type="button" class="win-btn-history" id="btnEoFooterHistory" onclick="ExportOpening.toggleHistory()"><i class="fa fa-history"></i> <span>History</span></button>
+    </div>
+</div>
+
+<!-- LoadSalesContractForExportOpening (ShowDialog) - ClientSize 920 x 661, "Sale Contracts For Opening" -->
+<div id="loaderModal" class="exm-modal is-hidden">
+    <div class="exm-modal-box">
+        <div class="pd-caption pd-caption-teal exm-modal-cap"><span>Sale Contracts For Opening</span>
+            <button type="button" class="ex-fs-btn" onclick="ExportOpening.loaderClose()">&times;</button></div>
+        <fieldset class="ex-groupbox"><legend>Filters</legend>
+            <div class="ex-filter">
+                <div class="ex-field" style="width:300px;"><label for="ldFromDate">From &amp; To Date</label>
+                    <div class="ex-pair" style="grid-template-columns:1fr 1fr;"><input type="date" id="ldFromDate" class="win-date"/><input type="date" id="ldTodate" class="win-date"/></div></div>
+                <div class="ex-field" style="width:240px;"><label for="ldCmbPartyName">Party Name</label><select id="ldCmbPartyName" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Party Name"></select></div>
+                <div class="ex-field" style="width:220px;"><label for="ldCmbItemName">Item Name</label><select id="ldCmbItemName" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Name"></select></div>
+                <div class="ex-field" style="width:160px;"><label for="ldCmbCurrency">Currency</label><select id="ldCmbCurrency" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Currency"></select></div>
+                <div class="ex-field"><label>&nbsp;</label><span>
+                    <button type="button" id="ldBtnSearch" class="win-btn-small" style="height:26px;" onclick="ExportOpening.loaderSearch(this)">Search</button>
+                    <button type="button" id="ldBtnReset" class="win-btn-small" style="height:26px;" onclick="ExportOpening.loaderReset(this)">Reset</button></span></div>
+            </div>
+        </fieldset>
+        <div class="pd-caption pd-caption-teal pd-history-bar" style="height:24px;"><span>Main Information</span>
+            <span class="ex-bar-right"><span class="exm-note">Tick the contracts of one customer / currency, then Load</span>
+                <label class="ex-check"><input type="checkbox" id="ldSelectAll"/> Select All</label>
+                <button type="button" id="ldBtnLoad" class="win-btn-small" onclick="ExportOpening.loaderLoad(this)">Load</button></span></div>
+        <div class="ex-grid-box"><div class="ex-grid-scroll ex-h240"><table class="win-grid" id="ldGrd"></table></div>
+            <div class="ex-grid-empty is-hidden" id="ldGrdEmpty">No contract found.</div></div>
+        <div class="pd-caption pd-caption-teal" style="height:22px;">Detail</div>
+        <div class="ex-grid-box"><div class="ex-grid-scroll ex-h240"><table class="win-grid" id="ldGrdDetail"></table></div></div>
+    </div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260924a}"></script>
+<script th:src="@{/build/js/countx_export_m_common.js?v=20261003a}"></script>
+<script th:src="@{/build/js/countx_export_opening.js?v=20261003a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>DHL Tracking - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_g.css?v=20261003a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_shipment.css?v=20261003a}"/>
+</head>
+<!-- frmDhlTracking.cs (Architecture.WinApp.Export), ClientSize 963 x 533, DocumentTypeId 248; no ScreenDefinition row (rights by the
+     form name). No DHL web service is called by the desktop: it is a register of air-way bills in dbo.DHLTracking.
+     toolStrip1 New / Refresh / Update (hidden on load) / Save / Attachment / ShortCut Keys / Register-248;
+     label39 "DHL Tracking"; Date Of Dispatched, Final ETA, AWB Bill No, Currenct Status (CmbCurrentStatus, ExImLookUps type 6;
+     Leave -> BindGrid), Detail / Description (multi line);
+     groupBox1 "History Filter's": From Dispatched / To Dispatched (checked), From ETA / To ETA (unchecked), AWB Bill No, Current Status, Show;
+     label3 "History"; grdfrm (DoubleClick = edit; Add-Attachment and X buttons; NoOfAttachments link). -->
+<body class="pd-body">
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="pd-form ex-form exs-form">
+    <div class="win-tool-strip">
+        <button type="button" id="btnNew" class="win-btn-tool" accesskey="n"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+        <button type="button" id="btnRefresh" class="win-btn-tool"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+        <button type="button" id="btnUpdate" class="win-btn-tool is-hidden" accesskey="u"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+        <button type="button" id="btnSave" class="win-btn-tool" accesskey="s"><i class="fa fa-save"></i> <span>Save</span></button>
+        <button type="button" id="btnAttachment" class="win-btn-tool"><i class="fa fa-paperclip"></i> <span><u>A</u>ttachment</span></button>
+        <button type="button" id="btnShortcukeys" class="win-btn-tool"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+        <button type="button" id="btnRegister" class="win-btn-tool"><i class="fa fa-print"></i> <span>Register-248</span></button>
+    </div>
+    <div class="pd-caption pd-caption-teal"><span>DHL Tracking</span></div>
+    <div class="exs-entry exs-cols-4">
+        <div class="ex-field"><label for="datDispatched">Date Of Dispatched</label><input type="date" id="datDispatched" class="win-date"/></div>
+        <div class="ex-field"><label for="datFinalETA">Final ETA</label><input type="date" id="datFinalETA" class="win-date"/></div>
+        <div class="ex-field"><label for="txtAwbBillNo">AWB Bill No</label><input type="text" id="txtAwbBillNo" class="win-textbox" maxlength="250" autocomplete="off"/></div>
+        <div class="ex-field"><label for="CmbCurrentStatus">Currenct Status</label>
+            <select id="CmbCurrentStatus" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Current Status"></select></div>
+        <div class="ex-field exs-span-all"><label for="txtDetail">Detail / Description</label>
+            <textarea id="txtDetail" class="win-textbox" rows="3" maxlength="250"></textarea></div>
+    </div>
+    <fieldset class="exs-group"><legend>History Filter's</legend>
+        <div class="ex-filter">
+            <div class="ex-field" style="width:170px;"><label for="datDispatchedFromHistory">From Dispatched</label>
+                <span class="ex-check"><input type="checkbox" id="datDispatchedFromHistoryChk" checked/><input type="date" id="datDispatchedFromHistory" class="win-date" style="flex:1;"/></span></div>
+            <div class="ex-field" style="width:170px;"><label for="datDispatchedToHistory">To Dispatched</label>
+                <span class="ex-check"><input type="checkbox" id="datDispatchedToHistoryChk" checked/><input type="date" id="datDispatchedToHistory" class="win-date" style="flex:1;"/></span></div>
+            <div class="ex-field" style="width:170px;"><label for="datFinalEtaFromHistory">From ETA</label>
+                <span class="ex-check"><input type="checkbox" id="datFinalEtaFromHistoryChk"/><input type="date" id="datFinalEtaFromHistory" class="win-date" style="flex:1;"/></span></div>
+            <div class="ex-field" style="width:170px;"><label for="datFinalEtaToHistory">To ETA</label>
+                <span class="ex-check"><input type="checkbox" id="datFinalEtaToHistoryChk"/><input type="date" id="datFinalEtaToHistory" class="win-date" style="flex:1;"/></span></div>
+            <div class="ex-field" style="width:220px;"><label for="txtAwbBillNoHistory">AWB Bill No</label>
+                <select id="txtAwbBillNoHistory" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="AWB Bill No"></select></div>
+            <div class="ex-field" style="width:220px;"><label for="CmbCurrentStatusHistory">Current Status</label>
+                <select id="CmbCurrentStatusHistory" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="current Status"></select></div>
+            <div class="ex-field"><label>&nbsp;</label><button type="button" id="btnShow" class="win-btn-small">Show</button></div>
+        </div>
+    </fieldset>
+    <div class="pd-caption pd-caption-dark pd-history-bar"><span>History</span>
+        <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdfrmBox" title="Fullscreen table">&#x26F6;</button></span></div>
+    <div class="ex-grid-box" id="grdfrmBox">
+        <div class="ex-grid-scroll ex-h400">
+            <table class="win-grid" id="grdfrm">
+                <thead><tr><th>Add-Attachment</th><th class="ctr">X</th><th>Date Of Dispatched</th><th>AWB Bill No</th><th>Final ETA</th><th>Current Status</th>
+                    <th>Detail</th><th>Entry User</th><th>Entry Date</th><th>Modify User</th><th>Modify Date</th><th class="num">No Of Attachments</th></tr></thead>
+                <tbody></tbody><tfoot></tfoot>
+            </table>
+        </div>
+        <div class="ex-grid-empty is-hidden" id="grdfrmEmpty">No record found.</div>
+    </div>
+    <div class="win-footer-strip">
+        <span class="ex-footer-left">frmDhlTracking - Document Type 248</span>
+        <button type="button" class="win-btn-history" id="btnFooterHistory"><i class="fa fa-history"></i> <span>History</span></button>
+    </div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_export_g_common.js?v=20261003a}"></script>
+<script th:src="@{/build/js/countx_export_shipment_common.js?v=20261003a}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20261003a}"></script>
+<script th:src="@{/build/js/countx_export_dhl_tracking.js?v=20261003a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

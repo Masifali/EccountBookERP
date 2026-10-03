@@ -358,5 +358,31 @@ public class ExportReportSupport {
                 ps(ORG, CO, P("@Id", "arg:id"), P("@DocumentTypeId", "arg:documentTypeId"), G("@IsApproved", "arg:isApproved"))));
         registry.register(def("exp-516", "516-ExImRptFCBankReceipts.rpt", "Sp_ExImFcBankReceiptsAdvoice_Rpt",
                 "Acfrmfcbankreceipt Print-516", ps(ORG, CO, G("@Id", "arg:id"))));
+            /* ------------------------------------------------ Round 3 (waves M, R2): return invoice voucher, 202 transfer slips,
+           201 delivery order slip. Procedures/parameters checked in procdure_index.csv. */
+        registry.register(def("exp-102", "102-ExportReturnInvoiceVoucherSlip.rpt", "SpVouchers_ExportReturnInvoiceVoucherSlipNew_Rpt",
+                "ExportReturnInvoice voucher print", ps(ORG, CO, P("@Id", "arg:id"), P("rpt:@PrintedBy", "session:userName"))));
+        for (String[] k : new String[][] {{"exp-549", "549-ExportCommercialInvoiceSlip.rpt"}, {"exp-548-bank", "548-ExportCommercialInvoiceSlipForBank.rpt"}}) {
+            registry.register(def(k[0], k[1], "[dbo].[USP_PreInvoice_SlipAndRegister_Rpt]",
+                    "CommiercialInvoiceAgainstPreInvoiceTransfer slip",
+                    ps(P("@OrginzationId", "session:organizationId"), CO, P("@Id", "arg:id"), RPT_ADDR, RPT_NAME),
+                    Collections.singletonList(sub("PreCommercialInvoiceExpenseSubReport.rpt", "[ExportInvoiceOtherExpense_SubRpt]",
+                            ps(P("@PihId", "arg:id"))))));
+        }
+        for (String[] k : new String[][] {{"exp-549a", "549A-ExportCommercialInvoiceSlip.rpt"}, {"exp-548a", "548A-ExportCommercialInvoiceSlipForBank.rpt"}}) {
+            registry.register(def(k[0], k[1], "[dbo].[USP_PreInvoice_SlipAndRegister_Rpt]",
+                    "CommiercialInvoiceAgainstPreInvoiceTransfer register (doc no range)",
+                    ps(P("@OrginzationId", "session:organizationId"), CO, P("@DocumentTypeId", "const:211"),
+                       P("@FinancialYearId", "session:financialYearId"), G("@FromDocNo", "arg:fromDocNo"), G("@ToDocNo", "arg:toDocNo"),
+                       RPT_ADDR, RPT_NAME)));
+        }
+        registry.register(def("262-deliveryorderslip", "262-DeliveryOrderSlip.rpt", "Sp_InvDeliveryOrder_Slip",
+                "CommonServices.InvDeliveryOrderSlip(Id, DocumentTypeId) - export delivery orders send 84",
+                deliveryOrderSlip("arg:documentTypeId")));
+        ReportDefinition so273a = registry.get("so-273-a");
+        if (so273a != null) {
+            registry.register(new ReportDefinition("273a-invrptsaleorderslip", so273a.template, so273a.procedure,
+                    so273a.desktopCaller, so273a.params, so273a.subReports));
+        }
     }
 }

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>FI Opening - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_q.css?v=20261003q}"/>
+</head>
+<!-- frmFIOpening.cs (Architecture.WinApp.Export), no ScreenDefinition row (opened from 952 "FI Opening Balances (Balance Advance Payment)" /
+     "FI Opening"), ClientSize 993 x 509, ScreenName "frmFIOpening".
+     menuStrip1: New (btnnew_Click), Save (btnSave_Click - RecId = 0, always an insert), Update (hidden; btnupdate_Click), ShortCut Keys, Refresh.
+     panel2 (Teal) label4 "FI Opening Balances (Balance Advance Payment)"; panel1: row 1 Opening Date (datOpeningDate dd-MMM-yy), FI Date
+     (datFIDate), FI Number (txtFiNumber), FI Amount (txtFiAmount), FI Expiry  Date (datFiExpiryDate), Fcy Code (CmbFcyCode, all columns),
+     Exchange Rate (txtExchangeRate - TextChanged: Lcy = FI Amount x rate "#,#.####"), Lcy Amount (txtLlcyAmount, ReadOnly);
+     row 2 Bank Name (CmbBankName, Home Country banks, Id/BranchName/BankIBANNo), Consignee Name (CmbConsigneeName, customer group 7;
+     GlAccountId / GlAccountCurrencyId hidden), Remarks (txtRemarks).
+     panel4 (Teal) label3 "History" + ctrlGrdBar1; grdfrm (Id, FcyId hidden; OpeningDate, FIDate, FINumber, FIAmount, ExpiryDate "dd-MM-yyyy",
+     FcyCode, ExchangeRate, LcyAmount, BankName, Consignee, Remarks, EntryUser, EntryDate, ModifyUser, ModifyDate; dates "dd-MM-yyyy hh:mm tt")
+     - DoubleClick / Ctrl+Enter -> ReadById.
+     KeyDown: Ctrl+S Save (when visible), Ctrl+U Update (when visible), Ctrl+N New, Ctrl+E / Esc close, Ctrl+F5 Opening Date, Ctrl+Down grid, Ctrl+Alt shortcuts.
+     Page parameter: ?id=<FIOpening.Id> opens that opening (as a history double-click). -->
+<body class="pd-body" data-export-page="fi-opening">
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="pd-form ex-form">
+    <div class="win-tool-strip">
+        <button type="button" id="btnnew" class="win-btn-tool" accesskey="n" onclick="ExportFiOpening.resetForm()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+        <button type="button" id="btnSave" class="win-btn-tool" accesskey="s" onclick="ExportFiOpening.toolSave(this)"><i class="fa fa-save"></i> <span>Save</span></button>
+        <button type="button" id="btnupdate" class="win-btn-tool is-hidden" accesskey="u" onclick="ExportFiOpening.toolUpdate(this)"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+        <button type="button" id="btnShortCutKeys" class="win-btn-tool" onclick="ExportFiOpening.shortcuts()"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+        <button type="button" id="btnRefresh" class="win-btn-tool" accesskey="r" onclick="ExportFiOpening.refresh(this)"><i class="fa fa-refresh"></i> <span><u>R</u>efresh</span></button>
+    </div>
+    <div class="pd-caption pd-caption-teal">FI Opening Balances (Balance Advance Payment)</div>
+    <div class="ex-entry exq-fi-entry">
+        <div class="ex-field"><label for="datOpeningDate">Opening Date</label><input type="date" id="datOpeningDate" class="win-date"/></div>
+        <div class="ex-field"><label for="datFIDate">FI Date</label><input type="date" id="datFIDate" class="win-date"/></div>
+        <div class="ex-field"><label for="txtFiNumber">FI Number</label><input type="text" id="txtFiNumber" class="win-textbox" autocomplete="off"/></div>
+        <div class="ex-field"><label for="txtFiAmount">FI Amount</label><input type="text" id="txtFiAmount" class="win-textbox num" autocomplete="off"/></div>
+        <div class="ex-field"><label for="datFiExpiryDate">FI Expiry  Date</label><input type="date" id="datFiExpiryDate" class="win-date"/></div>
+        <div class="ex-field"><label for="CmbFcyCode">Fcy Code</label>
+            <select id="CmbFcyCode" class="win-combo dtcombo" data-columns="Fcy Code|CurrencyName|CurrencyRate|CurrencySymbol" data-dtcombo-caption="Fcy Code"></select></div>
+        <div class="ex-field"><label for="txtExchangeRate">Exchange Rate</label><input type="text" id="txtExchangeRate" class="win-textbox num" autocomplete="off"/></div>
+        <div class="ex-field"><label for="txtLlcyAmount">Lcy Amount</label><input type="text" id="txtLlcyAmount" class="win-textbox num" readonly/></div>
+        <div class="ex-field exq-fi-bank"><label for="CmbBankName">Bank Name</label>
+            <select id="CmbBankName" class="win-combo dtcombo" data-columns="Bank Name|BankIBANNo" data-dtcombo-caption="Bank Name"></select></div>
+        <div class="ex-field exq-fi-cons"><label for="CmbConsigneeName">Consignee Name</label>
+            <select id="CmbConsigneeName" class="win-combo dtcombo" data-columns="Consignee|GlAccountCurrency" data-dtcombo-caption="Consignee"></select></div>
+        <div class="ex-field exq-fi-rem"><label for="txtRemarks">Remarks</label><input type="text" id="txtRemarks" class="win-textbox" autocomplete="off"/></div>
+    </div>
+    <div class="pd-caption pd-caption-teal pd-history-bar" id="historyBar"><span>History</span>
+        <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdfrmBox" title="Fullscreen table">&#x26F6;</button><span id="gridBarMount" class="pd-gridbar-mount"></span></span></div>
+    <div class="ex-grid-box" id="grdfrmBox">
+        <div class="ex-grid-scroll ex-h400">
+            <table class="win-grid" id="grdfrm" tabindex="0" data-gridbar="frmFIOpening:grdfrm" data-gridbar-mount="#gridBarMount" data-gridbar-reorder="false">
+                <thead><tr>
+                    <th data-col="OpeningDate">OpeningDate</th><th data-col="FIDate">FIDate</th><th data-col="FINumber">FINumber</th><th class="num" data-col="FIAmount">FIAmount</th>
+                    <th data-col="ExpiryDate">ExpiryDate</th><th data-col="FcyCode">FcyCode</th><th class="num" data-col="ExchangeRate">ExchangeRate</th><th class="num" data-col="LcyAmount">LcyAmount</th>
+                    <th data-col="BankName">BankName</th><th data-col="Consignee">Consignee</th><th data-col="Remarks">Remarks</th>
+                    <th data-col="EntryUser">EntryUser</th><th data-col="EntryDate">EntryDate</th><th data-col="ModifyUser">ModifyUser</th><th data-col="ModifyDate">ModifyDate</th>
+                </tr></thead>
+                <tbody id="histBody"></tbody>
+                <tfoot id="histFoot"></tfoot>
+            </table>
+        </div>
+        <div class="ex-grid-empty is-hidden" id="histEmpty">No record found.</div>
+    </div>
+    <div class="win-footer-strip">
+        <span class="ex-footer-left">frmFIOpening - Document Type 1</span>
+        <button type="button" class="win-btn-history" id="btnFooterHistory" onclick="ExportFiOpening.history(this)"><i class="fa fa-history"></i> <span>History</span></button>
+    </div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_export_q_common.js?v=20261003q}"></script>
+<script th:src="@{/build/js/countx_export_fi_opening.js?v=20261003q}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

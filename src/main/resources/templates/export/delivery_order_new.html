@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Export Delivery Order - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_invoice_transfer.css?v=20261003a}"/>
+</head>
+<!-- ExportDeliveryOrderNew.cs (Architecture.WinApp.Export), screen 201 "Export Delivery Order" (rights ScreenName "ExportDeliveryOrder"),
+     form Name "ExportDeliveryOrderNew", ClientSize 1284 x 658, InvDeliveryOrder DocumentTypeId 84 / DeliveryOrderType "Export".
+     tabControl1 (Alignment bottom): "Form" | "History".
+     Form: toolStrip1 New / Refresh / Update (hidden until a record is read) / Save / 262-Print / Attachment / ShortCut Keys;
+       panel3 "Delivery Order Export";
+       groupBox1 "Main Information": Doc No (txtdocno disabled), Doc Date (dd-MMM-yy), Vehicle No | Transporter (cmbtransporter - never
+         filled by this form), Remarks (multiline) | Branch Name (lblBranchName / CmbBranch, visible only with more than one branch);
+       groupBox4 "Weight Information": Item Weight (disabled), Packing Weight (disabled), Other Remarks | Other Weight, Total Gross Wt (disabled);
+       groupBox3 "Detail": Invoice No, Customer Name, Sale Contract No, WareHouse, JobLot, CropYear, Item Name /
+         Pack UOM, PackingType, Qty, Weight (disabled), Pack Weight (Tag PackingWeight), T.Pack Weight (Tag TotalPackingWeight),
+         Gross Weight (disabled), Container No, Container Remarks / Inspection Remarks, Comments, + / Update / Cancel;
+       groupBox2 "Invoice Information": Invoice Date, Invoice Weight, Balance Weight, Do Weight, Rejected Weight (all disabled);
+       panel6 "Detail" + ctrlGrdBar1; grd (X / Edit buttons, double-click = edit).
+     History: toolStrip2 New / Refresh; "Delivery Order Export History"; groupBox5 "Filters": From Date / To Date (check boxes),
+       From Doc No / To Doc No, Customer, Invoice, Show, Doc Date / Entry Date / Modify Date / Approved Date;
+       "Filtered Records" grdhistory (Edit, Print, NoOfAttachments link; SelectionChanged -> detail; double-click = ReadById);
+       "Detail of the selected above row" grdDetail.
+     Events: Load, KeyDown, tabControl1 SelectedIndexChanged, cmbInvoiceNo TextChanged + Leave, CmbOrderNo TextChanged, CmbItemName Leave,
+       CmbPackUom Leave, txtqty / txtTotalPackingWeight / txtPackingWt / txtOtherWeight TextChanged, decimal KeyPress, grd ColumnButtonClick /
+       DoubleClick / KeyDown, grdhistory ColumnButtonClick / SelectionChanged / LinkClicked / DoubleClick / KeyDown. -->
+<body class="pd-body" data-export-page="edon">
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="pd-form ex-form">
+    <div class="win-tabs" data-tabs="edon">
+        <button type="button" class="win-tab is-active" data-tab="tabPage1">Form</button>
+        <button type="button" class="win-tab" data-tab="tabPage2">History</button>
+    </div>
+
+    <div class="win-tab-panel is-active" id="tabPage1">
+        <div class="win-tool-strip">
+            <button type="button" id="btnnew" class="win-btn-tool" accesskey="n" onclick="ExportEdon.btnnew()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="btnRefresh" class="win-btn-tool" onclick="ExportEdon.btnRefresh(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+            <button type="button" id="btnupdate" class="win-btn-tool is-hidden" accesskey="u" onclick="ExportEdon.btnupdate(this)"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+            <button type="button" id="btnsave" class="win-btn-tool" accesskey="s" onclick="ExportEdon.btnsave(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+            <button type="button" id="btnprint" class="win-btn-tool" onclick="ExportEdon.print(this)"><i class="fa fa-print"></i> <span>262-Print</span></button>
+            <button type="button" id="btnattachment" class="win-btn-tool" disabled title="DMS attachments are not part of this web screen"><i class="fa fa-paperclip"></i> <span><u>A</u>ttachment</span></button>
+            <button type="button" id="btnShortCutKeys" class="win-btn-tool" onclick="ExportEdon.shortCutKeys()"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+        </div>
+        <div class="pd-caption pd-caption-teal" style="height:26px;">Delivery Order Export</div>
+        <div class="it-header it-c2w" style="padding:2px 4px;">
+            <fieldset class="it-box it-span2" style="margin:2px;">
+                <legend>Main Information</legend>
+                <div class="it-header" style="padding:0;">
+                    <div class="it-col">
+                        <div class="it-row"><label for="txtdocno">Doc No</label><input type="text" id="txtdocno" class="win-textbox" disabled/></div>
+                        <div class="it-row"><label for="DocDate">Doc Date</label><input type="date" id="DocDate" class="win-date"/></div>
+                        <div class="it-row"><label for="txtVehicleNo">Vehicle No</label><input type="text" id="txtVehicleNo" class="win-textbox" autocomplete="off"/></div>
+                    </div>
+                    <div class="it-col it-span2">
+                        <div class="it-row">
+                            <label for="cmbtransporter">Transporter</label><select id="cmbtransporter" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Transporter"></select>
+                            <label for="CmbBranch" id="lblBranchName" class="is-hidden" style="width:84px;flex:0 0 84px;font:600 9pt 'Segoe UI';">Branch Name</label>
+                            <span id="CmbBranchWrap" class="it-grow is-hidden"><select id="CmbBranch" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Branch Name"></select></span>
+                        </div>
+                        <div class="it-row"><label for="txtremarks">Remarks</label><textarea id="txtremarks" class="win-textbox" rows="2"></textarea></div>
+                    </div>
+                </div>
+            </fieldset>
+            <fieldset class="it-box" style="margin:2px;">
+                <legend>Weight Information</legend>
+                <div class="it-header" style="grid-template-columns:repeat(2,minmax(0,1fr));padding:0;">
+                    <div class="it-row"><label for="txtItemWeight">Item Weight</label><input type="text" id="txtItemWeight" class="win-textbox num" disabled/></div>
+                    <div class="it-row"><label for="txtOtherWeight">Other Weight</label><input type="text" id="txtOtherWeight" class="win-textbox num" data-guard="decimal" autocomplete="off"/></div>
+                    <div class="it-row"><label for="txtPackingWeight">Packing Weight</label><input type="text" id="txtPackingWeight" class="win-textbox num" disabled/></div>
+                    <div class="it-row"><label for="txtTotalGrossWeight">Total Gross Wt</label><input type="text" id="txtTotalGrossWeight" class="win-textbox num" disabled/></div>
+                    <div class="it-row it-span2"><label for="txtOtherRemarks">Other Remarks</label><input type="text" id="txtOtherRemarks" class="win-textbox" autocomplete="off"/></div>
+                </div>
+            </fieldset>
+        </div>
+        <div class="it-header" style="grid-template-columns:minmax(0,1fr) 240px;padding:0 4px;">
+            <fieldset class="it-box" style="margin:2px;">
+                <legend>Detail</legend>
+                <div class="it-entry" style="grid-template-columns:minmax(110px,1fr) minmax(180px,1.6fr) minmax(110px,1fr) minmax(150px,1.3fr) minmax(150px,1.3fr) minmax(90px,0.9fr) minmax(180px,1.6fr);">
+                    <div class="ex-field"><label for="cmbInvoiceNo">Invoice No</label><select id="cmbInvoiceNo" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Invoice No"></select></div>
+                    <div class="ex-field"><label for="CmbSupplierCustomer">Customer Name</label><select id="CmbSupplierCustomer" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Customer Name"></select></div>
+                    <div class="ex-field"><label for="CmbOrderNo">Sale Contract No</label><select id="CmbOrderNo" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Sale ContractNo"></select></div>
+                    <div class="ex-field"><label for="CmbWareHouse">WareHouse</label><select id="CmbWareHouse" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="WareHouseName"></select></div>
+                    <div class="ex-field"><label for="CmbJobLot">JobLot</label><select id="CmbJobLot" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="JobLot"></select></div>
+                    <div class="ex-field"><label for="CmbCropYear">CropYear</label><select id="CmbCropYear" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="CropYear"></select></div>
+                    <div class="ex-field"><label for="CmbItemName">Item Name</label><select id="CmbItemName" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Name"></select></div>
+                </div>
+                <div class="it-entry" style="grid-template-columns:minmax(80px,0.8fr) minmax(110px,1fr) repeat(5,minmax(70px,0.7fr)) minmax(130px,1.2fr) minmax(170px,1.6fr);">
+                    <div class="ex-field"><label for="CmbPackUom">Pack UOM</label><select id="CmbPackUom" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="PackUom"></select></div>
+                    <div class="ex-field"><label for="CmbPackingType">PackingType</label><select id="CmbPackingType" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Packing Type"></select></div>
+                    <div class="ex-field"><label for="txtqty">Qty</label><input type="text" id="txtqty" class="win-textbox num" data-guard="decimal" autocomplete="off"/></div>
+                    <div class="ex-field"><label for="txtweight">Weight</label><input type="text" id="txtweight" class="win-textbox num" disabled/></div>
+                    <div class="ex-field"><label for="txtPackingWt">Pack Weight</label><input type="text" id="txtPackingWt" class="win-textbox num" data-guard="decimal" data-tag="PackingWeight" autocomplete="off"/></div>
+                    <div class="ex-field"><label for="txtTotalPackingWeight">T.Pack Weight</label><input type="text" id="txtTotalPackingWeight" class="win-textbox num" data-guard="decimal" data-tag="TotalPackingWeight" autocomplete="off"/></div>
+                    <div class="ex-field"><label for="txtGrossWeight">Gross Weight</label><input type="text" id="txtGrossWeight" class="win-textbox num" disabled/></div>
+                    <div class="ex-field"><label for="cmbContainerNoDetail">Container No</label><select id="cmbContainerNoDetail" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Container No"></select></div>
+                    <div class="ex-field"><label for="txtContainerRemarks">Container Remarks</label><input type="text" id="txtContainerRemarks" class="win-textbox" autocomplete="off"/></div>
+                </div>
+                <div class="it-entry" style="grid-template-columns:minmax(200px,1.2fr) minmax(300px,2fr) auto;">
+                    <div class="ex-field"><label for="txtInspectionRemarks">Inspection Remarks</label><input type="text" id="txtInspectionRemarks" class="win-textbox" autocomplete="off"/></div>
+                    <div class="ex-field"><label for="txtremarksdetail">Comments</label><input type="text" id="txtremarksdetail" class="win-textbox" autocomplete="off"/></div>
+                    <div class="it-btns">
+                        <button type="button" id="btnplus" class="win-btn-small" onclick="ExportEdon.btnplus()">+</button>
+                        <button type="button" id="btnUpdateDetail" class="win-btn-small is-hidden" onclick="ExportEdon.btnUpdateDetail()">Update</button>
+                        <button type="button" id="btnCancelUpdateDetial" class="win-btn-small is-hidden" onclick="ExportEdon.btnCancelUpdateDetial()">Cancel</button>
+                    </div>
+                </div>
+            </fieldset>
+            <fieldset class="it-box" style="margin:2px;">
+                <legend>Invoice Information</legend>
+                <div class="it-row"><label for="txtInvoiceDate">Invoice Date</label><input type="date" id="txtInvoiceDate" class="win-date" disabled/></div>
+                <div class="it-row"><label for="txtInvoiceWeight">Invoice Weight</label><input type="text" id="txtInvoiceWeight" class="win-textbox num" disabled/></div>
+                <div class="it-row"><label for="txtBalanceWeight">Balance Weight</label><input type="text" id="txtBalanceWeight" class="win-textbox num" disabled/></div>
+                <div class="it-row"><label for="txtDoWeight">Do Weight</label><input type="text" id="txtDoWeight" class="win-textbox num" disabled/></div>
+                <div class="it-row"><label for="txtrejectedWeight">Rejected Weight</label><input type="text" id="txtrejectedWeight" class="win-textbox num" disabled/></div>
+            </fieldset>
+        </div>
+        <div class="pd-caption pd-caption-teal pd-history-bar" style="height:24px;"><span>Detail</span>
+            <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdBox" title="Fullscreen table">&#x26F6;</button><span id="gridBarMountEdon" class="pd-gridbar-mount"></span></span></div>
+        <div class="ex-grid-box" id="grdBox">
+            <div class="ex-grid-scroll ex-h240">
+                <table class="win-grid" id="grd" data-gridbar="ExportDeliveryOrderNew:grd" data-gridbar-mount="#gridBarMountEdon" data-gridbar-reorder="false">
+                    <thead><tr>
+                        <th class="ctr">X</th><th class="ctr">Edit</th><th>InvoiceNo</th><th>Customer</th><th>OrderNo</th><th>WareHouse</th><th>JobLot</th><th>CropYear</th>
+                        <th>Item</th><th>ItemUOM</th><th>PackingType</th><th class="num">LoadQty</th><th class="num">LoadWeight</th><th class="num">PackingWeight</th>
+                        <th class="num">TotalPackingWeight</th><th class="num">GrossWeight</th><th class="num">OtherWeight</th><th>ContainerNo</th><th>ContainerRemarks</th>
+                        <th>InspectionRemarks</th><th>Remarks</th>
+                    </tr></thead>
+                    <tbody id="edonBody"></tbody>
+                    <tfoot id="edonFoot"></tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="win-tab-panel" id="tabPage2">
+        <div class="win-tool-strip">
+            <button type="button" id="btnResetHistory" class="win-btn-tool" onclick="ExportEdon.btnResetHistory()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="btnRefreshHistory" class="win-btn-tool" onclick="ExportEdon.btnRefreshHistory(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+        </div>
+        <div class="pd-caption pd-caption-teal" style="height:24px;">Delivery Order Export History</div>
+        <fieldset class="ex-groupbox">
+            <legend>Filters</legend>
+            <div class="ex-filter">
+                <div class="ex-field" style="width:190px;"><label for="FromDateHistory">From Date</label>
+                    <span class="ex-check"><input type="checkbox" id="FromDateHistoryChk" checked/><input type="date" id="FromDateHistory" class="win-date" style="flex:1;"/></span></div>
+                <div class="ex-field" style="width:190px;"><label for="ToDateHistory">To Date</label>
+                    <span class="ex-check"><input type="checkbox" id="ToDateHistoryChk" checked/><input type="date" id="ToDateHistory" class="win-date" style="flex:1;"/></span></div>
+                <div class="ex-field" style="width:110px;"><label for="FromDocNoHistory">From Doc No</label><input type="text" id="FromDocNoHistory" class="win-textbox num" data-guard="integer" autocomplete="off"/></div>
+                <div class="ex-field" style="width:110px;"><label for="ToDocNoHistory">To Doc No</label><input type="text" id="ToDocNoHistory" class="win-textbox num" data-guard="integer" autocomplete="off"/></div>
+                <div class="ex-field" style="width:230px;"><label for="CmbCustomerHistory">Customer</label><select id="CmbCustomerHistory" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Party"></select></div>
+                <div class="ex-field" style="width:230px;"><label for="CmbInvoiceNoHistory">Invoice</label><select id="CmbInvoiceNoHistory" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Invoice No"></select></div>
+                <div class="ex-field"><label>&nbsp;</label><button type="button" id="btnShowHistory" class="win-btn-small" style="width:62px;height:26px;" onclick="ExportEdon.btnShowHistory(this)">Show</button></div>
+                <div class="ex-radios">
+                    <label class="ex-check"><input type="radio" name="edonDateBy" id="drdocdate" value="doc" checked/> Doc Date</label>
+                    <label class="ex-check"><input type="radio" name="edonDateBy" id="rdentrydate" value="entry"/> Entry Date</label>
+                </div>
+                <div class="ex-radios">
+                    <label class="ex-check"><input type="radio" name="edonDateBy" id="rdmodifydate" value="modify"/> Modify Date</label>
+                    <label class="ex-check"><input type="radio" name="edonDateBy" id="rdapproveddate" value="approved"/> Approved Date</label>
+                </div>
+            </div>
+        </fieldset>
+        <div class="pd-caption pd-caption-teal pd-history-bar" style="height:24px;"><span>Filtered Records</span>
+            <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdhistoryBox" title="Fullscreen table">&#x26F6;</button><span id="gridBarMountEdonH" class="pd-gridbar-mount"></span></span></div>
+        <div class="ex-grid-box" id="grdhistoryBox">
+            <div class="ex-grid-scroll ex-h240">
+                <table class="win-grid" id="grdhistory" data-gridbar="ExportDeliveryOrderNew:grdhistory" data-gridbar-mount="#gridBarMountEdonH" data-gridbar-reorder="false">
+                    <thead id="edonHistHead"></thead>
+                    <tbody id="edonHistBody"></tbody>
+                    <tfoot id="edonHistFoot"></tfoot>
+                </table>
+            </div>
+            <div class="ex-grid-empty is-hidden" id="edonHistEmpty">No record found.</div>
+        </div>
+        <div class="pd-caption pd-caption-teal pd-history-bar" style="height:22px;"><span>Detail of the selected above row</span>
+            <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdDetailBox" title="Fullscreen table">&#x26F6;</button></span></div>
+        <div class="ex-grid-box" id="grdDetailBox">
+            <div class="ex-grid-scroll ex-h240">
+                <table class="win-grid" id="grdDetail">
+                    <thead><tr>
+                        <th>InvocieNo</th><th>CustomerName</th><th>OrderNo</th><th>WareHouse</th><th>JobLot</th><th>Item</th><th>ItemUOM</th><th>PackingType</th>
+                        <th class="num">QTY</th><th class="num">Weight</th><th class="num">PackingWeight</th><th class="num">TotalPackingWeight</th><th class="num">GrossWeight</th>
+                        <th class="num">OtherWeight</th><th class="num">LoadQty</th><th class="num">LoadWeight</th><th>ContainerNo</th><th>ContainerRemarks</th><th>InspectionRemarks</th><th>Remarks</th>
+                    </tr></thead>
+                    <tbody id="edonHistDetailBody"></tbody>
+                    <tfoot id="edonHistDetailFoot"></tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="win-footer-strip">
+        <span class="ex-footer-left" id="edonFooterInfo"></span>
+        <button type="button" class="win-btn-history" id="btnEdonFooterHistory" onclick="ExportEdon.toggleHistory()"><i class="fa fa-history"></i> <span>History</span></button>
+    </div>
+</div>
+
+<div class="it-modal is-hidden" id="edonShortcutModal">
+    <div class="it-modal-box" style="width:min(560px,96vw);">
+        <div class="pd-caption pd-caption-teal" style="height:28px;"><span>ShortCut Keys</span><button type="button" class="it-modal-close" onclick="ExportEdon.closeShortCutKeys()">&times;</button></div>
+        <div class="ex-grid-scroll ex-h400">
+            <table class="win-grid"><thead><tr><th>KeyCombination</th><th>Description</th></tr></thead><tbody id="edonShortcutBody"></tbody></table>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260924a}"></script>
+<script th:src="@{/build/js/countx_export_invoice_transfer_common.js?v=20261003a}"></script>
+<script th:src="@{/build/js/countx_export_delivery_order_new.js?v=20261003a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

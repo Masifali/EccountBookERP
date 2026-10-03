@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Export Contract Scheduling Reports - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_rpta.css?v=20260930a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_rptn.css?v=20261003a}"/>
+</head>
+<!-- frmExportContractSchedulePeriodic.cs (Architecture.WinApp.ExportReports), screen 237 "5002 Contract Schedule Report", ClientSize 1328 x 567.
+     PanelDetail (Teal, Top 55): toolStrip3 btnNew "&New" / btnPrint "&Print" (Visible = false, no handler) / btnShortCutKeys "ShortCutKeys";
+     label11 "Export Contract Scheduling Reports". panel3 (Left 235): panel5 - From Month cmbFromMonth, Add Months txtAddMonths, To Month CmbToMonth,
+     btnShowByMonths "Show"; From Date txtDateFrom, Add Days tztAddDays, To Date txtToDate, BtnShowbyDates "Show"; panel2 "By Schedule Month" grdByMonths.
+     panel1 (Fill): " By Schedule Date" grdByDate (300) | " By Party" grdByParty (277) | " By Item" grdByItem (338) | "By Ports" grdByPorts (303).
+     Events: Load (MonthFill, GetLatestAttentiveLoadDate arithmetic, month combos), FormClosing, btnNew, btnShow (by dates), btnShowByMonths,
+     KeyDown (Enter, Ctrl+E/Esc, Ctrl+S = Show by months, Ctrl+F5, Ctrl+N, Ctrl+Down, Ctrl+Up, Ctrl+Alt), btnShortCutKeys,
+     txtAddMonths KeyPress / TextChanged, tztAddDays KeyPress / TextChanged. -->
+<body class="pd-body" data-export-page="sca">
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="pd-form ex-form">
+    <div class="win-tool-strip">
+        <button type="button" id="btnNew" class="win-btn-tool" accesskey="n" onclick="ExportSca.btnNew()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+        <button type="button" id="btnPrint" class="win-btn-tool is-hidden"><i class="fa fa-print"></i> <span><u>P</u>rint</span></button>
+        <button type="button" id="btnShortCutKeys" class="win-btn-tool" onclick="ExportSca.shortcuts()"><i class="fa fa-keyboard-o"></i> <span>ShortCutKeys</span></button>
+    </div>
+    <div class="pd-caption pd-caption-teal" style="height:28px;"><span>Export Contract Scheduling Reports</span></div>
+
+    <div class="rptn-sched">
+        <div class="rptn-left" id="panel3">
+            <div class="rpta-panel" id="panel5" style="padding:4px 0;">
+                <div class="ex-field"><label for="cmbFromMonth">From Month</label><select id="cmbFromMonth" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Month"></select></div>
+                <div class="ex-field"><label for="txtAddMonths">Add Months</label><input type="text" id="txtAddMonths" class="win-textbox num" data-guard="integer" autocomplete="off"/></div>
+                <div class="ex-field"><label for="CmbToMonth">To Month</label><select id="CmbToMonth" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Month"></select></div>
+                <div class="ex-field" style="justify-content:flex-end;"><button type="button" id="btnShowByMonths" class="win-btn-small rptn-teal-btn" style="width:64px;height:26px;" onclick="ExportSca.showByMonths(this)">Show</button></div>
+                <div class="ex-field"><label for="txtDateFrom">From Date</label><input type="date" id="txtDateFrom" class="win-date"/></div>
+                <div class="ex-field"><label for="tztAddDays">Add Days</label><input type="text" id="tztAddDays" class="win-textbox num" data-guard="integer" autocomplete="off"/></div>
+                <div class="ex-field"><label for="txtToDate">To Date</label><input type="date" id="txtToDate" class="win-date"/></div>
+                <div class="ex-field" style="justify-content:flex-end;"><button type="button" id="BtnShowbyDates" class="win-btn-small rptn-teal-btn" style="width:64px;height:26px;" onclick="ExportSca.showByDates(this)">Show</button></div>
+            </div>
+            <div class="rpta-panel" id="panel2" style="flex:1;">
+                <div class="pd-caption pd-caption-teal pd-history-bar" style="height:29px;"><span>By Schedule Month</span><span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdByMonthsBox" title="Fullscreen table">&#x26F6;</button></span></div>
+                <div class="ex-grid-box" id="grdByMonthsBox"><div class="ex-grid-scroll" style="max-height:251px;"><table class="win-grid" id="grdByMonths" tabindex="0"><thead></thead><tbody></tbody><tfoot></tfoot></table></div></div>
+            </div>
+        </div>
+        <div class="rptn-grids" id="panel1">
+            <div class="rpta-panel rptn-p300" id="panel6">
+                <div class="pd-caption pd-caption-teal pd-history-bar" style="height:27px;"><span>&nbsp;By Schedule Date</span><span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdByDateBox" title="Fullscreen table">&#x26F6;</button></span></div>
+                <div class="ex-grid-box" id="grdByDateBox"><div class="ex-grid-scroll" style="max-height:485px;"><table class="win-grid" id="grdByDate" tabindex="0"><thead></thead><tbody></tbody><tfoot></tfoot></table></div></div>
+            </div>
+            <div class="rpta-panel rptn-p277" id="panel11">
+                <div class="pd-caption pd-caption-teal pd-history-bar" style="height:27px;"><span>&nbsp;By Party</span><span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdByPartyBox" title="Fullscreen table">&#x26F6;</button></span></div>
+                <div class="ex-grid-box" id="grdByPartyBox"><div class="ex-grid-scroll" style="max-height:485px;"><table class="win-grid" id="grdByParty" tabindex="0"><thead></thead><tbody></tbody><tfoot></tfoot></table></div></div>
+            </div>
+            <div class="rpta-panel rptn-p338" id="panel9">
+                <div class="pd-caption pd-caption-teal pd-history-bar" style="height:27px;"><span>&nbsp;By Item</span><span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdByItemBox" title="Fullscreen table">&#x26F6;</button></span></div>
+                <div class="ex-grid-box" id="grdByItemBox"><div class="ex-grid-scroll" style="max-height:485px;"><table class="win-grid" id="grdByItem" tabindex="0"><thead></thead><tbody></tbody><tfoot></tfoot></table></div></div>
+            </div>
+            <div class="rpta-panel rptn-p303" id="panel16">
+                <div class="pd-caption pd-caption-teal pd-history-bar" style="height:27px;"><span>By Ports</span><span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdByPortsBox" title="Fullscreen table">&#x26F6;</button></span></div>
+                <div class="ex-grid-box" id="grdByPortsBox"><div class="ex-grid-scroll" style="max-height:485px;"><table class="win-grid" id="grdByPorts" tabindex="0"><thead></thead><tbody></tbody><tfoot></tfoot></table></div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="win-footer-strip" id="scaFooter">
+        <span class="ex-footer-left">frmExportContractSchedulePeriodic - screen 237</span>
+        <button type="button" class="win-btn-history" id="btnScaFooterHistory" onclick="ExportSca.showByDates(document.getElementById('BtnShowbyDates'))"><i class="fa fa-history"></i> <span>History</span></button>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_export_rpta_common.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_export_rptn_common.js?v=20261003a}"></script>
+<script th:src="@{/build/js/countx_export_contract_schedule_periodic_a.js?v=20261003a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

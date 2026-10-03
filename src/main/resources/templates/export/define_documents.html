@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Define Documents - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_q.css?v=20261003q}"/>
+</head>
+<!-- ExImfrmDefineDocuments.cs (Architecture.WinApp.Export), screen 207 "Documents" (form Text "Define Documents"), ClientSize 1329 x 436.
+     toolStrip1: "Define Documents" caption, New (btnnew_Click), Save (btnsave_Click - empty on the desktop), Update (hidden, no handler).
+     panel3 (408 high) docks three panels left to right:
+       panel5 (331): groupBox1 "Document List" - Doc Code (txtDocCode), Document Name (txtDocName), btnAddinGrid (+ icon);
+                     grdDocList (Id hidden, DocCode, DocumentName) - DoubleClick -> ReadById.
+       panel4 (337): groupBox2 "Document Group" - Group Code (txtGrpCode), Group Name (txtgrpName), btnSaveGroup;
+                     grdDocGroup (Id hidden, GroupCode, GroupName) - DoubleClick -> ReadByGrpId.
+       panel14 (659): groupBox3 "Assign Documetn To Group" - Group Code (cmbGroupCode), Document Name (cmbDocName), Orignal (txtorginal),
+                     Copies (txtcopies), btnSavedoctoGroup; grdAssignDocToGrp (Id hidden, GroupCode, DocumentName, Copies, Orignial) - DoubleClick -> ReadByDocGrpId.
+     Events: frmList_Load, btnnew_Click, btnAddinGrid_Click, btnSaveGroup_Click, btnSavedoctoGroup_Click, the three grid DoubleClicks,
+     cmbGroupCode_TextChanged (empty), btnsave_Click (empty). No KeyDown handler on this form. -->
+<body class="pd-body" data-export-page="define-documents">
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="pd-form ex-form">
+    <div class="win-tool-strip">
+        <span class="pd-caption-inline" style="font:bold 10pt Tahoma, sans-serif; color:#004d40; padding:0 8px;">Define Documents</span>
+        <button type="button" id="btnnew" class="win-btn-tool" accesskey="n" onclick="ExportDefineDocuments.newAll(this)"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+        <button type="button" id="btnsave" class="win-btn-tool" accesskey="s" title="btnsave_Click is empty on the desktop" onclick="ExportDefineDocuments.toolSave()"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+        <button type="button" id="btnUpdate" class="win-btn-tool is-hidden" accesskey="u" title="No handler on the desktop"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+    </div>
+
+    <div class="exq-docs">
+        <!-- panel5 -->
+        <div class="exq-col">
+            <fieldset class="ex-groupbox"><legend>Document List</legend>
+                <div class="exq-doc-entry">
+                    <div class="ex-field"><label for="txtDocCode">Doc Code</label><input type="text" id="txtDocCode" class="win-textbox" autocomplete="off"/></div>
+                    <div class="ex-field"><label for="txtDocName">Document Name</label><input type="text" id="txtDocName" class="win-textbox" autocomplete="off"/></div>
+                    <div class="ex-actions"><button type="button" id="btnAddinGrid" class="win-btn-small" title="Save" onclick="ExportDefineDocuments.saveDocument(this)"><i class="fa fa-plus"></i></button></div>
+                </div>
+            </fieldset>
+            <div class="pd-caption pd-caption-dark pd-history-bar"><span>Document List</span>
+                <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdDocListBox" title="Fullscreen table">&#x26F6;</button></span></div>
+            <div class="ex-grid-box" id="grdDocListBox">
+                <div class="ex-grid-scroll ex-h300">
+                    <table class="win-grid" id="grdDocList">
+                        <thead><tr><th data-col="DocCode">DocCode</th><th data-col="DocumentName">DocumentName</th></tr></thead>
+                        <tbody id="docBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- panel4 -->
+        <div class="exq-col">
+            <fieldset class="ex-groupbox"><legend>Document Group</legend>
+                <div class="exq-doc-entry">
+                    <div class="ex-field"><label for="txtGrpCode">Group Code</label><input type="text" id="txtGrpCode" class="win-textbox" autocomplete="off"/></div>
+                    <div class="ex-field"><label for="txtgrpName">Group Name</label><input type="text" id="txtgrpName" class="win-textbox" autocomplete="off"/></div>
+                    <div class="ex-actions"><button type="button" id="btnSaveGroup" class="win-btn-small" title="Save" onclick="ExportDefineDocuments.saveGroup(this)"><i class="fa fa-plus"></i></button></div>
+                </div>
+            </fieldset>
+            <div class="pd-caption pd-caption-dark pd-history-bar"><span>Document Group</span>
+                <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdDocGroupBox" title="Fullscreen table">&#x26F6;</button></span></div>
+            <div class="ex-grid-box" id="grdDocGroupBox">
+                <div class="ex-grid-scroll ex-h300">
+                    <table class="win-grid" id="grdDocGroup">
+                        <thead><tr><th data-col="GroupCode">GroupCode</th><th data-col="GroupName">GroupName</th></tr></thead>
+                        <tbody id="grpBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- panel14 -->
+        <div class="exq-col">
+            <fieldset class="ex-groupbox"><legend>Assign Documetn To Group</legend>
+                <div class="exq-assign-entry">
+                    <div class="ex-field"><label for="cmbGroupCode">Group Code</label>
+                        <select id="cmbGroupCode" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Group Code"></select></div>
+                    <div class="ex-field"><label for="cmbDocName">Document Name</label>
+                        <select id="cmbDocName" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Document Name "></select></div>
+                    <div class="ex-field"><label for="txtorginal">Orignal</label><input type="text" id="txtorginal" class="win-textbox num" autocomplete="off"/></div>
+                    <div class="ex-field"><label for="txtcopies">Copies</label><input type="text" id="txtcopies" class="win-textbox num" autocomplete="off"/></div>
+                    <div class="ex-actions"><button type="button" id="btnSavedoctoGroup" class="win-btn-small" title="Save" onclick="ExportDefineDocuments.saveSchedule(this)"><i class="fa fa-plus"></i></button></div>
+                </div>
+            </fieldset>
+            <div class="pd-caption pd-caption-dark pd-history-bar"><span>Assign Document To Group</span>
+                <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdAssignDocToGrpBox" title="Fullscreen table">&#x26F6;</button></span></div>
+            <div class="ex-grid-box" id="grdAssignDocToGrpBox">
+                <div class="ex-grid-scroll ex-h300">
+                    <table class="win-grid" id="grdAssignDocToGrp">
+                        <thead><tr><th data-col="GroupCode">GroupCode</th><th data-col="DocumentName">DocumentName</th><th class="num" data-col="Copies">Copies</th><th class="num" data-col="Orignial">Orignial</th></tr></thead>
+                        <tbody id="asgBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="win-footer-strip">
+        <span class="ex-footer-left" id="footerInfo">ExImfrmDefineDocuments - screen 207</span>
+        <button type="button" class="win-btn-history" id="btnFooterHistory" onclick="ExportDefineDocuments.history(this)"><i class="fa fa-history"></i> <span>History</span></button>
+    </div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_export_q_common.js?v=20261003q}"></script>
+<script th:src="@{/build/js/countx_export_define_documents.js?v=20261003q}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

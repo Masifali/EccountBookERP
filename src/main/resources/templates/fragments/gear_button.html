@@ -1,0 +1,88 @@
+<!--
+  The desktop shell's gear menu (DashboardNew.contextMenuStrip3), beside Logout in the web header:
+    "Admin Panel"      (btnadminpanel - only when RoleName == "Admin", DashboardNew.cs:1191)
+    "System Utilities" (btnUtility - everyone)
+  Items, routes and the Admin gate come from GearMenuController (adminItemsForView / utilityItemsForView),
+  the same lists /admin-panel and /system-utilities show. Unported items are greyed, not hidden.
+  Use:  <div th:replace="fragments/gear_button :: gear"></div>
+-->
+<div th:fragment="gear" class="gb-root"
+     th:with="adminItems=${@gearMenuController.adminItemsForView()}, utilItems=${@gearMenuController.utilityItemsForView()}">
+    <style>
+        .gb-root { position: fixed; left: 10px; bottom: 10px; z-index: 2000; font-family: "Segoe UI", Tahoma, sans-serif; }
+        .gb-root .gb-btn { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #fff; background: #00796B; color: #fff;
+                  font-size: 20px; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,.35); display: flex; align-items: center; justify-content: center; }
+        .gb-root .gb-btn:hover { background: #005f56; }
+        .gb-root .gb-menu { display: none; position: absolute; left: 0; bottom: 48px; background: #f0f0f0; border: 1px solid #979797;
+                   box-shadow: 2px 2px 6px rgba(0,0,0,.3); min-width: 190px; padding: 2px 0; font-size: 9pt; }
+        .gb-root.is-open .gb-menu { display: block; }
+        .gb-root .gb-item { position: relative; padding: 5px 22px 5px 26px; cursor: default; white-space: nowrap; color: #000; }
+        .gb-root .gb-item > .fa { position: absolute; left: 7px; top: 7px; width: 14px; color: #00796B; }
+        .gb-root .gb-item::after { content: "\25B8"; position: absolute; right: 8px; color: #333; }
+        .gb-root .gb-item:hover, .gb-root .gb-item.is-open { background: #cce8ff; }
+        .gb-root .gb-sub { display: none; position: absolute; left: 100%; bottom: -3px; background: #f0f0f0; border: 1px solid #979797;
+                  box-shadow: 2px 2px 6px rgba(0,0,0,.3); min-width: 230px; padding: 2px 0; }
+        .gb-root .gb-item:hover > .gb-sub, .gb-root .gb-item.is-open > .gb-sub { display: block; }
+        .gb-root .gb-sub a, .gb-root .gb-sub span { display: block; padding: 5px 14px; color: #000; text-decoration: none; white-space: nowrap; }
+        .gb-root .gb-sub a:hover { background: #cce8ff; }
+        .gb-root .gb-sub span.gb-off { color: #8a8a8a; cursor: not-allowed; }
+        .erp-navigation .gb-root.gb-in-header { position: relative; inset: auto; flex: 0 0 auto; z-index: 2200; }
+        .gb-root.gb-in-header .gb-btn { width: 32px; height: 32px; border: 0; border-radius: 3px; background: transparent; color: #34495e; box-shadow: none; font-size: 18px; }
+        .gb-root.gb-in-header .gb-btn:hover { background: #e6ebef; }
+        .gb-root.gb-in-header .gb-menu { left: auto; right: 0; top: 100%; bottom: auto; text-align: left; }
+        .gb-root.gb-in-header .gb-sub { left: auto; right: 100%; top: -3px; bottom: auto; max-height: calc(100vh - 100px); overflow-y: auto; }
+        .gb-root.gb-in-header .gb-item::after { content: "\25C2"; }
+        @media (max-width: 600px) {
+            .gb-root.gb-in-header .gb-menu { width: min(280px, calc(100vw - 70px)); min-width: 0; max-height: calc(100vh - 60px); overflow-y: auto; }
+            .gb-root.gb-in-header .gb-sub { position: static; min-width: 0; max-height: none; border: 0; box-shadow: none; margin: 5px -22px -5px -26px; }
+            .gb-root.gb-in-header .gb-sub a, .gb-root.gb-in-header .gb-sub span { white-space: normal; overflow-wrap: anywhere; }
+            .gb-root.gb-in-header .gb-item::after { content: "\25BE"; }
+        }
+    </style>
+    <div class="gb-menu" role="menu">
+        <div class="gb-item" th:if="${!adminItems.isEmpty()}" tabindex="0"><i class="fa fa-user-secret"></i>Admin Panel
+            <div class="gb-sub" role="menu">
+                <th:block th:each="i : ${adminItems}">
+                    <a th:if="${i['built']}" th:href="@{${i['route']}}" th:text="${i['text']}" role="menuitem">Item</a>
+                    <span th:unless="${i['built']}" class="gb-off" th:text="${i['text']}" th:title="${i['note']}">Item</span>
+                </th:block>
+            </div>
+        </div>
+        <div class="gb-item" tabindex="0"><i class="fa fa-wrench"></i>System Utilities
+            <div class="gb-sub" role="menu">
+                <th:block th:each="i : ${utilItems}">
+                    <a th:if="${i['built']}" th:href="@{${i['route']}}" th:text="${i['text']}" role="menuitem">Item</a>
+                    <span th:unless="${i['built']}" class="gb-off" th:text="${i['text']}" th:title="${i['note']}">Item</span>
+                </th:block>
+            </div>
+        </div>
+    </div>
+    <button type="button" class="gb-btn" title="Settings" aria-label="Settings" aria-haspopup="menu" aria-expanded="false"><i class="fa fa-cog" aria-hidden="true"></i></button>
+    <script>
+        (function () {
+            var root = document.currentScript.parentNode;
+            var logout = document.querySelector('.erp-navigation-bar .erp-logout');
+            if (logout) {
+                root.classList.add('gb-in-header');
+                logout.parentNode.insertBefore(root, logout);
+            }
+            var button = root.querySelector('.gb-btn');
+            function setOpen(open) {
+                root.classList.toggle('is-open', open);
+                button.setAttribute('aria-expanded', String(open));
+                if (!open) root.querySelectorAll('.gb-item').forEach(function (x) { x.classList.remove('is-open'); });
+            }
+            button.addEventListener('click', function () { setOpen(!root.classList.contains('is-open')); });
+            root.querySelectorAll('.gb-item').forEach(function (it) {
+                it.addEventListener('click', function (e) {
+                    if (e.target.closest('.gb-sub')) return;
+                    var open = it.classList.contains('is-open');
+                    root.querySelectorAll('.gb-item').forEach(function (x) { x.classList.remove('is-open'); });
+                    if (!open) it.classList.add('is-open');
+                });
+            });
+            document.addEventListener('mousedown', function (e) { if (!root.contains(e.target)) setOpen(false); });
+            document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && root.classList.contains('is-open')) { setOpen(false); button.focus(); } });
+        })();
+    </script>
+</div>

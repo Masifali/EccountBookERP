@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>GD Container BreakUp - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_q.css?v=20261003q}"/>
+</head>
+<!-- GdContainerBreakUp.cs (Architecture.WinApp.Export), no ScreenDefinition row (opened from 952 GD history "ContainerBreakUp" with
+     GdIdFromBreakUp = the GD Id), form Text "GD Container BreakUp", ClientSize 1019 x 498.
+     toolStrip4: New (btnNew_Click), Save (btnsave_Click), Update (hidden; btnupdate_Click - "RecId not found" unless opened with a GD).
+     panel30: Gd No (CmbGdNo, UltraCombo Id/GDNO/ExImInvoiceId(hidden)/InvoiceNo; Leave -> load that GD's break-up), Container No,
+     Container Size, NoOfBags ("0"), Net Weight ("0") - KeyPress OnlytextdecimelFunction; + / Update / Cancel (Teal).
+     panel1 (Teal) "GD Container Break " + ctrlGrdBar1; grdGdBreakUp: X (Delete) first, GdNo, InvoiceNo, ContainerNo, ContainerSize,
+     NoOfBags (Sum), NetWeight (Sum) "#,##0.###"; Id / GdId / ExImInvoiceId hidden; DoubleClick -> edit row.
+     KeyDown: Enter -> next control, Ctrl+N New, Ctrl+E / Esc close, Ctrl+U Update.
+     Page parameter: ?gdId=<ExImInvoiceBankGDBreakUp.Id> (GdIdFromBreakUp): the GD is selected and its break-up loaded. -->
+<body class="pd-body" data-export-page="gd-container-break-up">
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="pd-form ex-form">
+    <div class="win-tool-strip">
+        <button type="button" id="btnNew" class="win-btn-tool" accesskey="n" onclick="ExportGdContainerBreakUp.reset(this)"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+        <button type="button" id="btnsave" class="win-btn-tool" accesskey="s" onclick="ExportGdContainerBreakUp.save(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+        <button type="button" id="btnupdate" class="win-btn-tool is-hidden" accesskey="u" onclick="ExportGdContainerBreakUp.update(this)"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+    </div>
+    <div class="ex-entry exq-gdc-entry">
+        <div class="ex-field"><label for="CmbGdNo">Gd No</label>
+            <select id="CmbGdNo" class="win-combo dtcombo" data-columns="Gd No|InvoiceNo" data-dtcombo-caption="Gd No"></select></div>
+        <div class="ex-field"><label for="txtContainerNo">Container No</label><input type="text" id="txtContainerNo" class="win-textbox" maxlength="20" autocomplete="off"/></div>
+        <div class="ex-field"><label for="txtContainerSize">Container Size</label><input type="text" id="txtContainerSize" class="win-textbox" maxlength="20" autocomplete="off"/></div>
+        <div class="ex-field"><label for="txtNoOfBags">NoOfBags</label><input type="text" id="txtNoOfBags" class="win-textbox num" value="0" data-guard="decimal" autocomplete="off"/></div>
+        <div class="ex-field"><label for="txtNetWeight">Net Weight</label><input type="text" id="txtNetWeight" class="win-textbox num" value="0" data-guard="decimal" autocomplete="off"/></div>
+        <div class="ex-actions">
+            <button type="button" id="btnAdd" class="win-btn-small" title="Add" onclick="ExportGdContainerBreakUp.addRow()">+</button>
+            <button type="button" id="btnUpdateDetail" class="win-btn-small is-hidden" onclick="ExportGdContainerBreakUp.updateRow()">Update</button>
+            <button type="button" id="btnCancelDetail" class="win-btn-small is-hidden" onclick="ExportGdContainerBreakUp.cancelRow()">Cancel</button>
+        </div>
+    </div>
+    <div class="pd-caption pd-caption-teal pd-history-bar" id="gridBar"><span>GD Container Break </span>
+        <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdGdBreakUpBox" title="Fullscreen table">&#x26F6;</button><span id="gridBarMount" class="pd-gridbar-mount"></span></span></div>
+    <div class="ex-grid-box" id="grdGdBreakUpBox">
+        <div class="ex-grid-scroll ex-h400">
+            <table class="win-grid" id="grdGdBreakUp" data-gridbar="GdContainerBreakUp:grdGdBreakUp" data-gridbar-mount="#gridBarMount" data-gridbar-reorder="false">
+                <thead><tr>
+                    <th class="ctr" title="Delete">X</th>
+                    <th data-col="GdNo">GdNo</th><th data-col="InvoiceNo">InvoiceNo</th><th data-col="ContainerNo">ContainerNo</th><th data-col="ContainerSize">ContainerSize</th>
+                    <th class="num" data-col="NoOfBags">NoOfBags</th><th class="num" data-col="NetWeight">NetWeight</th>
+                </tr></thead>
+                <tbody id="gdcBody"></tbody>
+                <tfoot id="gdcFoot"></tfoot>
+            </table>
+        </div>
+    </div>
+    <div class="win-footer-strip">
+        <span class="ex-footer-left" id="footerInfo">GdContainerBreakUp</span>
+        <button type="button" class="win-btn-history" id="btnFooterHistory" onclick="ExportGdContainerBreakUp.history(this)"><i class="fa fa-history"></i> <span>History</span></button>
+    </div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_export_q_common.js?v=20261003q}"></script>
+<script th:src="@{/build/js/countx_export_gd_container_break_up.js?v=20261003q}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

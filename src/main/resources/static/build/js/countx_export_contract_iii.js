@@ -414,6 +414,7 @@
         commodity: 'The Commodity Detail form (frmCommodityDetailItemCustomerWise) is not ported.'
     };
     function popup(key) {
+        if (key === 'generateNos') { global.open('/export/generate-contract-nos', '_blank'); return; }
         if (key === 'pmDetail') { global.open('/export/packing-detail-by-contract' + (S.recId > 0 ? '?id=' + S.recId : ''), '_blank'); return; }
         box(POPUPS[key] || 'Not available.');
     }

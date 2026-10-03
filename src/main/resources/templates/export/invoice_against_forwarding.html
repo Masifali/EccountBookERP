@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Export Invoice Against Forwarding - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_g.css?v=20261003a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_shipment.css?v=20261003a}"/>
+</head>
+<!-- ExportInvoiceAgainstForwarding.cs (Architecture.WinApp.Export), form Text "EccountBook", ClientSize 1145 x 692, InvSaleInvoice
+     DocumentTypeId 208; no ScreenDefinition row (rights by the form name). tabControl1 "Form" | "History" (History -> GetAll(50)).
+     Form: toolStrip1 "Export Invoice" / New / Update / Save / Delete (hidden) / Attechment / Refresh / Load Farwarding / 103-Voucher /
+       319- Slip / 319A-Slip; Doc No && Date (txtdocno disabled, txtDocDate ValueChanged), Party Name (cmbPartyName ValueChanged),
+       Manual Bill No, Remarks, Due Days && Date (txtDueDays TextChanged, txtDueDate disabled), Invoice Amount (disabled), Item Rate /
+       Rate Uom header boxes (TextChanged rewrite every row), Voucher Print / Slip Print (checked); Stock Party / Delivery Term /
+       Empty Bags Cut hidden; grd (ItemRate / RateUom / ItemDescription editable, CellUpdated); "Debit Or Credit Against Party"
+       GrdPartyAddless (Party Add/Less value list of account types 2,11,12,15, %, Qty, Rate, Debit, Credit, Remarks, X and + buttons,
+       CellUpdated); panel10 (other expenses grid) hidden.
+     History: toolStrip2 LoadAll; "Export Invoice History" grdHistory (Voucher / Print / PartySlip / Detail / Edit, BillAmount summed;
+       SelectionChanged -> grdDetail; DoubleClick = ReadById_Update); grdDetail.
+     Loader LoadExportForwarding (1082 x 727): From Date (ActiveYr start), To Date, Party Name, Item Name (not sent), Search / Load / Reset;
+       grd with Select column, ItemQty / NetWeight / AddLessWeight / GrossWeight / StockWeight summed. -->
+<body class="pd-body">
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="pd-form ex-form exs-form">
+    <div class="win-tabs" data-tabs="main">
+        <button type="button" class="win-tab is-active" data-tab="tabForm">Form</button>
+        <button type="button" class="win-tab" data-tab="tabHistory">History</button>
+    </div>
+
+    <div class="win-tab-panel is-active" id="tabForm">
+        <div class="win-tool-strip">
+            <span class="exs-note" style="margin:0 6px 0 0;padding:2px 8px;background:transparent;border:0;color:#004d40;font-weight:bold;">Export Invoice</span>
+            <button type="button" id="btnNew" class="win-btn-tool" accesskey="n"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="btnUpdate" class="win-btn-tool is-hidden" accesskey="u"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+            <button type="button" id="btnSave" class="win-btn-tool" accesskey="s"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+            <button type="button" id="btnAttachment" class="win-btn-tool"><i class="fa fa-paperclip"></i> <span><u>A</u>ttechment</span></button>
+            <button type="button" id="btnFrmRefresh" class="win-btn-tool"><i class="fa fa-refresh"></i> <span><u>R</u>efresh</span></button>
+            <button type="button" id="toolStripButton3" class="win-btn-tool"><i class="fa fa-download"></i> <span>Load <u>F</u>arwarding</span></button>
+            <button type="button" id="btnPrint" class="win-btn-tool"><i class="fa fa-print"></i> <span>103-<u>V</u>oucher</span></button>
+            <button type="button" id="btnSlip220A" class="win-btn-tool"><i class="fa fa-print"></i> <span>319- Slip</span></button>
+            <button type="button" id="btn220bSummary" class="win-btn-tool"><i class="fa fa-print"></i> <span>319A-Slip</span></button>
+        </div>
+        <div class="exs-entry exs-cols-4">
+            <div class="ex-field"><label for="txtdocno">Doc No &amp; Date</label>
+                <div class="exs-pair"><input type="text" id="txtdocno" class="win-textbox num" readonly disabled/><input type="date" id="txtDocDate" class="win-date"/></div></div>
+            <div class="ex-field exs-span-2"><label for="cmbPartyName">Party Name</label>
+                <select id="cmbPartyName" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Customer"></select></div>
+            <div class="ex-field"><label for="txtbillno">Manual Bill No</label><input type="text" id="txtbillno" class="win-textbox" autocomplete="off"/></div>
+            <div class="ex-field exs-span-2"><label for="txtRemarks">Remarks</label><textarea id="txtRemarks" class="win-textbox" rows="2"></textarea></div>
+            <div class="ex-field"><label for="txtDueDays">Due Days &amp; Date</label>
+                <div class="exs-pair"><input type="text" id="txtDueDays" class="win-textbox num" data-guard="integer" autocomplete="off"/><input type="date" id="txtDueDate" class="win-date" disabled/></div></div>
+            <div class="ex-field"><label for="txtBillAmount">Invoice Amount</label><input type="text" id="txtBillAmount" class="win-textbox num" value="0" readonly disabled/></div>
+            <div class="ex-field"><label for="txtItemRateHeader">Item Rate</label><input type="text" id="txtItemRateHeader" class="win-textbox num" data-guard="decimal" autocomplete="off"/></div>
+            <div class="ex-field"><label for="txtRateUomHeader">Rate Uom</label><input type="text" id="txtRateUomHeader" class="win-textbox num" data-guard="integer" autocomplete="off"/></div>
+            <div class="exs-checks exs-span-2">
+                <label class="ex-check"><input type="checkbox" id="ChkBok" checked/> Voucher Print</label>
+                <label class="ex-check"><input type="checkbox" id="ChkBoxSlip" checked/> Slip Print</label>
+            </div>
+        </div>
+        <div class="pd-caption pd-caption-teal pd-history-bar" style="height:22px;"><span></span>
+            <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdBox" title="Fullscreen table">&#x26F6;</button></span></div>
+        <div class="ex-grid-box" id="grdBox">
+            <div class="ex-grid-scroll ex-h300">
+                <table class="win-grid" id="grd">
+                    <thead><tr><th>Reference No</th><th>Item Name</th><th>Packing Type</th><th>Pack Uom</th><th class="num">Item Qty</th><th class="num">Net Bill Weight</th>
+                        <th class="num">AddLess</th><th class="num">Gross Weight</th><th class="num">Item Rate</th><th class="num">Rate Uom</th><th class="num">Item Amount</th>
+                        <th>Gp No</th><th>Vehicle No</th><th>Bilty No</th><th>Crop Year</th><th>Warehouse Name</th><th>Job Lot</th><th>Item Description</th></tr></thead>
+                    <tbody></tbody><tfoot></tfoot>
+                </table>
+            </div>
+        </div>
+        <div class="pd-caption pd-caption-teal"><span>Debit Or Credit Against Party</span></div>
+        <div class="ex-grid-scroll ex-h240">
+            <table class="win-grid" id="GrdPartyAddless">
+                <thead><tr><th class="ctr">X</th><th class="ctr">+</th><th>Party Add/Less</th><th class="num"> % </th><th class="num">Qty</th><th class="num">Rate</th>
+                    <th class="num">Debit</th><th class="num">Credit</th><th>Remarks</th></tr></thead>
+                <tbody></tbody><tfoot></tfoot>
+            </table>
+        </div>
+    </div>
+
+    <div class="win-tab-panel" id="tabHistory">
+        <div class="win-tool-strip">
+            <button type="button" id="btnLoadAll" class="win-btn-tool"><i class="fa fa-list"></i> <span><u>L</u>oadAll</span></button>
+        </div>
+        <div class="pd-caption pd-caption-dark pd-history-bar"><span>Export Invoice History</span>
+            <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdHistoryBox" title="Fullscreen table">&#x26F6;</button></span></div>
+        <div class="ex-grid-box" id="grdHistoryBox">
+            <div class="ex-grid-scroll ex-h300">
+                <table class="win-grid" id="grdHistory">
+                    <thead><tr><th>Voucher</th><th>Print</th><th>PartySlip</th><th>Detail</th><th>Edit</th><th>Doc No</th><th>Doc Date</th><th>Customer Name</th>
+                        <th>Due Date</th><th>Manual Bill No</th><th>Remarks Header</th><th class="num">Bill Amount</th><th>Entry Date</th><th>Entry User</th><th>No Of Attachments</th></tr></thead>
+                    <tbody></tbody><tfoot></tfoot>
+                </table>
+            </div>
+            <div class="ex-grid-empty is-hidden" id="grdHistoryEmpty">No record found.</div>
+        </div>
+        <div class="pd-caption pd-caption-dark"><span>Detail</span></div>
+        <div class="ex-grid-scroll ex-h240">
+            <table class="win-grid" id="grdDetail">
+                <thead><tr><th>Forwarding Doc No</th><th>Reference No</th><th>Item Name</th><th>Item UOM</th><th>Packing Type</th><th class="num">Item Qty</th>
+                    <th class="num">Net Bill Weight</th><th class="num">Add Less</th><th class="num">Gross Weight</th><th class="num">Item Rate</th><th>Rate UOM</th>
+                    <th class="num">Item Amount</th><th>Gp No</th><th>Vehicle No</th><th>Crop Year</th><th>Ware House</th><th>Job Lot</th><th>Description</th></tr></thead>
+                <tbody></tbody><tfoot></tfoot>
+            </table>
+        </div>
+    </div>
+
+    <div class="win-footer-strip">
+        <span class="ex-footer-left">ExportInvoiceAgainstForwarding - Document Type 208</span>
+        <button type="button" class="win-btn-history" id="btnFooterHistory"><i class="fa fa-history"></i> <span>History</span></button>
+    </div>
+</div>
+
+<!-- LoadExportForwarding (loader dialog) -->
+<div class="exs-modal is-hidden" id="loaderModal">
+    <div class="exs-modal-box">
+        <div class="pd-caption pd-caption-teal exs-modal-head"><span>Export Forwarding Loader</span>
+            <button type="button" class="ex-fs-btn" id="loaderClose" title="Close">&times;</button></div>
+        <div class="exs-entry exs-cols-5">
+            <div class="ex-field"><label for="FromDate">From Date</label><input type="date" id="FromDate" class="win-date"/></div>
+            <div class="ex-field"><label for="Todate">To Date</label><input type="date" id="Todate" class="win-date"/></div>
+            <div class="ex-field exs-span-2"><label for="CmbPartyName">Party Name</label>
+                <select id="CmbPartyName" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Party Name"></select></div>
+            <div class="ex-field"><label for="cmbItem">Item Name</label>
+                <select id="cmbItem" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Name"></select></div>
+            <div class="exs-btns exs-span-all" style="justify-content:flex-end;">
+                <button type="button" id="btngrnlod" class="win-btn-small">Search</button>
+                <button type="button" id="btnLoadOnInvoice" class="win-btn-small">Load</button>
+                <button type="button" id="btnReset" class="win-btn-small">Reset</button>
+            </div>
+        </div>
+        <div class="ex-grid-scroll ex-h400">
+            <table class="win-grid" id="loaderGrd">
+                <thead><tr><th class="ctr"><input type="checkbox" id="loaderAll" title="Select all"/></th><th>Doc Date</th><th>Doc No</th><th>Reference No</th>
+                    <th>Vehicle No</th><th>Bilty No</th><th>Gp No</th><th>Customer Name</th><th>Item Name</th><th>Item Description</th><th>Warehouse Name</th>
+                    <th>Job Lot</th><th>Crop Year</th><th>Packing Type</th><th>Pack Uom</th><th class="num">Item Qty</th><th class="num">Net Weight</th>
+                    <th class="num">Add Less Weight</th><th class="num">Gross Weight</th><th class="num">Stock Weight</th></tr></thead>
+                <tbody></tbody><tfoot></tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_export_g_common.js?v=20261003a}"></script>
+<script th:src="@{/build/js/countx_export_shipment_common.js?v=20261003a}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20261003a}"></script>
+<script th:src="@{/build/js/countx_export_invoice_against_forwarding.js?v=20261003a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

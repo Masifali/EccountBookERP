@@ -35,11 +35,21 @@ public class InventoryModuleViewController {
 
     // 1. DASHBOARD
     @GetMapping({"", "/", "/dashboard"})
-    public String inventoryDashboard(Model model) {
+    public String inventoryDashboard(Model model,
+            @RequestParam(value = "module", required = false) Integer moduleId) {
         model.addAttribute("activeMenu", "inventory");
+        model.addAttribute("appName", "Inventory");
         model.addAttribute("definitionCount", 11);
         model.addAttribute("reportsCount", 1);
         model.addAttribute("stockReportsCount", 8);
+        String category = moduleId == null ? null : switch (moduleId) {
+            case 4 -> "def";
+            case 8, 93 -> "invrpt";
+            case 19 -> "stockrpt";
+            default -> null;
+        };
+        model.addAttribute("inventoryCategory", category);
+        if (category != null) model.addAttribute("selectedModuleId", moduleId);
         return "inventory/inventory_dashboard";
     }
 

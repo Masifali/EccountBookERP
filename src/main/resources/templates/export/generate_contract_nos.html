@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Generate Export Contract Nos - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_q.css?v=20261003q}"/>
+</head>
+<!-- frmGenerateExportContractNos.cs (Architecture.WinApp.Export), no ScreenDefinition row (opened from 879 Contract III "Generate Contract Nos"),
+     ClientSize 784 x 611, BackColor Teal, DocumentTypeId 223.
+     toolStrip1: New (btnnew_Click), Save (btnsave_Click), Update (hidden; btnUpdate_Click -> DeleteAndInsert), Define Prefix Type (DefineExportPrefixType dialog).
+     panel4 (10,110,110) "Generate Export Contract Nos"; panel3: Prefix Type (CmbPrefixType, Id/PrefixDescription), Pre Fix (txtPrefix),
+     Serial From (txtSerialFrom), Serial To (txtSerialTo) - KeyPress OnlytextdecimelFunction; BtnSavef "Save" / btnUpdateF "Update" (hidden) / BtnCancel "Cancel" (Teal).
+     panel6 (10,110,110) "History" + ctrlGrdBar1; Grd: Edit button first (frozen), PrefixType, Prefix, ContractNo, EntryDate, EntryUser
+     (Id, MainId, PrefixTypeId, SerialFrom, SerialTo hidden) - one row per MainId; SelectionChanged -> detail; DoubleClick / Edit -> ReadById.
+     panel5 (10,110,110) "Detail Of Selected Above Row" + ctrlGrdBar2; grdDetail: Prefix, SerialFrom, SerialTo, ContractNo.
+     DefineExportPrefixType (Architecture.WinApp, 605 x 450, "Prefix Type"): Description + New / Save / Update(hidden) + grid (double-click edits).
+     Page parameter: ?mainId=<MainId> selects that batch in the history (as clicking its row). -->
+<body class="pd-body" data-export-page="generate-contract-nos">
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="pd-form ex-form">
+    <div class="win-tool-strip">
+        <button type="button" id="btnnew" class="win-btn-tool" accesskey="n" onclick="ExportGenerateContractNos.reset(this)"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+        <button type="button" id="btnsave" class="win-btn-tool" accesskey="s" onclick="ExportGenerateContractNos.save(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+        <button type="button" id="btnUpdate" class="win-btn-tool is-hidden" accesskey="u" onclick="ExportGenerateContractNos.update(this)"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+        <button type="button" id="btnDefinePrefixType" class="win-btn-tool" onclick="ExportGenerateContractNos.definePrefixType(this)"><i class="fa fa-tags"></i> <span>Define Prefix Type</span></button>
+    </div>
+    <div class="pd-caption pd-caption-dark">Generate Export Contract Nos</div>
+    <div class="ex-entry exq-gen-entry">
+        <div class="ex-field"><label for="CmbPrefixType">Prefix Type</label>
+            <select id="CmbPrefixType" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Prefix Type"></select></div>
+        <div class="ex-field"><label for="txtPrefix">Pre Fix</label><input type="text" id="txtPrefix" class="win-textbox" autocomplete="off"/></div>
+        <div class="ex-field"><label for="txtSerialFrom">Serial From</label><input type="text" id="txtSerialFrom" class="win-textbox num" data-guard="decimal" autocomplete="off"/></div>
+        <div class="ex-field"><label for="txtSerialTo">Serial To</label><input type="text" id="txtSerialTo" class="win-textbox num" data-guard="decimal" autocomplete="off"/></div>
+        <div class="ex-actions">
+            <button type="button" id="BtnSavef" class="win-btn-small" onclick="ExportGenerateContractNos.save(this)">Save</button>
+            <button type="button" id="btnUpdateF" class="win-btn-small is-hidden" onclick="ExportGenerateContractNos.update(this)">Update</button>
+            <button type="button" id="BtnCancel" class="win-btn-small" onclick="ExportGenerateContractNos.close()">Cancel</button>
+        </div>
+    </div>
+    <div class="pd-caption pd-caption-dark pd-history-bar" id="historyBar"><span>History</span>
+        <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="GrdBox" title="Fullscreen table">&#x26F6;</button><span id="gridBarMount1" class="pd-gridbar-mount"></span></span></div>
+    <div class="ex-grid-box" id="GrdBox">
+        <div class="ex-grid-scroll ex-h240">
+            <table class="win-grid" id="Grd" data-gridbar="frmGenerateExportContractNos:Grd" data-gridbar-mount="#gridBarMount1" data-gridbar-reorder="false">
+                <thead><tr>
+                    <th>Edit</th><th data-col="PrefixType">PrefixType</th><th data-col="Prefix">Prefix</th><th data-col="ContractNo">ContractNo</th>
+                    <th data-col="EntryDate">EntryDate</th><th data-col="EntryUser">EntryUser</th>
+                </tr></thead>
+                <tbody id="histBody"></tbody>
+            </table>
+        </div>
+        <div class="ex-grid-empty is-hidden" id="histEmpty">No record found.</div>
+    </div>
+    <div class="pd-caption pd-caption-dark pd-history-bar"><span>Detail Of Selected Above Row</span>
+        <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdDetailBox" title="Fullscreen table">&#x26F6;</button><span id="gridBarMount2" class="pd-gridbar-mount"></span></span></div>
+    <div class="ex-grid-box" id="grdDetailBox">
+        <div class="ex-grid-scroll ex-h240">
+            <table class="win-grid" id="grdDetail" data-gridbar="frmGenerateExportContractNos:grdDetail" data-gridbar-mount="#gridBarMount2" data-gridbar-reorder="false">
+                <thead><tr><th data-col="Prefix">Prefix</th><th class="num" data-col="SerialFrom">SerialFrom</th><th class="num" data-col="SerialTo">SerialTo</th><th data-col="ContractNo">ContractNo</th></tr></thead>
+                <tbody id="detBody"></tbody>
+            </table>
+        </div>
+    </div>
+    <div class="win-footer-strip">
+        <span class="ex-footer-left">frmGenerateExportContractNos - Document Type 223</span>
+        <button type="button" class="win-btn-history" id="btnFooterHistory" onclick="ExportGenerateContractNos.history(this)"><i class="fa fa-history"></i> <span>History</span></button>
+    </div>
+</div>
+
+<!-- DefineExportPrefixType (ShowDialog) -->
+<div class="exq-modal" id="prefixModal" role="dialog" aria-labelledby="prefixModalTitle">
+    <div class="exq-modal-box">
+        <div class="exq-modal-head"><span id="prefixModalTitle">Prefix Type</span><button type="button" title="Close" onclick="ExportGenerateContractNos.closePrefixType()">&times;</button></div>
+        <div class="win-tool-strip">
+            <button type="button" id="pxBtnNew" class="win-btn-tool" onclick="ExportGenerateContractNos.pxNew()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="pxBtnSave" class="win-btn-tool" onclick="ExportGenerateContractNos.pxSave(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+            <button type="button" id="pxBtnUpdate" class="win-btn-tool is-hidden" onclick="ExportGenerateContractNos.pxUpdate(this)"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+        </div>
+        <div class="ex-entry" style="grid-template-columns: 1fr;">
+            <div class="ex-field"><label for="txtPrefixDescription">Description</label><input type="text" id="txtPrefixDescription" class="win-textbox" autocomplete="off"/></div>
+        </div>
+        <div class="pd-caption pd-caption-dark pd-history-bar"><span>Prefix Type</span></div>
+        <div class="ex-grid-box">
+            <div class="ex-grid-scroll ex-h240">
+                <table class="win-grid" id="pxGrd"><thead><tr><th data-col="Description">Description</th></tr></thead><tbody id="pxBody"></tbody></table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_export_q_common.js?v=20261003q}"></script>
+<script th:src="@{/build/js/countx_export_generate_contract_nos.js?v=20261003q}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

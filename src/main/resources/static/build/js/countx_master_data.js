@@ -79,7 +79,10 @@
     function visible(id) { var e = $id(id); return !!e && !e.classList.contains('is-hidden') && !e.disabled; }
     function val(id) { var e = $id(id); return e ? e.value : ''; }
     function setVal(id, v) { var e = $id(id); if (e) e.value = v; }
-    function focus(id) { var e = $id(id); if (e) e.focus(); }
+    function focus(id) {
+        var e = $id(id);
+        if (e) (e.__dtcombo ? e.__dtcombo.input : e).focus();
+    }
     /** BindDDLNew / BindDDL: value + display; ZeroIndex adds "...Select Any Value..." (0) first and selects it; otherwise no row is active. */
     function fill(id, rows, valueKey, textKey, zeroIndex) {
         var sel = $id(id);
@@ -528,7 +531,7 @@
         keys = function (e, k) {   // DateLock_KeyDown - Enter -> Tab
             if (e.key === 'Enter' && !e.ctrlKey && e.target && e.target.tagName !== 'BUTTON') {
                 e.preventDefault();
-                var f = Array.prototype.filter.call(document.querySelectorAll('input, select, button'), function (x) { return !x.disabled && x.offsetParent !== null; });
+                var f = Array.prototype.filter.call(document.querySelectorAll('input, select, button'), function (x) { return !x.disabled && x.tabIndex >= 0 && !x.classList.contains('dtcombo-native') && x.offsetParent !== null; });
                 var i = f.indexOf(e.target); if (i >= 0 && i + 1 < f.length) f[i + 1].focus();
             }
             if (e.ctrlKey && k === 's' && visible('btnsave')) { e.preventDefault(); M.btnsave(); }
@@ -736,7 +739,7 @@
         keys = function (e, k) {   // frmEduLookups_KeyDown - Enter -> Tab
             if (e.key === 'Enter' && !e.ctrlKey && e.target && e.target.tagName !== 'BUTTON') {
                 e.preventDefault();
-                var f = Array.prototype.filter.call(document.querySelectorAll('input, select, button'), function (x) { return !x.disabled && x.offsetParent !== null; });
+                var f = Array.prototype.filter.call(document.querySelectorAll('input, select, button'), function (x) { return !x.disabled && x.tabIndex >= 0 && !x.classList.contains('dtcombo-native') && x.offsetParent !== null; });
                 var i = f.indexOf(e.target); if (i >= 0 && i + 1 < f.length) f[i + 1].focus();
             }
             if (e.ctrlKey && k === 's' && !UpdateMode) { e.preventDefault(); M.btnsave(); }
@@ -839,7 +842,7 @@
         keys = function (e, k) {   // DefineCity_KeyDown :60 - Enter -> Tab, Ctrl+S = Show, Ctrl+T = tab transfer
             if (e.key === 'Enter' && !e.ctrlKey && e.target && e.target.tagName !== 'BUTTON' && !e.target.classList.contains('md-cell')) {
                 e.preventDefault();
-                var f = Array.prototype.filter.call(document.querySelectorAll('input, select, button'), function (x) { return !x.disabled && x.offsetParent !== null; });
+                var f = Array.prototype.filter.call(document.querySelectorAll('input, select, button'), function (x) { return !x.disabled && x.tabIndex >= 0 && !x.classList.contains('dtcombo-native') && x.offsetParent !== null; });
                 var i = f.indexOf(e.target); if (i >= 0 && i + 1 < f.length) f[i + 1].focus();
             }
             if (e.ctrlKey && k === 'n') { e.preventDefault(); if (TAB === 0) M.btnnew(); else M.btnNewNote(); }
@@ -867,9 +870,8 @@
             else { $id('combGlaccount').innerHTML = ''; }
             refreshCombos();
         }
-        function bindGrid(rows) {   // BankDefineGridFill :226 - only when rows came back; Edit button when the user has Update
-            if (!(rows || []).length) return;
-            GRID = rows.map(function (r) { return { Edit: '', Id: netI(col(r, 'Id')), BranchName: str(col(r, 'BranchName')), BranchCode: str(col(r, 'BranchCode')), BankAccountNo: str(col(r, 'BankAccountNo')), BankAccountTitle: str(col(r, 'BankAccountTitle')),
+        function bindGrid(rows) {   // BankDefineGridFill :226; clear stale rows on an empty reload, Edit needs Update rights.
+            GRID = (rows || []).map(function (r) { return { Edit: '', Id: netI(col(r, 'Id')), BranchName: str(col(r, 'BranchName')), BranchCode: str(col(r, 'BranchCode')), BankAccountNo: str(col(r, 'BankAccountNo')), BankAccountTitle: str(col(r, 'BankAccountTitle')),
                 BankIBANNo: str(col(r, 'BankIBANNo')), 'Phone No (1)': str(col(r, 'Contact1Tel')), 'Phone No (2)': str(col(r, 'Contact2Tel')), 'Mobile No': str(col(r, 'Contact3Mobile')), EmailAlternate: str(col(r, 'emailAlternate')),
                 IsHomeland: str(col(r, 'IsHomeland')), CountryName: str(col(r, 'Country')), CityName: str(col(r, 'City')), Address: str(col(r, 'BranchAddress')), ChequeTemplete: str(col(r, 'ChequeTemplete')), SWIFTCode: str(col(r, 'OtherInfo')),
                 ChartOfAccountId: netI(col(r, 'ChartOfAccountId')), AccountCode: str(col(r, 'AccountCode')), AccountTitle: str(col(r, 'AccountTitle')) }; });
@@ -944,7 +946,7 @@
         keys = function (e, k) {   // AcfrmDefineBank_KeyDown :300 - Enter -> Tab; Save/Update keys need the right and a visible button
             if (e.key === 'Enter' && !e.ctrlKey && e.target && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'TEXTAREA') {
                 e.preventDefault();
-                var f = Array.prototype.filter.call(document.querySelectorAll('input, select, textarea, button'), function (x) { return !x.disabled && x.offsetParent !== null; });
+                var f = Array.prototype.filter.call(document.querySelectorAll('input, select, textarea, button'), function (x) { return !x.disabled && x.tabIndex >= 0 && !x.classList.contains('dtcombo-native') && x.offsetParent !== null; });
                 var i = f.indexOf(e.target); if (i >= 0 && i + 1 < f.length) f[i + 1].focus();
             }
             if (canSave && e.ctrlKey && k === 's' && visible('btnsave')) { e.preventDefault(); M.btnsave(); }
@@ -960,6 +962,9 @@
             d = d || {};
             canSave = d.canSave !== false; canUpdate = d.canUpdate !== false;
             $id('btnsave').disabled = !canSave; $id('btnUpdate').disabled = !canUpdate;
+            if (window.GridBar) window.GridBar.setRights($id('GrdBankDefine'), {
+                canPrint: d.canGridPrint === true, canExport: d.canGridExport === true
+            });
             fill('txtishomeland', [{ Id: 1, Name: 'Foreign Country' }, { Id: 2, Name: 'Home Country' }], 'Id', 'Name', true);   // CountryTypeFill
             bindCombos(d);
             if (d.banksError) box(d.banksError); else bindGrid(d.banks);

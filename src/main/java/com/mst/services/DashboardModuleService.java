@@ -154,6 +154,84 @@ public class DashboardModuleService {
      */
     private static final Map<Integer, String> WEB_ROUTES_BY_SCREEN_ID = new LinkedHashMap<>();
     static {
+        /* Admin Panel (App 18): ScreenDefinition ids and TargetUrls checked against the
+           database. These existing forms also appear in the separate desktop gear menu.
+           UserRightsEditing (318/397) is a different form from UserRightsByCompany (409). */
+        WEB_ROUTES_BY_SCREEN_ID.put(313, "/user-management/user-define"); // Configurations.frmUserRights
+        WEB_ROUTES_BY_SCREEN_ID.put(317, "/configurations");              // Configurations.Configuration, module 22
+        WEB_ROUTES_BY_SCREEN_ID.put(396, "/configurations");              // Configurations.Configuration, module 43
+        WEB_ROUTES_BY_SCREEN_ID.put(401, "/configurations/company-profile"); // Configurations.frmCompanyProfile
+        WEB_ROUTES_BY_SCREEN_ID.put(409, "/user-management/rights");       // Configurations.UserRightsByCompany
+
+        /* Inventory: the existing definition and stock-report pages, matched by real
+           ScreenDefinition ids (reconciliation-input.json and migration/inventory/MODULE-MATRIX.md).
+           Desktop form names differ from the URLs and some URLs have multiple aliases, so
+           registered-route name inference misses these pages. */
+        WEB_ROUTES_BY_SCREEN_ID.put(92, "/stocks/stock_opening_form");
+        WEB_ROUTES_BY_SCREEN_ID.put(104, "/inventory/item-min-max-rate");
+        WEB_ROUTES_BY_SCREEN_ID.put(105, "/inventory/consumption-items");
+        WEB_ROUTES_BY_SCREEN_ID.put(106, "/inventory/pos-define-item");
+        WEB_ROUTES_BY_SCREEN_ID.put(110, "/inventory/define-lots");
+        WEB_ROUTES_BY_SCREEN_ID.put(111, "/inventory/items");
+        WEB_ROUTES_BY_SCREEN_ID.put(112, "/inventory/item_categories");
+        WEB_ROUTES_BY_SCREEN_ID.put(113, "/inventory/item_types");
+        WEB_ROUTES_BY_SCREEN_ID.put(115, "/inventory/item_uom_schedule");
+        WEB_ROUTES_BY_SCREEN_ID.put(116, "/inventory/warehouses");
+        WEB_ROUTES_BY_SCREEN_ID.put(876, "/inventory/brands");
+        WEB_ROUTES_BY_SCREEN_ID.put(287, "/stocks/item_ledger");
+        WEB_ROUTES_BY_SCREEN_ID.put(288, "/stocks/store-stock-report");
+        WEB_ROUTES_BY_SCREEN_ID.put(291, "/stocks/transaction-vehicle-wise");
+        WEB_ROUTES_BY_SCREEN_ID.put(301, "/inventory/stock-report"); // InventoryStockReportController: frmStockReport
+        WEB_ROUTES_BY_SCREEN_ID.put(580, "/inventory/stock-transactions"); // separate screen from 171 Item List
+
+        /* Contractor Wages: real ScreenDefinition ids from reconciliation-input.json,
+           modules 10 (five transactions) and 51 (two reports). AccountsModuleViewController
+           serves these pages through /vouchers/{voucherType} and /reports/{reportType},
+           so the registered-route name index cannot discover the individual screens. */
+        WEB_ROUTES_BY_SCREEN_ID.put(181, "/accounts/vouchers/wages-rate-schedule-contractor");
+        WEB_ROUTES_BY_SCREEN_ID.put(182, "/accounts/vouchers/wages-account");
+        WEB_ROUTES_BY_SCREEN_ID.put(183, "/accounts/vouchers/wages-rate-schedule");
+        WEB_ROUTES_BY_SCREEN_ID.put(184, "/accounts/vouchers/labour-wages");
+        WEB_ROUTES_BY_SCREEN_ID.put(187, "/accounts/vouchers/labour-wages-manual");
+        WEB_ROUTES_BY_SCREEN_ID.put(474, "/accounts/reports/wages-report-activities");
+        WEB_ROUTES_BY_SCREEN_ID.put(475, "/accounts/reports/wages-report");
+
+        /* Commission Trading: the real ScreenDefinition ids in reconciliation-input.json,
+           modules 56 (seven transactions) and 57 (five reports). The desktop's Cmagt form
+           names do not match the shorter Java URLs, so name inference misses these pages. */
+        WEB_ROUTES_BY_SCREEN_ID.put(971, "/commission/buyer-inquiry-booking");
+        WEB_ROUTES_BY_SCREEN_ID.put(987, "/commission/supplier-offer");
+        WEB_ROUTES_BY_SCREEN_ID.put(972, "/commission/purchase-order");
+        WEB_ROUTES_BY_SCREEN_ID.put(973, "/commission/sale-order");
+        WEB_ROUTES_BY_SCREEN_ID.put(976, "/commission/grn-loading-challan");
+        WEB_ROUTES_BY_SCREEN_ID.put(977, "/commission/goods-dispatching-note");
+        WEB_ROUTES_BY_SCREEN_ID.put(979, "/commission/trade-bill-against-gdn");
+        WEB_ROUTES_BY_SCREEN_ID.put(981, "/commission/reports/agent-trade-bill-register");
+        WEB_ROUTES_BY_SCREEN_ID.put(982, "/commission/reports/gdn-buyer-dispatch");
+        WEB_ROUTES_BY_SCREEN_ID.put(983, "/commission/reports/grn-supplier-loading");
+        WEB_ROUTES_BY_SCREEN_ID.put(984, "/commission/reports/purchase-order");
+        WEB_ROUTES_BY_SCREEN_ID.put(985, "/commission/reports/sale-order");
+
+        /* Sale, App 6: the same existing pages linked by /sale/customer and /sale/reports.
+           Screen ids/names come from reconciliation-input.json; TargetUrls were checked against
+           ScreenDefinition. Explicit ids avoid ambiguous names shared with other modules. */
+        WEB_ROUTES_BY_SCREEN_ID.put(147, "/sale/delivery-order");
+        WEB_ROUTES_BY_SCREEN_ID.put(148, "/sale/driver-bio");
+        WEB_ROUTES_BY_SCREEN_ID.put(149, "/sale/sale-order");
+        WEB_ROUTES_BY_SCREEN_ID.put(152, "/sale/outward-gate-pass");
+        WEB_ROUTES_BY_SCREEN_ID.put(150, "/sale/gdn");
+        WEB_ROUTES_BY_SCREEN_ID.put(146, "/sale/gdn-direct");
+        WEB_ROUTES_BY_SCREEN_ID.put(867, "/sale/gdn-purchase-return");
+        WEB_ROUTES_BY_SCREEN_ID.put(151, "/sale/sale-invoice");
+        WEB_ROUTES_BY_SCREEN_ID.put(141, "/sale/sale-invoice-gdn-no-wb");
+        WEB_ROUTES_BY_SCREEN_ID.put(154, "/sale/sale-invoice-direct");
+        WEB_ROUTES_BY_SCREEN_ID.put(153, "/sale/sale-invoice-return");
+        WEB_ROUTES_BY_SCREEN_ID.put(856, "/sale/gatepass-vehicle-time-analysis");
+        WEB_ROUTES_BY_SCREEN_ID.put(482, "/sale/reports/sale-order-report");
+        WEB_ROUTES_BY_SCREEN_ID.put(484, "/sale/reports/outward-gate-pass-report");
+        WEB_ROUTES_BY_SCREEN_ID.put(483, "/sale/reports/gdn-report");
+        WEB_ROUTES_BY_SCREEN_ID.put(481, "/sale/reports/sale-invoice-report-with-activities");
+
         /* Purchase, App 3. Module 5 Supplier Purchases and module 52 Purchase Reports; ids and TargetUrls from
            dbo.ScreenDefinition. Rechecked / ported 2026-09-30 (129, 868 and 869 are new pages). */
         WEB_ROUTES_BY_SCREEN_ID.put(120, "/purchase/purchase-order");                  // PurchsaeOrder (41)
@@ -280,6 +358,24 @@ public class DashboardModuleService {
         WEB_ROUTES_BY_SCREEN_ID.put(857, "/export/third-party-inspection");
         WEB_ROUTES_BY_SCREEN_ID.put(858, "/export/lab-against-third-party-inspection");
         WEB_ROUTES_BY_SCREEN_ID.put(794, "/export/fcy-receipts");
+        WEB_ROUTES_BY_SCREEN_ID.put(189, "/export/export-opening");
+        WEB_ROUTES_BY_SCREEN_ID.put(190, "/export/return-grn");
+        WEB_ROUTES_BY_SCREEN_ID.put(191, "/export/return-invoice");
+        WEB_ROUTES_BY_SCREEN_ID.put(200, "/export/performa-invoice");
+        WEB_ROUTES_BY_SCREEN_ID.put(201, "/export/delivery-order-new");
+        WEB_ROUTES_BY_SCREEN_ID.put(202, "/export/commercial-invoice-transfer");
+        WEB_ROUTES_BY_SCREEN_ID.put(204, "/quality/export-pre-shipment-analysis");
+        WEB_ROUTES_BY_SCREEN_ID.put(207, "/export/define-documents");
+        WEB_ROUTES_BY_SCREEN_ID.put(237, "/export/contract-schedule-periodic-a");
+        WEB_ROUTES_BY_SCREEN_ID.put(248, "/export/comparison-summary");
+        WEB_ROUTES_BY_SCREEN_ID.put(259, "/export/invoice-against-forwarding-pre-invoices");
+        WEB_ROUTES_BY_SCREEN_ID.put(264, "/export/bill-of-lading-report");
+        WEB_ROUTES_BY_SCREEN_ID.put(265, "/export/forwarding-report");
+        WEB_ROUTES_BY_SCREEN_ID.put(268, "/export/container-list");
+        WEB_ROUTES_BY_SCREEN_ID.put(271, "/export/pre-invoice-register");
+        WEB_ROUTES_BY_SCREEN_ID.put(272, "/export/bank-gd-summary");
+        WEB_ROUTES_BY_SCREEN_ID.put(588, "/export/forwarding-new");
+        WEB_ROUTES_BY_SCREEN_ID.put(589, "/export/commercial-invoice");
 
         /* Master Data Definition, App 19, ModuleId 2039 "System_Level" - all nine confirmed against the
            ScreenDefinition dump (GoldenAceDb(0509)t.sql) on 2026-09-30. */
@@ -1106,6 +1202,19 @@ public class DashboardModuleService {
         sc.put("route", route != null ? route : "/dashboard/screen?name=" + urlEncode(cls));
         sc.put("desktopForm", DESKTOP_FORMS.getOrDefault(cls, cls + ".cs"));
         return sc;
+    }
+
+    /**
+     * The web page a ScreenDefinition row (ScreenID / ScreenName / TargetUrl) is ported to, resolved
+     * exactly as the hub resolves it (routeFor below); null when the form is not ported. Added
+     * 2026-10-03 for the Audit Log Report's View button (AuditLogReportService).
+     */
+    public String webRouteFor(Integer screenId, String screenName, String targetUrl) {
+        Map<String, Object> r = new LinkedHashMap<>();
+        r.put("ScreenID", screenId);
+        r.put("ScreenName", screenName);
+        r.put("TargetUrl", targetUrl);
+        return routeFor(r);
     }
 
     /** The explicit map wins; otherwise the registered-route index, which never guesses a URL. */

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Financial Instruments Utilized - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_g.css?v=20261003a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_shipment.css?v=20261003a}"/>
+</head>
+<!-- FinancialInstrumentsUtilizedAgainstShipment.cs (Architecture.WinApp.Export), form Text "Commercial Invoice", ClientSize 1014 x 461.
+     Rights of "CommiercialInvoiceAgainstPreInvoiceTransfer" (ScreenDefinition 202). tabControl1 "Form" | "History".
+     Form: toolStrip4 New / Save / Update (hidden) / Refresh / ShortCut Keys; label23 "Financial Instruments Utilized Against Shipment";
+       panel20: Invoice No * (CmbInvoiceNo, Leave; Id / InvoiceNo / BankAmount / SupplierCustomerId / TotalAmount, DocumentTypeId hidden), Balance (ro);
+       tabControl2 "Payment Detail": Financial Instruments No * (CmbFinInstruments ValueChanged; EFormNo, PaymenttermId / DocumentTypeId hidden,
+       BalFIAmount), Balance (txtBalanceFI ro, Leave), Payment Term * (disabled), % of Total * (Leave), Fcy Amount * (Leave), Due Days, + / Update / Cancel;
+       grdpaymentdetail (X first; %OfTotal / FcyAmount summed "#,#.##"; DoubleClick edits).
+     History: toolStrip3 New / Refresh (Print hidden); label69 "Commercial Invoice History"; groupBox7 "Filters": Invoice, Financial Instrument No, Show;
+       DataGridHistory (Edit first; DoubleClick / Edit = ReadById(ExImInvoiceId)). -->
+<body class="pd-body">
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="pd-form ex-form exs-form">
+    <div class="win-tabs" data-tabs="main">
+        <button type="button" class="win-tab is-active" data-tab="tabForm">Form</button>
+        <button type="button" class="win-tab" data-tab="tabHistory">History</button>
+    </div>
+
+    <div class="win-tab-panel is-active" id="tabForm">
+        <div class="win-tool-strip">
+            <button type="button" id="btnNew" class="win-btn-tool" accesskey="n"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="btnsave" class="win-btn-tool" accesskey="s"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+            <button type="button" id="btnupdate" class="win-btn-tool is-hidden" accesskey="u"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+            <button type="button" id="btnrefersh" class="win-btn-tool" accesskey="r"><i class="fa fa-refresh"></i> <span><u>R</u>efresh</span></button>
+            <button type="button" id="btnShortCutKey" class="win-btn-tool"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+        </div>
+        <div class="pd-caption pd-caption-teal"><span>Financial Instruments Utilized Against Shipment</span></div>
+        <div class="exs-entry exs-cols-4">
+            <div class="ex-field exs-span-2"><label for="CmbInvoiceNo" class="ex-req">Invoice No</label>
+                <select id="CmbInvoiceNo" class="win-combo dtcombo" data-columns="Invoice No|BankAmount|SupplierCustomerId|TotalAmount" data-dtcombo-caption="Invoice No"></select></div>
+            <div class="ex-field"><label for="txtInvoiceBalanceAmt">Balance</label><input type="text" id="txtInvoiceBalanceAmt" class="win-textbox num" value="0" readonly/></div>
+        </div>
+        <div class="win-tabs" data-tabs="detail"><button type="button" class="win-tab is-active" data-tab="tabPayment">Payment Detail</button></div>
+        <div class="win-tab-panel is-active" id="tabPayment">
+            <div class="exs-entry exs-cols-6">
+                <div class="ex-field exs-span-2"><label for="CmbFinInstruments" class="ex-req">Financial Instruments No</label>
+                    <select id="CmbFinInstruments" class="win-combo dtcombo" data-columns="FI No|BalFIAmount" data-dtcombo-caption="FI No"></select></div>
+                <div class="ex-field"><label for="txtBalanceFI">Balance</label><input type="text" id="txtBalanceFI" class="win-textbox num" value="0" readonly/></div>
+                <div class="ex-field"><label for="dcmbpaymentterm" class="ex-req">Payment Term</label>
+                    <select id="dcmbpaymentterm" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Payment Term" disabled></select></div>
+                <div class="ex-field"><label for="dtxtpercentoftotal" class="ex-req">% of Total</label><input type="text" id="dtxtpercentoftotal" class="win-textbox num" value="0" data-guard="decimal" autocomplete="off"/></div>
+                <div class="ex-field"><label for="dtxtfcyamount" class="ex-req">Fcy Amount</label><input type="text" id="dtxtfcyamount" class="win-textbox num" value="0" data-guard="decimal" autocomplete="off"/></div>
+                <div class="ex-field"><label for="dtxtdueday">Due Days</label><input type="text" id="dtxtdueday" class="win-textbox num" value="0" data-guard="integer" autocomplete="off"/></div>
+                <div class="exs-btns">
+                    <button type="button" id="btndadd" class="win-btn-small" title="Add">+</button>
+                    <button type="button" id="btndupdate" class="win-btn-small is-hidden">Update</button>
+                    <button type="button" id="btndcancel" class="win-btn-small is-hidden">Cancel</button>
+                </div>
+            </div>
+            <div class="pd-caption pd-caption-teal pd-history-bar" style="height:22px;"><span></span>
+                <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdpaymentdetailBox" title="Fullscreen table">&#x26F6;</button></span></div>
+            <div class="ex-grid-box" id="grdpaymentdetailBox">
+                <div class="ex-grid-scroll ex-h300">
+                    <table class="win-grid" id="grdpaymentdetail">
+                        <thead><tr><th class="ctr">X</th><th>Financial Instrument No</th><th>Payment Term</th><th class="num">%OfTotal</th>
+                            <th class="num">Fcy Amount</th><th class="num">Due Days</th></tr></thead>
+                        <tbody></tbody><tfoot></tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="win-tab-panel" id="tabHistory">
+        <div class="win-tool-strip">
+            <button type="button" id="btnResetHistory" class="win-btn-tool"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="btnRefreshHistory" class="win-btn-tool"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+        </div>
+        <div class="pd-caption pd-caption-teal"><span>Commercial Invoice History</span></div>
+        <fieldset class="exs-group"><legend>Filters</legend>
+            <div class="ex-filter">
+                <div class="ex-field" style="width:300px;"><label for="CmbInvoiceHistory">Invoice</label>
+                    <select id="CmbInvoiceHistory" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="InvoiceNo"></select></div>
+                <div class="ex-field" style="width:300px;"><label for="CmbFINoHistory">Financial Instrument No</label>
+                    <select id="CmbFINoHistory" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Financial Instrument No"></select></div>
+                <div class="ex-field"><label>&nbsp;</label><button type="button" id="btnShowHistory" class="win-btn-small">Show</button></div>
+            </div>
+        </fieldset>
+        <div class="pd-caption pd-caption-dark pd-history-bar"><span>Filtered Records</span>
+            <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="DataGridHistoryBox" title="Fullscreen table">&#x26F6;</button></span></div>
+        <div class="ex-grid-box" id="DataGridHistoryBox">
+            <div class="ex-grid-scroll ex-h400">
+                <table class="win-grid" id="DataGridHistory">
+                    <thead><tr><th>Edit</th><th>Invoice No</th><th>Financial Instrument No</th><th>Payment Term</th><th class="num">Prcnt Of Total</th>
+                        <th class="num">Fcy Amount</th><th class="num">Due Days</th><th class="num">Sort No</th><th>Payment Remarks</th>
+                        <th>Entry User Name</th><th>Entry Date</th><th>Modify User Name</th><th>Modify Date</th></tr></thead>
+                    <tbody></tbody><tfoot></tfoot>
+                </table>
+            </div>
+            <div class="ex-grid-empty is-hidden" id="DataGridHistoryEmpty">No record found.</div>
+        </div>
+    </div>
+
+    <div class="win-footer-strip">
+        <span class="ex-footer-left">FinancialInstrumentsUtilizedAgainstShipment - rights of screen 202</span>
+        <button type="button" class="win-btn-history" id="btnFooterHistory"><i class="fa fa-history"></i> <span>History</span></button>
+    </div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_export_g_common.js?v=20261003a}"></script>
+<script th:src="@{/build/js/countx_export_shipment_common.js?v=20261003a}"></script>
+<script th:src="@{/build/js/countx_export_fi_utilized_against_shipment.js?v=20261003a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

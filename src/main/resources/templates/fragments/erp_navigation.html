@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:fragment="navigation"
+          th:with="nav=${@erpNavigationService.forRequest(#httpServletRequest, appName, selectedModuleId)}">
+    <th:block th:if="${nav != null}">
+        <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+        <link rel="stylesheet" th:href="@{/build/css/erp_navigation.css?v=20261003isolated}">
+        <div id="erp-navigation" class="erp-navigation" th:attr="data-parent-url=${nav.parentRoute != null ? #httpServletRequest.contextPath + nav.parentRoute : ''},data-parent-title=${nav.parentTitle}">
+            <!-- Desktop report templates style bare nav/header/aside tags for their own panels.
+                 Use explicit landmark roles so those rules cannot turn this rail into a toolbar. -->
+            <div id="erp-module-sidebar" class="erp-module-sidebar" role="complementary" aria-label="Applications and modules">
+                <a class="erp-nav-home" th:href="@{/apps}" title="Main pages">
+                    <i class="fa fa-th-large" aria-hidden="true"></i><span>Main pages</span>
+                </a>
+                <div class="erp-module-list" role="navigation" aria-label="Applications">
+                    <div class="erp-nav-app" th:each="app : ${nav.apps}" th:classappend="${app.active} ? 'is-active' : ''">
+                        <a class="erp-app-link" th:href="@{${app.route}}" th:title="${app.title}"
+                           th:attr="aria-current=${app.active ? 'true' : null}">
+                            <i class="fa" th:classappend="${app.icon}" aria-hidden="true"></i><span th:text="${app.title}">Accounts</span>
+                        </a>
+                        <div class="erp-nav-modules" th:if="${app.active}">
+                            <a th:each="module : ${app.modules}" th:href="@{${module.route}}"
+                               th:classappend="${module.active} ? 'is-active' : ''"
+                               th:attr="aria-current=${module.active ? 'true' : null}" th:text="${module.title}">Reports</a>
+                        </div>
+                    </div>
+                    <p class="erp-nav-message" th:if="${nav.unavailable}">Menu unavailable. Reload to try again.</p>
+                    <p class="erp-nav-message" th:if="${!nav.unavailable and #lists.isEmpty(nav.apps)}">No applications assigned.</p>
+                </div>
+            </div>
+            <div class="erp-navigation-bar" role="banner">
+                <button id="erp-navigation-toggle" class="erp-navigation-toggle" type="button"
+                        aria-controls="erp-module-sidebar" aria-expanded="false" aria-label="Expand module sidebar" title="Expand module sidebar">
+                    <i class="fa fa-bars" aria-hidden="true"></i>
+                </button>
+                <a id="erp-parent-back" class="erp-parent-back" th:if="${nav.parentRoute != null}"
+                   th:href="@{${nav.parentRoute}}" th:title="${'Back to ' + nav.parentTitle}">
+                    <i class="fa fa-arrow-left" aria-hidden="true"></i><span>Back</span>
+                    <span class="erp-parent-label" th:text="${'to ' + nav.parentTitle}">to Reports</span>
+                </a>
+                <span class="erp-navigation-title" th:text="${nav.currentTitle}">Main pages</span>
+                <a id="erp-username" class="erp-username" th:href="@{/apps}" title="Open main pages">
+                    <i class="fa fa-user-circle" aria-hidden="true"></i><span th:text="${nav.username}">Username</span>
+                    <i class="fa fa-th-large" aria-hidden="true"></i>
+                </a>
+                <a class="erp-logout" th:href="@{/logout}" aria-label="Log out" title="Log out"><i class="fa fa-sign-out" aria-hidden="true"></i></a>
+            </div>
+            <button class="erp-navigation-shade" type="button" aria-label="Close module sidebar" tabindex="-1"></button>
+        </div>
+        <script th:src="@{/build/js/erp_navigation.js?v=20261003}"></script>
+    </th:block>
+</th:block>
+</body>
+</html>

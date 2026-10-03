@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Goods Receipts At Port - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_g.css?v=20261003a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_shipment.css?v=20261003a}"/>
+</head>
+<!-- ExImGoodsReceiptsAtPort.cs (Architecture.WinApp.Export) "Goods Receipts At Port", ClientSize 944 x 676, no ScreenDefinition row
+     (rights by the form name). tabControl1: "Form" | "History" (SelectedIndexChanged -> BindHistory on History).
+     Form: toolStrip4 New / Save / Update (hidden) / Load Forwarding Data; panel1 (Teal) "Goods Receipts As Port" + ctrlGrdBar1;
+       grd (GridEX, CellUpdated): Id / ForwardingId / ForwardingDetailId / WarehouseId / PackEquivalent / BalQty / BalWeight hidden,
+       QtyReceived / WeightReceived / RemarksDetail editable.
+     History: toolStrip1 Register-Print (466); panel2 (Teal) "Goods Receipts As Port History" + ctrlGrdBar2; grdHistory (DoubleClick = edit by SortNo).
+     Loader GetForwardingDataForGoodsReceiptsAsPort (812 x 661): Filters From Date / To Date (never sent), Currency, Party Name, Item Name,
+       Search / Load / Reset; grd (Select column, SelectionChanged -> grddetail); grddetail (NoOfBags, NetWeight summed). -->
+<body class="pd-body">
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="pd-form ex-form exs-form">
+    <div class="win-tabs" data-tabs="main">
+        <button type="button" class="win-tab is-active" data-tab="tabForm">Form</button>
+        <button type="button" class="win-tab" data-tab="tabHistory">History</button>
+    </div>
+
+    <div class="win-tab-panel is-active" id="tabForm">
+        <div class="win-tool-strip">
+            <button type="button" id="btnNew" class="win-btn-tool" accesskey="n"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="btnsave" class="win-btn-tool" accesskey="s"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+            <button type="button" id="btnupdate" class="win-btn-tool is-hidden" accesskey="u"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+            <button type="button" id="btnLoaderForm" class="win-btn-tool" accesskey="l"><i class="fa fa-download"></i> <span><u>L</u>oad Forwarding Data</span></button>
+        </div>
+        <div class="pd-caption pd-caption-teal pd-history-bar"><span>Goods Receipts As Port</span>
+            <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdBox" title="Fullscreen table">&#x26F6;</button></span></div>
+        <div class="ex-grid-box" id="grdBox">
+            <div class="ex-grid-scroll ex-h400">
+                <table class="win-grid" id="grd">
+                    <thead><tr>
+                        <th>Forwarding No</th><th>Forwarding Date</th><th>Customer Name</th><th>Gp No</th><th>Gp Date</th><th>Vehicle No</th><th>Bilty No</th>
+                        <th>Warehouse</th><th class="num">Qty Received</th><th class="num">Weight Received</th><th>Remarks Detail</th>
+                    </tr></thead>
+                    <tbody></tbody><tfoot></tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="win-tab-panel" id="tabHistory">
+        <div class="win-tool-strip">
+            <button type="button" id="PrintRegister" class="win-btn-tool"><i class="fa fa-print"></i> <span>Register-Print</span></button>
+        </div>
+        <div class="pd-caption pd-caption-dark pd-history-bar"><span>Goods Receipts As Port History</span>
+            <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdHistoryBox" title="Fullscreen table">&#x26F6;</button></span></div>
+        <div class="ex-grid-box" id="grdHistoryBox">
+            <div class="ex-grid-scroll ex-h400">
+                <table class="win-grid" id="grdHistory">
+                    <thead><tr>
+                        <th>Doc No</th><th>Doc Date</th><th>Customer Name</th><th>Gp No</th><th>Gp Date</th><th>Vehicle No</th><th>Bilty No</th>
+                        <th>Warehouse</th><th class="num">Qty Received</th><th class="num">Weight Received</th><th>Remarks</th>
+                        <th>Entry User</th><th>Entry Date</th><th>Modify User</th><th>Modify Date</th>
+                    </tr></thead>
+                    <tbody></tbody><tfoot></tfoot>
+                </table>
+            </div>
+            <div class="ex-grid-empty is-hidden" id="grdHistoryEmpty">No record found.</div>
+        </div>
+    </div>
+
+    <div class="win-footer-strip">
+        <span class="ex-footer-left">ExImGoodsReceiptsAtPort</span>
+        <button type="button" class="win-btn-history" id="btnFooterHistory"><i class="fa fa-history"></i> <span>History</span></button>
+    </div>
+</div>
+
+<!-- GetForwardingDataForGoodsReceiptsAsPort (loader dialog) -->
+<div class="exs-modal is-hidden" id="loaderModal">
+    <div class="exs-modal-box">
+        <div class="pd-caption pd-caption-teal exs-modal-head"><span>Get Forwarding Data For Goods Receipts As Port</span>
+            <button type="button" class="ex-fs-btn" id="loaderClose" title="Close">&times;</button></div>
+        <fieldset class="exs-group"><legend>Filters</legend>
+            <div class="exs-entry exs-cols-4">
+                <div class="ex-field"><label for="FromDate">From Date</label><input type="date" id="FromDate" class="win-date"/></div>
+                <div class="ex-field"><label for="Todate">To Date</label><input type="date" id="Todate" class="win-date"/></div>
+                <div class="ex-field exs-span-2"><label for="CmbPartyName">Party Name</label>
+                    <select id="CmbPartyName" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Party Name"></select></div>
+                <div class="ex-field"><label for="cmbCurrency">Currency</label>
+                    <select id="cmbCurrency" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Currency Name"></select></div>
+                <div class="ex-field exs-span-2"><label for="cmbItemName">Item Name</label>
+                    <select id="cmbItemName" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Name"></select></div>
+                <div class="exs-btns">
+                    <button type="button" id="btngrnlod" class="win-btn-small">Search</button>
+                    <button type="button" id="btnLoadOnInvoice" class="win-btn-small">Load</button>
+                    <button type="button" id="btnReset" class="win-btn-small">Reset</button>
+                </div>
+            </div>
+        </fieldset>
+        <div class="pd-caption pd-caption-teal" style="height:22px;"><span></span></div>
+        <div class="ex-grid-scroll ex-h300">
+            <table class="win-grid" id="loaderGrd">
+                <thead><tr><th class="ctr"><input type="checkbox" id="loaderAll" title="Select all"/></th>
+                    <th>Doc Date</th><th>Doc No</th><th>Party Name</th><th>Gp No</th><th>Gp Date</th><th>Vehicle No</th><th>Bilty No</th>
+                    <th>Entry User</th><th>Entry Date</th><th>Modify User</th><th>Modify Date</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        <div class="pd-caption pd-caption-teal" style="height:22px;"><span></span></div>
+        <div class="ex-grid-scroll ex-h240">
+            <table class="win-grid" id="grddetail">
+                <thead><tr><th>Ware House Name</th><th>Item Name</th><th>Packing Type</th><th>Crop Year</th><th>Pack Uom</th>
+                    <th class="num">No Of Bags</th><th class="num">Net Weight</th></tr></thead>
+                <tbody></tbody><tfoot></tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_export_g_common.js?v=20261003a}"></script>
+<script th:src="@{/build/js/countx_export_shipment_common.js?v=20261003a}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20261003a}"></script>
+<script th:src="@{/build/js/countx_export_goods_receipts_at_port.js?v=20261003a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Audit Log Report - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20261002k}" href="/build/css/countx_desktop_combo.css">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20261002k}" href="/build/css/countx_prod_combo.css">
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}" href="/build/css/countx_grid_bar.css">
+    <link rel="stylesheet" th:href="@{/build/css/countx_button_busy.css?v=20261002gf}" href="/build/css/countx_button_busy.css">
+<!--
+  Admin Panel -> "Audit Log Report": DashboardNew.cs:2666 btnAuditLogReport_Click -> new Audit_Dashboard.AuditLogReport(UserAccount)
+  (base.Name "AuditLogReport", ClientSize 922x561, WindowState Maximized, KeyPreview, Font Verdana 9.75,
+  form BackColor = SystemColors.Control). 1:1 port of InitializeComponent (2026-10-03, group W-AUDIT-LOG):
+    panel1 Dock Fill
+      panel2  Dock Top 28        toolStrip3 (27 high, Verdana 9.75): &New (icons8_add_20) | &Refresh (referesf) |
+                                 Audit Log Report (icons8_print_16) | ShortCutKeys (text only)
+      panel3  Dock Top 29, Teal  label23 "Audit Log Report" (2,3) Tahoma 12 bold white
+      panel4  Dock Top 75, White groupBox1 "Filters" (6,3) 667x66, Tahoma 9.75 bold
+                label12 "Date Type" (7,18)  cmbperemeter (7,34) 122x26       Segoe UI Semibold 9 labels
+                label27 "Date From" (130,18) GRNfromdate (130,36) 118x23 dd-MMM-yy
+                label2  "Date To"   (251,18) GRNToDate   (249,36) 115x23 dd-MMM-yy
+                label1  "User Name" (366,18) cmbusername (366,34) 225x26
+                btnshow "Show" (594,34) 65x26 flat Teal, Verdana 9.75 bold white
+      panel5  Dock Fill
+         panel6 Dock Top 29, Teal: label4 "History" (3,4) Tahoma 12 bold white; ctrlGrdBar1 anchored right (875,2) 41x24
+         DataGridHistory Janus GridEX Dock Fill, Verdana 8.25, Office2007, AllowEdit False, filter row (FilterMode Automatic,
+                         DynamicFiltering), RecordNavigator, TotalRow (bottom), group-by box (designer default).
+  gridHisory(): dt = USP_UserAudit_Report -> dtGrn(ReferenceId, RefDocumentTypeId, Date, UserName, Description, Action, ScreenName);
+  GridSetting(): ReferenceId / RefDocumentTypeId / ScreenName hidden, Date "yyyy-MM-dd HH:mm:ss", AutoSize, + "Print" (Slip) and
+  "View" button columns 40 wide. API: /api/admin/audit-log-report/* (AuditLogReportController / AuditLogReportService).
+-->
+<style>
+    :root { --teal: #008080; --jb: #9eb6ce; --ctl: #f0f0f0; }
+    html, body { margin: 0; padding: 0; height: 100%; background: var(--ctl); overflow: hidden; }
+    body { display: flex; flex-direction: column; font-family: Verdana, sans-serif; font-size: 13px; color: #000; }
+    /* Keep the report below the navigation bar and inside the body's sidebar offset. */
+    body > .erp-navigation { flex: 0 0 auto; }
+    #frm { position: relative; flex: 1 1 auto; min-height: 0; overflow-x: auto; overflow-y: hidden; }
+    #panel1 { display: flex; flex-direction: column; height: 100%; min-width: 680px; background: var(--ctl); }
+
+    /* panel2 / toolStrip3 */
+    #panel2 { flex: 0 0 28px; height: 28px; background: var(--ctl); overflow: hidden; }
+    #toolStrip3 { display: flex; align-items: center; height: 27px; padding-left: 2px; white-space: nowrap; overflow: hidden;
+                  background: linear-gradient(#fbfcfe, #e9eef6); border-bottom: 1px solid #c5d3e2; font: 13px Verdana, sans-serif; }
+    #toolStrip3 button { display: inline-flex; align-items: center; gap: 4px; height: 24px; padding: 0 5px; margin: 0 1px;
+                  font: inherit; color: #000; background: transparent; border: 1px solid transparent; cursor: pointer; white-space: nowrap; }
+    #toolStrip3 button:hover:not(:disabled) { background: #cce8ff; border-color: #99d1ff; }
+    #toolStrip3 button:disabled { color: #a0a0a0; cursor: default; }
+    #toolStrip3 svg { width: 20px; height: 20px; flex: 0 0 20px; }
+    #toolStrip3 svg.p16 { width: 16px; height: 16px; flex: 0 0 16px; margin: 0 2px; }
+
+    /* panel3 (teal caption) */
+    #panel3 { flex: 0 0 29px; height: 29px; position: relative; background: var(--teal); }
+    #label23 { position: absolute; left: 2px; top: 3px; font: bold 16px Tahoma, sans-serif; color: #fff; line-height: 19px; white-space: nowrap; }
+
+    /* panel4 (white) + groupBox1 */
+    #panel4 { flex: 0 0 75px; height: 75px; position: relative; background: #fff; }
+    #groupBox1 { position: absolute; left: 6px; top: 3px; width: 667px; height: 66px; box-sizing: border-box; }
+    #groupBox1 .gb-line { position: absolute; left: 0; top: 8px; right: 0; bottom: 0; border: 1px solid #d5dfe5; border-radius: 3px; }
+    #groupBox1 .gb-cap { position: absolute; left: 6px; top: 0; padding: 0 2px; background: #fff; font: bold 13px Tahoma, sans-serif; line-height: 16px; color: #000; }
+    .lbl { position: absolute; font: 600 12px "Segoe UI Semibold", "Segoe UI", sans-serif; line-height: 15px; color: #000; white-space: nowrap; }
+    .dtp { position: absolute; box-sizing: border-box; height: 23px; font: 13px Verdana, sans-serif; border: 1px solid #7a7a7a; padding: 0 2px; background: #fff; }
+    #btnshow { position: absolute; left: 594px; top: 34px; width: 65px; height: 26px; box-sizing: border-box; padding: 0;
+               background: var(--teal); color: #fff; border: 0; font: bold 13px Verdana, sans-serif; cursor: pointer; }
+    #btnshow:disabled { opacity: .7; cursor: progress; }
+    #groupBox1 .dtcombo-wrap .dtcombo-input { font: 13px Verdana, sans-serif !important; }
+
+    /* panel5 */
+    #panel5 { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; background: var(--ctl); }
+    #panel6 { flex: 0 0 29px; height: 29px; position: relative; background: var(--teal); }
+    #label4 { position: absolute; left: 3px; top: 4px; font: bold 16px Tahoma, sans-serif; color: #fff; line-height: 19px; }
+    #gbMount { position: absolute; right: 6px; top: 2px; height: 24px; min-width: 41px; display: flex; align-items: center; justify-content: flex-end; }
+
+    /* DataGridHistory - Janus GridEX, VisualStyle Office2007, Verdana 8.25 */
+    .jg { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; border: 1px solid var(--jb); background: #fff; }
+    .jg-gbx { flex: 0 0 auto; min-height: 22px; display: flex; align-items: center; gap: 4px; padding: 3px 6px; box-sizing: border-box;
+              background: linear-gradient(#e4ecf7, #c9d9ee); border-bottom: 1px solid var(--jb); font: 11px Verdana, sans-serif; color: #4d6185; }
+    .jg-gbx.over { outline: 2px dashed #5b9bd5; outline-offset: -3px; }
+    .jg-gbx .chip { display: inline-flex; align-items: center; gap: 4px; height: 18px; padding: 0 6px; color: #000; cursor: grab;
+                    background: linear-gradient(#f9fcfd, #d3e2f0); border: 1px solid var(--jb); }
+    .jg-gbx .chip b { font-weight: normal; cursor: pointer; color: #555; }
+    .jg-wrap { flex: 1 1 auto; overflow: auto; min-height: 0; background: #fff; }
+    .jg table { border-collapse: separate; border-spacing: 0; font: 11px Verdana, sans-serif; }
+    .jg th { position: sticky; top: 0; z-index: 3; height: 20px; padding: 0 6px; text-align: left; font-weight: normal; white-space: nowrap;
+             background: linear-gradient(#f9fcfd, #d3e2f0); border-right: 1px solid var(--jb); border-bottom: 1px solid var(--jb); cursor: default; user-select: none; }
+    .jg th[draggable="true"] { cursor: grab; }
+    .jg tr.flt td { position: sticky; z-index: 2; background: #fff; padding: 1px; height: 20px; border-bottom: 1px solid var(--jb); border-right: 1px solid #e3e9ef; }
+    .jg tr.flt input { width: 100%; min-width: 30px; height: 17px; box-sizing: border-box; border: 1px solid #c5d3e2; font: 11px Verdana, sans-serif; padding: 0 2px; }
+    .jg td { height: 19px; padding: 0 6px; white-space: nowrap; box-sizing: border-box; border-right: 1px solid #e3e9ef; border-bottom: 1px solid #e3e9ef; }
+    .jg td.btnc { padding: 1px 2px; width: 40px; min-width: 40px; max-width: 40px; text-align: center; }
+    .jg td.btnc button { width: 100%; height: 17px; padding: 0; font: 11px Verdana, sans-serif; cursor: pointer;
+                         background: linear-gradient(#fdfdfd, #e3e3e3); border: 1px solid #a7a7a7; border-radius: 2px; }
+    .jg td.btnc button:hover:not(:disabled) { background: linear-gradient(#eaf6fd, #bee6fd); border-color: #3c7fb1; }
+    .jg td.btnc button:disabled { opacity: .6; cursor: progress; }
+    .jg th.btnh { width: 40px; min-width: 40px; max-width: 40px; padding: 0 4px; }
+    .jg td.fill, .jg th.fill { width: 100%; border-right: 0; padding: 0; }
+    .jg tbody tr.row.cur td { background: #ffe8a6; }
+    .jg tr.grp td { background: #eef3f8; font-weight: bold; cursor: pointer; border-bottom: 1px solid #c5d3e2; }
+    .jg tr.grp .tg { display: inline-block; width: 11px; text-align: center; border: 1px solid #8ea3b9; line-height: 9px; height: 9px; font-size: 9px; margin-right: 4px; background: #fff; }
+    .jg tfoot td { position: sticky; bottom: 0; z-index: 2; background: #e7eef6; border-top: 1px solid var(--jb); height: 20px; }
+    .jg-nav { flex: 0 0 22px; height: 22px; display: flex; align-items: center; gap: 2px; padding: 0 4px;
+              background: linear-gradient(#f4f8fb, #dbe6f1); border-top: 1px solid var(--jb); font: 11px Verdana, sans-serif; }
+    .jg-nav button { width: 20px; height: 18px; padding: 0; border: 1px solid transparent; background: transparent; cursor: pointer; font: 10px Verdana; }
+    .jg-nav button:hover:not(:disabled) { border-color: var(--jb); background: #fff; }
+    .jg-nav button:disabled { color: #aaa; cursor: default; }
+    .jg-nav span { padding: 0 6px; white-space: nowrap; }
+
+    /* ShortCutKeyPopUp */
+    #scModal { position: fixed; inset: 0; background: rgba(0,0,0,.25); display: none; align-items: center; justify-content: center; z-index: 50; }
+    #scModal .box { background: #fff; border: 1px solid #555; min-width: 520px; font: 12px "Segoe UI", sans-serif; }
+    #scModal .hd { background: var(--teal); color: #fff; font: bold 13px Tahoma; padding: 4px 8px; display: flex; justify-content: space-between; }
+    #scModal table { border-collapse: collapse; width: 100%; }
+    #scModal td, #scModal th { border: 1px solid #ccc; padding: 2px 6px; text-align: left; }
+</style>
+</head>
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div id="frm"><div id="panel1">
+    <div id="panel2">
+        <div id="toolStrip3" role="toolbar">
+            <button type="button" id="btnNew" title="Ctrl+N"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="8.5" fill="#2e9b45"/><path d="M10 5.5v9M5.5 10h9" stroke="#fff" stroke-width="2.2"/></svg><span><u>N</u>ew</span></button>
+            <button type="button" id="btnRefresh" title="Ctrl+R"><svg viewBox="0 0 20 20"><path d="M15.5 6.5A6.5 6.5 0 1 0 16.5 11" fill="none" stroke="#1f7a3a" stroke-width="2.2"/><path d="M16.8 2.8v5h-5z" fill="#1f7a3a"/></svg><span><u>R</u>efresh</span></button>
+            <button type="button" id="btn334Register" title="Ctrl+P" data-rpt-own data-rpt="AuditActiviyReport.rpt"><svg class="p16" viewBox="0 0 16 16"><rect x="4" y="1.5" width="8" height="4" fill="#fff" stroke="#555"/><rect x="1.5" y="5.5" width="13" height="6" rx="1" fill="#6b7d8f"/><rect x="4" y="9.5" width="8" height="5" fill="#fff" stroke="#555"/></svg><span>Audit Log Report</span></button>
+            <button type="button" id="btnShortCutKeys" title="ShortCutKeys"><span>ShortCutKeys</span></button>
+        </div>
+    </div>
+
+    <div id="panel3"><span id="label23">Audit Log Report</span></div>
+
+    <div id="panel4">
+        <div id="groupBox1">
+            <div class="gb-line"></div><span class="gb-cap">Filters</span>
+            <span class="lbl" id="label12" style="left:7px;top:18px">Date Type</span>
+            <select id="cmbperemeter" data-dtcombo="single" data-dtcombo-caption="Parameters" style="position:absolute;left:7px;top:34px;width:122px;height:26px"></select>
+            <span class="lbl" id="label27" style="left:130px;top:18px">Date From</span>
+            <input type="date" class="dtp" id="GRNfromdate" style="left:130px;top:36px;width:118px">
+            <span class="lbl" id="label2" style="left:251px;top:18px">Date To</span>
+            <input type="date" class="dtp" id="GRNToDate" style="left:249px;top:36px;width:115px">
+            <span class="lbl" id="label1" style="left:366px;top:18px">User Name</span>
+            <select id="cmbusername" data-dtcombo="single" data-dtcombo-caption="User Name" style="position:absolute;left:366px;top:34px;width:225px;height:26px"></select>
+            <button type="button" id="btnshow" title="Ctrl+S">Show</button>
+        </div>
+    </div>
+
+    <div id="panel5">
+        <div id="panel6"><span id="label4">History</span><div id="gbMount"></div></div>
+        <div class="jg" id="jgHistory">
+            <div class="jg-gbx" id="gbxHistory">Drag a column header here to group by that column.</div>
+            <div class="jg-wrap" data-gridbar-form="AuditLogReport" data-gridbar-grid="DataGridHistory" data-gridbar-mount="#gbMount"
+                 data-gridbar-reorder="false" data-gridbar-title="History"><table id="DataGridHistory" tabindex="0"></table></div>
+            <div class="jg-nav" data-for="DataGridHistory"></div>
+        </div>
+    </div>
+</div></div>
+
+<div id="scModal"><div class="box"><div class="hd"><span>ShortCut Keys</span><a href="#" id="scClose" style="color:#fff">X</a></div>
+    <table><thead><tr><th>KeyCombination</th><th>Description</th></tr></thead><tbody id="scBody"></tbody></table></div></div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}" src="/vendors/jquery/dist/jquery.min.js"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20261002k}" src="/build/js/countx_prod_combo.js"></script>
+<script th:src="@{/build/js/countx_acc_rpt_f.js?v=20261002k}" src="/build/js/countx_acc_rpt_f.js"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}" src="/build/js/countx_grid_bar.js"></script>
+<script>
+(function ($) {
+    'use strict';
+    var API = '/api/admin/audit-log-report';
+    var CTX = { activeYear: null };
+    var SCREENS = [];          // dtScreens (USP_GetScreensForAuditReport) + webRoute
+    var HAND = {};             // the View handler's hand-coded TargetUrls + webRoute
+    var dt = [];               // dt - the proc rows, what the toolbar print hands to AuditActiviyReport.rpt
+    var PRINT_METHODS = null;  // CommonServices method -> .rpt (static/build/data/commonservices-print-methods.json)
+
+    /* ------------------------------------------------------------------ helpers */
+    function esc(v) { return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+    function busy(btn, on) { var $b = $(btn); if (on) $b.prop('disabled', true).addClass('btn-busy'); else $b.removeClass('btn-busy').prop('disabled', false); }
+    function isBusy(btn) { return $(btn).hasClass('btn-busy'); }
+    function failText(x) {
+        try { var j = x.responseJSON || JSON.parse(x.responseText); if (j && j.message) return j.message; } catch (e) { /* ignore */ }
+        return x && x.status ? 'HTTP ' + x.status : 'Request failed';
+    }
+    function getJson(path, data) {
+        return new Promise(function (resolve, reject) {
+            $.ajax({ url: API + path, type: 'GET', data: data || {}, dataType: 'json', cache: false })
+                .done(function (r) { if (r && r.success === false) reject(new Error(r.message || 'Error')); else resolve(r); })
+                .fail(function (x) { reject(new Error(failText(x))); });
+        });
+    }
+
+    /* ------------------------------------------------------------------ DataGridHistory (Janus GridEX) */
+    /* dtGrn columns in the desktop's order; GridSetting hides ReferenceId, RefDocumentTypeId, ScreenName and appends Slip ("Print") + View */
+    var COLS = [
+        { key: 'ReferenceId', hidden: true }, { key: 'RefDocumentTypeId', hidden: true },
+        { key: 'Date' }, { key: 'UserName' }, { key: 'Description' }, { key: 'Action' }, { key: 'ScreenName', hidden: true },
+        { key: 'Slip', caption: 'Print', button: 'Print' }, { key: 'View', caption: 'View', button: 'View' }
+    ];
+    var G = { rows: [], view: [], filters: {}, cur: -1, groupKey: null, collapsed: {}, focusKey: null, shown: false };
+    var $t = $('#DataGridHistory'), $nav = $('.jg-nav[data-for="DataGridHistory"]'), $gbx = $('#gbxHistory');
+    $nav.html('<button type="button" data-nav="first" title="First">|&#9664;</button><button type="button" data-nav="prev" title="Previous">&#9664;</button>'
+        + '<span class="t">Record 0 of 0</span><button type="button" data-nav="next" title="Next">&#9654;</button><button type="button" data-nav="last" title="Last">&#9654;|</button>');
+
+    function visibleCols() { return COLS.filter(function (c) { return !c.hidden && !(G.groupKey && c.key === G.groupKey); }); }
+    /* DataGridHistory.ClearStructure() */
+    function clearGrid() { G.rows = []; G.view = []; G.cur = -1; G.shown = false; G.groupKey = null; G.filters = {}; $t.empty(); gbx(); nav(); }
+    /* DataSource = dtGrn; RetrieveStructure(); GridSetting() */
+    function loadGrid(rows) { G.rows = rows; G.filters = {}; G.focusKey = null; G.collapsed = {}; G.cur = rows.length ? 0 : -1; G.shown = true; render(false); }
+    function gbx() {
+        if (!G.shown) { $gbx.text('Drag a column header here to group by that column.'); return; }
+        if (G.groupKey) $gbx.html('<span class="chip" draggable="true" data-k="' + esc(G.groupKey) + '">' + esc(G.groupKey) + ' <b title="Remove grouping">&times;</b></span>');
+        else $gbx.text('Drag a column header here to group by that column.');
+    }
+    function render(keepFilters) {
+        if (!G.shown) return;
+        var cols = visibleCols(), fl = G.filters;
+        var view = G.rows.filter(function (r) {
+            return cols.every(function (c) { var f = fl[c.key]; if (!f || c.button) return true; return String(r[c.key] == null ? '' : r[c.key]).toLowerCase().indexOf(String(f).toLowerCase()) >= 0; });
+        });
+        if (G.groupKey) {          // Janus groups sort by the group value, rows keep their order inside a group
+            var order = [], by = {};
+            view.forEach(function (r) { var g = r[G.groupKey] == null ? '' : String(r[G.groupKey]); if (!by[g]) { by[g] = []; order.push(g); } by[g].push(r); });
+            order.sort(function (a, b) { return a.localeCompare(b); });
+            view = []; order.forEach(function (g) { view = view.concat(by[g]); });
+        }
+        G.view = view;
+        var h = '<thead><tr>' + cols.map(function (c) {
+            return c.button ? '<th class="btnh" data-k="' + esc(c.key) + '">' + esc(c.caption) + '</th>'
+                            : '<th draggable="true" data-k="' + esc(c.key) + '">' + esc(c.caption || c.key) + '</th>';
+        }).join('') + '<th class="fill"></th></tr>';
+        h += '<tr class="flt">' + cols.map(function (c) {
+            return c.button ? '<td class="btnc"></td>' : '<td><input type="text" data-k="' + esc(c.key) + '" value="' + esc(fl[c.key] || '') + '"></td>';
+        }).join('') + '<td class="fill"></td></tr></thead><tbody>';
+        function rowHtml(r, i) {
+            return '<tr class="row' + (i === G.cur ? ' cur' : '') + '" data-i="' + i + '">' + cols.map(function (c) {
+                if (c.button) return '<td class="btnc"><button type="button" tabindex="-1" data-col="' + c.key + '">' + esc(c.button) + '</button></td>';
+                var v = r[c.key] == null ? '' : String(r[c.key]);
+                return '<td data-k="' + esc(c.key) + '" title="' + esc(v) + '">' + esc(v) + '</td>';
+            }).join('') + '<td class="fill"></td></tr>';
+        }
+        if (G.groupKey) {
+            var i = 0;
+            while (i < view.length) {
+                var g = view[i][G.groupKey] == null ? '' : String(view[i][G.groupKey]), start = i, body = '';
+                while (i < view.length && String(view[i][G.groupKey] == null ? '' : view[i][G.groupKey]) === g) { body += rowHtml(view[i], i); i++; }
+                var col = !!G.collapsed[g];
+                h += '<tr class="grp" data-g="' + esc(g) + '"><td colspan="' + (cols.length + 1) + '"><span class="tg">' + (col ? '+' : '&minus;') + '</span>'
+                    + esc(G.groupKey + ': ' + g) + ' (' + (i - start) + ')</td></tr>';
+                if (!col) h += body;
+            }
+        } else {
+            view.forEach(function (r, idx) { h += rowHtml(r, idx); });
+        }
+        /* TotalRow = True, TotalRowPosition BottomFixed - no column carries an aggregate, so its cells stay empty */
+        h += '</tbody><tfoot><tr>' + cols.map(function (c) { return '<td' + (c.button ? ' class="btnc"' : '') + '></td>'; }).join('') + '<td class="fill"></td></tr></tfoot>';
+        $t.html(h).css('width', '100%');
+        if (keepFilters && G.focusKey) { var foc = $t.find('tr.flt input').filter(function () { return $(this).data('k') === G.focusKey; }); if (foc.length) { var v = foc.val(); foc.focus().val('').val(v); } }
+        if (G.cur >= view.length) G.cur = view.length - 1;
+        if (G.cur < 0 && view.length) G.cur = 0;
+        var hdr = $t.find('thead tr:first th').outerHeight() || 20;
+        $t.find('tr.flt td').css('top', hdr + 'px');
+        gbx(); nav();
+    }
+    function setCur(i) {
+        if (!G.view.length) { G.cur = -1; nav(); return; }
+        G.cur = Math.max(0, Math.min(G.view.length - 1, i));
+        $t.find('tr.row').removeClass('cur');
+        var $tr = $t.find('tr.row[data-i="' + G.cur + '"]').addClass('cur');
+        if ($tr.length && $tr[0].scrollIntoView) $tr[0].scrollIntoView({ block: 'nearest' });
+        nav();
+    }
+    function nav() {
+        var n = G.view.length;
+        $nav.find('.t').text('Record ' + (G.cur >= 0 ? G.cur + 1 : 0) + ' of ' + n);
+        $nav.find('[data-nav=first],[data-nav=prev]').prop('disabled', G.cur <= 0);
+        $nav.find('[data-nav=next],[data-nav=last]').prop('disabled', G.cur < 0 || G.cur >= n - 1);
+    }
+    $nav.on('click', 'button', function () {
+        var a = $(this).data('nav'), n = G.view.length;
+        setCur(a === 'first' ? 0 : a === 'last' ? n - 1 : a === 'prev' ? G.cur - 1 : G.cur + 1);
+    });
+    $t.on('click', 'tr.row td', function () { setCur(+$(this).closest('tr').data('i')); })
+      .on('click', 'tr.grp', function () { var g = $(this).data('g'); G.collapsed[g] = !G.collapsed[g]; render(true); })
+      .on('input', 'tr.flt input', function () { G.focusKey = $(this).data('k'); G.filters[G.focusKey] = $(this).val(); render(true); })
+      .on('keydown', function (e) {
+          if ($(e.target).is('input')) return;
+          if (e.key === 'ArrowDown' && !e.ctrlKey) { e.preventDefault(); setCur(G.cur + 1); }
+          else if (e.key === 'ArrowUp' && !e.ctrlKey) { e.preventDefault(); setCur(G.cur - 1); }
+      })
+      /* DataGridHistory_ColumnButtonClick */
+      .on('click', 'td.btnc button', function (e) {
+          e.stopPropagation();
+          var i = +$(this).closest('tr').data('i'); setCur(i);
+          var r = G.view[i]; if (!r) return;
+          columnButton($(this).data('col'), r, this);
+      })
+      /* group-by box: drag a header in, drag the chip back out (or x) to ungroup */
+      .on('dragstart', 'th[draggable="true"]', function (e) { e.originalEvent.dataTransfer.setData('text/plain', 'col:' + $(this).data('k')); });
+    $gbx.on('dragover', function (e) { if (G.shown) { e.preventDefault(); $gbx.addClass('over'); } })
+        .on('dragleave drop', function () { $gbx.removeClass('over'); })
+        .on('drop', function (e) {
+            e.preventDefault();
+            var d = e.originalEvent.dataTransfer.getData('text/plain') || '';
+            if (d.indexOf('col:') === 0 && G.shown) { G.groupKey = d.substring(4); G.collapsed = {}; render(true); }
+        })
+        .on('click', '.chip b', function () { G.groupKey = null; render(true); })
+        .on('dragstart', '.chip', function (e) { e.originalEvent.dataTransfer.setData('text/plain', 'ungroup'); });
+    $('#jgHistory .jg-wrap').on('dragover', function (e) { e.preventDefault(); })
+        .on('drop', function (e) { if ((e.originalEvent.dataTransfer.getData('text/plain') || '') === 'ungroup') { e.preventDefault(); G.groupKey = null; render(true); } });
+
+    /* ------------------------------------------------------------------ gridHisory / btnshow_Click */
+    function show() {
+        var btn = '#btnshow';
+        if (isBusy(btn)) return Promise.resolve();
+        busy(btn, true);
+        dt = [];                                                     // dt.Clear()
+        return getJson('/show', { fromDate: $('#GRNfromdate').val(), toDate: $('#GRNToDate').val(), userId: $('#cmbusername').val() || 0 })
+            .then(function (res) {
+                dt = res.rows || [];
+                if (dt.length > 0) {
+                    loadGrid(dt.map(function (r) {
+                        return { ReferenceId: r.ReferenceId, RefDocumentTypeId: r.RefDocumentTypeId, Date: r.ActivityDate, UserName: r.UserName,
+                                 Description: r.ActivityDescription, Action: r.Action, ScreenName: r.ScreenName };
+                    }));
+                } else {
+                    clearGrid();
+                }
+            })
+            .catch(function (e) { alert(e.message); })
+            .then(function () { busy(btn, false); });
+    }
+
+    /* ------------------------------------------------------------------ AllDropDownBind / ParameterFill */
+    function fillUsers(users) {
+        var keep = $('#cmbusername').val();
+        if (users && users.length > 0) {                             // if (dt.Rows.Count > 0) BindDDLNew(..., ZeroIndex false)
+            AccF.fillSelect('#cmbusername', users, 'Id', 'UserName', '');
+            if (keep && $('#cmbusername option[value="' + keep + '"]').length) $('#cmbusername').val(keep).trigger('change');
+        }
+    }
+    /* cmbperemeter_ValueChanged */
+    function onParameter() {
+        var id = parseInt($('#cmbperemeter').val(), 10);
+        if (id === 1) $('#GRNfromdate').val(AccF.today());
+        else if (id === 2) $('#GRNfromdate').val(AccF.addDays(-7));
+        else if (id === 3) { $('#GRNfromdate').val(AccF.monthStart()); $('#GRNToDate').val(AccF.today()); }
+        else if (id === 4) { $('#GRNfromdate').val(AccF.yearStart()); $('#GRNToDate').val(AccF.today()); }
+        else if (id === 5) $('#GRNfromdate').val(CTX.activeYear && CTX.activeYear.startPeriod ? CTX.activeYear.startPeriod : '');
+    }
+    /* btnNew_Click -> Reset(): cmbusername.Text = "", focus cmbperemeter (the grid and dt are left as they are) */
+    function reset() { $('#cmbusername').val('').trigger('change'); AccF.focus('#cmbperemeter'); }
+    /* btnRefresh_Click -> AllDropDownBind() */
+    function refresh() {
+        var b = '#btnRefresh'; if (isBusy(b)) return;
+        busy(b, true);
+        getJson('/refresh').then(function (r) { fillUsers(r.users); }).catch(function (e) { alert(e.message); }).then(function () { busy(b, false); });
+    }
+
+    /* ------------------------------------------------------------------ btn334Register_Click: dt -> AuditActiviyReport.rpt */
+    function printRegister() {
+        var b = '#btn334Register'; if (isBusy(b)) return;
+        if (!dt || dt.length === 0) { alert('Not Record Found For Display'); return; }
+        var win = window.open('about:blank', '_blank');
+        busy(b, true);
+        /* Reporting.ShowReportWithDataTable(dt, "AuditActiviyReport.rpt") with @CompanyName / @CompanyAddress - the server
+           adds the company name and address of the session's company (POST /reports/print/grid). */
+        fetch('/reports/print/grid', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rpt: 'AuditActiviyReport.rpt', title: 'Audit Log Report', rows: dt }) })
+            .then(function (r) {
+                var type = r.headers.get('Content-Type') || '';
+                if (r.ok && type.indexOf('application/pdf') === 0) return r.blob().then(function (bl) { win.location = URL.createObjectURL(bl); });
+                return r.text().then(function (t) { try { win.close(); } catch (x) { } alert(t || ('Print failed (' + r.status + ')')); });
+            })
+            .catch(function (e) { try { win.close(); } catch (x) { } alert(e.message); })
+            .then(function () { busy(b, false); });
+    }
+
+    /* ------------------------------------------------------------------ DataGridHistory_ColumnButtonClick */
+    var FOOD = 'Architecture.WinApp.Production.FoodProductionWithValues';
+    var FOOD_READ = { 80: 'ReadByIdInput', 112: 'ReadByIdOutPut', 181: 'ReadByIdConsumption', 110: 'ReadByIdOverHeadJobOrderWise', 111: 'ReadByIdPackingMaterial' };
+    function screenRow(name) { for (var i = 0; i < SCREENS.length; i++) if (SCREENS[i].ScreenName === name) return SCREENS[i]; return null; }
+    /* Activator.CreateInstance(Type.GetType(TargetUrl)) ... ReadById(Id): the web page of that form, ?id= loads the record */
+    function openForm(targetUrl, route, id, extra) {
+        if (!targetUrl) { alert('Target URL not Configured properly... '); return; }
+        if (!route) { alert('Target URL not Configured properly... ' + targetUrl + '\n(this form has no web page yet)'); return; }
+        var q = new URLSearchParams(); q.set('id', id);
+        Object.keys(extra || {}).forEach(function (k) { q.set(k, extra[k]); });
+        window.open(route + (route.indexOf('?') >= 0 ? '&' : '?') + q.toString(), '_blank');
+    }
+    function viewFood(id, docType) {
+        var route = HAND.FoodProductionWithValues ? HAND.FoodProductionWithValues.webRoute : null;
+        if (!FOOD_READ[docType]) { alert('Method  not found on form ' + FOOD); return; }    // ReadById "" -> GetMethod("") == null
+        openForm(FOOD, route, id, { documentTypeId: docType });
+    }
+    function printFood(id, docType) {
+        if (docType === 80 || docType === 112) invoke('ProductionInPutAndOutPut601', [id]);
+        else if (docType === 181) invoke('ProductionConsumptionReport_623', [id]);
+        else if (docType === 110) invoke('ProductionPMAndOverHeads_606', [id, 'OverHead']);
+        else if (docType === 111) invoke('ProductionPMAndOverHeads_606', [id, 'PackingMaterial']);
+    }
+
+    function columnButton(col, r, btn) {
+        var screenName = r.ScreenName == null ? '' : String(r.ScreenName);
+        var Id = parseInt(r.ReferenceId, 10) || 0;
+        var DocumentTypeId = parseInt(r.RefDocumentTypeId, 10) || 0;
+        if (String(r.Action) === 'DELETE') { alert('You Can Not View or Print Delete Record...'); return; }
+        var found = screenRow(screenName);
+        var TargetUrl = found ? (found.TargetUrl || '') : '';
+        if (col === 'View') {
+            if (!TargetUrl) {
+                if (['DeliveryOrder', 'ExportDeliveryOrderB', 'ExportDeliveryOrderNew', 'ExportPartyDefines', 'frmPurchaseInvoiceDirectStore', 'frmPurchaseInvoiceDirectStoreWithVariant'].indexOf(screenName) >= 0) {
+                    /* ExportPartyDefines has no branch of its own on the desktop (the second "ExportDeliveryOrderNew" test is dead), so it fails */
+                    var h = HAND[screenName];
+                    if (!h) { alert('Target URL not Configured properly... '); return; }
+                    openForm(h.TargetUrl, h.webRoute, Id);
+                } else if (screenName !== 'FoodProductionWithValues') {
+                    alert('Target URL not Configured properly... ');
+                } else {
+                    viewFood(Id, DocumentTypeId);
+                }
+            } else if (screenName === 'FoodProductionWithValues') {
+                viewFood(Id, DocumentTypeId);
+            } else {
+                openForm(TargetUrl, found.webRoute, Id);
+            }
+            return;
+        }
+        if (col !== 'Slip') return;
+        if (!TargetUrl) {
+            if (['DeliveryOrder', 'ExportDeliveryOrderB', 'DeliveryOrderTransfer', 'ExportDeliveryOrderNew'].indexOf(screenName) >= 0) invoke('InvDeliveryOrderSlip', [Id, DocumentTypeId]);
+            else if (screenName === 'ExportPartyDefines') invoke('InvRptSupplierSlip_293', [Id]);
+            else if (screenName === 'frmPurchaseInvoiceDirectStore' || screenName === 'frmPurchaseInvoiceDirectStoreWithVariant') invoke('PurchaseInvoiceStoreDirectSlip', [Id, DocumentTypeId]);
+            else if (screenName === 'FoodProductionWithValues') printFood(Id, DocumentTypeId);
+            return;
+        }
+        /* ReportsMethod.FormHistory(), read at every click */
+        busy(btn, true);
+        getJson('/report-methods').then(function (res) {
+            var rows = res.rows || [];
+            if (rows.length <= 0) return;
+            var Method = null;
+            for (var i = 0; i < rows.length; i++) {
+                var m = rows[i];
+                if (m.ScreenName === screenName || (m.RefDocumentTypeId != null && parseInt(m.RefDocumentTypeId, 10) === DocumentTypeId)) { Method = m.ReportMethod; break; }
+            }
+            if (Method != null) {
+                return methods().then(function (M) {
+                    var def = M[Method];
+                    if (!def) { alert('Method SomeMethod not found on form Architecture.WinApp.Common.CommonServices'); return; }
+                    /* switch (method5.GetParameters().Length): 1 -> (Id), 2 -> (Id, DocumentTypeId), otherwise nothing */
+                    if (def.params.length === 1) invoke(Method, [Id]);
+                    else if (def.params.length === 2) invoke(Method, [Id, DocumentTypeId]);
+                });
+            }
+            if (screenName === 'DeliveryOrderTransfer') invoke('InvDeliveryOrderSlip', [Id, DocumentTypeId]);
+            if (screenName === 'FoodProductionWithValues') printFood(Id, DocumentTypeId);
+        }).catch(function (e) { alert(e.message); }).then(function () { busy(btn, false); });
+    }
+
+    /* ------------------------------------------------------------------ CommonServices.<method>(args) -> its .rpt through the Jasper print layer */
+    function methods() {
+        if (PRINT_METHODS) return Promise.resolve(PRINT_METHODS);
+        return fetch('/build/data/commonservices-print-methods.json?v=20261003wa', { credentials: 'same-origin' })
+            .then(function (r) { if (!r.ok) throw new Error('Print method list not available (' + r.status + ')'); return r.json(); })
+            .then(function (j) { PRINT_METHODS = j.methods || {}; return PRINT_METHODS; });
+    }
+    function cond(expr, def, args) {
+        if (expr === 'else' || expr === 'always') return true;
+        var m = /^(\w+)\s*(==|!=)\s*(-?\d+)$/.exec(String(expr).trim()); if (!m) return false;
+        var idx = def.params.indexOf(m[1]); if (idx < 0) return false;
+        var v = parseInt(args[idx], 10);
+        return m[2] === '==' ? v === parseInt(m[3], 10) : v !== parseInt(m[3], 10);
+    }
+    function invoke(name, args, depth) {
+        return methods().then(function (M) {
+            var def = M[name];
+            if (!def) { alert('Method ' + name + ' not found on form Architecture.WinApp.Common.CommonServices'); return; }
+            for (var i = 0; i < args.length && i < def.paramTypes.length; i++) {
+                if (def.paramTypes[i] === 'string' && typeof args[i] !== 'string') { alert("Object of type 'System.Int32' cannot be converted to type 'System.String'."); return; }
+            }
+            if (def.calls) {
+                if ((depth || 0) > 4) return;
+                for (var c = 0; c < def.calls.length; c++) {
+                    if (cond(def.calls[c].when, def, args)) {
+                        var sub = M[def.calls[c].call] || { params: [] };
+                        var subArgs = sub.params.map(function (p) { var k = def.params.indexOf(p); return k >= 0 ? args[k] : args[0]; });
+                        if (!subArgs.length) subArgs = [args[0]];
+                        return invoke(def.calls[c].call, subArgs, (depth || 0) + 1);
+                    }
+                }
+                return;
+            }
+            var rpt = def.rpt || null;
+            if (!rpt && def.rptBy) {
+                var si = def.params.indexOf(def.switchOn), key = si >= 0 ? String(args[si]) : '';
+                rpt = def.rptBy[key] || def.rptBy['default'] || null;
+                if (!rpt) { alert('No report for document type ' + key + ' in CommonServices.' + name + '.'); return; }
+            }
+            if (!rpt) {
+                alert(def.unresolved ? 'CommonServices.' + name + ' chooses its report at run time; this print is not available on the web yet.'
+                                     : 'CommonServices.' + name + ' does not print a report.');
+                return;
+            }
+            if (!args[0]) { alert('No Record Found For Display'); return; }
+            var given = { id: args[0] };
+            for (var j = 1; j < args.length; j++) {
+                var p = def.params[j] || '';
+                if (/documenttypeid/i.test(p)) given.documentTypeId = args[j];
+                else if (typeof args[j] === 'string') given[p.charAt(0).toLowerCase() + p.slice(1)] = args[j];
+            }
+            if (!window.printRpt) { alert('Print layer not loaded.'); return; }
+            return window.printRpt(rpt, given);
+        }).catch(function (e) { alert(e.message); });
+    }
+
+    /* ------------------------------------------------------------------ MakeShortCutKeys (the desktop's own list, text unchanged) */
+    var SHORTCUTS = [ ['Ctrl+S', 'For Shoe Record'], ['Ctrl+E', 'For Close'], ['Ctrl+R', 'For Refresh'], ['Ctrl+N', 'For New'], ['Ctrl+P', 'For Print'],
+        ['Ctrl+F5', 'For Focus on Combo DateType'], ['Ctrl+alt', 'To Show ShortCut Keys Form'], ['Ctrl+ArrowDown', 'For Focus On Grid History'],
+        ['Ctrl+ArrowUp', 'For Focus On Date Type combo in Filters Box'] ];   /* spaced brackets: Thymeleaf reads a double bracket as an inline expression */
+    function shortcuts() {
+        $('#scBody').html(SHORTCUTS.map(function (s) { return '<tr><td>' + esc(s[0]) + '</td><td>' + esc(s[1]) + '</td></tr>'; }).join(''));
+        $('#scModal').css('display', 'flex');
+    }
+    function comboOpen() { return $('.dtcombo-pop').filter(function () { return this.style.display === 'block'; }).length > 0; }
+    function close() { window.location.href = '/admin-panel'; }
+
+    /* ------------------------------------------------------------------ wiring */
+    $('#btnshow').on('click', show)
+        /* btnshow_Leave: focus going into the grid is sent back to cmbperemeter */
+        .on('blur', function (e) { if (e.relatedTarget && $(e.relatedTarget).closest('#jgHistory').length) AccF.focus('#cmbperemeter'); });
+    $('#btnNew').on('click', reset);
+    $('#btnRefresh').on('click', refresh);
+    $('#btn334Register').on('click', printRegister);
+    $('#btnShortCutKeys').on('click', shortcuts);
+    $('#scClose').on('click', function (e) { e.preventDefault(); $('#scModal').hide(); });
+
+    /* frmGRNHistory_KeyDown (KeyPreview) */
+    $(document).on('keydown', function (e) {
+        var k = e.key, K = (k || '').toUpperCase();
+        if ($('#scModal').is(':visible')) { if (k === 'Escape') { e.preventDefault(); $('#scModal').hide(); } return; }
+        if (k === 'Enter' && !e.ctrlKey && !e.altKey && !e.shiftKey && !comboOpen() && !$(e.target).is('button, a, tr.flt input')) {
+            /* SendKeys.Send("{TAB}") */
+            var f = $('#panel1').find('input:visible:not([readonly]), .dtcombo-input:visible, button:visible:enabled').toArray();
+            var i = f.indexOf(e.target); if (i >= 0 && i < f.length - 1) { e.preventDefault(); f[i + 1].focus(); }
+        }
+        if ((e.ctrlKey && !e.altKey && K === 'E') || (k === 'Escape' && !comboOpen())) { e.preventDefault(); close(); return; }
+        if (e.ctrlKey && !e.altKey && K === 'S') { e.preventDefault(); show(); }
+        if (e.ctrlKey && k === 'F5') { e.preventDefault(); AccF.focus('#cmbperemeter'); }
+        if (e.ctrlKey && !e.altKey && K === 'N') { e.preventDefault(); reset(); }
+        if (e.ctrlKey && !e.altKey && K === 'P') { e.preventDefault(); printRegister(); }
+        if (e.ctrlKey && !e.altKey && K === 'R') { e.preventDefault(); refresh(); }
+        if (e.ctrlKey && k === 'ArrowDown') { e.preventDefault(); $('#DataGridHistory').focus(); }
+        if (e.ctrlKey && k === 'ArrowUp') { e.preventDefault(); AccF.focus('#cmbperemeter'); }
+        if (e.ctrlKey && e.altKey && (k === 'Control' || k === 'Alt')) { e.preventDefault(); shortcuts(); }
+    });
+
+    /* ------------------------------------------------------------------ frmGRNHistory_Load */
+    $(function () {
+        $('#GRNfromdate, #GRNToDate').val(AccF.today());              // DateTimePicker default: Now
+        getJson('/load').then(function (r) {
+            CTX.activeYear = r.activeYear || null;
+            SCREENS = r.screens || [];
+            (r.handTargets || []).forEach(function (h) { HAND[h.ScreenName] = h; });
+            /* ParameterFill: BindDDL(DateType, "Id", "Parameters", ZeroIndex false) */
+            AccF.fillSelect('#cmbperemeter', r.dateTypes || [], 'Id', 'Parameters', null);
+            $('#cmbperemeter').on('change', onParameter);
+            fillUsers(r.users);
+            /* cmbperemeter.Focus(); Value == 0 -> Rows[0].Activate() ("This Day" -> ValueChanged) */
+            $('#cmbperemeter').val(String((r.dateTypes && r.dateTypes[0] && r.dateTypes[0].Id) || 1)).trigger('change');
+            AccF.focus('#cmbperemeter');
+        }).catch(function (e) { alert(e.message); });
+    });
+})(window.jQuery);
+</script>
+<script src="/js/print-rpt.js?v=20261003erp"></script>
+</body>
+</html>

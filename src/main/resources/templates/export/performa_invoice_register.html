@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Performa Invoice Register - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_rpto.css?v=20261003a}"/>
+</head>
+<!-- PerformaInvoiceRegister.cs (Architecture.WinApp.ExportReports), no ScreenDefinition row, ClientSize 913 x 749, Text "EccountBookERP".
+     panel1 "Performa Invoice Register" (white on teal). panel2 / groupBox1 "Filters": From Date (dd-MM-yy, = ActiveYr.Start_Period) /
+     To Date (dd-MM-yy, today) - both NOT sent to the procedure (ExportInvoicesLoad never sets them); Currency (MultiCurrency.GetAll),
+     Party Name (GetSupplierustomerByCustomerGroupId "7"), Item Name (ItemGetForComboServiceBind), Skip Zero (unchecked), Search, Reset,
+     Print-546. tabControl1: "Detailed" (GridMainDetail, one row per detail line, Σ columns) and "Main Detail" (grd "Main" = distinct Id,
+     grddetail "Detail" = the selected Id's lines). NoOfAttachments is a link (AttachmentView, RefDocumentTypeId 151).
+     Events: Load, btngrnlod (Search), btnReset, btnPrint (546 of dtloadExIO), grd_SelectionChanged, grd_LinkClicked,
+     GridMainDetail_LinkClicked, FormClosing (HistoryStack). -->
+<body class="pd-body" data-export-page="pir">
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="pd-form ex-form">
+    <div class="pd-caption pd-caption-teal" id="panel1" style="height:32px;"><span id="label23">Performa Invoice Register</span></div>
+    <fieldset class="ex-groupbox" id="groupBox1">
+        <legend>Filters</legend>
+        <div class="rpto-filter" style="padding:0;">
+            <div class="ex-field w170"><label for="FromDate" id="label1">From Date</label><input type="date" id="FromDate" class="win-date"/></div>
+            <div class="ex-field w170"><label for="Todate" id="label13">To Date</label><input type="date" id="Todate" class="win-date"/></div>
+            <div class="ex-field w170"><label for="cmbCurrency" id="label5">Currency</label><select id="cmbCurrency" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Currency Name"></select></div>
+            <div class="ex-field w315"><label for="CmbPartyName" id="label2">Party Name</label><select id="CmbPartyName" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Party Name"></select></div>
+            <div class="ex-field w315"><label for="cmbItemName" id="label3">Item Name</label><select id="cmbItemName" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Name"></select></div>
+            <label class="ex-check"><input type="checkbox" id="ChboxSkipZero"/> Skip Zero</label>
+            <button type="button" id="btngrnlod" class="win-btn-small rpto-btn-teal" onclick="ExportPir.search(this)">Search</button>
+            <button type="button" id="btnReset" class="win-btn-small rpto-btn-teal" onclick="ExportPir.reset(this)">Reset</button>
+            <button type="button" id="btnPrint" class="win-btn-small" style="height:26px;" onclick="ExportPir.print(this)">Print-546</button>
+        </div>
+    </fieldset>
+    <div class="win-tabs" id="tabControl1">
+        <button type="button" class="win-tab is-active" id="tabPage1Btn" data-tab="tabPage1">Detailed</button>
+        <button type="button" class="win-tab" id="tabPage2Btn" data-tab="tabPage2">Main Detail</button>
+    </div>
+    <div class="win-tab-panel is-active" id="tabPage1">
+        <div class="pd-caption pd-caption-teal pd-history-bar" id="panel8" style="height:26px;"><span id="label7"></span>
+            <span class="ex-bar-right"><span id="gbPir3" class="pd-gridbar-mount"></span><button type="button" class="ex-fs-btn" data-fullscreen="gridMainDetailBox" title="Fullscreen table">&#x26F6;</button></span></div>
+        <div class="ex-grid-box" id="gridMainDetailBox">
+            <div class="ex-grid-scroll ex-h400"><table class="win-grid" id="GridMainDetail" tabindex="0" data-gridbar="PerformaInvoiceRegister:GridMainDetail" data-gridbar-mount="#gbPir3"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        </div>
+    </div>
+    <div class="win-tab-panel" id="tabPage2">
+        <div class="pd-caption pd-caption-teal pd-history-bar" id="panel3" style="height:26px;"><span id="label4">Main</span>
+            <span class="ex-bar-right"><span id="gbPir1" class="pd-gridbar-mount"></span><button type="button" class="ex-fs-btn" data-fullscreen="grdBox" title="Fullscreen table">&#x26F6;</button></span></div>
+        <div class="ex-grid-box" id="grdBox">
+            <div class="ex-grid-scroll ex-h300"><table class="win-grid" id="grd" tabindex="0" data-gridbar="PerformaInvoiceRegister:grd" data-gridbar-mount="#gbPir1"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        </div>
+        <div class="pd-caption pd-caption-teal pd-history-bar" id="panel4" style="height:26px;"><span id="label6">Detail</span>
+            <span class="ex-bar-right"><span id="gbPir2" class="pd-gridbar-mount"></span><button type="button" class="ex-fs-btn" data-fullscreen="grddetailBox" title="Fullscreen table">&#x26F6;</button></span></div>
+        <div class="ex-grid-box" id="grddetailBox">
+            <div class="ex-grid-scroll ex-h240"><table class="win-grid" id="grddetail" tabindex="0" data-gridbar="PerformaInvoiceRegister:grddetail" data-gridbar-mount="#gbPir2"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        </div>
+    </div>
+    <div class="win-footer-strip">
+        <span class="ex-footer-left">PerformaInvoiceRegister - Performa Invoice Register</span>
+        <button type="button" class="win-btn-history" id="btnPirFooterHistory" onclick="ExportPir.search(this)"><i class="fa fa-history"></i> <span>History</span></button>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260924a}"></script>
+<script th:src="@{/build/js/countx_export_rpto_common.js?v=20261003a}"></script>
+<script th:src="@{/build/js/countx_export_performa_invoice_register.js?v=20261003a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

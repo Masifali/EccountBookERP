@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Expense Voucher</title>
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_voucher.css?v=20261002gb}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260930s}">
+    <!--
+      Screen 46 "Expense Voucher" (ScreenName ExpenseVoucher, TargetUrl
+      Architecture.WinApp.Account_Definition.ExpenseVoucher) - DocumentTypeId 26.
+      This is the plain ExpenseVoucher.cs form; the VouchersWithTax twin (ExpenseVoucherNew) is
+      screen 862. Save: /accounts/api/desktop-voucher/expense/save.
+    -->
+</head>
+<body class="dv dvx">
+<!-- 2026-10-02 R3: Account_Definition/ExpenseVoucher InitializeComponent geometry. Form 1184 x 661, tabControl1
+     Alignment = Bottom. Form page: panel3 white 30 (btnPrintFormat2 toolstrip) / panel4 teal 27 / groupBox2 "Main"
+     5,59 865x142 / groupboxdetail "Detail" 5,201 865x119 / panel6 "Apply Multi Cost Center" 873,57 298x263 /
+     tabControl2 (Detail | Cost Center Breakup) Dock Left 870 + panel21 "Cost Center Summary" Dock Left 301. -->
+<div class="dvx-app">
+<div class="dvx-pages">
+
+<!-- ================================================================= FORM -->
+<div id="pgForm" class="dvx-pg">
+    <div class="dvx-ts w30">
+        <button type="button" id="btnNew" title="Ctrl+N"><i class="ic ic-new"></i><u>N</u>ew</button>
+        <button type="button" id="btnRefresh" title="Ctrl+R"><i class="ic ic-refresh"></i>Refresh</button>
+        <button type="button" id="btnUpdate" class="dv-hidden" title="Ctrl+U"><i class="ic ic-edit"></i><u>U</u>pdate</button>
+        <button type="button" id="btnSaveAs" class="dv-hidden"><i class="ic ic-save"></i>SaveAs</button>
+        <button type="button" id="btnSave" title="Ctrl+S"><i class="ic ic-save"></i><u>S</u>ave</button>
+        <button type="button" id="btnAttachment" disabled title="Attachments are not ported to the web yet"><i class="ic ic-attach"></i><u>A</u>ttachment</button>
+        <button type="button" id="btnPrint" title="102 - Payment / Receipt Voucher Slip (Alt+1)" data-rpt="102-ANewAcRptPaymentReceiptsVoucherSlip.rpt" data-rpt-own><i class="ic ic-print"></i>102-Print</button>
+        <button type="button" id="btnPrintFormatII" title="102 - Voucher Slip (Format II) (Alt+2)" data-rpt="102-AcRptPaymentReceiptsVoucherSlip.rpt" data-rpt-own><i class="ic ic-print"></i>102-Print II</button>
+        <button type="button" id="btnShortCutKey"><i class="ic ic-keys"></i>ShortCut Keys</button>
+    </div>
+    <div class="dvx-teal c008" style="height:27px"><span class="t" style="left:3px;top:4px">EXPENSE VOUCHER</span>
+        <a class="dvx-back" href="/accounts/dashboard" style="right:8px;top:7px">Back to Dashboard</a></div>
+
+    <div class="dvx-hs"><div class="dvx-abs" style="width:1172px;height:269px">
+        <div class="dvx-gb" style="left:5px;top:2px;width:865px;height:142px"><span class="cap">Main</span>
+            <span class="l" style="left:5px;top:18px">Project</span>
+            <div class="x" id="cmbProject" style="left:101px;top:12px;width:243px;height:26px"></div>
+            <label class="l" style="left:5px;top:45px" for="txtVoucherCode">Voucher No,Date</label>
+            <input class="x" id="txtVoucherCode" readonly style="left:101px;top:41px;width:103px">
+            <input class="x" type="date" id="dtVoucherDate" style="left:205px;top:41px;width:139px">
+            <span class="l dv-bal" id="lblBalance" style="left:207px;top:70px;width:137px;text-align:right;overflow:hidden"></span>
+            <span class="l" style="left:5px;top:92px">Credit Account</span>
+            <div class="x" id="cmbRefAccount" style="left:101px;top:86px;width:243px;height:26px"></div>
+            <label class="l b975" style="left:5px;top:116px" for="txtRemarks">Remarks</label>
+            <input class="x" id="txtRemarks" style="left:101px;top:114px;width:538px">
+            <label class="l" style="left:349px;top:18px" for="dtChequeDate">Cheque Date</label>
+            <input class="x" type="date" id="dtChequeDate" style="left:425px;top:14px;width:214px">
+            <span class="l" style="left:349px;top:45px">Cheque No</span>
+            <div class="x" id="cmbChequeNo" style="left:425px;top:39px;width:214px;height:26px"></div>
+            <label class="l" style="left:349px;top:70px" for="txtPayTitle">PayTitle</label>
+            <textarea class="x" id="txtPayTitle" style="left:425px;top:66px;width:214px;height:46px"></textarea>
+            <span class="l fcy" style="left:643px;top:18px">Fcy Code</span>
+            <div class="x fcy" id="cmbCurrency" style="left:725px;top:12px;width:135px;height:26px"></div>
+            <label class="l fcy" style="left:643px;top:45px" for="txtExchangeRate">Exchange Rate</label>
+            <input class="x r fcy" id="txtExchangeRate" style="left:725px;top:41px;width:135px">
+            <label class="l fcy" style="left:643px;top:70px" for="txtFcyAmount">Fcy Amount</label>
+            <input class="x r fcy" id="txtFcyAmount" disabled style="left:725px;top:66px;width:135px">
+            <label class="rb b975" style="left:645px;top:96px"><input type="checkbox" id="chkPrintPreview" checked> Print Preview</label>
+            <label class="rb b975" style="left:645px;top:117px"><input type="checkbox" id="chkFormat2"> Preview Format II</label>
+        </div>
+
+        <div class="dvx-gb" style="left:5px;top:144px;width:865px;height:119px"><span class="cap">Detail</span>
+            <span class="l" style="left:3px;top:17px">Debit Account</span>
+            <label class="rb" style="left:92px;top:16px"><input type="radio" name="rdAc" id="rdTitle" checked>Title</label>
+            <label class="rb" style="left:139px;top:16px"><input type="radio" name="rdAc" id="rdCode">Code</label>
+            <span class="dvx-bal dv-bal" id="lblBalanceDetail" style="left:233px;top:17px;width:165px;text-align:right;overflow:hidden"></span>
+            <div class="x" id="cmbAccount" style="left:3px;top:34px;width:397px;height:26px"></div>
+            <span class="l sub" style="left:402px;top:17px">Subsidiary Account</span>
+            <span class="dvx-bal dv-bal sub" id="lblSubBal" style="left:515px;top:17px;width:113px;text-align:right;overflow:hidden"></span>
+            <div class="x sub" id="cmbSubsidiary" style="left:402px;top:34px;width:230px;height:26px"></div>
+            <span class="l" style="left:634px;top:17px">Job/Lot</span>
+            <div class="x" id="cmbJobLot" style="left:634px;top:34px;width:228px;height:26px"></div>
+            <label class="l" style="left:3px;top:62px" for="txtComments">Remarks</label>
+            <input class="x" id="txtComments" style="left:3px;top:79px;width:278px">
+            <label class="l" style="left:282px;top:62px" for="txtDebitAmount">Debit Amount</label>
+            <input class="x r" id="txtDebitAmount" style="left:282px;top:79px;width:118px">
+            <span class="l" style="left:402px;top:62px">Cost Center</span>
+            <div class="x" id="cmbCostCenter" style="left:402px;top:77px;width:118px;height:26px"></div>
+            <span class="l br" style="left:522px;top:62px">Branch Name</span>
+            <div class="x br" id="cmbBranch" style="left:522px;top:77px;width:214px;height:26px"></div>
+            <button type="button" class="tb tah9" id="btnAdd" title="Add" style="left:739px;top:78px;width:36px;height:25px">+</button>
+            <button type="button" class="tb tah9 dv-hidden" id="btnUpdateDetail" style="left:739px;top:79px;width:61px;height:23px">Update</button>
+            <button type="button" class="tb tah9 dv-hidden" id="btnCancelDetail" style="left:802px;top:79px;width:56px;height:23px">Cancel</button>
+        </div>
+
+        <!-- panel6: Apply Multi Cost Center (grdCostCenter) 873,57 298x263 -->
+        <div class="x" style="left:873px;top:0;width:298px;height:263px;display:flex;flex-direction:column">
+            <div class="dvx-none" style="height:21px;position:relative;background:#fff"><span class="l" style="left:4px;top:2px;font:bold 13px Tahoma,'DejaVu Sans',sans-serif;color:#008080">Apply Multi Cost Center</span></div>
+            <div class="dv-gridwrap dvx-gh" style="border:1px solid #9eb6ce">
+                <table class="dv-grid" id="grdCostCenter"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+            </div>
+        </div>
+    </div></div>
+
+    <div class="dvx-none" style="flex:1 1 auto;min-height:0;display:flex;align-items:stretch">
+        <!-- tabControl2 (Dock Left 870) -->
+        <div style="flex:1 1 870px;min-width:0;display:flex;flex-direction:column">
+            <div class="dv-tabs dvx-ttabs" id="tabBar2">
+                <button type="button" data-tab="detail" class="active">Detail</button>
+                <button type="button" data-tab="breakup">Cost Center Breakup</button>
+            </div>
+            <div id="pgDetail" style="flex:1 1 auto;min-height:0;display:flex;flex-direction:column">
+                <div class="dvx-teal c008" style="height:21px"><span class="t10" style="left:1px;top:2px">VOUCHER Detail</span>
+                    <button type="button" class="dvx-cog ic-cog" disabled title="Grid layout (ctrlGrdBar) is not ported" style="right:2px;top:0;width:43px"></button></div>
+                <div class="dv-gridwrap dvx-gh">
+                    <table class="dv-grid" id="grd"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+                </div>
+            </div>
+            <div id="pgBreakup" class="dv-hidden" style="flex:1 1 auto;min-height:0;display:flex;flex-direction:column">
+                <div class="dvx-teal c008" style="height:22px"><span class="t10" style="left:3px;top:3px">Cost Center BreakUp</span></div>
+                <div class="dv-gridwrap dvx-gh">
+                    <table class="dv-grid" id="grdCostCenterDetail"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+                </div>
+            </div>
+        </div>
+        <!-- panel21 (Dock Left 301): Cost Center Summary -->
+        <div style="flex:0 0 301px;display:flex;flex-direction:column;border-left:1px solid #9eb6ce">
+            <div class="dvx-teal c008" style="height:21px"><span class="t10" style="left:1px;top:2px">Cost Center Summary</span></div>
+            <div class="dv-gridwrap dvx-gh">
+                <table class="dv-grid" id="grdSummary"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================== HISTORY -->
+<div id="pgHistory" class="dvx-pg dv-hidden">
+    <div class="dvx-ts">
+        <button type="button" id="btnNewHistory" title="Ctrl+N"><i class="ic ic-new"></i><u>R</u>eset</button>
+        <button type="button" id="btnRefreshHistory" title="Ctrl+R"><i class="ic ic-refresh"></i>Refresh</button>
+    </div>
+    <div class="dvx-teal c008" style="height:26px"><span class="t" style="left:5px;top:3px">Expense Voucher History</span>
+        <button type="button" class="dvx-cog ic-cog" disabled title="Grid layout (ctrlGrdBar) is not ported" style="right:3px;top:2px"></button></div>
+    <div class="dvx-hs"><div class="dvx-abs" style="width:1168px;height:77px">
+        <div class="dvx-gb" style="left:5px;top:3px;width:917px;height:72px"><span class="cap">Filters</span>
+            <span class="l" style="left:4px;top:19px">From Date</span>
+            <div class="dvx-dchk" style="left:70px;top:15px;width:140px;height:23px"><input type="checkbox" id="chkFromDate" checked><input type="date" id="dtFromHistory"></div>
+            <span class="l" style="left:4px;top:47px">To Date</span>
+            <div class="dvx-dchk" style="left:70px;top:43px;width:140px;height:23px"><input type="checkbox" id="chkToDate" checked><input type="date" id="dtToHistory"></div>
+            <label class="l" style="left:213px;top:19px" for="txtFromDocNoHistory">From Doc No</label>
+            <input class="x sui" id="txtFromDocNoHistory" style="left:294px;top:15px;width:100px">
+            <label class="l" style="left:213px;top:47px" for="txtToDocNoHistory">To Doc No</label>
+            <input class="x sui" id="txtToDocNoHistory" style="left:294px;top:43px;width:100px">
+            <span class="l" style="left:397px;top:19px">Account Title</span>
+            <div class="x mss10" id="cmbAccountTitleHistory" style="left:493px;top:13px;width:234px;height:26px"></div>
+            <span class="l" style="left:397px;top:47px">Approved Status</span>
+            <select class="x mss10" id="cmbApproveStatus" data-dtcombo="single" data-dtcombo-caption="Status" style="position:absolute;left:493px;top:41px;width:158px;height:26px">
+                <option value="notapproved">Not Apporved</option>
+                <option value="approved">Approved</option>
+                <option value="all">All</option>
+            </select>
+            <button type="button" class="tb c0a" id="btnShowHistory" title="Ctrl+S" style="left:656px;top:41px;width:71px;height:26px">Show</button>
+            <label class="rb" style="left:732px;top:16px"><input type="radio" name="rdHistDate" value="doc" checked>Doc Date</label>
+            <label class="rb" style="left:732px;top:36px"><input type="radio" name="rdHistDate" value="entry">Entry Date</label>
+            <label class="rb" style="left:813px;top:16px"><input type="radio" name="rdHistDate" value="modify">Modify Date</label>
+            <label class="rb" style="left:813px;top:36px"><input type="radio" name="rdHistDate" value="approved">Approved Date</label>
+        </div>
+        <div class="dvx-info dv-hidden" id="voucherInfoBox" style="left:922px;top:3px;width:242px;height:72px">
+            <span class="l" style="left:6px;top:11px">Total Vouchers</span><b id="lblTotalVouchers" style="left:153px;top:11px">0</b>
+            <span class="l" style="left:6px;top:28px">Approved Vouchers</span><b id="lblApprovedVouchers" style="left:153px;top:28px">0</b>
+            <span class="l" style="left:6px;top:47px">UnApproved Vouchers</span><b id="lblUnApprovedVouchers" style="left:153px;top:47px">0</b>
+        </div>
+    </div></div>
+    <div class="dv-gridwrap dvx-gh fixed" style="height:248px">
+        <table class="dv-grid" id="grdHistory"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+    </div>
+    <div class="dvx-teal c008" style="height:25px"><span class="t10" style="left:4px;top:3px">Detail of above selected row</span></div>
+    <div class="dv-gridwrap dvx-gh">
+        <table class="dv-grid" id="grdDetail"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+    </div>
+</div>
+
+</div>
+<div class="dvx-foot">
+    <div class="dv-tabs" id="tabBar">
+        <button type="button" data-tab="form" class="active">Form</button>
+        <button type="button" data-tab="history">History</button>
+    </div>
+    <div class="dvx-fr"><button type="button" class="dv-btn" id="btnHistoryFooter" title="Ctrl+T">History</button></div>
+</div>
+</div>
+
+<script th:src="@{/build/js/countx_desktop_voucher.js?v=20261002gb}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260930s}"></script>
+<script th:inline="none">
+(function () {
+    'use strict';
+    var API = DV.api('expense');
+    var $ = function (id) { return document.getElementById(id); };
+    var ctx = null, F = { multi: false, branch: false, sub: false };
+    var amountDec = 2, rateDec = 2, baseCurrency = 0, baseRate = 0;
+    var dtAccount = [], jobLots = [], branches = [], subCenters = [];
+    var table = [];            // grd's DataTable, grid order
+    var ccDetail = [];         // dtGridCostCenterDetail
+    var ccGrid = [];           // grdCostCenter rows {Id, CostCenter, ParentCostCenterId, ParentCostCenter, Prcnt, Amount, checked}
+    var RecId = 0, mode = 'new', updateDetailIndex = -1, subLen = 0;
+    /* print-rpt.js reads the open voucher's id (desktop: RecId == VoucherHeadId) */
+    try { Object.defineProperty(window, 'RecId', { get: function () { return RecId; }, configurable: true });
+          Object.defineProperty(window, 'VoucherHeadId', { get: function () { return RecId; }, configurable: true }); } catch (e) { }
+
+
+    var acCols = [{ key: 'AccountTitle', caption: 'AccountTitle' }, { key: 'AccountCode', caption: 'AccountCode' },
+                  { key: 'ParentAccountTitle', caption: 'ParentAccountTitle' }, { key: 'AccountClass', caption: 'AccountClass' }];
+    var cmbProject = new DV.Combo($('cmbProject'), { valueKey: 'Id', displayKey: 'ProjectName', header: 'Cost Center' });
+    var cmbRef = new DV.Combo($('cmbRefAccount'), { valueKey: 'Id', displayKey: 'AccountTitle', header: 'Account Title',
+        columns: acCols, onChange: function () { cheqNoFill(); }, onLeave: refLeave });
+    var cmbCheq = new DV.Combo($('cmbChequeNo'), { valueKey: 'Id', displayKey: 'CheqNo', header: 'CheqNo', limitToList: false });
+    var cmbCurrency = new DV.Combo($('cmbCurrency'), { valueKey: 'Id', displayKey: 'CurrencyCode', header: 'Currency', onLeave: currencyLeave });
+    var cmbAccount = new DV.Combo($('cmbAccount'), { valueKey: 'Id', displayKey: 'AccountTitle', header: 'Account Title',
+        columns: acCols, onLeave: accountLeave });
+    var cmbSub = new DV.Combo($('cmbSubsidiary'), { valueKey: 'Id', displayKey: 'SubsidiaryAccount', header: 'Account Title',
+        columns: [{ key: 'SubsidiaryAccount', caption: 'Account Title' }, { key: 'SubsidiaryType', caption: 'SubsidiaryType' }, { key: 'Code', caption: 'Code' }],
+        onChange: subChanged, onLeave: subLeave });
+    var cmbJobLot = new DV.Combo($('cmbJobLot'), { valueKey: 'Id', displayKey: 'JobLotDescription', header: 'JobLotDescription' });
+    var cmbCost = new DV.Combo($('cmbCostCenter'), { valueKey: 'Id', displayKey: 'CostCenterName', header: 'CostCenterName' });
+    var cmbBranch = new DV.Combo($('cmbBranch'), { valueKey: 'BranchId', displayKey: 'BranchName', header: 'Branch Name' });
+    var cmbAccountHist = new DV.Combo($('cmbAccountTitleHistory'), { valueKey: 'Id', displayKey: 'AccountTitle', header: 'Account Title' });
+
+    function fmtAmt(v) { return DV.fmtAmount(v, amountDec); }
+    function fmtRate(v) { return DV.fmtAmount(v, rateDec); }
+    function cfg(k) { return ctx && ctx.config ? ctx.config[k] : null; }
+    function toBool(v) { if (v === true) return true; if (v == null) return false; var s = String(v).trim().toLowerCase(); return s === '1' || s === 'true'; }
+
+    // ---------------------------------------------------------------- load :421
+    function load() {
+        return API.get('/context').then(function (c) {
+            ctx = c;
+            F.multi = !!c.multiCurrency; F.branch = !!c.branchFeature; F.sub = !!c.subsidiaryFeature;
+            amountDec = parseInt(cfg('Default NoofDecimal Points For Amount'), 10) || 0;
+            var r = parseInt(cfg('Default NoofDecimal Points For Rate'), 10) || 0; rateDec = r > 0 ? r : 2;
+            $('btnSave').disabled = !c.rights.save;
+            $('btnUpdate').disabled = !c.rights.update;
+            document.querySelectorAll('.fcy').forEach(function (e) { e.classList.toggle('dv-hidden', !F.multi); });
+            document.querySelectorAll('.sub').forEach(function (e) { e.classList.toggle('dv-hidden', !F.sub); });
+            document.querySelectorAll('.br').forEach(function (e) { e.classList.toggle('dv-hidden', !F.branch); });
+            $('txtVoucherCode').value = c.nextVoucherCode;
+            return Promise.all([
+                API.get('/cost-centers').then(function (d) {                   // GetAllSubCostCenters :1091
+                    subCenters = d; cmbCost.setData(d, true);
+                    if (c.appId === 5 && d.length) cmbCost.setValue(DV.pick(d[0], 'Id'), true);
+                }),
+                API.get('/branches').then(function (d) { branches = d; cmbBranch.setData(d); cmbBranch.setValue(c.userBranchId, true); }),
+                API.get('/credit-accounts').then(function (d) { cmbRef.setData(d, true); }),
+                API.get('/projects').then(function (d) { cmbProject.setData(d); if (d.length) cmbProject.setValue(DV.pick(d[0], 'Id'), true); }),
+                API.get('/job-lots').then(function (d) { jobLots = d; cmbJobLot.setData(d, true); }),
+                API.get('/accounts').then(function (d) { dtAccount = d; cmbAccount.setData(d, true); }),
+                API.get('/currencies').then(function (d) { cmbCurrency.setData(d, true); })
+            ]);
+        }).then(function () { gridCostCenterFill(); defaultConfigurations(); renderAll(); });
+    }
+    function defaultConfigurations() {                                   // DefaultConfigurations :928
+        if (cfg('Job/Lot') != null) cmbJobLot.setValue(parseInt(cfg('Job/Lot'), 10) || 0, true);
+        if (cfg('Base Currency') != null) { baseCurrency = parseInt(cfg('Base Currency'), 10) || 0; cmbCurrency.setValue(baseCurrency, true); }
+        if (cfg('BaseCurrencyRate') != null) { baseRate = DV.num(cfg('BaseCurrencyRate')); $('txtExchangeRate').value = fmtRate(baseRate); }
+    }
+
+    // ------------------------------------------------------------ balances / cheque book
+    function refLeave() {                                                // combcreditac_Leave :914
+        var el = $('lblBalance');
+        if (!cmbRef.value) { el.textContent = '0'; return; }
+        API.get('/balance', { accountId: cmbRef.value, date: $('dtVoucherDate').value })
+            .then(function (r) { el.textContent = r.hasRow ? DV.fmtBal(r.balance) : '0'; });
+    }
+    /** CheqNoFill :704 - "CheqBook Enabled" read with bool.Parse; LimitToList follows it. */
+    function cheqNoFill() {
+        var v = cfg('CheqBook Enabled');
+        if (v == null || String(v).trim().toLowerCase() !== 'true') { cmbCheq.opts.limitToList = false; return Promise.resolve(); }
+        cmbCheq.clear(true);
+        if (!cmbRef.value) { cmbCheq.rows = []; cmbCheq.opts.limitToList = true; return Promise.resolve(); }
+        return API.get('/cheques', { bankId: cmbRef.value, recId: RecId }).then(function (d) {
+            cmbCheq.rows = (d || []).map(function (x) { return { Id: DV.pick(x, 'Id'), CheqNo: DV.pick(x, 'CheqNo') }; });
+            cmbCheq.opts.limitToList = cmbCheq.rows.length > 0;
+        });
+    }
+    function accountLeave() {                                            // combactitle_Leave :841
+        var el = $('lblBalanceDetail');
+        if (cmbAccount.value) API.get('/balance', { accountId: cmbAccount.value, date: $('dtVoucherDate').value })
+            .then(function (r) { el.textContent = r.hasRow ? DV.fmtBal(r.balance) : '0'; });
+        else el.textContent = '0';
+        return bindSubsidiary();
+    }
+    /** BindSubsidiaryAccount :800 - VoucherHead.BindSubsidiaryAccount(CompanyId, account, "3"). */
+    function bindSubsidiary() {
+        if (!cmbAccount.row) { cmbSub.rows = []; cmbSub.clear(true); subLen = 0; return Promise.resolve(); }
+        return API.get('/subsidiary-accounts', { accountId: cmbAccount.value, typeIds: '3' }).then(function (d) {
+            subLen = d.length;
+            cmbSub.rows = d;
+            if (d.length === 1) cmbSub.setValue(DV.pick(d[0], 'Id'), true); else cmbSub.clear(true);
+            subChanged();
+        });
+    }
+    var afterCloseup = false;
+    function subChanged() {                                              // CmbSubsidiaryAccount_ValueChanged :1159
+        var el = $('lblSubBal');
+        if (cmbAccount.value > 0 && cmbSub.value > 0) {
+            API.get('/subsidiary-balance', { accountId: cmbAccount.value, subsidiaryId: cmbSub.value, date: $('dtVoucherDate').value })
+                .then(function (r) { el.textContent = r.balance === 0 ? '0' : DV.fmtBal(r.balance); });
+            var gl = Number(cmbSub.cell('AccountId')) || 0;              // AfterCloseUp :1182
+            if (gl) cmbAccount.setValue(gl, true);
+        } else el.textContent = '';
+    }
+    function subLeave() { subChanged(); }
+    $('rdTitle').addEventListener('change', function () { cmbAccount.setDisplayKey('AccountTitle', 'Account Title'); });
+    $('rdCode').addEventListener('change', function () { cmbAccount.setDisplayKey('AccountCode', 'Account Code'); });
+
+    // --------------------------------------------------------------------- currency
+    function currencyLeave() {                                           // cmbCurrency_Leave :993
+        if (!cmbCurrency.value) return;
+        if (cmbCurrency.value !== baseCurrency) {
+            API.get('/last-exchange-rate', { currencyId: cmbCurrency.value }).then(function (r) {
+                $('txtExchangeRate').value = r.found ? fmtRate(r.LastExchRate) : '0'; exchangeRateChanged(); });
+        } else { $('txtExchangeRate').value = fmtRate(baseRate); exchangeRateChanged(); }
+    }
+    function exchangeRateChanged() {                                     // txtExchangeRate_TextChanged :3144
+        var rate = DV.num($('txtExchangeRate').value);
+        table.forEach(function (r) { r.fcyAmount = rate > 0 ? DV.num(r.amount) / rate : 0; });
+        renderGrid();
+    }
+    $('txtExchangeRate').addEventListener('input', exchangeRateChanged);
+    $('txtExchangeRate').addEventListener('blur', function () { $('txtExchangeRate').value = fmtRate(DV.num($('txtExchangeRate').value)); });
+    DV.decimalOnly($('txtExchangeRate')); DV.decimalOnly($('txtDebitAmount'));
+    $('txtDebitAmount').addEventListener('blur', function () {           // ChangeAmountsOfCostCenter :3110
+        var d = DV.num($('txtDebitAmount').value);
+        ccGrid.forEach(function (r) { if (r.checked) r.Amount = d * (DV.num(r.Prcnt) / 100); });
+        renderCostCenterGrid();
+    });
+
+    // ----------------------------------------------------------- multi cost center grid
+    function gridCostCenterFill() {                                      // GridCostCenterFill :1780
+        ccGrid = subCenters.map(function (s) { return { Id: Number(DV.pick(s, 'Id')), CostCenter: DV.pick(s, 'CostCenterName'),
+            ParentCostCenterId: Number(DV.pick(s, 'ParentCostCenterId')) || 0, ParentCostCenter: DV.pick(s, 'parentCostCenterName'),
+            Prcnt: 0, Amount: 0, checked: false }; });
+        renderCostCenterGrid();
+    }
+    function checkedRows() { return ccGrid.filter(function (r) { return r.checked; }); }
+    function renderCostCenterGrid() {
+        var g = $('grdCostCenter');
+        g.tHead.innerHTML = '<tr><th><input type="checkbox" id="chkAllCc"></th><th>CostCenter</th><th class="n">Prcnt</th><th class="n">Amount</th></tr>';
+        var groups = {}, order = [];
+        ccGrid.forEach(function (r, i) { var k = r.ParentCostCenter || ''; if (!groups[k]) { groups[k] = []; order.push(k); } groups[k].push(i); });
+        var h = '', tp = 0, ta = 0;
+        order.forEach(function (k) {
+            h += '<tr><td colspan="4" style="background:#eef2f5;font-weight:600">ParentCostCenter: ' + DV.esc(k) + '</td></tr>';
+            groups[k].forEach(function (i) {
+                var r = ccGrid[i]; tp += DV.num(r.Prcnt); ta += DV.num(r.Amount);
+                h += '<tr data-i="' + i + '"><td><input type="checkbox" data-f="checked"' + (r.checked ? ' checked' : '') + '></td><td>' + DV.esc(r.CostCenter)
+                    + '</td><td class="n"><input data-f="Prcnt" value="' + DV.fmt3(r.Prcnt) + '" style="text-align:right;width:60px"></td>'
+                    + '<td class="n"><input data-f="Amount" value="' + DV.fmt3(r.Amount) + '" style="text-align:right;width:90px"></td></tr>';
+            });
+        });
+        g.tBodies[0].innerHTML = h;
+        g.tFoot.innerHTML = ccGrid.length ? '<tr><td></td><td></td><td class="n">' + DV.fmt3(tp) + '</td><td class="n">' + DV.fmt3(ta) + '</td></tr>' : '';
+        var all = $('chkAllCc');
+        if (all) all.addEventListener('change', function () { ccGrid.forEach(function (r) { r.checked = all.checked; }); renderCostCenterGrid(); });
+    }
+    /** grdCostCenter_CellUpdated :1833 */
+    $('grdCostCenter').addEventListener('change', function (e) {
+        var tr = e.target.closest('tr[data-i]'); if (!tr) return;
+        var row = ccGrid[Number(tr.getAttribute('data-i'))], f = e.target.getAttribute('data-f');
+        if (f === 'checked') { row.checked = e.target.checked; renderCostCenterGrid(); return; }
+        var debit = DV.num($('txtDebitAmount').value) > 0 ? DV.num($('txtDebitAmount').value) : 0;
+        var msg = null;
+        if (f === 'Prcnt') {
+            row.Prcnt = DV.num(e.target.value);
+            var tp = 0; checkedRows().forEach(function (r) { tp += DV.num(r.Prcnt); });
+            if (row.Prcnt > 100 || tp > 100) { row.Prcnt = 0; msg = "Total Percentage Can't greater than 100"; }
+            row.Amount = debit * (row.Prcnt / 100);
+        } else if (f === 'Amount') {
+            row.Amount = DV.num(e.target.value);
+            var ta = 0; checkedRows().forEach(function (r) { ta += DV.num(r.Amount); });
+            if (row.Amount > debit || ta > debit) { row.Amount = 0; msg = "Total Amount Can't greater than DebitAmount " + debit; }
+            row.Prcnt = debit > 0 ? Math.round(row.Amount / debit * 100 * 1000) / 1000 : 0;
+        }
+        row.checked = DV.num(row.Prcnt) > 0;
+        renderCostCenterGrid();
+        if (msg) DV.msg(msg, 'Message');
+    });
+
+    // ------------------------------------------------------------------ cost center breakup
+    function insertBreakup(lineId, accountText) {                        // InsertCostCenterBreakUp :2173
+        var ch = checkedRows();
+        if (ch.length > 1) {
+            ch.forEach(function (r) { ccDetail.push({ id: 0, lineId: lineId, parentId: r.ParentCostCenterId, debitAccount: accountText,
+                costCenterId: r.Id, costCenter: r.CostCenter, percent: DV.num(r.Prcnt), amount: DV.num(r.Amount) }); });
+        } else if (cmbCost.value > 0) {
+            ccDetail.push({ id: 0, lineId: lineId, parentId: Number(cmbCost.cell('ParentCostCenterId')) || 0, debitAccount: accountText,
+                costCenterId: cmbCost.value, costCenter: cmbCost.text(), percent: 100, amount: DV.num($('txtDebitAmount').value) });
+        }
+    }
+    function deleteBreakup(lineId) { if (lineId > 0) ccDetail = ccDetail.filter(function (r) { return r.lineId !== lineId; }); }
+    function updateBreakup(lineId, accountText) {                        // UpdateCostCenterBreakUp :2200
+        var ch = checkedRows();
+        var mine = ccDetail.filter(function (r) { return r.lineId === lineId; });
+        if (ch.length === 0 && !cmbCost.value) { if (mine.length) deleteBreakup(lineId); return; }
+        if (ch.length > 1) {
+            if (!mine.length) return;
+            if (mine.length !== ch.length) { deleteBreakup(lineId); insertBreakup(lineId, accountText); return; }
+            ccGrid.forEach(function (g) {
+                ccDetail.forEach(function (d) { if (d.costCenter === g.CostCenter && d.lineId === lineId) {
+                    d.parentId = g.ParentCostCenterId; d.debitAccount = accountText; d.costCenterId = g.Id;
+                    d.costCenter = g.CostCenter; d.percent = DV.num(g.Prcnt); d.amount = DV.num(g.Amount); } });
+            });
+            return;
+        }
+        if (cmbCost.value <= 0 || !mine.length) return;
+        if (mine.length !== 1) { deleteBreakup(lineId); insertBreakup(lineId, accountText); return; }
+        mine[0].parentId = Number(cmbCost.cell('ParentCostCenterId')) || 0; mine[0].debitAccount = accountText;
+        mine[0].costCenterId = cmbCost.value; mine[0].costCenter = cmbCost.text(); mine[0].percent = 100;
+        mine[0].amount = DV.num($('txtDebitAmount').value);
+    }
+
+    // ------------------------------------------------------------------------- render
+    function renderAll() { renderGrid(); renderBreakup(); renderCostCenterGrid(); }
+    /** grdSettings :1229 */
+    function renderGrid() {
+        var g = $('grd');
+        var editableAmount = amountDec <= 0;
+        g.tHead.innerHTML = '<tr><th>AccountCode</th><th>Account Title</th>' + (F.sub ? '<th>SubsidiaryAccount</th>' : '')
+            + '<th>JobLot</th><th>Remarks</th><th class="n">Debit Amount</th>' + (F.multi ? '<th class="n">FcyAmount</th>' : '')
+            + (F.branch ? '<th>BranchName</th>' : '') + '<th>CostCenterName</th><th>X</th></tr>';
+        var titles = {}, lots = {};
+        dtAccount.forEach(function (a) { titles[DV.pick(a, 'Id')] = DV.pick(a, 'AccountTitle'); });
+        jobLots.forEach(function (j) { lots[DV.pick(j, 'Id')] = DV.pick(j, 'JobLotDescription'); });
+        var tot = 0, tf = 0;
+        g.tBodies[0].innerHTML = table.map(function (r, i) {
+            tot += DV.num(r.amount); tf += DV.num(r.fcyAmount);
+            return '<tr data-i="' + i + '" tabindex="0" title="Double-click or Ctrl+Enter to edit"><td>' + DV.esc(r.accountCode) + '</td><td>' + DV.esc(titles[r.accountId] != null ? titles[r.accountId] : r.accountId) + '</td>'
+                + (F.sub ? '<td>' + DV.esc(r.subsidiaryAccount) + '</td>' : '')
+                + '<td>' + DV.esc(lots[r.jobLotId] != null ? lots[r.jobLotId] : r.jobLotId) + '</td><td>' + DV.esc(r.remarks) + '</td>'
+                + '<td class="n">' + (editableAmount ? '<input data-f="amount" value="' + DV.esc(r.amount) + '" style="text-align:right">' : fmtAmt(r.amount)) + '</td>'
+                + (F.multi ? '<td class="n">' + DV.fmt3(r.fcyAmount) + '</td>' : '')
+                + (F.branch ? '<td>' + DV.esc(r.branchName) + '</td>' : '')
+                + '<td>' + DV.esc(r.costCenterName) + '</td><td><button type="button" data-del="' + i + '">X</button></td></tr>';
+        }).join('');
+        g.tFoot.innerHTML = table.length ? '<tr><td></td><td></td>' + (F.sub ? '<td></td>' : '') + '<td></td><td></td><td class="n">' + fmtAmt(tot) + '</td>'
+            + (F.multi ? '<td class="n">' + DV.fmt3(tf) + '</td>' : '') + (F.branch ? '<td></td>' : '') + '<td></td><td></td></tr>' : '';
+        $('txtFcyAmount').value = table.length ? DV.fmt3(tf) : '0';          // CalculateTotalInformation :3177
+        g.querySelectorAll('input[data-f="amount"]').forEach(function (x) {
+            x.addEventListener('keypress', function (e) { if (e.key === '.' || (e.key.length === 1 && !/[0-9]/.test(e.key))) e.preventDefault(); });
+        });
+    }
+    function renderBreakup() {
+        var g = $('grdCostCenterDetail'), ta = 0;
+        g.tHead.innerHTML = '<tr><th>LineId</th><th>DebitAccount</th><th>CostCenter</th><th class="n">Percent</th><th class="n">Amount</th></tr>';
+        g.tBodies[0].innerHTML = ccDetail.map(function (r) { ta += DV.num(r.amount);
+            return '<tr><td>' + r.lineId + '</td><td>' + DV.esc(r.debitAccount) + '</td><td>' + DV.esc(r.costCenter) + '</td><td class="n">'
+                + DV.fmt3(r.percent) + '</td><td class="n">' + DV.fmt3(r.amount) + '</td></tr>'; }).join('');
+        g.tFoot.innerHTML = ccDetail.length ? '<tr><td></td><td></td><td></td><td></td><td class="n">' + DV.fmt3(ta) + '</td></tr>' : '';
+        // SummaryForCostCenterBreakUp :1734
+        var s = $('grdSummary'), ids = [], sums = {}, names = {};
+        ccDetail.forEach(function (r) { if (ids.indexOf(r.costCenterId) < 0) { ids.push(r.costCenterId); names[r.costCenterId] = r.costCenter; sums[r.costCenterId] = 0; }
+            sums[r.costCenterId] += DV.num(r.amount); });
+        s.tHead.innerHTML = ids.length ? '<tr><th>CostCenter</th><th class="n">Amount</th></tr>' : '';
+        var st = 0;
+        s.tBodies[0].innerHTML = ids.map(function (id) { st += sums[id]; return '<tr><td>' + DV.esc(names[id]) + '</td><td class="n">' + DV.fmt3(sums[id]) + '</td></tr>'; }).join('');
+        s.tFoot.innerHTML = ids.length ? '<tr><td></td><td class="n">' + DV.fmt3(st) + '</td></tr>' : '';
+    }
+    $('grd').addEventListener('click', function (e) {                   // grd_ColumnButtonClick :1203
+        var b = e.target.closest('button[data-del]'); if (!b) return;
+        var i = Number(b.getAttribute('data-del')), lineId = table[i].lineId;
+        table.splice(i, 1);
+        deleteBreakup(lineId);
+        renderGrid(); renderBreakup();
+    });
+    $('grd').addEventListener('change', function (e) {
+        var tr = e.target.closest('tr[data-i]'); if (!tr || e.target.getAttribute('data-f') !== 'amount') return;
+        table[Number(tr.getAttribute('data-i'))].amount = DV.num(e.target.value);   // grd_CellUpdated :1677 does nothing more
+    });
+    $('grd').addEventListener('dblclick', function (e) {
+        var tr = e.target.closest('tbody tr[data-i]'); if (tr && !e.target.closest('input,button')) editRow(Number(tr.getAttribute('data-i')));
+    });
+
+    // --------------------------------------------------------------------- add / update
+    function rowValidation() {                                           // Add_Click_1 :1602 / btnUpdateDetail_Click :1379
+        var err = function (m, f) { return DV.msg(m).then(function () { if (f) f.focus(); return false; }); };
+        if (!cmbAccount.row) return err('Account Title Field Required', cmbAccount);
+        if (F.sub && subLen > 0 && !cmbSub.row) return err('Subsidiary Account Title Field Required', cmbSub);
+        if (!cmbJobLot.row) return err('Job/Lot Field Required', cmbJobLot);
+        if (DV.num($('txtDebitAmount').value.trim()) === 0) return err('Amount Field Required', $('txtDebitAmount'));
+        var ch = checkedRows();
+        if (ch.length > 1) {
+            var tp = 0, ta = 0; ch.forEach(function (r) { tp += DV.num(r.Prcnt); ta += DV.num(r.Amount); });
+            if (Math.round(tp) !== 100 || ta !== DV.num($('txtDebitAmount').value)) return err('Percent not equal to 100 Or Amount not Equal To Debit Amount');
+        }
+        if (F.branch && !cmbBranch.value) return err('BranchName Field is Required', cmbBranch);
+        return Promise.resolve(true);
+    }
+    function addRow() {
+        rowValidation().then(function (ok) {
+            if (!ok) return;
+            var lineId = table.length ? Math.max.apply(null, table.map(function (r) { return r.lineId; })) + 1 : 1;
+            var amt = DV.num($('txtDebitAmount').value), rate = DV.num($('txtExchangeRate').value);
+            var multi = checkedRows().length > 1;
+            table.push({
+                accountCode: cmbAccount.cell('AccountCode'), accountId: cmbAccount.value,
+                subsidiaryAccountId: !F.sub ? 0 : (subLen > 0 ? cmbSub.value : cmbAccount.value),
+                subsidiaryAccount: !F.sub ? '' : (subLen > 0 ? cmbSub.text() : cmbAccount.text()),
+                subsidiaryAccountTypeId: !F.sub ? 0 : (subLen > 0 ? (Number(cmbSub.cell('SubsidiaryTypeId')) || 0) : 4),
+                jobLotId: cmbJobLot.value, remarks: $('txtComments').value, amount: amt,
+                fcyAmount: (rate > 0 && amt > 0) ? amt / rate : 0, lineId: lineId,
+                branchId: cmbBranch.value > 0 ? cmbBranch.value : 0, branchName: cmbBranch.text(),
+                costCenterId: multi ? 0 : cmbCost.value, costCenterName: multi ? '' : cmbCost.text()
+            });
+            insertBreakup(lineId, cmbAccount.text());
+            gridCostCenterFill();
+            renderGrid(); renderBreakup();
+            cmbAccount.clear(true); $('txtComments').value = ''; $('txtDebitAmount').value = '';
+            bindSubsidiary();
+            cmbAccount.focus();
+        });
+    }
+    function editRow(i) {                                                // grd_DoubleClick :1305
+        var r = table[i]; if (!r) return;
+        updateDetailIndex = i;
+        cmbAccount.setValue(r.accountId, true);
+        bindSubsidiary().then(function () {
+            if (subLen === 0 && r.subsidiaryAccountId) cmbSub.setFree(r.subsidiaryAccountId, r.subsidiaryAccount);
+            else cmbSub.setValue(r.subsidiaryAccountId, true);
+        });
+        cmbJobLot.setValue(r.jobLotId, true);
+        $('txtComments').value = r.remarks || ''; $('txtDebitAmount').value = r.amount;
+        cmbBranch.setValue(r.branchId, true);
+        if (r.costCenterId > 0) cmbCost.setValue(r.costCenterId, true); else cmbCost.clear(true);
+        $('btnAdd').classList.add('dv-hidden'); $('btnUpdateDetail').classList.remove('dv-hidden'); $('btnCancelDetail').classList.remove('dv-hidden');
+        var mine = ccDetail.filter(function (d) { return d.lineId === r.lineId; });
+        if (mine.length) {
+            ccGrid.forEach(function (g) {
+                var m = mine.filter(function (d) { return d.costCenterId === g.Id; })[0];
+                g.checked = !!m; g.Prcnt = m ? m.percent : 0; g.Amount = m ? m.amount : 0;
+            });
+            renderCostCenterGrid();
+        } else gridCostCenterFill();
+        cmbAccount.focus();
+    }
+    function updateRow() {
+        rowValidation().then(function (ok) {
+            if (!ok || updateDetailIndex < 0) return;
+            var r = table[updateDetailIndex];
+            r.accountCode = cmbAccount.cell('AccountCode'); r.accountId = cmbAccount.value;
+            if (F.sub) {
+                if (cmbSub.row && cmbSub.text() !== '') { r.subsidiaryAccountId = cmbSub.value; r.subsidiaryAccount = cmbSub.text(); r.subsidiaryAccountTypeId = Number(cmbSub.cell('SubsidiaryTypeId')) || 0; }
+                else { r.subsidiaryAccountId = cmbAccount.value; r.subsidiaryAccount = cmbAccount.text(); r.subsidiaryAccountTypeId = 4; }
+            } else { r.subsidiaryAccountId = 0; r.subsidiaryAccount = ''; r.subsidiaryAccountTypeId = 0; }
+            r.jobLotId = cmbJobLot.value; r.remarks = $('txtComments').value.trim(); r.amount = DV.num($('txtDebitAmount').value.trim());
+            r.branchId = cmbBranch.value; r.branchName = cmbBranch.text();
+            if (checkedRows().length > 1) { r.costCenterId = 0; r.costCenterName = ''; }
+            else { r.costCenterId = cmbCost.value; r.costCenterName = cmbCost.text(); }
+            var acText = cmbAccount.text();
+            if (!ccDetail.some(function (d) { return d.lineId === r.lineId; })) insertBreakup(r.lineId, acText); else updateBreakup(r.lineId, acText);
+            gridCostCenterFill();
+            exchangeRateChanged(); renderBreakup();
+            cancelDetail();
+        });
+    }
+    function cancelDetail() {                                            // btnCancelUpdateDetial_Click :1495
+        updateDetailIndex = -1;
+        $('btnAdd').classList.remove('dv-hidden'); $('btnUpdateDetail').classList.add('dv-hidden'); $('btnCancelDetail').classList.add('dv-hidden');
+        $('txtComments').value = ''; $('txtDebitAmount').value = ''; cmbAccount.clear(true);
+        gridCostCenterFill();
+        cmbAccount.focus();
+    }
+    $('btnAdd').addEventListener('click', addRow);
+    $('btnUpdateDetail').addEventListener('click', updateRow);
+    $('btnCancelDetail').addEventListener('click', cancelDetail);
+
+    // --------------------------------------------------------------------------- save
+    function setMode(m) {
+        mode = m;
+        $('btnSave').classList.toggle('dv-hidden', m !== 'new');
+        $('btnUpdate').classList.toggle('dv-hidden', m !== 'update');
+        $('btnSaveAs').classList.toggle('dv-hidden', m !== 'saveas');
+    }
+    function insert() {                                                  // Insert :1893
+        if (!table.length) { DV.msg('Grid Record not found', 'Database Error'); return; }
+        if (!cmbProject.value) { DV.msg('Cost Center Field is Required'); return; }
+        if (!cmbRef.value) { DV.msg('Credit Account Field is Required'); return; }
+        if (F.multi) {
+            if (!cmbCurrency.value) { DV.msg('Fcy Code Field is Required'); return; }
+            if (DV.num($('txtExchangeRate').value) === 0) { DV.msg('Exchange Rate Field is Required'); return; }
+            if (DV.num($('txtFcyAmount').value) === 0) { DV.msg('Fcy Amount Field is Required'); return; }
+        } else {
+            if (!cmbCurrency.value) { DV.msg('Please Configure Your Base Currency In configurations'); return; }
+            var er = $('txtExchangeRate').value.trim();
+            if (er === '' || er === '0') { DV.msg('Please Configure Your Base Currency Rate In configurations'); return; }
+        }
+        return DV.confirm(RecId === 0 ? 'Are you sure to Save?' : 'Are you sure to Update?', 'Confirm').then(function (yes) {
+            if (!yes) return;
+            for (var i = 0; i < table.length; i++) if (DV.num(table[i].amount) > 0 && !table[i].accountId) { DV.msg('Please Select Account Title First'); return; }
+            var titles = {}; dtAccount.forEach(function (a) { titles[DV.pick(a, 'Id')] = DV.pick(a, 'AccountTitle'); });
+            var payload = {
+                id: RecId, voucherCode: parseInt($('txtVoucherCode').value, 10) || 0, voucherDate: $('dtVoucherDate').value,
+                projectId: cmbProject.value, refAccountId: cmbRef.value, refAccountTitle: cmbRef.text(),
+                chequeDate: $('dtChequeDate').value, cheqId: cmbCheq.value, chequeNo: cmbCheq.text(),
+                payTitle: $('txtPayTitle').value, remarks: $('txtRemarks').value,
+                multiCurrencyId: cmbCurrency.value, exchangeCurrencyRate: DV.num($('txtExchangeRate').value),
+                fcAmount: DV.num($('txtFcyAmount').value),
+                rows: table.map(function (r) { return { accountCode: r.accountCode, accountId: r.accountId,
+                    accountTitle: titles[r.accountId] != null ? titles[r.accountId] : String(r.accountId),
+                    subsidiaryAccountId: r.subsidiaryAccountId, subsidiaryAccount: r.subsidiaryAccount,
+                    subsidiaryAccountTypeId: r.subsidiaryAccountTypeId, jobLotId: r.jobLotId, remarks: r.remarks,
+                    amount: DV.num(r.amount), fcyAmount: DV.num(r.fcyAmount), lineId: r.lineId, branchId: r.branchId,
+                    costCenterId: r.costCenterId }; }),
+                costCenters: ccDetail.map(function (d) { return { id: d.id, lineId: d.lineId, parentId: d.parentId, debitAccount: d.debitAccount,
+                    costCenterId: d.costCenterId, costCenter: d.costCenter, percent: DV.num(d.percent), amount: DV.num(d.amount) }; })
+            };
+            var preview = $('chkPrintPreview').checked, format2 = $('chkFormat2').checked;
+            return DV.saveWithConfirm(API.base + '/save', payload).then(function (res) {
+                if (!res) return;
+                var warn = (res.warnings || []).reduce(function (p, m) { return p.then(function () { return DV.msg(m, 'Confirm'); }); }, Promise.resolve());
+                /* Insert() :2137-2160 - the message, Reset(), then ChkBox -> ANewAcRptPaymentReceiptsVoucherSlip_102(success),
+                   else chkformat2 -> AcRptPaymentReceiptsVoucherSlip_102(success, 26). */
+                return warn.then(function () { return DV.msg(res.message); }).then(function () {
+                    reset();
+                    if (res.id && preview) DV.printANew102(res.id);
+                    else if (res.id && format2) DV.printAcRpt102(res.id, 26);
+                });
+            }).catch(function (e) { return DV.msg(e.message, e.dvTitle || 'Database Error'); });
+        });
+    }
+    /** Every server button: disabled with a spinner at once, a second click refused, re-enabled after. */
+    function serverButton(id, fn) {
+        $(id).addEventListener('click', function () {
+            var b = this;
+            if (b.getAttribute('data-dv-busy') === '1') return;
+            DV.busy(b, fn).catch(function (e) { DV.msg(e.message); });
+        });
+    }
+    serverButton('btnSave', function () { RecId = 0; return insert(); });
+    serverButton('btnSaveAs', function () { RecId = 0; return insert(); });
+    serverButton('btnUpdate', function () {
+        if (RecId === 0) return DV.msg('Record Not Update  ' + RecId, 'Database Error');
+        return insert();
+    });
+    /** Print_Click :3060 -> ANewAcRptPaymentReceiptsVoucherSlip_102(RecId); btnPrintFormatII_Click :3084 ->
+     *  AcRptPaymentReceiptsVoucherSlip_102(RecId, 26) or "No Record Selected". */
+    function print1() { return DV.printANew102(RecId); }
+    function print2() { return RecId > 0 ? DV.printAcRpt102(RecId, 26) : DV.msg('No Record Selected'); }
+    serverButton('btnPrint', print1);
+    serverButton('btnPrintFormatII', print2);
+
+    function reset() {                                                   // Reset :2500
+        subLen = 0; RecId = 0; table = []; ccDetail = []; updateDetailIndex = -1;
+        $('txtComments').value = ''; $('txtDebitAmount').value = ''; $('txtPayTitle').value = ''; $('txtRemarks').value = '';
+        cmbAccount.clear(true); cmbCheq.clear(true);
+        API.get('/next-code').then(function (r) { $('txtVoucherCode').value = r.voucherCode; });
+        setMode('new');
+        refLeave(); cheqNoFill();
+        $('lblBalanceDetail').textContent = '';
+        $('btnAdd').classList.remove('dv-hidden'); $('btnUpdateDetail').classList.add('dv-hidden'); $('btnCancelDetail').classList.add('dv-hidden');
+        $('txtFcyAmount').value = '';
+        gridCostCenterFill(); defaultConfigurations();
+        renderGrid(); renderBreakup();
+        $('dtVoucherDate').focus();
+    }
+    $('btnNew').addEventListener('click', function () { reset(); cmbRef.clear(true); $('lblBalance').textContent = ''; });
+    serverButton('btnRefresh', function () {                          // btnRefresh_Click :2556
+        return API.get('/context').then(function (c) { ctx = c; return Promise.all([
+            /* BranchesFill :976 - rebinds and puts UserAccount.BranchName back */
+            API.get('/branches').then(function (d) { branches = d; if (!d.length) return; cmbBranch.setData(d); cmbBranch.setValue(ctx.userBranchId, true); }),
+            API.get('/credit-accounts').then(function (d) { cmbRef.setData(d, true); }),
+            API.get('/job-lots').then(function (d) { jobLots = d; cmbJobLot.setData(d, true); }),
+            API.get('/accounts').then(function (d) { dtAccount = d; cmbAccount.setData(d, true); }),
+            API.get('/cost-centers').then(function (d) { subCenters = d; cmbCost.setData(d, true); })]); })
+          .then(function () { defaultConfigurations(); if (cmbRef.value) { refLeave(); cheqNoFill(); } renderGrid(); })
+          .catch(function (e) { DV.msg(e.message); });
+    });
+
+    /** ReadById :2334 */
+    function readById(id, saveAs) {
+        return API.get('/read/' + id).then(function (v) {
+            var h = v.head, refId = Number(DV.pick(h, 'RefAccountId')) || 0;
+            setMode('update');
+            RecId = saveAs ? 0 : id;
+            tabs.show('form');
+            $('dtVoucherDate').value = DV.isoDay(DV.pick(h, 'VoucherDate'));
+            cmbRef.setValue(refId, true); refLeave();
+            return cheqNoFill().then(function () {
+                $('txtPayTitle').value = DV.pick(h, 'PayTitle') || '';
+                var cheqNo = DV.pick(h, 'ChequeNo') || '', cheqId = Number(DV.pick(h, 'CheqId')) || 0;
+                var hit = cmbCheq.rows.filter(function (x) { return String(DV.pick(x, 'CheqNo')) === cheqNo; })[0];
+                if (hit) cmbCheq.setValue(DV.pick(hit, 'Id'), true); else cmbCheq.setFree(cheqId, cheqNo);
+                $('dtChequeDate').value = DV.isoDay(DV.pick(h, 'ChequeDate')) || DV.today();
+                $('txtRemarks').value = DV.pick(h, 'Remarks') || '';
+                $('txtVoucherCode').value = DV.pick(h, 'VoucherCode');
+                cmbCurrency.setValue(DV.pick(h, 'MultiCurrencyId'), true);
+                $('txtExchangeRate').value = fmtRate(DV.pick(h, 'ExchangeCurrencyRate'));
+                $('txtFcyAmount').value = DV.fmt3(DV.pick(h, 'FcAmount'));
+                if (!Number(DV.pick(h, 'MultiCurrencyId')) || !Number(DV.pick(h, 'ExchangeCurrencyRate'))) defaultConfigurations();
+                table = (v.details || []).filter(function (d) {
+                    return DV.pick(d, 'IsTaxable') === 'False' && (Number(DV.pick(d, 'AccountId')) || 0) !== refId;
+                }).map(function (d) {
+                    var t = Number(DV.pick(d, 'SubsidiaryTypeId')) || 0;
+                    var sid = t === 1 ? DV.pick(d, 'SupplierCustomerId') : (t === 2 ? DV.pick(d, 'EmployeeId') : ((t === 3 || t === 4) ? DV.pick(d, 'SubsidiaryAccountId') : 0));
+                    return { accountCode: DV.pick(d, 'AccountCode'), accountId: Number(DV.pick(d, 'AccountId')) || 0,
+                        subsidiaryAccountId: Number(sid) || 0, subsidiaryAccount: DV.pick(d, 'SubsidiaryAccountTitle'), subsidiaryAccountTypeId: t,
+                        jobLotId: Number(DV.pick(d, 'JobLotId')) || 0, remarks: DV.pick(d, 'Comments'),
+                        amount: DV.num(DV.pick(d, 'DebitAmount')), fcyAmount: DV.num(DV.pick(d, 'DCurrencyAmount')),
+                        lineId: Number(DV.pick(d, 'SortNo')) || 0, branchId: Number(DV.pick(d, 'BranchesId')) || 0,
+                        branchName: DV.pick(d, 'BranchName') || '', costCenterId: Number(DV.pick(d, 'CostCenterId')) || 0,
+                        costCenterName: DV.pick(d, 'CostCenterName') || '' };
+                });
+                ccDetail = (v.costCenters || []).map(function (c) { return { id: Number(DV.pick(c, 'Id')) || 0,
+                    lineId: Number(DV.pick(c, 'SortNo')) || 0, parentId: Number(DV.pick(c, 'ParentCostCenterId')) || 0,
+                    debitAccount: DV.pick(c, 'AccountTitle'), costCenterId: Number(DV.pick(c, 'CostCenterId')) || 0,
+                    costCenter: DV.pick(c, 'CostCenterName'), percent: DV.num(DV.pick(c, 'costPrcent')), amount: DV.num(DV.pick(c, 'costAmount')) }; });
+                exchangeRateChanged(); renderBreakup();
+            });
+        }).catch(function (e) { DV.msg(e.message); });
+    }
+
+    // ------------------------------------------------------------------------- history
+    var historyRows = [];
+    function historyFill() {                                             // HistoryFill :2687
+        var dt = document.querySelector('input[name="rdHistDate"]:checked').value;
+        return API.get('/history', {
+            dateType: dt,
+            fromDate: $('chkFromDate').checked ? $('dtFromHistory').value : '',
+            toDate: $('chkToDate').checked ? $('dtToHistory').value : '',
+            fromDocNo: parseInt($('txtFromDocNoHistory').value, 10) || 0,
+            toDocNo: parseInt($('txtToDocNoHistory').value, 10) || 0,
+            accountId: cmbAccountHist.value || 0,
+            approvedStatus: $('cmbApproveStatus').value
+        }).then(function (rows) { historyRows = rows || []; renderHistory(); }).catch(function (e) { DV.msg(e.message); });
+    }
+    /** HistoryGridSettings :2814 - Print, Edit, V.Type, Save As, ...; AgainstAccount/ManualBillNo hidden. */
+    function renderHistory() {
+        var g = $('grdHistory');
+        var cols = [
+            { k: 'VoucherCode', c: 'V.No', link: 1 }, { k: 'VoucherDate', c: 'V.Date', f: DV.fmtDate }, { k: 'AccountTitle', c: 'AccountTitle' },
+            { k: 'Remarks', c: 'Remarks' }, { k: 'VoucherAmount', c: 'VoucherAmount', n: 1 },
+            { k: 'Currencycode', c: 'FcyCode', on: F.multi }, { k: 'ExchangeCurrencyRate', c: 'ExchangeRate', n: 2, on: F.multi },
+            { k: 'FcAmount', c: 'FcyAmount', n: 3, on: F.multi },
+            { k: 'UserName', c: 'EntryUser' }, { k: 'EntryDate', c: 'EntryDate', f: DV.fmtStamp },
+            { k: 'ModifyUserName', c: 'ModifyUser' }, { k: 'ModifyDate', c: 'ModifyDate', f: DV.fmtStamp },
+            { k: 'ApprovedUserName', c: 'ApprovedUser' }, { k: 'PostDate', c: 'ApprovedDate', f: DV.fmtStamp },
+            { k: 'ChequeNo', c: 'CheqNo' }, { k: 'NoOfAttachments', c: 'Attachment' }
+        ].filter(function (c) { return c.on !== false; });
+        g.tHead.innerHTML = '<tr><th>Print</th><th>Edit</th><th>V.Type</th><th>Save As</th>' + cols.map(function (c) {
+            return '<th' + (c.n ? ' class="n"' : '') + '>' + c.c + '</th>'; }).join('') + '<th>Add Attachments</th></tr>';
+        var tv = 0, tf = 0;
+        g.tBodies[0].innerHTML = historyRows.map(function (r, i) {
+            tv += DV.num(DV.pick(r, 'VoucherAmount')); tf += DV.num(DV.pick(r, 'FcAmount'));
+            return '<tr data-i="' + i + '" data-id="' + DV.esc(DV.pick(r, 'Id')) + '" tabindex="0"><td><button type="button" data-rpt="102-ANewAcRptPaymentReceiptsVoucherSlip.rpt" data-rpt-own data-act="print">Print</button></td>'
+                + '<td><button type="button" data-act="edit">Edit</button></td><td>' + DV.esc(DV.pick(r, 'DocumentTypeCode')) + '</td>'
+                + '<td><button type="button" data-act="saveas">Save As</button></td>'
+                + cols.map(function (c) {
+                    var v = DV.pick(r, c.k);
+                    if (c.f) v = c.f(v); else if (c.n === 1) v = fmtAmt(v); else if (c.n === 2) v = fmtRate(v); else if (c.n === 3) v = DV.fmt3(v);
+                    if (c.link) return '<td><a href="#" class="dv-link" data-act="open" title="Open this voucher">' + DV.esc(v) + '</a></td>';
+                    return '<td' + (c.n ? ' class="n"' : '') + '>' + DV.esc(v) + '</td>'; }).join('')
+                + '<td><button type="button" disabled title="Attachments are not ported">Add Attachments</button></td></tr>';
+        }).join('');
+        g.tFoot.innerHTML = historyRows.length ? '<tr><td></td><td></td><td></td><td></td>' + cols.map(function (c) {
+            if (c.k === 'VoucherAmount') return '<td class="n">' + fmtAmt(tv) + '</td>';
+            if (c.k === 'FcAmount') return '<td class="n">' + DV.fmt3(tf) + '</td>';
+            return '<td></td>'; }).join('') + '<td></td></tr>' : '';
+        $('voucherInfoBox').classList.toggle('dv-hidden', !historyRows.length);
+        if (historyRows.length) {
+            $('lblTotalVouchers').textContent = Number(DV.pick(historyRows[0], 'TotalVouchers')) || 0;
+            $('lblApprovedVouchers').textContent = Number(DV.pick(historyRows[0], 'TotalApprovedVoucher')) || 0;
+            $('lblUnApprovedVouchers').textContent = Number(DV.pick(historyRows[0], 'TotalUnApprovedVoucher')) || 0;
+        } else { $('grdDetail').tHead.innerHTML = ''; $('grdDetail').tBodies[0].innerHTML = ''; $('grdDetail').tFoot.innerHTML = ''; }
+    }
+    $('grdHistory').addEventListener('click', function (e) {
+        var tr = e.target.closest('tbody tr[data-i]'); if (!tr) return;
+        var id = Number(DV.pick(historyRows[Number(tr.getAttribute('data-i'))], 'Id'));
+        Array.prototype.forEach.call($('grdHistory').tBodies[0].rows, function (x) { x.classList.toggle('dv-selrow', x === tr); });
+        var b = e.target.closest('[data-act]');
+        if (b && b.tagName === 'A') e.preventDefault();
+        /* DataGridHistory_ColumnButtonClick :2884 - Print: ANewAcRptPaymentReceiptsVoucherSlip_102(Id) */
+        if (b && b.getAttribute('data-act') === 'print') { DV.printANew102(id); return; }
+        if (b && (b.getAttribute('data-act') === 'edit' || b.getAttribute('data-act') === 'open')) { reset(); readById(id, false); return; }
+        if (b && b.getAttribute('data-act') === 'saveas') {                  // DataGridHistory_SaveAs :2923
+            reset();
+            readById(id, true).then(function () {
+                $('dtChequeDate').value = DV.today(); cmbCheq.clear(true); $('txtPayTitle').value = '';
+                setMode('saveas'); $('dtVoucherDate').value = DV.today();
+            });
+            return;
+        }
+        historyDetail(id);
+    });
+    /** DataGridHistory_KeyDown :3404 - Ctrl+Enter: Reset + ReadById; a focused row shows its detail. */
+    $('grdHistory').addEventListener('keydown', function (e) {
+        if (!(e.ctrlKey && e.key === 'Enter')) return;
+        var tr = e.target.closest('tbody tr[data-i]'); if (!tr) return;
+        e.preventDefault(); reset(); readById(Number(DV.pick(historyRows[Number(tr.getAttribute('data-i'))], 'Id')), false);
+    });
+    $('grdHistory').addEventListener('focusin', function (e) {
+        var tr = e.target; if (!tr || tr.tagName !== 'TR' || !tr.hasAttribute('data-i')) return;
+        Array.prototype.forEach.call($('grdHistory').tBodies[0].rows, function (x) { x.classList.toggle('dv-selrow', x === tr); });
+        historyDetail(Number(DV.pick(historyRows[Number(tr.getAttribute('data-i'))], 'Id')));
+    });
+    /** VoucherDetailByHeaderId :2944 - lines with a debit or credit. */
+    function historyDetail(id) {
+        API.get('/read/' + id).then(function (v) {
+            var lines = (v.details || []).filter(function (d) { return DV.num(DV.pick(d, 'DebitAmount')) > 0 || DV.num(DV.pick(d, 'CreditAmount')) > 0; });
+            var cols = [{ c: 'AccountCode', k: 'AccountCode' }, { c: 'AccountTitle', k: 'AccountTitle' }, { c: 'SubsidiaryAccount', k: 'SubsidiaryAccountTitle' },
+                { c: 'Job/Lot', k: 'JobLotDescription' }, { c: 'Remarks', k: 'Comments' }, { c: 'Debit', k: 'DebitAmount', n: 1 },
+                { c: 'Credit', k: 'CreditAmount', n: 1 }, { c: 'FcyAmount', k: 'DCurrencyAmount', n: 3, on: F.multi },
+                { c: 'BranchName', k: 'BranchName', on: F.branch }].filter(function (c) { return c.on !== false; });
+            var g = $('grdDetail'), sums = cols.map(function () { return 0; });
+            g.tHead.innerHTML = '<tr>' + cols.map(function (c) { return '<th' + (c.n ? ' class="n"' : '') + '>' + c.c + '</th>'; }).join('') + '</tr>';
+            g.tBodies[0].innerHTML = lines.map(function (d) { return '<tr>' + cols.map(function (c, j) {
+                var x = DV.pick(d, c.k); if (c.n) { sums[j] += DV.num(x); x = c.n === 3 ? DV.fmt3(x) : fmtAmt(x); }
+                return '<td' + (c.n ? ' class="n"' : '') + '>' + DV.esc(x) + '</td>'; }).join('') + '</tr>'; }).join('');
+            g.tFoot.innerHTML = lines.length ? '<tr>' + cols.map(function (c, j) {
+                return c.n ? '<td class="n">' + (c.n === 3 ? DV.fmt3(sums[j]) : fmtAmt(sums[j])) + '</td>' : '<td></td>'; }).join('') + '</tr>' : '';
+        }).catch(function (e) { DV.msg(e.message); });
+    }
+    function comboBindForHistory() { return API.get('/history-accounts').then(function (d) { cmbAccountHist.setData(d); }); }
+    function resetHistory() {                                            // btnNewHistory_Click :2623
+        $('dtFromHistory').value = DV.today(); $('dtToHistory').value = DV.today();
+        $('txtFromDocNoHistory').value = ''; $('txtToDocNoHistory').value = '';
+        cmbAccountHist.clear(true); $('cmbApproveStatus').value = 'notapproved';
+        historyRows = []; renderHistory();
+    }
+    serverButton('btnShowHistory', historyFill);
+    $('btnNewHistory').addEventListener('click', resetHistory);
+    serverButton('btnRefreshHistory', comboBindForHistory);
+    DV.digitsOnly($('txtFromDocNoHistory')); DV.digitsOnly($('txtToDocNoHistory'));
+
+    // ---------------------------------------------------------------------------- keys
+    var tabs = DV.tabs($('tabBar'), { form: $('pgForm'), history: $('pgHistory') });
+    DV.tabs($('tabBar2'), { detail: $('pgDetail'), breakup: $('pgBreakup') });
+    var SHORTCUTS = [['Ctrl+S', 'For Save on form tab and for show data in history tab'], ['Ctrl+U', 'For Update'], ['Ctrl+E', 'For Close'],
+        ['Ctrl+R', 'For Refresh'], ['Ctrl+N', 'For New'], ['Alt+1', 'For Print I'], ['Alt+2', 'For Print II'],
+        ['Ctrl+F5', 'For Focus on Voucher Date'], ['Ctrl+F10', 'For Open Attachments'], ['Ctrl+T', 'For Tab Transfer'],
+        ['Ctrl+alt', 'To Show ShortCut Keys Form'], ['Ctrl+ArrowDown', 'For Focus On Detail Grid'],
+        ['Ctrl+ArrowUp', 'For Focus On Debit Account in Detail Box'], ['Ctrl+Enter', 'When Focus On Any Grid For Update Record'],
+        ['Ctrl+Space', "When Focus On Any Grid To Call Function's On Button Or Link"]];
+    $('btnShortCutKey').addEventListener('click', function () { DV.showShortcuts(SHORTCUTS); });
+    $('btnHistoryFooter').addEventListener('click', function () { tabs.show('history'); });
+    DV.enterAsTab(document);                                           // ExpenseVoucher_KeyDown :3213 Return -> {TAB}
+    document.addEventListener('keydown', function (e) {                  // ExpenseVoucher_KeyDown :3209
+        if (document.querySelector('.dv-modal-back')) return;
+        var t = tabs.current();
+        if (e.ctrlKey && e.altKey) { DV.showShortcuts(SHORTCUTS); return; }
+        /* :3282-3289 - Alt+1 Print I, Alt+2 Print II, with the Print right */
+        if (e.altKey && (e.key === '1' || e.key === '2')) {
+            e.preventDefault();
+            if (ctx && ctx.rights && ctx.rights.print) { if (e.key === '1') print1(); else print2(); }
+            return;
+        }
+        if (!e.ctrlKey) return;
+        var k = e.key.toLowerCase();
+        if (k === 's') { e.preventDefault(); if (t === 'form') { if (!$('btnSave').classList.contains('dv-hidden') && !$('btnSave').disabled) $('btnSave').click(); } else $('btnShowHistory').click(); }
+        else if (k === 'u') { e.preventDefault(); if (!$('btnUpdate').classList.contains('dv-hidden') && !$('btnUpdate').disabled) $('btnUpdate').click(); }
+        else if (k === 'n') { e.preventDefault(); if (t === 'form') $('btnNew').click(); else resetHistory(); }
+        else if (k === 't') { e.preventDefault(); tabs.show(t === 'history' ? 'form' : 'history'); (t === 'history' ? $('dtVoucherDate') : $('dtFromHistory')).focus(); }
+        else if (k === 'r') { e.preventDefault(); if (t === 'form') $('btnRefresh').click(); else $('btnRefreshHistory').click(); }
+        else if (e.key === 'F5') { e.preventDefault(); $('dtVoucherDate').focus(); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); if (t === 'form') cmbAccount.focus(); else $('dtFromHistory').focus(); }
+        else if (e.key === 'ArrowDown') { e.preventDefault(); var g = document.querySelector(t === 'form' ? '#grd tbody tr[tabindex]' : '#grdHistory tbody tr[tabindex]'); if (g) g.focus(); }   // :3298
+        else if (e.key === 'Enter') { var tr = document.activeElement && document.activeElement.closest && document.activeElement.closest('#grd tr[data-i]');
+            if (tr) { e.preventDefault(); editRow(Number(tr.getAttribute('data-i'))); } }
+    });
+
+    // --------------------------------------------------------------------------- start
+    $('dtVoucherDate').value = DV.today(); $('dtChequeDate').value = DV.today();
+    $('dtFromHistory').value = DV.today(); $('dtToHistory').value = DV.today();
+    setMode('new');
+    load().then(function () {
+        comboBindForHistory();
+        var q = new URLSearchParams(location.search);
+        var id = parseInt(q.get('id') || q.get('Id'), 10);
+        var code = parseInt(q.get('voucherCode') || q.get('VoucherCode'), 10);
+        if (id > 0) return readById(id, false);
+        if (code > 0) return API.get('/history', { fromDocNo: code, toDocNo: code, approvedStatus: 'all' }).then(function (rows) {
+            if (rows && rows.length) return readById(Number(DV.pick(rows[0], 'Id')), false); });
+    }).catch(function (e) { DV.msg(e.message); });
+    window.ExpenseVoucherReadById = function (id) { reset(); return readById(id, false); };
+})();
+</script>
+<script src="/js/print-rpt.js?v=20261001a"></script>
+</body>
+</html>

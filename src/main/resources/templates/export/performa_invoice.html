@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Export Performa Invoice - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_invoice_transfer.css?v=20261003a}"/>
+</head>
+<!-- ExImProformaInvoice.cs (Architecture.WinApp.Export), screen 200 "Export Performa Invoice", ClientSize 1268 x 682,
+     table ExImProformaInvoice / ExImProformaInvoiceDetail, DocumentTypeId 200. tabControl1 (Alignment bottom): "Form" | "History".
+     Form: toolStrip4 New / Update (hidden) / Save; panel6 teal rgb(10,110,110) "Export : Performa Invoice";
+       HeaderGropBox "Main Header" 1254 x 337:
+         x6   Branch* (cmbbranches), Project* (cmbproject), Doc Date* (txtDocDate dd-MMM-yy), Doc No* (txtdocno read-only),
+              Customer* (cmbCustomer), Customer Ref (txtcustomerRef);
+         x264 Quotation Ref (txtquotRef), Inquiry Ref (txtinquiryRef), Destination Port* (cmbDestinationPort), Loading Port* (cmbLoadingPort),
+              Fcy Code* (cmbFcyCode), No of Container* (txtNoofContainer, digits only);
+         x548 Last Shipment Date (txtLastDate dd-MMM-yy), Status* (cmbStatus Open / Complete / Cancel), Remarks, Shipment Detail,
+              Payment Detail, Terms && Condition (562 wide);
+         groupBox5 "Detail" 1244 x 133: Item (cmbItem 284), Item Description, Pack Type, Inner Qty, Inner UOM, Outer Qty, Outer UOM,
+              Weight KGs (read-only) / Rate, Rate UOM, Amount Fcy (read-only), "+" (btnAddinGrid), Update (btnGridUpdate), Cancel (btnCancel);
+       grdDetail (Dock Fill, double-click = edit row; Weight / Rate / Fcy-Amount summed, format "0,0").
+     History: toolStrip3 New (toolStripButton6 - no handler on the desktop), panel15 teal "Performa Invoice History", ctrlGrdBar1,
+       DataGridHistory (Id hidden; double-click = ReadById; filter row; NoOfContainer summed).
+     Events: Load, KeyDown (Enter = Tab, Ctrl+S save (Form tab, not update mode), Ctrl+N new, Ctrl+T switch tab, Ctrl+E / Esc close,
+       Ctrl+U update (update mode)), tabControl1 SelectedIndexChanged (History -> HistoryGridFill), cmbItem ValueChanged (PackUOM),
+       cmbOuterUOM ValueChanged + txtOuterUnit TextChanged (WeightCalculation), cmbRateUOM ValueChanged + txtrate TextChanged
+       (AmountCalculation), grdDetail DoubleClick, DataGridHistory DoubleClick, KeyPress digits-only on No of Container / Inner Qty /
+       Outer Qty / Weight / Rate. -->
+<body class="pd-body" data-export-page="epi">
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="pd-form ex-form">
+    <div class="win-tabs" data-tabs="epi">
+        <button type="button" class="win-tab is-active" data-tab="tabPage1">Form</button>
+        <button type="button" class="win-tab" data-tab="tabPage2">History</button>
+    </div>
+
+    <div class="win-tab-panel is-active" id="tabPage1">
+        <div class="win-tool-strip">
+            <button type="button" id="btnNew" class="win-btn-tool" accesskey="n" onclick="ExportEpi.btnNew()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="btnupdate" class="win-btn-tool is-hidden" accesskey="u" onclick="ExportEpi.btnsave(this)"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+            <button type="button" id="btnsave" class="win-btn-tool" accesskey="s" onclick="ExportEpi.btnsave(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+        </div>
+        <div class="pd-caption pd-caption-teal" style="height:30px;">Export : Performa Invoice</div>
+        <fieldset class="it-box">
+            <legend>Main Header</legend>
+            <div class="it-header" style="padding:2px 0;">
+                <div class="it-col">
+                    <div class="it-row"><label for="cmbbranches" class="it-req">Branch</label><select id="cmbbranches" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Branch Name"></select></div>
+                    <div class="it-row"><label for="cmbproject" class="it-req">Project</label><select id="cmbproject" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Project Name"></select></div>
+                    <div class="it-row"><label for="txtDocDate" class="it-req">Doc Date</label><input type="date" id="txtDocDate" class="win-date"/></div>
+                    <div class="it-row"><label for="txtdocno" class="it-req">Doc No</label><input type="text" id="txtdocno" class="win-textbox" readonly/></div>
+                    <div class="it-row"><label for="cmbCustomer" class="it-req">Customer</label><select id="cmbCustomer" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Supplier Name"></select></div>
+                    <div class="it-row"><label for="txtcustomerRef">Customer Ref</label><input type="text" id="txtcustomerRef" class="win-textbox" maxlength="50" autocomplete="off"/></div>
+                </div>
+                <div class="it-col">
+                    <div class="it-row"><label for="txtquotRef">Quotation Ref</label><input type="text" id="txtquotRef" class="win-textbox" maxlength="50" autocomplete="off"/></div>
+                    <div class="it-row"><label for="txtinquiryRef">Inquiry Ref</label><input type="text" id="txtinquiryRef" class="win-textbox" maxlength="50" autocomplete="off"/></div>
+                    <div class="it-row"><label for="cmbDestinationPort" class="it-req">Destination Port</label><select id="cmbDestinationPort" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Destination Port"></select></div>
+                    <div class="it-row"><label for="cmbLoadingPort" class="it-req">Loading Port</label><select id="cmbLoadingPort" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Loading Port"></select></div>
+                    <div class="it-row"><label for="cmbFcyCode" class="it-req">Fcy Code</label><select id="cmbFcyCode" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Fcy Code"></select></div>
+                    <div class="it-row"><label for="txtNoofContainer" class="it-req">No of Container</label><input type="text" id="txtNoofContainer" class="win-textbox num" data-guard="integer" autocomplete="off"/></div>
+                </div>
+                <div class="it-col">
+                    <div class="it-row"><label for="txtLastDate">Last Shipment Date</label><input type="date" id="txtLastDate" class="win-date" style="max-width:171px;"/></div>
+                    <div class="it-row"><label for="cmbStatus" class="it-req">Status</label><select id="cmbStatus" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Order Status" style="max-width:171px;"></select></div>
+                    <div class="it-row"><label for="txtRemarks">Remarks</label><input type="text" id="txtRemarks" class="win-textbox" maxlength="200" autocomplete="off"/></div>
+                    <div class="it-row"><label for="txtShipmentDetail">Shipment Detail</label><input type="text" id="txtShipmentDetail" class="win-textbox" maxlength="150" autocomplete="off"/></div>
+                    <div class="it-row"><label for="txtPaymentDetail">Payment Detail</label><input type="text" id="txtPaymentDetail" class="win-textbox" maxlength="150" autocomplete="off"/></div>
+                    <div class="it-row"><label for="txttermNCondition">Terms &amp; Condition</label><input type="text" id="txttermNCondition" class="win-textbox" maxlength="250" autocomplete="off"/></div>
+                </div>
+            </div>
+            <fieldset class="it-box" style="margin:6px 0 0 0;">
+                <legend>Detail</legend>
+                <div class="it-entry it-entry-8">
+                    <div class="ex-field"><label for="cmbItem">Item</label><select id="cmbItem" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item"></select></div>
+                    <div class="ex-field"><label for="txtItemDesc">Item Description</label><input type="text" id="txtItemDesc" class="win-textbox" autocomplete="off"/></div>
+                    <div class="ex-field"><label for="cmbPackType">Pack Type</label><select id="cmbPackType" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Pack Type "></select></div>
+                    <div class="ex-field"><label for="txtInnerUnit">Inner Qty</label><input type="text" id="txtInnerUnit" class="win-textbox num" data-guard="integer" autocomplete="off"/></div>
+                    <div class="ex-field"><label for="cmbInnerUOM">Inner UOM</label><select id="cmbInnerUOM" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Inner UOM "></select></div>
+                    <div class="ex-field"><label for="txtOuterUnit">Outer Qty</label><input type="text" id="txtOuterUnit" class="win-textbox num" data-guard="integer" autocomplete="off"/></div>
+                    <div class="ex-field"><label for="cmbOuterUOM">Outer UOM</label><select id="cmbOuterUOM" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Outer UOM "></select></div>
+                    <div class="ex-field"><label for="txtweightDetail">Weight KGs</label><input type="text" id="txtweightDetail" class="win-textbox num" readonly/></div>
+                </div>
+                <div class="it-entry it-entry-pf2">
+                    <div class="ex-field"><label for="txtrate">Rate</label><input type="text" id="txtrate" class="win-textbox num" data-guard="integer" autocomplete="off"/></div>
+                    <div class="ex-field"><label for="cmbRateUOM">Rate UOM</label><select id="cmbRateUOM" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Rate UOM "></select></div>
+                    <div class="ex-field"><label for="txtAmountFC">Amount Fcy</label><input type="text" id="txtAmountFC" class="win-textbox num" readonly/></div>
+                    <div class="it-btns">
+                        <button type="button" id="btnAddinGrid" class="win-btn-small" onclick="ExportEpi.btnAddinGrid()">+</button>
+                        <button type="button" id="btnGridUpdate" class="win-btn-small is-hidden" onclick="ExportEpi.btnGridUpdate()">Update</button>
+                        <button type="button" id="btnCancel" class="win-btn-small is-hidden" onclick="ExportEpi.btnCancel()">Cancel</button>
+                    </div>
+                    <div></div>
+                </div>
+            </fieldset>
+        </fieldset>
+        <div class="pd-caption pd-caption-teal pd-history-bar" style="height:24px;"><span>Detail</span>
+            <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdDetailBox" title="Fullscreen table">&#x26F6;</button></span></div>
+        <div class="ex-grid-box" id="grdDetailBox">
+            <div class="ex-grid-scroll ex-h240">
+                <table class="win-grid" id="grdDetail">
+                    <thead><tr>
+                        <th>Item</th><th>ItemDesc</th><th>PackType</th><th class="num">InnerQty</th><th>InnerUOM</th><th class="num">OuterQty</th><th>OuterUOM</th>
+                        <th class="num">Weight</th><th class="num">Rate</th><th>RateUOM</th><th class="num">Fcy-Amount</th>
+                    </tr></thead>
+                    <tbody id="epiBody"></tbody>
+                    <tfoot id="epiFoot"></tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="win-tab-panel" id="tabPage2">
+        <div class="win-tool-strip">
+            <button type="button" id="toolStripButton6" class="win-btn-tool" title="No handler on the desktop form"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+        </div>
+        <div class="pd-caption pd-caption-teal pd-history-bar" style="height:30px;"><span>Performa Invoice History</span>
+            <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="DataGridHistoryBox" title="Fullscreen table">&#x26F6;</button></span></div>
+        <div class="ex-grid-box" id="DataGridHistoryBox">
+            <div class="ex-grid-scroll ex-h400">
+                <table class="win-grid" id="DataGridHistory">
+                    <thead>
+                    <tr><th class="num">DocNo</th><th>DocDate</th><th>Customer</th><th class="num">NoOfContainer</th><th>LoadingPort</th><th>DestinationPort</th>
+                        <th>LastShipmentDate</th><th>Status</th><th>Remarks</th></tr>
+                    <tr class="it-filterrow" id="epiHistFilter">
+                        <th><input data-f="DocNo"/></th><th><input data-f="DocDate"/></th><th><input data-f="Customer"/></th><th><input data-f="NoOfContainer"/></th>
+                        <th><input data-f="LoadingPort"/></th><th><input data-f="DestinationPort"/></th><th><input data-f="LastShipmentDate"/></th>
+                        <th><input data-f="Status"/></th><th><input data-f="Remarks"/></th></tr>
+                    </thead>
+                    <tbody id="epiHistBody"></tbody>
+                    <tfoot id="epiHistFoot"></tfoot>
+                </table>
+            </div>
+            <div class="ex-grid-empty is-hidden" id="epiHistEmpty">No record found.</div>
+        </div>
+    </div>
+
+    <div class="win-footer-strip">
+        <span class="ex-footer-left" id="epiFooterInfo"></span>
+        <button type="button" class="win-btn-history" id="btnEpiFooterHistory" onclick="ExportEpi.toggleHistory()"><i class="fa fa-history"></i> <span>History</span></button>
+    </div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_export_invoice_transfer_common.js?v=20261003a}"></script>
+<script th:src="@{/build/js/countx_export_performa_invoice.js?v=20261003a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

@@ -327,6 +327,24 @@ public final class SidebarScreenCatalog {
         e.add(new Entry("Third Party Inspection", "Export", "/export/third-party-inspection", "EXP_THIRD_PARTY_INSPECTION", "EXPORT", 857, 136));
         e.add(new Entry("Lab Against Third Party Inspection", "Export", "/export/lab-against-third-party-inspection", "EXP_LAB_AGAINST_THIRD_PARTY_INSPECTION", "EXPORT", 858, 136));
         e.add(new Entry("Fcy Receipts", "Export", "/export/fcy-receipts", "EXP_FCY_RECEIPTS", "EXPORT", 794, 100));
+        e.add(new Entry("Export Opening Balance", "Export", "/export/export-opening", "EXP_EXPORT_OPENING", "EXPORT", 189, 11));
+        e.add(new Entry("Export Return GRN", "Export", "/export/return-grn", "EXP_RETURN_GRN", "EXPORT", 190, 11));
+        e.add(new Entry("Export Return Invoice", "Export", "/export/return-invoice", "EXP_RETURN_INVOICE", "EXPORT", 191, 11));
+        e.add(new Entry("Export Performa Invoice", "Export", "/export/performa-invoice", "EXP_PERFORMA_INVOICE", "EXPORT", 200, 11));
+        e.add(new Entry("Export Delivery Order (New)", "Export", "/export/delivery-order-new", "EXP_DELIVERY_ORDER_NEW", "EXPORT", 201, 100));
+        e.add(new Entry("Commercial Invoice", "Export", "/export/commercial-invoice-transfer", "EXP_COMMERCIAL_INVOICE_TRANSFER", "EXPORT", 202, 100));
+        e.add(new Entry("Export Pre Shipment Analysis", "Export", "/quality/export-pre-shipment-analysis", "EXP_PRE_SHIPMENT_ANALYSIS", "EXPORT", 204, 11));
+        e.add(new Entry("Documents", "Export", "/export/define-documents", "EXP_DEFINE_DOCUMENTS", "EXPORT", 207, 11));
+        e.add(new Entry("5002 Contract Schedule Report", "Export", "/export/contract-schedule-periodic-a", "EXP_CONTRACT_SCHEDULE_PERIODIC_A", "EXPORT", 237, 17));
+        e.add(new Entry("Export Comparison Summary", "Export", "/export/comparison-summary", "EXP_COMPARISON_SUMMARY", "EXPORT", 248, 17));
+        e.add(new Entry("Export Sales Report", "Export", "/export/invoice-against-forwarding-pre-invoices", "EXP_INVOICE_AGAINST_FORWARDING_PRE_INVOICES", "EXPORT", 259, 17));
+        e.add(new Entry("Bill of Lading Report", "Export", "/export/bill-of-lading-report", "EXP_BILL_OF_LADING_REPORT", "EXPORT", 264, 17));
+        e.add(new Entry("Export Forwarding Report-001", "Export", "/export/forwarding-report", "EXP_FORWARDING_REPORT", "EXPORT", 265, 133));
+        e.add(new Entry("Container List", "Export", "/export/container-list", "EXP_CONTAINER_LIST", "EXPORT", 268, 17));
+        e.add(new Entry("Pre Invoice Register", "Export", "/export/pre-invoice-register", "EXP_PRE_INVOICE_REGISTER", "EXPORT", 271, 133));
+        e.add(new Entry("Bank Gd Summary", "Export", "/export/bank-gd-summary", "EXP_BANK_GD_SUMMARY", "EXPORT", 272, 133));
+        e.add(new Entry("Export Forwarding New", "Export", "/export/forwarding-new", "EXP_FORWARDING_NEW", "EXPORT", 588, 98));
+        e.add(new Entry("Export Commercial Invoice", "Export", "/export/commercial-invoice", "EXP_COMMERCIAL_INVOICE", "EXPORT", 589, 98));
 
         // 7. PRODUCTION REPORTS (module 21)
         // Ids, ScreenName and ScreenAlias all read from reconciliation-input.json, the live dump

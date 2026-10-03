@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PL &amp; BS Notes</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}" href="/vendors/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20261002gf}" href="/build/css/countx_desktop_combo.css">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20261003pb}" href="/build/css/countx_prod_combo.css">
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}" href="/build/css/countx_grid_bar.css">
+    <style>
+        /* ------------------------------------------------------------------------------------
+           BsPlSettingForm.InitializeComponent, 1:1.
+           Form ClientSize 964x561, WindowState Maximized, BackColor Control (#f0f0f0).
+           tabControl1 Dock Fill, Verdana 9.75, top tabs:
+             tabPage1 "Change Notes For Group Accounts" (UseVisualStyleBackColor -> white, Padding 3)
+               panel1 Top 28  > toolStrip1 White, Verdana 9.75: &New | Update | ShortCut Keys
+               panel3 Top 27  Teal > label23 "BS && PL Setting" @12,4 Verdana 12 Bold White
+               panel4 Top 79  White > groupBox1 "Filters" @3,2 243x73 Tahoma 9.75 Bold
+                                     panel5 @4,20 55x49 : radPL @3,3 (Checked) / radBS @4,26
+                                     panel6 @59,20 97x49: radAssets @6,3 / radLiablities @6,26 (Visible=false)
+                                     btnShow @160,40 61x29 Teal Flat, White Verdana 9.75 Bold
+               panel2 Top 28  Teal > label2 "Change Notes For Group Accounts" @3,5 ; ctrlGrdBar2 anchored right
+               grdBsPl Fill, Verdana 8.25, filter row, TotalRow bottom, RecordNavigator
+             tabPage2 "Change Note Title"
+               panel11 Top 56 Teal > toolStrip2 (White, 27) + label1 "Change Note Title" @0,31
+               panel8  Top 63 White > groupBox2 "Filters" @3,2 228x56 : panel10 @4,20 144x32
+                                     radAllNote @3,5 (Checked) / radPLNote @49,5 / radBSNote @99,5 ; btnShowNote @154,22 61x29
+               panel7  Top 24 Teal > label3 "Change Note Title" @4,3 ; ctrlGrdBar1 anchored right
+               grdNoteChange Fill
+           ------------------------------------------------------------------------------------ */
+        :root { --teal: #008080; --ctl: #f0f0f0; --line: #aca899; }
+        html, body { margin: 0; padding: 0; height: 100%; background: var(--ctl); overflow: hidden; }
+        body { font-family: Verdana, "Microsoft Sans Serif", Tahoma, sans-serif; font-size: 8.25pt; color: #000; }
+        #deny { padding: 14px 18px; font-size: 9pt; background: #ffebee; border: 1px solid #e57373; color: #7f0000; margin: 12px; }
+
+        #form { position: absolute; inset: 0; display: flex; flex-direction: column; min-width: 0; }
+        /* TabControl (top tabs) */
+        #tabstrip { flex: 0 0 auto; height: 25px; padding: 0 2px; border-bottom: 1px solid #898c95; position: relative; white-space: nowrap; overflow: hidden; }
+        #tabstrip .tab { display: inline-block; position: relative; top: 4px; height: 20px; line-height: 19px; padding: 0 6px; margin-right: -1px;
+                         font-family: Verdana; font-size: 9.75pt; background: linear-gradient(#f3f3f3, #e5e5e5); border: 1px solid #898c95; border-bottom: none;
+                         cursor: default; user-select: none; box-sizing: border-box; }
+        #tabstrip .tab.on { top: 2px; height: 23px; background: #fff; z-index: 1; }
+        .page { flex: 1 1 auto; display: none; flex-direction: column; background: #fff; padding: 3px; border: 1px solid #898c95; border-top: none;
+                margin: 0 2px 2px 2px; min-height: 0; }
+        .page.on { display: flex; }
+
+        /* ToolStrip */
+        .toolstrip { height: 27px; background: #fff; white-space: nowrap; box-sizing: border-box; border-bottom: 1px solid #fff; }
+        .toolstrip button { height: 24px; margin-top: 1px; border: 1px solid transparent; background: transparent; font-family: Verdana; font-size: 9.75pt;
+                            cursor: default; vertical-align: top; padding: 0 4px; color: #000; }
+        .toolstrip button:hover:not(:disabled) { border-color: #3399ff; background: #c2e0ff; }
+        .toolstrip button:disabled { color: #9a9a9a; }
+        .toolstrip .fa { margin-right: 4px; font-size: 14px; vertical-align: -1px; }
+        .toolstrip .fa-plus-circle { color: #2e9e3e; }
+        .toolstrip .fa-pencil { color: #d38b1d; }
+        .spin { width: 11px; height: 11px; border: 2px solid rgba(0,0,0,.15); border-top-color: #316ac5; border-radius: 50%;
+                display: none; margin-right: 4px; vertical-align: -1px; animation: sp .7s linear infinite; box-sizing: border-box; }
+        button.busy .spin { display: inline-block; }
+        button.busy .fa { display: none; }
+        @keyframes sp { to { transform: rotate(360deg); } }
+
+        .bar { position: relative; background: var(--teal); flex: 0 0 auto; }
+        .bar .cap { position: absolute; color: #fff; font-family: Verdana; font-size: 12pt; font-weight: bold; white-space: nowrap; line-height: 18px; }
+        .grdbar { position: absolute; right: 5px; display: flex; align-items: center; justify-content: center; }
+
+        .filters { position: relative; background: #fff; flex: 0 0 auto; }
+        /* GroupBox: caption on the top border at x=6, border from y=7 */
+        .gb { position: absolute; box-sizing: border-box; font-family: Tahoma; font-size: 9.75pt; font-weight: bold; }
+        .gb::before { content: ""; position: absolute; left: 0; right: 0; top: 7px; bottom: 0; border: 1px solid #d5dfe5; border-radius: 3px; }
+        .gb > .gbcap { position: absolute; left: 6px; top: 0; padding: 0 2px; background: #fff; line-height: 15px; white-space: nowrap; }
+        .pn { position: absolute; }
+        .rb { position: absolute; height: 20px; line-height: 20px; white-space: nowrap; font-family: Tahoma; font-size: 9.75pt; font-weight: bold; }
+        .rb input { margin: 0 4px 0 1px; vertical-align: -2px; }
+        .btnTeal { position: absolute; background: var(--teal); color: #fff; border: 1px solid #000; font-family: Verdana; font-size: 9.75pt;
+                   font-weight: bold; cursor: default; padding: 0; box-sizing: border-box; }
+        .btnTeal:hover:not(:disabled) { background: #0a9090; }
+        .btnTeal:disabled { opacity: .75; }
+        .btnTeal .spin { border-color: rgba(255,255,255,.3); border-top-color: #fff; }
+
+        /* tab1 */
+        #panel1 { height: 28px; flex: 0 0 auto; }
+        #panel3 { height: 27px; }  #label23 { left: 12px; top: 4px; }
+        #panel4 { height: 79px; }
+        #groupBox1 { left: 3px; top: 2px; width: 243px; height: 73px; }
+        #panel5 { left: 4px; top: 20px; width: 55px; height: 49px; }
+        #panel6 { left: 59px; top: 20px; width: 97px; height: 49px; }
+        #lblPL { left: 3px; top: 3px; } #lblBS { left: 4px; top: 26px; }
+        #lblAssets { left: 6px; top: 3px; } #lblLiab { left: 6px; top: 26px; }
+        #btnShow { left: 160px; top: 40px; width: 61px; height: 29px; }
+        #panel2 { height: 28px; }  #label2 { left: 3px; top: 5px; }  #ctrlGrdBar2 { top: 3px; width: 41px; height: 21px; }
+
+        /* tab2 */
+        #panel11 { height: 56px; }  #panel11 .toolstrip { position: absolute; left: 0; top: 0; right: 0; }  #label1 { left: 0; top: 31px; }
+        #panel8 { height: 63px; }
+        #groupBox2 { left: 3px; top: 2px; width: 228px; height: 56px; }
+        #panel10 { left: 4px; top: 20px; width: 144px; height: 32px; }
+        #lblAllNote { left: 3px; top: 5px; } #lblPLNote { left: 49px; top: 5px; } #lblBSNote { left: 99px; top: 5px; }
+        #btnShowNote { left: 154px; top: 22px; width: 61px; height: 29px; }
+        #panel7 { height: 24px; }  #label3 { left: 4px; top: 3px; }  #ctrlGrdBar1 { top: 0; width: 43px; height: 22px; }
+
+        /* Janus GridEX - fills the rest, scrolls inside itself only */
+        .gridWrap { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; border: 1px solid #7f9db9; background: #fff; }
+        .gridWrap.full { position: fixed; inset: 0; z-index: 50; }
+        .gridScroll { flex: 1 1 auto; overflow: auto; min-height: 0; }
+        table.grd { border-collapse: separate; border-spacing: 0; font-family: Verdana; font-size: 8.25pt; }
+        table.grd th { background: linear-gradient(#fdfdfd, #e6eaf0); border-right: 1px solid #c5c5c5; border-bottom: 1px solid #c5c5c5; padding: 3px 6px;
+                       text-align: left; white-space: nowrap; position: sticky; top: 0; font-weight: normal; z-index: 2; height: 15px; }
+        table.grd tr.filter td { position: sticky; top: 22px; background: #fbfbfb; padding: 1px; z-index: 2; border-bottom: 1px solid #c5c5c5; border-right: 1px solid #e0e0e0; }
+        table.grd tr.filter input { width: 100%; box-sizing: border-box; border: 1px solid #d0d0d0; font-family: Verdana; font-size: 8.25pt; padding: 1px 3px; height: 18px; }
+        table.grd td { border-bottom: 1px solid #e6e6e6; border-right: 1px solid #ececec; padding: 0 6px; height: 20px; white-space: nowrap; }
+        table.grd td.ed { padding: 0; }
+        table.grd td.ed input.cell { width: 100%; box-sizing: border-box; height: 20px; border: 1px solid transparent; font-family: Verdana; font-size: 8.25pt; padding: 0 5px; background: transparent; }
+        table.grd td.ed input.cell:focus { border-color: #7f9db9; background: #fff; outline: none; }
+        table.grd td.combo { padding: 0; position: relative; width: 250px; min-width: 250px; max-width: 250px; }
+        table.grd td.combo .dtcombo-wrap { width: 250px !important; }
+        table.grd tbody tr:hover td { background: #eaf2fb; }
+        table.grd tbody tr.sel td { background: #fff4c2; }
+        table.grd tfoot td { position: sticky; bottom: 0; background: #ece9d8; border-top: 1px solid #aca899; height: 18px; z-index: 2; }
+        table.grd td.fill, table.grd th.fill { width: 100%; }
+        .nav { flex: 0 0 auto; height: 20px; border-top: 1px solid var(--line); background: #ece9d8; display: flex; align-items: center; gap: 4px; padding: 0 6px; font-size: 8.25pt; }
+        .nav button { border: 1px solid var(--line); background: #f5f3ea; cursor: pointer; font-size: 9px; padding: 0 5px; height: 15px; line-height: 12px; }
+
+        /* MessageBox.Show / ShortCutKeyPopUp */
+        .mask { position: fixed; inset: 0; background: rgba(0,0,0,.25); display: none; align-items: center; justify-content: center; z-index: 100; }
+        .mbForm { background: #f0f0f0; border: 1px solid #555; min-width: 300px; max-width: 520px; box-shadow: 0 4px 18px rgba(0,0,0,.35); }
+        .mbForm .cap { background: #fff; padding: 5px 8px; font-size: 9pt; border-bottom: 1px solid #ddd; min-height: 14px; }
+        .mbForm .body { padding: 18px 16px; background: #fff; font-size: 9pt; white-space: pre-wrap; }
+        .mbForm .btns { padding: 9px 12px; text-align: right; }
+        .mbForm .btns button { min-width: 75px; height: 23px; margin-left: 6px; background: #e1e1e1; border: 1px solid #adadad; cursor: pointer; font-family: Verdana; font-size: 8.25pt; }
+        .mbForm .btns button:focus { border-color: #0078d7; outline: 1px solid #0078d7; }
+        #skForm { width: 576px; max-width: calc(100vw - 32px); height: 571px; max-height: calc(100vh - 32px); background: #fff; border: 1px solid #555; display: flex; flex-direction: column; box-shadow: 0 4px 18px rgba(0,0,0,.35); }
+        #skForm .hdr { height: 35px; background: var(--teal); position: relative; flex: 0 0 auto; }
+        #skForm .hdr span { position: absolute; left: 8px; top: 8px; color: #fff; font-family: Verdana; font-size: 12pt; font-weight: bold; }
+        #skForm .hdr button { position: absolute; right: 6px; top: 6px; border: none; background: transparent; color: #fff; font-size: 16px; cursor: pointer; }
+        #skForm .gridScroll { flex: 1 1 auto; overflow: auto; }
+    </style>
+</head>
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div id="deny" th:unless="${canOpen}">
+    PL &amp; BS Notes sits on the desktop's Admin Panel, which DashboardNew draws only when RoleName
+    is &quot;Admin&quot;. This page applies the same condition.
+</div>
+<div id="form" th:if="${canOpen}" th:attr="data-token=${token}" data-token="">
+    <div id="tabstrip">
+        <span class="tab on" data-tab="0" id="tabPage1Tab">Change Notes For Group Accounts</span><span class="tab" data-tab="1" id="tabPage2Tab">Change Note Title</span>
+    </div>
+
+    <!-- ============================ tabPage1 ============================ -->
+    <div class="page on" id="tabPage1">
+        <div id="panel1">
+            <div class="toolstrip" id="toolStrip1">
+                <button type="button" id="btnnew"><span class="spin"></span><i class="fa fa-plus-circle"></i><u>N</u>ew</button><button
+                        type="button" id="btnUpdate"><span class="spin"></span><i class="fa fa-pencil"></i>Update</button><button
+                        type="button" id="BtnShortCutkeys">ShortCut Keys</button>
+            </div>
+        </div>
+        <div class="bar" id="panel3"><span class="cap" id="label23">BS &amp; PL Setting</span></div>
+        <div class="filters" id="panel4">
+            <div class="gb" id="groupBox1"><span class="gbcap">Filters</span>
+                <div class="pn" id="panel5">
+                    <label class="rb" id="lblPL"><input type="radio" name="grpPLBS" id="radPL" value="PL" checked>PL</label>
+                    <label class="rb" id="lblBS"><input type="radio" name="grpPLBS" id="radBS" value="BS">BS</label>
+                </div>
+                <div class="pn" id="panel6">
+                    <label class="rb" id="lblAssets" style="display:none;"><input type="radio" name="grpClass" id="radAssets" value="2">Assets</label>
+                    <label class="rb" id="lblLiab" style="display:none;"><input type="radio" name="grpClass" id="radLiablities" value="3">Liabilities</label>
+                </div>
+                <button type="button" class="btnTeal" id="btnShow"><span class="spin"></span>Show</button>
+            </div>
+        </div>
+        <div class="bar" id="panel2">
+            <span class="cap" id="label2">Change Notes For Group Accounts</span>
+            <div class="grdbar" id="ctrlGrdBar2"></div>
+        </div>
+        <div class="gridWrap" id="grdBsPlWrap" data-gridbar-form="BsPlSettingForm" data-gridbar-grid="grdBsPl"
+             data-gridbar-mount="#ctrlGrdBar2" data-gridbar-reorder="false" data-gridbar-title="Change Notes For Group Accounts">
+            <div class="gridScroll"><table class="grd" id="grdBsPl"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+            <div class="nav" data-grid="grdBsPl">
+                <button type="button" data-nav="first">|&lt;</button><button type="button" data-nav="prev">&lt;</button>
+                <span class="pos">Record 0 of 0</span>
+                <button type="button" data-nav="next">&gt;</button><button type="button" data-nav="last">&gt;|</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================ tabPage2 ============================ -->
+    <div class="page" id="tabPage2">
+        <div class="bar" id="panel11">
+            <div class="toolstrip" id="toolStrip2">
+                <button type="button" id="btnNewNote"><span class="spin"></span><i class="fa fa-plus-circle"></i><u>N</u>ew</button><button
+                        type="button" id="btnUpdateNote"><span class="spin"></span><i class="fa fa-pencil"></i>Update</button><button
+                        type="button" id="btnSkey">ShortCut Keys</button>
+            </div>
+            <span class="cap" id="label1">Change Note Title</span>
+        </div>
+        <div class="filters" id="panel8">
+            <div class="gb" id="groupBox2"><span class="gbcap">Filters</span>
+                <div class="pn" id="panel10">
+                    <label class="rb" id="lblAllNote"><input type="radio" name="grpNote" id="radAllNote" value="" checked>All</label>
+                    <label class="rb" id="lblPLNote"><input type="radio" name="grpNote" id="radPLNote" value="PL">PL</label>
+                    <label class="rb" id="lblBSNote"><input type="radio" name="grpNote" id="radBSNote" value="BS">BS</label>
+                </div>
+                <button type="button" class="btnTeal" id="btnShowNote"><span class="spin"></span>Show</button>
+            </div>
+        </div>
+        <div class="bar" id="panel7">
+            <span class="cap" id="label3">Change Note Title</span>
+            <div class="grdbar" id="ctrlGrdBar1"></div>
+        </div>
+        <div class="gridWrap" id="grdNoteChangeWrap" data-gridbar-form="BsPlSettingForm" data-gridbar-grid="grdNoteChange"
+             data-gridbar-mount="#ctrlGrdBar1" data-gridbar-reorder="false" data-gridbar-title="Change Note Title">
+            <div class="gridScroll"><table class="grd" id="grdNoteChange"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+            <div class="nav" data-grid="grdNoteChange">
+                <button type="button" data-nav="first">|&lt;</button><button type="button" data-nav="prev">&lt;</button>
+                <span class="pos">Record 0 of 0</span>
+                <button type="button" data-nav="next">&gt;</button><button type="button" data-nav="last">&gt;|</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mask" id="mbMask"><div class="mbForm"><div class="cap" id="mbCap"></div><div class="body" id="mbBody"></div><div class="btns" id="mbBtns"></div></div></div>
+<div class="mask" id="skMask"><div id="skForm"><div class="hdr"><span>Shortcut Keys</span><button type="button" id="skClose">&times;</button></div>
+    <div class="gridScroll"><table class="grd" style="width:100%"><thead><tr><th>KeyCombination</th><th class="fill">Description</th></tr></thead><tbody id="skBody"></tbody></table></div></div></div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}" src="/vendors/jquery/dist/jquery.min.js"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20261003pb}" src="/build/js/countx_prod_combo.js"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}" src="/build/js/countx_grid_bar.js"></script>
+<script th:src="@{/build/js/countx_pl_bs_notes.js?v=20261003pc}" src="/build/js/countx_pl_bs_notes.js"></script>
+</body>
+</html>

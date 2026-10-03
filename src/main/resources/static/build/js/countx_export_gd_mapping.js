@@ -235,8 +235,8 @@
     function gdHistoryReset() { setText('FromDateGdBreakupHistory', X.today()); setText('ToDateGdBreakupHistory', X.today()); X.setVal('CmbBankGdBankHistory', '0'); HIST = []; CUR.hist = -1; histRender(); X.show('gdHistEmpty', false); }
     function gdHistoryRefresh(btn) { return X.busy(btn, function () { return X.getJson(API + '/history-banks').then(function (rows) { HIST_BANKS = rows || []; X.bind('CmbBankGdBankHistory', HIST_BANKS, 'Id', 'name', []); }).catch(function (e) { box(e.message); }); }); }
     /* grdGDhistory "ContainerBreakUp" -> GdContainerBreakUp(GdIdFromBreakUp = Id): that form is not part of this port. */
-    function containerBreakUp(i) { var r = HIST[i]; if (!r) return; box('GD Container BreakUp (GdContainerBreakUp) for GD Id ' + netI(col(r, 'Id')) + ' is not available on the web yet.'); }
-    function fiOpening() { box('FI Opening (frmFIOpening) is not available on the web yet.'); }
+    function containerBreakUp(i) { var r = HIST[i]; if (!r) return; window.open('/export/gd-container-break-up?gdId=' + netI(col(r, 'Id')), '_blank'); }
+    function fiOpening() { window.open('/export/fi-opening', '_blank'); }
 
     // ============================================================================== Bank Invoice Payment Schedule & GD Mapping
     /* InvoicesNoBindAdvanceUtilize: distinct Id / InvoiceNo of dtInvoices. */

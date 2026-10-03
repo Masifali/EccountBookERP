@@ -91,12 +91,13 @@ public class GearMenuController {
         items.add(item("Define Reports", "frmReportConfig",
                 "/configurations/define-reports", null));
         /* btnPlBSNotes_Click -> BsPlSettingForm */
-        items.add(item("PL & BS Notes", "BsPlSettingForm", null, "Not ported yet."));
+        /* Ported 2026-10-03: PlBsNotesViewController / PlBsNotesRestController / PlBsNotesService. */
+        items.add(item("PL & BS Notes", "BsPlSettingForm", "/admin/pl-bs-notes", null));
         /* companyProfileToolStripMenuItem_Click -> frmCompanyProfile */
         items.add(item("Company Profile", "frmCompanyProfile",
                 "/configurations/company-profile", null));
-        /* btnAuditLogReport_Click -> AuditLogReport */
-        items.add(item("Audit Log Report", "AuditLogReport", null, "Not ported yet."));
+        /* btnAuditLogReport_Click -> Audit_Dashboard.AuditLogReport. Ported 2026-10-03: AuditLogReportController. */
+        items.add(item("Audit Log Report", "AuditLogReport", "/admin/audit-log-report", null));
         /* sQLQueryExecuterToolStripMenuItem_Click -> new SqlLogin().ShowDialog(), which opens
            SqlQueryExecuter: a free-text SQL window run against the live database with credentials
            typed into the dialog. Deliberately not ported - see the note rendered to the user. */
@@ -108,7 +109,8 @@ public class GearMenuController {
         /* BtnThemeForm_Click -> ThemeSelectionForm */
         items.add(item("Theme", "ThemeSelectionForm", null, "Not ported yet."));
         /* btnAccountMovement_Click -> AccountToAccountTransfer */
-        items.add(item("Account Movement", "AccountToAccountTransfer", null, "Not ported yet."));
+        items.add(item("Account Movement", "AccountToAccountTransfer",
+                "/admin/account-movement", null));
         return items;
     }
 

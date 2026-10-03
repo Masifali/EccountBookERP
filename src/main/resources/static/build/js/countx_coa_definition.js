@@ -207,6 +207,7 @@ $(document).ready(function () {
 
         // Account Information -> Account Title input autocomplete
         $("#accountTitleInput").on("input", function () {
+            if (!$("#accountTitlePopup").length) return;   /* plain TextBox on the desktop: no suggestions */
             const query = $(this).val();
             if (query.length < 2) {
                 $("#accountTitlePopup").hide();
