@@ -5,382 +5,368 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Trial Balances All Level</title>
-
-    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
-    <link rel="stylesheet" th:href="@{/build/css/countx_acc_rpt_f.css?v=20260930s}">
     <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260930s}">
-    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20261002gv}">
     <style>
-        .accf table.wg tr.row-group td { font-weight: bold; }
-        .accf .tree-toggle { display: inline-block; width: 14px; text-align: center; cursor: pointer; color: var(--f-teal-dark); font-weight: bold; user-select: none; }
-        .accf .tree-toggle.leaf { visibility: hidden; }
+        /* frmTrialBalancesAllLevel.InitializeComponent - ClientSize 884x461, WindowState Maximized:
+           panel2 (teal, Dock Top, 51) = toolStrip3 (0,0 884x27) + toolStripLabel1 (2,30);
+           panel3 (white, Dock Top, 67) = the filters at their designer Location/Size;
+           panel4 (teal, Dock Top, 23) = "Filtered Records" + ctrlGrdBar1; grdHistory (Dock Fill, Verdana 8.25). */
+        :root { --teal: #008080; --show: rgb(10,110,110); --grid-line: #c5d3dc; --grid-head: #e9eef3; --alt: #f3f7fa; --sel: #cfe3f5; }
+        html, body { margin: 0; padding: 0; height: 100%; background: #fff; overflow-x: hidden; }
+        body { font-family: "Segoe UI", Tahoma, sans-serif; font-size: 12px; color: #000; display: flex; flex-direction: column; }
         [hidden] { display: none !important; }
+        .nav-bar { flex: 0 0 auto; display: flex; justify-content: space-between; align-items: center; background: #f0f0f0; border-bottom: 1px solid #c9c9c9; padding: 2px 8px; font: 11px "Segoe UI", sans-serif; color: #333; }
+        .nav-bar a { color: #0b5c86; text-decoration: none; }
+        /* the form is 884 px wide: narrower windows scroll THIS box, never the page */
+        .form-scroll { flex: 1 1 auto; min-height: 0; overflow-x: auto; overflow-y: hidden; display: flex; flex-direction: column; }
+        .form { min-width: 884px; flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+        .panel2 { position: relative; height: 51px; background: var(--teal); flex: 0 0 auto; }
+        .ts { position: absolute; left: 0; top: 0; right: 0; height: 27px; display: flex; align-items: center; padding-left: 2px;
+              background: linear-gradient(#fbfcfd, #e3e8ee); border-bottom: 1px solid #b9c4cf; font: 13px Verdana, sans-serif; }
+        .ts-btn { position: relative; height: 24px; display: inline-flex; align-items: center; gap: 4px; padding: 0 6px; border: 1px solid transparent;
+                  background: transparent; font: 13px Verdana, sans-serif; color: #000; cursor: pointer; }
+        .ts-btn:hover, .ts-btn.open { border-color: #7fb5d6; background: #dcecf8; }
+        .ts-btn:disabled { color: #8a8a8a; cursor: default; }
+        .ts-btn .ico-add { color: #2e9d3a; font-size: 15px; }
+        .ts-btn .ico-print { color: #44576a; }
+        .ts-btn u { text-decoration: underline; }
+        .ts-menu { position: absolute; left: 0; top: 24px; min-width: 220px; background: #fff; border: 1px solid #9aa9b8; box-shadow: 2px 2px 4px rgba(0,0,0,.25);
+                   z-index: 50; padding: 2px 0; text-align: left; }
+        .ts-menu div { padding: 3px 22px; font: 13px Verdana, sans-serif; white-space: nowrap; cursor: pointer; }
+        .ts-menu div:hover { background: #dcecf8; }
+        .ts-menu div.none { color: #888; cursor: default; font-style: italic; }
+        .ts-menu div.none:hover { background: transparent; }
+        .form-title { position: absolute; left: 2px; top: 30px; font: bold 16px Tahoma, sans-serif; color: #fff; white-space: nowrap; }
+        .panel3 { position: relative; height: 67px; background: #fff; flex: 0 0 auto; }
+        .panel3 .lbl { position: absolute; font: 600 12px "Segoe UI Semibold", "Segoe UI", sans-serif; white-space: nowrap; }
+        .panel3 .chk { position: absolute; display: flex; align-items: center; gap: 3px; font: 600 13px "Segoe UI Semibold", "Segoe UI", sans-serif; white-space: nowrap; margin: 0; cursor: pointer; }
+        .panel3 .chk input { margin: 0; }
+        .panel3 input[type=date] { position: absolute; box-sizing: border-box; font: 13px Verdana, sans-serif; border: 1px solid #7a7a7a; padding: 0 2px; }
+        .panel3 select { position: absolute; box-sizing: border-box; font: 13px Verdana, sans-serif; }
+        #btnshow { position: absolute; left: 444px; top: 34px; width: 58px; height: 26px; border: 0; background: var(--show); color: #fff;
+                   font: bold 13px Verdana, sans-serif; cursor: pointer; padding: 0; }
+        #btnshow:disabled { opacity: .75; cursor: progress; }
+        .panel4 { position: relative; height: 23px; background: var(--teal); flex: 0 0 auto; }
+        .panel4 .cap { position: absolute; left: 3px; top: 2px; font: bold 15px Tahoma, sans-serif; color: #fff; }
+        .panel4 .status { position: absolute; right: 8px; top: 4px; font: 11px Verdana, sans-serif; color: #e6f4f4; }
+        .grid-box { flex: 1 1 auto; min-height: 160px; position: relative; display: flex; flex-direction: column; border: 1px solid #7f9db9; }
+        .grid-scroll { flex: 1 1 auto; min-height: 0; overflow: auto; }
+        table.jg { border-collapse: separate; border-spacing: 0; width: 100%; table-layout: fixed; font: 11px Verdana, sans-serif; }
+        table.jg th { position: sticky; top: 0; z-index: 2; background: linear-gradient(#f7f9fb, var(--grid-head)); border-right: 1px solid var(--grid-line);
+                      border-bottom: 1px solid #9fb3c4; padding: 3px 4px; font-weight: normal; text-align: center; vertical-align: middle; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        table.jg td { border-right: 1px solid var(--grid-line); border-bottom: 1px solid var(--grid-line); padding: 2px 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; height: 16px; }
+        table.jg tbody tr:nth-child(even) td { background: var(--alt); }
+        table.jg tbody tr:hover td { background: var(--sel); }
+        table.jg tr.grp td { font-weight: bold; }
+        table.jg td.n { text-align: right; }
+        table.jg tfoot td { position: sticky; bottom: 0; z-index: 2; background: #e3e9ef; border-top: 1px solid #9fb3c4; font-weight: bold; }
+        table.jg td.msg { text-align: center; color: #555; padding: 14px; white-space: normal; height: auto; }
+        .tt { display: inline-block; width: 11px; height: 11px; line-height: 9px; margin-right: 3px; border: 1px solid #8ba0b2; background: #fff; text-align: center;
+              font-size: 10px; color: #333; cursor: pointer; vertical-align: middle; user-select: none; box-sizing: border-box; }
+        .tt.leaf { visibility: hidden; }
+        a.lnk { color: #0b45a8; text-decoration: underline; cursor: pointer; }
+        .nav { flex: 0 0 auto; height: 22px; display: flex; align-items: center; gap: 6px; padding: 0 6px; background: #eef2f6; border-top: 1px solid #b8c6d3;
+               font: 11px Verdana, sans-serif; color: #333; }
+        /* WaitForm (wf.Show()) */
+        .wait { position: absolute; inset: 0; background: rgba(255,255,255,.55); display: flex; align-items: center; justify-content: center; z-index: 5; }
+        .wait .box { background: #fff; border: 1px solid var(--teal); box-shadow: 0 2px 8px rgba(0,0,0,.25); padding: 12px 18px; font: 12px Verdana, sans-serif; color: #035; text-align: center; }
+        .wait .box i { color: var(--teal); margin-right: 6px; }
+        .wait .sub { margin-top: 4px; font-size: 11px; color: #555; }
+        @media print { .nav-bar, .panel2, .panel3 { display: none !important; } .grid-scroll { overflow: visible; } }
     </style>
 </head>
 <!--
-  Screen 82 "Trial Balances All Level" - Architecture.WinApp.Account_Reports.frmTrialBalancesAllLevel.
-  Load: ChkFourColumns ticked, ViewOptionsFill (5 fixed rows, Rows[4] "Upto All(5) Levels" active),
-  txtFromDate = ActiveYr.Start_Period (txtToDate keeps today), GridBind, Expand. Reset (btnNew): Rows[0], dates, GridBind.
-  GridBind -> VoucherReports.HararicalTrialBalance -> SpCoahierarchy_TrialBalance_Rpt (/accounts/api/reports-desktop/trial-balance-all-levels).
+  Screen 82 "Trial Balance All Levels" - Architecture.WinApp.Account_Reports.frmTrialBalancesAllLevel (standalone form,
+  Text "EccountBook", no tab control - the "Trial Balance | Trial Balance Selected | Trial Balances All Level" strip of
+  the previous page was not a desktop feature and is gone).
+  Load: ChkFourColumns ticked, ViewOptionsFill (5 fixed rows, Rows[4] "Upto All(5) Levels" active), txtFromDate =
+  ActiveYr.Start_Period (txtToDate keeps today), GridBind, rdGroupeExpand ticked, ReportsLoad (135-Print items =
+  CommonServices.DynamicReportsLoad("HararicalTrialBalance")).
+  GridBind -> VoucherReports.HararicalTrialBalance -> SpCoahierarchy_TrialBalance_Rpt @OrganizationId, @CompanyId,
+  [@FromDate], [@ToDate], [@SkipZero=1] (POST /accounts/api/reports-desktop/trial-balance-all-levels).
+  The procedure is slow (30-36 s on the 2026-10-02 log); the desktop shows its WaitForm meanwhile, so does this page.
 -->
-<body class="accf">
-    <div class="win-title-bar">
-        <span><i class="fa fa-sitemap"></i> Trial Balances All Level</span>
-        <a href="/accounts/dashboard"><i class="fa fa-arrow-left"></i> Back to Dashboard</a>
-    </div>
-    <ul class="win-tabs">
-        <li><a href="/accounts/reports/trial-balance">Trial Balance</a></li>
-        <li><a href="/accounts/reports/selected-trial-balance">Trial Balance Selected</a></li>
-        <li class="active"><a>Trial Balances All Level</a></li>
-    </ul>
-    <div class="win-toolbar">
-        <button type="button" class="win-btn" onclick="resetTBL()"><i class="fa fa-plus text-success"></i> Reset</button>
-        <button type="button" class="win-btn" onclick="window.print()" data-rpt-grid="135-AcRptTrialBalancesUpTo5Level.rpt" data-grid="tblTBL"><i class="fa fa-print"></i> 135-Print</button>
-    </div>
-    <div class="win-header-panel"><span>Trial Balances All Level</span></div>
-
-    <div class="filters">
-        <div class="gb">
-            <span class="gb-title">Filters</span>
-            <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-                <span class="lbl">From Date</span><input type="date" class="inp" id="txtFromDate" style="width:130px;">
-                <span class="lbl">To Date</span><input type="date" class="inp" id="txtToDate" style="width:130px;">
-                <span class="lbl">View Options</span>
-                <select class="inp" id="cmbViewOption" style="width:170px;" data-dtcombo="single" data-dtcombo-caption="View Option">
-                    <option value="1">Upto 1st Level</option>
-                    <option value="2">Upto 2nd Level</option>
-                    <option value="3">Upto 3rd Level</option>
-                    <option value="4">Upto 4th Level</option>
-                    <option value="5" selected>Upto All(5) Levels</option>
-                </select>
-                <button type="button" class="win-btn-show" onclick="btnshowClick()"><i class="fa fa-eye"></i> Show</button>
-                <label class="chk"><input type="checkbox" id="ChkFourColumns" checked> Four Columns</label>
-                <label class="chk"><input type="checkbox" id="ChkSixColumns"> Six Columns</label>
-                <label class="chk"><input type="radio" name="rdGroupTBL" id="rdGroupCollapsed"> Collapse</label>
-                <label class="chk"><input type="radio" name="rdGroupTBL" id="rdGroupeExpand" checked> Expand</label>
-                <label class="chk"><input type="checkbox" id="SkipZero"> Skip Zero</label>
-            </div>
+<body>
+<div class="nav-bar"><span>EccountBook</span><a href="/accounts/dashboard"><i class="fa fa-arrow-left"></i> Back to Dashboard</a></div>
+<div class="form-scroll">
+<div class="form">
+    <div class="panel2">
+        <div class="ts" id="toolStrip3">
+            <button type="button" class="ts-btn" id="btnNew" accesskey="r" title="Reset (Alt+R)"><i class="fa fa-plus-circle ico-add"></i><span><u>R</u>eset</span></button>
+            <span style="position:relative; display:inline-block;">
+                <button type="button" class="ts-btn" id="tsDropDown"><i class="fa fa-print ico-print"></i><span>135-Print</span> <i class="fa fa-caret-down" style="font-size:10px;"></i></button>
+                <div class="ts-menu" id="tsDropDownMenu" hidden></div>
+            </span>
         </div>
+        <div class="form-title" id="toolStripLabel1">Trial Balances All Level</div>
     </div>
 
-    <div class="grid-caption"><span>Filtered Records</span></div>
-    <div class="grid-wrap">
-        <table class="wg" id="tblTBL">
-            <thead>
-            <tr>
-                <th style="min-width:320px;">Account Title</th>
-                <th>Account Code</th>
-                <th>Ac Level</th>
-                <th>Account Type</th>
-                <th style="text-align:right;" class="col-four-tbl">Opening</th>
-                <th style="text-align:right;" class="col-six-tbl">Opening Dr</th>
-                <th style="text-align:right;" class="col-six-tbl">Opening Cr</th>
-                <th style="text-align:right;">Debit</th>
-                <th style="text-align:right;">Credit</th>
-                <th style="text-align:right;" class="col-four-tbl">Closing</th>
-                <th style="text-align:right;" class="col-six-tbl">Closing Dr</th>
-                <th style="text-align:right;" class="col-six-tbl">Closing Cr</th>
-            </tr>
-            </thead>
-            <tbody id="tblTBLBody">
-                <tr><td colspan="12" style="text-align:center; padding:16px; color:#666;">Set your filters and click Show.</td></tr>
-            </tbody>
-            <tfoot>
-            <tr>
-                <td colspan="4" style="text-align:right;">Total:</td>
-                <td style="text-align:right;" id="tblTotOpening" class="col-four-tbl">0</td>
-                <td style="text-align:right;" id="tblTotOpeningDr" class="col-six-tbl">0</td>
-                <td style="text-align:right;" id="tblTotOpeningCr" class="col-six-tbl">0</td>
-                <td style="text-align:right;" id="tblTotDebit">0</td>
-                <td style="text-align:right;" id="tblTotCredit">0</td>
-                <td style="text-align:right;" id="tblTotClosing" class="col-four-tbl">0</td>
-                <td style="text-align:right;" id="tblTotClosingDr" class="col-six-tbl">0</td>
-                <td style="text-align:right;" id="tblTotClosingCr" class="col-six-tbl">0</td>
-            </tr>
-            </tfoot>
-        </table>
+    <div class="panel3">
+        <span class="lbl" style="left:7px; top:12px;">From Date</span>
+        <input type="date" id="txtFromDate" style="left:74px; top:8px; width:145px; height:23px;" tabindex="1">
+        <span class="lbl" style="left:7px; top:40px;">To Date</span>
+        <input type="date" id="txtToDate" style="left:74px; top:36px; width:144px; height:23px;" tabindex="2">
+        <span class="lbl" style="left:222px; top:12px;">View Options</span>
+        <select id="cmbViewOption" data-dtcombo="single" data-dtcombo-caption="View Option" style="left:301px; top:6px; width:201px; height:26px;" tabindex="3">
+            <!-- ViewOptionsFill: fixed DataTable rows of the desktop form (Id, Name), ZeroIndex false -->
+            <option value="1">Upto 1st Level</option>
+            <option value="2">Upto 2nd Level</option>
+            <option value="3">Upto 3rd Level</option>
+            <option value="4">Upto 4th Level</option>
+            <option value="5" selected>Upto All(5) Levels</option>
+        </select>
+        <button type="button" id="btnshow" tabindex="4">Show</button>
+        <label class="chk" style="left:508px; top:5px;"><input type="checkbox" id="ChkFourColumns" tabindex="5"> Four Columns</label>
+        <label class="chk" style="left:508px; top:24px;"><input type="checkbox" id="ChkSixColumns" tabindex="6"> Six Columns</label>
+        <label class="chk" style="left:508px; top:43px;"><input type="checkbox" id="SkipZero" tabindex="7"> Skip Zero</label>
+        <label class="chk" style="left:635px; top:5px;"><input type="radio" name="rdGroup" id="rdGroupCollapsed" tabindex="8"> Collapse</label>
+        <label class="chk" style="left:635px; top:24px;"><input type="radio" name="rdGroup" id="rdGroupeExpand" tabindex="9"> Expand</label>
     </div>
 
-    <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
-    <script th:src="@{/build/js/countx_prod_combo.js?v=20260930s}"></script>
-    <script th:src="@{/build/js/countx_acc_rpt_f.js?v=20260930s}"></script>
-    <script th:inline="javascript">
-        /* GridSettings: every amount column and total in clsGlobalVariables.stringFormatboth */
-        function fmt(v) { return AccF.both(v); }
+    <div class="panel4"><span class="cap">Filtered Records</span><span class="status" id="lblStatus"></span></div>
 
-        let rawRows = [];
-        let dtFinal = [];
-        let collapsedSet = new Set();
+    <div class="grid-box">
+        <div class="grid-scroll" id="grdScroll">
+            <table class="jg" id="grdHistory">
+                <thead><tr id="grdHead"></tr></thead>
+                <tbody id="grdBody"></tbody>
+                <tfoot><tr id="grdFoot"></tr></tfoot>
+            </table>
+        </div>
+        <div class="nav" id="grdNav"><span id="navText">Record 0 of 0</span></div>
+        <div class="wait" id="waitForm" hidden><div class="box"><i class="fa fa-spinner fa-spin"></i>Please wait... loading Trial Balances All Level
+            <div class="sub" id="waitSub">0 s</div></div></div>
+    </div>
+</div>
+</div>
 
-        function buildTbRequest() {
-            return {
-                fromDate: $('#txtFromDate').val(),
-                toDate: $('#txtToDate').val(),
-                skipZero: $('#SkipZero').is(':checked')
-            };
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20261002gv}"></script>
+<script th:src="@{/build/js/countx_acc_rpt_f.js?v=20261002gv}"></script>
+<script>
+(function () {
+    'use strict';
+    /* dtFinal of GridBind: the desktop's DataTable, column for column (print 135 hands exactly this table to the .rpt) */
+    var FINAL_COLS = ['RowId', 'ParentId', 'AccountId', 'AccountTitle', 'AccountCode', 'AcLevel', 'AccountClass', 'IsGroupDetail',
+        'Opening', 'OpeningDr', 'OpeningCr', 'Debit', 'Credit', 'Closing', 'ClosingDr', 'ClosingCr',
+        'CurDbGt', 'CurCrGt', 'ObGt', 'ClGt', 'ObDrGt', 'ObCrGt', 'ClDrGt', 'ClCrGt'];
+    var AMOUNTS = ['Opening', 'OpeningDr', 'OpeningCr', 'Debit', 'Credit', 'Closing', 'ClosingDr', 'ClosingCr'];
+
+    var CTX = null, dtFinal = [], children = {}, collapsed = {}, fourCols = true, busy = false;
+    var loadedOnce = false;
+    var shownFrom = '', shownTo = '';
+
+    function ci(r, k) {
+        if (r[k] !== undefined) return r[k];
+        var lk = k.toLowerCase();
+        for (var p in r) if (p.toLowerCase() === lk) return r[p];
+        return null;
+    }
+    function num(v) { var n = parseFloat(v); return isNaN(n) ? 0 : n; }
+    function esc(s) { return AccF.esc(s == null ? '' : s); }
+    function fmt(v) { return AccF.both(v); }      // clsGlobalVariables.stringFormatboth (FormatString + TotalFormatString)
+
+    /* GridBind's per-level parent chain, ditto for View Option 1..5 */
+    function buildFinal(viewOption, rows) {
+        var out = [], rowId = 0, p2 = 0, p3 = 0, p4 = 0, p5 = 0;
+        function add(r, parent) {
+            var o = {};
+            FINAL_COLS.forEach(function (c) { o[c] = c === 'RowId' ? rowId : c === 'ParentId' ? parent : ci(r, c); });
+            out.push(o);
         }
-
-        function buildTree(viewOption, rows) {
-            const out = [];
-            let rowId = 0;
-            let p2 = null, p3 = null, p4 = null, p5 = null;
-            for (const r of rows) {
-                rowId++;
-                const lvl = parseInt(r.AcLevel, 10);
-                const push = (parentId) => out.push(Object.assign({}, r, { RowId: rowId, ParentId: parentId }));
-                if (viewOption === 1) {
-                    if (lvl === 1) { p2 = rowId; push(null); }
-                } else if (viewOption === 2) {
-                    if (lvl === 1) { p2 = rowId; push(null); }
-                    else if (lvl === 2) { p3 = rowId; push(p2); }
-                } else if (viewOption === 3) {
-                    if (lvl === 2) { p3 = rowId; push(null); }
-                    else if (lvl === 3) { p4 = rowId; push(p3); }
-                } else if (viewOption === 4) {
-                    if (lvl === 3) { p4 = rowId; push(null); }
-                    else if (lvl === 4) { p5 = rowId; push(p4); }
-                    else if (lvl === 5) { push(p5); }
-                } else if (viewOption === 5) {
-                    if (lvl === 1) { p2 = rowId; push(null); }
-                    else if (lvl === 2) { p3 = rowId; push(p2); }
-                    else if (lvl === 3) { p4 = rowId; push(p3); }
-                    else if (lvl === 4) { p5 = rowId; push(p4); }
-                    else if (lvl === 5) { push(p5); }
-                }
+        rows.forEach(function (r) {
+            rowId++;
+            var lvl = parseInt(ci(r, 'AcLevel'), 10) || 0;
+            switch (viewOption) {
+                case 1: if (lvl === 1) { p2 = rowId; add(r, null); } break;
+                case 2: if (lvl === 1) { p2 = rowId; add(r, null); } else if (lvl === 2) { p3 = rowId; add(r, p2); } break;
+                case 3: if (lvl === 2) { p3 = rowId; add(r, null); } else if (lvl === 3) { p4 = rowId; add(r, p3); } break;
+                case 4: if (lvl === 3) { p4 = rowId; add(r, null); } else if (lvl === 4) { p5 = rowId; add(r, p4); } else if (lvl === 5) { add(r, p5); } break;
+                case 5: if (lvl === 1) { p2 = rowId; add(r, null); } else if (lvl === 2) { p3 = rowId; add(r, p2); }
+                        else if (lvl === 3) { p4 = rowId; add(r, p3); } else if (lvl === 4) { p5 = rowId; add(r, p4); } else if (lvl === 5) { add(r, p5); } break;
             }
-            return out;
+        });
+        return out;
+    }
+
+    /* grdHistorySetting: visible columns (RetrieveStructure order, captions = column names, IsGroupDetail -> "AccountType");
+       ChkFourColumns ticked -> OpeningDr/Cr + ClosingDr/Cr hidden, otherwise Opening + Closing hidden. Read at GridBind. */
+    function visibleCols() {
+        var cols = [{ k: 'AccountTitle', cap: 'AccountTitle', w: 350 }, { k: 'AccountCode', cap: 'AccountCode', w: 110 },
+                    { k: 'AcLevel', cap: 'AcLevel', w: 60 }, { k: 'IsGroupDetail', cap: 'AccountType', w: 90 }];
+        (fourCols ? ['Opening', 'Debit', 'Credit', 'Closing'] : ['OpeningDr', 'OpeningCr', 'Debit', 'Credit', 'ClosingDr', 'ClosingCr'])
+            .forEach(function (k) { cols.push({ k: k, cap: k, w: 120, n: true }); });
+        return cols;
+    }
+
+    function render() {
+        var cols = visibleCols(), head = '', foot = '', body = [];
+        cols.forEach(function (c) { head += '<th style="width:' + c.w + 'px">' + esc(c.cap) + '</th>'; });
+        $('#grdHead').html(head);
+        if (!dtFinal.length) {
+            $('#grdBody').html(loadedOnce ? '<tr><td class="msg" colspan="' + cols.length + '">No records found for the selected criteria.</td></tr>' : '');
+            $('#grdFoot').html(''); $('#navText').text('Record 0 of 0'); $('#lblStatus').text('');
+            return;
         }
-
-        function normalizeRows(rows) {
-            if (!rows || !rows.length) return [];
-            const sample = rows[0];
-            if (sample.lvl01_Code || sample.lvl1_Code || sample.Lvl01_Code || sample.Lvl1_Code || sample.lvl01_Title || sample.lvl1_Title) {
-                const nodes = new Map();
-                rows.forEach(r => {
-                    const op = parseFloat(r.Opening || r.opening || 0);
-                    const opDr = parseFloat(r.OpeningDr || r.openingDr || 0);
-                    const opCr = parseFloat(r.OpeningCr || r.openingCr || 0);
-                    const deb = parseFloat(r.Debit || r.debit || 0);
-                    const cred = parseFloat(r.Credit || r.credit || 0);
-                    const cls = parseFloat(r.Closing || r.closing || 0);
-                    const clsDr = parseFloat(r.ClosingDr || r.closingDr || 0);
-                    const clsCr = parseFloat(r.ClosingCr || r.closingCr || 0);
-
-                    for (let i = 1; i <= 5; i++) {
-                        const codeKey1 = `lvl0${i}_Code`, titleKey1 = `lvl0${i}_Title`;
-                        const codeKey2 = `lvl${i}_Code`, titleKey2 = `lvl${i}_Title`;
-                        const code = r[codeKey1] || r[codeKey2] || r[`Lvl0${i}_Code`] || r[`Lvl${i}_Code`];
-                        const title = r[titleKey1] || r[titleKey2] || r[`Lvl0${i}_Title`] || r[`Lvl${i}_Title`] || code;
-
-                        if (code && String(code).trim() !== '' && String(code).trim() !== '0') {
-                            const cStr = String(code).trim();
-                            if (!nodes.has(cStr)) {
-                                nodes.set(cStr, {
-                                    AccountCode: cStr,
-                                    AccountTitle: String(title).trim(),
-                                    AcLevel: i,
-                                    IsGroupDetail: i >= 4 ? 'Detail' : 'Group',
-                                    Opening: 0, OpeningDr: 0, OpeningCr: 0,
-                                    Debit: 0, Credit: 0,
-                                    Closing: 0, ClosingDr: 0, ClosingCr: 0
-                                });
-                            }
-                            const n = nodes.get(cStr);
-                            n.Opening += op; n.OpeningDr += opDr; n.OpeningCr += opCr;
-                            n.Debit += deb; n.Credit += cred;
-                            n.Closing += cls; n.ClosingDr += clsDr; n.ClosingCr += clsCr;
-                        }
-                    }
-                });
-                const res = Array.from(nodes.values());
-                res.sort((a, b) => a.AccountCode.localeCompare(b.AccountCode));
-                return res;
-            }
-            return rows;
-        }
-
-        function btnshowClick() {
-            $('#tblTBLBody').html('<tr><td colspan="12" style="text-align:center; padding:16px; color:#666;"><i class="fa fa-spinner fa-spin"></i> Loading Trial Balances All Level...</td></tr>');
-            $.ajax({
-                url: '/accounts/api/reports-desktop/trial-balance-all-levels',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(buildTbRequest()),
-                success: function (res) {
-                    if (res && res.success) {
-                        rawRows = res.data || [];
-                        collapsedSet = new Set();
-                        rebuildAndRender();
-                    } else {
-                        rawRows = []; dtFinal = [];
-                        $('#tblTBLBody').html('<tr><td colspan="12" style="text-align:center; color:red; padding:16px;">' + (res.message || 'Error loading Trial Balances All Level.') + '</td></tr>');
-                    }
-                },
-                error: function (xhr) {
-                    rawRows = []; dtFinal = [];
-                    $('#tblTBLBody').html('<tr><td colspan="12" style="text-align:center; color:red; padding:16px;"></td></tr>');
-                    $('#tblTBLBody td').text((xhr && xhr.responseJSON && xhr.responseJSON.message) || 'Error executing Trial Balances All Level report.');
-                }
+        var byId = {}, depth = {};
+        dtFinal.forEach(function (r) { byId[r.RowId] = r; });
+        var tot = {}, shown = 0;
+        AMOUNTS.forEach(function (k) { tot[k] = 0; });
+        dtFinal.forEach(function (r) {
+            var d = 0, p = r.ParentId, hidden = false;
+            while (p != null && byId[p]) { if (collapsed[p]) hidden = true; d++; p = byId[p].ParentId; }
+            if (r.ParentId == null) AMOUNTS.forEach(function (k) { tot[k] += num(r[k]); });   // total row: root records (self-referencing aggregation)
+            if (hidden) return;
+            shown++;
+            var kids = children[r.RowId] && children[r.RowId].length;
+            var tr = '<tr data-row="' + r.RowId + '"' + (r.IsGroupDetail === 'Group' ? ' class="grp"' : '') + '>';
+            cols.forEach(function (c) {
+                var v = r[c.k];
+                if (c.k === 'AccountTitle') {
+                    tr += '<td style="padding-left:' + (4 + d * 16) + 'px"><span class="tt' + (kids ? '' : ' leaf') + '" data-row="' + r.RowId + '">'
+                        + (collapsed[r.RowId] ? '+' : '&minus;') + '</span><a class="lnk" data-link="' + r.RowId + '">' + esc(v) + '</a></td>';
+                } else if (c.n) tr += '<td class="n">' + fmt(v) + '</td>';
+                else tr += '<td>' + esc(v) + '</td>';
             });
-        }
-
-        function applyColumnModeTBL() {
-            const six = $('#ChkSixColumns').is(':checked');
-            $('.col-six-tbl').toggle(six);
-            $('.col-four-tbl').toggle(!six);
-        }
-
-        $('#ChkFourColumns').on('change', function () {
-            if ($(this).is(':checked')) { $('#ChkSixColumns').prop('checked', false); }
-            else { $(this).prop('checked', false); }
-            applyColumnModeTBL();
+            body.push(tr + '</tr>');
         });
-        $('#ChkSixColumns').on('change', function () {
-            if ($(this).is(':checked')) { $('#ChkFourColumns').prop('checked', false); }
-            else { $(this).prop('checked', false); }
-            applyColumnModeTBL();
-        });
+        $('#grdBody').html(body.join(''));
+        cols.forEach(function (c, i) { foot += c.n ? '<td class="n">' + fmt(tot[c.k]) + '</td>' : '<td>' + (i === 0 ? 'Total' : '') + '</td>'; });
+        $('#grdFoot').html(foot);
+        $('#navText').text('Record ' + (shown ? 1 : 0) + ' of ' + shown);
+        $('#lblStatus').text(dtFinal.length + ' rows');
+    }
 
-        $('#rdGroupCollapsed').on('change', function () {
-            if ($(this).is(':checked')) { collapseAll(); }
-        });
-        $('#rdGroupeExpand').on('change', function () {
-            if ($(this).is(':checked')) { expandAll(); }
-        });
+    function collapseAll() { collapsed = {}; Object.keys(children).forEach(function (k) { if (children[k].length) collapsed[k] = true; }); render(); }
+    function expandAll() { collapsed = {}; render(); }
 
-        function collapseAll() {
-            collapsedSet = new Set(dtFinal.filter(r => hasChildren(r.RowId)).map(r => r.RowId));
-            renderTree();
+    var waitTimer = null;
+    function wait(on) {
+        clearInterval(waitTimer);
+        $('#waitForm').prop('hidden', !on);
+        if (on) {
+            var t0 = Date.now();
+            $('#waitSub').text('0 s');
+            waitTimer = setInterval(function () {
+                var s = Math.round((Date.now() - t0) / 1000);
+                $('#waitSub').text(s + ' s' + (s >= 10 ? ' - this report reads every voucher of the period and can take more than 30 s' : ''));
+            }, 1000);
         }
-        function expandAll() {
-            collapsedSet = new Set();
-            renderTree();
-        }
+    }
 
-        function hasChildren(rowId) {
-            return dtFinal.some(r => r.ParentId === rowId);
-        }
+    /* GridBind */
+    function gridBind() {
+        if (busy) return Promise.resolve();
+        busy = true;
+        $('#btnshow, #btnNew').prop('disabled', true);
+        wait(true);
+        var from = $('#txtFromDate').val(), to = $('#txtToDate').val();
+        return AccF.post('/trial-balance-all-levels', { fromDate: from, toDate: to, skipZero: $('#SkipZero').is(':checked') })
+            .then(function (rows) {
+                rows = rows || [];
+                fourCols = $('#ChkFourColumns').is(':checked');
+                shownFrom = from; shownTo = to;
+                loadedOnce = true;
+                if (!rows.length) { dtFinal = []; children = {}; collapsed = {}; render(); return; }   // grdHistory.ClearStructure()
+                dtFinal = buildFinal(parseInt($('#cmbViewOption').val(), 10) || 0, rows);
+                children = {};
+                dtFinal.forEach(function (r) { if (r.ParentId != null) (children[r.ParentId] = children[r.ParentId] || []).push(r.RowId); });
+                if ($('#rdGroupCollapsed').is(':checked')) collapseAll(); else expandAll();
+            })
+            .catch(function (e) { alert(e.message); })
+            .then(function () { busy = false; wait(false); $('#btnshow, #btnNew').prop('disabled', false); });
+    }
 
-        function rebuildAndRender() {
-            const viewOption = parseInt($('#cmbViewOption').val(), 10) || 5;
-            dtFinal = buildTree(viewOption, rawRows);
-            if ($('#rdGroupCollapsed').is(':checked')) {
-                collapsedSet = new Set(dtFinal.filter(r => hasChildren(r.RowId)).map(r => r.RowId));
-            } else {
-                collapsedSet = new Set();
-            }
-            renderTree();
-        }
+    /* btnshow_Click */
+    $('#btnshow').on('click', gridBind);
 
-        function depthOf(row, byId) {
-            let d = 0, cur = row;
-            while (cur.ParentId !== null && cur.ParentId !== undefined) {
-                cur = byId.get(cur.ParentId);
-                if (!cur) break;
-                d++;
-            }
-            return d;
-        }
+    /* btnNew_Click (&Reset): cmbViewOption Rows[0], txtFromDate = ActiveYr.Start_Period, txtToDate = now, GridBind */
+    $('#btnNew').on('click', function () {
+        $('#cmbViewOption').val('1').trigger('change');
+        $('#txtFromDate').val((CTX && CTX.activeYear && CTX.activeYear.startPeriod) || AccF.today());
+        $('#txtToDate').val(AccF.today());
+        gridBind();
+    });
 
-        function isVisible(row, byId) {
-            let cur = byId.get(row.ParentId);
-            while (cur) {
-                if (collapsedSet.has(cur.RowId)) return false;
-                cur = byId.get(cur.ParentId);
-            }
-            return true;
-        }
+    /* ChkFourColumns_CheckedChanged / ChkSixColumns_CheckedChanged: ticking one clears the other (the grid follows at the next GridBind) */
+    $('#ChkFourColumns').on('change', function () { if (this.checked) $('#ChkSixColumns').prop('checked', false); });
+    $('#ChkSixColumns').on('change', function () { if (this.checked) $('#ChkFourColumns').prop('checked', false); });
 
-        function renderTree() {
-            applyColumnModeTBL();
-            const tbody = $('#tblTBLBody');
-            tbody.empty();
-            if (!dtFinal || dtFinal.length === 0) {
-                tbody.html('<tr><td colspan="12" style="text-align:center; padding:16px; color:#666;">No records found for the selected criteria.</td></tr>');
-                ['tblTotOpening','tblTotOpeningDr','tblTotOpeningCr','tblTotDebit','tblTotCredit','tblTotClosing','tblTotClosingDr','tblTotClosingCr'].forEach(id => $('#' + id).text('0'));
-                return;
-            }
-            let totOpening = 0, totOpeningDr = 0, totOpeningCr = 0, totDebit = 0, totCredit = 0, totClosing = 0, totClosingDr = 0, totClosingCr = 0;
-            const byId = new Map(dtFinal.map(r => [r.RowId, r]));
+    /* rdGroupCollapsed_CheckedChanged / rdGroupeExpand_CheckedChanged */
+    $('#rdGroupCollapsed').on('change', function () { if (this.checked) collapseAll(); });
+    $('#rdGroupeExpand').on('change', function () { if (this.checked) expandAll(); });
 
-            dtFinal.forEach(r => {
-                if (r.ParentId === null || r.ParentId === undefined) {
-                    totOpening += parseFloat(r.Opening || 0);
-                    totOpeningDr += parseFloat(r.OpeningDr || 0);
-                    totOpeningCr += parseFloat(r.OpeningCr || 0);
-                    totDebit += parseFloat(r.Debit || 0);
-                    totCredit += parseFloat(r.Credit || 0);
-                    totClosing += parseFloat(r.Closing || 0);
-                    totClosingDr += parseFloat(r.ClosingDr || 0);
-                    totClosingCr += parseFloat(r.ClosingCr || 0);
-                }
+    /* the Janus self-referencing expand/collapse glyph on AccountTitle */
+    $('#grdBody').on('click', '.tt:not(.leaf)', function (e) {
+        e.stopPropagation();
+        var id = $(this).data('row');
+        if (collapsed[id]) delete collapsed[id]; else collapsed[id] = true;
+        render();
+    });
 
-                if (!isVisible(r, byId)) return;
-                const depth = depthOf(r, byId);
-                const children = hasChildren(r.RowId);
-                const collapsed = collapsedSet.has(r.RowId);
-                const toggleHtml = children
-                    ? '<span class="tree-toggle" data-row-id="' + r.RowId + '">' + (collapsed ? '+' : '−') + '</span>'
-                    : '<span class="tree-toggle leaf">−</span>';
-                const isGroup = (r.IsGroupDetail === 'Group');
-                const opening = parseFloat(r.Opening || 0), openingDr = parseFloat(r.OpeningDr || 0), openingCr = parseFloat(r.OpeningCr || 0);
-                const debit = parseFloat(r.Debit || 0), credit = parseFloat(r.Credit || 0);
-                const closing = parseFloat(r.Closing || 0), closingDr = parseFloat(r.ClosingDr || 0), closingCr = parseFloat(r.ClosingCr || 0);
-                tbody.append(`
-                    <tr class="${isGroup ? 'row-group' : ''}">
-                        <td style="padding-left:${8 + depth * 18}px;">${toggleHtml} ${$('<div>').text(r.AccountTitle || '').html()}</td>
-                        <td>${$('<div>').text(r.AccountCode || '').html()}</td>
-                        <td>${r.AcLevel != null ? r.AcLevel : ''}</td>
-                        <td>${$('<div>').text(r.IsGroupDetail || '').html()}</td>
-                        <td style="text-align:right;" class="col-four-tbl">${fmt(opening)}</td>
-                        <td style="text-align:right;" class="col-six-tbl">${fmt(openingDr)}</td>
-                        <td style="text-align:right;" class="col-six-tbl">${fmt(openingCr)}</td>
-                        <td style="text-align:right;">${fmt(debit)}</td>
-                        <td style="text-align:right;">${fmt(credit)}</td>
-                        <td style="text-align:right;" class="col-four-tbl">${fmt(closing)}</td>
-                        <td style="text-align:right;" class="col-six-tbl">${fmt(closingDr)}</td>
-                        <td style="text-align:right;" class="col-six-tbl">${fmt(closingCr)}</td>
-                    </tr>
-                `);
-            });
+    /* grdHistory_LinkClicked: Group -> SelectedTrialBalance (FromDate, ToDate, GroupId); Detail -> General Ledger */
+    $('#grdBody').on('click', 'a.lnk', function () {
+        var id = $(this).data('link'), r = null;
+        for (var i = 0; i < dtFinal.length; i++) if (dtFinal[i].RowId === id) { r = dtFinal[i]; break; }
+        if (!r) return;
+        var from = $('#txtFromDate').val(), to = $('#txtToDate').val();
+        if (String(r.IsGroupDetail) === 'Group') {
+            var q = new URLSearchParams({ fromDate: from, toDate: to, groupAccountId: r.AccountId });
+            window.open('/accounts/reports/selected-trial-balance?' + q.toString(), '_blank');
+        } else AccF.openLedger(r.AccountId, from, to);
+    });
 
-            $('#tblTotOpening').text(fmt(totOpening));
-            $('#tblTotOpeningDr').text(fmt(totOpeningDr));
-            $('#tblTotOpeningCr').text(fmt(totOpeningCr));
-            $('#tblTotDebit').text(fmt(totDebit));
-            $('#tblTotCredit').text(fmt(totCredit));
-            $('#tblTotClosing').text(fmt(totClosing));
-            $('#tblTotClosingDr').text(fmt(totClosingDr));
-            $('#tblTotClosingCr').text(fmt(totClosingCr));
-            applyColumnModeTBL();
-        }
+    /* tsDropDown (135-Print): items = DynamicReportsLoad("HararicalTrialBalance"); a click prints dtFinal into
+       <item>.rpt with CompanyName / CompanyAddress, or "Record Not Found For Display". */
+    var menuLoaded = false;
+    function loadMenu() {
+        return AccF.get('/tb-family/dynamic-reports?folder=' + encodeURIComponent('HararicalTrialBalance')).then(function (items) {
+            var $m = $('#tsDropDownMenu').empty();
+            (items || []).forEach(function (n) { $('<div>').text(n).attr('data-rpt-item', n).appendTo($m); });
+            if (!items || !items.length) $('<div class="none">').text('No .rpt in the HararicalTrialBalance report folder').appendTo($m);
+            menuLoaded = true;
+        }).catch(function () { menuLoaded = false; });
+    }
+    $('#tsDropDown').on('click', function (e) {
+        e.stopPropagation();
+        var $m = $('#tsDropDownMenu'), open = $m.prop('hidden');
+        $m.prop('hidden', !open); $(this).toggleClass('open', open);
+        if (open && !menuLoaded) loadMenu();
+    });
+    $(document).on('click', function () { $('#tsDropDownMenu').prop('hidden', true); $('#tsDropDown').removeClass('open'); });
+    $('#tsDropDownMenu').on('click', '[data-rpt-item]', function () {
+        var item = $(this).attr('data-rpt-item');
+        $('#tsDropDownMenu').prop('hidden', true); $('#tsDropDown').removeClass('open');
+        if (!dtFinal.length) { alert('Record Not Found For Display'); return; }
+        var rows = dtFinal.map(function (r) { var o = {}; FINAL_COLS.forEach(function (c) { o[c] = r[c]; }); return o; });
+        var btn = $('#tsDropDown').prop('disabled', true);
+        var win = window.open('about:blank', '_blank');
+        fetch('/reports/print/grid', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rpt: item + '.rpt', title: item, rows: rows }) })
+            .then(function (r) {
+                var type = r.headers.get('Content-Type') || '';
+                if (r.ok && type.indexOf('application/pdf') === 0) return r.blob().then(function (b) { win.location = URL.createObjectURL(b); });
+                return r.text().then(function (t) { try { win.close(); } catch (x) { } alert(t || ('Print failed (' + r.status + ')')); });
+            })
+            .catch(function (e) { try { win.close(); } catch (x) { } alert(e.message); })
+            .then(function () { btn.prop('disabled', false); });
+    });
 
-        $('#tblTBLBody').on('click', '.tree-toggle:not(.leaf)', function () {
-            const rowId = parseInt($(this).data('row-id'), 10);
-            if (collapsedSet.has(rowId)) collapsedSet.delete(rowId);
-            else collapsedSet.add(rowId);
-            renderTree();
-        });
-
-
-
-        let TBL_CTX = null;
-        function resetTBL() {
-            $('#cmbViewOption').val('1').trigger('change');
-            $('#txtFromDate').val((TBL_CTX && TBL_CTX.activeYear.startPeriod) || AccF.today());
-            $('#txtToDate').val(AccF.today());
-            btnshowClick();
-        }
-
-        $(function () { (async function () {
-            $('#txtToDate').val(AccF.today());
-            applyColumnModeTBL();
-            try { TBL_CTX = await AccF.context(); } catch (e) { alert(e.message); }
-            $('#txtFromDate').val((TBL_CTX && TBL_CTX.activeYear.startPeriod) || AccF.today());
-            btnshowClick();
-        })(); });
-    </script>
-<script src="/js/print-rpt.js?v=20261001a"></script>
+    /* frmTrialBalancesAllLevel_Load */
+    $(function () { (async function () {
+        $('#ChkFourColumns').prop('checked', true);
+        $('#cmbViewOption').val('5').trigger('change');            // Rows[4].Activate()
+        $('#txtToDate').val(AccF.today());
+        try { CTX = await AccF.context(); } catch (e) { alert(e.message); }
+        $('#txtFromDate').val((CTX && CTX.activeYear && CTX.activeYear.startPeriod) || AccF.today());
+        $('#rdGroupeExpand').prop('checked', true);
+        render();
+        gridBind();
+        loadMenu();
+    })(); });
+})();
+</script>
 </body>
 </html>

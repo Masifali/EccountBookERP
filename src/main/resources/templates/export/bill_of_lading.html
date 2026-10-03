@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Bill Of Lading - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_f.css?v=20261001a}"/>
+</head>
+<!-- EximBillOfLading.cs (Architecture.WinApp.Export), screen 213 "Export Bill Of Lading", ClientSize 964 x 401, AutoScrollMinSize 1000 x 700.
+     tabControl1: tabPage1 "Form" | tabPage2 "History".
+     Form: panel2 (teal) "Bill Of Lading"; toolStrip1 New / Refresh / Save / Update(hidden) / Attachment / 505-Print / ShortCut Keys.
+       groupBox1 "Main Information": Invoice No#* (cmbInvoiceNo), Booking No*, Booking Date, B/L Number*, B/L Date, Vessel Name,
+       Voyage No*, Freight Type* (fixed: 2 Freight PrePaid [default], 1 Freight Collect), Carier Type* (fixed: 1 By Sea [default], 2 By Air,
+       3 By Road), To The Order (banks, Home Country), To The Order Desc, Notify Party, Party Comments, Importer (read-only combo),
+       Importer Comments, Fob Value, Goods Description, Remarks (RichTextBox); Company / Branch / Project combos hidden.
+       groupBox2 "Other" (Enabled = false): E-Form #, E-Form Date, E-Form Value, Contract No (cmblccontract), Fcy Code (cmbcurrencycode),
+       Delivery Terms, Gross Weight, Net Weight Kgs, No Of Container - filled by cmbInvoiceNo_Leave, never saved.
+     History: toolStrip3 New / Refresh; groupBox5 "Filters": From Date, To Date (checkable), Doc Date / Entry Date / Modify Date radios,
+       Invoice # (CmbInvoicenoHistory), Show; panel8 "Filtered Records" + ctrlGrdBar2; DataGridHistory with Print / Edit buttons,
+       NoOfAttachments link; double-click = ReadById. -->
+<body class="pd-body" data-export-page="bill-of-lading">
+<div class="pd-form ex-form">
+    <div class="win-tabs" data-tabs="main">
+        <button type="button" class="win-tab is-active" data-tab="tabPage1">Form</button>
+        <button type="button" class="win-tab" data-tab="tabHistory">History</button>
+    </div>
+
+    <div class="win-tab-panel is-active" id="tabPage1">
+        <div class="pd-caption pd-caption-teal">Bill Of Lading</div>
+        <div class="win-tool-strip">
+            <button type="button" id="btnnew" class="win-btn-tool" onclick="ExportBL.formReset()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="BtnRefresh" class="win-btn-tool" onclick="ExportBL.refresh(this)"><i class="fa fa-refresh"></i> <span><u>R</u>efresh</span></button>
+            <button type="button" id="btnsave" class="win-btn-tool" onclick="ExportBL.save(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+            <button type="button" id="btnUpdate" class="win-btn-tool is-hidden" onclick="ExportBL.update(this)"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+            <button type="button" id="btnAttachment" class="win-btn-tool" onclick="ExportBL.attachment()"><i class="fa fa-paperclip"></i> <span><u>A</u>ttachment</span></button>
+            <button type="button" id="Print" class="win-btn-tool" onclick="ExportBL.print()"><i class="fa fa-print"></i> <span>505-Print</span></button>
+            <button type="button" id="BtnShortCutkeys" class="win-btn-tool" onclick="ExportBL.shortcuts()"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+        </div>
+        <fieldset class="ex-groupbox" id="groupBox1"><legend>Main Information</legend>
+            <div class="ex-entry exf-bl-entry">
+                <div class="ex-field"><label for="cmbInvoiceNo">Invoice No# <span class="exf-req">*</span></label>
+                    <select id="cmbInvoiceNo" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Invoice No"></select></div>
+                <div class="ex-field"><label for="txtBookingNo">Booking No <span class="exf-req">*</span></label><input type="text" id="txtBookingNo" class="win-textbox" autocomplete="off"/></div>
+                <div class="ex-field"><label for="txtBookingDate">Booking Date</label><input type="date" id="txtBookingDate" class="win-date"/></div>
+                <div class="ex-field"><label for="txtBLNumber">B/L Number <span class="exf-req">*</span></label><input type="text" id="txtBLNumber" class="win-textbox" autocomplete="off"/></div>
+                <div class="ex-field"><label for="txtBLDate">B/L Date</label><input type="date" id="txtBLDate" class="win-date"/></div>
+                <div class="ex-field"><label for="txtVesselName">Vessel Name</label><input type="text" id="txtVesselName" class="win-textbox" autocomplete="off"/></div>
+                <div class="ex-field"><label for="txtVoyageNo">Voyage No <span class="exf-req">*</span></label><input type="text" id="txtVoyageNo" class="win-textbox" autocomplete="off"/></div>
+                <div class="ex-field"><label for="cmbFreight">Freight Type <span class="exf-req">*</span></label>
+                    <select id="cmbFreight" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Freight Type">
+                        <option value="0"></option><option value="2" selected>Freight PrePaid</option><option value="1">Freight Collect</option></select></div>
+                <div class="ex-field"><label for="cmbcarier">Carier Type <span class="exf-req">*</span></label>
+                    <select id="cmbcarier" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Carier Type">
+                        <option value="0"></option><option value="1" selected>By Sea</option><option value="2">By Air</option><option value="3">By Road</option></select></div>
+                <div class="ex-field"><label for="cmbTotheOrder">To The Order</label>
+                    <select id="cmbTotheOrder" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="To The Order"></select></div>
+                <div class="ex-field exf-span2"><label for="txtTotheOrder">To The Order Desc</label><input type="text" id="txtTotheOrder" class="win-textbox" autocomplete="off"/></div>
+                <div class="ex-field"><label for="cmbNotifyParty">Notify Party</label>
+                    <select id="cmbNotifyParty" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Notify party"></select></div>
+                <div class="ex-field exf-span3"><label for="txtNotifyParty">Party Comments</label><input type="text" id="txtNotifyParty" class="win-textbox" autocomplete="off"/></div>
+                <div class="ex-field"><label for="cmbImporter">Importer</label>
+                    <select id="cmbImporter" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Importer" disabled></select></div>
+                <div class="ex-field exf-span3"><label for="txtImporter">Importer Comments</label><input type="text" id="txtImporter" class="win-textbox" autocomplete="off"/></div>
+                <div class="ex-field"><label for="txtFOBValue">Fob Value</label><input type="text" id="txtFOBValue" class="win-textbox num" data-guard="decimal" autocomplete="off"/></div>
+                <div class="ex-field exf-span3"><label for="txtGoodsDesc">Goods Description</label><input type="text" id="txtGoodsDesc" class="win-textbox" autocomplete="off"/></div>
+                <div class="ex-field exf-span-all"><label for="txtRemarks">Remarks</label><textarea id="txtRemarks" class="win-textbox exf-remarks"></textarea></div>
+            </div>
+        </fieldset>
+        <fieldset class="ex-groupbox exf-readonly-group" id="groupBox2" disabled><legend>Other</legend>
+            <div class="ex-entry exf-bl-entry">
+                <div class="ex-field"><label for="txtEformNo">E-Form #</label><input type="text" id="txtEformNo" class="win-textbox"/></div>
+                <div class="ex-field"><label for="txtEformDate">E-Form Date</label><input type="date" id="txtEformDate" class="win-date"/></div>
+                <div class="ex-field"><label for="txtEformValue">E-Form Value</label><input type="text" id="txtEformValue" class="win-textbox num"/></div>
+                <div class="ex-field"><label for="cmblccontract">Contract No</label><select id="cmblccontract" class="win-combo"></select></div>
+                <div class="ex-field"><label for="cmbcurrencycode">Fcy Code</label><select id="cmbcurrencycode" class="win-combo"></select></div>
+                <div class="ex-field"><label for="txtdeliveryterm">Delivery Terms</label><input type="text" id="txtdeliveryterm" class="win-textbox"/></div>
+                <div class="ex-field"><label for="txtGrossWeight">Gross Weight</label><input type="text" id="txtGrossWeight" class="win-textbox num"/></div>
+                <div class="ex-field"><label for="txtNetWeight">Net Weight Kgs</label><input type="text" id="txtNetWeight" class="win-textbox num"/></div>
+                <div class="ex-field"><label for="txtNoOfContainer">No Of Container</label><input type="text" id="txtNoOfContainer" class="win-textbox num"/></div>
+            </div>
+        </fieldset>
+        <div class="win-footer-strip">
+            <span class="ex-footer-left" id="blFooterInfo"></span>
+            <button type="button" class="win-btn-history" id="btnBlFooterHistory" onclick="ExportBL.toggleHistory()"><i class="fa fa-history"></i> <span>History</span></button>
+        </div>
+    </div>
+
+    <div class="win-tab-panel" id="tabHistory">
+        <div class="pd-caption pd-caption-teal">Bill Of Lading History</div>
+        <div class="win-tool-strip">
+            <button type="button" id="btnResetHistory" class="win-btn-tool" onclick="ExportBL.historyReset()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="btnRefreshHistory" class="win-btn-tool" onclick="ExportBL.historyRefresh(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+        </div>
+        <fieldset class="ex-groupbox" id="groupBox5"><legend>Filters</legend>
+            <div class="ex-filter">
+                <div class="ex-field" style="width:180px;"><label for="FromDateHistory">From Date</label>
+                    <span class="ex-check"><input type="checkbox" id="FromDateHistoryChk" checked/><input type="date" id="FromDateHistory" class="win-date" style="flex:1;"/></span></div>
+                <div class="ex-field" style="width:180px;"><label for="ToDateHistory">To Date</label>
+                    <span class="ex-check"><input type="checkbox" id="ToDateHistoryChk" checked/><input type="date" id="ToDateHistory" class="win-date" style="flex:1;"/></span></div>
+                <div class="ex-radios ex-radios-row">
+                    <label class="ex-check"><input type="radio" name="dateBy" id="drdocdate" value="doc" checked/> Doc Date</label>
+                    <label class="ex-check"><input type="radio" name="dateBy" id="rdentrydate" value="entry"/> Entry Date</label>
+                    <label class="ex-check"><input type="radio" name="dateBy" id="rdmodifydate" value="modify"/> Modify Date</label>
+                </div>
+                <div class="ex-field" style="width:260px;"><label for="CmbInvoicenoHistory">Invoice #</label>
+                    <select id="CmbInvoicenoHistory" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Invoice No"></select></div>
+                <div class="ex-field"><label>&nbsp;</label><button type="button" id="btnShowHistory" class="win-btn-small" style="width:60px;" onclick="ExportBL.historyShow(this)">Show</button></div>
+            </div>
+        </fieldset>
+        <div class="pd-caption pd-caption-dark pd-history-bar"><span>Filtered Records</span>
+            <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="DataGridHistoryBox" title="Fullscreen table">&#x26F6;</button><span id="gridBarMountH" class="pd-gridbar-mount"></span></span></div>
+        <div class="ex-grid-box" id="DataGridHistoryBox">
+            <div class="ex-grid-scroll ex-h400">
+                <table class="win-grid" id="DataGridHistory" data-gridbar="EximBillOfLading:DataGridHistory" data-gridbar-mount="#gridBarMountH" data-gridbar-reorder="false">
+                    <thead><tr>
+                        <th class="exf-col-btn">Print</th><th class="exf-col-btn">Edit</th>
+                        <th data-col="InvoiceNo">Invoice No</th><th data-col="BookingNo">Booking No</th><th data-col="BookingDate">Booking Date</th>
+                        <th data-col="BLNumber">BL Number</th><th data-col="BLDate">BL Date</th><th data-col="VesselNo">Vessel No</th><th data-col="VoyageNo">Voyage No</th>
+                        <th data-col="FrieghtType">Frieght Type</th><th data-col="CarierType">Carier Type</th><th class="num" data-col="FobValue">Fob Value</th>
+                        <th data-col="EntryDate">Entry Date</th><th data-col="EntryUser">Entry User</th><th data-col="ModifyDate">Modify Date</th><th data-col="ModifyUser">Modify User</th>
+                        <th class="num" data-col="NoOfAttachments">No Of Attachments</th>
+                    </tr></thead>
+                    <tbody id="histBody"></tbody>
+                </table>
+            </div>
+            <div class="ex-grid-empty is-hidden" id="histEmpty">No record found.</div>
+        </div>
+        <div class="win-footer-strip">
+            <span class="ex-footer-left"></span>
+            <button type="button" class="win-btn-history" id="btnBlFooterHistory2" onclick="ExportBL.toggleHistory()"><i class="fa fa-file-text-o"></i> <span>Form</span></button>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_export_f_common.js?v=20261001a}"></script>
+<script th:src="@{/build/js/countx_export_bill_of_lading.js?v=20261001a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

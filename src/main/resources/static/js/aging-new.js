@@ -37,11 +37,14 @@
             if (c.destroy) c.destroy();
             c.wrap.remove();
             select.classList.remove('dtcombo-native'); select.removeAttribute('aria-hidden'); select.removeAttribute('tabindex');
-            delete select.value; delete select.selectedIndex; delete select.__dtcombo;
+            delete select.value; delete select.selectedIndex; delete select.__dtcombo; delete select.__dtcomboHooked;
             const list = window.DesktopCombo && window.DesktopCombo.instances, i = list ? list.indexOf(c) : -1;
             if (i >= 0) list.splice(i, 1);
         }
         select.multiple = true;
+        /* 2026-10-02: re-enhanced as the desktop's CHECKED combo (countx_prod_combo.js checked mode) */
+        select.setAttribute('data-dtcombo', 'single'); select.setAttribute('data-dtcombo-checked', '');
+        if (window.DesktopCombo) window.DesktopCombo.enhance(select);
     }
     function controlIds() { return [$('#control').val() || []].flat().filter(Boolean).map(Number); }
     /* AccountFillFromGlobal: AllAccountsWithCustomGroupId where AccountTypeId==3 && AccountClass==class,

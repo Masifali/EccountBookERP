@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Packing Detail By Export Contract - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_g.css?v=20261001a}"/>
+</head>
+<!-- frmExportSalesContractPmDetail.cs (Architecture.WinApp.Export), screen 240 "Packing Detail By Export Contract",
+     ClientSize 1234 x 711; the Packing Material grid of an existing Export Contract (DocumentTypeId 202).
+     tabControl1: "Form" | "History".
+     Form: toolstrip New / Refresh / Update / 501-Print / Load Contract / ShortCut Keys; "Packing Detail By Sales Contract ", Preview;
+       groupBox1 "Main": Sales Contract No (CmbSalesContractNo = GetLcOrderNo; Leave -> ReadById, "Grid already have Records..." confirm);
+       tabControl2 "Packing Material Detail": Brand (Name/Code radios; the contract detail grouped by item / packing type / pack uom),
+         Brand Uom, Brand Packing Type, Brand Outer / Inner Qty, PM Item (Name/Code), PM Item Uom, PM Outer / Inner Qty, Item Rate,
+         Amount, Remarks; + / Update / Cancel; grdPackingMaterialDetail (X). ReadById runs AutoFillGridFromMapping (ItemAndPMItemMap).
+     History: toolStrip3 New / Refresh; "Export Sales Contract History For Packing Detail"; groupBox5 "Filters" (From / To Date,
+       From / To Doc No, Customer, Doc / Entry / Modify / Approved(hidden) Date radios, Show); DataGridHistory (Print / Edit / Print523);
+       "Packing Material Detail of the selected above row" grdPMHistory. -->
+<body class="pd-body" data-export-page="pd">
+<div class="pd-form ex-form">
+    <div class="win-tabs" data-tabs="pd">
+        <button type="button" class="win-tab is-active" data-tab="pdForm">Form</button>
+        <button type="button" class="win-tab" data-tab="pdHistory">History</button>
+    </div>
+
+    <div class="win-tab-panel is-active" id="pdForm">
+        <div class="win-tool-strip">
+            <button type="button" id="btnnew" class="win-btn-tool" onclick="ExportContractPmDetail.btnNew()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="BtnRefresh" class="win-btn-tool" onclick="ExportContractPmDetail.btnRefresh(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+            <button type="button" id="btnUpdate" class="win-btn-tool" onclick="ExportContractPmDetail.btnUpdate(this)"><i class="fa fa-save"></i> <span>Update</span></button>
+            <button type="button" id="Print" class="win-btn-tool" onclick="ExportContractPmDetail.print501(this)"><i class="fa fa-print"></i> <span>501-Print</span></button>
+            <button type="button" id="BtnLoadContract" class="win-btn-tool" onclick="ExportContractPmDetail.loadContract()"><i class="fa fa-folder-open"></i> <span>Load Contract</span></button>
+            <button type="button" id="btnShortCutKey" class="win-btn-tool" onclick="ExportContractPmDetail.shortcuts()"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+        </div>
+        <div class="exg-head">
+            <span class="pd-title" id="label66">Packing Detail By Sales Contract</span>
+            <label class="ex-check"><input type="checkbox" id="ChkPreview"/> Preview</label>
+            <span class="exg-status" id="pdStatusInfo"></span>
+        </div>
+        <fieldset class="ex-groupbox" id="groupBox1">
+            <legend>Main</legend>
+            <div class="exg-grid exg-grid-4">
+                <div class="ex-field exg-span-2"><label class="ex-req" for="CmbSalesContractNo">Sales Contract No</label><select id="CmbSalesContractNo" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="ex-field"><label>Customer</label><input type="text" id="pdPartyName" class="win-textbox" readonly/></div>
+                <div class="ex-field"><label>Contract M.Ton / Containers</label><input type="text" id="pdContractInfo" class="win-textbox" readonly/></div>
+            </div>
+        </fieldset>
+
+        <div class="win-tabs exg-sub-tabs" data-tabs="pd2">
+            <button type="button" class="win-tab is-active" data-tab="tabPackingMaterialDetail">Packing Material Detail</button>
+            <button type="button" class="win-tab" data-tab="tabContractDetailView">Contract Detail</button>
+        </div>
+        <div class="win-tab-panel is-active" id="tabPackingMaterialDetail">
+            <div class="pd-caption pd-caption-teal" style="height:23px;"><span>Detail</span></div>
+            <div class="exg-entry">
+                <div class="exg-grid exg-grid-6">
+                    <div class="ex-field exg-span-2">
+                        <div class="exg-label-row"><label class="ex-req" for="cmbBrandForPmEntry">Brand</label>
+                            <span class="ex-radios"><label class="exg-inline-check"><input type="radio" name="pdBrandSearch" id="radBrandCode" value="code"/> Code</label>
+                            <label class="exg-inline-check"><input type="radio" name="pdBrandSearch" id="radBrandName" value="name" checked/> Name</label></span></div>
+                        <select id="cmbBrandForPmEntry" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="ex-field"><label class="ex-req" for="CmbBrandUomPm">Brand Uom</label><select id="CmbBrandUomPm" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="ex-field"><label class="ex-req" for="CmbBrandPackingTypePm">Brand Packing Type</label><select id="CmbBrandPackingTypePm" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="ex-field"><label class="ex-req" for="txtBrandOuterQtyPm">Brand Outer Qty</label><input type="text" id="txtBrandOuterQtyPm" class="win-textbox num" value="0" readonly/></div>
+                    <div class="ex-field"><label class="ex-req" for="txtBrandInnerQtyPm">Brand Inner Qty</label><input type="text" id="txtBrandInnerQtyPm" class="win-textbox num" value="0" readonly/></div>
+
+                    <div class="ex-field exg-span-2">
+                        <div class="exg-label-row"><label class="ex-req" for="CmbPMItem">PM Item</label>
+                            <span class="ex-radios"><label class="exg-inline-check"><input type="radio" name="pdPmSearch" id="rdPackingItemCode" value="code"/> Code</label>
+                            <label class="exg-inline-check"><input type="radio" name="pdPmSearch" id="rdPackingItemName" value="name" checked/> Name</label></span></div>
+                        <select id="CmbPMItem" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="ex-field"><label class="ex-req" for="CmbUomPm">PM Item Uom</label><select id="CmbUomPm" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="ex-field"><label for="txtOuterQtyPm">PM Outer Qty</label><input type="text" id="txtOuterQtyPm" class="win-textbox num" value="0"/></div>
+                    <div class="ex-field"><label for="txtInnerQtyPm">PM Inner Qty</label><input type="text" id="txtInnerQtyPm" class="win-textbox num" value="0"/></div>
+                    <div class="ex-field"><label class="ex-req" for="txtPackingItemRate">Item Rate</label><input type="text" id="txtPackingItemRate" class="win-textbox num" value="0"/></div>
+
+                    <div class="ex-field"><label class="ex-req" for="txtPackingAmount">Amount</label><input type="text" id="txtPackingAmount" class="win-textbox num" value="0" readonly/></div>
+                    <div class="ex-field exg-span-4"><label for="txtPackingRemarks">Remarks</label><input type="text" id="txtPackingRemarks" class="win-textbox"/></div>
+                    <div class="ex-field"><label>&nbsp;</label>
+                        <div class="exg-btns">
+                            <button type="button" id="btnPackingAdd" class="win-btn-small">+</button>
+                            <button type="button" id="btnPackingUpdate" class="win-btn-small is-hidden">Update</button>
+                            <button type="button" id="btnPackingCancel" class="win-btn-small is-hidden">Cancel</button></div></div>
+                </div>
+            </div>
+            <div class="pd-caption pd-caption-teal pd-history-bar" style="height:23px;"><span>Packing Material Grid</span>
+                <span class="ex-bar-right"><span class="exg-bar-note">Double-click = edit &nbsp; Ctrl+Space on X = delete</span>
+                    <button type="button" class="ex-fs-btn" data-fullscreen="grdPackingMaterialDetailBox" title="Fullscreen table">&#x26F6;</button><span id="gridBarMountPm" class="pd-gridbar-mount"></span></span></div>
+            <div class="ex-grid-box" id="grdPackingMaterialDetailBox">
+                <div class="ex-grid-scroll ex-h300">
+                    <table class="win-grid" id="grdPackingMaterialDetail" data-gridbar="frmExportSalesContractPmDetail:grdPackingMaterialDetail" data-gridbar-mount="#gridBarMountPm" data-gridbar-reorder="false">
+                        <thead><tr><th class="ctr">X</th><th data-col="BrandCode">BrandCode</th><th data-col="BrandName">BrandName</th><th data-col="BrandUom">BrandUom</th><th data-col="PackingType">PackingType</th>
+                            <th class="num" data-col="BrandOuterQty">BrandOuterQty</th><th class="num" data-col="BrandInnerQty">BrandInnerQty</th>
+                            <th data-col="PmItemCode">PmItemCode</th><th data-col="PmItemName">PmItemName</th><th data-col="PmItemUom">PmItemUom</th>
+                            <th class="num" data-col="PmItemOuterQty">PmItemOuterQty</th><th class="num" data-col="PmItemInnerQty">PmItemInnerQty</th>
+                            <th class="num" data-col="Rate">Rate</th><th class="num" data-col="Amount">Amount</th><th data-col="Remarks">Remarks</th></tr></thead>
+                        <tbody></tbody><tfoot></tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="win-tab-panel" id="tabContractDetailView">
+            <div class="pd-caption pd-caption-teal" style="height:23px;"><span>Contract Detail (CurrentOrderDetailRecord - read only)</span></div>
+            <div class="ex-grid-box"><div class="ex-grid-scroll ex-h300"><table class="win-grid" id="grdContractDetailView">
+                <thead><tr><th data-col="ItemCode">ItemCode</th><th data-col="ItemName">ItemName</th><th data-col="PackType">PackType</th><th data-col="CropYear">CropYear</th><th class="num" data-col="QtyMTon">Qty/M.Ton</th>
+                    <th data-col="PackSize">PackSize</th><th class="num" data-col="NoOfBags">NoOfBags</th><th class="num" data-col="Rate">Rate</th><th data-col="RateUOM">RateUOM</th><th class="num" data-col="Amount">Amount</th></tr></thead><tbody></tbody><tfoot></tfoot></table></div></div>
+        </div>
+    </div>
+
+    <!-- ===================================================== History -->
+    <div class="win-tab-panel" id="pdHistory">
+        <div class="win-tool-strip">
+            <button type="button" id="btnResetHistory" class="win-btn-tool" onclick="ExportContractPmDetail.historyNew(this)"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="btnRefreshHistory" class="win-btn-tool" onclick="ExportContractPmDetail.historyRefresh(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+        </div>
+        <div class="exg-head"><span class="pd-title">Export Sales Contract History For Packing Detail</span></div>
+        <fieldset class="ex-groupbox" id="groupBox5">
+            <legend>Filters</legend>
+            <div class="ex-filter">
+                <div class="ex-field"><label class="exg-inline-check"><input type="checkbox" id="chkFromDateHistory" checked/> From Date</label><input type="date" id="FromDateHistory" class="win-date"/></div>
+                <div class="ex-field"><label class="exg-inline-check"><input type="checkbox" id="chkToDateHistory" checked/> To Date</label><input type="date" id="ToDateHistory" class="win-date"/></div>
+                <div class="ex-field"><label for="FromDocNoHistory">From Doc No</label><input type="text" id="FromDocNoHistory" class="win-textbox num" inputmode="numeric"/></div>
+                <div class="ex-field"><label for="ToDocNoHistory">To Doc No</label><input type="text" id="ToDocNoHistory" class="win-textbox num" inputmode="numeric"/></div>
+                <div class="ex-field" style="min-width:240px;"><label for="CmbCustomerHistory">Customer</label><select id="CmbCustomerHistory" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="ex-radios">
+                    <label class="exg-inline-check"><input type="radio" name="pdHistDateBy" id="drdocdate" value="doc" checked/> Doc Date</label>
+                    <label class="exg-inline-check"><input type="radio" name="pdHistDateBy" id="rdentrydate" value="entry"/> Entry Date</label>
+                    <label class="exg-inline-check"><input type="radio" name="pdHistDateBy" id="rdmodifydate" value="modify"/> Modify Date</label>
+                    <label class="exg-inline-check is-hidden"><input type="radio" name="pdHistDateBy" id="rdapproveddate" value="approved"/> Approved Date</label>
+                </div>
+                <div class="ex-actions"><button type="button" id="btnShowHistory" class="win-btn-small" onclick="ExportContractPmDetail.historyShow(this)">Show</button></div>
+            </div>
+        </fieldset>
+        <div class="pd-caption pd-caption-teal pd-history-bar" style="height:23px;"><span>Filtered Records</span>
+            <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="DataGridHistoryBox" title="Fullscreen table">&#x26F6;</button><span id="gridBarMountHist" class="pd-gridbar-mount"></span></span></div>
+        <div class="ex-grid-box" id="DataGridHistoryBox">
+            <div class="ex-grid-scroll ex-h300">
+                <table class="win-grid" id="DataGridHistory" data-gridbar="frmExportSalesContractPmDetail:DataGridHistory" data-gridbar-mount="#gridBarMountHist" data-gridbar-reorder="false">
+                    <thead><tr><th>Print</th><th>Edit</th><th>Print523</th>
+                        <th class="num" data-col="DocNo">DocNo</th><th data-col="DocDate">DocDate</th><th data-col="OrderNo">OrderNo</th><th data-col="OrderDate">OrderDate</th>
+                        <th data-col="CustomerName">CustomerName</th><th data-col="LotReference">LotReference</th><th class="num" data-col="MTons">M.Tons</th>
+                        <th class="num" data-col="NoOfContainers">NoOfContainers</th><th data-col="FcyCode">FcyCode</th><th class="num" data-col="FcyAmount">FcyAmount</th>
+                        <th data-col="LastShipmentDate">LastShipmentDate</th><th data-col="NotifyParty">NotifyParty</th><th data-col="DeliveryTerm">DeliveryTerm</th>
+                        <th data-col="PaymentTerm">PaymentTerm</th><th data-col="LoadingPort">LoadingPort</th><th data-col="DestinationPort">DestinationPort</th>
+                        <th data-col="Commodity_Description">Commodity_Description</th><th data-col="EntryUser">EntryUser</th><th data-col="EntryDate">EntryDate</th>
+                        <th data-col="ModifyUser">ModifyUser</th><th data-col="ModifyDate">ModifyDate</th><th class="num" data-col="NoOfAttachments">NoOfAttachments</th></tr></thead>
+                    <tbody></tbody><tfoot></tfoot>
+                </table>
+            </div>
+            <div class="ex-grid-empty is-hidden" id="pdHistEmpty">No record found.</div>
+        </div>
+        <div class="pd-caption pd-caption-teal" style="height:23px;"><span>Packing Material Detail of the selected above row</span></div>
+        <div class="ex-grid-box"><div class="ex-grid-scroll ex-h240"><table class="win-grid" id="grdPMHistory">
+            <thead><tr><th data-col="BrandCode">BrandCode</th><th data-col="BrandName">BrandName</th><th data-col="BrandUom">BrandUom</th><th data-col="PackingType">PackingType</th><th class="num" data-col="BrandOuterQty">BrandOuterQty</th><th class="num" data-col="BrandInnerQty">BrandInnerQty</th>
+                <th data-col="PmItemCode">PmItemCode</th><th data-col="PmItemName">PmItemName</th><th data-col="PmItemUom">PmItemUom</th><th class="num" data-col="PmItemOuterQty">PmItemOuterQty</th><th class="num" data-col="PmItemInnerQty">PmItemInnerQty</th><th class="num" data-col="Rate">Rate</th><th class="num" data-col="Amount">Amount</th><th data-col="Remarks">Remarks</th></tr></thead><tbody></tbody><tfoot></tfoot></table></div></div>
+    </div>
+
+    <div class="win-footer-strip">
+        <span class="ex-footer-left" id="pdFooterInfo"></span>
+        <button type="button" class="win-btn-history" id="btnPdFooterHistory" onclick="ExportContractPmDetail.toggleHistory()"><i class="fa fa-history"></i> <span>History</span></button>
+    </div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260924a}"></script>
+<script th:src="@{/build/js/countx_export_g_common.js?v=20261001a}"></script>
+<script th:src="@{/build/js/countx_export_packing_detail_by_contract.js?v=20261001a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

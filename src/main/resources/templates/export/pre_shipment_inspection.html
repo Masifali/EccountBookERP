@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Pre Shipment Inspection - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_f.css?v=20261001a}"/>
+</head>
+<!-- PreShipmentInspection.cs (Architecture.WinApp.Export), screen 188 "Pre-Shipment Inspection", ClientSize 964 x 661 (maximised).
+     tabControl1: tabPage1 "Form" | tabPage2 "History". panel28 (teal) "Pre Shipment Inspection";
+     toolstrip New / Refresh / Save / Update(hidden) / Attachment / 513-Print / LookUp / ShortCut Keys.
+     panel1 header: Report No (txtDocNo, disabled, GenerateCode), Report Date, Inspection Status (ExImLookUps type 3), Job Lot,
+       Item (items of the export contracts), Total M.Tons (disabled, sum of the grid), Report Status (Accepted / Rejected / Waiting*),
+       Confirmation Date, Remarks (txtInspectionRemarks), Required Analysis.
+     panel6 "Inspection Detail": Customer, Contract No (per customer), M.Tons, Lot (txtSubLot), Status (In-Process* / Complete),
+       Remarks, + / Update / Cancel; grd (X column; double-click edits).
+     History: filters From / To Date (checkable), Doc / Entry / Modify Date radios, From / To Doc No, Item, Show; "History"
+       DataGridHistory (Edit / Print buttons, NoOfAttachments link); "Detail of Above Selected Row" grdDetail. -->
+<body class="pd-body" data-export-page="pre-shipment-inspection">
+<div class="pd-form ex-form">
+    <div class="win-tabs" data-tabs="main">
+        <button type="button" class="win-tab is-active" data-tab="tabPage1">Form</button>
+        <button type="button" class="win-tab" data-tab="tabHistory">History</button>
+    </div>
+
+    <div class="win-tab-panel is-active" id="tabPage1">
+        <div class="pd-caption pd-caption-teal">Pre Shipment Inspection</div>
+        <div class="win-tool-strip">
+            <button type="button" id="btnNew" class="win-btn-tool" onclick="ExportPSI.reset()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="btnRefresh" class="win-btn-tool" onclick="ExportPSI.refresh(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+            <button type="button" id="btnsave" class="win-btn-tool" onclick="ExportPSI.save(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+            <button type="button" id="btnUpdate" class="win-btn-tool is-hidden" onclick="ExportPSI.update(this)"><i class="fa fa-pencil"></i> <span>Update</span></button>
+            <button type="button" id="btnAttachment" class="win-btn-tool" onclick="ExportPSI.attachment()"><i class="fa fa-paperclip"></i> <span>Attachment</span></button>
+            <button type="button" id="btnPrint" class="win-btn-tool" onclick="ExportPSI.print(this)"><i class="fa fa-print"></i> <span>513-Print</span></button>
+            <button type="button" id="btnExportLookUP" class="win-btn-tool" onclick="ExportPSI.lookup()"><i class="fa fa-list"></i> <span>LookUp</span></button>
+            <button type="button" id="btnShortCutKey" class="win-btn-tool" onclick="ExportPSI.shortcuts()"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+        </div>
+        <div class="ex-entry exf-inspection-entry" id="panel1">
+            <div class="ex-field"><label for="txtDocNo">Report No</label><input type="text" id="txtDocNo" class="win-textbox num" disabled/></div>
+            <div class="ex-field"><label for="txtReportDate">Report Date</label><input type="date" id="txtReportDate" class="win-date"/></div>
+            <div class="ex-field"><label for="CmbInspectionStatus">Inspection Status</label>
+                <select id="CmbInspectionStatus" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Inspection Status"></select></div>
+            <div class="ex-field"><label for="CmbJobLot">Job Lot</label>
+                <div class="exf-with-btn"><select id="CmbJobLot" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Job Lot"></select>
+                    <button type="button" id="BtnDefineJobLot" class="win-btn-small" title="Define Job Lot" onclick="ExportPSI.defineJobLot()">...</button></div></div>
+            <div class="ex-field"><label for="CmbItemName">Item</label>
+                <select id="CmbItemName" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Name"></select></div>
+            <div class="ex-field"><label for="txtHeaderMtons">Total M.Tons</label><input type="text" id="txtHeaderMtons" class="win-textbox num" value="0" disabled/></div>
+            <div class="ex-field"><label for="CmbReportStatus">Report Status</label>
+                <select id="CmbReportStatus" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Report Status">
+                    <option value="1">Accepted</option><option value="2">Rejected</option><option value="3" selected>Waiting</option></select></div>
+            <div class="ex-field"><label for="txtConfirmationDate">Confirmation Date</label><input type="date" id="txtConfirmationDate" class="win-date"/></div>
+            <div class="ex-field exf-span2"><label for="txtInspectionRemarks">Remarks</label><input type="text" id="txtInspectionRemarks" class="win-textbox" autocomplete="off"/></div>
+            <div class="ex-field exf-span2"><label for="txtRequiredAnalysis">Required Analysis</label><input type="text" id="txtRequiredAnalysis" class="win-textbox" autocomplete="off"/></div>
+        </div>
+        <div class="pd-caption pd-caption-teal">Inspection Detail</div>
+        <div class="ex-entry exf-inspection-entry" id="panel6">
+            <div class="ex-field"><label for="CmbCustomer">Customer</label>
+                <select id="CmbCustomer" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Customer Name"></select></div>
+            <div class="ex-field"><label for="cmbContractNo">Contract No</label>
+                <select id="cmbContractNo" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Contract No"></select></div>
+            <div class="ex-field"><label for="txtMtons">M.Tons</label><input type="text" id="txtMtons" class="win-textbox num" value="0" data-guard="decimal" autocomplete="off"/></div>
+            <div class="ex-field"><label for="txtSubLot">Lot</label><input type="text" id="txtSubLot" class="win-textbox" autocomplete="off"/></div>
+            <div class="ex-field"><label for="CmbStatusDetail">Status</label>
+                <select id="CmbStatusDetail" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Status">
+                    <option value="1" selected>In-Process</option><option value="2">Complete</option></select></div>
+            <div class="ex-field exf-span2"><label for="txtDetailRemarks">Remarks</label><input type="text" id="txtDetailRemarks" class="win-textbox" autocomplete="off"/></div>
+            <div class="ex-actions">
+                <button type="button" id="btnAdd" class="win-btn-small" onclick="ExportPSI.addRow()">+</button>
+                <button type="button" id="btnUpdateDetail" class="win-btn-small is-hidden" onclick="ExportPSI.updateRow()">Update</button>
+                <button type="button" id="btnCancelDetial" class="win-btn-small is-hidden" onclick="ExportPSI.cancelRow()">Cancel</button>
+            </div>
+        </div>
+        <div class="pd-caption pd-caption-teal pd-history-bar" style="height:23px;"><span></span>
+            <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdBox" title="Fullscreen table">&#x26F6;</button><span id="gridBarMountD" class="pd-gridbar-mount"></span></span></div>
+        <div class="ex-grid-box" id="grdBox">
+            <div class="ex-grid-scroll ex-h240">
+                <table class="win-grid" id="grd" data-gridbar="PreShipmentInspection:grd" data-gridbar-mount="#gridBarMountD" data-gridbar-reorder="false">
+                    <thead><tr><th class="ctr" title="Delete">X</th><th>Customer</th><th>Contract No</th><th class="num">M.Tons</th><th>Status</th><th>Sub Lot</th><th>Remarks</th></tr></thead>
+                    <tbody id="detBody"></tbody><tfoot id="detFoot"></tfoot>
+                </table>
+            </div>
+        </div>
+        <div class="win-footer-strip">
+            <span class="ex-footer-left" id="psiFooterInfo"></span>
+            <button type="button" class="win-btn-history" id="btnPsiFooterHistory" onclick="ExportPSI.toggleHistory()"><i class="fa fa-history"></i> <span>History</span></button>
+        </div>
+    </div>
+
+    <div class="win-tab-panel" id="tabHistory">
+        <div class="pd-caption pd-caption-teal">History</div>
+        <div class="win-tool-strip">
+            <button type="button" id="btnResetHistory" class="win-btn-tool" onclick="ExportPSI.historyReset()"><i class="fa fa-plus"></i> <span>New</span></button>
+            <button type="button" id="BtnRefreshHistory" class="win-btn-tool" onclick="ExportPSI.historyRefresh(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+        </div>
+        <fieldset class="ex-groupbox" id="groupBox5"><legend>Filters</legend>
+            <div class="ex-filter">
+                <div class="ex-field" style="width:180px;"><label for="FromDateHistory">From Date</label>
+                    <span class="ex-check"><input type="checkbox" id="FromDateHistoryChk" checked/><input type="date" id="FromDateHistory" class="win-date" style="flex:1;"/></span></div>
+                <div class="ex-field" style="width:180px;"><label for="ToDateHistory">To Date</label>
+                    <span class="ex-check"><input type="checkbox" id="ToDateHistoryChk" checked/><input type="date" id="ToDateHistory" class="win-date" style="flex:1;"/></span></div>
+                <div class="ex-radios ex-radios-row">
+                    <label class="ex-check"><input type="radio" name="dateBy" id="drdocdate" value="doc" checked/> Doc Date</label>
+                    <label class="ex-check"><input type="radio" name="dateBy" id="rdentrydate" value="entry"/> Entry Date</label>
+                    <label class="ex-check"><input type="radio" name="dateBy" id="rdmodifydate" value="modify"/> Modify Date</label>
+                </div>
+                <div class="ex-field" style="width:120px;"><label for="txtFromDocNoHistory">From Doc No</label><input type="text" id="txtFromDocNoHistory" class="win-textbox num" data-guard="integer"/></div>
+                <div class="ex-field" style="width:120px;"><label for="txtToDocNoHistory">To Doc No</label><input type="text" id="txtToDocNoHistory" class="win-textbox num" data-guard="integer"/></div>
+                <div class="ex-field" style="width:260px;"><label for="CmbItemHistory">Item</label><select id="CmbItemHistory" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Name"></select></div>
+                <div class="ex-field"><label>&nbsp;</label><button type="button" id="btnShow" class="win-btn-small" style="width:60px;" onclick="ExportPSI.historyShow(this)">Show</button></div>
+            </div>
+        </fieldset>
+        <div class="pd-caption pd-caption-dark pd-history-bar"><span>History</span>
+            <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="DataGridHistoryBox" title="Fullscreen table">&#x26F6;</button><span id="gridBarMountH" class="pd-gridbar-mount"></span></span></div>
+        <div class="ex-grid-box" id="DataGridHistoryBox">
+            <div class="ex-grid-scroll ex-h300">
+                <table class="win-grid" id="DataGridHistory" data-gridbar="PreShipmentInspection:DataGridHistory" data-gridbar-mount="#gridBarMountH" data-gridbar-reorder="false">
+                    <thead><tr><th class="exf-col-btn">Print</th><th class="exf-col-btn">Edit</th><th class="num">Report No</th><th>Report Date</th><th>Inspected By Name</th><th>Job Lot</th><th>Item Name</th>
+                        <th class="num">M.Tons</th><th>Confirmation Date</th><th>Report Status</th><th>Inspection Remarks</th><th>Required Analysis</th><th class="num">No Of Attachments</th></tr></thead>
+                    <tbody id="histBody"></tbody><tfoot id="histFoot"></tfoot>
+                </table>
+            </div>
+            <div class="ex-grid-empty is-hidden" id="histEmpty">No record found.</div>
+        </div>
+        <div class="pd-caption pd-caption-dark pd-history-bar"><span>Detail of Above Selected Row</span>
+            <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdDetailBox" title="Fullscreen table">&#x26F6;</button></span></div>
+        <div class="ex-grid-box" id="grdDetailBox">
+            <div class="ex-grid-scroll ex-h240">
+                <table class="win-grid" id="grdDetail"><thead><tr><th>Customer</th><th>Contract No</th><th class="num">M.Tons</th><th>Status</th><th>Sub Lot</th><th>Remarks</th></tr></thead>
+                    <tbody id="hdetBody"></tbody><tfoot id="hdetFoot"></tfoot></table>
+            </div>
+        </div>
+        <div class="win-footer-strip">
+            <span class="ex-footer-left"></span>
+            <button type="button" class="win-btn-history" onclick="ExportPSI.toggleHistory()"><i class="fa fa-file-text-o"></i> <span>Form</span></button>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_export_f_common.js?v=20261001a}"></script>
+<script th:src="@{/build/js/countx_export_pre_shipment_inspection.js?v=20261001a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

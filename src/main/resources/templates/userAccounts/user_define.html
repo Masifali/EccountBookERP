@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>User Rights - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_master_data.css?v=20260930d}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_user_define.css?v=20261001a}"/>
+</head>
+<!--
+  Architecture.WinApp.Configurations.frmUserRights (Admin Panel -> "User Rights"), ClientSize 984 x 561.
+  tabControl1 (Alignment = Bottom): tabPage3 "User Define" | tabPage1 "User History".
+  tabPage3: tabControlForForms (top, 27 high) "Define User" + the tabs AddTabPage adds; PanelUserDefine:
+    panel7/panel13/toolStrip3 (32, white, Verdana 9.75): New | Update (hidden) | Save | Branches Allocation To User | Device Allocation To User (feature 16)
+    panel11 (25, rgb 10,110,110): label15 "Add New User" Tahoma 14.25 bold
+    panel9 (181, white): panel16 705 wide -> groupBox1 "User Detail" (3,6) 696x172 Tahoma 9.75 bold; panel17 481 wide -> grdBranches
+    grduserdefine (fill)
+  tabPage1: toolStrip2 "New" (no handler); panel6 (34, rgb 10,110,110) label23 "User History" MS Sans Serif 14.25; grdUser (fill).
+-->
+<body class="pd-body ud-body" data-screen="frmUserRights">
+<div class="pd-form ud-form">
+
+    <!-- ============================== tabPage3 "User Define" ============================== -->
+    <section class="ud-page" id="tabPage3">
+        <nav class="ud-toptabs" id="tabControlForForms" aria-label="User forms">
+            <button type="button" class="ud-toptab is-active" data-tab="tabDefineUser">Define User</button>
+            <button type="button" class="ud-toptab" data-tab="tabApplicationsAllocateToUser">ApplicationsAllocateToUser</button>
+            <button type="button" class="ud-toptab is-hidden" data-tab="tabUsersWithCostCenter" data-notported="frmUsersWithCostCenter">UsersWithCostCenter</button>
+            <button type="button" class="ud-toptab is-hidden" data-tab="tabChartOfAccountAllocateCostCenter" data-notported="frmChartOfAccountAllocateCostCenter">ChartOfAccountAllocateCostCenter</button>
+            <button type="button" class="ud-toptab is-hidden" data-tab="tabSupplierCustomerAllocateCostCenter" data-notported="frmSupplierCustomerAllocateCostCenter">SupplierCustomerAllocateCostCenter</button>
+            <button type="button" class="ud-toptab is-hidden" data-tab="tabCustomerPortalRegistration" data-notported="CustomerRegistration_MobileApp">CustomerPortalRegistration</button>
+        </nav>
+
+        <!-- PanelUserDefine -->
+        <div class="ud-panel" id="PanelUserDefine">
+            <div class="ud-toolstrip" id="toolStrip3">
+                <button type="button" id="btnNew1" class="ud-tool" onclick="UD.btnnew()"><i class="fa fa-plus-circle ud-ic-green"></i> <span><u>N</u>ew</span></button>
+                <button type="button" id="butnUpdate" class="ud-tool is-hidden" onclick="UD.btnUpdate(this)"><i class="fa fa-pencil-square ud-ic-blue"></i> <span><u>U</u>pdate</span></button>
+                <button type="button" id="butnSave" class="ud-tool" onclick="UD.btnsave(this)"><i class="fa fa-floppy-o ud-ic-blue"></i> <span><u>S</u>ave</span></button>
+                <button type="button" id="BtnUser" class="ud-tool" onclick="UD.BtnUser()"><i class="fa fa-bar-chart ud-ic-teal"></i> <span>Branches Allocation To User</span></button>
+                <button type="button" id="BtnDeviceAllocation" class="ud-tool is-hidden" disabled title="UserDevices (Templates/UserDevices.cs) is not ported yet."><i class="fa fa-mobile"></i> <span>Device Allocation To User</span></button>
+            </div>
+            <div class="ud-caption" id="panel11"><span id="label15">Add New User</span></div>
+
+            <div class="ud-entry" id="panel9">
+                <div class="ud-panel16">
+                    <fieldset class="md-absgroup ud-group" id="groupBox1"><legend>User Detail</legend>
+                        <label class="md-abs md-lbl" style="left:1px;top:21px;" for="txtUsername">User Name</label>
+                        <span class="md-abs md-star" style="left:72px;top:20px;">*</span>
+                        <input type="text" id="txtUsername" class="md-abs win-textbox" style="left:87px;top:17px;width:187px;height:23px;" autocomplete="off" maxlength="50"/>
+
+                        <label class="md-abs md-lbl" style="left:1px;top:46px;" for="txtPassword">Password</label>
+                        <span class="md-abs md-star" style="left:72px;top:45px;">*</span>
+                        <input type="password" id="txtPassword" class="md-abs win-textbox" style="left:87px;top:42px;width:187px;height:23px;" autocomplete="new-password" maxlength="50"/>
+
+                        <label class="md-abs md-lbl" style="left:1px;top:71px;" for="txtFirstName">First Name</label>
+                        <span class="md-abs md-star" style="left:72px;top:70px;">*</span>
+                        <input type="text" id="txtFirstName" class="md-abs win-textbox" style="left:87px;top:67px;width:187px;height:23px;" autocomplete="off" maxlength="50"/>
+
+                        <label class="md-abs md-lbl" style="left:1px;top:96px;" for="txtLastName">Last Name</label>
+                        <span class="md-abs md-star" style="left:72px;top:95px;">*</span>
+                        <input type="text" id="txtLastName" class="md-abs win-textbox" style="left:87px;top:92px;width:187px;height:23px;" autocomplete="off" maxlength="50"/>
+
+                        <label class="md-abs md-lbl" style="left:1px;top:121px;" for="txtFatherName">Father Name</label>
+                        <span class="md-abs md-star" style="left:72px;top:120px;">*</span>
+                        <input type="text" id="txtFatherName" class="md-abs win-textbox" style="left:87px;top:117px;width:187px;height:23px;" autocomplete="off" maxlength="50"/>
+
+                        <label class="md-abs md-lbl" style="left:1px;top:149px;" for="CmbRoleName">Role Name</label>
+                        <span class="md-abs md-star" style="left:69px;top:148px;">*</span>
+                        <select id="CmbRoleName" class="md-abs win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="RoleDescription" style="left:87px;top:144px;width:187px;height:26px;"></select>
+
+                        <label class="md-abs md-lbl" style="left:277px;top:20px;" for="txtWhatsAppNo">WhatsApp#</label>
+                        <span class="md-abs md-star" style="left:352px;top:19px;">*</span>
+                        <input type="text" id="txtWhatsAppNo" class="md-abs win-textbox ud-mask" data-mask="####-###-####" style="left:370px;top:16px;width:139px;height:23px;" autocomplete="off" inputmode="numeric"/>
+
+                        <label class="md-abs md-lbl" style="left:277px;top:45px;" for="txtCellNo">Cell No</label>
+                        <span class="md-abs md-star" style="left:352px;top:44px;">*</span>
+                        <input type="text" id="txtCellNo" class="md-abs win-textbox ud-mask" data-mask="####-###-####" style="left:370px;top:41px;width:139px;height:23px;" autocomplete="off" inputmode="numeric"/>
+
+                        <label class="md-abs md-lbl" style="left:277px;top:70px;" for="txtCnicNo">CNIC No.</label>
+                        <span class="md-abs md-star" style="left:352px;top:69px;">*</span>
+                        <input type="text" id="txtCnicNo" class="md-abs win-textbox ud-mask" data-mask="#####-#######-#" style="left:370px;top:66px;width:139px;height:23px;" autocomplete="off" inputmode="numeric"/>
+
+                        <label class="md-abs md-lbl" style="left:277px;top:95px;" for="txtEmail">Email</label>
+                        <span class="md-abs md-star" style="left:352px;top:94px;">*</span>
+                        <input type="text" id="txtEmail" class="md-abs win-textbox" style="left:370px;top:91px;width:139px;height:23px;" autocomplete="off" maxlength="250"/>
+
+                        <!-- flowLayoutPanel1 (280,117) 229x53: chkEnableAuthentication, ChkDeviceDepenedency, chkboxIsActive -->
+                        <div class="md-abs ud-flow" style="left:280px;top:117px;width:229px;height:53px;">
+                            <label class="ud-check is-hidden" id="wrapEnableAuthentication"><input type="checkbox" id="chkEnableAuthentication"/> Enable Authentication</label>
+                            <label class="ud-check is-hidden" id="wrapDeviceDependency"><input type="checkbox" id="ChkDeviceDepenedency"/> Device Depenedent</label>
+                            <label class="ud-check"><input type="checkbox" id="chkboxIsActive"/> IsActive</label>
+                        </div>
+
+                        <div class="md-abs ud-picture" id="ProfileImagePictureBox" style="left:512px;top:15px;width:179px;height:125px;"><img id="ProfileImage" alt="" class="is-hidden"/></div>
+                        <input type="file" id="fileBrowse" accept=".jpg,.jpeg,.png,image/jpeg,image/png" class="is-hidden"/>
+                        <button type="button" id="browse" class="md-abs ud-teal-btn" style="left:512px;top:141px;width:91px;height:25px;" onclick="UD.browse()">Browse</button>
+                        <button type="button" id="btnClearImage" class="md-abs ud-teal-btn" style="left:603px;top:141px;width:88px;height:25px;" onclick="UD.btnClearImage()">Clear</button>
+                    </fieldset>
+                </div>
+                <!-- panel17 - grdBranches (Location 250 | Active, header selector) -->
+                <div class="ud-panel17">
+                    <div class="ud-gridwrap">
+                        <div class="win-grid-scroll ud-scroll-loc">
+                            <table class="win-grid ud-grid ud-grid-fill" id="grdBranches">
+                                <thead><tr><th style="width:250px;">Location</th><th style="width:100px;" class="ud-center"><label class="ud-hdrsel">Active <input type="checkbox" id="chkAllActive" title="Select all"/></label></th></tr></thead>
+                                <tbody id="grdBranchesBody"></tbody>
+                            </table>
+                        </div>
+                        <div class="ud-recordbar" id="barBranches">Record: <b>0</b> Of <b>0</b></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- grduserdefine -->
+            <div class="ud-gridbox">
+                <div class="win-grid-scroll ud-scroll-main">
+                    <table class="win-grid ud-grid ud-grid-2line" id="grduserdefine"><thead><tr></tr></thead><tbody></tbody></table>
+                </div>
+                <div class="ud-recordbar" id="barUserDefine">Record: <b>0</b> Of <b>0</b></div>
+            </div>
+        </div>
+
+        <!-- PanelForViewForm - frmApplicationsAllocateToUser hosted in the panel (BookingOffice.frmApplicationsAllocateToUser) -->
+        <div class="ud-panel is-hidden" id="PanelForViewForm">
+            <div class="win-tool-strip" id="tsItemType">
+                <button type="button" id="btnRefreshApps" class="win-btn-tool" onclick="UD.apps.btnRefresh(this)"><i class="fa fa-refresh"></i> <span><u>R</u>efresh</span></button>
+                <button type="button" id="btnDefineItemCustomGroup" class="win-btn-tool" onclick="UD.apps.BtnUserDefine()"><i class="fa fa-user"></i> <span>Define User</span></button>
+                <button type="button" id="btnshortcutkeysApps" class="win-btn-tool" onclick="UD.apps.shortcuts()"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+            </div>
+            <div class="ud-userbar" id="panel7Apps">
+                <label for="CmbUserNameApps" class="ud-userlbl" style="left:5px;">UserName</label>
+                <select id="CmbUserNameApps" class="win-combo dtcombo ud-usercombo" data-dtcombo="single" data-dtcombo-caption="UserName" style="left:75px;width:290px;"></select>
+                <button type="button" id="BtnShowApps" class="ud-teal-btn ud-showbtn" style="left:368px;width:58px;" onclick="UD.apps.BtnShow(this)">Show</button>
+            </div>
+            <div class="ud-three">
+                <div class="ud-col" style="flex-basis:430px;">
+                    <div class="ud-colhead" id="label7">Companies Of Selected User</div>
+                    <div class="win-grid-scroll"><table class="win-grid ud-grid ud-grid-fill" id="grdCompany"><thead><tr><th style="width:270px;">CompanyName</th><th>UserName</th></tr></thead><tbody></tbody></table></div>
+                </div>
+                <div class="ud-col" style="flex-basis:370px;">
+                    <div class="ud-colhead"><span id="labelUnAllocateGridTemplateII">UnAllocated Apps Of User :</span>
+                        <button type="button" id="BtnSaveApps" class="ud-headbtn" title="Allocate (Ctrl+A)" onclick="UD.apps.allocate(this)"><i class="fa fa-check"></i></button></div>
+                    <div class="win-grid-scroll"><table class="win-grid ud-grid ud-grid-fill" id="GridUnAllocated"><thead><tr><th style="width:30px;" class="ud-center"><input type="checkbox" data-all="GridUnAllocated"/></th><th style="width:280px;">AppName</th></tr></thead><tbody></tbody></table></div>
+                </div>
+                <div class="ud-col" style="flex-basis:365px;">
+                    <div class="ud-colhead"><span id="labelAllocateGridTemplateII">Allocated Apps Of User :</span>
+                        <button type="button" id="btnDeleteApps" class="ud-headbtn" title="Un-Allocate (Ctrl+D)" onclick="UD.apps.unallocate(this)"><i class="fa fa-times"></i></button></div>
+                    <div class="win-grid-scroll"><table class="win-grid ud-grid ud-grid-fill" id="GridAllocated"><thead><tr><th style="width:30px;" class="ud-center"><input type="checkbox" data-all="GridAllocated"/></th><th style="width:280px;">AppName</th></tr></thead><tbody></tbody></table></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================== tabPage1 "User History" ============================== -->
+    <section class="ud-page is-hidden" id="tabPage1">
+        <div class="ud-panel">
+            <div class="win-tool-strip" id="toolStrip2">
+                <button type="button" class="win-btn-tool" title="No handler on the desktop (toolStrip2 'New' has no Click)."><i class="fa fa-plus-circle ud-ic-green"></i> <span><u>N</u>ew</span></button>
+            </div>
+            <div class="ud-caption ud-caption-34"><span id="label23">User History</span></div>
+            <div class="ud-gridbox">
+                <div class="win-grid-scroll ud-scroll-hist">
+                    <table class="win-grid ud-grid ud-grid-2line" id="grdUser"><thead><tr></tr></thead><tbody></tbody></table>
+                </div>
+                <div class="ud-recordbar" id="barUser">Record: <b>0</b> Of <b>0</b></div>
+            </div>
+        </div>
+    </section>
+
+    <nav class="ud-bottomtabs" id="tabControl1" aria-label="User sections">
+        <button type="button" class="ud-bottomtab is-active" data-page="tabPage3">User Define</button>
+        <button type="button" class="ud-bottomtab" data-page="tabPage1">User History</button>
+    </nav>
+</div>
+
+<div class="ud-toast" id="udToast" role="status" aria-live="polite"></div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_user_define.js?v=20261001a}"></script>
+</body>
+</html>

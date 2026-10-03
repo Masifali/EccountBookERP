@@ -6,146 +6,136 @@
 <title>Premature Receipts</title>
 <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
 <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+<link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20261002gc}">
+<link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20261002gc}">
+<link rel="stylesheet" th:href="@{/build/css/acc_c_desktop_form.css?v=20261002gc}">
 <!--
   Screen 25 "Premature Receipts" - AccountsPrematurePaymentsReceipts (DocumentTypeId 159).
-  Layout = InitializeComponent(): panel5 controls at their desktop Locations/Sizes (px).
+  R3 2026-10-02: markup = InitializeComponent() 1:1 (form 1297 x 622, tabControl1 Alignment=Bottom).
+    tabPage1 "Form":  panel2 toolStrip1 (h28) / panel4 teal 10,110,110 (h26) / panel5 white (1283 x 115,
+                      every control at its Location/Size) / panel3 grd (h176) / panel7 grdPendingRecord (fill, h245).
+    tabPage2 "Register": panel8 toolStrip2 (h30) / panel10 teal "Premature Receipts History" (h28) /
+                      panel11 (h80) groupBox3 "Filters" (5,3 969 x 74) / panel12 teal "Filtered Records" (h28) /
+                      grdHistory (fill, h424). FromDateHistory / ToDateHistory have ShowCheckBox = true.
+  Every combo = countx_prod_combo.js through acc_c_xcombo.js (XCombo keeps the DCombo API the page code uses).
   Server: /accounts/api/desktop-vouchers/premature/... (DesktopVoucherScreensController).
 -->
-<style>
- body{font-family:"Segoe UI",Tahoma,Verdana,sans-serif;background:#e4e9ed;font-size:12px;color:#222;margin:0}
- .tbar{background:linear-gradient(#fff,#e3e8ee);border-bottom:1px solid #b0bec5;padding:2px 6px;display:flex;gap:3px;flex-wrap:wrap;align-items:center}
- .tbtn{background:#fff;border:1px solid #90a4ae;border-radius:2px;padding:2px 9px;font-size:12px;cursor:pointer}
- .tbtn:hover{background:#e0f2f1}.tbtn:disabled{opacity:.45;cursor:not-allowed}
- .tabs{display:flex;gap:2px;padding:4px 6px 0;background:#d1d5db}
- .tab{border:1px solid #9ca3af;border-bottom:none;background:#e5e7eb;padding:3px 16px;cursor:pointer;font-weight:600}
- .tab.on{background:#fff;color:#00796B}
- .cap{background:#00796B;color:#fff;height:26px;position:relative;font-weight:bold}
- .cap .t{position:absolute;left:8px;top:3px;font-size:14px}
- .pnl{position:relative;background:#fff;border-bottom:1px solid #b0bec5}
- .lbl{position:absolute;white-space:nowrap;font-weight:600;color:#334155}
- input.f,select.f{position:absolute;border:1px solid #94a3b8;border-radius:2px;padding:1px 4px;font-size:12px;background:#fff}
- input.f[readonly]{background:#f1f5f9}
- .abs{position:absolute}
- table.g{border-collapse:collapse;width:100%;background:#fff}
- table.g th{background:#00796B;color:#fff;padding:3px 6px;border:1px solid #004d40;white-space:nowrap;font-weight:600;text-align:center}
- table.g td{padding:2px 6px;border:1px solid #cbd5e1;white-space:nowrap}
- table.g tr.sel td{background:#b2dfdb}
- table.g tfoot td{font-weight:bold;background:#e0f2f1}
- .num{text-align:right}
- .gridwrap{overflow:auto;border:1px solid #b0bec5;background:#fff}
- .dcombo-popup{position:absolute;z-index:2000;background:#fff;border:1px solid #00796B;box-shadow:0 4px 10px rgba(0,0,0,.2);max-height:260px;overflow:auto;font-size:12px}
- .dcombo-popup table{border-collapse:collapse;width:100%}
- .dcombo-popup th{background:#00796B;color:#fff;padding:2px 6px;position:sticky;top:0}
- .dcombo-popup td{padding:2px 6px;border-bottom:1px solid #eee;white-space:nowrap;cursor:pointer}
- .dcombo-popup tr.act td,.dcombo-popup tbody tr:hover td{background:#e0f2f1}
- fieldset.gb{position:absolute;border:1px solid #9aa9b5;padding:0;background:#fff}
- fieldset.gb>legend{font-size:12px;font-weight:600;width:auto;margin:0 0 0 8px;padding:0 4px;border:0;color:#004d40}
- #msg{position:fixed;right:12px;top:8px;z-index:3000;max-width:520px}
- .modal-sc{position:fixed;inset:0;background:rgba(0,0,0,.3);display:none;z-index:2500}
- .modal-sc>div{background:#fff;width:520px;margin:60px auto;padding:8px;border:1px solid #00796B}
-</style>
 </head>
-<body>
+<body class="dwin">
 <div id="msg"></div>
-<div class="tabs">
-  <div class="tab on" id="tabForm" onclick="PR.tab(0)">Form</div>
-  <div class="tab" id="tabHist" onclick="PR.tab(1)">Register</div>
-  <a href="/accounts/dashboard" style="margin-left:auto;padding:3px 8px">Back to Dashboard</a>
-</div>
 
 <!-- ======================================================================= tabPage1 "Form" -->
-<div id="pgForm">
-  <div class="tbar">
-    <button class="tbtn" id="btnNew" onclick="PR.newForm()">New</button>
-    <button class="tbtn" id="toolStripButton1" onclick="PR.refresh()">Refresh</button>
-    <button class="tbtn" id="btnsave" onclick="PR.save('save')">Save</button>
-    <button class="tbtn" id="btnUpdate" onclick="PR.save('update')" style="display:none">Update</button>
-    <button class="tbtn" id="toolStripButton8" disabled title="Attachments (DMS) are not ported to the web.">Attachment</button>
-    <button class="tbtn" id="btnConfirmVoucher" onclick="PR.confirmChecked()">Confirm Vouchers</button>
-    <button class="tbtn" id="btnShortCutKey" onclick="PR.shortcuts()">ShortCut Keys</button>
-  </div>
-  <!-- panel4 -->
-  <div class="cap"><span class="t" id="lblCaption">Accounts Premature Receipts</span>
-    <span class="lbl" id="lblCostCenter" style="left:285px;top:5px;color:#fff;display:none">Cost Center</span>
-    <input class="f" id="CmbCostCenter" style="left:362px;top:0;width:167px;height:26px;display:none" disabled>
-  </div>
-  <!-- panel5 (1283 x 115) -->
-  <div class="pnl" style="height:115px;width:1283px">
-    <label class="lbl" style="left:13px;top:6px">Doc No</label>
-    <input class="f" id="txtdocno" readonly style="left:12px;top:27px;width:89px;height:23px">
-    <label class="lbl" style="left:104px;top:6px">Doc Date</label>
-    <input class="f" type="date" id="txtdocdate" style="left:103px;top:27px;width:116px;height:23px">
-    <label class="lbl" style="left:223px;top:6px">Tracking Slip #</label>
-    <input class="f" id="txtTrackingNo" style="left:220px;top:27px;width:101px;height:23px">
-    <label class="lbl" style="left:324px;top:6px">Slip Amount</label>
-    <input class="f num" id="txtSlipAmount" style="left:322px;top:27px;width:114px;height:23px">
-    <label class="lbl" style="left:438px;top:6px">Voucher Type</label>
-    <input class="f" id="cmbVouchertype" style="left:437px;top:25px;width:119px;height:26px">
-    <label class="lbl" style="left:560px;top:6px">Sender Bank</label>
-    <input class="f" id="cmbSenderbank" style="left:556px;top:25px;width:215px;height:26px">
-    <button class="tbtn abs" id="button1" style="left:772px;top:26px;width:23px;height:24px;padding:0" disabled title="Define PDC Bank (PdcBank form) is not ported.">+</button>
-    <label class="lbl" style="left:795px;top:6px">Representative A/c</label>
-    <input class="f" id="cmbRepresentiveAc" style="left:796px;top:25px;width:348px;height:26px">
-    <button class="tbtn abs" id="btnDefineOtherParties" style="left:1145px;top:27px;width:23px;height:24px;padding:0" disabled title="Define Other Parties form is not ported.">+</button>
-    <label class="lbl" style="left:10px;top:61px">Sender Account</label>
-    <input class="f" id="CmbSenderAccount" style="left:10px;top:82px;width:209px;height:26px">
-    <label class="lbl" id="lblReceiverAc" style="left:223px;top:61px">Receiver Account</label>
-    <input class="f" id="CmbReceiverAccount" style="left:220px;top:82px;width:216px;height:26px">
-    <label class="lbl" style="left:439px;top:61px">Cheque No</label>
-    <input class="f" id="txtChequeNo" style="left:437px;top:84px;width:119px;height:23px">
-    <label class="lbl" style="left:558px;top:61px">Cheque Date</label>
-    <input class="f" type="date" id="datChequeDate" style="left:558px;top:84px;width:117px;height:23px">
-    <label class="lbl" style="left:673px;top:61px">Amount</label>
-    <input class="f num" id="txtAmount" style="left:676px;top:84px;width:95px;height:23px">
-    <label class="lbl" style="left:771px;top:61px">Remarks</label>
-    <input class="f" id="txtremarks" style="left:772px;top:84px;width:284px;height:23px">
-    <label class="lbl" style="left:1057px;top:61px">Status</label>
-    <select class="f" id="cmbStatus" style="left:1057px;top:82px;width:87px;height:26px"></select>
-    <button class="tbtn abs" id="Add" style="left:1145px;top:83px;width:26px;height:24px;padding:0" onclick="PR.add()">+</button>
-    <button class="tbtn abs" id="btnUpdateDetail" style="left:1172px;top:84px;width:54px;height:22px;padding:0;display:none" onclick="PR.updateDetail()">Update</button>
-    <button class="tbtn abs" id="btnCancelUpdateDetial" style="left:1228px;top:84px;width:50px;height:22px;padding:0;display:none" onclick="PR.cancelDetail()">Cancel</button>
-  </div>
-  <!-- panel3: grd (entry grid) -->
-  <div class="gridwrap" style="height:176px"><table class="g" id="grd"></table></div>
-  <!-- panel7: grdPendingRecord -->
-  <div class="gridwrap" style="height:245px;margin-top:3px"><table class="g" id="grdPendingRecord"></table></div>
+<div id="pgForm" class="dpane">
+  <div class="dscroll"><div class="dform" style="min-width:1283px">
+    <!-- panel2 / toolStrip1: btnNew, toolStripButton1, btnsave, btnUpdate, toolStripButton8, btnConfirmVoucher, btnShortCutKey -->
+    <div class="dts">
+      <button type="button" class="tsi" id="btnNew" onclick="PR.newForm()" style="min-width:59px"><i class="fa fa-plus-circle g"></i>New</button>
+      <button type="button" class="tsi" id="toolStripButton1" onclick="PR.refresh()" style="min-width:80px"><i class="fa fa-refresh g"></i>Refresh</button>
+      <button type="button" class="tsi" id="btnsave" onclick="PR.save('save')" style="min-width:64px"><i class="fa fa-floppy-o b"></i>Save</button>
+      <button type="button" class="tsi" id="btnUpdate" onclick="PR.save('update')" style="min-width:78px;display:none"><i class="fa fa-pencil o"></i>Update</button>
+      <button type="button" class="tsi" id="toolStripButton8" disabled title="Attachments (DMS) are not ported to the web." style="min-width:109px"><i class="fa fa-paperclip k"></i>Attachment</button>
+      <button type="button" class="tsi" id="btnConfirmVoucher" onclick="PR.confirmChecked()" style="min-width:145px"><i class="fa fa-check-square-o b"></i>Confirm Vouchers</button>
+      <button type="button" class="tsi" id="btnShortCutKey" onclick="PR.shortcuts()" style="min-width:106px">ShortCut Keys</button>
+    </div>
+    <!-- panel4 (h26, 10,110,110) -->
+    <div class="dbar" style="height:26px">
+      <span class="cap" id="lblCaption" style="left:8px;top:3px">Accounts Premature Receipts</span>
+      <span class="dl white" id="lblCostCenter" style="left:285px;top:6px;display:none;font-family:'Segoe UI',Tahoma,Arial,sans-serif;font-weight:bold">Cost Center</span>
+      <select class="f" id="CmbCostCenter" style="left:362px;top:0;width:167px;height:26px;display:none" disabled></select>
+    </div>
+    <!-- panel5 (1283 x 115, White) -->
+    <div style="position:relative;height:115px;background:#fff">
+      <span class="dl" style="left:13px;top:6px">Doc No</span>
+      <input class="f" id="txtdocno" readonly style="left:12px;top:27px;width:89px;height:23px">
+      <span class="dl" style="left:104px;top:6px">Doc Date</span>
+      <input class="f" type="date" id="txtdocdate" style="left:103px;top:27px;width:116px;height:23px">
+      <span class="dl" style="left:223px;top:6px">Tracking Slip #</span>
+      <input class="f" id="txtTrackingNo" style="left:220px;top:27px;width:101px;height:23px">
+      <span class="dl" style="left:324px;top:6px">Slip Amount</span>
+      <input class="f num" id="txtSlipAmount" style="left:322px;top:27px;width:114px;height:23px">
+      <span class="dl" style="left:438px;top:6px">Voucher Type</span>
+      <select class="f" id="cmbVouchertype" style="left:437px;top:25px;width:119px;height:26px"></select>
+      <span class="dl" style="left:560px;top:6px">Sender Bank</span>
+      <select class="f" id="cmbSenderbank" style="left:556px;top:25px;width:215px;height:26px"></select>
+      <button type="button" class="dbtn icon" id="button1" style="left:772px;top:26px;width:23px;height:24px" disabled title="Define PDC Bank (PdcBank form) is not ported."><i class="fa fa-plus"></i></button>
+      <span class="dl" style="left:795px;top:6px">Representative A/c</span>
+      <select class="f" id="cmbRepresentiveAc" style="left:796px;top:25px;width:348px;height:26px"></select>
+      <button type="button" class="dbtn icon" id="btnDefineOtherParties" style="left:1145px;top:27px;width:23px;height:24px" disabled title="Define Other Parties form is not ported."><i class="fa fa-plus"></i></button>
+      <span class="dl" style="left:10px;top:61px">Sender Account</span>
+      <select class="f" id="CmbSenderAccount" style="left:10px;top:82px;width:209px;height:26px"></select>
+      <span class="dl" id="lblReceiverAc" style="left:223px;top:61px">Receiver Account</span>
+      <select class="f" id="CmbReceiverAccount" style="left:220px;top:82px;width:216px;height:26px"></select>
+      <span class="dl" style="left:439px;top:61px">Cheque No</span>
+      <input class="f" id="txtChequeNo" style="left:437px;top:84px;width:119px;height:23px">
+      <span class="dl" style="left:558px;top:61px">Cheque Date</span>
+      <input class="f" type="date" id="datChequeDate" style="left:558px;top:84px;width:117px;height:23px">
+      <span class="dl" style="left:673px;top:61px">Amount</span>
+      <input class="f num" id="txtAmount" style="left:676px;top:84px;width:95px;height:23px">
+      <span class="dl" style="left:771px;top:61px">Remarks</span>
+      <input class="f" id="txtremarks" style="left:772px;top:84px;width:284px;height:23px">
+      <span class="dl" style="left:1057px;top:61px">Status</span>
+      <select class="f" id="cmbStatus" style="left:1057px;top:82px;width:87px;height:26px"></select>
+      <button type="button" class="dbtn" id="Add" style="left:1145px;top:83px;width:26px;height:24px;font:14px Arial,sans-serif" onclick="PR.add()">+</button>
+      <button type="button" class="dbtn small" id="btnUpdateDetail" style="left:1172px;top:84px;width:54px;height:22px;display:none" onclick="PR.updateDetail()">Update</button>
+      <button type="button" class="dbtn small" id="btnCancelUpdateDetial" style="left:1228px;top:84px;width:50px;height:22px;display:none" onclick="PR.cancelDetail()">Cancel</button>
+    </div>
+  </div></div>
+  <!-- panel3: grd (Dock Top, h176) -->
+  <div class="dgrid" style="height:176px;flex:0 0 176px" id="grdWrap" tabindex="0"><table class="jg" id="grd"></table></div>
+  <!-- panel7: grdPendingRecord (Dock Fill, h245) -->
+  <div class="dgrid" style="flex:1 1 245px;min-height:245px" id="grdPendingWrap" tabindex="0"><table class="jg" id="grdPendingRecord"></table></div>
+  <div class="dfoot"><button type="button" class="tsi" id="btnHistoryFooter" onclick="PR.tab(1)" title="Register tab (Ctrl+T)"><i class="fa fa-history"></i>History</button></div>
 </div>
 
 <!-- ===================================================================== tabPage2 "Register" -->
-<div id="pgHist" style="display:none">
-  <div class="tbar">
-    <button class="tbtn" id="btnNewHistory" onclick="PR.histReset()">New</button>
-    <button class="tbtn" id="btnRefreshHistory" onclick="PR.histCombos()">Refresh</button>
-  </div>
-  <div class="cap"><span class="t">Premature Receipts History</span></div>
-  <div class="pnl" style="height:80px">
-    <fieldset class="gb" style="left:5px;top:3px;width:969px;height:74px"><legend>Filters</legend>
-      <label class="lbl" style="left:6px;top:8px">From &amp; To Date</label>
-      <input class="f" type="date" id="FromDateHistory" style="left:117px;top:0;width:135px;height:23px">
-      <input class="f" type="date" id="ToDateHistory" style="left:253px;top:0;width:134px;height:23px">
-      <label class="lbl" style="left:6px;top:28px">From &amp; To Doc No</label>
-      <input class="f" id="txtFromDocNoHistory" style="left:117px;top:25px;width:134px;height:23px">
-      <input class="f" id="txtToDocNoHistory" style="left:253px;top:25px;width:134px;height:23px">
-      <label class="lbl" style="left:393px;top:4px">Voucher Type</label>
-      <input class="f" id="CmbVoucherTypeHistory" style="left:477px;top:0;width:133px;height:26px">
-      <label class="lbl" style="left:393px;top:31px">Bank Name</label>
-      <input class="f" id="CmbBankNameHistory" style="left:477px;top:27px;width:133px;height:26px">
-      <label class="lbl" style="left:612px;top:5px">Sender Ac</label>
-      <input class="f" id="CmbSenderAcHistory" style="left:681px;top:1px;width:226px;height:26px">
-      <label class="lbl" id="label12" style="left:612px;top:32px">Receiver Ac</label>
-      <input class="f" id="CmbReceiverAcHistory" style="left:681px;top:28px;width:226px;height:26px">
-      <button class="tbtn abs" id="btnshow" style="left:911px;top:28px;width:53px;height:26px" onclick="PR.history()">Show</button>
-      <label class="abs" style="left:6px;top:50px;font-size:11px"><input type="checkbox" id="chkFrom" checked> From date <input type="checkbox" id="chkTo" checked> To date</label>
-    </fieldset>
-  </div>
-  <div style="margin:3px"><b>Filtered Records</b></div>
-  <div class="gridwrap" style="max-height:424px"><table class="g" id="grdHistory"></table></div>
+<div id="pgHist" class="dpane" style="display:none">
+  <div class="dscroll"><div class="dform" style="min-width:1283px">
+    <!-- panel8 / toolStrip2: btnNewHistory, btnRefreshHistory -->
+    <div class="dts" style="height:30px">
+      <button type="button" class="tsi" id="btnNewHistory" onclick="PR.histReset()" style="min-width:59px"><i class="fa fa-plus-circle g"></i>New</button>
+      <button type="button" class="tsi" id="btnRefreshHistory" onclick="PR.histCombos()" style="min-width:80px"><i class="fa fa-refresh g"></i>Refresh</button>
+    </div>
+    <!-- panel10 (Teal, h28) -->
+    <div class="dbar teal" style="height:28px"><span class="cap" style="left:3px;top:4px">Premature Receipts History</span></div>
+    <!-- panel11 (h80): groupBox3 "Filters" (5,3) 969 x 74 -->
+    <div style="position:relative;height:80px;background:#fff">
+      <div class="dgb" style="left:5px;top:3px;width:969px;height:74px"><span class="gbcap">Filters</span>
+        <span class="dl" style="left:6px;top:23px">From &amp; To Date</span>
+        <div class="dtp" style="left:117px;top:15px;width:135px;height:23px"><input type="checkbox" id="chkFrom" checked title="FromDateHistory.Checked"><input class="f" type="date" id="FromDateHistory"></div>
+        <div class="dtp" style="left:253px;top:15px;width:134px;height:23px"><input type="checkbox" id="chkTo" checked title="ToDateHistory.Checked"><input class="f" type="date" id="ToDateHistory"></div>
+        <span class="dl" style="left:6px;top:43px">From &amp; To Doc No</span>
+        <input class="f segoe" id="txtFromDocNoHistory" style="left:117px;top:40px;width:134px;height:23px">
+        <input class="f segoe" id="txtToDocNoHistory" style="left:253px;top:40px;width:134px;height:23px">
+        <span class="dl" style="left:393px;top:19px">Voucher Type</span>
+        <select class="f ms" id="CmbVoucherTypeHistory" style="left:477px;top:15px;width:133px;height:26px"></select>
+        <span class="dl" style="left:393px;top:46px">Bank Name</span>
+        <select class="f ms" id="CmbBankNameHistory" style="left:477px;top:42px;width:133px;height:26px"></select>
+        <span class="dl" style="left:612px;top:20px">Sender Ac</span>
+        <select class="f ms" id="CmbSenderAcHistory" style="left:681px;top:16px;width:226px;height:26px"></select>
+        <span class="dl" id="label12" style="left:612px;top:47px">Receiver Ac</span>
+        <select class="f ms" id="CmbReceiverAcHistory" style="left:681px;top:43px;width:226px;height:26px"></select>
+        <button type="button" class="dbtn dk" id="btnshow" style="left:911px;top:43px;width:53px;height:26px" onclick="PR.history()">Show</button>
+      </div>
+    </div>
+    <!-- panel12 (Teal, h28) -->
+    <div class="dbar teal" style="height:28px"><span class="cap" style="left:3px;top:4px">Filtered Records</span></div>
+  </div></div>
+  <!-- grdHistory (Dock Fill, h424) -->
+  <div class="dgrid" style="flex:1 1 424px;min-height:300px" id="grdHistoryWrap" tabindex="0"><table class="jg" id="grdHistory"></table></div>
 </div>
 
-<div class="modal-sc" id="scModal" onclick="this.style.display='none'"><div><b>ShortCut Keys</b><table class="g" id="scTable"></table></div></div>
+<!-- tabControl1: Alignment = Bottom -->
+<div class="dtabs">
+  <div class="tab on" id="tabForm" onclick="PR.tab(0)">Form</div>
+  <div class="tab" id="tabHist" onclick="PR.tab(1)">Register</div>
+  <a class="back" href="/accounts/dashboard">Back to Dashboard</a>
+</div>
+
+<div class="modal-sc" id="scModal" onclick="this.style.display='none'"><div><b>ShortCut Keys</b><table class="jg" id="scTable"></table></div></div>
 
 <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
-<script th:src="@{/build/js/desktop_combo_c.js}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20261002gc}"></script>
+<script th:src="@{/build/js/acc_c_xcombo.js?v=20261002gc}"></script>
 <script>
 (function () {
 'use strict';
@@ -173,21 +163,84 @@ function ajax(method, url, body) {
         .fail(function (x) { msg((x.responseJSON && x.responseJSON.message) || ('Request failed (' + x.status + ')')); });
 }
 function costCenterId() { return +cb.cc.value() || 0; }
+/* Every server button: disabled at once with a spinner, a second click while the request runs is
+   refused, re-enabled when it ends (success or failure). start() returns the jqXHR or nothing. */
+function busy(el, start) {
+    var b = typeof el === 'string' ? $id(el) : el;
+    if (!b) return start();
+    if (b._busy) return null;
+    b._busy = true; var was = b.disabled;
+    b.disabled = true; b.classList.add('busy');
+    var p = null;
+    var done = function () { b._busy = false; b.classList.remove('busy'); b.disabled = was; };
+    try { p = start(); } catch (x) { done(); throw x; }
+    if (p && p.always) p.always(done); else done();
+    return p;
+}
+/* AcfrmDefPdcManagment_KeyDown: Enter = SendKeys("{TAB}") */
+function focusNext(el) {
+    var all = Array.prototype.filter.call(document.querySelectorAll('input,select,textarea,button'), function (x) {
+        return !x.disabled && x.offsetParent !== null && x.tabIndex >= 0;
+    });
+    var i = all.indexOf(el);
+    if (i >= 0 && i + 1 < all.length) all[i + 1].focus();
+}
+/* Ctrl+E / Escape = Close() */
+function closeForm() { window.location.href = '/accounts/dashboard'; }
+function AD() { return (L && L.decimals && L.decimals.amount) || 0; }
+/* CommonServices.OnlytextdecimelFunction (KeyPress) + CommasApplyWhileTypingOnVouchers (TextChanged) */
+function commaInput(el) {
+    el.addEventListener('keypress', function (e) {
+        var c = e.key;
+        if (c.length !== 1) return;
+        if (!/[0-9.]/.test(c) || (c === '.' && el.value.indexOf('.') > -1)) e.preventDefault();
+    });
+    el.addEventListener('input', function () {
+        var raw = el.value.replace(/,/g, '');
+        if (raw === '' || isNaN(Number(raw))) return;
+        var pos = el.selectionStart, before = el.value.length;
+        var f = Math.floor(Number(raw)).toLocaleString('en-US', { maximumFractionDigits: 0 });
+        if (raw.indexOf('.') > -1) { var dp = raw.split('.')[1]; var d = AD(); if (dp.length > d) dp = dp.substring(0, d); f += '.' + dp; }
+        el.value = f;
+        try { var np = Math.max(0, Math.min(f.length, pos + (f.length - before))); el.setSelectionRange(np, np); } catch (x) { }
+    });
+}
+/* CommonServices.OnlytextNumberFunction (KeyPress) */
+function digitsOnly(el) {
+    el.addEventListener('keypress', function (e) { if (e.key.length === 1 && !/[0-9]/.test(e.key)) e.preventDefault(); });
+}
 
 /* ----------------------------------------------------------- AcfrmDefPdcManagment_Load */
 function init() {
-    cb.cc = DCombo('CmbCostCenter', { columns: [{ key: 'CostCenterName', caption: 'Cost Center' }], valueKey: 'CostCenterId', textKey: 'CostCenterName' });
-    cb.vt = DCombo('cmbVouchertype', { columns: [{ key: 'Name', caption: 'VoucherType' }], textKey: 'Name', onLeave: function () { receiverAccountBind(); } });
-    cb.bank = DCombo('cmbSenderbank', { columns: [{ key: 'BankName', caption: 'BankName' }], textKey: 'BankName', popupWidth: 260 });
-    cb.rep = DCombo('cmbRepresentiveAc', { columns: [{ key: 'PartyName', caption: 'Representative AC' }], textKey: 'PartyName' });
-    cb.snd = DCombo('CmbSenderAccount', { columns: [{ key: 'AccountTitle', caption: 'SenderAccount' }], popupWidth: 320 });
-    cb.rcv = DCombo('CmbReceiverAccount', { columns: [{ key: 'AccountTitle', caption: 'Receiver Account' }], popupWidth: 320 });
-    cb.hVt = DCombo('CmbVoucherTypeHistory', { columns: [{ key: 'Name', caption: 'Voucher Type' }], textKey: 'Name' });
-    cb.hBank = DCombo('CmbBankNameHistory', { columns: [{ key: 'Name', caption: 'Bank Name' }], textKey: 'Name', popupWidth: 240 });
-    cb.hSnd = DCombo('CmbSenderAcHistory', { columns: [{ key: 'Name', caption: 'Sender Ac' }], textKey: 'Name', popupWidth: 300 });
-    cb.hRcv = DCombo('CmbReceiverAcHistory', { columns: [{ key: 'Name', caption: 'Receiver Ac' }], textKey: 'Name', popupWidth: 300 });
+    cb.cc = XCombo('CmbCostCenter', { columns: [{ key: 'CostCenterName', caption: 'Cost Center' }], valueKey: 'CostCenterId', textKey: 'CostCenterName' });
+    cb.vt = XCombo('cmbVouchertype', { columns: [{ key: 'Name', caption: 'VoucherType' }], textKey: 'Name', onLeave: function () { receiverAccountBind(); } });
+    cb.bank = XCombo('cmbSenderbank', { columns: [{ key: 'BankName', caption: 'BankName' }], textKey: 'BankName', popupWidth: 260 });
+    cb.rep = XCombo('cmbRepresentiveAc', { columns: [{ key: 'PartyName', caption: 'Representative AC' }], textKey: 'PartyName' });
+    cb.snd = XCombo('CmbSenderAccount', { columns: [{ key: 'AccountTitle', caption: 'SenderAccount' }], popupWidth: 320 });
+    cb.rcv = XCombo('CmbReceiverAccount', { columns: [{ key: 'AccountTitle', caption: 'Receiver Account' }], popupWidth: 320 });
+    cb.hVt = XCombo('CmbVoucherTypeHistory', { columns: [{ key: 'Name', caption: 'Voucher Type' }], textKey: 'Name' });
+    cb.hBank = XCombo('CmbBankNameHistory', { columns: [{ key: 'Name', caption: 'Bank Name' }], textKey: 'Name', popupWidth: 240 });
+    cb.hSnd = XCombo('CmbSenderAcHistory', { columns: [{ key: 'Name', caption: 'Sender Ac' }], textKey: 'Name', popupWidth: 300 });
+    cb.hRcv = XCombo('CmbReceiverAcHistory', { columns: [{ key: 'Name', caption: 'Receiver Ac' }], textKey: 'Name', popupWidth: 300 });
+    XCombo.enhance($id('cmbStatus'));
     $id('txtdocdate').value = today(); $id('datChequeDate').value = today();
     document.addEventListener('keydown', keys);
+    commaInput($id('txtSlipAmount')); commaInput($id('txtAmount'));
+    digitsOnly($id('txtFromDocNoHistory')); digitsOnly($id('txtToDocNoHistory'));
+    /* grd_KeyDown: Ctrl+Enter = grd_DoubleClick; Ctrl+Space on X = delete the row */
+    $id('grdWrap').addEventListener('keydown', function (e) {
+        if (!e.ctrlKey) return;
+        var sel = $id('grd').querySelector('tbody tr.sel');
+        if (e.key === 'Enter' && sel) { e.preventDefault(); editEntry(+sel.getAttribute('data-i')); }
+        else if (e.key === ' ' && e.target && e.target.hasAttribute && e.target.hasAttribute('data-del')) { e.preventDefault(); e.target.click(); }
+    });
+    /* grdPendingRecord_KeyDown: Ctrl+Enter = Edit (Update right); Ctrl+Space = the focused cell button */
+    $id('grdPendingWrap').addEventListener('keydown', function (e) {
+        if (!e.ctrlKey) return;
+        var sel = $id('grdPendingRecord').querySelector('tbody tr.sel');
+        if (e.key === 'Enter' && sel) { e.preventDefault(); if (rights.update) editPending(pending[+sel.getAttribute('data-i')]); }
+        else if (e.key === ' ' && e.target && e.target.tagName === 'BUTTON') { e.preventDefault(); e.target.click(); }
+    });
 
     ajax('GET', API + '/lookups').done(function (d) {
         L = d; rights = d.rights || {}; booking = !!d.bookingOffice; portal = !!d.customerPortal;
@@ -210,7 +263,10 @@ function init() {
         cb.rep.setData(d.representatives || []);
         sendersBind();
         receiverAccountBind();
-        gridFill();
+        /* ?id= opens that pending slip for edit (the pending grid's Edit) */
+        var qid = parseInt(new URLSearchParams(window.location.search).get('id') || '0', 10);
+        var pg = gridFill();
+        if (qid > 0 && pg) pg.done(function () { openPendingById(qid, true); });
         histCombos();
         var from = new Date(); from.setDate(from.getDate() - (d.historyFromDaysBack || 3));
         $id('FromDateHistory').value = dstr(from); $id('ToDateHistory').value = today();
@@ -220,7 +276,7 @@ function init() {
 }
 
 function sendersBind() {
-    ajax('GET', API + '/senders?costCenterId=' + costCenterId()).done(function (d) { cb.snd.setData(d || []); });
+    return ajax('GET', API + '/senders?costCenterId=' + costCenterId()).done(function (d) { cb.snd.setData(d || []); });
 }
 
 /* ReceiverAccountBind() */
@@ -232,7 +288,17 @@ function receiverAccountBind() {
 
 /* GridFill() */
 function gridFill() {
-    ajax('GET', API + '/pending?costCenterId=' + costCenterId()).done(function (d) { pending = d || []; renderPending(); });
+    return ajax('GET', API + '/pending?costCenterId=' + costCenterId()).done(function (d) { pending = d || []; renderPending(); });
+}
+
+/* A slip opened by id (?id= or a DocNo link) - only a pending slip can be loaded, as on the desktop. */
+function openPendingById(id, quiet) {
+    var r = null;
+    pending.forEach(function (x) { if (+x.Id === +id) r = x; });
+    if (!r) { if (!quiet) msg('Only a pending slip can be opened for edit.'); return null; }
+    if (!rights.update) { msg('You do not have the Update right for this screen.'); return null; }
+    tab(0);
+    return editPending(r);
 }
 
 /* ------------------------------------------------------------------ formvalidation() */
@@ -323,7 +389,7 @@ function renderEntry() {
         ['bankName', 'BankName'], ['representativeAc', 'RepresentativeAc'], ['senderAc', 'SenderAc'], ['receiverAc', 'ReceiverAc'],
         ['chequeNo', 'ChequeNo'], ['chequeDate', 'ChequeDate'], ['amount', 'Amount'], ['remarks', 'Remarks'], ['status', 'Status']];
     var tot = 0;
-    var h = '<thead><tr>' + cols.map(function (c) { return '<th>' + c[1] + '</th>'; }).join('') + '<th>X</th></tr></thead><tbody>';
+    var h = '<thead><tr>' + cols.map(function (c) { return th(c, 100); }).join('') + '<th class="c" style="width:30px">X</th></tr></thead><tbody>';
     table.forEach(function (r, i) {
         tot += num(r.amount);
         h += '<tr data-i="' + i + '">' + cols.map(function (c) {
@@ -335,7 +401,10 @@ function renderEntry() {
     });
     h += '</tbody><tfoot><tr>' + cols.map(function (c) { return c[0] === 'amount' ? '<td class="num">' + fmt(tot) + '</td>' : '<td></td>'; }).join('') + '<td></td></tr></tfoot>';
     var t = $id('grd'); t.innerHTML = h;
-    t.querySelectorAll('tbody tr').forEach(function (tr) { tr.addEventListener('dblclick', function () { editEntry(+tr.getAttribute('data-i')); }); });
+    t.querySelectorAll('tbody tr').forEach(function (tr) {
+        tr.addEventListener('click', function () { t.querySelectorAll('tr.sel').forEach(function (x) { x.classList.remove('sel'); }); tr.classList.add('sel'); });
+        tr.addEventListener('dblclick', function () { editEntry(+tr.getAttribute('data-i')); });
+    });
     t.querySelectorAll('[data-del]').forEach(function (b) {
         b.addEventListener('click', function (e) { e.stopPropagation(); table.splice(+b.getAttribute('data-del'), 1); renderEntry(); });
     });
@@ -346,9 +415,9 @@ function renderPending() {
     var h = '<thead><tr>';
     var sel = !booking && !portal && rights.canChangeOrderStatusToComplete;
     var can = !booking && !portal && rights.canChangeOrderStatusToCancel;
-    if (sel) h += '<th><input type="checkbox" id="chkAllPending"></th><th>Confirm</th>';
-    if (can) h += '<th>Cancel</th>';
-    if (rights.update) h += '<th>Edit</th>';
+    if (sel) h += '<th class="c" style="width:40px"><input type="checkbox" id="chkAllPending"></th><th class="c" style="width:60px">Confirm</th>';
+    if (can) h += '<th class="c" style="width:60px">Cancel</th>';
+    if (rights.update) h += '<th class="c" style="width:40px">Edit</th>';
     var cols = [ ['DocNo', 'DocNo'], ['DocDate', 'DocDate']];
     /* CostCenter: hidden for portal/booking, else Visible = CmbCostCenter.Visible (only shown for
        booking office) - so it is never visible on this grid. */
@@ -356,18 +425,19 @@ function renderPending() {
     if (!(portal || booking)) cols.push(['RecieverAccount', 'ReceiverAccount']);
     cols.push(['ChequeNo', 'ChequeNo'], ['ChequeDate', 'ChequeDate'], ['RepresentativeAc', 'RepresentativeAccount'], ['SlipAmount', 'SlipAmount'],
         ['EntryStatus', 'EntryStatus'], ['RemarksHeader', 'Remarks'], ['NoOfAttachments', 'NoOfAttachments']);
-    h += cols.map(function (c) { return '<th>' + c[1] + '</th>'; }).join('') + '</tr></thead><tbody>';
+    h += cols.map(function (c) { return th(c, 90); }).join('') + '</tr></thead><tbody>';
     var tot = 0;
     pending.forEach(function (r, i) {
         tot += num(r.Amount);
         h += '<tr data-i="' + i + '">';
-        if (sel) h += '<td><input type="checkbox" class="chkP" data-i="' + i + '"></td><td><button class="tbtn" data-act="Confirm">Confirm</button></td>';
+        if (sel) h += '<td class="c"><input type="checkbox" class="chkP" data-i="' + i + '"></td><td><button class="tbtn" data-act="Confirm">Confirm</button></td>';
         if (can) h += '<td><button class="tbtn" data-act="Cancel">Cancel</button></td>';
         if (rights.update) h += '<td><button class="tbtn" data-act="Edit">Edit</button></td>';
         h += cols.map(function (c) {
             var v = r[c[0]];
             if (c[0] === 'Amount' || c[0] === 'SlipAmount') return '<td class="num">' + fmt(v) + '</td>';
             if (c[0] === 'DocDate' || c[0] === 'ChequeDate') return '<td>' + esc(day(v)) + '</td>';
+            if (c[0] === 'DocNo' && rights.update) return '<td><a class="code-link" data-open="1" title="Open this slip">' + esc(v) + '</a></td>';
             return '<td>' + esc(v) + '</td>';
         }).join('') + '</tr>';
     });
@@ -376,13 +446,32 @@ function renderPending() {
     var t = $id('grdPendingRecord'); t.innerHTML = h;
     var all = $id('chkAllPending');
     if (all) all.addEventListener('change', function () { t.querySelectorAll('.chkP').forEach(function (c) { c.checked = all.checked; }); });
+    t.querySelectorAll('tbody tr').forEach(function (tr) {
+        tr.addEventListener('click', function () { t.querySelectorAll('tr.sel').forEach(function (x) { x.classList.remove('sel'); }); tr.classList.add('sel'); });
+    });
     t.querySelectorAll('[data-act]').forEach(function (b) {
         b.addEventListener('click', function () {
             var r = pending[+b.closest('tr').getAttribute('data-i')];
             var a = b.getAttribute('data-act');
-            if (a === 'Edit') editPending(r); else statusChange(a, [r], false);
+            if (a === 'Edit') busy(b, function () { return editPending(r); }); else statusChange(a, [r], false, b);
         });
     });
+    t.querySelectorAll('[data-open]').forEach(function (a) {
+        a.addEventListener('click', function () { editPending(pending[+a.closest('tr').getAttribute('data-i')]); });
+    });
+}
+
+/* Janus column widths: gridsetting() (pending) and the history grid setting (:720-734, :1638-1653) */
+var WIDTHS = { DocNo: 60, DocDate: 80, CostCenter: 120, CostCenterName: 120, TrakingNo: 80, VoucherType: 70, Amount: 85, BankName: 120,
+    SenderAccount: 140, RecieverAccount: 140, ChequeNo: 85, ChequeDate: 90, RepresentativeAc: 140, SlipAmount: 85, EntryStatus: 85,
+    RemarksHeader: 160, NoOfAttachments: 100, __tws: 120 };
+function th(c, dflt) {
+    var w = WIDTHS[c[0]] || dflt;
+    if (c[1] === 'RepresentativeAccount') w = 160;
+    if (c[1] === 'NoOfAttachments' && c[0] === 'NoOfAttachments' && dflt === 90) w = 90;
+    if (c[1] === 'Remarks' && c[0] === 'RemarksHeader') w = 150;
+    var n = /Amount$/.test(c[0]) ? ' num' : '';
+    return '<th class="' + n + '" style="width:' + w + 'px" title="' + c[1] + '">' + c[1] + '</th>';
 }
 
 function slipKey(r) {
@@ -393,7 +482,7 @@ function slipKey(r) {
 /* grdPendingRecord "Edit" -> ReadByMultiParams */
 function editPending(r) {
     var k = slipKey(r);
-    ajax('POST', API + '/read', { trackingNo: k.trakingNo, slipAmount: k.slipAmount, voucherTypeId: k.vouchersId,
+    return ajax('POST', API + '/read', { trackingNo: k.trakingNo, slipAmount: k.slipAmount, voucherTypeId: k.vouchersId,
         receiverAcId: k.receiverAcId, docDate: k.docDate, costCenterId: k.costCenterId }).done(function (dt) {
         if (!dt || !dt.length) return;
         show('btnUpdate', true); show('btnsave', false); mode = 'update';
@@ -411,12 +500,14 @@ function editPending(r) {
 }
 
 /* Confirm / Cancel (grid buttons) and btnConfirmVoucher_Click (checked rows) */
-function statusChange(action, rows, bulk) {
+function statusChange(action, rows, bulk, btn) {
     if (!rows.length) { msg('Please select row first'); return; }
-    if (!confirm(bulk ? 'Are you sure to Confirm Voucher' : 'Are you sure to ' + action)) return;
-    ajax('POST', API + '/status', { action: action, bulk: bulk, rows: rows.map(slipKey) }).done(function (d) {
-        msg(d.message, true); reset();
-    }).always(function () { gridFill(); });
+    busy(btn || 'btnConfirmVoucher', function () {
+        if (!confirm(bulk ? 'Are you sure to Confirm Voucher' : 'Are you sure to ' + action)) return null;
+        return ajax('POST', API + '/status', { action: action, bulk: bulk, rows: rows.map(slipKey) }).done(function (d) {
+            msg(d.message, true); reset();
+        }).always(function () { gridFill(); });
+    });
 }
 
 function confirmChecked() {
@@ -427,12 +518,17 @@ function confirmChecked() {
 }
 
 /* Insert() */
+var saving = false;
 function save(m) {
-    if (!table.length) { msg('grid record not found'); return; }
-    if (!confirm(m === 'update' ? 'Are you sure to Update?' : 'Are you sure to Save?')) return;
-    ajax('POST', API + '/save', { mode: m, costCenterId: costCenterId(), trackingNo: $id('txtTrackingNo').value,
-        slipAmount: num($id('txtSlipAmount').value), docDate: $id('txtdocdate').value, rows: table }).done(function (d) {
-        msg(d.message, true); reset();
+    if (saving) return;
+    busy(m === 'update' ? 'btnUpdate' : 'btnsave', function () {
+        if (!table.length) { msg('grid record not found'); return null; }
+        if (!confirm(m === 'update' ? 'Are you sure to Update?' : 'Are you sure to Save?')) return null;
+        saving = true;
+        return ajax('POST', API + '/save', { mode: m, costCenterId: costCenterId(), trackingNo: $id('txtTrackingNo').value,
+            slipAmount: num($id('txtSlipAmount').value), docDate: $id('txtdocdate').value, rows: table }).done(function (d) {
+            msg(d.message, true); reset();
+        }).always(function () { saving = false; });
     });
 }
 
@@ -444,25 +540,28 @@ function reset() {
     $id('txtChequeNo').value = ''; $id('txtAmount').value = '';
     table = []; renderEntry();
     show('Add', true); show('btnUpdateDetail', false); show('btnCancelUpdateDetial', false);
-    ajax('GET', API + '/doc-no').done(function (d) { $id('txtdocno').value = d.docNo || ''; });
-    gridFill();
+    var a = ajax('GET', API + '/doc-no').done(function (d) { $id('txtdocno').value = d.docNo || ''; });
+    var b = gridFill();
     $id('txtdocdate').focus();
+    return $.when(a, b);
 }
 
-function newForm() { reset(); show('btnsave', true); show('btnUpdate', false); }
+function newForm() { busy('btnNew', function () { var p = reset(); show('btnsave', true); show('btnUpdate', false); return p; }); }
 
 /* btnRefresh_Click: bankfill, OtherPartiesFill, SenderPartiesBind */
 function refresh() {
-    ajax('GET', API + '/lookups').done(function (d) { cb.bank.setData(d.banks || []); cb.rep.setData(d.representatives || []); });
-    sendersBind();
+    busy('toolStripButton1', function () {
+        var a = ajax('GET', API + '/lookups').done(function (d) { cb.bank.setData(d.banks || []); cb.rep.setData(d.representatives || []); });
+        return $.when(a, sendersBind());
+    });
 }
 
 /* ------------------------------------------------------------------------ register tab */
 function histCombos() {
-    ajax('GET', API + '/history-combos?costCenterId=' + costCenterId()).done(function (d) {
+    busy('btnRefreshHistory', function () { return ajax('GET', API + '/history-combos?costCenterId=' + costCenterId()).done(function (d) {
         cb.hVt.setData(d.voucherTypes || []); cb.hBank.setData(d.banks || []);
         cb.hSnd.setData(d.senders || []); cb.hRcv.setData(d.receivers || []);
-    });
+    }); });
 }
 
 function history() {
@@ -470,7 +569,7 @@ function history() {
         fromDocNo: $id('txtFromDocNoHistory').value, toDocNo: $id('txtToDocNoHistory').value,
         voucherTypeId: cb.hVt.value() || 0, bankId: cb.hBank.value() || 0, senderAcId: cb.hSnd.value() || 0,
         receiverAcId: cb.hRcv.value() || 0, costCenterId: costCenterId() };
-    ajax('GET', API + '/history?' + $.param(q)).done(function (list) {
+    busy('btnshow', function () { return ajax('GET', API + '/history?' + $.param(q)).done(function (list) {
         list = list || [];
         if (!list.length) { $id('grdHistory').innerHTML = ''; return; }
         var cols = [];
@@ -480,10 +579,11 @@ function history() {
             ['ChequeNo', 'ChequeNo'], ['ChequeDate', 'ChequeDate'], ['EntryStatus', 'EntryStatus'], ['NoOfAttachments', 'NoOfAttachments'],
             ['RemarksHeader', 'RemarksHeader'], ['__tws', 'TrackingWithSlipAmount']);
         var tot = 0;
-        var h = '<thead><tr>' + cols.map(function (c) { return '<th>' + c[1] + '</th>'; }).join('') + '</tr></thead><tbody>';
+        var h = '<thead><tr>' + cols.map(function (c) { return th(c, 100); }).join('') + '</tr></thead><tbody>';
         list.forEach(function (r) {
             tot += num(r.Amount);
-            h += '<tr>' + cols.map(function (c) {
+            h += '<tr data-id="' + esc(r.Id) + '">' + cols.map(function (c) {
+                if (c[0] === 'DocNo') return '<td><a class="code-link" data-open="1" title="Open this slip (pending slips only)">' + esc(r[c[0]]) + '</a></td>';
                 if (c[0] === '__tws') return '<td>' + esc((r.TrakingNo == null ? '' : r.TrakingNo) + ' ' + (r.SlipAmount == null ? '' : r.SlipAmount)) + '</td>';
                 var v = r[c[0]];
                 if (c[0] === 'Amount') return '<td class="num">' + fmt(v) + '</td>';
@@ -492,8 +592,11 @@ function history() {
             }).join('') + '</tr>';
         });
         h += '</tbody><tfoot><tr>' + cols.map(function (c) { return c[0] === 'Amount' ? '<td class="num">' + fmt(tot) + '</td>' : '<td></td>'; }).join('') + '</tr></tfoot>';
-        $id('grdHistory').innerHTML = h;
-    });
+        var g = $id('grdHistory'); g.innerHTML = h;
+        g.querySelectorAll('[data-open]').forEach(function (a) {
+            a.addEventListener('click', function () { openPendingById(+a.closest('tr').getAttribute('data-id'), false); });
+        });
+    }); });
 }
 
 function histReset() {
@@ -520,9 +623,23 @@ function shortcuts() {
 
 /* AcfrmDefPdcManagment_KeyDown */
 function keys(e) {
+    var t = e.target || {};
+    /* Enter = SendKeys("{TAB}") (combos pick their row first, in their own handler) */
+    if (e.key === 'Enter' && !e.ctrlKey && !e.altKey && !e.shiftKey && (t.tagName === 'INPUT' || t.tagName === 'SELECT')
+        && t.type !== 'checkbox' && t.type !== 'radio') { e.preventDefault(); focusNext(t); return; }
+    /* Escape = Close() - not while a combo or the shortcut list is open */
+    if (e.key === 'Escape' && !e.ctrlKey) {
+        if ($id('scModal').style.display === 'block') { $id('scModal').style.display = 'none'; return; }
+        if (t.classList && (t.classList.contains('dcombo-input') || t.classList.contains('dtcombo-input'))) return;
+        closeForm(); return;
+    }
     if (e.ctrlKey && e.altKey) { shortcuts(); return; }
     if (!e.ctrlKey) return;
     var k = e.key.toLowerCase();
+    if (k === 'e') { e.preventDefault(); closeForm(); return; }
+    if (e.key === 'F10') { e.preventDefault(); msg('Attachments (DMS) are not ported to the web.'); return; }
+    /* Ctrl+Down: grd focused -> grdPendingRecord, else -> grd */
+    if (e.key === 'ArrowDown') { e.preventDefault(); var gw = $id('grdWrap'); if (document.activeElement === gw || gw.contains(document.activeElement)) $id('grdPendingWrap').focus(); else gw.focus(); return; }
     if (k === 's' && $id('btnsave').style.display !== 'none' && !$id('btnsave').disabled) { e.preventDefault(); save('save'); }
     else if (k === 'u' && $id('btnUpdate').style.display !== 'none' && !$id('btnUpdate').disabled) { e.preventDefault(); save('update'); }
     else if (k === 'n') { e.preventDefault(); newForm(); }

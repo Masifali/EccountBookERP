@@ -354,13 +354,18 @@ public class ReportPdfService {
     @org.springframework.beans.factory.annotation.Autowired
     private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
 
-    /** CompName / CompAddress of the signed-in company - what the desktop passes as @CompanyName / @CompanyAddress. */
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.mst.repositories.ICompanyRepository companies;
+
+    /** CompName / CompAddress of the signed-in company - what the desktop passes as @CompanyName / @CompanyAddress
+        (UserAccount.CompName / CompAddress = the signed-in dbo.Company row). 2026-10-02: was
+        Sp_Company_GetAllMethod @Activity='ReadById', an activity the procedure does not have (no result set). */
     private Object companyValue(String col) {
         try {
-            List<Map<String, Object>> r = jdbcTemplate.queryForList("EXEC Sp_Company_GetAllMethod @Id=?, @Activity=?",
-                    context.currentCompanyId(), "ReadById");
-            if (!r.isEmpty()) for (Map.Entry<String, Object> e : r.get(0).entrySet())
-                if (e.getKey().equalsIgnoreCase(col)) return e.getValue();
+            com.mst.models.Company c = companies.findById(context.currentCompanyId()).orElse(null);
+            if (c == null) return "";
+            Object v = "CompName".equalsIgnoreCase(col) ? c.getCompName() : "CompAddress".equalsIgnoreCase(col) ? c.getCompAddress() : null;
+            return v == null ? "" : v;
         } catch (Exception ignored) { }
         return "";
     }

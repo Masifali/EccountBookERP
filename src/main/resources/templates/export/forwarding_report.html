@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Forwarding Report - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_rptb.css?v=20260930a}"/>
+</head>
+<!-- ExImForwardingHistory.cs (Architecture.WinApp.ExportReports), screen 269 "5012 Forwarding Report", ClientSize 1193 x 561 (AutoScrollMinSize 974 x 788).
+     tsItemType: btnnew "&New" | btnRefresh "&Refresh" | toolStripButton2 "508-Forwarding Register" | btnLoadingRegister "508-01_LoadingSheet".
+     panel5 (Teal) label3 "Export Forwarding Register". panel2 filters: cmbdatetype "Date Type" (Rows[0] = This Day on load), txtdatefrom /
+       txtdateto "Date From" / "Date To" (ShowCheckBox, checked), cmbSupplierName "Customer" (Leave -> InvoiceNoFill), cmbInvoiceNo "Invoice No",
+       CmbItem "Item Name", CmbContractNo "Contract No", CmbWarehouseFrom "From Warehouse", CmbWarehouseTo "To Warehouse", GPfromdate "Gp Date From" /
+       GPToDate "Gp Date To" (ShowCheckBox, unchecked), GpsNoFrom / GpsNoTo "GP From&To" (digits only), btnShow "Show".
+     panel6 (Teal) label1 "History" + ctrlGrdBar1; grdfrm: "Print" button column first (frozen) -> 507 slip by Id; Id hidden; hidden when grouped:
+       DeliveryTerm, FcyCode, MTon, CostingContribution, ProfitLoss, Continent.
+     ?invoiceId=&fromDate=&toDate=&auto=1 on the URL plays the public cmbInvoiceNo / txtdatefrom / txtdateto + btnShow_Click that 254 uses.
+     Events: Load, cmbSupplierName Leave, cmbdatetype ValueChanged, btnShow/btnnew/btnRefresh/toolStripButton2/btnLoadingRegister Click,
+       grdfrm ColumnButtonClick / KeyDown (Ctrl+Space), GpsNoFrom/GpsNoTo KeyPress, KeyDown. -->
+<body class="pd-body" data-export-page="rptb-269">
+<div class="pd-form ex-form">
+    <div class="win-tool-strip">
+        <button type="button" id="btnnew" class="win-btn-tool" onclick="ExportFwd.reset()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+        <button type="button" id="btnRefresh" class="win-btn-tool" onclick="ExportFwd.refresh(this)"><i class="fa fa-refresh"></i> <span><u>R</u>efresh</span></button>
+        <button type="button" id="toolStripButton2" class="win-btn-tool" onclick="ExportFwd.print('exp-508', this)"><i class="fa fa-print"></i> <span>508-Forwarding Register</span></button>
+        <button type="button" id="btnLoadingRegister" class="win-btn-tool" onclick="ExportFwd.print('exp-508-01', this)"><i class="fa fa-print"></i> <span>508-01_LoadingSheet</span></button>
+    </div>
+    <div class="rptb-title"><span id="label3">Export Forwarding Register</span></div>
+
+    <div class="rptb-filters">
+        <div class="rptb-row">
+            <div class="ex-field w-m"><label for="cmbdatetype">Date Type</label>
+                <select id="cmbdatetype" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Parameters"></select></div>
+            <div class="ex-field w-m"><label for="txtdatefrom">Date From</label>
+                <span class="ex-check"><input type="checkbox" id="txtdatefromChk" checked/><input type="date" id="txtdatefrom" class="win-date" style="flex:1;"/></span></div>
+            <div class="ex-field w-m"><label for="txtdateto">Date To</label>
+                <span class="ex-check"><input type="checkbox" id="txtdatetoChk" checked/><input type="date" id="txtdateto" class="win-date" style="flex:1;"/></span></div>
+            <div class="ex-field w-l"><label for="cmbSupplierName">Customer</label>
+                <select id="cmbSupplierName" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Customer Name"></select></div>
+            <div class="ex-field w-m"><label for="cmbInvoiceNo">Invoice No</label>
+                <select id="cmbInvoiceNo" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Invoice No"></select></div>
+            <div class="ex-field w-l"><label for="CmbItem">Item Name</label>
+                <select id="CmbItem" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Name"></select></div>
+            <div class="ex-field w-m"><label for="CmbContractNo">Contract No</label>
+                <select id="CmbContractNo" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="ContractNo"></select></div>
+        </div>
+        <div class="rptb-row" style="margin-top:4px;">
+            <div class="ex-field w-l"><label for="CmbWarehouseFrom">From Warehouse</label>
+                <select id="CmbWarehouseFrom" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="From Warehouse"></select></div>
+            <div class="ex-field w-l"><label for="CmbWarehouseTo">To Warehouse</label>
+                <select id="CmbWarehouseTo" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="To Warehouse"></select></div>
+            <div class="ex-field w-m"><label for="GPfromdate">Gp Date From</label>
+                <span class="ex-check"><input type="checkbox" id="GPfromdateChk"/><input type="date" id="GPfromdate" class="win-date" style="flex:1;"/></span></div>
+            <div class="ex-field w-m"><label for="GPToDate">Gp Date To</label>
+                <span class="ex-check"><input type="checkbox" id="GPToDateChk"/><input type="date" id="GPToDate" class="win-date" style="flex:1;"/></span></div>
+            <div class="ex-field w-m"><label for="GpsNoFrom">GP From&amp; To</label>
+                <div class="ex-pair" style="grid-template-columns:1fr 1fr;"><input type="text" id="GpsNoFrom" class="win-textbox num" data-guard="integer" autocomplete="off"/><input type="text" id="GpsNoTo" class="win-textbox num" data-guard="integer" autocomplete="off"/></div></div>
+            <div class="ex-field"><label>&nbsp;</label><button type="button" id="btnShow" class="win-btn-small rptb-show" onclick="ExportFwd.show(this)">Show</button></div>
+        </div>
+    </div>
+
+    <div class="pd-caption pd-caption-teal pd-history-bar" style="height:24px;"><span id="label1">History</span>
+        <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdBox" title="Fullscreen table">&#x26F6;</button><span id="gridBarMount" class="pd-gridbar-mount"></span></span></div>
+    <div class="ex-grid-box" id="grdBox">
+        <div class="ex-grid-scroll ex-hfill">
+            <table class="win-grid" id="grdfrm" data-gridbar="ExImForwardingHistory:grdfrm" data-gridbar-mount="#gridBarMount" data-gridbar-reorder="false"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+        </div>
+        <div class="ex-grid-empty is-hidden" id="grdEmpty">No record found.</div>
+    </div>
+    <div class="win-footer-strip"><span class="ex-footer-left">ExImForwardingHistory</span></div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_export_rptb_common.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_export_forwarding_report.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

@@ -46,6 +46,38 @@
     function fail(e) { alert(e && e.message ? e.message : e); }
     function has(id) { return val(id) !== '' && val(id) !== '0'; }
 
+    // Server buttons (user mandate 2026-10-02): disabled at once with a spinner, a second request
+    // refused while one is running, and put back to the state they had on success AND on failure.
+    function lock(b) {
+        if (typeof b === 'string') b = $(b);
+        if (!b) return true;
+        if (b.getAttribute('data-busy')) return false;
+        b.setAttribute('data-busy', b.disabled ? 'd' : 'e');
+        b.setAttribute('data-html', b.innerHTML);
+        b.disabled = true;
+        b.innerHTML = '<i class="fa fa-spinner fa-spin"></i> ' + b.innerHTML;
+        return true;
+    }
+    function unlock(b) {
+        if (typeof b === 'string') b = $(b);
+        if (!b || !b.getAttribute('data-busy')) return;
+        b.disabled = b.getAttribute('data-busy') === 'd';
+        b.innerHTML = b.getAttribute('data-html');
+        b.removeAttribute('data-busy'); b.removeAttribute('data-html');
+    }
+    function isBusy(id) { var b = $(id); return !!(b && b.getAttribute('data-busy')); }
+    function busy(b, fn) {
+        if (!lock(b)) return Promise.resolve();
+        var p;
+        try { p = Promise.resolve(fn()); } catch (x) { p = Promise.reject(x); }
+        return p.catch(fail).then(function () { unlock(b); });
+    }
+    function firstRow(tableId) {
+        var t = $(tableId); if (!t) return;
+        var r = t.querySelector('tbody tr');
+        if (r) r.focus(); else if (t.parentNode && t.parentNode.focus) t.parentNode.focus();
+    }
+
     function fillAccounts(sel, rows) {
         GD.fill(sel, rows, 'Id', 'AccountTitle', { code: 'AccountCode', parent: 'ParentAccountTitle', 'class': 'AccountClass' }, '');
     }
@@ -94,6 +126,9 @@
             defaultConfigurations();
             renderGrid();
             $('txtDocDate').focus();
+            // ?id= in the URL loads that voucher (ReadById)
+            var qid = parseInt(new URLSearchParams(location.search).get('id') || '0', 10);
+            if (qid > 0) read(qid);
         }).catch(fail);
     }
 
@@ -509,7 +544,7 @@
         var tDr = 0, tCr = 0, fDr = 0, fCr = 0;
         S.table.forEach(function (r, i) {
             tDr += toDbl(r.AmountDr); tCr += toDbl(r.AmountCr); fDr += toDbl(r.DebitFcyAmount); fCr += toDbl(r.CreditFcyAmount);
-            h += '<tr' + (i === S.cur ? ' class="cur"' : '') + ' ondblclick="DBO.editRow(' + i + ')">'
+            h += '<tr' + (i === S.cur ? ' class="cur"' : '') + ' tabindex="-1" data-i="' + i + '" ondblclick="DBO.editRow(' + i + ')">'
                 + (tmp ? '<td class="num">' + r.SubCode + '</td>' : '')
                 + '<td>' + GD.esc(r.AccountCode) + '</td><td>' + GD.esc(r.AccountTitle) + '</td>'
                 + (sub ? '<td>' + GD.esc(r.SubsidiaryAccount) + '</td>' : '')
@@ -544,12 +579,12 @@
         $('txtDocDate').focus();
         S.table = []; S.cur = -1;
         renderGrid();
-        GD.get(API + '/offset/code').then(function (r) { set('txtDocNo', r.voucherCode); }).catch(fail);
+        busy('btnNew', function () { return GD.get(API + '/offset/code').then(function (r) { set('txtDocNo', r.voucherCode); }); });
     }
 
     // =========================================================================== btnRefresh
     function refresh() {
-        GD.get(API + '/offset/accounts').then(function (d) {
+        busy('btnRefresh', function () { return GD.get(API + '/offset/accounts').then(function (d) {
             var keep = { cash: val('cmbCashAccount'), h: val('CmbCashAccountForHistory'), cr: val('cmbCreditAccount'), dr: val('cmbDebitAccount'), cur: val('cmbCurrency') };
             S.cashAccounts = d.cashAccounts || []; S.accounts = d.detailAccounts || [];
             GD.fill('cmbCurrency', d.currencies, 'Id', 'CurrencyCode', null, ''); set('cmbCurrency', keep.cur);
@@ -562,11 +597,12 @@
             if (S.tempAccountId > 0) set('CmbTemporaryAccount', S.tempAccountId);
             S.baseCurrency = d.baseCurrencyId || 0; S.baseRate = d.baseCurrencyRate || 0;
             defaultConfigurations();
-        }).catch(fail);
+        }); });
     }
 
     // ================================================================= btnsave_Click / btnUpdate_Click
     function save(isUpdate, acknowledged) {
+        if (isBusy('btnsave') || isBusy('btnUpdate')) return;      // a save is already running
         if (isUpdate && S.recId === 0) { alert('Record Id Not Found'); return; }
         if (val('txtDocNo') === '') { alert('DocNo Required'); return; }
         if (!has('cmbCashAccount')) { alert('Cash Account Required'); $('cmbCashAccount').focus(); return; }
@@ -599,15 +635,18 @@
             })
         };
         var preview = $('ChkBoxPrintPreview').checked, format2 = $('chkformat2').checked;
-        GD.api('POST', API + '/offset/save', body).then(function (res) {
-            alert(res.message);
-            newForm();
-            if (preview) slip({ id: res.id });
-            else if (format2) GD.get(API + '/slip102/' + res.id).then(function (rows) { GD.printRows('102-AcRptPaymentReceiptsVoucherSlip', rows); }).catch(fail);
-        }).catch(function (e) {
-            if (e && e.status === 409 && e.confirm === 'duplicate') { if (confirm(e.message)) save(isUpdate, true); return; }
-            fail(e);
-        });
+        var again = false;
+        busy(isUpdate ? 'btnUpdate' : 'btnsave', function () {
+            return GD.api('POST', API + '/offset/save', body).then(function (res) {
+                alert(res.message);
+                newForm();
+                if (preview) slip({ id: res.id });
+                else if (format2) GD.get(API + '/slip102/' + res.id).then(function (rows) { GD.printRows('102-AcRptPaymentReceiptsVoucherSlip', rows); }).catch(fail);
+            }).catch(function (e) {
+                if (e && e.status === 409 && e.confirm === 'duplicate') { again = confirm(e.message); return; }
+                fail(e);
+            });
+        }).then(function () { if (again) save(isUpdate, true); });
     }
 
     // =============================================================================== History
@@ -617,11 +656,11 @@
         if (i === 1) history();
     }
 
-    function loadVoucherDates() { GD.get(API + '/offset/voucher-dates').then(fillVoucherDates).catch(fail); }
+    function loadVoucherDates() { busy('btnRefreshHistory', function () { return GD.get(API + '/offset/voucher-dates').then(fillVoucherDates); }); }
 
     /** HistoryFill (:1980) */
     function history() {
-        GD.get(API + '/offset/history', { voucherDate: val('datVouchderDateForHistory'), cashAccountId: val('CmbCashAccountForHistory') || 0 })
+        busy('BtnShow', function () { return GD.get(API + '/offset/history', { voucherDate: val('datVouchderDateForHistory'), cashAccountId: val('CmbCashAccountForHistory') || 0 })
             .then(function (rows) {
                 if (!rows || rows.length === 0) { $('DataGridCreditHistory').innerHTML = ''; $('DataGridDebitHistory').innerHTML = ''; return; }
                 var cr = [], dr = [];
@@ -631,7 +670,7 @@
                 });
                 renderHistory('DataGridCreditHistory', cr, 'CreditAmount', true);
                 renderHistory('DataGridDebitHistory', dr, 'DebitAmount', false);
-            }).catch(fail);
+            }); });
     }
 
     function renderHistory(grid, rows, amountCol, withUsers) {
@@ -646,9 +685,9 @@
             var ed = GD.toDate(GD.col(r, 'EntryDate')), md = GD.toDate(GD.col(r, 'ModifyDate'));
             if (ed) ed.setHours(0, 0, 0, 0);
             if (md) md.setHours(0, 0, 0, 0);
-            h += '<tr><td><button type="button" onclick="DBO.read(' + id + ')">Edit</button></td>'
+            h += '<tr tabindex="-1" data-id="' + id + '"><td><button type="button" onclick="DBO.read(' + id + ')">Edit</button></td>'
                 + '<td><button type="button" onclick="DBO.slip({id:' + id + '})">Print</button></td>'
-                + '<td>' + GD.esc(GD.col(r, 'VoucherCode')) + '</td><td>' + GD.esc(GD.col(r, 'CashAccount')) + '</td>'
+                + '<td><a href="#" class="code" title="Load this voucher" onclick="DBO.read(' + id + ');return false;">' + GD.esc(GD.col(r, 'VoucherCode')) + '</a></td><td>' + GD.esc(GD.col(r, 'CashAccount')) + '</td>'
                 + '<td>' + GD.esc(GD.col(r, 'DeailAccountCode')) + '</td><td>' + GD.esc(GD.col(r, 'DetailAccount')) + '</td>'
                 + '<td class="num">' + GD.fmtSingle(GD.col(r, amountCol)) + '</td>'
                 + (mc ? '<td class="num">' + GD.fmt3(GD.col(r, 'DCurrencyAmount')) + '</td>' : '')
@@ -738,6 +777,27 @@
         else if (k === 'p') { e.preventDefault(); if (!$('btnPrint144').disabled) print144(); }
         else if (e.key === 'F5') { e.preventDefault(); (onForm ? $('txtDocDate') : $('datVouchderDateForHistory')).focus(); }
         else if (e.key === 'ArrowUp') { e.preventDefault(); $('cmbCreditAccount').focus(); }
+        else if (e.key === 'ArrowDown') { e.preventDefault(); if (onForm) firstRow('grdDetail'); }          // focus on the detail grid
+        else if (e.key === 'ArrowRight' && !onForm) {                                                       // history grids, one then the other
+            e.preventDefault();
+            var inCr = $('DataGridCreditHistory').contains(document.activeElement);
+            firstRow(inCr ? 'DataGridDebitHistory' : 'DataGridCreditHistory');
+        }
+        else if (e.key === 'Enter' || e.key === ' ' || e.code === 'Space') {
+            // grdDetail_KeyDown / DataGrid*History_KeyDown: Ctrl+Enter = edit / load the row,
+            // Ctrl+Space = the button of the current column (Delete asks first, as on the desktop).
+            var tr = e.target && e.target.closest ? e.target.closest('tbody tr') : null;
+            var tb = tr ? tr.closest('table') : null;
+            if (!tb || ['grdDetail', 'DataGridCreditHistory', 'DataGridDebitHistory'].indexOf(tb.id) < 0) return;
+            e.preventDefault();
+            if (e.key === 'Enter') {
+                if (tb.id === 'grdDetail') editRow(+tr.getAttribute('data-i'));
+                else read(+tr.getAttribute('data-id'));
+            } else {
+                var b = e.target.closest('button, a');
+                if (b) b.click();
+            }
+        }
     });
 
     window.DBO = {

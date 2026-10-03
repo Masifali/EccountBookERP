@@ -42,6 +42,33 @@
     function today() { return GD.iso(new Date()); }
     function fail(e) { alert(e && e.message ? e.message : e); }
 
+    // Server buttons (user mandate 2026-10-02): disabled at once with a spinner, a second request
+    // refused while one is running, and put back to the state they had on success AND on failure.
+    function lock(b) {
+        if (typeof b === 'string') b = $(b);
+        if (!b) return true;
+        if (b.getAttribute('data-busy')) return false;
+        b.setAttribute('data-busy', b.disabled ? 'd' : 'e');
+        b.setAttribute('data-html', b.innerHTML);
+        b.disabled = true;
+        b.innerHTML = '<i class="fa fa-spinner fa-spin"></i> ' + b.innerHTML;
+        return true;
+    }
+    function unlock(b) {
+        if (typeof b === 'string') b = $(b);
+        if (!b || !b.getAttribute('data-busy')) return;
+        b.disabled = b.getAttribute('data-busy') === 'd';
+        b.innerHTML = b.getAttribute('data-html');
+        b.removeAttribute('data-busy'); b.removeAttribute('data-html');
+    }
+    function isBusy(id) { var b = $(id); return !!(b && b.getAttribute('data-busy')); }
+    function busy(b, fn) {
+        if (!lock(b)) return Promise.resolve();
+        var p;
+        try { p = Promise.resolve(fn()); } catch (x) { p = Promise.reject(x); }
+        return p.catch(fail).then(function () { unlock(b); });
+    }
+
     function fillAccounts(sel, rows, blank) {
         GD.fill(sel, rows, 'Id', 'AccountTitle', { code: 'AccountCode', parent: 'ParentAccountTitle', 'class': 'AccountClass' }, blank);
     }
@@ -75,6 +102,9 @@
             fillVoucherDates(d.voucherDates);
             renderGrid('cr'); renderGrid('dr');
             $('cmbCashAccount').focus();
+            // ?id= in the URL loads that voucher (ReadById)
+            var qid = parseInt(new URLSearchParams(location.search).get('id') || '0', 10);
+            if (qid > 0) read(qid);
         }).catch(fail);
     }
 
@@ -310,7 +340,7 @@
         S.upd.cr = -1; S.upd.dr = -1;
         S.cr = []; S.dr = [];
         renderGrid('cr'); renderGrid('dr');
-        GD.get(API + '/cash/code').then(function (r) { $('txtDocNo').value = r.voucherCode; }).catch(fail);
+        busy('btnNew', function () { return GD.get(API + '/cash/code').then(function (r) { $('txtDocNo').value = r.voucherCode; }); });
         $('CmbCreditAccount').value = ''; $('txtCreditAmount').value = '';
         $('CmbDebitAccount').value = ''; $('txtDebitAmount').value = '';
         $('cmbCashAccount').focus();
@@ -319,7 +349,7 @@
 
     // ===================================================================== btnRefresh_Click
     function refresh() {
-        GD.get(API + '/cash/accounts').then(function (d) {
+        busy('btnRefresh', function () { return GD.get(API + '/cash/accounts').then(function (d) {
             var keep = { a: val('cmbCashAccount'), h: val('CmbCashAccountForHistory'), c: val('CmbCreditAccount'), dd: val('CmbDebitAccount') };
             S.cashAccounts = d.cashAccounts || []; S.detailAccounts = d.detailAccounts || [];
             fillAccounts('cmbCashAccount', S.cashAccounts, ''); $('cmbCashAccount').value = keep.a;
@@ -327,11 +357,12 @@
             fillAccounts('CmbCreditAccount', S.detailAccounts, ''); $('CmbCreditAccount').value = keep.c;
             fillAccounts('CmbDebitAccount', S.detailAccounts, ''); $('CmbDebitAccount').value = keep.dd;
             if (S.subsidiaryFeature) { S.subAll = d.subsidiaryAccounts || []; bindSub('dr'); bindSub('cr'); }
-        }).catch(fail);
+        }); });
     }
 
     // =============================================================== btnsave_Click / btnUpdate_Click -> Insert()
     function save(isUpdate) {
+        if (isBusy('btnSave') || isBusy('btnUpdate')) return;      // a save is already running
         if (!isUpdate) S.recId = 0;
         if (intOf(val('txtDocNo')) === 0) { alert('Doc No Field is Required'); return; }
         if (val('cmbCashAccount') === '') { alert('cash Account Field is Required'); $('cmbCashAccount').focus(); return; }
@@ -348,11 +379,13 @@
             remarks: val('txtHeaderRemarks'), receipts: S.cr.map(line), payments: S.dr.map(line)
         };
         var print = $('ChkPrintPreview').checked;
-        GD.api('POST', API + '/cash/save', body).then(function (res) {
-            alert(res.message);
-            newForm();
-            if (print) slip({ documentTypeId: 9, id: res.id });
-        }).catch(fail);
+        busy(isUpdate ? 'btnUpdate' : 'btnSave', function () {
+            return GD.api('POST', API + '/cash/save', body).then(function (res) {
+                alert(res.message);
+                newForm();
+                if (print) slip({ documentTypeId: 9, id: res.id });
+            });
+        });
     }
 
     // =============================================================================== History
@@ -363,12 +396,12 @@
     }
 
     function loadVoucherDates() {
-        GD.get(API + '/cash/voucher-dates').then(fillVoucherDates).catch(fail);
+        busy('btnRefreshHistory', function () { return GD.get(API + '/cash/voucher-dates').then(fillVoucherDates); });
     }
 
     /** HistoryFill (:1683) */
     function history() {
-        GD.get(API + '/cash/history', { voucherDate: val('datVouchderDateForHistory'), cashAccountId: val('CmbCashAccountForHistory') || 0 })
+        busy('BtnShow', function () { return GD.get(API + '/cash/history', { voucherDate: val('datVouchderDateForHistory'), cashAccountId: val('CmbCashAccountForHistory') || 0 })
             .then(function (rows) {
                 var cr = [], dr = [];
                 (rows || []).forEach(function (r) {
@@ -381,7 +414,7 @@
                 }
                 renderHistory('DataGridCreditHistory', cr, 'CreditAmount', true);
                 renderHistory('DataGridDebitHistory', dr, 'DebitAmount', false);
-            }).catch(fail);
+            }); });
     }
 
     /** DataGridCreditHistorySetting / DataGridDebitHistorySetting: grouped by CashAccount. */
@@ -406,7 +439,7 @@
                 var id = GD.col(r, 'Id');
                 t += GD.num(GD.col(r, amountCol));
                 grand += GD.num(GD.col(r, amountCol));
-                h += '<tr ondblclick="DB.read(' + id + ')"><td>' + GD.esc(GD.col(r, 'VoucherCode')) + '</td>'
+                h += '<tr ondblclick="DB.read(' + id + ')"><td><a href="#" class="code" title="Load this voucher" onclick="DB.read(' + id + ');return false;">' + GD.esc(GD.col(r, 'VoucherCode')) + '</a></td>'
                     + '<td>' + GD.esc(GD.col(r, 'DetailAccount')) + '</td>'
                     + (sub ? '<td>' + GD.esc(GD.col(r, 'SubsidiaryAccountTitle')) + '</td>' : '')
                     + '<td class="num">' + GD.fmtSingle(GD.col(r, amountCol)) + '</td>'
@@ -442,8 +475,8 @@
             $('txtDocDate').value = GD.iso(S.loadedDate);
             $('txtDocNo').value = GD.col(hd, 'VoucherCode');
             $('cmbCashAccount').value = String(GD.col(hd, 'RefAccountId'));
+            cashLeave();               // :1931 runs against the grids still on screen; they are cleared at :1933
             S.cr = []; S.dr = [];
-            cashLeave();
             $('txtHeaderRemarks').value = GD.col(hd, 'Remarks') || '';
             (o.details || []).forEach(function (x) {
                 var acc = intOf(GD.col(x, 'AccountId')), against = intOf(GD.col(x, 'AgainstAccountId'));

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Packing Detail - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_pre_invoice.css?v=20261001a}"/>
+</head>
+<!-- PackingDetailForCommercialInvoice.cs (Architecture.WinApp.Export), screen 193 "Packing Detail", ClientSize 964 x 661,
+     ScreenName PackingDetailForCommercialInvoice; rows of ExImPackingListDetail with RefDocumentTypeId 211 (Commercial Invoice).
+     tabControl1 "Form" | "History".
+     Form: toolStrip4 New / Save / Update(hidden) / Refresh / Attachment(hidden) / Print-550 / Delete (shown after Edit with the Delete right);
+       panel10 "Packing List for Commercial Invoice"; groupBox1 "Filter Commercial Invoice": Invoice No* (Cmbinvoiceno), Preview (checked),
+       Total Qty (hidden); panel3 (visible once an invoice is chosen) groupBox3 "Invoice Information" (every box disabled):
+       Doc No & Date, Customer / Importer, Lot Ref No., GD No & Date | Carier Type, Delivery Term, Loading Port, Destination Port |
+       Fcy Code, No.Of Container, Gross Weight KG, Net Weight KG; "Detail Of Commercial Invoice " + grdDetail: X (Delete) and Add buttons,
+       ItemName, PackType, CropYear, WareHouse Name (value list), JobLot Name (value list), Qty, Pack Uom, NetWeight, PackingWeight,
+       PackingWeightTotal, GrossWeight, ContainerNo, SealNo (Qty / PackingWeight / PackingWeightTotal / ContainerNo / SealNo editable).
+     History: toolStrip3 LoadAll (Print hidden); "Packing List Commercial Invoice History"; DataGridHistory (Edit / Slip, double-click = Edit;
+       the tab opens with the last 50); "Detail Of Above Selected Row" gridDetailHistory.
+     Events: Cmbinvoiceno TextChanged, grdDetail CellUpdated / ColumnButtonClick, tabControl1 SelectedIndexChanged, DataGridHistory
+       ColumnButtonClick / SelectionChanged / DoubleClick, btnLoadAll, btnPrint, btnDelete, the form KeyDown. -->
+<body class="pd-body" data-export-page="pd">
+<div class="pd-form ex-form">
+    <div class="win-tabs" data-tabs="pd">
+        <button type="button" class="win-tab is-active" data-tab="pdForm">Form</button>
+        <button type="button" class="win-tab" data-tab="pdHistory">History</button>
+    </div>
+
+    <div class="win-tab-panel is-active" id="pdForm">
+        <div class="win-tool-strip">
+            <button type="button" id="btnNew" class="win-btn-tool" accesskey="n" onclick="ExportPd.btnNew()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="btnsave" class="win-btn-tool" accesskey="s" onclick="ExportPd.btnsave(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+            <button type="button" id="btnupdate" class="win-btn-tool is-hidden" accesskey="u" onclick="ExportPd.btnupdate(this)"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+            <button type="button" id="btnrefersh" class="win-btn-tool" accesskey="r" onclick="ExportPd.btnRefresh(this)"><i class="fa fa-refresh"></i> <span><u>R</u>efresh</span></button>
+            <button type="button" id="btnPrint" class="win-btn-tool" onclick="ExportPd.print(this)" data-rpt="550-CommercialInvoicePackingDetailList_Slip.rpt"><i class="fa fa-print"></i> <span>Print-550</span></button>
+            <button type="button" id="btnDelete" class="win-btn-tool is-hidden" onclick="ExportPd.btnDelete(this)"><i class="fa fa-trash"></i> <span>Delete</span></button>
+        </div>
+        <div class="pd-caption pd-caption-teal" style="height:26px;">Packing List for Commercial Invoice</div>
+        <fieldset class="ex-groupbox">
+            <legend>Filter Commercial Invoice</legend>
+            <div class="xi-inline" style="flex-wrap:wrap;gap:6px 18px;">
+                <div class="xi-row" style="width:min(420px,100%);"><label class="xi-req" for="Cmbinvoiceno" style="width:80px;flex:0 0 80px;">Invoice No</label>
+                    <select id="Cmbinvoiceno" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Commercial Invoice_Number"></select></div>
+                <label class="ex-check"><input type="checkbox" id="ChkPrintPreview" checked/> Preview</label>
+                <input type="hidden" id="txttotalQtyHeaderForConditions" value=""/>
+            </div>
+        </fieldset>
+        <div id="panel3" class="is-hidden">
+            <fieldset class="ex-groupbox">
+                <legend>Invoice Information</legend>
+                <div class="xi-header xi-3">
+                    <div class="xi-col">
+                        <div class="xi-row"><label for="txtdocno">Doc No &amp; Date</label><div class="ex-pair"><input type="text" id="txtdocno" class="win-textbox" disabled readonly/><input type="date" id="txtDocDate" class="win-date" disabled/></div></div>
+                        <div class="xi-row"><label for="cmbSupCust">Customer / Importer</label><select id="cmbSupCust" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Supplier Name" disabled></select></div>
+                        <div class="xi-row"><label for="txtLotRef">Lot Ref No.</label><input type="text" id="txtLotRef" class="win-textbox" disabled/></div>
+                        <div class="xi-row"><label for="txtGdNo">GD No &amp; Date</label><div class="ex-pair"><input type="text" id="txtGdNo" class="win-textbox" disabled/><input type="date" id="txtIformDate" class="win-date" disabled/></div></div>
+                    </div>
+                    <div class="xi-col">
+                        <div class="xi-row"><label for="cmbcareiertype">Carier Type</label><select id="cmbcareiertype" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Carier type" disabled></select></div>
+                        <div class="xi-row"><label for="cmbdeliverytermnew">Delivery Term</label><select id="cmbdeliverytermnew" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="DeliveryTerms" disabled></select></div>
+                        <div class="xi-row"><label for="cmbLoadingPort">Loading Port</label><select id="cmbLoadingPort" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Loading Port" disabled></select></div>
+                        <div class="xi-row"><label for="cmbDestinationPort">Destination Port</label><select id="cmbDestinationPort" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Destination Port" disabled></select></div>
+                    </div>
+                    <div class="xi-col">
+                        <div class="xi-row"><label for="cmbfcycode">Fcy Code</label><select id="cmbfcycode" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="CurrencyName" disabled></select></div>
+                        <div class="xi-row"><label for="txtNoOfContainer">No.Of Container</label><input type="text" id="txtNoOfContainer" class="win-textbox num" value="0" disabled/></div>
+                        <div class="xi-row"><label for="txtGrossWeight">Gross Weight KG</label><input type="text" id="txtGrossWeight" class="win-textbox num" value="0" disabled/></div>
+                        <div class="xi-row"><label for="txtNetWeight">Net Weight KG</label><input type="text" id="txtNetWeight" class="win-textbox num" value="0" disabled readonly/></div>
+                    </div>
+                </div>
+            </fieldset>
+        </div>
+        <div class="pd-caption pd-caption-teal pd-history-bar" style="height:24px;"><span>Detail Of Commercial Invoice </span>
+            <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdDetailBox" title="Fullscreen table">&#x26F6;</button><span id="gridBarMountPd" class="pd-gridbar-mount"></span></span></div>
+        <div class="ex-grid-box" id="grdDetailBox">
+            <div class="ex-grid-scroll ex-h400">
+                <table class="win-grid" id="grdDetail" data-gridbar="PackingDetailForCommercialInvoice:grdDetail" data-gridbar-mount="#gridBarMountPd" data-gridbar-reorder="false">
+                    <thead><tr>
+                        <th class="ctr">X</th><th class="ctr">Add</th>
+                        <th data-col="ItemName">ItemName</th><th data-col="PackType">PackType</th><th data-col="CropYear">CropYear</th>
+                        <th data-col="WarehouseId">WareHouse Name</th><th data-col="JobLotId">JobLot Name</th><th class="num" data-col="OuterQty">Qty</th>
+                        <th data-col="OuterPackUOM">Pack Uom</th><th class="num" data-col="NetWeight">NetWeight</th><th class="num" data-col="PackingWeight">PackingWeight</th>
+                        <th class="num" data-col="PackingWeightTotal">PackingWeightTotal</th><th class="num" data-col="GrossWeight">GrossWeight</th>
+                        <th data-col="ContainerNo">ContainerNo</th><th data-col="SealNo">SealNo</th>
+                    </tr></thead>
+                    <tbody id="pdBody"></tbody>
+                    <tfoot id="pdFoot"></tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="win-tab-panel" id="pdHistory">
+        <div class="win-tool-strip">
+            <button type="button" id="btnLoadAll" class="win-btn-tool" onclick="ExportPd.loadAll(this)"><i class="fa fa-list"></i> <span>LoadAll</span></button>
+        </div>
+        <div class="pd-caption pd-caption-teal" style="height:24px;">Packing List Commercial Invoice History</div>
+        <div class="pd-caption pd-caption-teal pd-history-bar" style="height:26px;"><span>Filtered Records</span>
+            <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="DataGridHistoryBox" title="Fullscreen table">&#x26F6;</button><span id="gridBarMountPdH" class="pd-gridbar-mount"></span></span></div>
+        <div class="ex-grid-box" id="DataGridHistoryBox">
+            <div class="ex-grid-scroll ex-h400">
+                <table class="win-grid" id="DataGridHistory" data-gridbar="PackingDetailForCommercialInvoice:DataGridHistory" data-gridbar-mount="#gridBarMountPdH" data-gridbar-reorder="false">
+                    <thead><tr>
+                        <th>Edit</th><th>Slip</th>
+                        <th data-col="InvoiceNo">InvoiceNo</th><th class="num" data-col="DocCode">DocCode</th><th data-col="DocDate">DocDate</th><th data-col="CustomerName">CustomerName</th>
+                        <th class="num" data-col="NoOfContainers">NoOfContainers</th><th class="num" data-col="GrossWeight">GrossWeight</th><th class="num" data-col="NetWeight">NetWeight</th>
+                        <th class="num" data-col="FcyAmount">FcyAmount</th><th class="num" data-col="AddLess">Add/Less</th><th class="num" data-col="TotalAmount">TotalAmount</th>
+                        <th data-col="LoadingPort">LoadingPort</th><th data-col="DestinationPort">DestinationPort</th>
+                    </tr></thead>
+                    <tbody id="pdHistBody"></tbody>
+                    <tfoot id="pdHistFoot"></tfoot>
+                </table>
+            </div>
+            <div class="ex-grid-empty is-hidden" id="pdHistEmpty">No record found.</div>
+        </div>
+        <div class="pd-caption" style="background:#fff;color:#000;height:22px;font:9pt 'Segoe UI',sans-serif;border-top:1px solid #ddd;">Detail Of Above Selected Row</div>
+        <div class="ex-grid-box">
+            <div class="ex-grid-scroll ex-h240">
+                <table class="win-grid" id="gridDetailHistory">
+                    <thead><tr><th>ItemName</th><th>PackType</th><th>CropYear</th><th>WarehouseName</th><th>JobLot</th><th class="num">OuterQty</th><th>OuterPackUOM</th>
+                        <th class="num">NetWeight</th><th class="num">PackingWeight</th><th class="num">PackingWeightTotal</th><th class="num">GrossWeight</th><th>ContainerNo</th><th>SealNo</th></tr></thead>
+                    <tbody id="pdHistDetailBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="win-footer-strip">
+        <span class="ex-footer-left" id="pdFooterInfo"></span>
+        <button type="button" class="win-btn-history" id="btnPdFooterHistory" onclick="ExportPd.toggleHistory()"><i class="fa fa-history"></i> <span>History</span></button>
+    </div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260924a}"></script>
+<script th:src="@{/build/js/countx_export_packing_detail.js?v=20261001a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Container Inspection - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_f.css?v=20261001a}"/>
+</head>
+<!-- GatePassInspection.cs (Architecture.WinApp.Export), screen 205 "Container Inspection", ClientSize 959 x 661.
+     tabControl1: tabPage1 "Form" | tabPage2 "History". panel3 (teal) "Vehicle Cargo Inspection Report";
+     toolStrip1 New / Refresh / Save / Update(hidden) / Attachments Container 1 / Attachments Container 2 / ShorCut Key(hidden) / Print-244.
+     groupBox3 "Gate Pass Information": GatePass No (cmbgatepass: Id, GpSrNo, GpDate, VehicleNo, BiltyNo, Status), Vehicle # (read-only).
+     boxcontainer1 "Container  01 Information": Container #, Seal #, Inspected By, Verified By, Picture Taken By, Remarks,
+       "Container Accepted For Loading" + grdDoc01 (grouped by Category; Status checkbox, Remarks editable).
+     boxcontainer2 "Container  02 Information": the same with grdDoc02.
+     History: groupBox2 "Filters": From GP Date / To GP Date (checkable), From GP No / To GP No, Show; "Vehicle Cargo Inspection History"
+       DataGridHistory (GpSlip / Edit buttons, FactoryWeight summed, selection fills the two read-only container boxes and grids). -->
+<body class="pd-body" data-export-page="container-inspection">
+<div class="pd-form ex-form">
+    <div class="win-tabs" data-tabs="main">
+        <button type="button" class="win-tab is-active" data-tab="tabPage1">Form</button>
+        <button type="button" class="win-tab" data-tab="tabHistory">History</button>
+    </div>
+
+    <div class="win-tab-panel is-active" id="tabPage1">
+        <div class="pd-caption pd-caption-teal">Vehicle Cargo Inspection Report</div>
+        <div class="win-tool-strip">
+            <button type="button" id="btnNew" class="win-btn-tool" onclick="ExportVCI.resetMain()"><i class="fa fa-plus"></i> <span>New</span></button>
+            <button type="button" id="btnRefresh" class="win-btn-tool" onclick="ExportVCI.refresh(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+            <button type="button" id="btnsave" class="win-btn-tool" onclick="ExportVCI.save(this)"><i class="fa fa-save"></i> <span>Save</span></button>
+            <button type="button" id="btnupdate" class="win-btn-tool is-hidden" onclick="ExportVCI.update(this)"><i class="fa fa-pencil"></i> <span>Update</span></button>
+            <button type="button" id="btnAttachmentsForContainer1" class="win-btn-tool" onclick="ExportVCI.attachment(1)"><i class="fa fa-paperclip"></i> <span>Attachments Container 1</span></button>
+            <button type="button" id="btnAttachmentsForContainer2" class="win-btn-tool" onclick="ExportVCI.attachment(2)"><i class="fa fa-paperclip"></i> <span>Attachments Container 2</span></button>
+            <button type="button" id="btnShortCutKey" class="win-btn-tool is-hidden" onclick="ExportVCI.shortcuts()"><i class="fa fa-keyboard-o"></i> <span>ShorCut Key</span></button>
+            <button type="button" id="btnPrint" class="win-btn-tool" onclick="ExportVCI.print(this)"><i class="fa fa-print"></i> <span>Print-244</span></button>
+        </div>
+        <fieldset class="ex-groupbox" id="groupBox3"><legend>Gate Pass Information</legend>
+            <div class="ex-entry exf-inspection-entry">
+                <div class="ex-field"><label for="cmbgatepass">GatePass No</label>
+                    <select id="cmbgatepass" class="win-combo dtcombo" data-columns="Gate Pass|GpDate|VehicleNo|BiltyNo|Status" data-dtcombo-caption="Gate Pass"></select></div>
+                <div class="ex-field"><label for="txtvehicleno1">Vehicle #</label><input type="text" id="txtvehicleno1" class="win-textbox" readonly/></div>
+            </div>
+        </fieldset>
+        <div class="exf-two-col">
+            <fieldset class="ex-groupbox" id="boxcontainer1"><legend>Container  01 Information</legend>
+                <div class="ex-entry exf-cont-entry">
+                    <div class="ex-field"><label for="txtcontainerno1">Container #</label><input type="text" id="txtcontainerno1" class="win-textbox" autocomplete="off"/></div>
+                    <div class="ex-field"><label for="txtsealno1">Seal #</label><input type="text" id="txtsealno1" class="win-textbox" autocomplete="off"/></div>
+                    <div class="ex-field"><label for="txtinspect1">Inspected By</label><input type="text" id="txtinspect1" class="win-textbox" autocomplete="off"/></div>
+                    <div class="ex-field"><label for="txtverify1">Verified By</label><input type="text" id="txtverify1" class="win-textbox" autocomplete="off"/></div>
+                    <div class="ex-field"><label for="txtpict1">Picture Taken By</label><input type="text" id="txtpict1" class="win-textbox" autocomplete="off"/></div>
+                    <div class="ex-field ex-inline" style="align-self:end;"><input type="checkbox" id="chkloading1"/><label for="chkloading1">Container Accepted For Loading</label></div>
+                    <div class="ex-field exf-span-all"><label for="txtremarks1">Remarks</label><textarea id="txtremarks1" class="win-textbox exf-remarks"></textarea></div>
+                </div>
+                <div class="ex-grid-box" id="grdDoc01Box">
+                    <div class="ex-grid-scroll ex-h300">
+                        <table class="win-grid exf-edit-grid" id="grdDoc01"><thead><tr><th>Category</th><th>Inspection Point</th><th class="ctr">Status</th><th>Remarks</th></tr></thead><tbody id="doc1Body"></tbody></table>
+                    </div>
+                </div>
+            </fieldset>
+            <fieldset class="ex-groupbox" id="boxcontainer2"><legend>Container  02 Information</legend>
+                <div class="ex-entry exf-cont-entry">
+                    <div class="ex-field"><label for="txtcontainer2">Container #</label><input type="text" id="txtcontainer2" class="win-textbox" autocomplete="off"/></div>
+                    <div class="ex-field"><label for="txtseal2">Seal #</label><input type="text" id="txtseal2" class="win-textbox" autocomplete="off"/></div>
+                    <div class="ex-field"><label for="txtinspect2">Inspected By</label><input type="text" id="txtinspect2" class="win-textbox" autocomplete="off"/></div>
+                    <div class="ex-field"><label for="txtverify2">Verified By</label><input type="text" id="txtverify2" class="win-textbox" autocomplete="off"/></div>
+                    <div class="ex-field"><label for="txtpict2">Picture Taken By</label><input type="text" id="txtpict2" class="win-textbox" autocomplete="off"/></div>
+                    <div class="ex-field ex-inline" style="align-self:end;"><input type="checkbox" id="chkloading2"/><label for="chkloading2">Container Accepted For Loading</label></div>
+                    <div class="ex-field exf-span-all"><label for="txtremarks2">Remarks</label><textarea id="txtremarks2" class="win-textbox exf-remarks"></textarea></div>
+                </div>
+                <div class="ex-grid-box" id="grdDoc02Box">
+                    <div class="ex-grid-scroll ex-h300">
+                        <table class="win-grid exf-edit-grid" id="grdDoc02"><thead><tr><th>Category</th><th>Inspection Point</th><th class="ctr">Status</th><th>Remarks</th></tr></thead><tbody id="doc2Body"></tbody></table>
+                    </div>
+                </div>
+            </fieldset>
+        </div>
+        <div class="win-footer-strip">
+            <span class="ex-footer-left" id="vciFooterInfo"></span>
+            <button type="button" class="win-btn-history" id="btnVciFooterHistory" onclick="ExportVCI.toggleHistory()"><i class="fa fa-history"></i> <span>History</span></button>
+        </div>
+    </div>
+
+    <div class="win-tab-panel" id="tabHistory">
+        <div class="pd-caption pd-caption-teal">Vehicle Cargo Inspection History</div>
+        <div class="win-tool-strip">
+            <button type="button" id="btnResetHistory" class="win-btn-tool" onclick="ExportVCI.historyReset()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+        </div>
+        <fieldset class="ex-groupbox" id="groupBox2"><legend>Filters</legend>
+            <div class="ex-filter">
+                <div class="ex-field" style="width:180px;"><label for="FromDateHistory">From GP Date</label>
+                    <span class="ex-check"><input type="checkbox" id="FromDateHistoryChk" checked/><input type="date" id="FromDateHistory" class="win-date" style="flex:1;"/></span></div>
+                <div class="ex-field" style="width:180px;"><label for="ToDateHistory">To GP Date</label>
+                    <span class="ex-check"><input type="checkbox" id="ToDateHistoryChk" checked/><input type="date" id="ToDateHistory" class="win-date" style="flex:1;"/></span></div>
+                <div class="ex-field" style="width:120px;"><label for="FromDocNoHistory">From GP No</label><input type="text" id="FromDocNoHistory" class="win-textbox num" data-guard="integer"/></div>
+                <div class="ex-field" style="width:120px;"><label for="ToDocNoHistory">To GP No</label><input type="text" id="ToDocNoHistory" class="win-textbox num" data-guard="integer"/></div>
+                <div class="ex-field"><label>&nbsp;</label><button type="button" id="btnShowHistory" class="win-btn-small" style="width:60px;" onclick="ExportVCI.historyShow(this)">Show</button></div>
+            </div>
+        </fieldset>
+        <div class="pd-caption pd-caption-dark pd-history-bar"><span>Filtered Records</span>
+            <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="DataGridHistoryBox" title="Fullscreen table">&#x26F6;</button></span></div>
+        <div class="ex-grid-box" id="DataGridHistoryBox">
+            <div class="ex-grid-scroll ex-h300">
+                <table class="win-grid" id="DataGridHistory">
+                    <thead><tr><th class="exf-col-btn">GpSlip</th><th class="exf-col-btn">Edit</th><th>Gp Date</th><th class="num">Gp Sr No</th><th>Vehicle No</th><th class="num">Factory Weight</th>
+                        <th>Container 1 No</th><th>Container 2 No</th><th>Entry Date</th><th>Entry User</th><th>Modify Date</th><th>Modify User</th></tr></thead>
+                    <tbody id="histBody"></tbody><tfoot id="histFoot"></tfoot>
+                </table>
+            </div>
+            <div class="ex-grid-empty is-hidden" id="histEmpty">No record found.</div>
+        </div>
+        <div class="exf-two-col">
+            <fieldset class="ex-groupbox" id="groupBox4"><legend>Container  01 Information</legend>
+                <div class="ex-entry exf-cont-entry exf-readonly-group">
+                    <div class="ex-field"><label>Container #</label><input type="text" id="txtContainer01History" class="win-textbox" disabled/></div>
+                    <div class="ex-field"><label>Seal #</label><input type="text" id="txtSeal01History" class="win-textbox" disabled/></div>
+                    <div class="ex-field"><label>Inspected By</label><input type="text" id="txtInspectedBy01History" class="win-textbox" disabled/></div>
+                    <div class="ex-field"><label>Verified By</label><input type="text" id="txtVerifiedBy01History" class="win-textbox" disabled/></div>
+                    <div class="ex-field"><label>Picture Taken By</label><input type="text" id="txtPicBy01History" class="win-textbox" disabled/></div>
+                    <div class="ex-field ex-inline" style="align-self:end;"><input type="checkbox" id="chkContainerAccepted01History" disabled/><label>Container Accepted For Loading</label></div>
+                    <div class="ex-field exf-span-all"><label>Remarks</label><input type="text" id="txtRemarks01History" class="win-textbox" disabled/></div>
+                </div>
+                <div class="ex-grid-box"><div class="ex-grid-scroll ex-h240">
+                    <table class="win-grid" id="grdDoc01History"><thead><tr><th>Category</th><th>Inspection Point</th><th>Status</th><th>Remarks</th></tr></thead><tbody id="h1Body"></tbody></table></div></div>
+            </fieldset>
+            <fieldset class="ex-groupbox" id="groupBox1"><legend>Container  02 Information</legend>
+                <div class="ex-entry exf-cont-entry exf-readonly-group">
+                    <div class="ex-field"><label>Container #</label><input type="text" id="txtContainer02History" class="win-textbox" disabled/></div>
+                    <div class="ex-field"><label>Seal #</label><input type="text" id="txtSeal02History" class="win-textbox" disabled/></div>
+                    <div class="ex-field"><label>Inspected By</label><input type="text" id="txtInspectedBy02History" class="win-textbox" disabled/></div>
+                    <div class="ex-field"><label>Verified By</label><input type="text" id="txtVerifiedBy02History" class="win-textbox" disabled/></div>
+                    <div class="ex-field"><label>Picture Taken By</label><input type="text" id="txtPicBy02History" class="win-textbox" disabled/></div>
+                    <div class="ex-field ex-inline" style="align-self:end;"><input type="checkbox" id="chkContainerAccepted02History" disabled/><label>Container Accepted For Loading</label></div>
+                    <div class="ex-field exf-span-all"><label>Remarks</label><input type="text" id="txtRemarks02History" class="win-textbox" disabled/></div>
+                </div>
+                <div class="ex-grid-box"><div class="ex-grid-scroll ex-h240">
+                    <table class="win-grid" id="grdDoc02History"><thead><tr><th>Category</th><th>Inspection Point</th><th>Status</th><th>Remarks</th></tr></thead><tbody id="h2Body"></tbody></table></div></div>
+            </fieldset>
+        </div>
+        <div class="win-footer-strip">
+            <span class="ex-footer-left"></span>
+            <button type="button" class="win-btn-history" onclick="ExportVCI.toggleHistory()"><i class="fa fa-file-text-o"></i> <span>Form</span></button>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_export_f_common.js?v=20261001a}"></script>
+<script th:src="@{/build/js/countx_export_container_inspection.js?v=20261001a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260929a}"></script>
+</body>
+</html>

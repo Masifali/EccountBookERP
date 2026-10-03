@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="/vendors/select2/dist/css/select2.min.css">
 <link rel="stylesheet" href="/css/report-loading.css">
 <link rel="stylesheet" href="/css/inventory-ui.css">
+<link rel="stylesheet" href="/build/css/countx_desktop_combo.css?v=20260930s"><link rel="stylesheet" href="/build/css/countx_prod_combo.css?v=20261002gv">
 <style>
 *{box-sizing:border-box}body{margin:0;min-width:980px;background:#f0f0f0;font:13px Tahoma,sans-serif;color:#000}
 nav{height:27px;display:flex;align-items:center;gap:4px;background:#fff;border-bottom:1px solid #aaa}button{font:13px Tahoma;cursor:pointer}nav button{height:24px;background:transparent;border:1px solid transparent}nav button:hover{border-color:#008080}
@@ -22,6 +23,9 @@ form{position:relative;width:948px;height:140px;margin:0 8px;border:1px solid #a
 .date-input{display:flex;position:relative;width:148px;height:23px}.date-input input:first-child{width:125px;font:13px Verdana;border:1px solid #888;border-right:0;border-radius:0}.date-input input[type=date]{width:23px;height:23px;padding:0;border:1px solid #888;border-left:0;font-size:0;color:transparent}.date-input input[type=date]::-webkit-calendar-picker-indicator{margin:0;padding:3px;font-size:13px;width:16px}.grid table{font:11px Verdana}.grid th{background:#eee;color:#000}.grid tbody tr:nth-child(even){background:white}.grid tr.selected{background:#cce8ff}.column-filters th{top:22px;background:#fafafa}.column-filters input{width:100%;min-width:60px;height:21px;border:1px solid #aaa}.results-title{margin:0 8px;padding:4px;background:teal;color:white;font:bold 16px Tahoma;height:27px}.grid{margin-top:0;max-width:calc(100vw - 16px)}dialog{border:1px solid teal;max-width:80vw}dialog::backdrop{background:#0004}
 .filter label,.filter>.select2{flex-shrink:0}.first>.select2{width:148px!important}.middle>.select2{width:202px!important}.last>.select2{width:228px!important}#documentTypeId+.select2{width:164px!important}.filter .select2-search--inline .select2-search__field{width:auto;height:22px;margin-top:0}.filter .select2-selection--single{width:100%}
 .filter .select2-selection--multiple{overflow:hidden}.filter .select2-selection--multiple .select2-selection__rendered{display:flex;align-items:center;flex-wrap:nowrap;height:24px;margin:0;padding-top:0;padding-bottom:0}.filter .select2-search--inline{height:22px;line-height:22px}.filter .select2-selection--multiple .select2-selection__choice{flex-shrink:0}
+/* 2026-10-02: Item Type / WareHouse are the desktop checked UltraCombos (countx_prod_combo.js checked mode) */
+.filter .dtcombo-wrap.pcx-checked{height:26px;flex-shrink:0}.middle .dtcombo-wrap.pcx-checked{width:202px}.last .dtcombo-wrap.pcx-checked{width:228px}.filter .pcx-checked .dtcombo-input.pcx-field{width:100%;height:26px;font:13px Verdana,sans-serif}
+/* the hidden 1px list box scrolls to a ticked option and that scroll closed the popup */select.dtcombo-native[multiple][data-dtcombo-checked]{display:none!important}
 </style>
 <script src="/js/report-loading.js"></script><script src="/js/inventory-ui.js"></script>
 </head>
@@ -35,9 +39,9 @@ form{position:relative;width:948px;height:140px;margin:0 8px;border:1px solid #a
 <div class="filter first r4"><label for="itemClassGroupId">Item Class</label><select id="itemClassGroupId" data-activity="ItemClassGroup"></select></div>
 <div class="filter middle r1"><label for="parentCategoryId">Parent Category</label><select id="parentCategoryId" data-activity="ParentCategories"></select></div>
 <div class="filter middle r2"><label for="itemCategoryId">Item Category</label><select id="itemCategoryId" data-activity="ItemCategories"></select></div>
-<div class="filter middle r3"><label for="itemTypeIds">Item Type</label><select id="itemTypeIds" multiple data-activity="ItemTypes"></select></div>
+<div class="filter middle r3"><label for="itemTypeIds">Item Type</label><select id="itemTypeIds" multiple data-activity="ItemTypes" data-native-select data-dtcombo="single" data-dtcombo-checked data-dtcombo-caption="Item Type"></select></div>
 <div class="filter middle r4"><label for="jobLotId">JobLot</label><select id="jobLotId" data-activity="JobLot"></select></div>
-<div class="filter last r1"><label for="warehouseIds">WareHouse</label><select id="warehouseIds" multiple data-activity="Warehouse"></select></div>
+<div class="filter last r1"><label for="warehouseIds">WareHouse</label><select id="warehouseIds" multiple data-activity="Warehouse" data-native-select data-dtcombo="single" data-dtcombo-checked data-dtcombo-caption="WareHouse"></select></div>
 <div class="filter last r2"><label for="itemId">Item Name</label><select id="itemId" data-activity="Items"></select></div>
 <div class="filter last r3"><label for="supplierCustomerId">Supplier Name</label><select id="supplierCustomerId" data-activity="Supplier_Customer"></select></div>
 <div class="filter last r4"><label for="documentTypeId">DocumentType</label><select id="documentTypeId"></select></div>
@@ -47,7 +51,7 @@ form{position:relative;width:948px;height:140px;margin:0 8px;border:1px solid #a
 <h2 class="results-title">Inventory Transaction</h2>
 <div class="grid" tabindex="0" aria-label="Inventory transactions, scroll horizontally for more columns"><table><thead id="head"></thead><tbody id="rows"></tbody><tfoot id="totals"></tfoot></table></div>
 <dialog id="keys"><h2>ShortCut Keys</h2><p>Ctrl+S: Show · Ctrl+N / Ctrl+R: Refresh dropdowns<br>Ctrl+P: Stock Report · Ctrl+E / Escape: Close<br>Ctrl+F5 / Ctrl+↑: Date Type · Ctrl+↓: Grid<br>Ctrl+Alt: ShortCut Keys</p><button id="close-keys">Close</button></dialog>
-<script src="/vendors/jquery/dist/jquery.min.js"></script><script src="/vendors/select2/dist/js/select2.min.js"></script>
-<script src="/js/report-decimal.js"></script><script src="/js/inventory-request.js"></script><script src="/js/inventory-transactions.js?v=20260916-filter-state"></script>
+<script src="/vendors/jquery/dist/jquery.min.js"></script><script src="/build/js/countx_prod_combo.js?v=20261002gv"></script><script src="/vendors/select2/dist/js/select2.min.js"></script>
+<script src="/js/report-decimal.js"></script><script src="/js/inventory-request.js"></script><script src="/js/inventory-transactions.js?v=20261002ck"></script>
 <script src="/js/print-rpt.js?v=20261001a"></script>
 </body></html>

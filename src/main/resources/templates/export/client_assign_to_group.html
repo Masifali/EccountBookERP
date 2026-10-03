@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Client Assign To Group - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_sdt.css?v=20260930a}"/>
+</head>
+<!-- frmClientCustomGroup.cs (Architecture.WinApp.SDT), screen 622 "Client Assign To Group", ClientSize 802 x 619.
+     tsItemType: New | Refresh. panel6 (rgb 10,110,110) "Supplier Customer Allocation To Cutom Group".
+     panel7 (white, 40): Custom Group (CmbCutomGroup, 244 wide) + Show (Teal).
+     panel3 (400): label4 (Teal) "Pending  For Allocation (InActive)" + BtnAllocateItems (25x24, DoHaveSaveRight) + GridUnAllocated (Select selector 60 | Suppliercustomer 340)
+     panel4 (400): label1 (Teal) "Allocated (Active)" + btnDeAllocate (25x24, DoHaveUpdateRights) + GridAllocated (same columns).
+     KeyDown: Enter=Tab, Ctrl+R refresh, Ctrl+F5 combo, Ctrl+A allocate, Ctrl+D unallocate, Ctrl+E/Esc close, Ctrl+Down grid focus. -->
+<body class="pd-body" data-export-page="sdt-622">
+<div class="pd-form ex-form">
+    <div class="win-tool-strip">
+        <button type="button" id="BtnNew" class="win-btn-tool" accesskey="n" onclick="ExportClientCustomGroup.reset()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+        <button type="button" id="btnRefresh" class="win-btn-tool" accesskey="r" onclick="ExportClientCustomGroup.refresh(this)"><i class="fa fa-refresh"></i> <span><u>R</u>efresh</span></button>
+    </div>
+    <div class="pd-caption pd-caption-dark" id="label15">Supplier Customer Allocation To Cutom Group</div>
+    <div class="sdt-header" id="panel7">
+        <div class="ex-field" style="width:260px;"><label for="CmbCutomGroup">Custom Group</label>
+            <select id="CmbCutomGroup" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="CustomGroup Name"></select></div>
+        <div class="ex-field"><label>&nbsp;</label><button type="button" id="BtnShow" class="win-btn-small" style="width:62px;" onclick="ExportClientCustomGroup.show(this)">Show</button></div>
+    </div>
+    <div class="sdt-split sdt-half">
+        <div class="sdt-pane" id="panel3">
+            <div class="pd-caption pd-caption-teal pd-history-bar" id="label4"><span>Pending  For Allocation (InActive)</span>
+                <span class="ex-bar-right sdt-cap-btns">
+                    <button type="button" id="BtnAllocateItems" class="win-btn-cap" title="Allocate checked rows" onclick="ExportClientCustomGroup.allocate(this)"><i class="fa fa-arrow-right"></i></button>
+                    <button type="button" class="ex-fs-btn" data-fullscreen="GridUnAllocatedBox" title="Fullscreen table">&#x26F6;</button></span></div>
+            <div class="ex-grid-box" id="GridUnAllocatedBox">
+                <div class="ex-grid-scroll ex-h400">
+                    <table class="win-grid" id="GridUnAllocated">
+                        <thead><tr><th class="ctr" id="unSelTh"><input type="checkbox" title="Select all"/></th><th>Suppliercustomer</th></tr></thead>
+                        <tbody id="unBody"></tbody>
+                    </table>
+                </div>
+                <div class="ex-grid-empty is-hidden" id="unEmpty">No record found.</div>
+            </div>
+        </div>
+        <div class="sdt-pane" id="panel4">
+            <div class="pd-caption pd-caption-teal pd-history-bar" id="label1"><span>Allocated (Active)</span>
+                <span class="ex-bar-right sdt-cap-btns">
+                    <button type="button" id="btnDeAllocate" class="win-btn-cap" title="UnAllocate checked rows" onclick="ExportClientCustomGroup.unallocate(this)"><i class="fa fa-arrow-left"></i></button>
+                    <button type="button" class="ex-fs-btn" data-fullscreen="GridAllocatedBox" title="Fullscreen table">&#x26F6;</button></span></div>
+            <div class="ex-grid-box" id="GridAllocatedBox">
+                <div class="ex-grid-scroll ex-h400">
+                    <table class="win-grid" id="GridAllocated">
+                        <thead><tr><th class="ctr" id="alSelTh"><input type="checkbox" title="Select all"/></th><th>Suppliercustomer</th></tr></thead>
+                        <tbody id="alBody"></tbody>
+                    </table>
+                </div>
+                <div class="ex-grid-empty is-hidden" id="alEmpty">No record found.</div>
+            </div>
+        </div>
+    </div>
+    <div class="win-footer-strip">
+        <span class="ex-footer-left" id="footerInfo">frmClientCustomGroup</span>
+        <button type="button" class="win-btn-history" id="btnFooterHistory" onclick="ExportClientCustomGroup.toggleHistory()"><i class="fa fa-history"></i> <span>History</span></button>
+    </div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_export_sdt_common.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_export_client_assign_to_group.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

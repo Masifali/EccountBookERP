@@ -83,6 +83,9 @@ public class PrematureReceiptsService {
                         "DocumentTypeId", DOC_TYPE, "Activity", "ReadAll")));
         int dd = toInt(s.config("DefaultDaysToLessFromHistoryFromDate"));
         m.put("historyFromDaysBack", dd > 0 ? dd : 3);
+        /* CommonServices.GetDecimalConfiguration() - CommasApplyWhileTypingOnVouchers trims the typed
+           decimals to DefaultNoofDecimalPointsForAmount (txtSlipAmount / txtAmount TextChanged). */
+        m.put("decimals", s.decimals());
         return m;
     }
 

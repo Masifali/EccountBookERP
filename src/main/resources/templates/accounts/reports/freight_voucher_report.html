@@ -6,77 +6,128 @@
     <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
     <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
     <title>Freight Voucher Report</title>
-    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
-    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260930s}">
-    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260930s}">
-    <link rel="stylesheet" th:href="@{/build/css/countx_acc_rpt_f.css?v=20260930s}">
-    <link rel="stylesheet" th:href="@{/build/css/countx_acc_rpt_h.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20261003qf}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20261003qf}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_acc_desk_d.css?v=20261003qf}">
+    <!--
+      Screen 911 "Freight Voucher Report" = Architecture.WinApp.Account_Reports.FreightVoucherRegister (base.Name
+      FreightVoucherRegister). Read-only report, no rights checks on the desktop form.
+      Designer: ClientSize 1047x483, maximized. panel1 Fill = panel2 27 (toolStrip3: Reset / Refresh / 240-Register,
+      Verdana 9.75) | panel3 teal 26 (label23 "Freight Voucher Register", Verdana 12 bold, 3,4) | panel4 Fill =
+      panel5 white 97 (groupBox3 "Filters", Dock=Left 746x97, Tahoma 9.75 bold) + panel6 Fill = panel7 teal 26
+      (label1 "Filtered Records" 4,4; ctrlGrdBar1 at the right) + grd (Janus GridEX, Fill, Verdana 8.25, filter row,
+      total row, record navigator, 3 header lines, 2 frozen columns).
+      There is NO tab control on this form (the old page had an invented "Freight Voucher Register" tab).
+      Data (same BLL calls, same parameters, tenancy from the session):
+        HistoryComboBind  InvFreightVoucher.GetDataForDropDownFromFreightVoucher(org, comp, null)
+                          = USP_GetDataForDropDownFromFreightVoucher @OrganizationId, @CompanyId -> /accounts/api/freight/history-combos
+                          The procedure lists ONLY parties / credit accounts / debit accounts that occur on SAVED
+                          freight vouchers (InvFreightVoucher) of the company: with no freight voucher saved yet, the
+                          three lists are empty on the desktop too (BindAndRetainSelection binds nothing).
+        btnshow_Click     InvFreightVoucher.FreightVoucherSlipAndRegister (DocumentTypeId 28, FY, FromDate, ToDate,
+                          GpSrNoF/T, VehicleNo, SupplierCustomerId, CreditAccountId, DebitAccountId - each only when
+                          non-zero / non-empty) = SP_FreightVoucherSlipAndRegister -> /accounts/api/freight/register
+        btnRegister_Click 240-FreightVoucherRegister.rpt over dtRegister (the procedure's own rows, by name)
+                          -> POST /reports/print/grid (Jasper, converted 240 template; @CompanyName/@CompanyAddress)
+        grid Print        CommonServices.FreightVoucherSlip241(Id)               -> printRpt('241-FreightVoucherSlip.rpt')
+        grid Voucher      CommonServices.ANewAcRptPaymentReceiptsVoucherSlip_102(VoucherHeadId) -> printRpt('102-...')
+      Rebuilt to the designer geometry 2026-10-03 (Q-FREIGHT-REPORT). Old page: _claude_stage/backup-20261003-reports/Q-FREIGHT-REPORT/.
+    -->
+    <style>
+        .dk-page.fvr { min-width: 1047px; min-height: 100%; }
+        /* label23 / label1: Verdana 12pt bold, white */
+        .fvr .vcap { position: absolute; white-space: nowrap; color: #fff; font: bold 16px Verdana, "DejaVu Sans", sans-serif; line-height: 18px; }
+        /* btnshow: FlatStyle Flat, BorderSize 0, BackColor (10,110,110), Tahoma 9.75 bold white, 53x24, caption only */
+        #btnshow { border: 0; padding: 0; background: rgb(10,110,110); color: #fff; font: bold 13px Tahoma, "DejaVu Sans", sans-serif;
+                   line-height: 24px; text-align: center; white-space: nowrap; overflow: hidden; }
+        #btnshow:hover:not(:disabled) { background: rgb(14,128,128); }
+        #btnshow:disabled { background: rgb(90,150,150); }
+        /* ToolStrip images: icons8_add_20 (green plus), referesf (refresh), icons8_print_16 */
+        .dk-tsb i.fa.add { color: #2e9e3e; }
+        /* Janus GridEX: HeaderLines 3, filter row, frozen Print / Voucher columns, total row fixed at the bottom */
+        #grdWrap { flex: 1 1 auto; min-height: 120px; }
+        #grd { table-layout: fixed; }
+        #grd thead tr.hd th { height: 44px; white-space: normal; overflow: hidden; overflow-wrap: anywhere; padding: 1px 3px; }
+        #grd thead tr.fr th { top: 44px; height: 20px; padding: 0; background: #fff; border-bottom: 1px solid #9eadbd; }
+        #grd thead tr.fr input { width: 100%; height: 19px; border: 0; margin: 0; padding: 0 3px; font: 11px Verdana, "DejaVu Sans", sans-serif; background: #fff; outline: none; }
+        #grd thead tr.fr input:focus { background: #fffde7; }
+        #grd thead tr.fr input[type=date] { font-size: 10px; padding: 0 1px; }
+        #grd .fz0 { position: sticky; left: 0; z-index: 3; background-clip: padding-box; }
+        #grd .fz1 { position: sticky; left: 50px; z-index: 3; background-clip: padding-box; border-right: 2px solid #9eadbd; }
+        #grd tbody td.fz0, #grd tbody td.fz1 { background: #fff; z-index: 1; }
+        #grd tfoot td.fz0, #grd tfoot td.fz1 { background: #eef2f6; z-index: 2; }
+        #grd thead th.fz0, #grd thead th.fz1 { z-index: 4; }
+        #grd td.ctr { text-align: center; }
+        #grd td a.att { color: #0645ad; text-decoration: underline; cursor: pointer; }
+        #grd tbody tr.cur td { background: #c9e0f7; }
+        #grd tbody tr:focus { outline: none; }
+        #recBar { display: block; }
+        /* MessageBox */
+        .h-modal { position: fixed; inset: 0; background: rgba(0,0,0,.3); z-index: 9000; display: flex; align-items: center; justify-content: center; }
+        .h-dlg { background: #fff; border: 1px solid #004d40; box-shadow: 0 6px 24px rgba(0,0,0,.4); font: 12px "Segoe UI", Tahoma, sans-serif; max-width: 96vw; }
+        .h-dlg .cap { height: 24px; display: flex; align-items: center; padding: 0 8px; background: #008080; color: #fff; font-weight: bold; }
+        .h-dlg .msg { padding: 14px 18px; white-space: pre-wrap; max-width: 560px; min-width: 240px; }
+        .h-dlg .btns { padding: 6px 12px; background: #f0f0f0; border-top: 1px solid #c8c8c8; text-align: right; }
+        .h-dlg .btns button { min-width: 75px; height: 23px; font: 12px "Segoe UI", Tahoma, sans-serif; border: 1px solid #adadad; background: #e1e1e1; cursor: pointer; }
+    </style>
 </head>
-<!--
-  Screen 911 "Freight Voucher Report" - FreightVoucherRegister.cs. Read-only.
-  toolStrip3 / panel3 (teal "Freight Voucher Register") / groupBox3 "Filters" / panel7 (teal "Filtered Records") + grid.
-  Combos: USP_GetDataForDropDownFromFreightVoucher (/accounts/api/freight/history-combos, Activity Supplier / CreditAccount / DebitAccount).
-  Show: SP_FreightVoucherSlipAndRegister (DocumentTypeId 28, FY) via /accounts/api/freight/register.
-  Dates as VoucherValidation_Load: From = ActiveYr.Start_Period, To = today. Look: countx_acc_rpt_f.css; combos countx_prod_combo.js (R5, 2026-09-30).
--->
-<body class="accf">
-<div class="win-title-bar">
-    <span><i class="fa fa-truck"></i> Freight Voucher Report</span>
-    <a href="/accounts/dashboard"><i class="fa fa-arrow-left"></i> Back to Dashboard</a>
-</div>
-<ul class="win-tabs">
-    <li class="active"><a>Freight Voucher Register</a></li>
-</ul>
-<div class="win-toolbar" id="toolStrip3">
-    <button type="button" class="win-btn" id="btnResetRegister"><i class="fa fa-file-o text-success"></i> Reset</button>
-    <button type="button" class="win-btn" id="btnRefreshRegister"><i class="fa fa-refresh"></i> Refresh</button>
-    <button type="button" class="win-btn" id="btnRegister" data-rpt-skip="rows"><i class="fa fa-print"></i> 240-Register</button>
-</div>
-<div class="win-header-panel" id="panel3"><span>Freight Voucher Register</span></div>
-
-<div class="filters" id="panel5">
-    <div class="gb" id="groupBox3" style="width:760px;">
-        <span class="gb-title">Filters</span>
-        <div class="fgrid" style="grid-template-columns: 104px 118px 112px 88px 250px 1fr;">
-            <span class="lbl">Date From &amp; To</span>
-            <input type="date" id="datFromDate" class="inp">
-            <input type="date" id="datToDate" class="inp">
-            <span class="lbl">Party Name</span>
-            <select id="CmbSupplierName" class="inp" data-dtcombo="single" data-dtcombo-caption="Party Name"></select>
-            <span></span>
-
-            <span class="lbl">GP No From &amp; To</span>
-            <input type="text" id="txtGpNoFrom" class="inp">
-            <input type="text" id="txtGpNoTo" class="inp">
-            <span class="lbl">Credit Account</span>
-            <select id="CmbCreditAcRegister" class="inp" data-dtcombo="single" data-dtcombo-caption="Credit Account"></select>
-            <span></span>
-
-            <span class="lbl">Vehicle No</span>
-            <input type="text" id="txtVehicleRegister" class="inp span2">
-            <span class="lbl">Debit Account</span>
-            <select id="CmbDebitAcRegister" class="inp" data-dtcombo="single" data-dtcombo-caption="Debit Account"></select>
-            <div class="show-cell" style="justify-content:flex-start"><button type="button" id="btnshow" class="win-btn-show"><i class="fa fa-eye"></i> Show</button></div>
+<body class="dk">
+<div class="dk-shell">
+<div class="dk-body">
+<div class="dk-page p0 fvr" id="panel1">
+    <!-- panel2 27: toolStrip3 -->
+    <div class="dk-ts" id="toolStrip3">
+        <button type="button" class="dk-tsb" id="btnResetRegister" title="Reset (Ctrl+N)"><i class="fa fa-plus-circle add"></i><span>Reset</span></button>
+        <button type="button" class="dk-tsb" id="btnRefreshRegister" title="Refresh (Ctrl+R)"><i class="fa fa-refresh g"></i><span>Refresh</span></button>
+        <button type="button" class="dk-tsb" id="btnRegister" title="240-Register (Ctrl+P)"><i class="fa fa-print"></i><span>240-Register</span></button>
+    </div>
+    <!-- panel3 teal 26 -->
+    <div class="dk-dock dk-teal" id="panel3" style="height:26px;"><span class="vcap" id="label23" style="left:3px;top:4px;">Freight Voucher Register</span></div>
+    <!-- panel4 Fill: panel5 97 + panel6 Fill -->
+    <div class="dk-dock" id="panel5" style="height:97px;background:#fff;">
+        <div class="dk-gb" id="groupBox3" style="left:0;top:0;width:746px;height:97px;">
+            <span class="dk-gbcap">Filters</span>
+            <label class="dk-l" id="label20" style="left:5px;top:18px;" for="datFromDate">Date From &amp; To</label>
+            <input type="date" class="dk-t" id="datFromDate" style="left:109px;top:14px;width:118px;">
+            <input type="date" class="dk-t" id="datToDate" style="left:229px;top:14px;width:112px;">
+            <label class="dk-l" id="label10" style="left:5px;top:45px;" for="txtGpNoFrom">GP No From &amp; To</label>
+            <input type="text" class="dk-t" id="txtGpNoFrom" autocomplete="off" style="left:109px;top:41px;width:118px;">
+            <input type="text" class="dk-t" id="txtGpNoTo" autocomplete="off" style="left:229px;top:41px;width:112px;">
+            <label class="dk-l" id="label3" style="left:6px;top:72px;" for="txtVehicleRegister">Vehicle No</label>
+            <input type="text" class="dk-t" id="txtVehicleRegister" autocomplete="off" style="left:109px;top:68px;width:232px;">
+            <label class="dk-l" id="label5" style="left:347px;top:18px;">Party Name</label>
+            <select id="CmbSupplierName" class="dtcombo" data-dtcombo="single" data-dtcombo-caption="Party Name" style="position:absolute;left:437px;top:12px;width:250px;height:26px;"><option value="0"></option></select>
+            <label class="dk-l" id="label19" style="left:347px;top:45px;">Credit Account</label>
+            <select id="CmbCreditAcRegister" class="dtcombo" data-dtcombo="single" data-dtcombo-caption="Credit Account" style="position:absolute;left:437px;top:39px;width:250px;height:26px;"><option value="0"></option></select>
+            <label class="dk-l" id="label22" style="left:347px;top:72px;">Debit Account</label>
+            <select id="CmbDebitAcRegister" class="dtcombo" data-dtcombo="single" data-dtcombo-caption="Debit Account" style="position:absolute;left:437px;top:66px;width:250px;height:26px;"><option value="0"></option></select>
+            <button type="button" class="dk-a" id="btnshow" title="Show (Ctrl+S)" style="left:689px;top:67px;width:53px;height:24px;">Show</button>
         </div>
     </div>
+    <!-- panel6 Fill: panel7 teal 26 + grd -->
+    <div class="dk-dock dk-teal" id="panel7" style="height:26px;"><span class="vcap" id="label1" style="left:4px;top:4px;">Filtered Records</span></div>
+    <div class="dk-grid" id="grdWrap" tabindex="0"><table class="g" id="grd"></table></div>
+    <div class="dk-recbar" id="recBar"></div>
 </div>
-<div class="grid-caption" id="panel7"><span>Filtered Records</span><span id="lblStatus"></span></div>
-<div class="grid-wrap tall" id="wrap" tabindex="0"><table class="wg" id="grd"></table></div>
+</div>
+</div>
+
 <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
-<script th:src="@{/build/js/countx_prod_combo.js?v=20260930s}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20261003qf}"></script>
 <script th:src="@{/build/js/countx_acc_rpt_h.js?v=20260930s}"></script>
 <script>
 (function () {
     'use strict';
-    /* Data comes from the Freight Voucher API (FreightVoucherController): the same BLL calls with the
-       same parameters - InvFreightVoucher.GetDataForDropDownFromFreightVoucher(org, comp, null) and
-       FreightVoucherSlipAndRegister (DocumentTypeId 28, the signed-in FinancialYearId, dates, GpSrNoF/T,
-       VehicleNo, SupplierCustomerId, CreditAccountId, DebitAccountId - each only when non-zero/non-empty). */
     var H = AccH, API = '/accounts/api/freight';
-    var dec = 0, dtRegister = [], grid = [];
+    var dec = 0;
+    var dtRegister = [];   /* ds.Tables[0] of the last Show - what 240-Register prints */
+    var grid = [];         /* dtRegisterGrid */
+    var view = [];         /* grid rows passing the filter row */
+    var cur = -1;          /* index into view (GridEX CurrentRow) */
+    var filters = {};
 
-    /* dtRegisterGrid - columns in the desktop's order, with its typed columns. */
+    /* dtRegisterGrid: the desktop's typed columns, in its order (i int, d DateTime, n double, s string, t DateTime with time). */
     var COLS = [ ['Id', 'i'], ['VoucherHeadId', 'i'], ['DocDate', 'd'], ['DocNo', 'i'], ['GpDate', 'd'], ['GpNo', 'i'], ['SupplierName', 's'], ['VehicleNo', 's'],
         ['BiltyNo', 's'], ['BiltyDate', 'd'], ['DeliveryTerm', 's'], ['SupplierWeight', 'n'], ['FactoryWeight', 'n'], ['ShortWeight', 'n'], ['AllowShortage', 'n'],
         ['ShortageApply', 'n'], ['ShortageAmount', 'n'], ['BiltyFreight', 'n'], ['DeductedAmount', 'n'], ['DiscountAmount', 'n'], ['ToleranceWeight', 's'],
@@ -84,149 +135,275 @@
         ['RemainingAmount', 'n'], ['PerMtonFreight', 'n'], ['PerMaundFreight', 'n'], ['CityName', 's'], ['CashAccountCode', 's'], ['CashAccountTitle', 's'],
         ['DebitAccountCode', 's'], ['DebitAccountTitle', 's'], ['EntryDate', 't'], ['EntryUser', 's'], ['ModifyDate', 't'], ['ModifyUser', 's'],
         ['ApprovedDate', 't'], ['ApprovalUser', 's'], ['ApprovalStatus', 's'], ['NoOfAttachments', 'i'], ['RemarksDetail', 's'], ['RemarksHeader', 's']];
-    /* the values dtRegisterGrid.Rows.Add receives, POSITIONALLY. From column 18 the list is shifted against
-       the columns (ToleranceWeight is passed before BiltyFreight and ScaleCharges lands in WbCharges) -
-       reproduced as the desktop shows it. */
-    var SRC = ['Id', 'VoucherHeadId', 'DocDate', 'DocNo', 'GatePassDate', 'GatePassNo', 'SupplierName', 'VehicleNo', 'BiltyNo', 'BiltyDate', 'DeliveryTerm',
-        'SupplierWeight', 'FactoryWeight', 'ShortWeight', 'AllowShortage', 'ShortageApply', 'ShortageAmount', 'ToleranceWeight', 'BiltyFreight', 'DeductedAmount',
-        'DiscountAmount', 'ScaleCharges', 'AdvanceByParty', 'AdvanceByFactory', 'TotalFreight', 'ChargeToParty', 'PaidAmount', 'RemainingAmount', 'PerMtonFreight',
-        '#PerMaund', 'CityName', 'CashAcCode', 'CashAcTitle', 'DebAcCode', 'DebAcTitle', 'EntryDate', 'EntryUser', 'ModifyDate', 'ModifyUser', 'ApprovedDate',
-        'ApprovalUser', 'ApprovalStatus', 'NoOfAttachments', 'RemarksDetail', 'RemarksHeader'];
+    /* Procedure column behind each grid column (by NAME). */
+    var SRC = { GpDate: 'GatePassDate', GpNo: 'GatePassNo', WbCharges: 'ScaleCharges', CashAccountCode: 'CashAcCode', CashAccountTitle: 'CashAcTitle',
+        DebitAccountCode: 'DebAcCode', DebitAccountTitle: 'DebAcTitle', PerMaundFreight: '#PerMaund' };
+    /* The desktop's dtRegisterGrid.Rows.Add passes ToleranceWeight, BiltyFreight, DeductedAmount, DiscountAmount POSITIONALLY into the
+       columns BiltyFreight, DeductedAmount, DiscountAmount, ToleranceWeight - four values rotated by one under the wrong captions
+       ("Bilty Freight" shows the tolerance weight, "Deduction From Freight" the bilty freight, "DiscountAmount" the deduction,
+       "Weigh Bridge Tolerance" the discount), while its own 240 print (dtRegister, by name) is right. Decision 2026-10-03: the web
+       shows each value under its OWN column (column order, captions, widths, formats and totals unchanged). Set true to reproduce
+       the desktop's rotated display. */
+    var DESKTOP_POSITIONAL = false;
+    var ROTATED = { BiltyFreight: 'ToleranceWeight', DeductedAmount: 'BiltyFreight', DiscountAmount: 'DeductedAmount', ToleranceWeight: 'DiscountAmount' };
+
     var HIDDEN = ['Id', 'VoucherHeadId', 'RemainingAmount', 'CashAccountCode', 'DebitAccountCode'];
     var CAPS = { ToleranceWeight: 'Weigh Bridge Tolerance', DeductedAmount: 'Deduction From Freight', PaidAmount: 'Net Payable Amount', AdvanceByParty: 'Advance By Supplier',
         ChargeToParty: 'Shortage Charge To Supplier', AllowShortage: 'Against Policy Discount / Allowed Weight', ShortageApply: 'Shortage Applied Weight', ShortageAmount: 'Shortage Applied Amount' };
+    /* RegisterGridSettings widths; the rest GridEX_Helper.GetDefaultWidth (int 60, DateTime 80, double 90, city 90, string 100). */
     var W = { EntryDate: 145, ModifyDate: 145, ApprovedDate: 145, DocDate: 80, DocNo: 55, GpDate: 80, GpNo: 55, DeliveryTerm: 65, VehicleNo: 75, BiltyNo: 70, SupplierName: 200,
         SupplierWeight: 70, FactoryWeight: 70, ToleranceWeight: 70, BiltyFreight: 70, PerMtonFreight: 75, WbCharges: 60, AdvanceByParty: 70, AdvanceByFactory: 70, TotalFreight: 80,
         ShortWeight: 65, AllowShortage: 100, ShortageAmount: 85, ShortageApply: 65, DeductedAmount: 80, DiscountAmount: 80, ChargeToParty: 80, PaidAmount: 80,
-        CashAccountTitle: 150, DebitAccountTitle: 150, RemarksDetail: 150, NoOfAttachments: 90 };
+        CashAccountTitle: 150, DebitAccountTitle: 150, RemarksDetail: 150, NoOfAttachments: 90, CityName: 90 };
+    function width(c) { return W[c[0]] || (c[1] === 'i' ? 60 : c[1] === 'n' ? 90 : (c[1] === 'd' || c[1] === 't') ? 80 : 100); }
+    var VIS = COLS.filter(function (c) { return HIDDEN.indexOf(c[0]) < 0; });
 
-    /* GridEX_Helper.GridColumnSettings: Amount/Freight -> stringFormatsingle; other doubles "#,##0.<n #>"; all doubles summed. */
+    /* GridEX_Helper.GridColumnSettings: Amount/Freight/NetPaid -> stringFormatsingle "#,##0.<dec 0s>"; any other double "#,##0.<dec #s>"
+       (dec 0 -> 2); every double column summed in the total row; ints centred; doubles right-aligned. */
     function fmtNum(k, v) {
         if (v == null || v === '') return '';
         var n = Number(v); if (!isFinite(n)) return isNaN(n) ? 'NaN' : (n > 0 ? 'Infinity' : '-Infinity');
         if (/Amount|Freight|NetPaid/.test(k)) return H.fixed(n, dec);
         return H.opt(n, dec || 2);
     }
-    function num(v) { if (v == null || v === '') return null; var n = Number(v); return isNaN(n) ? v : n; }
+    function num(v) { if (v == null || v === '') return null; var n = Number(v); return isNaN(n) ? null : n; }
+    function toInt(v) { var n = parseInt(String(v == null ? '' : v).trim(), 10); return isNaN(n) ? 0 : n; }
+    function cellText(c, v) {
+        if (c[1] === 'n') return fmtNum(c[0], v);
+        if (c[1] === 'd') return v == null || v === '' ? '' : H.shortDate(v);
+        if (c[1] === 't') return v == null || v === '' ? '' : H.dMMMyyyyhm(v);
+        return v == null ? '' : String(v);
+    }
 
+    /* ------------------------------------------------------------ busy buttons (no duplicate requests) */
+    function busy(btn, fn) {
+        if (btn.disabled || btn.__busy) return;
+        btn.__busy = true; btn.disabled = true;
+        var icon = btn.querySelector('i.fa'), old = icon ? icon.className : null, html = btn.innerHTML;
+        if (icon) icon.className = 'fa fa-spinner fa-spin'; else btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
+        var done = function () { btn.__busy = false; btn.disabled = false; if (icon) icon.className = old; else btn.innerHTML = html; };
+        var p;
+        try { p = fn(); } catch (e) { done(); throw e; }
+        Promise.resolve(p).then(done, done);
+    }
+
+    /* ------------------------------------------------------------ HistoryComboBind */
     function historyComboBind(rows) {
         var s = [], c = [], d = [];
         (rows || []).forEach(function (r) {
             var a = String(H.ci(r, 'Activity')), o = { Id: H.ci(r, 'Id'), Name: H.ci(r, 'ReferenceName') };
             if (a === 'Supplier') s.push(o); else if (a === 'CreditAccount') c.push(o); else if (a === 'DebitAccount') d.push(o);
         });
-        /* InfragisticsHelper.BindAndRetainSelection - keep the current pick */
-        [ ['CmbSupplierName', s], ['CmbCreditAcRegister', c], ['CmbDebitAcRegister', d]].forEach(function (p) {
+        /* InfragisticsHelper.BindAndRetainSelection(insertDefaultRow false, AllowNull): the current pick is kept when it is still in the
+           list. The leading empty option is the web's way to clear a pick (the desktop's AllowNull combo is cleared by deleting its text). */
+        [['CmbSupplierName', s], ['CmbCreditAcRegister', c], ['CmbDebitAcRegister', d]].forEach(function (p) {
             var el = H.$(p[0]), keep = el.value;
             el.innerHTML = '<option value="0"></option>' + p[1].map(function (o) { return '<option value="' + H.esc(o.Id) + '">' + H.esc(o.Name) + '</option>'; }).join('');
             el.value = keep && el.querySelector('option[value="' + keep + '"]') ? keep : '0';
         });
     }
-    function refresh() { H.api('GET', API + '/history-combos').then(historyComboBind).catch(function (e) { H.box(e.message); }); }
+    function refresh() {
+        return H.api('GET', API + '/history-combos').then(historyComboBind).catch(function (e) { H.box(e.message); });
+    }
 
-    function toInt(v) { var n = parseInt(String(v || '').trim(), 10); return isNaN(n) ? 0 : n; }
-
-    /* btnshow_Click */
+    /* ------------------------------------------------------------ btnshow_Click */
     function show() {
         dtRegister = [];
-        H.api('POST', API + '/register', {
+        return H.api('POST', API + '/register', {
             fromDate: H.$('datFromDate').value, toDate: H.$('datToDate').value,
             gpNoFrom: toInt(H.$('txtGpNoFrom').value), gpNoTo: toInt(H.$('txtGpNoTo').value), vehicleNo: H.$('txtVehicleRegister').value,
-            supplierCustomerId: +H.$('CmbSupplierName').value || 0, creditAccountId: +H.$('CmbCreditAcRegister').value || 0, debitAccountId: +H.$('CmbDebitAcRegister').value || 0
+            supplierCustomerId: +H.$('CmbSupplierName').value || 0, creditAccountId: +H.$('CmbCreditAcRegister').value || 0,
+            debitAccountId: +H.$('CmbDebitAcRegister').value || 0
         }).then(function (rows) {
             dtRegister = rows || [];
-            if (!dtRegister.length) return;           /* the previous grid stays, as on the desktop */
+            if (!dtRegister.length) return;           /* desktop: the previous grid stays, dtRegister is empty */
             grid = dtRegister.map(function (r) {
                 var o = {};
-                COLS.forEach(function (c, i) {
-                    var src = SRC[i], v;
+                COLS.forEach(function (c) {
+                    var src = DESKTOP_POSITIONAL && ROTATED[c[0]] ? ROTATED[c[0]] : (SRC[c[0]] || c[0]), v;
                     if (src === '#PerMaund') v = H.toNum(H.ci(r, 'BiltyFreight')) / H.toNum(H.ci(r, 'FactoryWeight')) * 40;
                     else v = H.ci(r, src);
                     if (c[1] === 'n') v = num(v);
+                    else if (c[0] === 'ToleranceWeight' && v != null && v !== '' && !isNaN(Number(v))) v = Number(v).toFixed(2);  /* decimal(18,2).ToString() */
                     o[c[0]] = v;
                 });
                 return o;
             });
-            draw();
+            filters = {};
+            drawGrid();
         }).catch(function (e) { H.box(e.message); });
     }
 
-    function draw() {
-        var vis = COLS.filter(function (c) { return HIDDEN.indexOf(c[0]) < 0; });
-        var sums = {};
-        var h = '<thead><tr><th style="min-width:50px">Print</th><th style="min-width:70px">Voucher</th>' + vis.map(function (c) {
-            return '<th style="min-width:' + (W[c[0]] || (c[1] === 'i' ? 60 : c[1] === 'n' ? 90 : c[1] === 'd' ? 80 : 100)) + 'px">' + H.esc(CAPS[c[0]] || c[0]) + '</th>';
-        }).join('') + '</tr></thead><tbody>';
-        grid.forEach(function (r, i) {
-            h += '<tr data-i="' + i + '"><td class="ctr"><button type="button" class="cb" data-b="Print">Print</button></td><td class="ctr"><button type="button" class="cb" data-b="Voucher">Voucher</button></td>';
-            vis.forEach(function (c) {
-                var v = r[c[0]], t;
-                if (c[1] === 'n') { if (typeof v === 'number' && isFinite(v)) sums[c[0]] = (sums[c[0]] || 0) + v; t = fmtNum(c[0], v); h += '<td class="num">' + H.esc(t) + '</td>'; return; }
-                if (c[1] === 'd') t = H.shortDate(v);
-                else if (c[1] === 't') t = H.dMMMyyyyhm(v);
-                else t = v == null ? '' : String(v);
-                if (c[0] === 'NoOfAttachments') { h += '<td class="ctr"><a data-att="1">' + H.esc(t) + '</a></td>'; return; }
-                h += '<td' + (c[1] === 'i' ? ' class="ctr"' : (c[0] === 'ToleranceWeight' ? ' class="num"' : '')) + '>' + H.esc(t) + '</td>';
-            });
-            h += '</tr>';
-        });
-        h += '</tbody><tfoot><tr><td></td><td></td>' + vis.map(function (c) { return '<td class="num">' + (c[0] in sums ? H.esc(fmtNum(c[0], sums[c[0]])) : '') + '</td>'; }).join('') + '</tr></tfoot>';
-        H.$('grd').innerHTML = h;
-        H.$('lblStatus').textContent = 'Records: ' + grid.length;
+    /* ------------------------------------------------------------ grid (Janus GridEX look) */
+    function drawGrid() {
+        var t = H.$('grd');
+        var total = 50 + 70 + VIS.reduce(function (a, c) { return a + width(c); }, 0);
+        var h = '<colgroup><col style="width:50px"><col style="width:70px">' + VIS.map(function (c) { return '<col style="width:' + width(c) + 'px">'; }).join('') + '</colgroup>';
+        h += '<thead><tr class="hd"><th class="fz0">Print</th><th class="fz1">Voucher</th>' + VIS.map(function (c) {
+            return '<th title="' + H.esc(CAPS[c[0]] || c[0]) + '">' + H.esc(CAPS[c[0]] || c[0]) + '</th>';
+        }).join('') + '</tr><tr class="fr"><th class="fz0"></th><th class="fz1"></th>' + VIS.map(function (c) {
+            return '<th><input type="' + (c[1] === 'd' ? 'date' : 'text') + '" data-f="' + c[0] + '" autocomplete="off"></th>';
+        }).join('') + '</tr></thead><tbody></tbody><tfoot></tfoot>';
+        t.style.width = total + 'px';
+        t.innerHTML = h;
+        applyFilter();
     }
+    function applyFilter() {
+        view = grid.filter(function (r) {
+            return VIS.every(function (c) {
+                var f = filters[c[0]]; if (!f) return true;
+                if (c[1] === 'd') { var v = r[c[0]]; return v != null && String(v).substring(0, 10) === f; }      /* date: Equal */
+                return cellText(c, r[c[0]]).toLowerCase().indexOf(f.toLowerCase()) >= 0;                      /* Contains */
+            });
+        });
+        cur = view.length ? 0 : -1;
+        drawBody();
+    }
+    function drawBody() {
+        var t = H.$('grd'), sums = {}, b = '';
+        view.forEach(function (r, i) {
+            b += '<tr data-i="' + i + '"' + (i === cur ? ' class="cur"' : '') + '><td class="fz0 ctr"><button type="button" data-b="Print">Print</button></td>'
+               + '<td class="fz1 ctr"><button type="button" data-b="Voucher">Voucher</button></td>';
+            VIS.forEach(function (c) {
+                var v = r[c[0]], txt = cellText(c, v);
+                if (c[1] === 'n') { if (typeof v === 'number' && isFinite(v)) sums[c[0]] = (sums[c[0]] || 0) + v; b += '<td class="num">' + H.esc(txt) + '</td>'; return; }
+                if (c[0] === 'NoOfAttachments') { b += '<td class="ctr"><a class="att" data-att="1">' + H.esc(txt) + '</a></td>'; return; }
+                b += '<td' + (c[1] === 'i' ? ' class="ctr"' : (c[0] === 'ToleranceWeight' ? ' class="num"' : '')) + ' title="' + H.esc(txt) + '">' + H.esc(txt) + '</td>';
+            });
+            b += '</tr>';
+        });
+        t.tBodies[0].innerHTML = b;
+        t.tFoot.innerHTML = '<tr><td class="fz0"></td><td class="fz1"></td>' + VIS.map(function (c) {
+            return '<td class="num">' + (c[1] === 'n' ? H.esc(fmtNum(c[0], sums[c[0]] || 0)) : '') + '</td>';
+        }).join('') + '</tr>';
+        recBar();
+    }
+    function recBar() { H.$('recBar').textContent = grid.length ? 'Record: ' + (cur + 1) + ' of ' + view.length : ''; }
+    function setCur(i) {
+        if (i < 0 || i >= view.length) return;
+        var rows = H.$('grd').tBodies[0].rows;
+        if (rows[cur]) rows[cur].classList.remove('cur');
+        cur = i;
+        if (rows[cur]) { rows[cur].classList.add('cur'); rows[cur].scrollIntoView({ block: 'nearest' }); }
+        recBar();
+    }
+    function clearGrid() { grid = []; view = []; cur = -1; filters = {}; H.$('grd').innerHTML = ''; H.$('grd').style.width = ''; H.$('recBar').textContent = ''; }
 
+    H.$('grd').addEventListener('input', function (e) {
+        var f = e.target.getAttribute && e.target.getAttribute('data-f'); if (!f) return;
+        filters[f] = e.target.value.trim();
+        applyFilter();
+    });
     H.$('grd').addEventListener('click', function (e) {
-        var tr = e.target.closest('tr[data-i]'); if (!tr) return;
-        var r = grid[+tr.getAttribute('data-i')];
+        var tr = e.target.closest('tbody tr[data-i]'); if (!tr) return;
+        setCur(+tr.getAttribute('data-i'));
+        var r = view[cur];
         var b = e.target.closest('button[data-b]');
-        if (b && b.getAttribute('data-b') === 'Print') print241(r.Id);
-        else if (b) print102(r.VoucherHeadId);
-        else if (e.target.closest('a[data-att]') && (+r.NoOfAttachments || 0) > 0) H.box('Attachments are not available on the web page yet.');
+        if (b) { if (b.getAttribute('data-b') === 'Print') print241(r.Id); else print102(r.VoucherHeadId); return; }   /* grd_ColumnButtonClick */
+        if (e.target.closest('a[data-att]') && (+r.NoOfAttachments || 0) > 0)                                           /* grd_LinkClicked */
+            H.box('Attachments are not available on the web page yet.');
+    });
+    /* grd_KeyDown: Enter -> next control. Its Ctrl+Space branch (Print / Voucher / Attachment) sits in an `else if` that only runs
+       when the grid has NO rows, so it never fires on the desktop - not reproduced. Up/Down/Home/End move the current row (GridEX). */
+    H.$('grdWrap').addEventListener('keydown', function (e) {
+        if (e.target.tagName === 'INPUT') return;
+        if (e.key === 'ArrowDown') { e.preventDefault(); setCur(cur + 1); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); setCur(cur - 1); }
+        else if (e.key === 'Home' && e.ctrlKey) { e.preventDefault(); setCur(0); }
+        else if (e.key === 'End' && e.ctrlKey) { e.preventDefault(); setCur(view.length - 1); }
     });
 
-    /* CommonServices.FreightVoucherSlip241 / ANewAcRptPaymentReceiptsVoucherSlip_102 - browser output of the same procedures */
-    function print241(id) {
-        if (window.printRpt) { if (!(+id)) { H.box('No Record Found For Display'); return; } return window.printRpt('241-FreightVoucherSlip.rpt', { id: +id }); }
-        H.api('GET', API + '/slip241/' + (+id || 0)).then(function (rows) {
-            if (!rows || !rows.length) { H.box('No Record Found For Display'); return; }
-            H.printRows('241 - Freight Voucher Slip', 'Browser output of SP_FreightVoucherSlipAndRegister - not the Crystal layout.', Object.keys(rows[0]), rows);
-        }).catch(function (e) { H.box(e.message); });
+    /* ------------------------------------------------------------ prints */
+    function print241(id) {                          /* CommonServices.FreightVoucherSlip241 */
+        if (!(+id)) { H.box('No Record Found For Display'); return; }
+        window.printRpt('241-FreightVoucherSlip.rpt', { id: +id });
     }
-    function print102(id) {
-        if (window.printRpt) { if (!(+id)) { H.box('VoucherId Not Found'); return; } return window.printRpt('102-ANewAcRptPaymentReceiptsVoucherSlip.rpt', { id: +id }); }
-        H.api('GET', API + '/voucher102/' + (+id || 0)).then(function (rows) {
-            if (!rows || !rows.length) { H.box('No Record Found For Display'); return; }
-            H.printRows('102 - Voucher', 'Browser output of SpVouchers_PaymentReceiptVoucherSlipNew_Rpt - not the Crystal layout.',
-                ['VoucherCode', 'VoucherDate', 'AccountCode', 'AccountTitle', 'Comments', 'DebitAmount', 'CreditAmount'], rows);
-        }).catch(function (e) { H.box(e.message); });
+    function print102(id) {                          /* CommonServices.ANewAcRptPaymentReceiptsVoucherSlip_102 */
+        if (!(+id)) { H.box('VoucherId Not Found'); return; }
+        window.printRpt('102-ANewAcRptPaymentReceiptsVoucherSlip.rpt', { id: +id });
     }
-    /* btnRegister_Click - 240-FreightVoucherRegister.rpt over dtRegister */
+    /* btnRegister_Click: ShowReportWithDataTable(dtRegister, "240-FreightVoucherRegister.rpt") with @CompanyName / @CompanyAddress.
+       The rows are the procedure's own (by column name); /reports/print/grid lays them out through the converted 240 Jasper
+       template and passes @CompanyName / @CompanyAddress from the session. */
+    function pad(n) { return (n < 10 ? '0' : '') + n; }
+    function sqlDate(v) {
+        if (typeof v === 'number') { var d = new Date(v); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds()); }
+        var m = /^(\d{4}-\d{2}-\d{2})(?:[T ](\d{2}:\d{2}(?::\d{2})?))?/.exec(String(v));
+        return m ? m[1] + ' ' + (m[2] ? (m[2].length === 5 ? m[2] + ':00' : m[2]) : '00:00:00') : v;
+    }
     function print240() {
         if (!dtRegister.length) { H.box('Not Record Found For Display'); return; }
-        H.printRows('240 - Freight Voucher Register', 'Browser output of SP_FreightVoucherSlipAndRegister - not the Crystal layout.', Object.keys(dtRegister[0]), dtRegister,
-            function (c, v) { return /Date/.test(c) ? H.shortDate(v) : (v == null ? '' : v); });
+        var rows = dtRegister.map(function (r) {
+            var o = {};
+            Object.keys(r).forEach(function (k) { var v = r[k]; o[k] = (v != null && v !== '' && /Date$/.test(k)) ? sqlDate(v) : v; });
+            return o;
+        });
+        var win = window.open('about:blank', '_blank');
+        return fetch('/reports/print/grid', { method: 'POST', credentials: 'same-origin',
+            headers: Object.assign({ 'Content-Type': 'application/json' }, csrfHeader()),
+            body: JSON.stringify({ rpt: '240-FreightVoucherRegister.rpt', title: 'Freight Voucher Register', rows: rows }) })
+            .then(function (r) {
+                var type = r.headers.get('Content-Type') || '';
+                if (r.ok && type.indexOf('application/pdf') === 0) return r.blob().then(function (b) { if (win) win.location = URL.createObjectURL(b); });
+                return r.text().then(function (t) { try { if (win) win.close(); } catch (x) { } H.box(t || ('Print failed (' + r.status + ')')); });
+            }).catch(function (e) { try { if (win) win.close(); } catch (x) { } H.box(e.message); });
     }
+    function csrfHeader() {
+        var t = document.querySelector('meta[name="_csrf"]'), h = document.querySelector('meta[name="_csrf_header"]'), o = {};
+        if (t && h && t.content && h.content) o[h.content] = t.content;
+        return o;
+    }
+
+    /* ------------------------------------------------------------ btnResetRegister_Click */
     function reset() {
-        H.$('txtGpNoFrom').value = ''; H.$('txtGpNoTo').value = ''; H.$('txtVehicleRegister').value = ''; H.$('CmbSupplierName').value = '0';
-        dtRegister = []; grid = []; H.$('grd').innerHTML = ''; H.$('lblStatus').textContent = '';
+        H.$('txtGpNoFrom').value = ''; H.$('txtGpNoTo').value = ''; H.$('txtVehicleRegister').value = '';
+        H.$('CmbSupplierName').value = '0';           /* CmbSupplierName.Text = "" - Credit / Debit Account and the dates are kept */
+        dtRegister = [];
+        clearGrid();                                   /* grd.ClearStructure() */
     }
 
-    H.$('btnshow').addEventListener('click', show);
+    H.$('btnshow').addEventListener('click', function () { busy(H.$('btnshow'), show); });
     H.$('btnResetRegister').addEventListener('click', reset);
-    H.$('btnRefreshRegister').addEventListener('click', refresh);
-    H.$('btnRegister').addEventListener('click', print240);
-    H.keys({ 'Ctrl+E': function () { window.location.href = '/accounts/dashboard'; }, 'Ctrl+N': reset, 'Ctrl+R': refresh, 'Ctrl+P': print240, 'Ctrl+S': show });
+    H.$('btnRefreshRegister').addEventListener('click', function () { busy(H.$('btnRefreshRegister'), refresh); });
+    H.$('btnRegister').addEventListener('click', function () { busy(H.$('btnRegister'), print240); });
 
-    /* VoucherValidation_Load: From = ActiveYr.Start_Period, To = today, HistoryComboBind */
+    /* VoucherValidation_KeyDown (KeyPreview): Enter -> {TAB}, Ctrl+E close, Ctrl+N reset, Ctrl+R refresh, Ctrl+P 240, Ctrl+S show */
+    var ORDER = ['datFromDate', 'datToDate', 'txtGpNoFrom', 'txtGpNoTo', 'txtVehicleRegister', 'CmbSupplierName', 'CmbCreditAcRegister', 'CmbDebitAcRegister', 'btnshow'];
+    function focusCtl(id) {
+        var el = H.$(id), w = el && el.closest('.dtcombo-wrap');
+        if (w) { var f = w.querySelector('.dtcombo-input'); if (f) { f.focus(); return; } }
+        if (el) el.focus();
+    }
+    document.addEventListener('keydown', function (e) {
+        if (e.key !== 'Enter' || e.ctrlKey || e.altKey) return;
+        var t = e.target;
+        if (document.querySelector('.h-modal')) return;
+        if (t.closest && t.closest('.dtcombo-pop')) return;                 /* the combo's own Enter picks the row */
+        var w = t.closest && t.closest('.dtcombo-wrap'), id = w ? (w.querySelector('select') || {}).id : t.id;
+        var i = ORDER.indexOf(id);
+        if (i < 0 || id === 'btnshow') return;
+        e.preventDefault();
+        focusCtl(ORDER[i + 1]);
+    }, true);
+    H.keys({
+        'Ctrl+E': function () { window.location.href = '/accounts/dashboard'; },
+        'Ctrl+N': reset,
+        'Ctrl+R': function () { busy(H.$('btnRefreshRegister'), refresh); },
+        'Ctrl+P': function () { busy(H.$('btnRegister'), print240); },
+        'Ctrl+S': function () { busy(H.$('btnshow'), show); }
+    });
+
+    /* VoucherValidation_Load: From = ActiveYr.Start_Period, To = today, focus From, HistoryComboBind.
+       The combos are filled on their own so a failing /init cannot leave them empty. */
     H.$('datToDate').value = H.today();
+    H.$('datFromDate').focus();
     H.api('GET', '/accounts/api/reports/freight-voucher-911/init').then(function (c) {
         if (c.financialYearStart) H.$('datFromDate').value = String(c.financialYearStart).substring(0, 10);
         dec = c.amountDecimals || 0;
-        H.$('datFromDate').focus();
-        refresh();
     }).catch(function (e) { H.box(e.message); });
+    refresh();
 })();
 </script>
-<script src="/js/print-rpt.js?v=20261001a"></script>
+<script th:src="@{/js/print-rpt.js?v=20261001a}"></script>
 </body>
 </html>

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Define Chart Of Document - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_sdt.css?v=20260930a}"/>
+</head>
+<!-- DefineChartOfDocument.cs (Architecture.WinApp.SDT), screen 620 "Define Chart Of Document", ClientSize 685 x 405.
+     menuStrip1: New | Refresh | Save (hidden) | Update (hidden) | ShortCut Keys. panel2 (Teal) "Chart Of Document".
+     panel1 (white): Code (txtChartOfDocumentCode), Name (txtChartOfDocumentName), Type (CmbRequiredLevel), Provider Name (CmbProvider),
+       SequenceNo (txtSeqNo, digits), Lead Time (txtLeadTime, digits), btnAdd (Teal) "Save" / "Update".
+     panel4 (Teal) "History" + grdfrm (DocumentCode | DocumentName | SequenceNo | RequiredLevel | LeadTime | ProviderName | EntryUser | EntryDate | ModifyUser | ModifyDate; DoubleClick = ReadById).
+     Desktop quirk: DateLock_Load disables btnSave, btnAdd and btnupdate without consulting rights and the procedure refuses new rows
+       ("New ChartOfDocument Definition Is Closed For Users ,Please Contact EccountBook ERP Support"); the buttons stay disabled here too.
+     KeyDown: Ctrl+E/Esc close, Ctrl+N new, Ctrl+S/Ctrl+U (only when enabled), Ctrl+Down grid, Ctrl+Up / Ctrl+F5 code, Ctrl+Enter = grid double click, Ctrl+Alt shortcut keys. -->
+<body class="pd-body" data-export-page="sdt-620">
+<div class="pd-form ex-form">
+    <div class="win-tool-strip">
+        <button type="button" id="btnnew" class="win-btn-tool" accesskey="n" onclick="ExportChartOfDocument.reset()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+        <button type="button" id="refreshToolStripMenuItem" class="win-btn-tool" onclick="ExportChartOfDocument.refresh(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+        <button type="button" id="btnSave" class="win-btn-tool is-hidden" onclick="ExportChartOfDocument.save(this, false)" disabled><i class="fa fa-save"></i> <span>Save</span></button>
+        <button type="button" id="btnupdate" class="win-btn-tool is-hidden" accesskey="u" onclick="ExportChartOfDocument.save(this, true)" disabled><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+        <button type="button" id="btnShortCutKeys" class="win-btn-tool" onclick="ExportChartOfDocument.shortcuts()"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+    </div>
+    <div class="pd-caption pd-caption-teal" id="label4">Chart Of Document</div>
+    <div class="sdt-entry" id="panel1">
+        <label for="txtChartOfDocumentCode">Code</label><input type="text" id="txtChartOfDocumentCode" class="win-textbox" autocomplete="off"/>
+        <label for="txtChartOfDocumentName">Name</label><input type="text" id="txtChartOfDocumentName" class="win-textbox" autocomplete="off"/>
+        <label for="CmbRequiredLevel">Type</label><select id="CmbRequiredLevel" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Required Level"></select>
+        <label for="CmbProvider">Provider Name</label><select id="CmbProvider" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Document Provider"></select>
+        <label for="txtSeqNo">SequenceNo</label><input type="text" id="txtSeqNo" class="win-textbox num" data-guard="integer" autocomplete="off"/>
+        <label for="txtLeadTime">Lead Time</label><input type="text" id="txtLeadTime" class="win-textbox num" data-guard="integer" autocomplete="off"/>
+        <div class="sdt-actions"><button type="button" id="btnAdd" class="win-btn-small" style="width:90px;" onclick="ExportChartOfDocument.add(this)" disabled title="Disabled on the desktop (DateLock_Load)">Save</button></div>
+    </div>
+    <div class="pd-caption pd-caption-teal pd-history-bar" id="panel4"><span id="label3">History</span>
+        <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdfrmBox" title="Fullscreen table">&#x26F6;</button><span id="gridBarMount" class="pd-gridbar-mount"></span></span></div>
+    <div class="ex-grid-box" id="grdfrmBox">
+        <div class="ex-grid-scroll ex-h400">
+            <table class="win-grid" id="grdfrm" data-gridbar="DefineChartOfDocument:grdfrm" data-gridbar-mount="#gridBarMount" data-gridbar-reorder="false">
+                <thead><tr>
+                    <th>Document Code</th><th>Document Name</th><th class="num">Sequence No</th><th>Required Level</th><th class="num">Lead Time</th>
+                    <th>Provider Name</th><th>Entry User</th><th>Entry Date</th><th>Modify User</th><th>Modify Date</th>
+                </tr></thead>
+                <tbody id="histBody"></tbody>
+            </table>
+        </div>
+        <div class="ex-grid-empty is-hidden" id="histEmpty">No record found.</div>
+    </div>
+    <div class="win-footer-strip">
+        <span class="ex-footer-left" id="footerInfo">DefineChartOfDocument</span>
+        <button type="button" class="win-btn-history" id="btnFooterHistory" onclick="ExportChartOfDocument.toggleHistory(this)"><i class="fa fa-history"></i> <span>History</span></button>
+    </div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_export_sdt_common.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_export_define_chart_of_document.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

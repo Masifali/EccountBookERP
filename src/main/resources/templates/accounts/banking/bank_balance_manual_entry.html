@@ -1,303 +1,395 @@
 <!DOCTYPE html>
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Bank Balance Manual Entry - EccountBookERP</title>
-    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
-    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
-    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
-    <style>
-        body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f3f5; font-size: 11px; color: #333; margin: 0; padding: 0; }
-        .erp-header { background-color: #00796B; color: white; padding: 6px 12px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
-        .erp-toolbar { background-color: #e2e8f0; border-bottom: 1px solid #cbd5e1; padding: 4px 10px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-        .btn-erp { background-color: #ffffff; border: 1px solid #94a3b8; border-radius: 3px; padding: 3px 10px; font-size: 11px; font-weight: 600; color: #1e293b; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; text-decoration: none; }
-        .btn-erp:hover { background-color: #f1f5f9; border-color: #64748b; text-decoration: none; }
-        .btn-erp-primary { background-color: #00796B; color: white; border: 1px solid #004d40; }
-        .btn-erp-primary:hover { background-color: #004d40; color: white; }
-        .btn-erp-danger { background-color: #dc3545; color: white; border: 1px solid #bd2130; }
-        .btn-erp-danger:hover { background-color: #c82333; color: white; }
-        .erp-fieldset { background: white; border: 1px solid #cbd5e1; border-radius: 3px; padding: 10px; margin-bottom: 10px; }
-        .erp-fieldset legend { font-size: 11px; font-weight: bold; color: #00796B; width: auto; padding: 0 4px; margin-bottom: 6px; border: none; }
-        .form-label-erp { font-weight: 600; color: #334155; margin-bottom: 2px; font-size: 11px; }
-        .form-control-erp { border: 1px solid #94a3b8; border-radius: 2px; padding: 2px 6px; font-size: 11px; height: 24px; box-sizing: border-box; background-color: #fff; width: 100%; }
-        .grid-container { height: 440px; overflow-y: auto; border: 1px solid #cbd5e1; background: white; }
-        .erp-table { width: 100%; border-collapse: collapse; font-size: 11px; }
-        .erp-table th { background-color: #00796B; color: white; padding: 5px 6px; text-align: left; border: 1px solid #004d40; font-weight: 600; position: sticky; top: 0; z-index: 2; }
-        .erp-table td { padding: 4px 6px; border: 1px solid #cbd5e1; vertical-align: middle; }
-        .erp-table tr:nth-child(even) { background-color: #f8fafc; }
-        .erp-table tr.selected { background-color: #b2dfdb !important; font-weight: bold; }
-        .filter-row input { width: 100%; font-size: 10px; padding: 1px 4px; height: 20px; box-sizing: border-box; }
-    </style>
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20261002gf}" href="/build/css/countx_desktop_combo.css">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20261002gv}" href="/build/css/countx_prod_combo.css">
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}" href="/build/css/countx_grid_bar.css">
+    <link rel="stylesheet" th:href="@{/build/css/countx_button_busy.css?v=20261002gf}" href="/build/css/countx_button_busy.css">
+<!--
+  Screen 705 "Bank Balance Entry" - desktop Architecture.WinApp.Account_Definition.BankBalanceManualEntry
+  (base.Name "BankBalanceManualEntry", ClientSize 793x441, WindowState Maximized, KeyPreview).
+  1:1 port of InitializeComponent (2026-10-02). Every panel is docked, so the layout stretches with the window
+  exactly like the maximised desktop form:
+    panel2   Dock Top 25   toolStrip3 (white, Verdana 9.75): &New, Save
+    panel3   Dock Top 78   white
+       panel4  Dock Top 30, Teal: label1 "Bank Balance Manual Entry" (3,4) Tahoma 12 bold white
+       label27 "Balance Date" (12,32) Segoe UI Semibold 9 bold
+       txtBalanceDate (12,50) 124x23 Verdana 9.75, dd-MMM-yy
+       btnshow "Show" (141,50) 58x23, flat, back rgb(10,110,110), Tahoma 9.75 bold white
+    panel7   Dock Fill
+       panel8  Dock Top 26, Teal: label5 "Summary" (6,2) Calibri 12 bold white; ctrlGrdSummary anchored right (751,2) 38x21
+       grdHistory (Janus GridEX, Dock Fill, Verdana 8.25, Office2007, RecordNavigator, TotalRow, no group-by box)
+  Grid (SummeryGrd + GridSetting): Time (hh:mm tt, editable) | AccountId (hidden) | AccountCode (link -> GL) |
+  AccountTitle (350) | ERPBalance (sum, right, no edit) | BankBalance (sum, right, editable) |
+  Source (value list SpStaticColumnNames 'SourceBy', Id/type, LimitToList) | ConfirmBy (no edit).
+  API: /accounts/api/banking/bank-balance-manual-entry/{init,summary,save} (BankBalanceManualEntryController).
+  The form has no Update / Delete / history / print. The old page's "Manual Balance Entry Form" (bank combo, amount,
+  Balance Time, Source / Portal, Confirmed By, Remarks), the "Register" grid with ID column + filter row and the
+  /api/banking/bank-manual-balance/* calls were invented and are gone.
+-->
+<style>
+    :root { --teal: #008080; --showbtn: rgb(10,110,110); }
+    html, body { margin: 0; padding: 0; height: 100%; background: #fff; overflow: hidden; }
+    body { font-family: "Segoe UI", Tahoma, sans-serif; font-size: 12px; color: #000; }
+    #frm { display: flex; flex-direction: column; height: 100vh; min-width: 0; }
+
+    /* panel2 / toolStrip3 */
+    #panel2 { flex: 0 0 25px; height: 25px; background: #fff; overflow: hidden; border-bottom: 1px solid #e3e3e3; }
+    #toolStrip3 { display: flex; align-items: center; height: 25px; padding-left: 2px; background: #fff;
+                  font-family: Verdana, sans-serif; font-size: 13px; }
+    #toolStrip3 button { display: inline-flex; align-items: center; gap: 4px; height: 23px; padding: 0 6px; margin: 0 1px;
+                  font: inherit; color: #000; background: transparent; border: 1px solid transparent; cursor: pointer; }
+    #toolStrip3 button:hover:not(:disabled) { background: #cce8ff; border-color: #99d1ff; }
+    #toolStrip3 button:disabled { color: #a0a0a0; cursor: default; }
+    #toolStrip3 button:disabled svg { opacity: .45; }
+    #toolStrip3 svg { width: 20px; height: 20px; flex: 0 0 20px; }
+
+    /* panel3 */
+    #panel3 { flex: 0 0 78px; height: 78px; position: relative; background: #fff; }
+    #panel4 { position: absolute; left: 0; top: 0; right: 0; height: 30px; background: var(--teal); }
+    #label1 { position: absolute; left: 3px; top: 4px; font: bold 16px Tahoma, sans-serif; color: #fff; white-space: nowrap; line-height: 19px; }
+    #label27 { position: absolute; left: 12px; top: 32px; font: 600 12px "Segoe UI Semibold", "Segoe UI", sans-serif; line-height: 15px; white-space: nowrap; }
+    #txtBalanceDate { position: absolute; left: 12px; top: 50px; width: 124px; height: 23px; box-sizing: border-box;
+                      font: 13px Verdana, sans-serif; border: 1px solid #7a7a7a; padding: 0 2px; background: #fff; }
+    #btnshow { position: absolute; left: 141px; top: 50px; width: 58px; height: 23px; box-sizing: border-box; padding: 0;
+               background: var(--showbtn); color: #fff; border: 0; font: bold 13px Tahoma, sans-serif; cursor: pointer; }
+    #btnshow:disabled { opacity: .7; cursor: progress; }
+
+    /* panel7 */
+    #panel7 { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
+    #panel8 { flex: 0 0 26px; height: 26px; position: relative; background: var(--teal); }
+    #label5 { position: absolute; left: 6px; top: 2px; font: bold 16px Calibri, "Segoe UI", sans-serif; color: #fff; line-height: 19px; }
+    #gbMount { position: absolute; right: 4px; top: 2px; height: 21px; min-width: 38px; display: flex; align-items: center; justify-content: flex-end; }
+
+    /* grdHistory - Janus GridEX, VisualStyle Office2007 */
+    #panel9 { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; border: 1px solid #9eb6ce; }
+    #grdWrap { flex: 1 1 auto; overflow: auto; min-height: 0; background: #fff; }
+    #grdHistory { border-collapse: separate; border-spacing: 0; table-layout: fixed; font: 11px Verdana, sans-serif; }
+    #grdHistory th { position: sticky; top: 0; z-index: 2; height: 20px; padding: 0 4px; text-align: left; font-weight: normal;
+                     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+                     background: linear-gradient(#f9fcfd, #d3e2f0); border-right: 1px solid #9eb6ce; border-bottom: 1px solid #9eb6ce; }
+    #grdHistory td { height: 20px; padding: 0 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+                     border-right: 1px solid #e3e9ef; border-bottom: 1px solid #e3e9ef; box-sizing: border-box; }
+    #grdHistory td.num, #grdHistory th.num { text-align: right; }
+    #grdHistory td.ed { background: #fff; cursor: text; }
+    #grdHistory tbody tr.cur td { background: #ffe8a6; }
+    #grdHistory tbody tr.cur td.ed { background: #fff6d6; }
+    #grdHistory td a.lnk { color: #0000ff; text-decoration: underline; cursor: pointer; }
+    #grdHistory td input.cell-ed { width: 100%; height: 18px; box-sizing: border-box; border: 1px solid #5b9bd5; font: inherit; padding: 0 2px; }
+    #grdHistory td input.cell-ed.num { text-align: right; }
+    #grdHistory td.src { padding: 0 1px; overflow: visible; }
+    #grdHistory td.src .dtcombo-wrap { width: 100% !important; height: 18px !important; }
+    #grdHistory td.src .dtcombo-input { height: 18px !important; min-height: 18px !important; font: 11px Verdana, sans-serif !important; }
+    #grdHistory tfoot td { position: sticky; bottom: 0; z-index: 1; background: #e7eef6; border-top: 1px solid #9eb6ce; font-weight: bold; }
+    #grdHistory .hid { display: none; }
+    #grdHistory td.empty { color: #666; text-align: center; }
+
+    /* Janus RecordNavigator */
+    #recNav { flex: 0 0 22px; height: 22px; display: flex; align-items: center; gap: 2px; padding: 0 4px;
+              background: linear-gradient(#f4f8fb, #dbe6f1); border-top: 1px solid #9eb6ce; font: 11px Verdana, sans-serif; }
+    #recNav button { width: 20px; height: 18px; padding: 0; border: 1px solid transparent; background: transparent; cursor: pointer; font: 10px Verdana; }
+    #recNav button:hover:not(:disabled) { border-color: #9eb6ce; background: #fff; }
+    #recNav button:disabled { color: #aaa; cursor: default; }
+    #recNav span { padding: 0 6px; white-space: nowrap; }
+</style>
 </head>
 <body>
-    <div class="erp-header">
-        <div><i class="fa fa-university"></i> Bank Balance Manual Entry</div>
-        <div>
-            <a href="/accounts/reports/bank-balances" style="color: white; text-decoration: underline; margin-right: 15px;"><i class="fa fa-bar-chart"></i> Bank Balances Report</a>
-            <a href="/accounts/dashboard" style="color: white; text-decoration: underline;"><i class="fa fa-arrow-left"></i> Accounts Dashboard</a>
+<div id="frm">
+    <div id="panel2">
+        <div id="toolStrip3" role="toolbar">
+            <button type="button" id="btnNew" title="Alt+N"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="8.5" fill="#2e9b45"/><path d="M10 5.5v9M5.5 10h9" stroke="#fff" stroke-width="2.2"/></svg><span><u>N</u>ew</span></button>
+            <button type="button" id="btnSave"><svg viewBox="0 0 20 20"><rect x="2.5" y="2.5" width="15" height="15" rx="1" fill="#3b78c2"/><rect x="5.5" y="3" width="9" height="5.5" fill="#fff"/><rect x="5.5" y="11" width="9" height="6" fill="#dfe9f5"/></svg><span>Save</span></button>
         </div>
     </div>
-    
-    <div class="erp-toolbar">
-        <button type="button" class="btn-erp" id="btnNew"><i class="fa fa-file-o"></i> New</button>
-        <button type="button" class="btn-erp btn-erp-primary" id="btnSave"><i class="fa fa-save"></i> Save</button>
-        <button type="button" class="btn-erp" id="btnUpdate"><i class="fa fa-pencil"></i> Update</button>
-        <button type="button" class="btn-erp btn-erp-danger" id="btnDelete"><i class="fa fa-trash"></i> Delete</button>
-        <button type="button" class="btn-erp" id="btnRefresh"><i class="fa fa-refresh"></i> Refresh</button>
+
+    <div id="panel3">
+        <div id="panel4"><span id="label1">Bank Balance Manual Entry</span></div>
+        <label id="label27" for="txtBalanceDate">Balance Date</label>
+        <input type="date" id="txtBalanceDate">
+        <button type="button" id="btnshow">Show</button>
     </div>
 
-    <div style="padding: 10px;">
-        <input type="hidden" id="entryRecordId" value="" />
-
-        <div class="erp-fieldset">
-            <legend>Manual Balance Entry Form</legend>
-            <div class="row" style="margin-bottom: 6px;">
-                <div class="col-md-4">
-                    <label class="form-label-erp">Bank Account *</label>
-                    <select id="bankAccountId" class="form-control-erp select2">
-                        <option value="">-- Select Bank Account --</option>
-                        <option th:each="acc : ${bankAccountsList}" th:value="${acc.id}" th:text="${acc.accountTitle}"></option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label-erp">Balance Date *</label>
-                    <input type="date" id="balanceDate" class="form-control-erp" />
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label-erp">Manual Balance Amount (PKR) *</label>
-                    <input type="number" step="0.01" id="manualBalance" class="form-control-erp" placeholder="0.00" style="text-align: right; font-weight: bold; color: #00796B;" />
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label-erp">Balance Time</label>
-                    <input type="text" id="balanceTime" class="form-control-erp" placeholder="e.g. 05:00 PM" />
-                </div>
-            </div>
-
-            <div class="row" style="margin-bottom: 6px;">
-                <div class="col-md-3">
-                    <label class="form-label-erp">Source</label>
-                    <input type="text" id="sourceBy" class="form-control-erp" placeholder="Source / Portal" />
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label-erp">Confirmed By</label>
-                    <input type="text" id="confirmedBy" class="form-control-erp" placeholder="Confirmed By" />
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label-erp">Remarks / Description</label>
-                    <input type="text" id="remarks" class="form-control-erp" placeholder="Remarks" />
-                </div>
-            </div>
-        </div>
-
-        <div class="erp-fieldset">
-            <legend>Bank Manual Balance Register</legend>
-            <div class="grid-container">
-                <table class="erp-table" id="manualBalanceGrid">
-                    <thead>
-                        <tr>
-                            <th style="width: 5%;">ID</th>
-                            <th style="width: 25%;">Bank Account</th>
-                            <th style="width: 12%;">Balance Date</th>
-                            <th style="width: 15%; text-align: right;">Manual Balance (PKR)</th>
-                            <th style="width: 10%;">Balance Time</th>
-                            <th style="width: 12%;">Source</th>
-                            <th style="width: 12%;">Confirmed By</th>
-                            <th style="width: 9%;">Remarks</th>
-                        </tr>
-                        <tr class="filter-row">
-                            <th><input type="text" data-col="0" placeholder="Filter..." /></th>
-                            <th><input type="text" data-col="1" placeholder="Filter..." /></th>
-                            <th><input type="text" data-col="2" placeholder="Filter..." /></th>
-                            <th><input type="text" data-col="3" placeholder="Filter..." /></th>
-                            <th><input type="text" data-col="4" placeholder="Filter..." /></th>
-                            <th><input type="text" data-col="5" placeholder="Filter..." /></th>
-                            <th><input type="text" data-col="6" placeholder="Filter..." /></th>
-                            <th><input type="text" data-col="7" placeholder="Filter..." /></th>
-                        </tr>
-                    </thead>
-                    <tbody id="manualBalanceGridBody">
-                        <tr><td colspan="8" style="text-align:center;">Loading bank manual balances...</td></tr>
-                    </tbody>
+    <div id="panel7">
+        <div id="panel8"><span id="label5">Summary</span><div id="gbMount"></div></div>
+        <div id="panel9">
+            <div id="grdWrap" data-gridbar-form="BankBalanceManualEntry" data-gridbar-grid="grdHistory"
+                 data-gridbar-mount="#gbMount" data-gridbar-reorder="false" data-gridbar-title="Summary">
+                <table id="grdHistory">
+                    <colgroup>
+                        <col style="width:100px"><col class="hid"><col style="width:100px"><col style="width:350px">
+                        <col style="width:110px"><col style="width:110px"><col style="width:120px"><col style="width:140px">
+                    </colgroup>
+                    <thead><tr>
+                        <th data-col="Time">Time</th>
+                        <th data-col="AccountId" class="hid">AccountId</th>
+                        <th data-col="AccountCode">AccountCode</th>
+                        <th data-col="AccountTitle">AccountTitle</th>
+                        <th data-col="ERPBalance" class="num">ERPBalance</th>
+                        <th data-col="BankBalance" class="num">BankBalance</th>
+                        <th data-col="Source">Source</th>
+                        <th data-col="ConfirmBy">ConfirmBy</th>
+                    </tr></thead>
+                    <tbody id="grdBody"></tbody>
+                    <tfoot><tr>
+                        <td></td><td class="hid"></td><td></td><td></td>
+                        <td class="num" id="totERP"></td><td class="num" id="totBank"></td><td></td><td></td>
+                    </tr></tfoot>
                 </table>
             </div>
+            <div id="recNav">
+                <button type="button" data-nav="first" title="First">|&#9664;</button>
+                <button type="button" data-nav="prev" title="Previous">&#9664;</button>
+                <span id="recNavText">Record 0 of 0</span>
+                <button type="button" data-nav="next" title="Next">&#9654;</button>
+                <button type="button" data-nav="last" title="Last">&#9654;|</button>
+            </div>
         </div>
     </div>
+</div>
 
-    <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
-    <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
-    <script th:src="@{/vendors/select2/dist/js/select2.min.js}"></script>
-    <script>
-        var manualBalanceData = [];
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}" src="/vendors/jquery/dist/jquery.min.js"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20261002gv}" src="/build/js/countx_prod_combo.js"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}" src="/build/js/countx_grid_bar.js"></script>
+<script>
+(function ($) {
+    'use strict';
+    var API = '/accounts/api/banking/bank-balance-manual-entry';
+    var rights = { save: false };
+    var sourceBy = [];          // dtSourceBy (Id, type)
+    var decimals = 2;           // clsGlobalVariables.stringFormatboth decimals
+    var rows = [];              // grdHistory DataSource (dtcol)
+    var cur = -1;               // grdHistory.CurrentRow
+    var MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-        $(document).ready(function() {
-            $('.select2').select2({ width: '100%' });
-            var today = new Date().toISOString().split('T')[0];
-            $('#balanceDate').val(today);
+    function esc(v) { return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    function num(v) { var n = parseFloat(v); return isNaN(n) ? 0 : n; }
+    function grp(n) { return Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals }); }
+    /* "#,##0.dd;(0,0.dd); 0" - null shows empty */
+    function both(v) { if (v === null || v === undefined || v === '') return ''; var n = num(v); if (n === 0) return '0'; return n < 0 ? '(' + grp(n) + ')' : grp(n); }
+    function pad(n) { return (n < 10 ? '0' : '') + n; }
+    function todayIso() { var d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+    /* "HH:mm[:ss]" -> "hh:mm tt" */
+    function hhmmtt(t) {
+        if (!t) return '';
+        var p = String(t).split(':'); var h = parseInt(p[0], 10), m = parseInt(p[1], 10);
+        if (isNaN(h) || isNaN(m)) return String(t);
+        var ap = h >= 12 ? 'PM' : 'AM'; var h12 = h % 12; if (h12 === 0) h12 = 12;
+        return pad(h12) + ':' + pad(m) + ' ' + ap;
+    }
+    function nowHHmm() { var d = new Date(); return pad(d.getHours()) + ':' + pad(d.getMinutes()); }
 
-            loadGridData();
+    function busy(btn, on) {
+        var $b = $(btn);
+        if (on) { $b.prop('disabled', true).addClass('btn-busy'); $('#frm').addClass('is-busy'); }
+        else { $b.removeClass('btn-busy'); $('#frm').removeClass('is-busy'); $b.prop('disabled', false); applyRights(); }
+    }
+    function applyRights() { $('#btnSave').prop('disabled', !rights.save || $('#btnSave').hasClass('btn-busy')); }
 
-            $('#btnNew').click(function() { resetForm(); });
-            $('#btnSave, #btnUpdate').click(function() { saveRecord(); });
-            $('#btnDelete').click(function() { deleteRecord(); });
-            $('#btnRefresh').click(function() { loadGridData(); });
+    function getJson(url, data) {
+        return $.ajax({ url: url, type: 'GET', data: data || {}, dataType: 'json', cache: false });
+    }
+    function failText(x) {
+        try { var j = x.responseJSON || JSON.parse(x.responseText); if (j && j.message) return j.message; } catch (e) { /* ignore */ }
+        return x && x.status ? 'HTTP ' + x.status : 'Request failed';
+    }
 
-            $('.filter-row input').on('keyup change', function() {
-                filterGrid();
+    /* ---------------------------------------------------------------- SummeryGrd */
+    var loading = false;
+    function summeryGrd(btn) {
+        if (loading) return $.Deferred().resolve().promise();
+        loading = true;
+        if (btn) busy(btn, true);
+        return getJson(API + '/summary', { balanceDate: $('#txtBalanceDate').val() || todayIso() })
+            .done(function (r) {
+                if (!r || r.success === false) { alert((r && r.message) || 'Error'); return; }
+                rows = (r.rows || []).map(function (x) {
+                    return {
+                        /* BalanceTime empty -> DateTime.Now.TimeOfDay "hh:mm tt" */
+                        Time: x.Time ? String(x.Time).substring(0, 5) : nowHHmm(),
+                        AccountId: x.AccountId, AccountCode: x.AccountCode, AccountTitle: x.AccountTitle,
+                        ERPBalance: x.ERPBalance, BankBalance: (x.BankBalance === null || x.BankBalance === undefined) ? null : num(x.BankBalance),
+                        Source: (x.Source === null || x.Source === undefined || x.Source === '') ? '' : String(x.Source),
+                        ConfirmBy: x.ConfirmBy == null ? '' : x.ConfirmBy
+                    };
+                });
+                cur = rows.length ? 0 : -1;
+                render();
+            })
+            .fail(function (x) { alert(failText(x)); })
+            .always(function () { loading = false; if (btn) busy(btn, false); });
+    }
+
+    function sourceOptions(val) {
+        var h = '<option value=""></option>';
+        sourceBy.forEach(function (s) {
+            h += '<option value="' + esc(s.Id) + '"' + (String(s.Id) === String(val) ? ' selected' : '') + '>' + esc(s.type) + '</option>';
+        });
+        return h;
+    }
+
+    function render() {
+        var $b = $('#grdBody').empty();
+        rows.forEach(function (r, i) {
+            var tr = '<tr data-i="' + i + '"' + (i === cur ? ' class="cur"' : '') + '>'
+                + '<td class="ed" data-k="Time">' + esc(hhmmtt(r.Time)) + '</td>'
+                + '<td class="hid">' + esc(r.AccountId) + '</td>'
+                + '<td><a class="lnk" href="#">' + esc(r.AccountCode) + '</a></td>'
+                + '<td title="' + esc(r.AccountTitle) + '">' + esc(r.AccountTitle) + '</td>'
+                + '<td class="num">' + esc(both(r.ERPBalance)) + '</td>'
+                + '<td class="num ed" data-k="BankBalance">' + esc(both(r.BankBalance)) + '</td>'
+                + '<td class="src"><select data-dtcombo="single" style="width:100%;height:18px">' + sourceOptions(r.Source) + '</select></td>'
+                + '<td title="' + esc(r.ConfirmBy) + '">' + esc(r.ConfirmBy) + '</td>'
+                + '</tr>';
+            $b.append(tr);
+        });
+        if (window.DesktopCombo && window.DesktopCombo.refresh) window.DesktopCombo.refresh();
+        totals();
+        nav();
+    }
+
+    /* TotalRow: AggregateFunction Sum on ERPBalance and BankBalance */
+    function totals() {
+        var e = 0, b = 0;
+        rows.forEach(function (r) { e += num(r.ERPBalance); b += num(r.BankBalance); });
+        $('#totERP').text(rows.length ? both(e) : '');
+        $('#totBank').text(rows.length ? both(b) : '');
+    }
+
+    function setCur(i) {
+        if (!rows.length) { cur = -1; nav(); return; }
+        cur = Math.max(0, Math.min(rows.length - 1, i));
+        var $tr = $('#grdBody tr').removeClass('cur').filter('[data-i="' + cur + '"]').addClass('cur');
+        if ($tr.length) { var w = $('#grdWrap')[0], t = $tr[0]; if (t.offsetTop < w.scrollTop + 20 || t.offsetTop + t.offsetHeight > w.scrollTop + w.clientHeight - 22) t.scrollIntoView({ block: 'nearest' }); }
+        nav();
+    }
+    function nav() {
+        var n = rows.length;
+        $('#recNavText').text('Record ' + (cur >= 0 ? cur + 1 : 0) + ' of ' + n);
+        $('#recNav [data-nav=first], #recNav [data-nav=prev]').prop('disabled', cur <= 0);
+        $('#recNav [data-nav=next], #recNav [data-nav=last]').prop('disabled', cur < 0 || cur >= n - 1);
+    }
+
+    /* ---------------------------------------------------------------- cell editing */
+    function commitEditor($inp) {
+        var $td = $inp.closest('td'), i = +$td.closest('tr').data('i'), k = $td.data('k'), r = rows[i];
+        if (!r) return;
+        var v = $.trim($inp.val());
+        if (k === 'BankBalance') {
+            /* grdHistory_UpdatingCell: CommonServices.IsNumeric -> decimal.TryParse(e.Value) */
+            var ok = v !== '' && /^[-+]?(\d+(,\d{3})*|\d*)(\.\d+)?$/.test(v) && /\d/.test(v);
+            if (!ok) {
+                alert('Please Type Only Numeric Value');
+                if (v === '') r.BankBalance = null;
+            } else {
+                r.BankBalance = parseFloat(v.replace(/,/g, ''));
+            }
+            $td.text(both(r.BankBalance));
+            totals();
+        } else if (k === 'Time') {
+            if (v) r.Time = v.substring(0, 5);
+            $td.text(hhmmtt(r.Time));
+        }
+    }
+    function openEditor($td) {
+        if ($td.find('input.cell-ed').length) return;
+        var i = +$td.closest('tr').data('i'), k = $td.data('k'), r = rows[i];
+        var $inp;
+        if (k === 'Time') {
+            $inp = $('<input type="time" class="cell-ed">').val(r.Time || '');
+        } else {
+            $inp = $('<input type="text" class="cell-ed num" inputmode="decimal">').val(r.BankBalance === null || r.BankBalance === undefined ? '' : String(r.BankBalance));
+        }
+        $td.empty().append($inp);
+        $inp.on('blur', function () { commitEditor($inp); })
+            .on('keydown', function (e) {
+                if (e.key === 'Enter') { e.preventDefault(); $inp.blur(); }
+                else if (e.key === 'Escape') { e.preventDefault(); $inp.off('blur'); $td.text(k === 'Time' ? hhmmtt(r.Time) : both(r.BankBalance)); }
+                else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                    if (k === 'Time') return;
+                    e.preventDefault(); var ni = i + (e.key === 'ArrowDown' ? 1 : -1);
+                    if (ni < 0 || ni >= rows.length) return;
+                    $inp.blur(); setCur(ni); openEditor($('#grdBody tr[data-i="' + ni + '"] td[data-k="' + k + '"]'));
+                }
+            });
+        $inp.focus(); if ($inp[0].select) try { $inp[0].select(); } catch (e2) { /* time input */ }
+    }
+
+    /* ---------------------------------------------------------------- btnSave_Click */
+    var saving = false;
+    function save() {
+        if (saving || !rights.save) return;
+        $('#grdBody input.cell-ed').blur();
+        if (rows.length <= 0) return;                        // grdHistory.GetRows().Count() <= 0 -> return
+        var list = [];
+        $('#grdBody tr[data-i]').each(function () {
+            var i = +$(this).data('i'), r = rows[i];
+            if (!(num(r.BankBalance) > 0)) return;            // Conversion.ToDouble(BankBalance) > 0
+            var $sel = $(this).find('td.src select');
+            var sv = $sel.val() || '';
+            list.push({
+                accountId: r.AccountId, time: r.Time, bankBalance: r.BankBalance,
+                source: sv === '' ? 0 : parseInt(sv, 10),
+                sourceText: sv === '' ? '' : $sel.find('option:selected').text()
             });
         });
+        saving = true; busy('#btnSave', true);
+        $.ajax({ url: API + '/save', type: 'POST', contentType: 'application/json', dataType: 'json',
+                 data: JSON.stringify({ balanceDate: $('#txtBalanceDate').val() || todayIso(), rows: list }) })
+            .done(function (r) {
+                if (!r || r.success === false) { alert((r && r.message) || 'Error'); return; }
+                summeryGrd();                                 // no message on the desktop, just SummeryGrd()
+            })
+            .fail(function (x) { alert(failText(x)); })
+            .always(function () { saving = false; busy('#btnSave', false); });
+    }
 
-        function loadGridData() {
-            $.ajax({
-                url: '/api/banking/bank-manual-balance/list',
-                type: 'GET',
-                success: function(data) {
-                    manualBalanceData = data || [];
-                    renderGrid(manualBalanceData);
-                },
-                error: function() {
-                    $('#manualBalanceGridBody').html('<tr><td colspan="8" style="text-align:center; color:red;">Failed to load bank manual balances.</td></tr>');
-                }
+    /* ---------------------------------------------------------------- wiring */
+    $(function () {
+        $('#txtBalanceDate').val(todayIso());               // txtBalanceDate.Value = DateTime.Now
+        applyRights();
+
+        $('#btnshow').on('click', function () { summeryGrd(this); });
+        $('#btnNew').on('click', function () { $('#txtBalanceDate').focus(); summeryGrd(this); });
+        $('#btnSave').on('click', save);
+        /* KeyPreview + "&New" mnemonic */
+        $(document).on('keydown', function (e) {
+            if (e.altKey && !e.ctrlKey && (e.key === 'n' || e.key === 'N')) { e.preventDefault(); if (!$('#btnNew').prop('disabled')) $('#btnNew').click(); }
+        });
+
+        $('#grdBody').on('click', 'tr[data-i]', function () { setCur(+$(this).data('i')); })
+            .on('click', 'td.ed', function () { openEditor($(this)); })
+            .on('click', 'a.lnk', function (e) {
+                /* grdHistory_LinkClicked -> CommonServices.GoToGeneralLedgerFromLinkedEvent(AccountId, txtBalanceDate, txtBalanceDate) */
+                e.preventDefault();
+                var r = rows[+$(this).closest('tr').data('i')]; if (!r) return;
+                var d = $('#txtBalanceDate').val() || todayIso();
+                var q = new URLSearchParams({ accountId: r.AccountId, fromDate: d, toDate: d });
+                window.open('/accounts/reports/general-ledger?' + q.toString(), '_blank');
+            })
+            .on('change', 'td.src select', function () {
+                var r = rows[+$(this).closest('tr').data('i')]; if (r) r.Source = $(this).val() || '';
             });
-        }
+        $('#recNav').on('click', 'button', function () {
+            var a = $(this).data('nav');
+            setCur(a === 'first' ? 0 : a === 'last' ? rows.length - 1 : a === 'prev' ? cur - 1 : cur + 1);
+        });
 
-        function renderGrid(list) {
-            var html = '';
-            if(!list || list.length === 0) {
-                html = '<tr><td colspan="8" style="text-align:center;">No bank manual balance records found.</td></tr>';
-            } else {
-                $.each(list, function(idx, item) {
-                    var amt = parseFloat(item.manualBalance || item.ManualBalance || 0);
-
-                    html += '<tr data-id="' + item.id + '" onclick="selectRow(this, ' + idx + ')">';
-                    html += '<td>' + (item.id || '') + '</td>';
-                    html += '<td><strong>' + (item.accountTitle || item.AccountTitle || ('Account #' + item.bankAccountId)) + '</strong></td>';
-                    html += '<td>' + (item.balanceDate || item.BalanceDate || '') + '</td>';
-                    html += '<td style="text-align:right; font-weight:bold; color:#00796B;">' + amt.toLocaleString(undefined, {minimumFractionDigits: 2}) + '</td>';
-                    html += '<td>' + (item.balanceTime || item.BalanceTime || '-') + '</td>';
-                    html += '<td>' + (item.sourceBy || item.Source || '-') + '</td>';
-                    html += '<td>' + (item.confirmedBy || item.ConfirmBy || '-') + '</td>';
-                    html += '<td>' + (item.remarks || item.Remarks || '-') + '</td>';
-                    html += '</tr>';
-                });
-            }
-            $('#manualBalanceGridBody').html(html);
-        }
-
-        function selectRow(tr, idx) {
-            $('#manualBalanceGridBody tr').removeClass('selected');
-            $(tr).addClass('selected');
-            var item = manualBalanceData[idx];
-            if(item) {
-                $('#entryRecordId').val(item.id);
-                $('#bankAccountId').val(item.bankAccountId || item.AccountId).trigger('change');
-                $('#balanceDate').val(item.balanceDate || item.BalanceDate || '');
-                $('#manualBalance').val(item.manualBalance || item.ManualBalance || '0.00');
-                $('#balanceTime').val(item.balanceTime || item.BalanceTime || '');
-                $('#sourceBy').val(item.sourceBy || item.Source || '');
-                $('#confirmedBy').val(item.confirmedBy || item.ConfirmBy || '');
-                $('#remarks').val(item.remarks || item.Remarks || '');
-            }
-        }
-
-        function resetForm() {
-            var today = new Date().toISOString().split('T')[0];
-            $('#entryRecordId').val('');
-            $('#bankAccountId').val('').trigger('change');
-            $('#balanceDate').val(today);
-            $('#manualBalance').val('');
-            $('#balanceTime').val('');
-            $('#sourceBy').val('');
-            $('#confirmedBy').val('');
-            $('#remarks').val('');
-            $('#manualBalanceGridBody tr').removeClass('selected');
-        }
-
-        function saveRecord() {
-            var bankAccountId = $('#bankAccountId').val();
-            var manualBalance = $('#manualBalance').val();
-            if(!bankAccountId) {
-                alert('Please select a Bank Account.');
-                $('#bankAccountId').focus();
-                return;
-            }
-            if(!manualBalance || isNaN(manualBalance)) {
-                alert('Please enter Manual Balance Amount.');
-                $('#manualBalance').focus();
-                return;
-            }
-
-            var payload = {
-                id: $('#entryRecordId').val() ? parseInt($('#entryRecordId').val()) : null,
-                bankAccountId: parseInt(bankAccountId),
-                balanceDate: $('#balanceDate').val(),
-                manualBalance: parseFloat(manualBalance),
-                balanceTime: $('#balanceTime').val(),
-                sourceBy: $('#sourceBy').val(),
-                confirmedBy: $('#confirmedBy').val(),
-                remarks: $('#remarks').val()
-            };
-
-            $.ajax({
-                url: '/api/banking/bank-manual-balance/save',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(payload),
-                success: function(res) {
-                    alert('Bank Manual Balance saved successfully!');
-                    resetForm();
-                    loadGridData();
-                },
-                error: function(xhr) {
-                    alert('Failed to save Bank Manual Balance: ' + (xhr.responseText || 'Error occurred'));
-                }
-            });
-        }
-
-        function deleteRecord() {
-            var id = $('#entryRecordId').val();
-            if(!id) {
-                alert('Please select a Bank Manual Balance record to delete.');
-                return;
-            }
-            if(confirm('Are you sure you want to delete record #' + id + '?')) {
-                $.ajax({
-                    url: '/api/banking/bank-manual-balance/' + id,
-                    type: 'DELETE',
-                    success: function() {
-                        alert('Record deleted successfully!');
-                        resetForm();
-                        loadGridData();
-                    },
-                    error: function(xhr) {
-                        alert('Failed to delete: ' + xhr.responseText);
-                    }
-                });
-            }
-        }
-
-        function filterGrid() {
-            var filters = [];
-            $('.filter-row input').each(function() {
-                filters.push({ col: $(this).data('col'), val: $(this).val().toLowerCase() });
-            });
-
-            $('#manualBalanceGridBody tr').each(function() {
-                var row = $(this);
-                var show = true;
-                $.each(filters, function(i, f) {
-                    if(f.val) {
-                        var text = row.find('td').eq(f.col).text().toLowerCase();
-                        if(text.indexOf(f.val) === -1) {
-                            show = false;
-                            return false;
-                        }
-                    }
-                });
-                row.toggle(show);
-            });
-        }
-    </script>
+        /* FrmBankBalancesRpt_Load: rights, SourceByBindFromStaticColumns, txtBalanceDate = Now, SummeryGrd */
+        getJson(API + '/init')
+            .done(function (r) {
+                if (!r || r.success === false) { alert((r && r.message) || 'Error'); return; }
+                rights = r.rights || { save: false };
+                sourceBy = r.sourceBy || [];
+                var d = parseInt(r.amountDecimals, 10); decimals = (isNaN(d) || d < 1 || d > 4) ? 0 : d;   // GetDecimalConfiguration: 1..4, anything else none
+                applyRights();
+            })
+            .fail(function (x) { alert(failText(x)); })
+            .always(function () { summeryGrd(); });
+    });
+})(window.jQuery);
+</script>
 </body>
 </html>

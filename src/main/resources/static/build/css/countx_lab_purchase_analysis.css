@@ -1,0 +1,117 @@
+/* Screen 160 "Purchase Analysis" (InvLabPurchaseAnalysis.cs) — desktop geometry, 1:1 in px.
+   Same visual vocabulary as the other ported desktop forms (wf-* absolute layout, teal bands,
+   Janus-style grids — reference: countx_stock_in_transit.css); the combos are enhanced by
+   countx_desktop_combo.js. Self-contained: no rule of another page's stylesheet is relied on. */
+[hidden] { display: none !important; }
+body { background: #fff; margin: 0; padding: 0 0 36px 0; }
+.wf-scroll { overflow-x: auto; }
+/* tabControl1 1334 x 711 (Dock Fill, form maximized): at least the designer width, wider on a wide screen. */
+.wf-root { position: relative; min-width: 1334px; font-family: "Microsoft Sans Serif", Tahoma, sans-serif; font-size: 11px; }
+.wf-tabctl { border: 1px solid #a0a0a0; background: #fff; box-sizing: border-box; }
+.pa-page { display: none; position: relative; margin-left: 4px; padding: 3px; box-sizing: border-box; background: #fff; }
+.pa-page.is-active { display: block; }
+.wf-abs { position: absolute; box-sizing: border-box; margin: 0; }
+.wf-rel { position: relative; }
+.wf-lbl { font-family: "Segoe UI Semibold", "Segoe UI", Tahoma, sans-serif; font-weight: bold; font-size: 12px; white-space: nowrap; line-height: 15px; color: #000; }
+.wf-lbl.wrap { white-space: normal; }
+.wf-lbl.red { color: red; }
+.wf-lbl.big { font-size: 16px; line-height: 21px; }
+.wf-txt { box-sizing: border-box; font-family: Verdana, sans-serif; font-size: 13px; height: 23px; border: 1px solid #7a7a7a; padding: 1px 3px; background: #fff; }
+.wf-txt:disabled { background: #f0f0f0; color: #4d4d4d; }
+.wf-txt[readonly] { background: #f0f0f0; }
+.wf-txt.r { text-align: right; }
+textarea.wf-txt { resize: none; font-family: Verdana, sans-serif; }
+.wf-cmb { font-family: Verdana, sans-serif; font-size: 13px; height: 26px; border: 1px solid #7a7a7a; background: #fff; padding: 0 2px; }
+.wf-dt { font-family: Verdana, sans-serif; font-size: 12px; height: 23px; border: 1px solid #7a7a7a; background: #fff; padding: 0 2px; }
+.wf-dt:disabled { background: #f0f0f0; }
+.wf-dtc { display: flex; align-items: center; gap: 2px; height: 23px; border: 1px solid #7a7a7a; background: #fff; padding: 0 2px; }
+.wf-dtc input[type=date] { border: none; font-family: Verdana, sans-serif; font-size: 12px; height: 19px; width: 100%; min-width: 0; padding: 0; }
+.wf-gb { position: absolute; box-sizing: border-box; background: #fff; }
+.wf-gb::before { content: ""; position: absolute; left: 0; right: 0; top: 7px; bottom: 0; border: 1px solid #d5dfe5; border-radius: 3px; pointer-events: none; }
+.wf-gb > .wf-cap { position: absolute; left: 6px; top: 0; padding: 0 2px; background: #fff; font-family: Tahoma, sans-serif; font-size: 13px; font-weight: bold; line-height: 14px; color: #000; }
+.wf-gb > .wf-cap.small { font-family: Verdana, sans-serif; font-size: 11px; }
+.wf-check { display: inline-flex; align-items: center; gap: 3px; font-family: "Segoe UI Semibold", "Segoe UI", Tahoma, sans-serif; font-weight: bold; font-size: 12px; height: 19px; white-space: nowrap; }
+.wf-check input { margin: 0; }
+.wf-check.blue { color: #0000c0; }
+.wf-check-w { color: #fff; font-family: Verdana, sans-serif; font-size: 12px; }
+.wf-teal { background: #008080; position: relative; }
+.wf-teal-title { position: absolute; font-family: Tahoma, sans-serif; font-size: 16px; font-weight: bold; color: #fff; white-space: nowrap; line-height: 19px; }
+.wf-teal-title.ms { font-family: "Microsoft Sans Serif", Tahoma, sans-serif; font-size: 19px; font-weight: normal; line-height: 24px; }
+.wf-strip { height: 27px; display: flex; align-items: center; background: linear-gradient(to bottom, #fcfcfc 0%, #e0e0e0 100%); border-bottom: 1px solid #b5b5b5; box-sizing: border-box; position: relative; }
+.wf-tool { font-family: Verdana, sans-serif; font-size: 13px; height: 24px; background: transparent; border: 1px solid transparent; display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 0 5px; cursor: pointer; box-sizing: border-box; white-space: nowrap; color: #000; text-decoration: none; }
+.wf-tool:hover:not(:disabled) { background: #ffe4a0; border-color: #e59d00; }
+.wf-tool:disabled { color: #9a9a9a; cursor: default; }
+.wf-sep { width: 1px; height: 19px; background: #b5b5b5; margin: 0 3px; }
+.wf-exit { margin-left: auto; color: #004d40; font-size: 11px; font-weight: bold; }
+.wf-gbar { height: 21px; border: 1px solid transparent; background: transparent; color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; }
+.wf-gbar.dark { color: #555; }
+.wf-btn { background: #008080; color: #fff; border: 1px solid #005959; font-family: Verdana, sans-serif; font-size: 13px; font-weight: bold; cursor: pointer; padding: 0 4px; }
+.wf-btn:disabled { background: #7fb3b3; cursor: default; }
+.wf-grid { overflow: auto; background: #fff; border: 1px solid #9eb6ce; box-sizing: border-box; }
+.win-grid { border-collapse: collapse; width: auto; min-width: 100%; font-family: Verdana, sans-serif; font-size: 11px; }
+.win-grid.big { font-size: 13px; }
+.win-grid th { background: linear-gradient(to bottom, #e3efff 0%, #c4dcf8 100%); border: 1px solid #9eb6ce; font-weight: normal; text-align: center; padding: 2px 4px; white-space: normal; position: sticky; top: 0; z-index: 1; }
+.win-grid td { border: 1px solid #d5e1f0; padding: 1px 3px; white-space: nowrap; height: 20px; }
+.win-grid td.n { text-align: right; }
+.win-grid td.c { text-align: center; }
+.win-grid tbody tr:hover { background: #fff0cf; }
+.win-grid tbody tr.is-sel { background: #cfe3ff; }
+.win-grid tbody tr.grp td { background: #e9eef6; font-weight: bold; color: #1f3b63; }
+.win-grid tbody tr.pa-rowred td { color: red; }
+.win-grid td.pa-cellred { color: red; font-weight: bold; }
+.win-grid td.pa-green { color: darkgreen; font-weight: bold; }
+.win-grid tfoot td { font-weight: bold; background: #eef4fb; position: sticky; bottom: 0; }
+.win-grid tr.flt td { padding: 0; background: #f7fbff; }
+.win-grid tr.flt input { width: 100%; box-sizing: border-box; border: 1px solid #c9d7e6; font-size: 11px; height: 18px; }
+.win-grid td input[type=text] { width: 100%; min-width: 40px; box-sizing: border-box; font-size: 11px; height: 19px; border: 1px solid #b8c8d8; font-family: Verdana, sans-serif; }
+.win-grid.big td input[type=text] { font-size: 13px; height: 21px; }
+.win-grid td input.r { text-align: right; }
+.win-grid .gbtn { font-size: 11px; padding: 0 4px; height: 18px; cursor: pointer; border: 1px solid #8aa; background: #f4f4f4; }
+.win-grid a.lnk { color: #0645ad; text-decoration: underline; cursor: pointer; }
+.wf-tabs { display: flex; gap: 0; padding-left: 2px; border-top: 1px solid #a0a0a0; background: #f0f0f0; height: 24px; }
+.wf-tabs .win-tab { width: 64px; text-align: center; padding: 3px 0; font-family: "Microsoft Sans Serif", Tahoma, sans-serif; font-size: 13px; background: #f0f0f0; border: 1px solid #a0a0a0; border-top: none; border-radius: 0 0 3px 3px; color: #000; cursor: pointer; }
+.wf-tabs .win-tab.is-active { background: #fff; }
+
+/* panel22 (3,3) 1320 x 50, BackColor 10,110,110: toolStrip "btn" 27 + the title band */
+.pa-panel22 { background: rgb(10, 110, 110); height: 50px; position: relative; }
+.pa-panel22 .wf-strip { position: absolute; left: 0; right: 0; top: 0; }
+.pa-combo1 { position: absolute; left: 693px; top: 3px; width: 181px; height: 21px; font-size: 11px; z-index: 2; }
+/* PanelFeildForms (Dock Left, 803 x 629) + PanalParamGrdsForm (Dock Fill, AutoScroll, min 900 x 750) */
+.pa-body { display: flex; height: 629px; }
+.pa-fields { position: relative; flex: 0 0 803px; width: 803px; height: 629px; overflow: hidden; }
+.pa-grids { flex: 1 1 auto; min-width: 517px; height: 629px; overflow: auto; }
+.pa-grids-in { display: flex; min-width: 950px; width: 100%; height: 629px; }
+.pa-gcol { display: flex; flex-direction: column; height: 629px; min-width: 0; }
+.pa-gtitle { height: 25px; position: relative; background: #fff; flex: 0 0 25px; }
+.pa-gtitle span { position: absolute; font-family: Tahoma, sans-serif; font-size: 15px; font-weight: bold; color: #008080; white-space: nowrap; }
+.pa-pic { border: 1px solid #000; background: #fff; overflow: hidden; }
+.pa-pic img { display: block; }                       /* PictureBoxSizeMode.Normal: top-left, unscaled */
+.pa-piccap { background: #f5f5f5; font-family: "Times New Roman", serif; font-size: 13px; line-height: 15px; }
+.pa-hbottom { display: flex; height: 234px; }
+.pa-denied { background: #fff3cd; border: 1px solid #e0b100; color: #6b4e00; padding: 6px 10px; font: 12px Verdana, sans-serif; }
+.pa-modal { position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 100000; display: flex; align-items: flex-start; justify-content: center; padding-top: 3vh; }
+.pa-modal-box { background: #fff; border: 1px solid #555; box-shadow: 0 6px 24px rgba(0,0,0,.35); max-height: 94vh; display: flex; flex-direction: column; }
+.pa-modal-head { background: #f0f0f0; color: #000; font: 12px "Segoe UI", Tahoma, sans-serif; padding: 5px 8px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #a0a0a0; }
+.pa-modal-head button { background: transparent; border: none; color: #000; font-size: 18px; cursor: pointer; }
+.pa-modal-body { overflow: auto; }
+
+/* ---- acceptance rules 4-6 (2026-10-01): busy buttons, full-width grids, fullscreen toggle, footer History button ---- */
+.btn-busy { pointer-events: none; opacity: .75; }
+.btn-busy::after { content: ""; display: inline-block; flex: 0 0 auto; width: 9px; height: 9px; margin-left: 5px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: wf-spin .7s linear infinite; vertical-align: middle; }
+@keyframes wf-spin { to { transform: rotate(360deg); } }
+.wf-block { display: flex; flex-direction: column; min-width: 0; }
+.wf-block > .wf-teal, .wf-block > .wf-gcap { flex: 0 0 auto; }
+.wf-block.is-full { position: fixed; inset: 0; z-index: 99990; background: #fff; width: auto !important; height: auto !important; flex: none !important; }
+.wf-block.is-full > .wf-grid { flex: 1 1 auto !important; height: auto !important; min-height: 0 !important; max-height: none !important; width: auto !important; }
+.wf-gcap { height: 20px; background: #008080; color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 0 2px 0 5px; font: bold 12px Tahoma, sans-serif; box-sizing: border-box; }
+.wf-fullbtn { background: transparent; border: 1px solid transparent; color: #fff; cursor: pointer; height: 18px; width: 24px; padding: 0; font-size: 12px; line-height: 16px; }
+.wf-fullbtn:hover { border-color: #fff; }
+.wf-teal > .wf-fullbtn, .wf-teal-rel > .wf-fullbtn { position: absolute; right: 2px; top: 50%; margin-top: -9px; }
+.wf-tabs { align-items: stretch; }
+.wf-foot-btn { margin-left: auto; margin-right: 4px; align-self: center; height: 21px; padding: 0 10px; background: #008080; color: #fff; border: 1px solid #005959; font: bold 12px Verdana, sans-serif; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+.wf-foot-btn:hover { background: #006d6d; }
+.win-grid a.lnk.doc { font-weight: bold; }
+.wf-teal-rel { position: relative; }
+.wf-fullbtn.dark { color: #008080; }
+.wf-fullbtn.dark:hover { border-color: #008080; }
+.pa-hbottom > .wf-block > .wf-grid { flex: 1 1 auto; }

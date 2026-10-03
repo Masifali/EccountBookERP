@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <title th:text="${moduleTitle}">Purchase Order Report</title>
     <link rel="stylesheet" th:href="@{/build/css/cmagt_theme.css?v=20260930T}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20261002gv}">
     <style>
         body.cmagt { font-family: "Segoe UI", Tahoma, Arial, sans-serif; font-size: 12px; margin: 0; background: #fff; }
         /* GUI-20260930: desktop geometry (InitializeComponent): toolStrip1 / panel3 (white, title band panel5 rgb(10,110,110))
@@ -152,9 +154,10 @@
             } else if (id === 'fromDocNo' || id === 'toDocNo') {
                 inner += '<input class="fc" type="number" min="0" step="1" id="' + id + '" style="' + s + '">';
             } else if (id === 'parentItemIds') {
-                /* CmbParentItem: check-box multi-select combo; the hidden <select multiple> keeps the value API. */
-                inner += '<div class="ms" id="parentMs" style="' + s + '"><button type="button" class="ms-btn" id="parentMsBtn"></button>' +
-                    '<div class="ms-list" id="parentMsList"></div></div><select id="parentItemIds" multiple hidden></select>';
+                /* CmbParentItem: the desktop's CHECKED UltraCombo (CheckStateMember "Selected", header check box,
+                   ListSeparator ","), 2026-10-03 -> countx_prod_combo.js checked mode; the native <select multiple>
+                   stays authoritative (selectedParents() reads its options). */
+                inner += '<select class="fc" id="parentItemIds" multiple data-dtcombo="single" data-dtcombo-checked data-dtcombo-caption="Parent Categories" style="' + s + '"></select>';
             } else if (id === 'datePreset') {
                 inner += '<select class="fc" id="datePreset" style="' + s + '"><option value="1">Today</option><option value="2">Last 7 Days</option>' +
                     '<option value="3" selected>Current Month</option><option value="4">Current Year</option><option value="5">Financial Year</option></select>';
@@ -178,28 +181,14 @@
         if (CFG.approval) el('approved').value = CFG.approvedDefault || '';
         if (!CFG.tb) {
             el('parentItemIds').addEventListener('change', function () { msSync(); bindCombos(); });
-            el('parentMsBtn').addEventListener('click', function (e) { e.stopPropagation(); el('parentMs').classList.toggle('open'); });
-            el('parentMsList').addEventListener('click', function (e) { e.stopPropagation(); });
-            el('parentMsList').addEventListener('change', function (e) {
-                var cb = e.target; if (!cb.classList || !cb.classList.contains('ms-cb')) return;
-                Array.prototype.forEach.call(el('parentItemIds').options, function (o) { if (o.value === cb.value) o.selected = cb.checked; });
-                el('parentItemIds').dispatchEvent(new Event('change'));
-            });
-            document.addEventListener('click', function () { var m = el('parentMs'); if (m) m.classList.remove('open'); });
             msSync();
         }
         if (CFG.tb) el('datePreset').addEventListener('change', applyPreset);
     }
-    /* Rebuild the check-box list from the hidden <select multiple>. */
+    /* Refresh the checked combo's field after the native <select multiple> was changed in code. */
     function msSync() {
-        var s = el('parentItemIds'), list = el('parentMsList'), btn = el('parentMsBtn'); if (!s || !list) return;
-        var sel = [];
-        list.innerHTML = Array.prototype.map.call(s.options, function (o) {
-            if (o.selected) sel.push(o.text);
-            return '<label><input type="checkbox" class="ms-cb" value="' + esc(o.value) + '"' + (o.selected ? ' checked' : '') + '> ' + esc(o.text) + '</label>';
-        }).join('');
-        btn.textContent = sel.join(', ');
-        btn.title = sel.join(', ');
+        var s = el('parentItemIds'); if (!s) return;
+        if (s.__dtcombo && s.__dtcombo.syncFromSelect) s.__dtcombo.syncFromSelect();
     }
     /* Styled replacement for window.prompt('Remarks'): resolves the text, or null on Cancel. */
     function askRemarks(reqType) {
@@ -528,6 +517,7 @@
     });
 })();
 </script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20261003ck}" data-dtcombo-checked-only></script>
 <script src="/js/print-rpt.js?v=20261001a"></script>
 </body>
 </html>

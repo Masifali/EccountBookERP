@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>FI Utilization Report - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_rptb.css?v=20260930a}"/>
+</head>
+<!-- frmFinancialInstrumentAdvanceBalanceSummary.cs (Architecture.WinApp.ExportReports), screen 935 "5017 FI Utilization Report", ClientSize 1064 x 561
+     (AutoScrollMinSize 1070 x 600), form Text "EccountBook".
+     toolStrip3: btnNew "&New" | btnRefresh "&Refresh" | btn300_02Register "300_02-Register" | btnShortCutKeys "ShortCutKeys".
+     panel3 (Teal) label23 "Financial Instrument Advance Balance Summary". groupBox1 "Filters": cmbperemeter "Date Type" (Rows[4] = Financial Year on
+       load), Fromdate "From Date", ToDate "To Date", CmbSupplier "Customer Name", CmbBankName "Bank Name" (Receiver Account), chkSkipZero "SkipZero",
+       panel7 rdParyExport "Party Export" (checked) / rdBankExport "Bank Export", btnshow "Show".
+     panel6 (Teal) label4 "History" + ctrlGrdBar1; DataGridHistory (hidden Id, SupplierCustomerId, BankAccountId, PaymenttermId, DocumentTypeId,
+       AdjustedAgainstGdAmount; "FI NO" link -> frmFinancialInstrumentUtilizedDetailByFI popup when AdjustedAmount > 0 else
+       "No Breakup Found Against this Financial Instrument Number...").
+     Events: Load (WaitForm), cmbperemeter ValueChanged, btnshow Click/Leave, btnNew/btnRefresh/btn334Register/btnShortCutKeys Click,
+       DataGridHistory LinkClicked, KeyDown (Alt+1 = 300_02 print). -->
+<body class="pd-body" data-export-page="rptb-935">
+<div class="pd-form ex-form">
+    <div class="win-tool-strip">
+        <button type="button" id="btnNew" class="win-btn-tool" onclick="ExportFiu.reset()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+        <button type="button" id="btnRefresh" class="win-btn-tool" onclick="ExportFiu.refresh(this)"><i class="fa fa-refresh"></i> <span><u>R</u>efresh</span></button>
+        <button type="button" id="btn300_02Register" class="win-btn-tool" onclick="ExportFiu.print300(this)"><i class="fa fa-print"></i> <span>300_02-Register</span></button>
+        <button type="button" id="btnShortCutKeys" class="win-btn-tool" onclick="ExportFiu.shortcuts()"><i class="fa fa-keyboard-o"></i> <span>ShortCutKeys</span></button>
+    </div>
+    <div class="rptb-title"><span id="label23">Financial Instrument Advance Balance Summary</span></div>
+
+    <fieldset class="rptb-filters" id="groupBox1"><legend>Filters</legend>
+        <div class="rptb-row">
+            <div class="ex-field w-m"><label for="cmbperemeter">Date Type</label>
+                <select id="cmbperemeter" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Parameters"></select></div>
+            <div class="ex-field w-s"><label for="Fromdate">From Date</label><input type="date" id="Fromdate" class="win-date"/></div>
+            <div class="ex-field w-s"><label for="ToDate">To Date</label><input type="date" id="ToDate" class="win-date"/></div>
+            <div class="ex-field w-xl"><label for="CmbSupplier">Customer Name</label>
+                <select id="CmbSupplier" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Customer Name"></select></div>
+            <div class="ex-field w-l"><label for="CmbBankName">Bank Name</label>
+                <select id="CmbBankName" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Receiver Account"></select></div>
+            <div class="ex-field"><label>&nbsp;</label><span class="ex-check"><input type="checkbox" id="chkSkipZero"/> <label for="chkSkipZero" style="margin:0;">SkipZero</label></span></div>
+            <div class="ex-field"><label>&nbsp;</label>
+                <div class="rptb-radios" id="panel7">
+                    <label><input type="radio" name="exportType" id="rdParyExport" value="1" checked/> Party Export</label>
+                    <label><input type="radio" name="exportType" id="rdBankExport" value="2"/> Bank Export</label>
+                </div></div>
+            <div class="ex-field"><label>&nbsp;</label><button type="button" id="btnshow" class="win-btn-small rptb-show" onclick="ExportFiu.show(this)">Show</button></div>
+        </div>
+    </fieldset>
+
+    <div class="pd-caption pd-caption-teal pd-history-bar" style="height:24px;"><span id="label4">History</span>
+        <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdBox" title="Fullscreen table">&#x26F6;</button><span id="gridBarMount" class="pd-gridbar-mount"></span></span></div>
+    <div class="ex-grid-box" id="grdBox">
+        <div class="ex-grid-scroll ex-hfill">
+            <table class="win-grid" id="DataGridHistory" data-gridbar="frmFinancialInstrumentAdvanceBalanceSummary:DataGridHistory" data-gridbar-mount="#gridBarMount" data-gridbar-reorder="false"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+        </div>
+        <div class="ex-grid-empty is-hidden" id="grdEmpty">No record found.</div>
+    </div>
+    <div class="win-footer-strip"><span class="ex-footer-left">frmFinancialInstrumentAdvanceBalanceSummary</span></div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_export_rptb_common.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_export_fi_utilization_report.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

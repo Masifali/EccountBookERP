@@ -232,7 +232,8 @@ function loadSetup() {
 
         var bw = el('branchWrap');
         if (bw) bw.style.display = S.branchFeature ? '' : 'none';
-        if (S.branchFeature) fillSelect('branches', d.branches, 'Branch Name');
+        /* 2026-10-03: no caption row in the checked combo - the empty value-0 slot is not drawn (pickedIds skips 0 anyway) */
+        if (S.branchFeature) fillSelect('branches', d.branches, '');
 
         /* :226-233 - the Short Weight tick box exists only on the Paddy screen. */
         var sw = el('shortWeightWrap');

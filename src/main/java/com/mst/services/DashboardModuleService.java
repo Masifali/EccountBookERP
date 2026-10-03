@@ -311,7 +311,7 @@ public class DashboardModuleService {
            Accounts recheck (claude/ACCOUNTS-MODULE-FULL-RECHECK-56-SCREENS-...) built from that desktop form.
            Rows sharing one desktop class share its page (28/29 + 703/704 PaymentVoucherNew/ReceiptsVoucherNew,
            24/44 frmDayBook, 79/706 GeneralLedger, 73/702 BankBalances, 709 = 413 AcfrmDefineBank).
-           84 BSandPLBreakup has no standalone page (only the Balance Sheet breakup dialog), so it stays unbuilt. */
+           84 BSandPLBreakup: own page /accounts/reports/bs-pl-breakup since 2026-10-03 (the desktop form only opens as a dialog). */
         WEB_ROUTES_BY_SCREEN_ID.put(1,   "/accounts/custom_group");                    // frmAccountCustomGroup
         WEB_ROUTES_BY_SCREEN_ID.put(2,   "/accounts/allocation");                      // AcfrmAcAllocation
         WEB_ROUTES_BY_SCREEN_ID.put(9,   "/accounts/chart_of_accounts");               // AcfrmDefCoa
@@ -353,6 +353,7 @@ public class DashboardModuleService {
         WEB_ROUTES_BY_SCREEN_ID.put(61,  "/accounts/reports/inventory-payables-receivables"); // InventoryPayablesandReceivables
         WEB_ROUTES_BY_SCREEN_ID.put(62,  "/accounts/reports/balance-sheet");           // BalanceSheet
         WEB_ROUTES_BY_SCREEN_ID.put(64,  "/accounts/reports/profit-and-loss");         // frmProfitLossHararical
+        WEB_ROUTES_BY_SCREEN_ID.put(84,  "/accounts/reports/bs-pl-breakup");           // BSandPLBreakup (BsPlBreakupViewController, 2026-10-03)
         WEB_ROUTES_BY_SCREEN_ID.put(65,  "/accounts/reports/trade-receivables");       // TradeDebitorsReport
         WEB_ROUTES_BY_SCREEN_ID.put(66,  "/accounts/reports/trade-payables");          // TradeDebitorsReport (creditors)
         WEB_ROUTES_BY_SCREEN_ID.put(69,  "/accounts/reports/activity-summary");        // ActicitySummery
@@ -382,6 +383,8 @@ public class DashboardModuleService {
         WEB_ROUTES_BY_SCREEN_ID.put(704, "/accounts/vouchers/bank-receipt");           // ReceiptsVoucherNew
         WEB_ROUTES_BY_SCREEN_ID.put(705, "/accounts/bank-balance-manual-entry");       // BankBalanceManualEntry
         WEB_ROUTES_BY_SCREEN_ID.put(706, "/accounts/reports/general-ledger");          // GeneralLedger
+        WEB_ROUTES_BY_SCREEN_ID.put(707, "/accounts/vouchers/fcy-bank-receipt");       // Acfrmfcbankreceipt "FCY Bank Receipt" (2026-10-02)
+        WEB_ROUTES_BY_SCREEN_ID.put(43,  "/accounts/vouchers/fcy-bank-receipt");       // Acfrmfcbankreceipt "FCY Receipt", Accounts Transaction (= 707)
         WEB_ROUTES_BY_SCREEN_ID.put(709, "/master-data/bank");                         // AcfrmDefineBank (= 413)
 
         /* HRM, App 12 - every ScreenDefinition row of modules 2018-2027, 47 and 29 (GoldenAceDb(0509)t.sql),
@@ -765,23 +768,34 @@ public class DashboardModuleService {
      * @return one entry per module: moduleTypeId, moduleId, moduleDescription, sortNo, screens
      */
     public List<Map<String, Object>> getMenu() {
-        lastError = null;
         List<Map<String, Object>> modules = new ArrayList<>();
         try {
-            int compId = currentUserContext.currentCompanyId();
-            int userId = currentUserContext.currentUserId();
+            /* DashboardNew.InitializeMenu (:1445-1515) reads the same ScreenViewReights rows as the
+               cards: the ModuleTypeId == 1 modules first (ContextMenuStrip1), then the
+               ModuleTypeId == 2 modules (contextMenuStrip2), each grouped by ModuleID in the
+               procedure's order, with every Value row of that module. Rows of any other module
+               type are not on either desktop menu; they are listed after them here so this
+               migration page still shows everything the user holds. */
+            List<Map<String, Object>> all = rights();
+            if (lastError != null) return Collections.emptyList();
+            List<Map<String, Object>> ordered = new ArrayList<>();
+            for (Map<String, Object> r : all) if (asInt(col(r, "ModuleTypeId")) == 1) ordered.add(r);
+            for (Map<String, Object> r : all) if (asInt(col(r, "ModuleTypeId")) == 2) ordered.add(r);
+            for (Map<String, Object> r : all) {
+                int t = asInt(col(r, "ModuleTypeId"));
+                if (t != 1 && t != 2) ordered.add(r);
+            }
 
             Map<String, Map<String, Object>> byModule = new LinkedHashMap<>();
 
-            for (Map<String, Object> r : jdbcTemplate.queryForList(SQL_MENU, compId, compId, userId)) {
+            for (Map<String, Object> r : ordered) {
                 String targetUrl = str(col(r, "TargetUrl"));
-                if (targetUrl.isEmpty()) continue;
 
-                String moduleId = str(col(r, "ModuleId"));
+                String moduleId = str(moduleIdOf(r));
                 Map<String, Object> mod = byModule.get(moduleId);
                 if (mod == null) {
                     mod = new LinkedHashMap<>();
-                    mod.put("moduleId", col(r, "ModuleId"));
+                    mod.put("moduleId", moduleIdOf(r));
                     mod.put("moduleTypeId", asInt(col(r, "ModuleTypeId")));
                     mod.put("moduleDescription", str(col(r, "ModuleDescription")));
                     mod.put("sortNo", asInt(col(r, "ModuleSortNo")));
@@ -899,9 +913,11 @@ public class DashboardModuleService {
         }
         List<Map<String, Object>> out = new ArrayList<>();
         for (Map<String, Object> r : jdbcTemplate.queryForList(sql.toString(), args.toArray())) {
-            /* ScreenBindInNavigation (:1595) keeps only granted rows that have a TargetUrl. */
+            /* frmModules (:74), frmMenue (:91, :207) and InitializeMenu (:1451, :1484) all filter
+               ScreenViewReights on x.Value and nothing else; the TargetUrl test belongs only to
+               ScreenBindInNavigation (:1596), the search combo, so it is not applied to the cards.
+               The rows keep the procedure's own ORDER BY a.SortNo, M.SortNo, sd.SortNo. */
             if (!truthy(col(r, "Value"))) continue;
-            if (str(col(r, "TargetUrl")).isEmpty()) continue;
             out.add(r);
         }
         return out;
@@ -911,19 +927,16 @@ public class DashboardModuleService {
     private List<Map<String, Object>> rights() {
         lastError = null;
         rightsSource = "USP_GetUserRightsForViewbyUserId";
+        /* DashboardNew.GetViewRightsByUserId (:1791-1812): when the procedure throws, the desktop
+           shows the message and continues with an EMPTY list. The hand-built join that used to
+           stand in here was not the procedure: it had no SuperUsers branch, no
+           ScreensAllocateToCompany / ModuleAllocateToOrganizationTemplates rules and a different
+           ORDER BY, so on a failure it showed a screen list the desktop never shows. */
         try {
             return viewRights();
         } catch (Exception e) {
-            LOG.error("USP_GetUserRightsForViewbyUserId failed; falling back to the rebuilt join", e);
-            rightsSource = "rebuilt join (procedure failed: " + e.getMessage() + ")";
-        }
-        try {
-            return jdbcTemplate.queryForList(SQL_MENU,
-                    currentUserContext.currentCompanyId(),
-                    currentUserContext.currentCompanyId(),
-                    currentUserContext.currentUserId());
-        } catch (Exception e) {
-            LOG.error("Rebuilt join failed too", e);
+            LOG.error("USP_GetUserRightsForViewbyUserId failed", e);
+            rightsSource = "USP_GetUserRightsForViewbyUserId failed: " + e.getMessage();
             lastError = e.getMessage();
             return Collections.emptyList();
         }
@@ -1057,8 +1070,10 @@ public class DashboardModuleService {
         Map<String, Object> out = new LinkedHashMap<>();
         List<Map<String, Object>> screens = new ArrayList<>();
         String moduleTitle = "";
+        /* frmMenue.DynamicallyGenerateCards (:91): ScreenViewReights.Where(x => x.ModuleID == ModId
+           && x.Value) - the module id alone, every row in the procedure's order. The rows are
+           already only this user's, so no other test is added (appId is kept in the signature). */
         for (Map<String, Object> r : rights()) {
-            if (asInt(col(r, "AppId")) != appId) continue;
             if (asInt(moduleIdOf(r)) != moduleId) continue;
             moduleTitle = str(col(r, "ModuleDescription"));
             screens.add(screenCard(r));

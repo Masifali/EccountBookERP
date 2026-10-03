@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>FCY Bank Receipt</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_fcy_bank_receipt.css?v=20261002ja}">
+</head>
+<!-- 2026-10-02: screens 707 "FCY Bank Receipt" (Banking Managment) and 43 "FCY Receipt" (Accounts Transaction) -
+     Architecture.WinApp.Account_Definition.Acfrmfcbankreceipt (the class 794 "Fcy Receipts" also opens), DocumentTypeId 203.
+     Drawn at the InitializeComponent geometry: ClientSize 1175 x 752, tabControl1 TabAlignment.Bottom ("Form" | "History").
+     Form (panel2 1161 x 717): panel7 toolStrip (New / Save / Update / Voucher102 / Attachments / Refresh / 516-Print | Load Invoice) h28,
+       panel6 teal "FCY Receipt" + Preview (Anchor Top|Right) h28, panel3 h325 with groupBox1 "Fcy Receipt" (5,1) 1352 x 324,
+       then panelInvoiceWiseBreakup (Dock Left 542, hidden until term 4 + Bank) and panel4 (Fill): panel5 h118 groupBox2 "Export Charges"
+       (grdPaymentTerms at 618,6 401 x 112), panel14 (Dock Left 612) grdFCBank, RemainingBalanceOfBankDeviceBreakUp (Fill).
+     History: panel8 teal h52 (toolStrip2 New / Refresh + "Fcy Receipt History"), panel15 h72 groupBox6 "Filters" 1030 x 72,
+       panel9 teal h24 "Filtered Records", DataGridHistory (Fill). Every id below is the desktop control name. -->
+<body class="fcyb-body">
+<div class="fcyb-caption"><span>FCY Bank Receipt</span><a href="/accounts/dashboard"><i class="fa fa-arrow-left"></i> Back to Dashboard</a></div>
+
+<div class="fcyb-pages" id="fcyPages">
+  <!-- ============================================================ tabPage1 "Form" -->
+  <div class="win-tab-panel fcyb-page is-active" id="fcyForm">
+    <!-- panel7 / btnAttachments (ToolStrip) -->
+    <div class="fcyb-ts">
+      <button type="button" id="btnnew" class="ts-btn" onclick="FcyBank.btnnew()"><i class="fa fa-plus-circle" style="color:#2e7d32"></i><span><u>N</u>ew</span></button>
+      <button type="button" id="btnsave" class="ts-btn" onclick="FcyBank.btnsave(this)"><i class="fa fa-floppy-o" style="color:#1565c0"></i><span><u>S</u>ave</span></button>
+      <button type="button" id="btnUpdate" class="ts-btn is-hidden" onclick="FcyBank.btnUpdate(this)"><i class="fa fa-pencil" style="color:#e65100"></i><span><u>U</u>pdate</span></button>
+      <button type="button" id="btnPrint" class="ts-btn" onclick="FcyBank.voucher102(this)"><i class="fa fa-print" style="color:#37474f"></i><span><u>V</u>oucher102</span></button>
+      <button type="button" id="btnAttachment" class="ts-btn" onclick="FcyBank.notPorted('Attachments')"><i class="fa fa-paperclip" style="color:#455a64"></i><span>Attachments</span></button>
+      <button type="button" id="btnRefresh" class="ts-btn" onclick="FcyBank.btnRefresh(this)"><i class="fa fa-refresh" style="color:#2e7d32"></i><span>Refresh</span></button>
+      <button type="button" id="btnSlip" class="ts-btn" onclick="FcyBank.slip516(this)"><i class="fa fa-print" style="color:#37474f"></i><span>516-Print</span></button>
+      <span class="ts-sep"></span>
+      <button type="button" id="BtnLoadInvoice" class="ts-btn" onclick="FcyBank.notPorted('Load Invoice')"><span>Load Invoice</span></button>
+    </div>
+    <!-- panel6 -->
+    <div class="tealbar" style="left:0;right:0;top:28px;height:28px;"><span style="left:11px;top:4px;">FCY Receipt</span>
+      <label class="fchk" style="right:1px;top:3px;height:20px;"><input type="checkbox" id="chkpreview" checked/> Preview</label></div>
+    <!-- panel3 -->
+    <div class="fcyb-abs" style="left:0;right:0;top:56px;height:325px;">
+    <div class="gb" id="groupBox1" style="left:5px;top:1px;width:1352px;height:324px;"><span class="gb-cap" style="font:700 13.0px 'Segoe UI',Tahoma,sans-serif;">Fcy Receipt</span>
+      <input type="text" class="ft num ro" id="txtdocNumber" style="left:126px;top:28px;width:82px;height:23px;font:400 13.0px Verdana,Geneva,sans-serif;" readonly autocomplete="off"/>
+      <label class="fl" id="label1" style="left:2px;top:30px;font:600 12.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">Voucher Date &amp; No</label>
+      <label class="fl" id="label3" style="left:2px;top:60px;font:600 12.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">Payment Term</label>
+      <select id="cmbLCOrder" disabled class="win-combo dtcombo fcb" data-dtcombo="single" data-dtcombo-caption="Contract No" style="position:absolute;left:125px;top:142px;width:234px;height:26px;"></select>
+      <label class="fl" id="label7" style="left:2px;top:148px;font:600 12.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">Sales Contract No</label>
+      <select id="cmbbankAcc" class="win-combo dtcombo fcb" data-dtcombo="single" data-dtcombo-caption="Account Title" style="position:absolute;left:487px;top:24px;width:193px;height:26px;"></select>
+      <label class="fl" id="label9" style="left:373px;top:30px;font:600 12.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">Account (Dr)</label>
+      <select id="cmbcurrency" disabled class="win-combo dtcombo fcb" data-dtcombo="single" data-dtcombo-caption="Fcy Code" style="position:absolute;left:125px;top:171px;width:234px;height:26px;"></select>
+      <label class="fl" id="label10" style="left:2px;top:177px;font:600 12.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">Fcy Code</label>
+      <input type="text" class="ft" id="txtbankfbpNo" style="left:487px;top:57px;width:193px;height:23px;font:400 13.0px Verdana,Geneva,sans-serif;" autocomplete="off"/>
+      <label class="fl" id="label11" style="left:373px;top:61px;font:600 12.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">Bank FBP # </label>
+      <input type="text" class="ft num" id="txtFCGrosamount" style="left:487px;top:86px;width:193px;height:23px;font:400 13.0px Verdana,Geneva,sans-serif;" data-guard="decimal" autocomplete="off"/>
+      <label class="fl" id="label14" style="left:373px;top:90px;font:600 12.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">FCY Amount</label>
+      <input type="text" class="ft num" id="txtexchangeRate" style="left:487px;top:114px;width:193px;height:23px;font:400 13.0px Verdana,Geneva,sans-serif;" data-guard="decimal" value="0" autocomplete="off"/>
+      <label class="fl" id="label18" style="left:373px;top:118px;font:600 12.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">Exchange Rate</label>
+      <label class="fl req-star" id="label5" style="left:111px;top:30px;font:400 12.0px 'Segoe UI',Tahoma,sans-serif;">*</label>
+      <label class="fl req-star" id="label6" style="left:111px;top:177px;font:400 12.0px 'Segoe UI',Tahoma,sans-serif;">*</label>
+      <label class="fl req-star" id="label19" style="left:111px;top:148px;font:400 12.0px 'Segoe UI',Tahoma,sans-serif;">*</label>
+      <label class="fl req-star" id="label20" style="left:470px;top:118px;font:400 12.0px 'Segoe UI',Tahoma,sans-serif;">*</label>
+      <label class="fl req-star" id="label23" style="left:470px;top:89px;font:400 13.0px 'Microsoft Sans Serif',Arial,sans-serif;">*</label>
+      <label class="fl req-star" id="label26" style="left:470px;top:30px;font:400 12.0px 'Segoe UI',Tahoma,sans-serif;">*</label>
+      <label class="fl req-star" id="label29" style="left:111px;top:60px;font:400 12.0px 'Segoe UI',Tahoma,sans-serif;">*</label>
+      <label class="fl req-star" id="label30" style="left:470px;top:61px;font:400 12.0px 'Segoe UI',Tahoma,sans-serif;">*</label>
+      <input type="date" class="ft fdate" id="txtdate" style="left:210px;top:29px;width:149px;height:23px;font:400 13.0px Verdana,Geneva,sans-serif;"/>
+      <select id="cmbPaymentTerm" class="win-combo dtcombo fcb" data-dtcombo="single" data-dtcombo-caption="Payment Terms" style="position:absolute;left:125px;top:54px;width:234px;height:26px;"></select>
+      <label class="fl" id="label46" style="left:2px;top:286px;font:600 12.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">Remarks</label>
+      <input type="text" class="ft" id="txtRemarks" style="left:125px;top:284px;width:555px;height:23px;font:400 13.0px 'Segoe UI',Tahoma,sans-serif;" autocomplete="off"/>
+      <label class="fl is-hidden" id="labFiNo" style="left:687px;top:303px;font:600 12.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">Financial Instr (F.I) #</label>
+      <input type="text" class="ft is-hidden" id="txtFINo" style="left:805px;top:298px;width:173px;height:23px;font:400 13.0px Verdana,Geneva,sans-serif;" autocomplete="off"/>
+      <label class="fl" id="label4" style="left:2px;top:91px;font:600 12.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">Customer Name</label>
+      <label class="fl req-star" id="label25" style="left:111px;top:91px;font:400 12.0px 'Segoe UI',Tahoma,sans-serif;">*</label>
+      <label class="fl req-star" id="label22" style="left:111px;top:120px;font:400 12.0px 'Segoe UI',Tahoma,sans-serif;">*</label>
+      <select id="comSuplier" class="win-combo dtcombo fcb" data-dtcombo="single" data-dtcombo-caption="Customer Name" style="position:absolute;left:125px;top:85px;width:234px;height:26px;"></select>
+      <label class="fl" id="label8" style="left:2px;top:120px;font:600 12.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">Invoice # </label>
+      <select id="cmbInvoiceNo" disabled class="win-combo dtcombo fcb" data-dtcombo="single" data-dtcombo-caption="InvoiceNo" style="position:absolute;left:125px;top:114px;width:234px;height:26px;"></select>
+      <label class="fl" id="label57" style="left:2px;top:234px;font:600 12.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">AccountType</label>
+      <label class="fl req-star" id="label56" style="left:111px;top:234px;font:400 12.0px 'Segoe UI',Tahoma,sans-serif;">*</label>
+      <label class="fl req-star" id="label24" style="left:470px;top:147px;font:400 12.0px 'Segoe UI',Tahoma,sans-serif;">*</label>
+      <input type="text" class="ft num ro" id="txtNetAmount" style="left:487px;top:143px;width:193px;height:23px;font:400 13.0px Verdana,Geneva,sans-serif;" readonly autocomplete="off"/>
+      <label class="fl" id="label55" style="left:373px;top:234px;font:600 12.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">Gain/Loss Ac</label>
+      <label class="fl" id="label51" style="left:687px;top:252px;font:600 12.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">Local Charges PKR</label>
+      <input type="text" class="ft num ro" id="txtLocalAmount" style="left:805px;top:248px;width:173px;height:23px;font:400 13.0px Verdana,Geneva,sans-serif;" readonly value="0" autocomplete="off"/>
+      <label class="fl" id="label45" style="left:687px;top:277px;font:600 12.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">Foreign Charges PKR</label>
+      <input type="text" class="ft num ro" id="txtForeinchargesPkr" style="left:805px;top:273px;width:173px;height:23px;font:400 13.0px Verdana,Geneva,sans-serif;" readonly value="0" autocomplete="off"/>
+      <select id="CmbGainLossAc" class="win-combo dtcombo fcb" data-dtcombo="single" data-dtcombo-caption="Account Title" style="position:absolute;left:487px;top:225px;width:193px;height:26px;"></select>
+      <label class="fl" id="label69" style="left:373px;top:263px;font:600 12.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">FBC Debit Ac</label>
+      <select id="CmbFBCDebitAccount" class="win-combo dtcombo fcb" data-dtcombo="single" data-dtcombo-caption="Account Title" style="position:absolute;left:487px;top:255px;width:193px;height:26px;"></select>
+      <label class="fl is-hidden" id="lblConsignee" style="left:373px;top:292px;font:600 12.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">Consignee</label>
+      <select id="CmbConsignee" class="win-combo dtcombo fcb is-hidden" data-dtcombo="single" data-dtcombo-caption="Consignee" style="position:absolute;left:487px;top:284px;width:193px;height:26px;"></select>
+      <label class="fl req-star" id="label31" style="left:470px;top:202px;font:400 12.0px 'Segoe UI',Tahoma,sans-serif;">*</label>
+      <select id="cmbaccounttype" class="win-combo dtcombo fcb" data-dtcombo="single" data-dtcombo-caption="Accounttype" style="position:absolute;left:125px;top:228px;width:234px;height:26px;"></select>
+      <label class="fl req-star" id="label28" style="left:470px;top:175px;font:400 12.0px 'Segoe UI',Tahoma,sans-serif;">*</label>
+      <label class="fl" id="label13" style="left:373px;top:202px;font:600 12.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">Net Amount FCY</label>
+      <div class="gb" id="groupBox4" style="left:689px;top:1px;width:293px;height:116px;"><span class="gb-cap" style="font:600 13.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">Invoice Info</span>
+        <label class="fl" id="label54" style="left:6px;top:93px;font:600 12.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">Invoice Balance Amt</label>
+        <input type="text" class="ft num ro" id="txtBalanceAmount" style="left:132px;top:89px;width:157px;height:23px;font:400 13.0px Verdana,Geneva,sans-serif;" readonly autocomplete="off"/>
+        <label class="fl" id="label53" style="left:6px;top:68px;font:600 12.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">Received Amount</label>
+        <input type="text" class="ft num ro" id="txtRecAmount" style="left:132px;top:64px;width:157px;height:23px;font:400 13.0px Verdana,Geneva,sans-serif;" readonly autocomplete="off"/>
+        <input type="text" class="ft num ro" id="txtExportvoucherRate" style="left:132px;top:14px;width:157px;height:23px;font:400 13.0px Verdana,Geneva,sans-serif;" readonly autocomplete="off"/>
+        <label class="fl" id="label50" style="left:6px;top:43px;font:600 12.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">Invoice Amount</label>
+        <input type="text" class="ft num ro" id="txtInvoiceAmount" style="left:132px;top:39px;width:157px;height:23px;font:400 13.0px Verdana,Geneva,sans-serif;" readonly autocomplete="off"/>
+        <label class="fl" id="label52" style="left:6px;top:18px;font:600 12.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">Invoice Exchange Rate</label>
+      </div>
+      <input type="text" class="ft num ro" id="txtNetAmountFC" style="left:487px;top:198px;width:193px;height:23px;font:400 13.0px Verdana,Geneva,sans-serif;" readonly autocomplete="off"/>
+      <label class="fl" id="label12" style="left:373px;top:175px;font:600 12.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">Bank Dr Amount</label>
+      <label class="fl" id="label17" style="left:373px;top:147px;font:600 12.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">Amount(PKR)</label>
+      <input type="text" class="ft num ro" id="txtbankDrAmount" style="left:487px;top:171px;width:193px;height:23px;font:400 13.0px Verdana,Geneva,sans-serif;" readonly autocomplete="off"/>
+      <div class="gb" id="groupBox3" style="left:689px;top:117px;width:293px;height:130px;"><span class="gb-cap" style="font:600 13.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">Third Currency Info</span>
+        <input type="text" class="ft num" id="txtFcyExchRthirdParty" style="left:76px;top:76px;width:46px;height:23px;font:400 13.0px Verdana,Geneva,sans-serif;" data-guard="decimal" autocomplete="off"/>
+        <input type="text" class="ft num" id="txtReceiverExchangeRate" style="left:76px;top:102px;width:46px;height:23px;font:400 13.0px Verdana,Geneva,sans-serif;" data-guard="decimal" autocomplete="off"/>
+        <select id="cmbFcycodeThirdParty" class="win-combo dtcombo fcb" data-dtcombo="single" data-dtcombo-caption="Fcy Code" style="position:absolute;left:76px;top:20px;width:213px;height:26px;"></select>
+        <label class="fl" id="label2" style="left:1px;top:81px;font:400 11.0px 'Segoe UI',Tahoma,sans-serif;">Cust Ex.Rate</label>
+        <label class="fl" id="label71" style="left:1px;top:107px;font:400 11.0px 'Segoe UI',Tahoma,sans-serif;">Rec Ex.Rate</label>
+        <label class="fl" id="label16" style="left:1px;top:26px;font:600 12.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">Fcy Code</label>
+        <label class="fl" id="label21" style="left:128px;top:81px;font:400 11.0px 'Segoe UI',Tahoma,sans-serif;">Hcy Ex.Rate</label>
+        <label class="fl" id="label72" style="left:128px;top:107px;font:400 11.0px 'Segoe UI',Tahoma,sans-serif;">Fcy Amount</label>
+        <input type="text" class="ft num" id="txtHcyExchRthirdParty" style="left:201px;top:76px;width:88px;height:23px;font:400 13.0px Verdana,Geneva,sans-serif;" data-guard="decimal" autocomplete="off"/>
+        <input type="text" class="ft num" id="txtReceiverFcyAmount" style="left:201px;top:102px;width:88px;height:23px;font:400 13.0px Verdana,Geneva,sans-serif;" readonly autocomplete="off"/>
+        <label class="fl" id="label27" style="left:1px;top:54px;font:600 12.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">Fcy Amount</label>
+        <input type="text" class="ft num" id="txtfcyAmountThirdParty" style="left:76px;top:49px;width:213px;height:23px;font:400 13.0px Verdana,Geneva,sans-serif;" data-guard="decimal" autocomplete="off"/>
+      </div>
+      <label class="fl" id="label43" style="left:2px;top:205px;font:600 12.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">Reference # </label>
+      <input type="text" class="ft" id="cmbReferenceNo" list="dlReferenceNo" autocomplete="off" style="left:125px;top:199px;width:234px;height:23px;font:400 12.0px 'Segoe UI',Tahoma,sans-serif;"/><datalist id="dlReferenceNo"></datalist>
+      <input type="text" class="ft num" id="txtFBC" style="left:126px;top:257px;width:233px;height:25px;font:400 13.0px 'Segoe UI',Tahoma,sans-serif;" data-guard="decimal" autocomplete="off"/>
+      <label class="fl" id="label68" style="left:5px;top:262px;font:600 12.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">Foreign Charges</label>
+      <label class="frd" style="left:990px;top:14px;height:21px;font:400 13.0px 'Segoe UI',Tahoma,sans-serif;"><input type="radio" name="fcyTrans" value="1" id="RDBankSingleAndPartiesMulti"/> BANK ONE TIME DEBIT BUT PARTIES MULTI TIME CREDIT</label>
+      <label class="frd" style="left:990px;top:41px;height:21px;font:400 13.0px 'Segoe UI',Tahoma,sans-serif;"><input type="radio" name="fcyTrans" value="2" id="RDMultiBankDevice" checked/> BANK MULTI TIME DEBIT BUT PARTY ONE TIME CREDIT</label>
+      <label class="frd" style="left:990px;top:67px;height:21px;font:400 13.0px 'Segoe UI',Tahoma,sans-serif;"><input type="radio" name="fcyTrans" value="3" id="rdMultiBankAndMultiParties"/> BANK MULTI TIME DEBIT BUT PARTY ONE TIME CREDIT</label>
+      <div id="panel10" class="is-hidden" style="left:997px;top:92px;width:345px;height:219px;">
+        <div class="tealbar" style="left:0;top:0;width:345px;height:32px;"><span style="left:6px;top:6px;">Party Payments BreakUp</span></div>
+        <div class="jgbox" style="left:0;top:32px;width:345px;height:187px;">
+          <table class="jg" id="grdPartyPaymentsBreackUp"><colgroup><col style="width:20px"><col style="width:20px"><col><col><col></colgroup>
+            <thead><tr><th class="ctr">X</th><th class="ctr">+</th><th class="num">RealizedAmount</th><th class="num">FBC</th><th class="num">TotalAmount</th></tr></thead>
+            <tbody id="partyBody"></tbody><tfoot id="partyFoot"></tfoot></table>
+        </div>
+      </div>
+    </div>
+
+    </div>
+    <!-- panelInvoiceWiseBreakup (Dock Left) + panel4 (Dock Fill) -->
+    <div class="fcyb-bottom">
+      <div id="panelInvoiceWiseBreakup" class="is-hidden fcyb-brk">
+        <div class="fcyb-abs" style="position:relative;height:118px;">
+    <div class="gb" id="groupBox5" style="left:0px;top:0px;width:542px;height:118px;"><span class="gb-cap" style="font:700 13.0px 'Segoe UI',Tahoma,sans-serif;">Invoice Wise Breakup</span>
+      <select id="cmbInvoicenobreakup" class="win-combo dtcombo fcb" data-dtcombo="single" data-dtcombo-caption="InvoiceNo" style="position:absolute;left:4px;top:39px;width:101px;height:26px;"></select>
+      <button type="button" class="fbtn teal is-hidden" id="BtnCancelBreakUp" style="left:472px;top:85px;width:65px;height:23px;font:700 13.0px Tahoma,Geneva,sans-serif;" onclick="FcyBank.resetBreakUp()">Cancel</button>
+      <button type="button" class="fbtn teal is-hidden" id="BtnUpdatebreakup" style="left:405px;top:85px;width:65px;height:23px;font:700 13.0px Tahoma,Geneva,sans-serif;" onclick="FcyBank.btnUpdatebreakup()">Update</button>
+      <button type="button" class="fbtn teal" id="btnAddBreakup" style="left:378px;top:84px;width:27px;height:25px;font:700 13.0px Tahoma,Geneva,sans-serif;" onclick="FcyBank.btnAddBreakup()">+</button>
+      <select id="cmbGdNoBreakup" class="win-combo dtcombo fcb" data-dtcombo="single" data-dtcombo-caption="GD No" style="position:absolute;left:108px;top:39px;width:114px;height:26px;"></select>
+      <input type="text" class="ft" id="txtFDBCNoBreakup" style="left:4px;top:85px;width:249px;height:23px;font:400 13.0px Verdana,Geneva,sans-serif;" autocomplete="off"/>
+      <label class="fl" id="label64" style="left:4px;top:68px;font:600 12.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">FDBC #</label>
+      <input type="text" class="ft num" id="txtRealizedAmtBreakup" style="left:430px;top:41px;width:108px;height:23px;font:400 13.0px Verdana,Geneva,sans-serif;" data-guard="decimal" autocomplete="off"/>
+      <label class="fl" id="label63" style="left:427px;top:22px;font:600 12.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">Realized Amount</label>
+      <label class="fl" id="label62" style="left:112px;top:22px;font:600 12.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">GD #</label>
+      <label class="fl" id="label59" style="left:4px;top:22px;font:600 12.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">Invoice No</label>
+      <input type="text" class="ft num" id="txtInvoiceAmountBreakup" style="left:224px;top:41px;width:98px;height:23px;font:400 13.0px Verdana,Geneva,sans-serif;" data-guard="decimal" autocomplete="off"/>
+      <label class="fl" id="label58" style="left:224px;top:22px;font:600 12.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">Total Amount</label>
+      <select id="cmbStatusBreakup" class="win-combo dtcombo fcb" data-dtcombo="single" data-dtcombo-caption="Status" style="position:absolute;left:256px;top:83px;width:120px;height:26px;"></select>
+      <label class="fl" id="label66" style="left:323px;top:22px;font:600 12.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">Commission</label>
+      <input type="text" class="ft num" id="txtCommisionamtbreakUp" style="left:323px;top:41px;width:105px;height:23px;font:400 13.0px Verdana,Geneva,sans-serif;" data-guard="decimal" autocomplete="off"/>
+      <label class="fl" id="label60" style="left:256px;top:67px;font:600 12.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">Status</label>
+    </div>
+
+        </div>
+        <div class="jgbox fcyb-fill">
+          <table class="jg" id="grdInvoiceWiseBreakUp"><colgroup><col style="width:20px"><col><col><col><col><col><col><col></colgroup>
+            <thead><tr><th class="ctr">X</th><th>InvoiceNo</th><th>GDNO</th><th class="num">TotalAmount</th><th class="num">RealizedAmount</th><th class="num">Commission</th><th>FDBCNo</th><th>Status</th></tr></thead>
+            <tbody id="brkBody"></tbody><tfoot id="brkFoot"></tfoot></table>
+        </div>
+      </div>
+      <div class="fcyb-p4">
+        <div class="fcyb-abs" style="position:relative;height:118px;overflow:hidden;">
+    <div class="gb" id="groupBox2" style="left:0px;top:0px;right:0;height:118px;"><span class="gb-cap" style="font:700 13.0px 'Segoe UI',Tahoma,sans-serif;">Export Charges</span>
+      <label class="fl req-star" id="label49" style="left:175px;top:21px;font:400 12.0px 'Segoe UI',Tahoma,sans-serif;">*</label>
+      <select id="CmbChargesType" class="win-combo dtcombo fcb" data-dtcombo="single" data-dtcombo-caption="ChargesType" style="position:absolute;left:103px;top:39px;width:78px;height:26px;"></select>
+      <button type="button" class="fbtn" id="button1" style="left:335px;top:17px;width:27px;height:23px;" onclick="FcyBank.notPorted('Fcy Bank Charges Types')">...</button>
+      <label class="fl" id="label47" style="left:121px;top:68px;font:600 12.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">Remarks</label>
+      <select id="CmbChargesFDBCNo" class="win-combo dtcombo fcb" data-dtcombo="single" data-dtcombo-caption="FDBC #" style="position:absolute;left:3px;top:39px;width:97px;height:26px;"></select>
+      <input type="text" class="ft" id="txtRemarksDetail" style="left:124px;top:85px;width:238px;height:23px;font:400 13.0px Verdana,Geneva,sans-serif;" autocomplete="off"/>
+      <button type="button" class="fbtn teal is-hidden" id="btnCancelUpdateDetial" style="left:457px;top:85px;width:65px;height:23px;font:700 13.0px Tahoma,Geneva,sans-serif;" onclick="FcyBank.btnCancelUpdateDetial()">Cancel</button>
+      <button type="button" class="fbtn teal is-hidden" id="btnUpdateDetail" style="left:390px;top:85px;width:65px;height:23px;font:700 13.0px Tahoma,Geneva,sans-serif;" onclick="FcyBank.btnUpdateDetail()">Update</button>
+      <button type="button" class="fbtn teal" id="btnAddinGrid" style="left:363px;top:84px;width:27px;height:25px;font:700 13.0px Tahoma,Geneva,sans-serif;" onclick="FcyBank.btnAddinGrid()">+</button>
+      <select id="CmbChargesAccountType" class="win-combo dtcombo fcb" data-dtcombo="single" data-dtcombo-caption="Charges Type" style="position:absolute;left:184px;top:39px;width:176px;height:26px;"></select>
+      <label class="fl req-star" id="label36" style="left:76px;top:68px;font:400 12.0px 'Segoe UI',Tahoma,sans-serif;">*</label>
+      <input type="text" class="ft num" id="txtpkramount" style="left:3px;top:85px;width:116px;height:23px;font:400 13.0px Verdana,Geneva,sans-serif;" data-guard="decimal" autocomplete="off"/>
+      <label class="fl" id="label37" style="left:3px;top:68px;font:600 12.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">Rs Amount</label>
+      <input type="text" class="ft num" id="txtfcamount" style="left:415px;top:41px;width:106px;height:23px;font:400 13.0px Verdana,Geneva,sans-serif;" data-guard="decimal" autocomplete="off"/>
+      <label class="fl" id="label33" style="left:414px;top:21px;font:600 12.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">FC Amount</label>
+      <label class="fl" id="label61" style="left:3px;top:21px;font:600 12.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">FDBS #</label>
+      <label class="fl" id="label35" style="left:191px;top:21px;font:600 12.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">Account Title</label>
+      <label class="fl req-star" id="label34" style="left:280px;top:21px;font:400 12.0px 'Segoe UI',Tahoma,sans-serif;">*</label>
+      <label class="fl req-star" id="label32" style="left:481px;top:21px;font:400 12.0px 'Segoe UI',Tahoma,sans-serif;">*</label>
+      <label class="fl" id="label48" style="left:94px;top:21px;font:600 12.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">Charges Type</label>
+      <input type="text" class="ft num" id="txtChargePercent" style="left:363px;top:41px;width:49px;height:23px;font:400 13.0px Verdana,Geneva,sans-serif;" data-guard="decimal" autocomplete="off"/>
+      <label class="fl" id="label44" style="left:367px;top:21px;font:600 12.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">Prcnt</label>
+      <button type="button" class="fbtn teal is-hidden" id="btnRemaingBreakupBalance" style="left:528px;top:54px;width:84px;height:41px;font:700 13.0px Tahoma,Geneva,sans-serif;" onclick="FcyBank.remainingBalance()">Generate Remaining</button>
+      <div class="jgbox is-hidden" id="grdPaymentTermsBox" style="left:618px;top:6px;width:401px;height:112px;">
+        <table class="jg" id="grdPaymentTerms"><colgroup><col style="width:70px"><col style="width:70px"><col style="width:70px"><col><col style="width:70px"></colgroup>
+          <thead><tr><th>PaymentTerm</th><th class="num">Amount</th><th class="num">Received</th><th class="num">Balance</th><th class="num">ThisReceipt</th></tr></thead>
+          <tbody id="termsBody"></tbody><tfoot id="termsFoot"></tfoot></table>
+      </div>
+    </div>
+
+        </div>
+        <div class="fcyb-p4grids">
+          <div class="jgbox" id="panel14" style="position:relative;flex:0 0 612px;">
+            <table class="jg" id="grdFCBank"><colgroup><col style="width:20px"><col><col><col><col><col><col></colgroup>
+              <thead><tr><th class="ctr">X</th><th>Type</th><th>ChargesType</th><th class="num">Prcnt</th><th>Remarks</th><th class="num">FC-Amount</th><th class="num">Rs-Amount</th></tr></thead>
+              <tbody id="chgBody"></tbody><tfoot id="chgFoot"></tfoot></table>
+          </div>
+          <div class="jgbox is-hidden" id="RemainingBalanceOfBankDeviceBreakUp" style="position:relative;flex:1 1 auto;">
+            <table class="jg" id="RemainingBalanceGrid">
+              <thead><tr><th>FDBCNo</th><th class="num">Realized</th><th class="num">ExRate</th><th class="num">LcyAmount</th><th class="num">Expense</th><th class="num">NetLcyAmount</th></tr></thead>
+              <tbody id="remBody"></tbody><tfoot id="remFoot"></tfoot></table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ tabPage2 "History" -->
+  <div class="win-tab-panel fcyb-page" id="fcyHistory">
+    <!-- panel8 (teal, h52): toolStrip2 + label38 -->
+    <div class="tealbar" style="left:0;right:0;top:0;height:52px;background:#008080;">
+      <div class="fcyb-ts" style="top:0;height:27px;">
+        <button type="button" id="btnResetHistory" class="ts-btn" onclick="FcyBank.historyReset()"><i class="fa fa-plus-circle" style="color:#2e7d32"></i><span><u>N</u>ew</span></button>
+        <button type="button" id="btnRefreshHistory" class="ts-btn" onclick="FcyBank.historyRefresh(this)"><i class="fa fa-refresh" style="color:#2e7d32"></i><span>Refresh</span></button>
+      </div>
+      <span style="left:5px;top:30px;">Fcy Receipt History</span>
+    </div>
+    <!-- panel15 (h72): groupBox6 "Filters" (Dock Left 1030) -->
+    <div class="fcyb-abs" style="left:0;right:0;top:52px;height:72px;">
+    <div class="gb" id="groupBox6" style="left:0px;top:0px;width:1030px;height:72px;"><span class="gb-cap" style="font:700 13.0px Tahoma,Geneva,sans-serif;">Filters</span>
+      <span class="fdtp" style="left:69px;top:16px;width:142px;height:23px;"><input type="checkbox" id="FromDateHistoryChk" checked/><input type="date" class="ft fdate" id="FromDateHistory" style="font:400 13.0px Verdana,Geneva,sans-serif;"/></span>
+      <span class="fdtp" style="left:69px;top:43px;width:142px;height:23px;"><input type="checkbox" id="ToDateHistoryChk" checked/><input type="date" class="ft fdate" id="ToDateHistory" style="font:400 13.0px Verdana,Geneva,sans-serif;"/></span>
+      <input type="text" class="ft num" id="FromDocNoHistory" style="left:315px;top:16px;width:78px;height:23px;font:400 13.0px Verdana,Geneva,sans-serif;" data-guard="integer" autocomplete="off"/>
+      <input type="text" class="ft num" id="ToDocNoHistory" style="left:315px;top:43px;width:78px;height:23px;font:400 13.0px Verdana,Geneva,sans-serif;" data-guard="integer" autocomplete="off"/>
+      <select id="CmbCustomerHistory" class="win-combo dtcombo fcb" data-dtcombo="single" data-dtcombo-caption="Party" style="position:absolute;left:739px;top:14px;width:222px;height:26px;"></select>
+      <label class="fl" id="label91" style="left:5px;top:20px;font:600 12.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">From Date</label>
+      <label class="fl" id="label90" style="left:5px;top:47px;font:600 12.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">To Date</label>
+      <label class="fl" id="label89" style="left:214px;top:20px;font:600 12.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">From Voucher No</label>
+      <label class="fl" id="label76" style="left:214px;top:47px;font:600 12.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">To Voucher No</label>
+      <label class="fl" id="label75" style="left:673px;top:20px;font:600 12.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">Customer</label>
+      <button type="button" class="fbtn teal" id="btnShowHistory" style="left:962px;top:41px;width:62px;height:26px;font:700 13.0px Verdana,Geneva,sans-serif;" onclick="FcyBank.historyShow(this)">Show</button>
+      <select id="CmbPaymentTermHistory" class="win-combo dtcombo fcb" data-dtcombo="single" data-dtcombo-caption="Payment Term" style="position:absolute;left:482px;top:14px;width:189px;height:26px;"></select>
+      <label class="fl" id="label74" style="left:397px;top:20px;font:600 12.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">Payment Term</label>
+      <select id="CmbInvoiceNoHistory" class="win-combo dtcombo fcb" data-dtcombo="single" data-dtcombo-caption="Invoice No" style="position:absolute;left:482px;top:41px;width:189px;height:26px;"></select>
+      <label class="fl" id="label73" style="left:397px;top:47px;font:600 12.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;">Invoice No</label>
+      <select id="CmbReceiverAcHistory" class="win-combo dtcombo fcb" data-dtcombo="single" data-dtcombo-caption="Receiver/Bank Ac" style="position:absolute;left:739px;top:41px;width:222px;height:26px;"></select>
+      <label class="fl" id="label67" style="left:673px;top:41px;font:600 12.0px 'Segoe UI Semibold','Segoe UI',Tahoma,sans-serif;width:65px;white-space:normal;line-height:15px;">Receiver / Bank Ac</label>
+    </div>
+
+    </div>
+    <!-- panel9 (teal, h24) -->
+    <div class="tealbar" style="left:0;right:0;top:124px;height:24px;background:#008080;"><span style="left:2px;top:2px;">Filtered Records</span>
+      <span class="fcyb-gridbar" style="right:2px;top:1px;"><span id="gridBarMountFcyH" class="pd-gridbar-mount"></span></span></div>
+    <!-- DataGridHistory (Fill) -->
+    <div class="jgbox" id="DataGridHistoryBox" style="position:absolute;left:0;right:0;top:148px;bottom:0;">
+      <table class="jg" id="DataGridHistory" style="width:2273px"><colgroup><col style="width:65px"><col style="width:40px"><col style="width:40px"><col style="width:60px"><col style="width:55px"><col style="width:73px"><col style="width:130px"><col style="width:110px"><col style="width:70px"><col style="width:60px"><col style="width:130px"><col style="width:120px"><col style="width:110px"><col style="width:60px"><col style="width:90px"><col style="width:120px"><col style="width:130px"><col style="width:90px"><col style="width:90px"><col style="width:70px"><col style="width:110px"><col style="width:140px"><col style="width:100px"><col style="width:100px"><col style="width:110px"></colgroup>
+        <thead><tr><th class="ctr">Voucher</th><th class="ctr">Slip</th><th class="ctr">Edit</th><th class="ctr">G&amp;LBreakup</th><th class="ctrh">DocNo</th><th class="ctrh">DocDate</th><th class="ctrh">CustomerName</th><th class="ctrh">InvoiceNo / ContractNo</th><th class="ctrh">PaymentTerm</th><th class="ctrh">AccountType</th><th class="ctrh">BankGLDrAc</th><th class="ctrh">BankFbpNo</th><th class="num">BankDrAmount</th><th class="ctrh">Fcy Code</th><th class="num">FcGrossAmount</th><th class="ctrh">ReferenceNo</th><th class="ctrh">FBCAccount</th><th class="num">FcFBCharges</th><th class="num">FcNetAmount</th><th class="num">ExchangeRate</th><th class="num">NetAmountRs</th><th class="ctrh">EntryDate</th><th class="ctrh">UserName</th><th class="num">NoOfAttachments</th><th class="ctrh">Add Attachment</th></tr></thead>
+        <tbody id="fcyHistBody"></tbody><tfoot id="fcyHistFoot"></tfoot></table>
+      <div class="fcyb-empty is-hidden" id="fcyHistEmpty">No record found.</div>
+    </div>
+  </div>
+</div>
+
+<!-- tabControl1 tab strip (TabAlignment.Bottom) + the History button on the right of the footer -->
+<div class="fcyb-footer">
+  <div class="win-tabs" data-tabs="fcy">
+    <button type="button" class="win-tab is-active" data-tab="fcyForm">Form</button>
+    <button type="button" class="win-tab" data-tab="fcyHistory">History</button>
+  </div>
+  <button type="button" class="fcyb-histbtn" id="btnFcyFooterHistory" onclick="FcyBank.toggleHistory()"><i class="fa fa-history"></i> <span>History</span></button>
+</div>
+
+<!-- GainAndLossBreakUp (minimum pop-up) -->
+<div id="fcyGl" class="is-hidden fcyb-modal">
+  <div class="fcyb-modal-box">
+    <div class="fcyb-modal-cap"><span>Gain &amp; Loss BreakUp</span><button type="button" onclick="FcyBank.glClose()">&times;</button></div>
+    <div class="jgbox" style="position:relative;max-height:66vh;"><table class="jg" id="fcyGlGrid"><thead id="fcyGlHead"></thead><tbody id="fcyGlBody"></tbody></table></div>
+  </div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260930s}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260930s}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+<script th:src="@{/build/js/countx_fcy_bank_receipt.js?v=20261002ja}"></script>
+</body>
+</html>

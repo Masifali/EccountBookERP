@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sale Analysis - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_purchase_request.css?v=20260923a}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_lab_sale_analysis.css?v=20261001a}">
+</head>
+<body>
+<!--
+    Screen 161 "Sale Analysis" — Architecture.WinApp.Lab/InvLabSaleAnalysis.cs (ScreenName InvLabSaleAnalysis,
+    DocumentTypeId 304). tabControl1 (Fill, tabs at the bottom): tabForm = btn (ToolStrip, Top) + panel7 (Top,
+    1213 x 206) + panel1 (Fill: grd); tabHistory = panel2 (Top, Teal) + panel4 (grdhistory) + panel5
+    (grdHistoryDetail). panel7 keeps the designer geometry in px; every id below is the desktop control name.
+-->
+<div id="rightsNote" class="lsl-denied" hidden></div>
+<div class="wf-root" th:attr="data-screen-id=${screenId},data-document-type-id=${documentTypeId}">
+
+<!-- =========================================================================== tabForm "Form" -->
+<div id="tabForm" class="lsl-page is-active">
+
+    <!-- btn (ToolStrip) — items in designer order: toolStripButton1, btnNew, btnUpdate, btnSave, btnprint, btnattachment, separator, txtRefresh -->
+    <div class="wf-strip">
+        <span class="wf-strip-title">Sale Analysis</span>
+        <button type="button" class="wf-tool" id="btnNew"><i class="fa fa-plus"></i> New</button>
+        <button type="button" class="wf-tool" id="btnUpdate" hidden><i class="fa fa-pencil"></i> Update</button>
+        <button type="button" class="wf-tool" id="btnSave"><i class="fa fa-save"></i> Save</button>
+        <button type="button" class="wf-tool" id="btnprint"><i class="fa fa-print"></i> 658-Print</button>
+        <button type="button" class="wf-tool" id="btnattachment"><i class="fa fa-paperclip"></i> Attechment <span id="attachmentCount"></span></button>
+        <span class="wf-sep"></span>
+        <button type="button" class="wf-tool" id="txtRefresh">Refresh</button>
+        <a href="/quality" class="wf-tool wf-exit" id="lnkExit"><i class="fa fa-arrow-left"></i> Exit</a>
+    </div>
+
+    <!-- panel7 (3,30) Top 1213 x 206 -->
+    <div class="lsl-head-scroll">
+    <div class="lsl-head">
+        <label class="wf-abs wf-lbl" for="txtdocno" style="left:17px;top:17px;">Document No</label>
+        <input type="text" id="txtdocno" class="wf-abs wf-txt" style="left:116px;top:13px;width:220px;" disabled>
+        <label class="wf-abs wf-lbl" for="txtdocdate" style="left:354px;top:17px;">Doc Date</label>
+        <input type="date" id="txtdocdate" class="wf-abs wf-dt" style="left:462px;top:13px;width:220px;">
+
+        <label class="wf-abs wf-lbl" for="txtgatepassno" style="left:17px;top:44px;">Gate Pass #</label>
+        <select id="txtgatepassno" class="wf-abs wf-cmb" style="left:116px;top:40px;width:220px;" data-dtcombo="lslGatePass" data-dtcombo-caption="GpSrNo"></select>
+        <label class="wf-abs wf-lbl" for="txtsupcode" style="left:354px;top:44px;">Customer Code</label>
+        <input type="text" id="txtsupcode" class="wf-abs wf-txt" style="left:462px;top:40px;width:220px;" disabled>
+
+        <label class="wf-abs wf-lbl" for="txtbiltyno" style="left:17px;top:71px;">Bilty No</label>
+        <input type="text" id="txtbiltyno" class="wf-abs wf-txt" style="left:116px;top:67px;width:73px;" disabled>
+        <label class="wf-abs wf-lbl" for="txtvehicleno" style="left:190px;top:71px;">Vehicle No</label>
+        <input type="text" id="txtvehicleno" class="wf-abs wf-txt" style="left:261px;top:67px;width:75px;" disabled>
+        <label class="wf-abs wf-lbl" for="cmbitem" style="left:354px;top:71px;">Item Name</label>
+        <select id="cmbitem" class="wf-abs wf-cmb" style="left:462px;top:67px;width:220px;" data-dtcombo="single" data-dtcombo-caption="ItemName"></select>
+
+        <label class="wf-abs wf-lbl" for="txtcrop" style="left:17px;top:102px;">Crop Year</label>
+        <select id="txtcrop" class="wf-abs wf-cmb" style="left:116px;top:98px;width:220px;" data-dtcombo="single" data-dtcombo-caption="Crop Year"></select>
+        <label class="wf-abs wf-lbl" for="cmbanalysisgroup" style="left:354px;top:102px;">Analysis Group</label>
+        <select id="cmbanalysisgroup" class="wf-abs wf-cmb" style="left:462px;top:98px;width:220px;" data-dtcombo="single" data-dtcombo-caption="Analysis Group"></select>
+
+        <label class="wf-abs wf-lbl" for="txtcontainerno" style="left:17px;top:131px;">Container No</label>
+        <input type="text" id="txtcontainerno" class="wf-abs wf-txt" style="left:115px;top:127px;width:68px;" maxlength="250">
+        <label class="wf-abs wf-lbl" for="txtAnalyzedBags" style="left:183px;top:131px;">Analyzed Bags</label>
+        <input type="text" id="txtAnalyzedBags" class="wf-abs wf-txt" style="left:275px;top:129px;width:61px;">
+        <label class="wf-abs wf-lbl" for="txtAnalystName" style="left:354px;top:126px;">Analyst  Name</label>
+        <input type="text" id="txtAnalystName" class="wf-abs wf-txt" style="left:462px;top:126px;width:220px;" maxlength="500">
+
+        <label class="wf-abs wf-lbl" for="txtremarks" style="left:17px;top:158px;">Remarks</label>
+        <input type="text" id="txtremarks" class="wf-abs wf-txt" style="left:116px;top:155px;width:455px;" maxlength="250">
+        <label class="wf-abs wf-lbl" for="chkisaccepted" style="left:577px;top:156px;">Is Accepted</label>
+        <input type="checkbox" id="chkisaccepted" class="wf-abs" style="left:667px;top:158px;width:15px;height:14px;" checked>
+        <label class="wf-abs wf-lbl" for="chkprint" style="left:577px;top:176px;">Preview</label>
+        <input type="checkbox" id="chkprint" class="wf-abs" style="left:667px;top:177px;width:15px;height:14px;" checked>
+
+        <!-- sampleanalysispicture (703,21) 158 x 127 + Browse (703,153) / Preview (791,153) -->
+        <span class="wf-abs lsl-pic-cap" style="left:737px;top:3px;">Analysis Pic</span>
+        <div class="wf-abs lsl-pic" style="left:703px;top:21px;width:158px;height:127px;"><img id="sampleanalysispicture" alt="" hidden></div>
+        <button type="button" class="wf-abs wf-btn" id="btnimg1" style="left:703px;top:153px;width:64px;height:27px;">Browse</button>
+        <button type="button" class="wf-abs wf-btn" id="btnprv" style="left:791px;top:153px;width:70px;height:27px;">Preview</button>
+        <input type="file" id="fileAnalysisPic" accept=".jpg,.jpeg,.png" hidden>
+
+        <!-- cookingpic (899,21) 152 x 127 + Browse (899,153) / Preview (980,153) -->
+        <span class="wf-abs lsl-pic-cap" style="left:931px;top:2px;">Cooking Pic</span>
+        <div class="wf-abs lsl-pic" style="left:899px;top:21px;width:152px;height:127px;"><img id="cookingpic" alt="" hidden></div>
+        <button type="button" class="wf-abs wf-btn" id="btnimage2" style="left:899px;top:153px;width:61px;height:27px;">Browse</button>
+        <button type="button" class="wf-abs wf-btn" id="btnimgprevcookingpic" style="left:980px;top:153px;width:71px;height:27px;">Preview</button>
+        <input type="file" id="fileCookingPic" accept=".jpg,.jpeg,.png" hidden>
+    </div>
+    </div>
+
+    <!-- panel1 (Fill): grd -->
+    <div class="lsl-block grow" id="blkGrd">
+        <div class="lsl-grid-cap"><span>Analysis Parameters</span><button type="button" data-full="blkGrd" title="Fullscreen"><i class="fa fa-arrows-alt"></i></button></div>
+        <div class="wf-grid lsl-fill"><table class="win-grid" id="grd"><thead></thead><tbody></tbody></table></div>
+    </div>
+</div>
+
+<!-- ===================================================================== tabHistory "History" -->
+<div id="tabHistory" class="lsl-page">
+    <!-- panel2 (Top, Teal, 32): label11 -->
+    <div class="wf-teal" style="height:32px;">
+        <span class="wf-teal-title" style="left:5px;top:3px;">Sale Lab Analysis History</span>
+    </div>
+    <!-- panel4 (Top 363): grdhistory — FilterMode Automatic -->
+    <div class="lsl-block grow3" id="blkHistory">
+        <div class="lsl-grid-cap"><span>History</span><button type="button" data-full="blkHistory" title="Fullscreen"><i class="fa fa-arrows-alt"></i></button></div>
+        <div class="wf-grid lsl-fill"><table class="win-grid" id="grdhistory"><thead></thead><tbody></tbody></table></div>
+    </div>
+    <!-- panel5 (Fill 217): grdHistoryDetail — AllowEdit False -->
+    <div class="lsl-block grow2" id="blkHistoryDetail">
+        <div class="lsl-grid-cap"><span>Detail</span><button type="button" data-full="blkHistoryDetail" title="Fullscreen"><i class="fa fa-arrows-alt"></i></button></div>
+        <div class="wf-grid lsl-fill"><table class="win-grid" id="grdHistoryDetail"><thead></thead><tbody></tbody></table></div>
+    </div>
+</div>
+
+<!-- footer: tabControl1 headers (bottom) + the History button on the right -->
+<div class="wf-tabs">
+    <div class="win-tab is-active" data-tab="tabForm" id="tabBtnForm">Form</div>
+    <div class="win-tab" data-tab="tabHistory" id="tabBtnHistory">History</div>
+    <div class="lsl-foot-right">
+        <button type="button" class="lsl-foot-btn" id="btnHistory"><i class="fa fa-history"></i> History</button>
+    </div>
+</div>
+</div>
+
+<!-- ============================ LabImagesPreview (pictureBox1 Fill, StretchImage) -->
+<div class="lsl-modal" id="dlgPreview" hidden>
+    <div class="lsl-modal-box">
+        <div class="lsl-modal-head"><span>EccountBook</span><button type="button" id="dlgPreviewClose">&times;</button></div>
+        <div class="lsl-modal-body" style="padding:0;"><img id="pictureBox1" alt="" style="display:block;width:min(795px,96vw);height:min(540px,80vh);"></div>
+    </div>
+</div>
+
+<!-- ============================ Attachment (AT.Show(), :1128) -->
+<div class="lsl-modal" id="dlgAttachments" hidden>
+    <div class="lsl-modal-box" style="width:min(640px,96vw);">
+        <div class="lsl-modal-head"><span>Attachment</span><button type="button" id="dlgAttachmentsClose">&times;</button></div>
+        <div class="lsl-modal-body">
+            <div class="wf-grid" style="max-height:60vh;"><table class="win-grid" id="grdAttachments"><thead><tr><th>Attachment</th><th style="width:150px;">EntryDate</th><th style="width:70px;"></th></tr></thead><tbody></tbody></table></div>
+            <input type="file" id="fileAttachments" multiple hidden>
+        </div>
+        <div class="lsl-modal-foot">
+            <button type="button" class="wf-btn" id="btnAttachBrowse">Browse</button>
+            <button type="button" class="wf-btn" id="btnAttachOk">OK</button>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/build/js/countx_purchase_request.js?v=20260923a}"></script>
+<script th:src="@{/build/js/countx_desktop_combo.js?v=20260927b}"></script>
+<script th:src="@{/build/js/lab/countx_lab_sale_analysis.js?v=20261001a}"></script>
+</body>
+</html>

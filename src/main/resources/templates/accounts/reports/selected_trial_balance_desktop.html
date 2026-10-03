@@ -8,7 +8,7 @@
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
     <link rel="stylesheet" th:href="@{/build/css/countx_acc_rpt_f.css?v=20260930s}">
     <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260930s}">
-    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20261002gv}">
 </head>
 <!--
   Screen 81 "Trial Balance Seleted" - Architecture.WinApp.Account_Reports.SelectedTrialBalance (base.Name "SelectedTrialBalance").
@@ -26,8 +26,10 @@
 </ul>
 <div class="win-toolbar">
     <button type="button" class="win-btn" onclick="resetSelectedTrial()"><i class="fa fa-plus text-success"></i> Reset</button>
-    <button type="button" class="win-btn" onclick="window.print()" data-rpt="113A-AcRptTrialBalanceSelectedGroupAc.rpt"><i class="fa fa-print"></i> Print</button>
-    <button type="button" class="win-btn" onclick="window.print()" data-rpt="113A-AcRptTrialBalanceSelectedGroupAc.rpt"><i class="fa fa-print"></i> 113A-Print</button>
+    <!-- tsSelectedTrialBalance: Reset, Print (tsDropDownSelectedTrial), Level Wise (tsDropDownLevelWise), 113A-Print (btnReportGroupWise) -->
+    <span class="tbp-dd"><button type="button" class="win-btn" id="tsDropDownSelectedTrial"><i class="fa fa-print"></i> Print <i class="fa fa-caret-down"></i></button><div class="tbp-menu" hidden></div></span>
+    <span class="tbp-dd"><button type="button" class="win-btn" id="tsDropDownLevelWise"><i class="fa fa-print"></i> Level Wise <i class="fa fa-caret-down"></i></button><div class="tbp-menu" hidden></div></span>
+    <button type="button" class="win-btn" id="btnReportGroupWise" data-rpt="113A-AcRptTrialBalanceSelectedGroupAc.rpt" data-rpt-own title="113A-Print (Ctrl+P)"><i class="fa fa-print"></i> 113A-Print</button>
 </div>
 <div class="win-header-panel"><span>Trial Balances Selected</span></div>
 
@@ -45,7 +47,7 @@
                   <label class="chk"><input type="checkbox" id="chkSkipCgs"> Skip CGS</label></span>
 
             <span class="lbl">Documents Not To Include</span>
-            <select id="cmbDocumentTypeIds" class="inp" multiple style="grid-column: span 3;"></select>
+            <select id="cmbDocumentTypeIds" class="inp" multiple data-dtcombo="single" data-dtcombo-checked data-dtcombo-caption="Document Type" style="grid-column: span 3;"></select>
             <span><label class="chk"><input type="radio" name="rdCols" id="RdFourColumns" checked> Four Columns</label>
                   <label class="chk"><input type="radio" name="rdCols" id="RdSixColumns"> Six Columns</label></span>
 
@@ -79,10 +81,16 @@
 <div class="grid-wrap"><table class="wg" id="grdSelected"></table></div>
 
 <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
-<script th:src="@{/build/js/countx_prod_combo.js?v=20260930s}"></script>
-<script th:src="@{/build/js/countx_acc_rpt_f.js?v=20260930s}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20261002gv}"></script>
+<script th:src="@{/build/js/countx_acc_rpt_f.js?v=20261002gv}"></script>
+<script th:src="@{/build/js/countx_tb_family_print.js?v=20261002gl}"></script>
 <script>
     let CTX = null, rows = [], branchShown = false;
+    /* 2026-10-02: the filters of the last successful Show - what dtTrialSelected was built from. 113A-Print sends them as the
+       arguments of the 113a contract (VoucherReports.SelectedTrialBalanceNew: @LanguageId always; @FromDate/@ToDate,
+       @CityId, @GroupAccountId, @CustomeGroupId, @ZeroBalanceType, @SkipCgsAccounts, @IsApproved, @DocumentTypeIds,
+       @BranchesIds, @ClDebit, @ClCredit when set). Before, the button sent no argument at all. */
+    let lastPrintArgs = null;
     const QS = new URLSearchParams(window.location.search);
 
     function columns() {
@@ -113,6 +121,20 @@
         AccF.busy(btn, true);
         try {
             const br = $('#CmbBranches').val();
+            const brCsv = br ? (Array.isArray(br) ? br.join(',') : br) : '';
+            const docIds = AccF.selectedIds('#cmbDocumentTypeIds');
+            const printArgs = {
+                fromDate: $('#datFromDateSt').val(), toDate: $('#datToDateST').val(),
+                cityId: $('#CmbCityName').val() || '', groupAccountId: $('#cmbAccountTitle').val() || '',
+                customerGroupId: $('#CmbCustomeGroups').val() || '',
+                zeroBalanceType: $('#ChkZkipZeroSelected').is(':checked') ? 1 : '',
+                skipCgsAccounts: $('#chkSkipCgs').is(':checked') ? 1 : '',
+                isApproved: $('#ChkBoxPostSelectedTrial').is(':checked') ? '' : 1,      // ApprovedFilter "All" -> not sent
+                documentTypeIds: docIds ? ',' + docIds : '',                              // the desktop's ",id,id"
+                branchesIds: !CTX.branchFeature || !brCsv ? '' : (CTX.branchConsolidated ? ',' + brCsv.split(',').filter(Boolean).join(',') : brCsv),
+                debit: $('#txtClosingDebit').val() || '', credit: $('#txtClosingCredit').val() || '',
+                languageId: $('#CmbLanguageSelected').val() || 0
+            };
             rows = await AccF.post('/selected-trial-balance', {
                 fromDate: $('#datFromDateSt').val(), toDate: $('#datToDateST').val(),
                 clDebit: $('#txtClosingDebit').val(), clCredit: $('#txtClosingCredit').val(),
@@ -124,9 +146,10 @@
                 branchesIds: br ? (Array.isArray(br) ? br.join(',') : br) : null
             });
             branchShown = !!(CTX.branchFeature && br && br.length);
+            lastPrintArgs = printArgs;
             render();
         } catch (e) {
-            rows = []; $('#grdSelected').empty();
+            rows = []; lastPrintArgs = null; $('#grdSelected').empty();
             alert(e.message);
         } finally { AccF.busy(btn, false); }
     }
@@ -135,8 +158,38 @@
     function resetSelectedTrial() {
         $('#ChkZkipZeroSelected').prop('checked', true);
         $('#CmbCityName, #CmbCustomeGroups, #cmbAccountTitle').val('');
-        rows = []; $('#grdSelected').empty(); $('#lblStatus').text('');
+        rows = []; lastPrintArgs = null; $('#grdSelected').empty(); $('#lblStatus').text('');
     }
+
+    /* btnReportGroupWise_Click (113A-Print, Ctrl+P): dtTrialSelected -> 113A-AcRptTrialBalanceSelectedGroupAc.rpt,
+       "Record Not Found For Display" when the grid is empty. */
+    function print113A() {
+        if (!rows.length || !lastPrintArgs) { alert('Record Not Found For Display'); return; }
+        window.printRpt('113A-AcRptTrialBalanceSelectedGroupAc.rpt', Object.assign({}, lastPrintArgs));
+    }
+    $('#btnReportGroupWise').on('click', print113A);
+
+    /* tsDropDownSelectedTrial: items = DynamicReportsLoad("SelectedTrialBalance"); prints dtTrialSelected into the item
+       (nothing happens when the grid is empty, as on the desktop) */
+    function rowsForPrint() {
+        return rows.map(function (r) { const o = Object.assign({}, r); o.ParentAccountTitle = r.ParentTitle; return o; });
+    }
+    TbPrint.menu('#tsDropDownSelectedTrial', 'SelectedTrialBalance', function (item) {
+        if (!rows.length) return;
+        TbPrint.rows(item, rowsForPrint(), '#tsDropDownSelectedTrial');
+    });
+    /* tsDropDownLevelWise: items = DynamicReportsLoad("Trial Balance Level Wise"); VoucherReports.TrialBalanceAllLevels
+       (Sp_Accounts_TrialBalancesAllLevels_Rpt, From/To/Language of the form) -> the item, or "Record Not Found For Display" */
+    TbPrint.menu('#tsDropDownLevelWise', 'Trial Balance Level Wise', async function (item) {
+        const btn = $('#tsDropDownLevelWise');
+        btn.prop('disabled', true);
+        try {
+            const data = await AccF.post('/tb-family/level-wise-rows', { fromDate: $('#datFromDateSt').val(), toDate: $('#datToDateST').val(),
+                languageId: $('#CmbLanguageSelected').val() || 0 });
+            if (!data || !data.length) { alert('Record Not Found For Display'); return; }
+            TbPrint.rows(item, data);
+        } catch (e) { alert(e.message); } finally { btn.prop('disabled', false); }
+    });
     /* reset() (Ctrl+N): City and Group Account cleared, Include UnPost ticked */
     function resetCtrlN() {
         $('#CmbCityName, #cmbAccountTitle').val('');
@@ -147,7 +200,7 @@
     $(document).on('keydown', function (e) {
         if (e.ctrlKey && (e.key === 'n' || e.key === 'N')) { e.preventDefault(); resetCtrlN(); }
         if (e.ctrlKey && (e.key === 'l' || e.key === 'L')) { e.preventDefault(); $('.st-lang').show(); AccF.focus('#CmbLanguageSelected'); }
-        if (e.ctrlKey && (e.key === 'p' || e.key === 'P')) { e.preventDefault(); window.print(); }
+        if (e.ctrlKey && (e.key === 'p' || e.key === 'P')) { e.preventDefault(); print113A(); }   // SelectedTrialBalance_KeyDown -> btnReportGroupWise_Click
     });
 
     $('input[name="rdCols"]').on('change', function () { if (rows.length) render(); });
@@ -157,7 +210,7 @@
             CTX = await AccF.context();
             if (CTX.branchFeature) {
                 const brs = await AccF.lookup('branches');
-                if (CTX.branchConsolidated) $('#CmbBranches').attr('multiple', 'multiple');
+                if (CTX.branchConsolidated) $('#CmbBranches').attr({ multiple: 'multiple', 'data-dtcombo-checked': '' }); /* 2026-10-02: checked combo */
                 AccF.fillSelect('#CmbBranches', brs, 'Id', 'BranchName', CTX.branchConsolidated ? null : '');
                 $('#CmbBranches').val(CTX.branchConsolidated ? [String(CTX.userBranchId)] : String(CTX.userBranchId));
                 $('.st-branch').show();

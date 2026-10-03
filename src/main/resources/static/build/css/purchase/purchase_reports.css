@@ -1,0 +1,90 @@
+/* Purchase Reports (module 52) - desktop look: toolstrip, teal caption bars, "Filters" group box
+   laid out on the Designer's coordinates, Janus-style grid with filter row, group rows and total row. */
+* { box-sizing: border-box; }
+body.pr { margin: 0; background: #f0f0f0; font: 12px "Segoe UI", Tahoma, Verdana, sans-serif; color: #111; }
+.pr-toolstrip { display: flex; align-items: center; gap: 2px; background: linear-gradient(#fdfdfd, #e3e7ec); border-bottom: 1px solid #b9c3cd; height: 28px; padding: 0 4px; }
+.pr-toolstrip button, .pr-toolstrip a, .pr-toolstrip .pr-drop > summary { font: 12px "Segoe UI", Tahoma, sans-serif; background: transparent; border: 1px solid transparent; padding: 2px 8px; height: 24px; cursor: pointer; color: #111; text-decoration: none; display: inline-flex; align-items: center; border-radius: 2px; }
+.pr-toolstrip button:hover, .pr-toolstrip a:hover, .pr-toolstrip .pr-drop > summary:hover { background: #dbe9f6; border-color: #9fc3e6; }
+.pr-toolstrip button:disabled { color: #999; cursor: default; background: transparent; border-color: transparent; }
+.pr-toolstrip .pr-sep { width: 1px; height: 18px; background: #b9c3cd; margin: 0 4px; }
+.pr-toolstrip .pr-right { margin-left: auto; }
+.pr-caption { background: #008080; color: #fff; font: bold 14px Verdana, sans-serif; height: 27px; line-height: 27px; padding: 0 6px; display: flex; align-items: center; gap: 12px; }
+.pr-caption .pr-sub { font-weight: normal; font-size: 12px; }
+.pr-caption .pr-right { margin-left: auto; display: flex; gap: 6px; align-items: center; font-weight: normal; font-size: 12px; }
+.pr-caption .pr-right button { font-size: 11px; padding: 1px 6px; }
+.pr-tabs { display: flex; gap: 2px; padding: 4px 4px 0; background: #f0f0f0; border-bottom: 1px solid #a0a0a0; }
+.pr-tabs button { border: 1px solid #a0a0a0; border-bottom: none; background: #e4e4e4; padding: 3px 12px; font: 12px "Segoe UI", sans-serif; cursor: pointer; }
+.pr-tabs button[aria-selected="true"] { background: #fff; position: relative; top: 1px; }
+.pr-panel { padding: 0 3px 3px; }
+.pr-filters { position: relative; border: 1px solid #b0b0b0; margin: 3px 0; padding: 0; background: #f0f0f0; font: 12px Verdana, sans-serif; }
+.pr-filters > legend { margin-left: 6px; padding: 0 3px; font: 12px Verdana, sans-serif; }
+.pr-abs { position: absolute; }
+.pr-abs label, label.pr-abs { white-space: nowrap; }
+.pr-filters input[type=text], .pr-filters input[type=date], .pr-filters select, .pr-filters .pr-check > summary { height: 23px; font: 12px Verdana, sans-serif; border: 1px solid #7a9cbf; background: #fff; padding: 1px 3px; width: 100%; }
+.pr-filters .pr-date { display: flex; align-items: center; gap: 2px; }
+.pr-filters .pr-date input[type=checkbox] { margin: 0; }
+.pr-filters .pr-date input[type=date] { flex: 1; }
+.pr-filters button.pr-show { height: 26px; font: 12px Verdana, sans-serif; background: linear-gradient(#fff, #dde4ea); border: 1px solid #7a9cbf; cursor: pointer; }
+.pr-radios { display: flex; gap: 8px; align-items: center; white-space: nowrap; }
+.pr-radios.vertical { flex-direction: column; align-items: flex-start; gap: 1px; }
+.pr-check { position: relative; }
+.pr-check > summary { list-style: none; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; cursor: pointer; line-height: 19px; }
+.pr-check > summary::-webkit-details-marker { display: none; }
+.pr-check > .pr-check-pop { position: absolute; z-index: 30; top: 24px; left: 0; min-width: 100%; max-height: 260px; overflow: auto; background: #fff; border: 1px solid #7a9cbf; box-shadow: 0 3px 8px rgba(0,0,0,.2); padding: 3px; }
+.pr-check-pop label { display: block; padding: 1px 3px; white-space: nowrap; }
+.pr-check-pop input[type=search] { width: 100%; margin-bottom: 3px; }
+.pr-grid-bar { background: #008080; color: #fff; height: 27px; display: flex; align-items: center; padding: 0 6px; gap: 12px; font: bold 12px Verdana, sans-serif; }
+.pr-grid-bar .pr-right { margin-left: auto; display: flex; gap: 4px; }
+.pr-grid-bar button { font: 11px "Segoe UI", sans-serif; }
+.pr-grid-bar label { font-weight: normal; }
+.pr-wrap { overflow: auto; background: #fff; border: 1px solid #a0a0a0; height: calc(100vh - 330px); min-height: 220px; }
+.pr-wrap:fullscreen { height: 100vh; }
+table.pr-grid { border-collapse: collapse; font: 8.25pt Verdana, sans-serif; table-layout: fixed; }
+table.pr-grid th, table.pr-grid td { border: 1px solid #d0d7de; padding: 1px 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+table.pr-grid thead th { background: linear-gradient(#fbfbfb, #e3e8ee); position: sticky; top: 0; z-index: 2; text-align: center; white-space: normal; font-weight: normal; cursor: pointer; }
+table.pr-grid thead tr.pr-filter-row th { top: 34px; background: #fffbe6; padding: 0; cursor: default; }
+table.pr-grid thead tr.pr-filter-row input { width: 100%; border: 0; font: 8pt Verdana, sans-serif; background: transparent; padding: 1px 2px; }
+table.pr-grid td.n { text-align: right; }
+table.pr-grid tr.pr-group td { background: #e6eef6; font-weight: bold; }
+table.pr-grid tr.pr-gtotal td { background: #f3f6f9; font-weight: bold; }
+table.pr-grid tfoot td { background: #e8edf2; font-weight: bold; position: sticky; bottom: 0; }
+table.pr-grid tbody tr:hover td { background: #fff7d6; }
+table.pr-grid tr.pr-checked td { background: #90ee90; color: #006400; }
+table.pr-grid a, table.pr-grid button.pr-link { color: #0645ad; text-decoration: underline; background: none; border: 0; padding: 0; font: inherit; cursor: pointer; }
+table.pr-grid button.pr-cell-btn { font: 8pt Verdana, sans-serif; padding: 0 4px; height: 17px; }
+table.pr-grid td.pr-red { color: red; font-weight: bold; }
+table.pr-grid input.pr-edit { width: 100%; font: 8pt Verdana, sans-serif; border: 1px solid #9ab; }
+.pr-empty { color: #666; padding: 6px; }
+.pr-status { display: flex; flex-wrap: wrap; gap: 3px; }
+.pr-status .pr-panel-btn { border: 1px solid #7a9cbf; background: #e9f3fb; cursor: pointer; padding: 2px 6px; font: 11px Verdana, sans-serif; text-align: left; }
+.pr-status .pr-panel-btn b { display: block; font-size: 13px; }
+#prMessage { color: #b00020; padding: 2px 6px; min-height: 18px; font-weight: bold; }
+#prMessage.ok { color: #0a6b0a; }
+#prLoading { position: fixed; inset: 0; background: rgba(255,255,255,.4); display: flex; align-items: center; justify-content: center; z-index: 100; font: bold 13px Verdana, sans-serif; }
+#prLoading[hidden] { display: none; }
+dialog.pr-dialog { min-width: 420px; max-width: 90vw; border: 1px solid #7a9cbf; padding: 0; }
+dialog.pr-dialog h2 { margin: 0; background: #008080; color: #fff; font: bold 13px Verdana, sans-serif; padding: 5px 8px; }
+dialog.pr-dialog .pr-dialog-body { padding: 8px; max-height: 70vh; overflow: auto; }
+dialog.pr-dialog .pr-dialog-buttons { text-align: right; padding: 6px 8px; border-top: 1px solid #ddd; }
+dialog.pr-dialog textarea { width: 100%; min-height: 70px; font: 12px Verdana, sans-serif; }
+.is-hidden { display: none !important; }
+/* round 2: record links, busy buttons, no page-wide horizontal scroll (the filter box scrolls inside the panel) */
+.pr-panel { overflow-x: auto; }
+table.pr-grid a.pr-open { color: #0645ad; text-decoration: underline; cursor: pointer; }
+table.pr-grid button.pr-slip { text-decoration: none; margin-left: 2px; font-size: 10px; color: #444; }
+button[aria-busy="true"] { cursor: progress; }
+table.pr-grid { min-width: 100%; }   /* use the full width first; wider grids scroll inside .pr-wrap */
+/* round 3 (2026-09-30, "overlaping" on 480 Summary Register):
+   1. `.pr-check { position: relative }` is declared after `.pr-abs`, so a checked-list combo placed with pr-abs fell back into
+      the normal flow and took its left/top as an OFFSET: Parent Category and Custom Group landed on other rows (the doubled
+      box on Stock A/C, the missing box beside Custom Group). An absolutely placed one must stay absolute. */
+details.pr-check.pr-abs { position: absolute; }
+/* 2. An in-flow <legend> makes Chrome start the fieldset's content box below the legend, which pushed every Designer
+      coordinate ~14px down and cut the last filter row under the teal bar. A WinForms GroupBox caption is drawn ON the
+      border and takes no room, so the legend is taken out of the flow. */
+fieldset.pr-filters { margin-top: 9px; }
+fieldset.pr-filters > legend { position: absolute; left: 6px; top: -9px; margin: 0; width: auto; line-height: 16px; background: #f0f0f0; font: bold 9.75pt Tahoma, sans-serif; }
+/* 3. The Designer's labels and check boxes are "Segoe UI Semibold" 9pt; Verdana 12px is about a quarter wider, so captions
+      ran into the boxes ("From & To Date") and into each other ("City Wise" / "Pack Uom"). */
+.pr-filters label.pr-abs, .pr-filters .pr-abs > label, .pr-filters .pr-radios label { font: 600 12px "Segoe UI Semibold", "Segoe UI", Tahoma, Arial, sans-serif; letter-spacing: -0.1px; }
+.pr-filters label.pr-abs input[type=checkbox], .pr-filters label.pr-abs input[type=radio] { margin: 0 3px 0 0; vertical-align: -2px; }

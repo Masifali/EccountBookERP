@@ -13,6 +13,12 @@ public class DocumentAgingController {
     public DocumentAgingController(DocumentAgingService service) { this.service=service; }
     @GetMapping("/supplier/lookups")
     public Map<String,Object> lookups() { return service.supplierLookups(); }
+    /** frmPayablesAgingDocumentWise.btnRefresh_Click rebinds CmbCustomerAccounts only. */
+    @GetMapping("/supplier/accounts")
+    public List<Map<String,Object>> supplierAccounts() { return service.supplierAccounts(); }
+    /** frmReceivableAgingDocumentWise.btnRefresh_Click rebinds CmbCustomerAccounts only. */
+    @GetMapping("/customer/accounts")
+    public List<Map<String,Object>> customerAccounts() { return service.customerAccounts(); }
     @GetMapping("/customer/lookups")
     public Map<String,Object> customerLookups() { return service.customerLookups(); }
     @GetMapping("/customer")

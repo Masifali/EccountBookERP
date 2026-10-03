@@ -1,0 +1,159 @@
+/* ============================================================================================
+ * 707 "FCY Bank Receipt" / 43 "FCY Receipt" - Acfrmfcbankreceipt (Architecture.WinApp.Account_Definition).
+ * 2026-10-02: the desktop designer layout. Each GroupBox / Panel is a box at its InitializeComponent
+ * Location / Size and every label and control is absolutely positioned at its designer coordinates
+ * (inline styles in templates/accounts/vouchers/fcy_bank_receipt.html, generated from the designer).
+ * Fonts as declared there: labels Segoe UI Semibold 9pt, text boxes / combos Verdana 9.75pt, group box
+ * captions Segoe UI 9.75pt bold, teal bars Tahoma 12pt bold, grids Verdana 8.25pt. Tabs at the BOTTOM.
+ * The page never scrolls sideways: the tab page scrolls inside .fcyb-pages (the form's AutoScroll).
+ * ============================================================================================ */
+html, body { height: 100%; }
+body.fcyb-body {
+    margin: 0; padding: 0; overflow: hidden; background: #f0f0f0; color: #000;
+    font-family: "Segoe UI", Tahoma, Arial, sans-serif; font-size: 12px;
+    display: flex; flex-direction: column;
+}
+.fcyb-body *, .fcyb-body *::before, .fcyb-body *::after { box-sizing: border-box; }
+.fcyb-body .is-hidden { display: none !important; }
+
+.fcyb-caption {
+    flex: 0 0 24px; display: flex; align-items: center; justify-content: space-between;
+    padding: 0 8px; background: #0a6e6e; color: #fff; font: bold 12px "Segoe UI", Tahoma, sans-serif;
+}
+.fcyb-caption a { color: #fff; font-weight: normal; text-decoration: none; font-size: 11px; }
+.fcyb-caption a:hover { text-decoration: underline; }
+
+/* tab pages: scroll by themselves (both ways) */
+.fcyb-pages { flex: 1 1 auto; min-height: 0; overflow: auto; background: #fff; border: 1px solid #a0a0a0; border-bottom: 0; position: relative; }
+.win-tab-panel { display: none; }
+.win-tab-panel.is-active { display: block; }
+.fcyb-page { position: relative; min-height: 100%; background: #fff; }
+/* Form: panel2 1161 x 717, groupBox1 reaches x 1357 -> the tab page scrolls sideways below 1362 px */
+#fcyForm { min-width: 1362px; height: 100%; min-height: 717px; }
+/* History: groupBox6 1030 wide, the grid fills */
+#fcyHistory { min-width: 1040px; height: 100%; min-height: 560px; }
+
+/* ToolStrip (Verdana 9.75pt, icon + text) */
+.fcyb-ts {
+    position: absolute; left: 0; right: 0; top: 0; height: 28px; display: flex; align-items: center; padding: 0 2px; white-space: nowrap;
+    background: linear-gradient(#fbfbfb, #f0f0f0 60%, #e6e9ee); border-bottom: 1px solid #c5cbd3; font: 9.75pt Verdana, sans-serif;
+}
+.ts-btn {
+    display: inline-flex; align-items: center; gap: 4px; height: 23px; padding: 0 5px; margin: 0;
+    border: 1px solid transparent; border-radius: 0; background: transparent; color: #000;
+    font: 9.75pt Verdana, sans-serif; cursor: pointer; white-space: nowrap;
+}
+.ts-btn:hover:not(:disabled) { background: #fde8b0; border-color: #e5c365; }
+.ts-btn:disabled { color: #8d8d8d; cursor: default; }
+.ts-btn:disabled .fa { opacity: .45; }
+.ts-btn .fa { font-size: 15px; width: 16px; text-align: center; }
+.ts-sep { display: inline-block; width: 1px; height: 19px; margin: 0 4px; background: #b9c0c9; box-shadow: 1px 0 0 #fff; }
+
+/* teal panels (panel6 / panel12: FromArgb(10,110,110); panel8 / panel9: Color.Teal) */
+.tealbar { position: absolute; background: #0a6e6e; }
+.tealbar > span { position: absolute; color: #fff; font: bold 12pt Tahoma, sans-serif; white-space: nowrap; line-height: 19px; }
+.fchk { position: absolute; margin: 0; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; cursor: pointer;
+        color: #fff; font: bold 9.75pt Verdana, sans-serif; }
+.fchk input { margin: 0; width: 13px; height: 13px; }
+.fcyb-gridbar { position: absolute; }
+
+/* absolutely positioned designer layers */
+.fcyb-abs { position: absolute; }
+.fcyb-abs > *, .gb > *, #panel10 > * { position: absolute; }
+
+/* GroupBox: thin grey frame, caption on the frame */
+.gb { background: #fff; overflow: hidden; }
+.gb::before { content: ""; position: absolute; left: 0; right: 0; top: 8px; bottom: 0; border: 1px solid #c8c8c8; border-radius: 2px; pointer-events: none; }
+.gb > .gb-cap { left: 7px; top: 0; padding: 0 2px; background: #fff; z-index: 1; line-height: 16px; white-space: nowrap; color: #000; }
+
+/* labels */
+.fl { margin: 0; padding: 0; white-space: nowrap; line-height: 15px; color: #000; }
+.fl.req-star { color: #f00; }
+
+/* text boxes / date pickers (FixedSingle) */
+.ft { margin: 0; padding: 1px 4px; border: 1px solid #7a7a7a; border-radius: 0; background: #fff; color: #000; outline: none; box-shadow: none; }
+.ft:focus { border-color: #0078d7; }
+.ft.num { text-align: right; }
+.ft.ro, .ft[readonly] { background: #f0f0f0; }          /* SystemColors.Menu */
+#txtReceiverFcyAmount { background: #fff; }              /* ReadOnly, BackColor White */
+input[type=date].ft { padding: 0 2px 0 4px; font-size: 9pt !important; }
+.fdtp { position: absolute; }
+.fdtp > input[type=checkbox] { position: absolute; left: 4px; top: 5px; margin: 0; width: 13px; height: 13px; z-index: 1; }
+.fdtp > input[type=date] { position: absolute; left: 0; top: 0; width: 100%; height: 100%; padding-left: 21px; }
+
+/* combos: countx_prod_combo.js wraps each select at its inline geometry */
+.fcyb-body .pcx-wrap > .dtcombo-input.pcx-field { height: 100%; font: 9.75pt Verdana, sans-serif; border-color: #7a7a7a; padding-left: 3px; }
+.fcyb-body .pcx-wrap.dtcombo-disabled > .dtcombo-input.pcx-field { background: #f0f0f0; color: #555; }
+
+/* radio buttons */
+.frd { margin: 0; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; cursor: pointer; font-weight: normal; }
+.frd input { margin: 0; width: 13px; height: 13px; }
+
+/* flat teal buttons (+ / Update / Cancel / Generate Remaining / Show) */
+.fbtn { margin: 0; padding: 0 2px; border: 1px solid #adadad; border-radius: 0; background: #e1e1e1; color: #000; cursor: pointer; line-height: 1.05; white-space: normal; }
+.fbtn.teal { background: #008080; border-color: #008080; color: #fff; }
+.fbtn.teal:hover:not(:disabled) { background: #009a9a; }
+.fbtn:disabled { opacity: .6; cursor: default; }
+
+/* bottom area: panelInvoiceWiseBreakup (Dock Left 542) + panel4 (Fill) */
+.fcyb-bottom { position: absolute; left: 0; right: 0; top: 381px; bottom: 0; display: flex; min-height: 336px; }
+.fcyb-brk { flex: 0 0 542px; display: flex; flex-direction: column; min-height: 0; }
+.fcyb-p4 { flex: 1 1 auto; display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.fcyb-p4grids { flex: 1 1 auto; display: flex; min-height: 0; }
+.fcyb-fill { position: relative; flex: 1 1 auto; min-height: 0; }
+
+/* Janus GridEX look */
+.jgbox { overflow: auto; background: #fff; border: 1px solid #7f9db9; }
+.jg { border-collapse: separate; border-spacing: 0; font: 8.25pt Verdana, sans-serif; color: #000; background: #fff; table-layout: fixed; min-width: 100%; }
+.jg th {
+    position: sticky; top: 0; z-index: 2; height: 21px; padding: 2px 4px; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    font-weight: normal; color: #000; background: linear-gradient(#fdfdfd, #ebebeb); border-right: 1px solid #c5c5c5; border-bottom: 1px solid #a5a5a5;
+}
+#DataGridHistory th { height: 32px; white-space: normal; text-align: center; vertical-align: middle; line-height: 12px; }   /* HeaderLines = 2, centred */
+.jg th.num { text-align: right; }
+.jg th.ctr { text-align: center; }
+.jg td { height: 20px; padding: 1px 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-right: 1px solid #e3e3e3; border-bottom: 1px solid #e3e3e3; vertical-align: middle; }
+.jg td.num { text-align: right; }
+.jg td.lbl { font-weight: bold; }
+.jg tbody tr:hover td { background: #f3f8fd; }
+.jg tbody tr.is-current td { background: #cce8ff; }
+.jg tfoot td { position: sticky; bottom: 0; z-index: 1; background: #f0f0f0; font-weight: bold; border-top: 1px solid #a5a5a5; text-align: right; }
+.jg tfoot td.lbl { text-align: left; }
+.jg tr.fcy-group td { background: #e9edf2; font-weight: bold; }
+.jg tr.fcy-group-total td { background: #f7f7f7; font-weight: bold; text-align: right; }
+.jg tr.fcy-group-total td.lbl { text-align: left; }
+.jg td.win-cell-btn { padding: 1px 2px; text-align: center; }
+.jg .win-x, .jg .win-edit {
+    margin: 0; padding: 0 4px; height: 17px; line-height: 15px; border: 1px solid #adadad; border-radius: 2px;
+    background: linear-gradient(#f6f6f6, #dedede); color: #000; font: 8.25pt Verdana, sans-serif; cursor: pointer; width: 100%;
+}
+.jg .win-x:hover, .jg .win-edit:hover { background: #e5f1fb; border-color: #0078d7; }
+.jg td.win-editable { padding: 0 1px; }
+.jg td.win-editable input { width: 100%; height: 18px; padding: 0 3px; border: 1px solid #c5c5c5; font: 8.25pt Verdana, sans-serif; text-align: right; }
+.jg a.win-code { color: #0645ad; text-decoration: underline; cursor: pointer; }
+.fcyb-empty { padding: 12px; text-align: center; color: #888; font: 8.25pt Verdana, sans-serif; }
+
+/* bottom tab strip (TabAlignment.Bottom) + History button on the right */
+.fcyb-footer { flex: 0 0 auto; display: flex; align-items: flex-start; justify-content: space-between; padding: 0 2px 2px; background: #f0f0f0; border-top: 1px solid #a0a0a0; }
+.fcyb-footer .win-tabs { display: flex; }
+.fcyb-footer .win-tab {
+    margin-top: -1px; padding: 3px 14px 4px; background: #e8e8e8; border: 1px solid #a0a0a0; border-top: 0;
+    border-radius: 0 0 3px 3px; font: 9.75pt Verdana, sans-serif; color: #000; cursor: pointer;
+}
+.fcyb-footer .win-tab.is-active { background: #fff; position: relative; padding-bottom: 6px; z-index: 1; }
+.fcyb-histbtn { margin: 3px 4px 0 0; padding: 2px 10px; border: 1px solid #008080; background: #008080; color: #fff; font: bold 9pt Verdana, sans-serif; cursor: pointer; }
+.fcyb-histbtn:hover { background: #009a9a; }
+
+/* busy contract: disabled + spinner while a request runs */
+.is-busy { position: relative; pointer-events: none; opacity: .75; }
+.is-busy::after {
+    content: ""; display: inline-block; width: 11px; height: 11px; margin-left: 5px; vertical-align: middle;
+    border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: fcyb-spin .7s linear infinite;
+}
+@keyframes fcyb-spin { to { transform: rotate(360deg); } }
+
+/* GainAndLossBreakUp pop-up */
+.fcyb-modal { position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 9000; display: flex; align-items: center; justify-content: center; }
+.fcyb-modal-box { background: #fff; border: 1px solid #666; width: min(900px, 96vw); max-height: 80vh; display: flex; flex-direction: column; }
+.fcyb-modal-cap { display: flex; justify-content: space-between; align-items: center; height: 28px; padding: 0 8px; background: #0a6e6e; color: #fff; font: bold 12pt Tahoma, sans-serif; }
+.fcyb-modal-cap button { background: transparent; border: 0; color: #fff; font-size: 18px; cursor: pointer; }

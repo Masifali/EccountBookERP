@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Purchase Invoice Against Grn Order</title>
+<link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+<link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}">
+<link rel="stylesheet" th:href="@{/build/css/countx_purchase_request.css?v=20260930a}">
+<link rel="stylesheet" th:href="@{/build/css/countx_direct_invoice.css?v=20260930a}">
+<!-- Architecture.WinApp.Purchase.PurchaseInvoiceAgainstGrnOrder (ScreenDefinition 132, DocumentTypeId 172). Geometry follows
+     InitializeComponent: toolStrip1 (panel2) / panel4 header 1309x145 (controls at their designer x,y) / panel5: panel7
+     [grdFreight 641 | grdInvExp 668] x126, panel12 [grdGLedger 641 | grdEmptyBags 668] x137, panel8 grd x274 /
+     tabControl1 with Form and History pages aligned to the bottom. -->
+<style>
+    html,body{max-width:100%;overflow-x:hidden}
+    body{padding-bottom:40px}
+    .pio-title{font:bold 13px Tahoma,serif;color:#006b6b;margin-right:10px}
+    .pio-headwrap{overflow-x:auto;background:#fff;border:1px solid #ccc;margin:3px 0}
+    .pio-head{position:relative;width:1309px;height:145px;font:12px 'Segoe UI',Verdana,sans-serif}
+    .pio-head > *{position:absolute}
+    .pio-head label.l{white-space:nowrap}
+    .pio-head input[type=text],.pio-head input[type=date],.pio-head select,.pio-head textarea{height:23px;border:1px solid #888;font:12px Verdana;padding:1px 3px;background:#fff}
+    .pio-head textarea{resize:none;height:auto}
+    .pio-head input[readonly],.pio-head input:disabled,.pio-head textarea:disabled{background:#f0f0f0}
+    .pio-head .num{text-align:right}
+    .pio-head .dtcombo-wrap{width:100%}
+    .pio-head .chk{display:flex;align-items:center;gap:3px;white-space:nowrap}
+    .pio-sec{display:flex;justify-content:space-between;align-items:center;background:#f0f0f0;padding:2px 5px;font:bold 12px Tahoma;border-top:1px solid #ccc}
+    .pio-wrap{overflow:auto;background:#fff;border:1px solid #ccc;position:relative}
+    .pio-wrap:focus{outline:1px solid #008080}
+    .pio-wrap table{font:12px Verdana}
+    .pio-wrap td input{width:80px;height:21px;border:1px solid #9ab;text-align:right;font:12px Verdana}
+    .pio-wrap td input.txt{width:150px;text-align:left}
+    .pio-wrap td select{width:190px;height:22px}
+    .pio-wrap td .dtcombo-wrap{min-width:190px}
+    .pio-wrap tfoot td{background:#f7f7f7;font-weight:bold}
+    .pio-wrap td button{min-height:20px;padding:0 5px}
+    .pio-pair{display:grid;grid-template-columns:minmax(0,641fr) minmax(0,668fr);gap:3px}
+    @media (max-width:900px){.pio-pair{grid-template-columns:minmax(0,1fr)}}
+    .pio-link{color:#006b6b;text-decoration:underline;cursor:pointer}
+    .pio-tabs{position:fixed;left:0;right:0;bottom:0;height:34px;display:flex;align-items:center;gap:4px;padding:0 10px;background:linear-gradient(to bottom,#fcfcfc 0%,#e0e0e0 100%);border-top:1px solid #999;z-index:8000}
+    .pio-tabs button[aria-selected=true]{background:#008080;color:#fff;border-color:#005959;font-weight:bold}
+    .pio-tabs .push{margin-left:auto}
+    #histBody tr.sel td,#ldrBody tr.sel td{background:#fff3c4}
+    .pio-dialog{position:fixed;inset:5%;z-index:15000;background:#f0f0f0;border:1px solid #777;box-shadow:0 8px 40px #0004;display:flex;flex-direction:column;padding:6px;gap:4px}
+    .pio-dialog h2{display:flex;justify-content:space-between;align-items:center}
+    .pio-dialog .pio-wrap{flex:1}
+    #ldrBranches{display:flex;gap:8px;flex-wrap:wrap;max-width:420px}
+    .pio-fs{position:absolute;top:1px;right:1px;z-index:3;min-height:18px!important;height:18px;padding:0 4px!important;font:9px Verdana!important}
+    .pio-fs-on{position:fixed!important;inset:6px 6px 40px 6px!important;z-index:9000!important;max-height:none!important;height:auto!important}
+</style>
+</head>
+<body>
+<main>
+<section id="tabForm" role="tabpanel" aria-labelledby="tabBtnForm">
+    <!-- panel2: toolStrip1 AddRange(15) :564-568 (btnDelete Visible=false and its Click handler is empty - not shown) -->
+    <nav class="invoice-tools" aria-label="Purchase invoice toolbar">
+        <span class="pio-title">Purchase Invoice</span>
+        <button type="button" id="btnFrmRefresh">Refresh</button>
+        <button type="button" id="btnNew">New</button>
+        <button type="button" id="btnUpdate" hidden>Update</button>
+        <button type="button" id="btnSave">Save</button>
+        <button type="button" id="btnAttachment">Attechment</button>
+        <button type="button" id="btnLoadGrn">Load GRN</button>
+        <button type="button" id="btnPrint">103-Voucher</button>
+        <button type="button" id="btn104Voucher">104-Voucher</button>
+        <button type="button" id="btnSlipDetail">220-SlipDetail</button>
+        <button type="button" id="btnSlip220A">220A-Party Slip</button>
+        <button type="button" id="btn220bSummary">220B-Summary</button>
+        <a href="/purchase">Purchase</a>
+    </nav>
+
+    <!-- panel4 (1309 x 145): every control at its designer Location / Size -->
+    <div class="pio-headwrap">
+    <div class="pio-head">
+        <label class="l" for="cmbBranch" style="left:8px;top:13px">Branch</label>
+        <div style="left:90px;top:9px;width:220px"><select id="cmbBranch" data-dtcombo="single" data-dtcombo-caption="Branch Name" style="width:220px"></select></div>
+        <label class="l" for="cmbProject" style="left:8px;top:41px">Project</label>
+        <div style="left:90px;top:36px;width:220px"><select id="cmbProject" data-dtcombo="single" data-dtcombo-caption="Project Name" style="width:220px"></select></div>
+        <label class="l" for="dtDocDate" style="left:8px;top:67px">Doc Date</label>
+        <input type="date" id="dtDocDate" style="left:90px;top:64px;width:219px">
+        <label class="l" for="txtDocNo" style="left:8px;top:92px">Doc No</label>
+        <input type="text" id="txtDocNo" readonly tabindex="-1" style="left:90px;top:89px;width:219px">
+        <label class="l" for="cmbSupplier" style="left:7px;top:119px">Supplier Name</label>
+        <div style="left:90px;top:115px;width:220px"><select id="cmbSupplier" data-dtcombo="single" data-dtcombo-caption="Supplier Name" style="width:220px"></select></div>
+
+        <label class="l" for="txtDueDays" style="left:316px;top:14px">Due Days</label>
+        <input type="text" id="txtDueDays" inputmode="numeric" style="left:380px;top:10px;width:70px">
+        <label class="l" for="dtDueDate" style="left:460px;top:14px">Due Date</label>
+        <input type="date" id="dtDueDate" disabled style="left:528px;top:11px;width:76px;padding:0">
+        <label class="l" for="txtBillNo" style="left:317px;top:40px">Bill No</label>
+        <input type="text" id="txtBillNo" style="left:380px;top:36px;width:70px">
+        <label class="l" for="txtGrnNo" style="left:460px;top:41px">Grn No</label>
+        <input type="text" id="txtGrnNo" inputmode="numeric" style="left:528px;top:37px;width:76px">
+        <label class="l" for="txtRemarks" style="left:315px;top:64px">Remarks</label>
+        <textarea id="txtRemarks" style="left:380px;top:64px;width:224px;height:75px"></textarea>
+
+        <label class="l" for="cmbCommAgent" style="left:610px;top:15px">Comm Agent</label>
+        <div style="left:686px;top:11px;width:229px"><select id="cmbCommAgent" data-dtcombo="single" data-dtcombo-caption="Commission Agent Name" style="width:229px"></select></div>
+        <label class="l" for="cmbCommType" style="left:611px;top:40px">Comm Type</label>
+        <select id="cmbCommType" style="left:686px;top:39px;width:85px"></select>
+        <label class="l" for="txtCommRate" style="left:774px;top:45px">Comm Rate</label>
+        <input type="text" id="txtCommRate" class="num" inputmode="decimal" style="left:845px;top:39px;width:70px">
+        <label class="l" for="cmbCommUom" style="left:611px;top:69px">Rate UOM</label>
+        <select id="cmbCommUom" style="left:686px;top:65px;width:85px"></select>
+        <label class="l" for="txtCommAmount" style="left:777px;top:70px">Amount</label>
+        <input type="text" id="txtCommAmount" class="num" tabindex="-1" style="left:845px;top:65px;width:70px">
+        <label class="l" for="txtCommRemarks" style="left:611px;top:99px">Remarks</label>
+        <textarea id="txtCommRemarks" style="left:686px;top:93px;width:229px;height:46px"></textarea>
+
+        <label class="l" for="cmbBroker" style="left:922px;top:14px">Brokery Agent</label>
+        <div style="left:1001px;top:10px;width:229px"><select id="cmbBroker" data-dtcombo="single" data-dtcombo-caption="Broker Ac" style="width:229px"></select></div>
+        <label class="l" for="cmbBrokeryType" style="left:923px;top:39px">Brokery Type</label>
+        <select id="cmbBrokeryType" style="left:1001px;top:38px;width:85px"></select>
+        <label class="l" for="txtBrokeryRate" style="left:1089px;top:44px">Brokery Rate</label>
+        <input type="text" id="txtBrokeryRate" class="num" inputmode="decimal" style="left:1162px;top:38px;width:70px">
+        <label class="l" for="cmbBrokeryUom" style="left:923px;top:68px">Rate UOM</label>
+        <select id="cmbBrokeryUom" style="left:1001px;top:64px;width:85px"></select>
+        <label class="l" for="txtBrokeryAmount" style="left:1092px;top:69px">Amount</label>
+        <input type="text" id="txtBrokeryAmount" class="num" readonly tabindex="-1" style="left:1162px;top:63px;width:70px">
+        <label class="l" for="txtDeliveryTerm" style="left:922px;top:96px">Delivery Term</label>
+        <input type="text" id="txtDeliveryTerm" readonly tabindex="-1" style="left:1001px;top:91px;width:110px">
+        <label class="l" for="txtBillAmount" style="left:919px;top:121px">Bill Amount</label>
+        <input type="text" id="txtBillAmount" class="num" readonly tabindex="-1" style="left:1001px;top:115px;width:231px;font-weight:bold">
+
+        <label class="chk" style="left:1235px;top:81px"><input type="checkbox" id="ChkBok"> Voucher</label>
+        <label class="chk" style="left:1235px;top:101px"><input type="checkbox" id="ChkBoxParty"> Party Print</label>
+        <label class="chk" style="left:1235px;top:122px"><input type="checkbox" id="ChkBoxItemPrint"> Item Print</label>
+    </div>
+    </div>
+
+    <!-- panel5 -->
+    <div class="pio-pair">
+        <div>
+            <div class="pio-sec"><span>Charge to Product</span></div>
+            <div class="pio-wrap" id="frWrap" tabindex="0" style="height:126px" aria-label="Charge to Product grid"><table style="width:100%"><thead id="frHead"></thead><tbody id="frBody"></tbody><tfoot id="frFoot"></tfoot></table></div>
+        </div>
+        <div>
+            <div class="pio-sec"><span>Other Expense</span></div>
+            <div class="pio-wrap" id="expWrap" tabindex="0" style="height:126px" aria-label="Other Expense grid"><table style="width:100%"><thead id="expHead"></thead><tbody id="expBody"></tbody><tfoot id="expFoot"></tfoot></table></div>
+        </div>
+    </div>
+    <div class="pio-pair">
+        <div>
+            <div class="pio-sec"><span>Supplier Add/Less</span></div>
+            <div class="pio-wrap" id="glWrap" tabindex="0" style="height:137px" aria-label="Supplier Add/Less grid"><table style="width:100%"><thead id="glHead"></thead><tbody id="glBody"></tbody><tfoot id="glFoot"></tfoot></table></div>
+        </div>
+        <div>
+            <div class="pio-sec"><span>Empty Bags</span></div>
+            <div class="pio-wrap" id="bagWrap" tabindex="0" style="height:137px" aria-label="Empty Bags grid"><table style="width:100%"><thead id="bagHead"></thead><tbody id="bagBody"></tbody><tfoot id="bagFoot"></tfoot></table></div>
+        </div>
+    </div>
+    <div class="pio-sec"><span>Detail</span><span id="lblRecords" style="font-weight:normal"></span></div>
+    <div class="pio-wrap" id="grdWrap" tabindex="0" style="height:274px" aria-label="Detail grid"><table><thead id="grdHead"></thead><tbody id="grdBody"></tbody><tfoot id="grdFoot"></tfoot></table></div>
+</section>
+
+<section id="tabHistory" role="tabpanel" aria-labelledby="tabBtnHistory" hidden>
+    <!-- panel6: toolStrip2 (LoadAll) -->
+    <nav class="invoice-tools"><button type="button" id="btnLoadAll">LoadAll</button></nav>
+    <!-- panel14 -->
+    <div class="pio-sec" style="font-size:15px;padding:5px 14px"><span>PURCHASE INVOICE HISTORY</span></div>
+    <div class="pio-wrap" id="histWrap" tabindex="0" style="height:394px" aria-label="History grid"><table><thead id="histHead"></thead><tbody id="histBody"></tbody><tfoot id="histFoot"></tfoot></table></div>
+    <div class="pio-wrap" id="detWrap" tabindex="0" style="height:254px;margin-top:3px" aria-label="History detail grid"><table><thead id="detHead"></thead><tbody id="detBody"></tbody><tfoot id="detFoot"></tfoot></table></div>
+</section>
+</main>
+
+<!-- tabControl1.Alignment = Bottom: Form on the left, History on the right of the footer -->
+<div class="pio-tabs" role="tablist">
+    <button type="button" id="tabBtnForm" role="tab" aria-selected="true">Form</button>
+    <span class="push"></span>
+    <button type="button" id="tabBtnHistory" role="tab" aria-selected="false"><i class="fa fa-history"></i> History</button>
+</div>
+
+<!-- frmLoadGRN (DocumentTypeId 169) -->
+<section id="grnLoader" class="pio-dialog" hidden role="dialog" aria-label="Load GRN">
+    <h2>Load GRN <button type="button" id="ldrClose">Close</button></h2>
+    <div class="invoice-fields">
+        <label class="invoice-field" style="width:130px">From Date<input type="date" id="ldrFrom"></label>
+        <label class="invoice-field" style="width:130px">To Date<input type="date" id="ldrTo"></label>
+        <div class="invoice-field">Branch Name<div id="ldrBranches"></div></div>
+        <button type="button" id="ldrShow">Show</button>
+        <button type="button" id="ldrLoad">Load on Invoice</button>
+        <button type="button" id="ldrReset">Reset</button>
+    </div>
+    <div class="pio-wrap"><table><thead id="ldrHead"></thead><tbody id="ldrBody"></tbody></table></div>
+    <div class="pio-wrap" style="max-height:160px;flex:none"><table><thead id="ldrDetailHead"></thead><tbody id="ldrDetailBody"></tbody></table></div>
+</section>
+
+<script th:src="@{/build/js/countx_desktop_combo.js?v=20260927b}"></script>
+<script th:src="@{/build/js/countx_purchase_request.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_invoice_attachments.js?v=20260930o2}"></script>
+<script th:src="@{/build/js/countx_doc_link.js?v=20261001pr}"></script>
+<script th:src="@{/build/js/countx_pi_against_grn_order.js?v=20260930a}"></script>
+</body>
+</html>

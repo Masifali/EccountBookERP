@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Export Sales Report - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_rptb.css?v=20260930a}"/>
+</head>
+<!-- ExportSalesReport.cs (Architecture.WinApp.ExportReports), screen 270 "5004 Sale Report", ClientSize 1176 x 599 (AutoScrollMinSize 1200 x 625).
+     tsItemType: btnnew "&New" | btnReport "359-SaleReport". panel5 (Teal) label3 "Export Sales Report".
+     Filters: chkFromDate "From Date" (checked) + datFromDate (FY start on load), chkToDate "To Date" (checked) + datToDate, CmbCustomerName
+       "Customer Name", CmbInvoiceNo "Invoice No", CmbItemName "Item Name", CmbJobLot "Lot No", rdNotRealized "Not Realized" / rdRealized
+       "Realized" / rdAll "All" (checked), button1 "Show". CurrencyFlowLayout: one LableWithValue card per currency (Sum FcAmount).
+     grdfrm + ctrlGrdBar1 (GridBind runs on load). Events: Load, btnnew/btnReport/button1 Click, KeyDown (Enter, Ctrl+E/Esc, Ctrl+N, Ctrl+P). -->
+<body class="pd-body" data-export-page="rptb-270">
+<div class="pd-form ex-form">
+    <div class="win-tool-strip">
+        <button type="button" id="btnnew" class="win-btn-tool" onclick="ExportSal.reset(this)"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+        <button type="button" id="btnReport" class="win-btn-tool" onclick="ExportSal.print359(this)"><i class="fa fa-print"></i> <span>359-SaleReport</span></button>
+    </div>
+    <div class="rptb-title"><span id="label3">Export Sales Report</span></div>
+
+    <div class="rptb-filters">
+        <div class="rptb-row">
+            <div class="ex-field w-m"><label for="datFromDate"><span class="ex-check"><input type="checkbox" id="chkFromDate" checked/> From Date</span></label><input type="date" id="datFromDate" class="win-date"/></div>
+            <div class="ex-field w-m"><label for="datToDate"><span class="ex-check"><input type="checkbox" id="chkToDate" checked/> To Date</span></label><input type="date" id="datToDate" class="win-date"/></div>
+            <div class="ex-field w-xl"><label for="CmbCustomerName">Customer Name</label>
+                <select id="CmbCustomerName" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Customer Name"></select></div>
+            <div class="ex-field w-m"><label for="CmbInvoiceNo">Invoice No</label>
+                <select id="CmbInvoiceNo" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Invoice No"></select></div>
+            <div class="ex-field w-xl"><label for="CmbItemName">Item Name</label>
+                <select id="CmbItemName" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Name"></select></div>
+            <div class="ex-field w-m"><label for="CmbJobLot">Lot No</label>
+                <select id="CmbJobLot" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Job Lot"></select></div>
+            <div class="ex-field"><label>&nbsp;</label>
+                <div class="rptb-radios">
+                    <label><input type="radio" name="realized" id="rdNotRealized" value="1"/> Not Realized</label>
+                    <label><input type="radio" name="realized" id="rdRealized" value="2"/> Realized</label>
+                    <label><input type="radio" name="realized" id="rdAll" value="0" checked/> All</label>
+                </div></div>
+            <div class="ex-field"><label>&nbsp;</label><button type="button" id="button1" class="win-btn-small rptb-show" onclick="ExportSal.show(this)">Show</button></div>
+        </div>
+    </div>
+    <div class="rptb-cards" id="CurrencyFlowLayout"></div>
+
+    <div class="pd-caption pd-caption-teal pd-history-bar" style="height:24px;"><span>Export Sales</span>
+        <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdBox" title="Fullscreen table">&#x26F6;</button><span id="gridBarMount" class="pd-gridbar-mount"></span></span></div>
+    <div class="ex-grid-box" id="grdBox">
+        <div class="ex-grid-scroll ex-hfill">
+            <table class="win-grid" id="grdfrm" data-gridbar="ExportSalesReport:grdfrm" data-gridbar-mount="#gridBarMount" data-gridbar-reorder="false"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+        </div>
+        <div class="ex-grid-empty is-hidden" id="grdEmpty">No record found.</div>
+    </div>
+    <div class="win-footer-strip"><span class="ex-footer-left">ExportSalesReport</span></div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_export_rptb_common.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_export_sale_report.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

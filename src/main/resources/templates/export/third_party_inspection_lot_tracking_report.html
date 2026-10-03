@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Third Party Inspection Lot Tracking Report - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_rpt_c.css?v=20260930c}"/>
+</head>
+<!-- frmThirdPartyInspectionLotTrackingReport.cs (Architecture.WinApp.ExportReports), screen 859, ClientSize 1087 x 461.
+     toolStrip3: btnNew "&Reset" | btnRefresh "&Refresh" | btnPrintCurrent "514_01-Print" | BtnThirdPartyInspectionForm "Third Party Inspection" | BtnLabAgainstThirdPartyInspectionForm
+     "Lab Against Third Party Inspection" | btnShortCutKeys. panel8 "Third Party Inspection Lot Tracking Report";
+     groupBox1 "Filters": Date Type (CmbDateType, Rows[1] "This Week", applied on Leave), Requested Lodge Date For Lot Code From && To (datFromDate / datToDate, ShowCheckBox, unticked, dd-MMM-yyyy),
+     Lot Tracking No (CmbLotTrackingNo: Lot No | Lodge Date | Item Name | M.Tons | Farming NTrade), Customer (cmbsupplierCustomer), Item Name (CmbItemName),
+     RadAll "All" (Checked) / RadReffered "Approved && Accepted" / RadNotReffered "Pending && Inprocess" / radioButton1 "Rejected && Cancel", chkSkipZero "Skip Zero", btnshow "Show".
+     grdEtaDestination: the stage cards (LotInspectionStage, NoOfLots, MTons) from V_LotTrackingCurrentStage; panel3 "Filtered Records" + ctrlGrdBar1; grd with Inspection / Lab buttons first (FrozenColumns 2). -->
+<body class="pd-body exr-page" data-export-page="lot859">
+<div class="pd-form ex-form">
+    <div class="win-tool-strip">
+        <button type="button" id="btnNew" class="win-btn-tool" onclick="ExportLotTracking.reset()"><i class="fa fa-plus"></i> <span><u>R</u>eset</span></button> <button type="button" id="btnRefresh" class="win-btn-tool" onclick="ExportLotTracking.refresh(this)"><i class="fa fa-refresh"></i> <span><u>R</u>efresh</span></button> <button type="button" id="btnPrintCurrent" class="win-btn-tool" onclick="ExportLotTracking.print(this)"><i class="fa fa-print"></i> <span>514_01-Print</span></button> <button type="button" id="BtnThirdPartyInspectionForm" class="win-btn-tool" onclick="ExportLotTracking.openInspection(0)"><i class="fa fa-external-link"></i> <span>Third Party Inspection</span></button> <button type="button" id="BtnLabAgainstThirdPartyInspectionForm" class="win-btn-tool" onclick="ExportLotTracking.openLab(0)"><i class="fa fa-external-link"></i> <span>Lab Against Third Party Inspection</span></button> <button type="button" id="btnShortCutKeys" class="win-btn-tool" onclick="ExportLotTracking.shortcuts()"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+    </div>
+    <div class="exr-title">Third Party Inspection Lot Tracking Report</div>
+    <fieldset class="exr-filters"><legend>Filters</legend>
+        <div class="exr-row">
+            <div class="ex-field w150"><label>Date Type</label><select id="CmbDateType" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Date Type"></select></div>
+            <div class="ex-field w320"><label>Requested Lodge Date For Lot Code</label><div class="ex-pair" style="grid-template-columns:1fr 1fr;"><span class="ex-check"><input type="checkbox" id="datFromDateChk"/><input type="date" id="datFromDate" class="win-date"/></span><span class="ex-check"><input type="checkbox" id="datToDateChk"/><input type="date" id="datToDate" class="win-date"/></span></div></div>
+            <div class="ex-field w320"><label>Lot Tracking No</label><select id="CmbLotTrackingNo" class="win-combo dtcombo" data-columns="Lot No|Lodge Date|Item Name|M.Tons|Farming NTrade" data-dtcombo-caption="Tracking No"></select></div> <div class="ex-field w260"><label>Customer</label><select id="cmbsupplierCustomer" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Customer"></select></div> <div class="ex-field w200"><label>Item Name</label><select id="CmbItemName" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="ItemName"></select></div>
+            <div class="ex-field"><label>&nbsp;</label><div class="exr-radios">
+                <label><input type="radio" name="lotAction" id="RadAll" value="0" checked/> All</label>
+                <label><input type="radio" name="lotAction" id="RadReffered" value="1"/> Approved &amp; Accepted</label>
+                <label><input type="radio" name="lotAction" id="RadNotReffered" value="2"/> Pending &amp; Inprocess</label>
+                <label><input type="radio" name="lotAction" id="radioButton1" value="3"/> Rejected &amp; Cancel</label></div></div>
+            <div class="ex-field"><label>&nbsp;</label><span class="ex-check"><input type="checkbox" id="chkSkipZero"/><label for="chkSkipZero" style="margin:0;font-weight:normal;">Skip Zero</label></span></div>
+            <div class="ex-field"><label>&nbsp;</label><button type="button" id="btnshow" class="exr-btn" onclick="ExportLotTracking.show(this)">Show</button></div>
+        </div>
+    </fieldset>
+    <div class="pd-caption pd-caption-teal" style="height:23px;">Lot Inspection Stage</div>
+    <div class="exr-cards" id="grdEtaDestination"></div>
+    <div class="pd-caption pd-caption-dark pd-history-bar"><span>Filtered Records</span>
+        <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdBox" title="Fullscreen table">&#x26F6;</button><span id="gridBarMount" class="pd-gridbar-mount"></span></span></div>
+    <div class="ex-grid-box" id="grdBox">
+        <div class="ex-grid-scroll ex-h400">
+            <table class="win-grid" id="grd" data-gridbar="frmThirdPartyInspectionLotTrackingReport:grd" data-gridbar-mount="#gridBarMount" data-gridbar-reorder="false"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+        </div>
+        <div class="ex-grid-empty is-hidden" id="grdEmpty">No record found.</div>
+    </div>
+    <div class="win-footer-strip">
+        <span class="ex-footer-left" id="footerInfo"></span>
+        <button type="button" class="win-btn-history" id="btnFooterHistory" onclick="ExportLotTracking.toggleHistory()"><i class="fa fa-history"></i> <span>History</span></button>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_export_rpt_c.js?v=20260930c}"></script>
+<script th:src="@{/build/js/countx_export_third_party_inspection_lot_tracking_report.js?v=20260930c}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+<script src="/js/print-rpt.js?v=20261001a"></script>
+</body>
+</html>

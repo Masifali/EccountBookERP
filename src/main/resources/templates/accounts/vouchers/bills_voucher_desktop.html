@@ -6,213 +6,321 @@
 <title th:text="${moduleTitle}">Bills</title>
 <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
 <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+<link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20261002ge}">
+<link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20261002ge}">
+<link rel="stylesheet" th:href="@{/build/css/countx_acc_desk_e.css?v=20261002ge}">
 <!--
   Screens 38 frmBillsPayables (DocumentTypeId 6) and 39 frmBillsReceivables (7).
-  Layout = InitializeComponent(): groupBox1 "Main" and panel19 controls at their desktop
-  Locations/Sizes (px); groupBox2 "Detail" is the form's FlowLayoutPanel of fixed-width panels.
+  R3 2026-10-02: laid out at the InitializeComponent() geometry. tabControl1 (Alignment Bottom) -> tabPage1 "Form"
+  1158 x 682 (39: 1356 x 713): panel2 Teal 56 (toolStrip1 + caption strip), panel6 136 (groupBox1 "Main" 1016 x 127 at 3,3),
+  groupBox2 "Detail" Dock Top 116 (flowLayoutPanel1 1020 x 94 at 1,18), panel16 Teal 23, grd Fill, panel19 Bottom 230.
+  tabPage2 "History": panel9 Teal 50, panel11 79 (groupBox3 "Filters" 790 x 72, VoucherInfoBox 221 x 72), panel12 Teal 22,
+  DataGridHistory Fill, panel13 Teal 22 Bottom, grdDetailHistory 156 Bottom.
+  Coordinates are frmBillsPayables; data-r="left,top,width,height" carries the frmBillsReceivables value where it differs.
+  Every combo is countx_prod_combo (the DCombo calls below are a thin adapter over it).
   Server: /accounts/api/desktop-vouchers/bills/{6|7}/... (DesktopVoucherScreensController).
 -->
 <style>
- body{font-family:"Segoe UI",Tahoma,Verdana,sans-serif;background:#e4e9ed;font-size:12px;color:#222;margin:0}
- .tbar{background:linear-gradient(#fff,#e3e8ee);border-bottom:1px solid #b0bec5;padding:2px 6px;display:flex;gap:3px;flex-wrap:wrap;align-items:center}
- .tbtn{background:#fff;border:1px solid #90a4ae;border-radius:2px;padding:2px 9px;font-size:12px;cursor:pointer}
- .tbtn:hover{background:#e0f2f1}.tbtn:disabled{opacity:.45;cursor:not-allowed}
- .tabs{display:flex;gap:2px;padding:4px 6px 0;background:#d1d5db}
- .tab{border:1px solid #9ca3af;border-bottom:none;background:#e5e7eb;padding:3px 16px;cursor:pointer;font-weight:600}
- .tab.on{background:#fff;color:#00796B}
- .cap{background:#00796B;color:#fff;height:29px;position:relative}
- .cap .t{position:absolute;left:4px;top:4px;font-size:14px;font-weight:bold}
- .rel{position:relative}
- fieldset.gb{position:relative;border:1px solid #9aa9b5;margin:3px;padding:0;background:#fff}
- fieldset.gb>legend{font-size:12px;font-weight:600;width:auto;margin:0 0 0 8px;padding:0 4px;border:0;color:#004d40}
- .lbl{position:absolute;white-space:nowrap;font-weight:600;color:#334155}
- .abs{position:absolute}
- input.f,select.f,textarea.f{position:absolute;border:1px solid #94a3b8;border-radius:2px;padding:1px 4px;font-size:12px;background:#fff}
- input.f[readonly],input.f:disabled{background:#f1f5f9}
- .flow{display:flex;flex-wrap:wrap;width:1020px;padding:2px 1px}
- .fp{position:relative;height:45px}
- .fp label{position:absolute;left:2px;top:2px;font-weight:600;color:#334155;white-space:nowrap}
- .fp input{position:absolute;left:1px;top:19px;height:24px;border:1px solid #94a3b8;border-radius:2px;padding:1px 4px;font-size:12px}
- table.g{border-collapse:collapse;width:100%;background:#fff}
- table.g th{background:#00796B;color:#fff;padding:3px 6px;border:1px solid #004d40;white-space:nowrap;font-weight:600;text-align:center}
- table.g td{padding:2px 6px;border:1px solid #cbd5e1;white-space:nowrap}
- table.g tr.sel td{background:#b2dfdb}
- table.g tfoot td{font-weight:bold;background:#e0f2f1}
- table.g td input{width:100%;border:0;font-size:12px;padding:0 2px}
- .num{text-align:right}
- .gridwrap{overflow:auto;border:1px solid #b0bec5;background:#fff}
- .dcombo-popup{position:absolute;z-index:2000;background:#fff;border:1px solid #00796B;box-shadow:0 4px 10px rgba(0,0,0,.2);max-height:260px;overflow:auto;font-size:12px}
- .dcombo-popup table{border-collapse:collapse;width:100%}
- .dcombo-popup th{background:#00796B;color:#fff;padding:2px 6px;position:sticky;top:0}
- .dcombo-popup td{padding:2px 6px;border-bottom:1px solid #eee;white-space:nowrap;cursor:pointer}
- .dcombo-popup tr.act td,.dcombo-popup tbody tr:hover td{background:#e0f2f1}
- #msg{position:fixed;right:12px;top:8px;z-index:3000;max-width:520px}
- .modal-sc{position:fixed;inset:0;background:rgba(0,0,0,.3);display:none;z-index:2500}
- .modal-sc>div{background:#fff;width:540px;margin:60px auto;padding:8px;border:1px solid #00796B}
+ #msg{position:fixed;right:12px;top:8px;z-index:30000;max-width:520px}
+ .modal-sc{position:fixed;inset:0;background:rgba(0,0,0,.3);display:none;z-index:25000}
+ .modal-sc>div{background:#fff;width:540px;margin:60px auto;padding:8px;border:1px solid #008080;font:12px Verdana,sans-serif}
+ .modal-sc table{border-collapse:collapse;width:100%}
+ .modal-sc th{background:#008080;color:#fff;padding:3px 6px}
+ .modal-sc td{border:1px solid #cbd5e1;padding:2px 6px}
+ #panel19 .l{line-height:15px}
+ #groupBox1 .cap,#groupBox3 .cap,#groupBox2 .cap{background:#fff}
 </style>
 </head>
-<body>
+<body class="dk">
 <div id="msg"></div>
-<div class="tabs">
-  <div class="tab on" id="tabForm" onclick="BV.tab(0)">Form</div>
-  <div class="tab" id="tabHist" onclick="BV.tab(1)">History</div>
-  <a href="/accounts/dashboard" style="margin-left:auto;padding:3px 8px">Back to Dashboard</a>
-</div>
+<div class="dk-scroll" id="dkScroll"><div class="dk-root" id="dkRoot" style="min-width:1158px">
 
-<!-- ============================================================================ tabPage1 -->
-<div id="pgForm">
-  <div class="tbar">
-    <button class="tbtn" id="btnnew" onclick="BV.newForm()">New</button>
-    <button class="tbtn" id="btnRefresh" onclick="BV.refresh()">Refresh</button>
-    <button class="tbtn" id="btnsave" onclick="BV.save('save')">Save</button>
-    <button class="tbtn" id="btnSaveAs" onclick="BV.save('saveAs')" style="display:none">SaveAs</button>
-    <button class="tbtn" id="btnUpdate" onclick="BV.save('update')" style="display:none">Update</button>
-    <button class="tbtn" id="btnAttachment" disabled title="Attachments (DMS) are not ported to the web.">Attachments</button>
-    <button class="tbtn" id="Print" title="102 - Voucher Slip" data-rpt="102-ANewAcRptPaymentReceiptsVoucherSlip.rpt" data-rpt-need="id" data-rpt-need-msg="Save or open a voucher first.">102-Print</button>
-    <button class="tbtn pay" id="BtnPrintII" title="102_01 - Bills Payables / Receivables Voucher" data-rpt="102_01_BillsPayablesOrReceiveableVoucher.rpt" data-rpt-need="voucherHeadId" data-rpt-need-msg="Save or open a voucher first.">102_01-Print</button>
-    <button class="tbtn" id="BtnLookup" disabled title="frmAccountsAllocateToCustomAccountGroupByDocumentType is not ported here.">Accounts Allocate To Custom</button>
-    <button class="tbtn" id="btnShortCutKey" onclick="BV.shortcuts()">ShortCut Keys</button>
-    <button class="tbtn rcv" id="BtnPrintII_r" title="102_01 - Bills Payables / Receivables Voucher" data-rpt="102_01_BillsPayablesOrReceiveableVoucher.rpt" data-rpt-need="voucherHeadId" data-rpt-need-msg="Save or open a voucher first.">102_01-Print</button>
-  </div>
-  <!-- panel2 lower strip -->
-  <div class="cap"><span class="t" id="label3" th:text="${moduleTitle}">Bills</span>
-    <span class="lbl" id="labelLocationType" style="top:6px;color:#fff">Location Type</span>
-    <input class="f" id="cmbLocationType" style="top:1px;width:243px;height:26px;color:#222">
-    <label class="abs" style="left:547px;top:6px;color:#fff;font-weight:bold"><input type="checkbox" id="chkCustomAccounts"> Custom Accounts</label>
-    <label class="abs" id="lblPreview" style="top:5px;color:#fff"><input type="checkbox" id="CHKPREVIEW" checked disabled> Preview</label>
+<!-- ============================================================================ tabPage1 "Form" -->
+<div id="pgForm" class="dk-page">
+  <!-- panel2: Teal, Dock Top, 56 -->
+  <div class="dk-teal" id="panel2" style="height:56px">
+    <!-- toolStrip1 1152 x 27, Verdana 9.75; items in designer order -->
+    <div class="dk-ts h27" id="toolStrip1">
+      <button type="button" id="btnnew" onclick="BV.newForm()"><i class="fa fa-plus-circle g"></i>New</button>
+      <button type="button" id="btnRefresh" onclick="BV.refresh()"><i class="fa fa-refresh b"></i>Refresh</button>
+      <button type="button" id="btnsave" onclick="BV.save('save')"><i class="fa fa-floppy-o b"></i>Save</button>
+      <button type="button" id="btnSaveAs" onclick="BV.save('saveAs')" style="display:none"><i class="fa fa-floppy-o k"></i>SaveAs</button>
+      <button type="button" id="btnUpdate" onclick="BV.save('update')" style="display:none"><i class="fa fa-pencil o"></i>Update</button>
+      <button type="button" id="btnAttachment" disabled title="Attachments (DMS) are not ported to the web."><i class="fa fa-paperclip k"></i>Attachments</button>
+      <button type="button" id="Print" title="102 - Voucher Slip" data-rpt="102-ANewAcRptPaymentReceiptsVoucherSlip.rpt" data-rpt-need="id" data-rpt-need-msg="Save or open a voucher first."><i class="fa fa-print k"></i>102-Print</button>
+      <button type="button" class="pay" id="BtnPrintII" title="102_01 - Bills Payables / Receivables Voucher" data-rpt="102_01_BillsPayablesOrReceiveableVoucher.rpt" data-rpt-need="voucherHeadId" data-rpt-need-msg="Save or open a voucher first."><i class="fa fa-print k"></i>102_01-Print</button>
+      <button type="button" class="rcv" id="BtnPrintII_r" title="102_01 - Bills Payables / Receivables Voucher" data-rpt="102_01_BillsPayablesOrReceiveableVoucher.rpt" data-rpt-need="voucherHeadId" data-rpt-need-msg="Save or open a voucher first."><i class="fa fa-print k"></i>102_01-Print</button>
+      <button type="button" id="BtnLookup" disabled title="frmAccountsAllocateToCustomAccountGroupByDocumentType is not ported here."><i class="fa fa-book b"></i>Accounts Allocate To Custom</button>
+      <button type="button" id="btnShortCutKey" onclick="BV.shortcuts()"><i class="fa fa-keyboard-o k"></i>ShortCut Keys</button>
+    </div>
+    <span class="t16" id="label3" style="left:4px;top:32px" th:text="${moduleTitle}">Bills Payables</span>
+    <span class="t12" id="labelLocationType" style="left:135px;top:34px;font-family:'Segoe UI',Arial,sans-serif;line-height:15px" data-r="170,34">Location Type</span>
+    <select id="cmbLocationType" style="left:223px;top:28px;width:243px;height:26px" data-r="258,28,243,26"></select>
+    <label class="w" style="left:547px;top:33px;font:bold 11px Verdana,'DejaVu Sans',sans-serif"><input type="checkbox" id="chkCustomAccounts"> Custom Accounts</label>
+    <label class="w" id="lblPreview" style="right:5px;top:31px;font:bold 13px Verdana,'DejaVu Sans',sans-serif"><input type="checkbox" id="CHKPREVIEW" checked> Preview</label>
   </div>
 
-  <!-- groupBox1 "Main" 1016 x 127 -->
-  <fieldset class="gb" id="groupBox1" style="width:1016px;height:127px"><legend>Main</legend>
-    <label class="lbl" style="left:6px;top:9px">Cost Center</label>
-    <input class="f" id="CmbProjectId" style="left:80px;top:4px;width:206px;height:24px">
-    <label class="lbl" style="left:6px;top:36px">Doc No,Date</label>
-    <input class="f" id="txtDocNo" readonly style="left:80px;top:32px;width:82px;height:23px">
-    <input class="f" type="date" id="txtDocDate" style="left:163px;top:32px;width:123px;height:22px">
-    <label class="lbl" style="left:6px;top:59px">Remarks</label>
-    <textarea class="f" id="txtRemarks" style="left:80px;top:58px;width:383px;height:51px"></textarea>
-    <label class="lbl" style="left:290px;top:9px">Bill No</label>
-    <input class="f" id="txtInvoiceNo" style="left:340px;top:5px;width:123px;height:23px">
-    <label class="lbl" style="left:290px;top:36px">Bill Date</label>
-    <input class="f" type="date" id="txtInvoiceDate" style="left:340px;top:32px;width:123px;height:22px">
-    <label class="lbl" style="left:466px;top:9px">Account Type</label>
-    <input class="f" id="CmbAccountType" style="left:567px;top:3px;width:234px;height:26px">
-    <label class="lbl" id="label7" style="left:466px;top:36px"></label>
-    <input class="f" id="cmbAccount" style="left:567px;top:30px;width:234px;height:26px">
-    <label class="lbl" style="left:466px;top:62px">Account Balance</label>
-    <input class="f num" id="lblCreditAcBalance" readonly style="left:567px;top:58px;width:201px;height:23px" value="0">
-    <span class="lbl" id="lblDrCrS" style="left:771px;top:62px"></span>
-    <label class="lbl sub" id="lblSubsidiaryaccountCr" style="left:466px;top:89px">Subsidiary A/C</label>
-    <input class="f sub" id="CmbSubsidiaryAccountHdr" style="left:567px;top:83px;width:234px;height:26px">
-    <label class="lbl" style="left:805px;top:9px">Fcy Code</label>
-    <input class="f" id="cmbCurrency" style="left:888px;top:3px;width:125px;height:26px">
-    <label class="lbl" style="left:805px;top:36px">Exchange Rate</label>
-    <input class="f num" id="txtExchangeRate" style="left:888px;top:32px;width:125px;height:23px">
-    <label class="lbl" style="left:805px;top:62px">Fcy Amount</label>
-    <input class="f num" id="txtFcyAmount" disabled style="left:888px;top:58px;width:125px;height:23px">
-  </fieldset>
+  <!-- panel6: Dock Top, 136 -->
+  <div class="dk-box" id="panel6" style="height:136px">
+    <!-- groupBox1 "Main" 1016 x 127 at 3,3 (39: 1018 x 125) -->
+    <div class="dk-gb" id="groupBox1" style="left:3px;top:3px;width:1016px;height:127px" data-r="3,3,1018,125"><span class="cap">Main</span>
+      <span class="l" id="label13" style="left:6px;top:19px" data-r="6,18">Cost Center</span>
+      <select id="CmbProjectId" data-dtcombo-class="ms9" style="left:80px;top:14px;width:206px;height:24px" data-r="80,13,206,24"></select>
+      <span class="l" id="label2" style="left:6px;top:46px" data-r="6,45">Doc No,Date</span>
+      <input class="x wbg" id="txtDocNo" readonly style="left:80px;top:42px;width:82px" data-r="80,41">
+      <input class="x d" type="date" id="txtDocDate" style="left:163px;top:42px;width:123px" data-r="163,41">
+      <span class="l s11" id="label8" style="left:6px;top:69px;background:#fff">Remarks</span>
+      <textarea class="x" id="txtRemarks" style="left:80px;top:68px;width:383px;height:51px" data-r="80,68,383,50"></textarea>
+      <span class="l" id="label4" style="left:290px;top:19px" data-r="290,18">Bill No</span>
+      <input class="x" id="txtInvoiceNo" style="left:340px;top:15px;width:123px" data-r="340,14">
+      <span class="l" id="label5" style="left:290px;top:46px" data-r="290,45">Bill Date</span>
+      <input class="x d" type="date" id="txtInvoiceDate" style="left:340px;top:42px;width:123px" data-r="340,41">
+      <span class="l" id="label41" style="left:466px;top:19px" data-r="466,18">Account Type</span>
+      <select id="CmbAccountType" style="left:567px;top:13px;width:234px;height:26px" data-r="567,12,234,26"></select>
+      <span class="l" id="label7" style="left:466px;top:46px" data-r="467,45"></span>
+      <select id="cmbAccount" style="left:567px;top:40px;width:234px;height:26px" data-r="567,39,234,26"></select>
+      <span class="l" id="label6" style="left:466px;top:72px" data-r="467,72">Account Balance</span>
+      <input class="x r" id="lblCreditAcBalance" readonly value="0" style="left:567px;top:68px;width:201px" data-r="567,68,194">
+      <span class="l" id="lblDrCrS" style="left:771px;top:72px" data-r="765,72"></span>
+      <span class="l sub" id="lblSubsidiaryaccountCr" style="left:466px;top:99px" data-r="467,98">Subsidiary A/C</span>
+      <select class="sub" id="CmbSubsidiaryAccountHdr" style="left:567px;top:93px;width:234px;height:26px" data-r="567,92,234,26"></select>
+      <span class="l" id="lblFcyCode" style="left:805px;top:19px" data-r="805,18">Fcy Code</span>
+      <select id="cmbCurrency" style="left:888px;top:13px;width:125px;height:26px" data-r="888,12,125,26"></select>
+      <span class="l" id="lblExchangeRate" style="left:805px;top:46px" data-r="805,45">Exchange Rate</span>
+      <input class="x r" id="txtExchangeRate" style="left:888px;top:42px;width:125px" data-r="888,41">
+      <span class="l" id="lblFcyAmount" style="left:805px;top:72px">Fcy Amount</span>
+      <input class="x r" id="txtFcyAmount" disabled style="left:888px;top:68px;width:125px">
+    </div>
+  </div>
 
-  <!-- groupBox2 "Detail" -->
-  <fieldset class="gb" style="width:1146px;height:116px"><legend>Detail</legend>
-    <div class="flow">
-      <div class="fp" style="width:159px"><label>Custom Group</label><input id="CmbCustomGroup" style="width:158px"></div>
-      <div class="fp" id="PanelAccountTitleDetail" style="width:272px"><label id="label9"></label>
-        <label id="label29" style="left:81px;color:#6a1b9a"></label>
-        <label id="lblbalancedetail" style="left:164px;display:none">0</label><label id="lbldetaildrcr" style="left:235px;display:none"></label>
-        <input id="cmbAccountDetail" style="width:270px"></div>
-      <div class="fp" id="PanelSubsidiaryDetail" style="width:215px"><label>Subsidiary Account</label><input id="CmbSubsidiaryAccount" style="left:2px;width:212px"></div>
-      <div class="fp" style="width:114px"><label>Job/Lot</label><input id="cmbJobLotFile" style="width:111px"></div>
-      <div class="fp" style="width:93px"><label>Bill/Invoice #</label><input id="txtInvoiceNoDetail" style="top:21px;width:91px;height:23px"></div>
-      <div class="fp" style="width:84px"><label>Qty</label><input id="txtQtyDetial" class="num" value="0" style="top:21px;width:82px;height:23px"></div>
-      <div class="fp" style="width:82px"><label>Rate</label><input id="txtRateDetail" class="num" value="0" style="top:21px;width:80px;height:23px"></div>
-      <div class="fp" style="width:108px"><label>Amount</label><input id="txtAmountDetail" class="num" style="top:21px;width:106px;height:23px"></div>
-      <div class="fp" style="width:110px"><label>Fcy Amount</label><input id="txtFcyAmountDetail" class="num" style="top:22px;width:109px;height:23px"></div>
-      <div class="fp" style="width:208px"><label>Reference Account</label><input id="CmbReferenceAccount" style="width:207px"></div>
-      <div class="fp" style="width:428px"><label>Remarks</label><input id="txtRemarksDetail" style="top:21px;width:427px;height:23px"></div>
-      <div class="fp" style="width:135px">
-        <button class="tbtn abs" id="btnAdd" style="left:3px;top:17px;width:35px;height:27px" onclick="BV.addRow()">+</button>
-        <button class="tbtn abs" id="btnUpdateDetail" style="left:3px;top:18px;width:65px;height:26px;display:none" onclick="BV.updateRow()">Update</button>
-        <button class="tbtn abs" id="btnCancelDetail" style="left:69px;top:18px;width:63px;height:26px;display:none" onclick="BV.cancelRow()">Cancel</button>
+  <!-- groupBox2 "Detail": Dock Top, 116, Segoe UI 9.75 bold; flowLayoutPanel1 1020 x 94 at 1,18 -->
+  <div class="dk-gb dock su" id="groupBox2" style="height:116px"><span class="cap">Detail</span>
+    <div class="dk-flow" id="flowLayoutPanel1" style="left:1px;top:18px;width:1020px;height:94px">
+      <div class="fp" id="PanelCustomGroupDetail" style="width:159px">
+        <span class="l" style="left:2px;top:2px">Custom Group</span>
+        <select id="CmbCustomGroup" style="left:1px;top:18px;width:158px;height:26px"></select></div>
+      <div class="fp" id="PanelAccountTitleDetail" style="width:272px">
+        <span class="l" id="label9" style="left:4px;top:3px"></span>
+        <span class="l" id="label29" style="left:81px;top:3px"></span>
+        <span class="l" id="lblbalancedetail" style="left:164px;top:3px;display:none">0</span>
+        <span class="l" id="lbldetaildrcr" style="left:235px;top:3px;display:none"></span>
+        <select id="cmbAccountDetail" style="left:1px;top:19px;width:270px;height:26px"></select></div>
+      <div class="fp" id="PanelSubsidiaryDetail" style="width:215px">
+        <span class="l" style="left:2px;top:2px">Subsidiary Account</span>
+        <select id="CmbSubsidiaryAccount" style="left:2px;top:18px;width:212px;height:26px"></select></div>
+      <div class="fp" id="PanelJobLotDetail" style="width:114px">
+        <span class="l" style="left:2px;top:2px">Job/Lot</span>
+        <select id="cmbJobLotFile" style="left:1px;top:18px;width:111px;height:26px"></select></div>
+      <div class="fp" id="PaanelInvoiceNoDetail" style="width:93px">
+        <span class="l" style="left:4px;top:3px">Bill/Invoice #</span>
+        <input class="x" id="txtInvoiceNoDetail" style="left:1px;top:21px;width:91px"></div>
+      <div class="fp" id="PanelQty" style="width:84px">
+        <span class="l" style="left:1px;top:3px">Qty</span>
+        <input class="x r" id="txtQtyDetial" value="0" style="left:1px;top:21px;width:82px"></div>
+      <div class="fp" id="PanelRateDetail" style="width:82px">
+        <span class="l" style="left:1px;top:3px">Rate</span>
+        <input class="x r" id="txtRateDetail" value="0" style="left:1px;top:21px;width:80px"></div>
+      <div class="fp" id="PanelAmountDetail" style="width:108px">
+        <span class="l" style="left:1px;top:3px">Amount</span>
+        <input class="x r" id="txtAmountDetail" style="left:1px;top:21px;width:106px"></div>
+      <div class="fp" id="PanelFcyAmountDetail" style="width:110px">
+        <span class="l" style="left:1px;top:4px">Fcy Amount</span>
+        <input class="x r" id="txtFcyAmountDetail" style="left:1px;top:22px;width:109px"></div>
+      <div class="fp" id="ReferenceAccountPanel" style="width:208px">
+        <span class="l" style="left:2px;top:2px">Reference Account</span>
+        <select id="CmbReferenceAccount" style="left:1px;top:18px;width:207px;height:26px"></select></div>
+      <div class="fp" id="PanelRemarksDetail" style="width:428px">
+        <span class="l" style="left:2px;top:3px">Remarks</span>
+        <input class="x" id="txtRemarksDetail" style="left:1px;top:21px;width:427px"></div>
+      <div class="fp" id="PanelAddUpdateBtn" style="width:135px">
+        <button type="button" class="bt" id="btnAdd" style="left:3px;top:17px;width:35px;height:27px" onclick="BV.addRow()">+</button>
+        <button type="button" class="bt" id="btnUpdateDetail" style="left:3px;top:18px;width:65px;height:26px;display:none" onclick="BV.updateRow()">Update</button>
+        <button type="button" class="bt" id="btnCancelDetail" style="left:69px;top:18px;width:63px;height:26px;display:none" onclick="BV.cancelRow()">Cancel</button>
       </div>
     </div>
-  </fieldset>
+  </div>
 
-  <div class="gridwrap" style="margin:0 3px;min-height:115px;max-height:260px" id="grdWrap" tabindex="0"><table class="g" id="grd"></table></div>
+  <!-- panel16: Teal, Dock Top, 23 (ctrlGrdBar1 anchored right) -->
+  <div class="dk-teal" id="panel16" style="height:23px"><span class="dk-cog" style="right:3px" title="Grid layout (desktop only)"><i class="fa fa-cog"></i></span></div>
+  <!-- grd: Dock Fill (designer 1152 x 115) -->
+  <div class="dk-grid tot dk-fill" id="grdWrap" tabindex="0" style="min-height:115px"><table class="g" id="grd"></table></div>
 
-  <!-- panel19 (bottom, 230 high) -->
-  <div class="rel" style="height:232px;margin:3px;background:#fff;border:1px solid #b0bec5">
-    <div class="abs" style="left:0;top:0;width:506px;height:230px">
-      <div style="background:#00796B;color:#fff;font-weight:bold;padding:1px 4px;height:19px">Amount Distribution</div>
-      <div class="gridwrap" style="height:211px" id="grdScheduleWrap"><table class="g" id="grdSchedule"></table></div>
+  <!-- panel19: Dock Bottom, 230 -->
+  <div class="dk-box" id="panel19" style="height:230px">
+    <!-- panel8 Dock Left 506: panel20 Teal 19 + grdSchedule Fill 211 -->
+    <div class="dk-a" id="panel8" style="left:0;top:0;width:506px;height:230px">
+      <div class="dk-teal" id="panel20" style="height:19px"><span class="t12" style="left:4px;top:2px">Amount Distribution</span></div>
+      <div class="dk-grid tot" id="grdScheduleWrap" tabindex="0" style="height:211px"><table class="g" id="grdSchedule"></table></div>
     </div>
-    <label class="lbl" style="left:776px;top:7px">Voucher Amount</label>
-    <input class="f num" id="txtVoucherAmountFooter" disabled style="left:903px;top:3px;width:111px;height:23px">
-    <label class="lbl" style="left:653px;top:31px">Sales Tax Type</label>
-    <input class="f" id="CmbTaxType" style="left:784px;top:26px;width:92px;height:24px">
-    <label class="lbl" style="left:879px;top:31px">%</label>
-    <input class="f num" id="txtTaxPercent" disabled style="left:903px;top:27px;width:111px;height:22px">
-    <label class="lbl" style="left:653px;top:57px">Sales Tax Account</label>
-    <input class="f" id="CmbTaxAccount" style="left:784px;top:51px;width:230px;height:26px">
-    <label class="lbl" style="left:776px;top:82px">Sales Tax Amount</label>
-    <input class="f num" id="txtTaxAmount" disabled style="left:903px;top:78px;width:111px;height:23px">
-    <label class="lbl" style="left:653px;top:108px">Advance Tax Account</label>
-    <input class="f" id="CmbAdvanceTaxAccount" style="left:784px;top:102px;width:230px;height:26px">
-    <label class="lbl" style="left:776px;top:133px">Advance Tax Amount</label>
-    <input class="f num" id="txtAdvanceTaxAmount" style="left:903px;top:129px;width:111px;height:23px">
-    <label class="lbl" style="left:653px;top:159px">Other Charges Account</label>
-    <input class="f" id="CmbOtherChargesAccount" style="left:784px;top:153px;width:230px;height:26px">
-    <label class="lbl" style="left:776px;top:185px">Other Charges Amount</label>
-    <input class="f num" id="txtOtherChargesAmount" style="left:903px;top:181px;width:111px;height:23px">
-    <label class="lbl" style="left:776px;top:209px">Total Amount</label>
-    <input class="f num" id="txtTotalAmount" disabled style="left:903px;top:205px;width:111px;height:23px">
+    <span class="l" id="label22" style="left:776px;top:7px">Voucher Amount</span>
+    <input class="x r" id="txtVoucherAmountFooter" disabled style="left:903px;top:3px;width:111px">
+    <span class="l" id="label1" style="left:653px;top:31px">Sales Tax Type</span>
+    <select id="CmbTaxType" data-dtcombo-class="ms9" style="left:784px;top:26px;width:92px;height:24px"></select>
+    <span class="l" id="label17" style="left:879px;top:31px">%</span>
+    <input class="x r ms" id="txtTaxPercent" disabled style="left:903px;top:27px;width:111px;height:22px;font-size:13px">
+    <span class="l" id="label16" style="left:653px;top:57px">Sales Tax Account</span>
+    <select id="CmbTaxAccount" style="left:784px;top:51px;width:230px;height:26px"></select>
+    <span class="l" id="label20" style="left:776px;top:82px">Sales Tax Amount</span>
+    <input class="x r" id="txtTaxAmount" disabled style="left:903px;top:78px;width:111px">
+    <span class="l" id="label25" style="left:653px;top:108px">Advance Tax Account</span>
+    <select id="CmbAdvanceTaxAccount" style="left:784px;top:102px;width:230px;height:26px"></select>
+    <span class="l" id="label26" style="left:776px;top:133px">Advance Tax Amount</span>
+    <input class="x r" id="txtAdvanceTaxAmount" style="left:903px;top:129px;width:111px">
+    <span class="l" id="label27" style="left:653px;top:159px">Other Charges Account</span>
+    <select id="CmbOtherChargesAccount" style="left:784px;top:153px;width:230px;height:26px"></select>
+    <span class="l" id="labelNoteTitleDetailAccount" style="left:776px;top:185px">Other Charges Amount</span>
+    <input class="x r" id="txtOtherChargesAmount" style="left:903px;top:181px;width:111px">
+    <span class="l" id="label23" style="left:776px;top:209px">Total Amount</span>
+    <input class="x r" id="txtTotalAmount" disabled style="left:903px;top:205px;width:111px">
   </div>
 </div>
 
-<!-- ============================================================================ tabPage2 -->
-<div id="pgHist" style="display:none">
-  <div class="tbar">
-    <button class="tbtn" id="btnNewHistory" onclick="BV.histReset()">Reset</button>
-    <button class="tbtn" id="btnRefreshHistory" onclick="BV.histAccounts()">Refresh</button>
-    <button class="tbtn" id="btnLoadAll" style="display:none">LoadAll</button>
+<!-- ============================================================================ tabPage2 "History" -->
+<div id="pgHist" class="dk-page" style="display:none">
+  <!-- panel9: Teal, Dock Top, 50 (toolStrip3 + label35) -->
+  <div class="dk-teal" id="panel9" style="height:50px">
+    <div class="dk-ts h27" id="toolStrip3">
+      <button type="button" id="btnNewHistory" onclick="BV.histReset()"><i class="fa fa-plus-circle g"></i>Reset</button>
+      <button type="button" id="btnRefreshHistory" onclick="BV.histAccounts()"><i class="fa fa-refresh b"></i>Refresh</button>
+      <button type="button" id="btnLoadAll" style="display:none"><i class="fa fa-list k"></i>LoadAll</button>
+    </div>
+    <span class="t16" id="label35" style="left:2px;top:29px"></span>
   </div>
-  <div class="cap" style="height:23px"><span class="t" id="label35" style="top:2px"></span></div>
-  <div class="rel" style="height:79px;background:#fff">
-    <fieldset class="gb" style="position:absolute;left:4px;top:0;width:790px;height:72px;margin:0"><legend>Filters</legend>
-      <label class="lbl" style="left:4px;top:9px"><input type="checkbox" id="chkFrom" checked> From Date</label>
-      <input class="f" type="date" id="FromDateHistory" style="left:84px;top:5px;width:112px;height:22px">
-      <label class="lbl" style="left:4px;top:37px"><input type="checkbox" id="chkTo" checked> To Date</label>
-      <input class="f" type="date" id="ToDateHistory" style="left:84px;top:33px;width:112px;height:22px">
-      <label class="lbl" style="left:200px;top:9px">From Doc</label>
-      <input class="f" id="txtFromDocNoHistory" style="left:258px;top:5px;width:92px;height:23px">
-      <label class="lbl" style="left:200px;top:37px">To Doc</label>
-      <input class="f" id="txtToDocNoHistory" style="left:258px;top:33px;width:92px;height:23px">
-      <label class="lbl" style="left:354px;top:9px">Account Title (Cr)</label>
-      <input class="f" id="CmbAccountTitleHistory" style="left:451px;top:3px;width:234px;height:26px">
-      <label class="lbl" style="left:354px;top:37px">Approved Status</label>
-      <select class="f" id="cmbApproveStatus" style="left:451px;top:31px;width:158px;height:26px">
+  <!-- panel11: Dock Top, 79 -->
+  <div class="dk-box" id="panel11" style="height:79px">
+    <!-- groupBox3 "Filters" 790 x 72 at 4,3 -->
+    <div class="dk-gb" id="groupBox3" style="left:4px;top:3px;width:790px;height:72px"><span class="cap">Filters</span>
+      <span class="l" style="left:4px;top:19px">From Date</span>
+      <input type="checkbox" class="dk-dtchk" id="chkFrom" checked style="left:74px;top:20px" title="FromDateHistory.ShowCheckBox">
+      <input class="x d chk" type="date" id="FromDateHistory" style="left:70px;top:15px;width:126px">
+      <span class="l" style="left:4px;top:47px">To Date</span>
+      <input type="checkbox" class="dk-dtchk" id="chkTo" checked style="left:74px;top:48px" title="ToDateHistory.ShowCheckBox">
+      <input class="x d chk" type="date" id="ToDateHistory" style="left:70px;top:43px;width:126px">
+      <span class="l" style="left:200px;top:19px">From Doc</span>
+      <input class="x su" id="txtFromDocNoHistory" style="left:258px;top:15px;width:92px">
+      <span class="l" style="left:200px;top:47px">To Doc</span>
+      <input class="x su" id="txtToDocNoHistory" style="left:258px;top:43px;width:92px">
+      <span class="l" id="label28" style="left:354px;top:19px">Account Title (Cr)</span>
+      <select id="CmbAccountTitleHistory" data-dtcombo-class="ms10" style="left:451px;top:13px;width:234px;height:26px"></select>
+      <span class="l" id="label30" style="left:354px;top:47px">Approved Status</span>
+      <select id="cmbApproveStatus" data-dtcombo="single" data-dtcombo-class="ms10" style="left:451px;top:41px;width:158px;height:26px">
         <option>Not Apporved</option><option>Approved</option><option>All</option></select>
-      <button class="tbtn abs" id="btnShowHistory" style="left:614px;top:31px;width:71px;height:26px" onclick="BV.history()">Show</button>
-      <label class="abs" style="left:690px;top:0"><input type="radio" name="dt" value="doc" checked> Doc Date</label>
-      <label class="abs" style="left:690px;top:15px"><input type="radio" name="dt" value="entry"> Entry Date</label>
-      <label class="abs" style="left:690px;top:30px"><input type="radio" name="dt" value="modify"> Modify Date</label>
-      <label class="abs" style="left:690px;top:45px"><input type="radio" name="dt" value="approved"> Approved Date</label>
-    </fieldset>
-    <div class="abs" id="VoucherInfoBox" style="left:795px;top:3px;width:221px;height:72px;border:1px solid #9aa9b5;padding:4px 6px;display:none">
-      <div>Total Vouchers <b id="lblTotalVouchers" style="float:right">0</b></div>
-      <div>Approved Vouchers <b id="lblApprovedVouchers" style="float:right">0</b></div>
-      <div>UnApproved Vouchers <b id="lblUnApprovedVouchers" style="float:right">0</b></div>
+      <button type="button" class="bt v dark" id="btnShowHistory" style="left:614px;top:41px;width:71px;height:26px;font-size:13px" onclick="BV.history()">Show</button>
+      <label class="rb" style="left:690px;top:10px"><input type="radio" name="dt" value="doc" checked> Doc Date</label>
+      <label class="rb" style="left:690px;top:25px"><input type="radio" name="dt" value="entry"> Entry Date</label>
+      <label class="rb" style="left:690px;top:40px"><input type="radio" name="dt" value="modify"> Modify Date</label>
+      <label class="rb" style="left:690px;top:55px"><input type="radio" name="dt" value="approved"> Approved Date</label>
+    </div>
+    <!-- VoucherInfoBox: GroupBox without text, 221 x 72 at 795,3, Visible=false -->
+    <div class="dk-gb" id="VoucherInfoBox" style="left:795px;top:3px;width:221px;height:72px;display:none">
+      <span class="l" style="left:6px;top:12px">Total Vouchers</span>
+      <span class="l su10 r" id="lblTotalVouchers" style="left:136px;top:11px;width:80px">0</span>
+      <span class="l" style="left:6px;top:30px">Approved Vouchers</span>
+      <span class="l su10 r" id="lblApprovedVouchers" style="left:136px;top:29px;width:80px">0</span>
+      <span class="l" style="left:6px;top:48px">UnApproved Vouchers</span>
+      <span class="l su10 r" id="lblUnApprovedVouchers" style="left:136px;top:47px;width:80px">0</span>
     </div>
   </div>
-  <div style="margin:3px"><b>Filtered Records</b></div>
-  <div class="gridwrap" style="max-height:347px"><table class="g" id="DataGridHistory"></table></div>
-  <div style="margin:3px"><b>Detail of above selected row</b></div>
-  <div class="gridwrap" style="max-height:156px"><table class="g" id="grdDetailHistory"></table></div>
+  <!-- panel12: Teal, Dock Top, 22 -->
+  <div class="dk-teal" id="panel12" style="height:22px"><span class="t16" style="left:3px;top:1px">Filtered Records</span>
+    <span class="dk-cog" style="right:3px;top:0" title="Grid layout (desktop only)"><i class="fa fa-cog"></i></span></div>
+  <!-- DataGridHistory: Dock Fill (designer 1152 x 347) -->
+  <div class="dk-grid tot dk-fill" id="histWrap" tabindex="0" style="min-height:200px"><table class="g" id="DataGridHistory"></table></div>
+  <!-- panel13: Teal, Dock Bottom, 22 -->
+  <div class="dk-teal" id="panel13" style="height:22px"><span class="t13" style="left:3px;top:3px">Detail of above selected row</span></div>
+  <!-- grdDetailHistory: Dock Bottom, 156 -->
+  <div class="dk-grid tot" id="grdDetailHistoryWrap" style="height:156px"><table class="g" id="grdDetailHistory"></table></div>
+</div>
+
+</div></div>
+<!-- tabControl1.Alignment = Bottom; History button on the right of the footer -->
+<div class="dk-btabs">
+  <button type="button" class="tab on" id="tabForm" onclick="BV.tab(0)">Form</button>
+  <button type="button" class="tab" id="tabHist" onclick="BV.tab(1)">History</button>
+  <span class="sp"></span>
+  <a href="/accounts/dashboard">Back to Dashboard</a>
+  <button type="button" class="ftrbtn" id="btnHistoryFooter" onclick="BV.tab(1)"><i class="fa fa-history"></i>History</button>
 </div>
 
 <div class="modal-sc" id="scModal" onclick="this.style.display='none'"><div><b>ShortCut Keys</b><table class="g" id="scTable"></table></div></div>
 
 <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
-<script th:src="@{/build/js/desktop_combo_c.js}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20261002ge}"></script>
+<script>
+/* R3 2026-10-02: the DCombo API this page was written against (desktop_combo_c.js), kept as a thin adapter over
+   countx_prod_combo so every combo on the page is the project's searchable combo. The native <select> stays the
+   value holder; option data-i points at the bound row; data-c1.. feed the extra popup columns.
+   UltraCombo Leave = focus leaving the combo (field + popup); ValueChanged = the select's change event. */
+(function (global) {
+    'use strict';
+    var seq = 0;
+    function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+    function DCombo(input, opt) {
+        var sel = typeof input === 'string' ? document.getElementById(input) : input;
+        opt = opt || {};
+        var columns = opt.columns || [{ key: opt.textKey || 'Name', caption: '' }];
+        var valueKey = opt.valueKey || 'Id';
+        var textKey = opt.textKey || columns[0].key;
+        var data = [];
+        var fam = 'bvcombo' + (++seq);
+        global.DesktopCombo.define(fam, columns.map(function (c, i) {
+            return i === 0 ? { caption: c.caption || '', flex: 3 } : { caption: c.caption || '', flex: 2, key: 'c' + i };
+        }));
+        sel.setAttribute('data-dtcombo', fam);
+        sel.innerHTML = '<option value="" hidden></option>';
+        var cbx = global.DesktopCombo.enhance(sel);
+        function row() {
+            var o = sel.selectedIndex > 0 ? sel.options[sel.selectedIndex] : null;
+            return o ? (data[+o.getAttribute('data-i')] || null) : null;
+        }
+        function selectIndex(i) { sel.selectedIndex = i; if (cbx) cbx.syncFromSelect(); }
+        function pick(r, silent) {
+            var i = r ? data.indexOf(r) : -1;
+            selectIndex(i >= 0 ? i + 1 : 0);
+            if (!silent && opt.onSelect) opt.onSelect(row());
+        }
+        sel.addEventListener('change', function () { if (opt.onSelect) opt.onSelect(row()); });
+        if (cbx && opt.onLeave) {
+            cbx.wrap.addEventListener('focusout', function (e) {
+                if (e.relatedTarget && cbx.wrap.contains(e.relatedTarget)) return;
+                setTimeout(function () { if (!cbx.wrap.contains(document.activeElement)) opt.onLeave(row()); }, 0);
+            });
+        }
+        var api = {
+            setData: function (rows) {
+                var cur = row(), keep = cur ? cur[valueKey] : null;
+                data = rows || [];
+                var h = ['<option value="" hidden></option>'];
+                for (var i = 0; i < data.length; i++) {
+                    var r = data[i], a = ' data-i="' + i + '"';
+                    for (var c = 1; c < columns.length; c++) a += ' data-c' + c + '="' + esc(r[columns[c].key]) + '"';
+                    h.push('<option value="' + esc(r[valueKey]) + '"' + a + '>' + esc(r[textKey]) + '</option>');
+                }
+                sel.innerHTML = h.join('');
+                selectIndex(0);
+                if (keep != null) api.setValue(keep, true);
+                return api;
+            },
+            rows: function () { return data; },
+            value: function () { var r = row(); return r ? r[valueKey] : 0; },
+            row: row,
+            text: function () { var r = row(); return r ? String(r[textKey] == null ? '' : r[textKey]) : ''; },
+            setValue: function (v, silent) {
+                var r = null;
+                for (var i = 0; i < data.length; i++) { if (String(data[i][valueKey]) === String(v)) { r = data[i]; break; } }
+                pick(r, silent !== false);
+                return !!r;
+            },
+            clear: function () { pick(null, true); },
+            focus: function () { if (cbx && cbx.input) cbx.input.focus(); else sel.focus(); },
+            hide: function () { if (cbx && cbx.open) cbx.closePop(false); },
+            el: sel
+        };
+        return api;
+    }
+    global.DCombo = DCombo;
+})(window);
+</script>
 <script th:inline="javascript">
 var DOC_TYPE = /*[[${documentTypeId}]]*/ 6;
 </script>
@@ -233,6 +341,8 @@ var baseCurrency = 0, baseRate = 0;
 var cb = {};
 
 function $id(i) { return document.getElementById(i); }
+/* R3: a combo's visible box is its countx_prod_combo wrap - resize both */
+function setW(id, w) { var e = $id(id); if (!e) return; e.style.width = w + 'px'; var p = e.parentNode; if (p && p.classList && p.classList.contains('dtcombo-wrap')) p.style.width = w + 'px'; }
 function show(el, on) { if (typeof el === 'string') el = $id(el); if (el) el.style.display = on ? '' : 'none'; }
 function num(v) { v = String(v == null ? '' : v).replace(/,/g, ''); var n = parseFloat(v); return isNaN(n) ? 0 : n; }
 function fmt(n, d) { return Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: d == null ? 2 : d }); }
@@ -254,13 +364,38 @@ function ajax(method, url, body) {
 }
 function gridTotal() { var t = 0; rows.forEach(function (r) { t += num(r.amount); }); return t; }
 
+/* R2: every server button is disabled at once with a spinner, a second request is refused and the
+   button is re-enabled (to its previous state) when the call succeeds or fails. */
+var inflight = {};
+function busy(btn, key, run) {
+    var b = typeof btn === 'string' ? $id(btn) : btn;
+    if (inflight[key]) return $.Deferred().reject().promise();
+    inflight[key] = true;
+    var was = b ? b.disabled : false;
+    if (b) { b.disabled = true; b.classList.add('busy'); }
+    function done() { inflight[key] = false; if (b) { b.classList.remove('busy'); b.disabled = was; } }
+    var p = null;
+    try { p = run(); } catch (e) { done(); throw e; }
+    if (p && p.always) p.always(done); else done();
+    return p;
+}
+var selDetail = -1, selHist = 0;
+
 function captions() {
     $id('label7').textContent = PAY ? 'Account Title (Cr)' : 'Account Title (Dr)';
     $id('label9').textContent = PAY ? 'Account (Dr)' : 'Account (Cr)';
     $id('label35').textContent = PAY ? 'Bills Payables History' : 'Bills Receivables History';
-    $id('labelLocationType').style.left = (PAY ? 135 : 170) + 'px';
-    $id('cmbLocationType').style.left = (PAY ? 223 : 258) + 'px';
-    $id('lblPreview').style.left = (PAY ? 1063 : 1261) + 'px';
+    /* R3: frmBillsReceivables designer geometry where it differs from frmBillsPayables (data-r = left,top,width,height) */
+    if (!PAY) {
+        $id('dkRoot').style.minWidth = '1356px';
+        document.querySelectorAll('[data-r]').forEach(function (e) {
+            var g = e.getAttribute('data-r').split(',');
+            e.style.left = g[0] + 'px'; e.style.top = g[1] + 'px';
+            if (g[2]) e.style.width = g[2] + 'px';
+            if (g[3]) e.style.height = g[3] + 'px';
+        });
+    }
+    $id('lblDrCrS').textContent = PAY ? 'Cr' : 'Cr/Dr';                 // InitializeComponent lblDrCrS.Text
     document.querySelectorAll('.pay').forEach(function (e) { show(e, PAY); });
     document.querySelectorAll('.rcv').forEach(function (e) { show(e, !PAY); });
 }
@@ -275,7 +410,7 @@ function init() {
     cb.acc = DCombo('cmbAccount', { columns: acCols, popupWidth: 420, onLeave: accountLeave });
     cb.subH = DCombo('CmbSubsidiaryAccountHdr', { columns: [{ key: 'SubsidiaryAccount', caption: 'Account Title' }], textKey: 'SubsidiaryAccount', popupWidth: 300,
         onLeave: function (r) { if (r && +r.AccountId) cb.acc.setValue(r.AccountId); } });
-    cb.cur = DCombo('cmbCurrency', { columns: [{ key: 'CurrencyCode', caption: 'Currency' }, { key: 'CurrencyName', caption: 'Name' }], textKey: 'CurrencyCode', onLeave: currencyLeave });
+    cb.cur = DCombo('cmbCurrency', { columns: [{ key: 'CurrencyCode', caption: 'Currency' }, { key: 'CurrencyName', caption: 'Name' }], textKey: 'CurrencyCode' });   // cmbCurrency_Leave is not wired on either form
     cb.grp = DCombo('CmbCustomGroup', { columns: [{ key: 'CustomGroupName', caption: 'Custom Group' }], textKey: 'CustomGroupName', popupWidth: 300, onLeave: customGroupLeave });
     cb.det = DCombo('cmbAccountDetail', { columns: acCols.concat([{ key: 'NoteTitle', caption: 'Note' }]), popupWidth: 460, onLeave: detailAccountLeave });
     cb.sub = DCombo('CmbSubsidiaryAccount', { columns: [{ key: 'SubsidiaryAccount', caption: 'Account Title' }], textKey: 'SubsidiaryAccount', popupWidth: 300,
@@ -294,7 +429,22 @@ function init() {
     $id('txtAmountDetail').addEventListener('input', function () { related('amount'); });
     $id('txtFcyAmountDetail').addEventListener('input', function () { related('fcy'); });
     $id('txtExchangeRate').addEventListener('input', exchangeRateChanged);
-    $id('txtExchangeRate').addEventListener('blur', function () { this.value = num(this.value).toFixed(RD()); });
+    /* txtExchangeRate_Leave is not wired on the desktop: no reformat on leave. */
+    /* KeyPress: OnlytextdecimelFunction / ...WithMinus (other charges) / OnlytextNumberFunction (history doc nos) */
+    function only(ids, re) { ids.forEach(function (i) { $id(i).addEventListener('keypress', function (e) { if (e.key && e.key.length === 1 && !e.ctrlKey && !re.test(e.key)) e.preventDefault(); }); }); }
+    only(['txtQtyDetial', 'txtRateDetail', 'txtAmountDetail', 'txtFcyAmountDetail', 'txtExchangeRate', 'txtAdvanceTaxAmount'], /[0-9.]/);
+    only(['txtOtherChargesAmount'], /[0-9.\-]/);
+    only(['txtFromDocNoHistory', 'txtToDocNoHistory'], /[0-9]/);
+    /* grdDetail_KeyDown: Ctrl+Enter = edit the current row, Ctrl+Space = delete it (confirmed) */
+    $id('grdWrap').addEventListener('keydown', function (e) {
+        if (!e.ctrlKey || selDetail < 0 || !rows[selDetail]) return;
+        if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); editRow(selDetail); }
+        else if (e.key === ' ') { e.preventDefault(); e.stopPropagation(); if (confirm('Are you sure to Delete?')) { rows.splice(selDetail, 1); selDetail = -1; renderGrid(); } }
+    });
+    /* DataGridHistory_KeyDown: Ctrl+Enter = ReadById of the current row */
+    $id('histWrap').addEventListener('keydown', function (e) {
+        if (e.ctrlKey && e.key === 'Enter' && selHist > 0) { e.preventDefault(); e.stopPropagation(); readById(selHist, false); }
+    });
     $id('txtAdvanceTaxAmount').addEventListener('input', totalAmountInFooter);
     $id('txtOtherChargesAmount').addEventListener('input', totalAmountInFooter);
     document.addEventListener('keydown', keys);
@@ -303,10 +453,11 @@ function init() {
         L = d; rights = d.rights || {}; subFeature = !!d.subsidiaryFeature;
         $id('btnsave').disabled = !rights.save; $id('btnSaveAs').disabled = !rights.save;
         $id('btnUpdate').disabled = !rights.update;
+        $id('Print').disabled = !rights.print;                           // Print.Enabled = DoHavePrintRights
         document.querySelectorAll('.sub').forEach(function (e) { show(e, subFeature); });
         show('PanelSubsidiaryDetail', subFeature);
         $id('PanelAccountTitleDetail').style.width = subFeature ? '272px' : '487px';
-        $id('cmbAccountDetail').style.width = subFeature ? '270px' : '485px';
+        setW('cmbAccountDetail', subFeature ? 270 : 485);
         $id('txtDocNo').value = d.voucherCode || '';
         cb.loc.setData(d.locationTypes || []); if ((d.locationTypes || []).length) cb.loc.setValue(d.locationTypes[0].Id);
         cb.proj.setData(d.costCenters || []); if ((d.costCenters || []).length) cb.proj.setValue(d.costCenters[0].Id);
@@ -329,6 +480,9 @@ function init() {
         $id('FromDateHistory').value = dstr(from); $id('ToDateHistory').value = today();
         totalAmountInFooter();
         $id('txtDocDate').focus();
+        /* ?id= opens that voucher (ReadById) */
+        var qid = parseInt(new URLSearchParams(window.location.search).get('id'), 10);
+        if (qid > 0) readById(qid, false);
     });
 }
 
@@ -383,7 +537,7 @@ function bindDetailSubsidiary() {
         var vis = t !== 2 && t !== 15 && subFeature;
         show('PanelSubsidiaryDetail', vis);
         $id('PanelAccountTitleDetail').style.width = vis ? '272px' : '487px';
-        $id('cmbAccountDetail').style.width = vis ? '270px' : '485px';
+        setW('cmbAccountDetail', vis ? 270 : 485);
         var keep = cb.sub.text() ? cb.sub.value() : 0;
         var m = all.filter(function (x) { return +x.AccountId === acc; });
         subLenDetail = m.length; cb.sub.setData(m); cb.sub.clear();
@@ -506,7 +660,7 @@ function updateRow() {
     if (!PAY) n.srNo = rows[editIndex].srNo;
     rows[editIndex] = n; editIndex = -1;
     show('lblbalancedetail', false); show('lbldetaildrcr', false);
-    resetDetail(); cb.det.focus(); exchangeRateChanged(); updateSchedAmounts(); salesTex();
+    resetDetail(); cb.det.focus(); exchangeRateChanged(); updateSchedAmounts();
 }
 
 function cancelRow() { editIndex = -1; resetDetail(); }
@@ -520,7 +674,7 @@ function renderGrid() {
     cols.push(['jobLot', 'JobLot'], ['invoiceNo', 'InvoiceNo'], ['qty', 'Qty'], ['rate', 'Rate'], ['amount', 'Amount'], ['fcyAmount', 'FcyAmount'],
         ['referenceAccount', 'ReferenceAccount'], ['remarks', 'Remarks']);
     var tq = 0, ta = 0, tf = 0, sr = 0;
-    var h = '<thead><tr>' + cols.map(function (c) { return '<th>' + c[1] + '</th>'; }).join('') + '<th>X</th></tr></thead><tbody>';
+    var h = '<thead><tr>' + cols.map(function (c) { return '<th>' + c[1] + '</th>'; }).join('') + '<th style="width:20px;min-width:20px">X</th></tr></thead><tbody>';
     rows.forEach(function (r, i) {
         tq += num(r.qty); ta += num(r.amount); tf += num(r.fcyAmount); sr += num(r.rate);
         h += '<tr data-i="' + i + '">' + cols.map(function (c) {
@@ -538,9 +692,14 @@ function renderGrid() {
         return '<td></td>';
     }).join('') + '<td></td></tr></tfoot>';
     var t = $id('grd'); t.innerHTML = h;
-    t.querySelectorAll('tbody tr').forEach(function (tr) { tr.addEventListener('dblclick', function () { editRow(+tr.getAttribute('data-i')); }); });
+    t.querySelectorAll('tbody tr').forEach(function (tr) {
+        var i = +tr.getAttribute('data-i');
+        if (i === selDetail) tr.classList.add('sel');
+        tr.addEventListener('click', function () { selDetail = i; t.querySelectorAll('tr.sel').forEach(function (x) { x.classList.remove('sel'); }); tr.classList.add('sel'); $id('grdWrap').focus(); });
+        tr.addEventListener('dblclick', function () { editRow(i); });
+    });
     t.querySelectorAll('[data-del]').forEach(function (b) {
-        b.addEventListener('click', function (e) { e.stopPropagation(); rows.splice(+b.getAttribute('data-del'), 1); updateSchedAmounts(); exchangeRateChanged(); salesTex(); });
+        b.addEventListener('click', function (e) { e.stopPropagation(); rows.splice(+b.getAttribute('data-del'), 1); selDetail = -1; updateSchedAmounts(); exchangeRateChanged(); });
     });
     calcTotals();
 }
@@ -556,7 +715,7 @@ function schedAddRow() {
 function updateSchedAmounts() { var t = gridTotal(); sched.forEach(function (s) { s.amount = num(s.duePercent) * t / 100; }); renderSched(); }
 
 function renderSched() {
-    var h = '<thead><tr><th>DueDays</th><th>DueDate</th><th>Due%</th><th>Amount</th><th>X</th><th>+</th></tr></thead><tbody>';
+    var h = '<thead><tr><th style="width:70px;min-width:70px">DueDays</th><th style="width:100px;min-width:100px">DueDate</th><th style="width:50px;min-width:50px">Due%</th><th style="width:80px;min-width:80px">Amount</th><th style="width:20px;min-width:20px">X</th><th style="width:20px;min-width:20px">+</th></tr></thead><tbody>';
     var tot = 0;
     sched.forEach(function (s, i) {
         tot += num(s.amount);
@@ -609,9 +768,24 @@ function totalAmountInFooter() {
 }
 
 /* --------------------------------------------------------------------------------- save */
+/* FormValidation() - same order and text as the desktop (the server repeats it) */
+function formValidation() {
+    if (!+cb.loc.value()) { msg('Location Type Field is Required'); cb.loc.focus(); return false; }
+    if (!+cb.proj.value()) { msg('Cost Center  Field Required'); cb.proj.focus(); return false; }
+    var dn = String($id('txtDocNo').value || '').trim();
+    if (dn === '' || dn === '0') { msg('DocNo  Field Required'); $id('txtDocNo').focus(); return false; }
+    if (!+cb.acc.value()) { msg('Account  Field Required'); cb.acc.focus(); return false; }
+    if (subFeature && subLenHdr > 0 && !+cb.subH.value()) { msg('Subsidiary Account Title Field Required'); cb.subH.focus(); return false; }
+    if (!+cb.cur.value()) { msg('Fcy Code Field is Required'); cb.cur.focus(); return false; }
+    if (num($id('txtExchangeRate').value) === 0) { msg('Exchange Rate Field is Required'); $id('txtExchangeRate').focus(); return false; }
+    if (num($id('txtFcyAmount').value) === 0) { msg('Fcy Amount Field is Required'); return false; }
+    return true;
+}
+
 function save(mode) {
     if (mode === 'update' && !recId) { msg('Record Not Update  0'); return; }
     if (!rows.length) { msg('Grid Record not found'); return; }
+    if (!formValidation()) return;
     if (!confirm(mode === 'update' ? 'Are you sure to Update?' : 'Are you sure to Save?')) return;
     var sr = cb.sub.row();
     var body = {
@@ -627,8 +801,13 @@ function save(mode) {
         detailSubsidiaryId: sr ? +sr.Id : 0, detailSubsidiaryTypeId: sr ? +sr.SubsidiaryTypeId : 0,
         rows: rows, schedules: sched
     };
-    ajax('POST', API + '/save', body).done(function (d) {
-        msg(d.message, true); resetForm(true); if (d.nextVoucherCode) $id('txtDocNo').value = d.nextVoucherCode;
+    busy(mode === 'update' ? 'btnUpdate' : (mode === 'saveAs' ? 'btnSaveAs' : 'btnsave'), 'save', function () {
+        return ajax('POST', API + '/save', body).done(function (d) {
+            msg(d.message, true); resetForm(true); if (d.nextVoucherCode) $id('txtDocNo').value = d.nextVoucherCode;
+            /* if (CHKPREVIEW.Checked [&& DoHavePrintRights on Receivables]) ANewAcRptPaymentReceiptsVoucherSlip_102(success) */
+            if ($id('CHKPREVIEW').checked && (PAY || rights.print) && d.id && window.printRpt)
+                window.printRpt('102-ANewAcRptPaymentReceiptsVoucherSlip.rpt', { id: d.id, voucherHeadId: d.id });
+        });
     });
 }
 
@@ -641,14 +820,15 @@ function resetForm(keepCode) {
     show('btnsave', true); show('btnUpdate', false); show('btnSaveAs', false);
     cb.adv.clear(); cb.oc.clear(); cb.taxType.clear();
     $id('txtVoucherAmountFooter').value = '0'; $id('txtAdvanceTaxAmount').value = '0'; $id('txtOtherChargesAmount').value = '0'; $id('txtTotalAmount').value = '0';
-    if (!keepCode) ajax('GET', API + '/next-code').done(function (d) { $id('txtDocNo').value = d.voucherCode || ''; });
+    selDetail = -1;
+    if (!keepCode) return ajax('GET', API + '/next-code').done(function (d) { $id('txtDocNo').value = d.voucherCode || ''; });
 }
 
-function newForm() { resetForm(false); resetDetail(); }
+function newForm() { busy('btnnew', 'new', function () { var p = resetForm(false); resetDetail(); return p; }); }
 
 /* btnRefresh_Click */
 function refresh() {
-    ajax('GET', API + '/lookups').done(function (d) {
+    busy('btnRefresh', 'refresh', function () { return ajax('GET', API + '/lookups').done(function (d) {
         var keep = L; L = d; L.decimals = d.decimals || keep.decimals;
         cb.loc.setData(d.locationTypes || []); cb.proj.setData(d.costCenters || []); cb.type.setData(d.accountTypes || []);
         if (+cb.type.value() > 0) accountTypeLeave(); else if (PAY) cb.acc.setData(d.headerAccounts || []);
@@ -657,12 +837,12 @@ function refresh() {
         cb.taxType.setData(d.taxTypes || []); cb.adv.setData(d.advanceTaxAccounts || []);
         if (!PAY) cb.oc.setData(d.otherChargesAccounts || []);
         defaults();
-    });
+    }); });
 }
 
 /* ReadById(ID) */
 function readById(id, asSaveAs) {
-    ajax('GET', API + '/load/' + id).done(function (v) {
+    busy(null, 'load', function () { return ajax('GET', API + '/load/' + id).done(function (v) {
         resetForm(true);
         recId = v.id; updateMode = true;
         show('btnsave', false); show('btnSaveAs', !!asSaveAs); show('btnUpdate', !asSaveAs);
@@ -686,7 +866,7 @@ function readById(id, asSaveAs) {
         $id('txtTaxPercent').value = t.taxPercent; $id('txtTaxAmount').value = t.taxAmount;
         sched = (v.schedules && v.schedules.length) ? v.schedules : []; if (!sched.length) schedAddRow(); renderSched();
         exchangeRateChanged(); totalAmountInFooter();
-    });
+    }); });
 }
 
 /* ------------------------------------------------------------------------------ history */
@@ -695,8 +875,9 @@ function history() {
         fromDate: $id('chkFrom').checked ? $id('FromDateHistory').value : '', toDate: $id('chkTo').checked ? $id('ToDateHistory').value : '',
         fromDocNo: $id('txtFromDocNoHistory').value, toDocNo: $id('txtToDocNoHistory').value,
         accountId: cb.hist.value() || 0, status: $id('cmbApproveStatus').value };
-    ajax('GET', API + '/history?' + $.param(q)).done(function (d) {
+    busy('btnShowHistory', 'history', function () { return ajax('GET', API + '/history?' + $.param(q)).done(function (d) {
         var list = d.rows || [];
+        selHist = 0;
         $id('grdDetailHistory').innerHTML = '';
         if (!list.length) { show('VoucherInfoBox', false); $id('DataGridHistory').innerHTML = ''; return; }
         show('VoucherInfoBox', true);
@@ -708,7 +889,9 @@ function history() {
             ['EntryUser', 'EntryUser'], ['EntryDate', 'EntryDate'], ['ModifyUser', 'ModifyUser'], ['ModifyDate', 'ModifyDate'],
             ['ApprovedUser', 'ApprovedUser'], ['ApprovedDate', 'ApprovedDate'], ['CheqNo', 'CheqNo'], ['Attachment', 'Attachment']];
         var tv = 0, tf = 0;
-        var h = '<thead><tr><th>Print</th><th>PrintII</th><th>Edit</th><th>SaveAs</th>' + cols.map(function (c) { return '<th>' + c[1] + '</th>'; }).join('') + '</tr></thead><tbody>';
+        var HW = { VoucherDate: 90, VoucherCode: 60, DocumentTypeCode: 60, Remarks: 200 };
+        var h = '<thead><tr><th style="width:50px;min-width:50px">Print</th><th style="width:60px;min-width:60px">PrintII</th><th style="width:50px;min-width:50px">Edit</th><th style="width:70px;min-width:70px">SaveAs</th>'
+            + cols.map(function (c) { return '<th' + (HW[c[0]] ? ' style="width:' + HW[c[0]] + 'px;min-width:' + HW[c[0]] + 'px"' : '') + '>' + c[1] + '</th>'; }).join('') + '</tr></thead><tbody>';
         list.forEach(function (r) {
             tv += num(r.VoucherAmount); tf += num(r.FcyAmount);
             h += '<tr data-id="' + r.Id + '"><td><button class="tbtn" data-rpt="102-ANewAcRptPaymentReceiptsVoucherSlip.rpt" data-rpt-need="id">Print</button></td>' +
@@ -720,6 +903,7 @@ function history() {
                     if (c[0] === 'FcyAmount') return '<td class="num">' + fmt(v, 3) + '</td>';
                     if (c[0] === 'ExchangeRate') return '<td class="num">' + num(v).toFixed(RD()) + '</td>';
                     if (c[0] === 'EntryDate' || c[0] === 'ModifyDate' || c[0] === 'ApprovedDate') return '<td>' + esc(v ? String(v).substring(0, 19) : '') + '</td>';
+                    if (c[0] === 'VoucherCode') return '<td><a class="vlink" data-act="Open" title="Open this voucher">' + esc(v) + '</a></td>';
                     return '<td>' + esc(v) + '</td>';
                 }).join('') + '</tr>';
         });
@@ -730,15 +914,16 @@ function history() {
         t.querySelectorAll('tbody tr').forEach(function (tr) {
             var id = +tr.getAttribute('data-id');
             tr.addEventListener('click', function () {
-                t.querySelectorAll('tr.sel').forEach(function (x) { x.classList.remove('sel'); }); tr.classList.add('sel'); historyDetail(id);
+                t.querySelectorAll('tr.sel').forEach(function (x) { x.classList.remove('sel'); }); tr.classList.add('sel'); selHist = id; historyDetail(id);
             });
+            tr.querySelector('[data-act=Open]').addEventListener('click', function (e) { e.stopPropagation(); readById(id, false); });
             tr.addEventListener('dblclick', function () { readById(id, false); });
             tr.querySelector('[data-act=Edit]').addEventListener('click', function (e) { e.stopPropagation(); readById(id, false); });
             tr.querySelector('[data-act=SaveAs]').addEventListener('click', function (e) {
                 e.stopPropagation(); if (rights.update) readById(id, true);
             });
         });
-    });
+    }); });
 }
 
 /* VoucherDetailByHeaderId() */
@@ -769,7 +954,7 @@ function histReset() {
     $id('DataGridHistory').innerHTML = ''; rows = []; renderGrid();   // btnNewHistory_Click also clears grd
 }
 
-function histAccounts() { ajax('GET', API + '/history-accounts').done(function (d) { cb.hist.setData(d || []); }); }
+function histAccounts() { busy('btnRefreshHistory', 'histAcc', function () { return ajax('GET', API + '/history-accounts').done(function (d) { cb.hist.setData(d || []); }); }); }
 
 function tab(i) {
     show('pgForm', i === 0); show('pgHist', i === 1);
@@ -801,7 +986,14 @@ function keys(e) {
     else if (e.key === 'F5') { e.preventDefault(); $id('txtDocDate').focus(); }
     else if (e.key === 'ArrowDown') { e.preventDefault(); $id('grdWrap').focus(); }
     else if (e.key === 'ArrowUp') { e.preventDefault(); cb.det.focus(); }
-    else if (e.key === 'ArrowRight') { e.preventDefault(); if (document.activeElement === $id('grdWrap')) $id('grdScheduleWrap').focus(); else $id('grdWrap').focus(); }
+    else if (k === 'p') { e.preventDefault(); if (rights.print && !$id('Print').disabled) $id('Print').click(); }
+    else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        var ae = document.activeElement;
+        if (ae === $id('grdWrap')) $id('grdScheduleWrap').focus();
+        else if ($id('grdScheduleWrap').contains(ae)) cb.tax.focus();
+        else $id('grdWrap').focus();
+    }
 }
 
 window.BV = { tab: tab, newForm: newForm, refresh: refresh, save: save, addRow: addRow, updateRow: updateRow, cancelRow: cancelRow,

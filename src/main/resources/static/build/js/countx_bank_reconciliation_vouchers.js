@@ -6,12 +6,18 @@
  * History's Voucher From / Voucher To boxes exist on the desktop but its history call never
  * sends them; they are kept and ignored the same way.
  * Not ported: attachments.
+ * 2026-10-02 R2: every server button busy (disabled + spinner, duplicate refused, restored on both
+ * outcomes); searchable combos (countx_prod_combo.js); VoucherNo in History loads the record;
+ * ?bankAccountId=&id= (VoucherHeadId) loads a record (ReadById needs both); the 920 slip goes to the
+ * Jasper template after the desktop's own "Not Record Found For Display" check; the form KeyDown
+ * (Enter -> next field, Ctrl+E, Ctrl+Down / Ctrl+Right grid focus, history-tab focus keys),
+ * tabControl1_SelectedIndexChanged focus and grdHistory_KeyDown (Ctrl+Enter / Ctrl+P) wired.
  * ============================================================================================ */
 (function () {
     'use strict';
     var API = '/accounts/api/bank-reconciliation-vouchers';
     var $ = function (id) { return document.getElementById(id); };
-    var S = { rights: {}, pending: [], rows: [], recId: 0, approved: false, voucher: null, defaultDays: 0, yearStart: '', history: [] };
+    var S = { rights: {}, saveRight: false, pending: [], rows: [], recId: 0, approved: false, voucher: null, defaultDays: 0, yearStart: '', history: [] };
 
     function toInt(v) { var n = parseInt(String(v === undefined || v === null ? '' : v).replace(/,/g, ''), 10); return isNaN(n) ? 0 : n; }
     function col(r, c) { return GD.col(r, c); }
@@ -19,9 +25,38 @@
     function fail(e) { alert(e && e.message ? e.message : e); }
     function ask(m) { return confirm(m + '?'); }      // FormHelper.ConfirmAction appends "?"
 
+    /** Server buttons: disabled at once + spinner, a second click refused, restored on success AND failure. */
+    function busy(btn, work) {
+        if (btn && btn.getAttribute('data-busy') === '1') return Promise.resolve();
+        if (btn) {
+            btn.setAttribute('data-busy', '1');
+            btn.setAttribute('data-was-disabled', btn.disabled ? '1' : '0');
+            btn.disabled = true; btn.classList.add('btn-busy');
+        }
+        function done() {
+            if (!btn) return;
+            btn.removeAttribute('data-busy');
+            btn.disabled = btn.getAttribute('data-was-disabled') === '1';
+            btn.classList.remove('btn-busy');
+        }
+        var p;
+        try { p = Promise.resolve(work()); } catch (e) { done(); return Promise.reject(e); }
+        return p.then(function (v) { done(); return v; }, function (e) { done(); throw e; });
+    }
+
+    /** focus a combo's visible field (the native select is hidden by countx_prod_combo.js) */
+    function focusCombo(id) {
+        var s = $(id); if (!s) return;
+        var w = s.closest ? s.closest('.dtcombo-wrap') : null;
+        var inp = w ? w.querySelector('.dtcombo-input') : null;
+        (inp || s).focus();
+    }
+    function focusEl(id) { if ($(id)) $(id).focus(); }
+
     function load() {
         GD.get(API + '/init').then(function (d) {
             S.rights = d.rights || {};
+            S.saveRight = !!S.rights.canSave;
             S.defaultDays = d.defaultDaysToLessFromHistoryFromDate || 0;
             S.yearStart = d.financialYearStart || '';
             GD.setDecimals(d.amountDecimals, 2);
@@ -35,8 +70,15 @@
             var from = new Date(); from.setDate(from.getDate() - (S.defaultDays > 0 ? S.defaultDays : 3));
             $('txtFromdateHistory').value = GD.iso(from);
             $('txtToDateHistory').value = GD.iso(new Date());
+            /* txtVoucherDate is a DateTimePicker with no Value set in the designer -> it shows today (DateTime.Now)
+               until a voucher is loaded (:478 / :812); Reset() never touches it. */
+            if (!$('txtVoucherDate').value) $('txtVoucherDate').value = GD.iso(new Date());
             render();
-            $('CmbSupplier').focus();
+            focusCombo('CmbSupplier');
+            /* ?bankAccountId=<BankAccountId>&id=<VoucherHeadId> opens that reconciliation (ReadById needs both). */
+            var q = new URLSearchParams(window.location.search);
+            var vh = toInt(q.get('id') || q.get('voucherHeadId')), ba = toInt(q.get('bankAccountId'));
+            if (vh > 0 && ba > 0) readById(ba, vh);
         }).catch(function () { alert('Error occurred during database call.'); });
     }
 
@@ -56,12 +98,14 @@
 
     // ===================================================================== btnShowRecords_Click
     function show() {
-        if ($('btnSave').hidden || $('btnSave').disabled) { alert('Please Reset the Form First...'); return Promise.resolve(); }
+        // btnSave.Visible && btnSave.Enabled (Enabled = Save right; the busy state of the button is not "disabled" here)
+        if ($('btnSave').hidden || !S.saveRight) { alert('Please Reset the Form First...'); return Promise.resolve(); }
         var id = toInt(val('CmbSupplier'));
-        if (id <= 0) { alert('Please Select a Bank Account to Show Records'); $('CmbSupplier').focus(); return Promise.resolve(); }
+        if (id <= 0) { alert('Please Select a Bank Account to Show Records'); focusCombo('CmbSupplier'); return Promise.resolve(); }
         if ((S.rows.length > 0 || S.pending.length > 0) && !ask('Record Already Exists,Do you want to Refresh Previous And Load Again')) return Promise.resolve();
         reset();
-        return GD.get(API + '/show', { bankAccountId: id }).then(function (d) {
+        return busy($('btnShowRecords'), function () { return GD.get(API + '/show', { bankAccountId: id }); }).then(function (d) {
+            if (!d) return;
             S.pending = (d.pending || []).map(function (r) {
                 return { RecNo: col(r, 'RecNo'), Id: col(r, 'Id'), DetailId: col(r, 'DetailId'), DocumentTypeId: col(r, 'DocumentTypeId'),
                     DocumentType: col(r, 'DocumentTypeDescription'), VoucherDate: col(r, 'VoucherDate'), VoucherCode: col(r, 'VoucherCode'),
@@ -111,7 +155,7 @@
     /** grdPendingOrders_LoadClick (:455) */
     function loadPending(i) {
         var r = S.pending[i]; if (!r) return;
-        if ($('btnSave').hidden || $('btnSave').disabled) { alert('Please Reset the Form First to Load New Data'); return; }
+        if ($('btnSave').hidden || !S.saveRight) { alert('Please Reset the Form First to Load New Data'); return; }
         if (toInt(r.DocumentTypeId) === 0) { alert('Please Select Valid row to Load Data'); return; }
         if (toInt(val('CmbVoucher')) > 0 && !ask('Voucher Is Already Selected,Do you Want To change??')) return;
         S.voucher = { Id: toInt(r.Id), VoucherNo: r.VoucherCode, DetailId: toInt(r.DetailId) };
@@ -119,6 +163,7 @@
         $('txtVoucherDate').value = GD.iso(r.VoucherDate);
         $('txtVoucherAmountCr').value = GD.fmt3(Math.abs(GD.num(r.CreditAmount)));
         $('txtVoucherAmountDr').value = GD.fmt3(Math.abs(GD.num(r.DebitAmount)));
+        focusEl('grdWrap');
     }
 
     function reset() {
@@ -129,11 +174,11 @@
         $('txtVoucherAmountCr').value = ''; $('txtVoucherAmountDr').value = '';
         S.rows = []; S.pending = [];
         render();
-        $('CmbSupplier').focus();
+        focusCombo('CmbSupplier');
     }
 
     function refresh() {
-        GD.get(API + '/bank-accounts').then(fillBanks).catch(fail);
+        return busy($('btnRefresh'), function () { return GD.get(API + '/bank-accounts').then(fillBanks); }).catch(fail);
     }
 
     // ================================================================== Insert() (:701)
@@ -160,11 +205,13 @@
         if (toInt(val('CmbVoucher')) === 0) { alert('Voucher No field is required'); return; }
         if (!ask(S.recId === 0 ? 'Are you sure to Save' : 'Are you sure to Update')) return;
         var req = request(checked);
-        GD.api('POST', API + '/save', req).then(function (res) {
-            alert(res.message);
-            reset();
-            if ($('ChkPrintslip').checked) generateSlip(req.bankAccountId, req.voucherHeadId);
-            return show();
+        busy($(isUpdate ? 'btnUpdate' : 'btnSave'), function () {
+            return GD.api('POST', API + '/save', req).then(function (res) {
+                alert(res.message);
+                reset();
+                if ($('ChkPrintslip').checked) generateSlip(req.bankAccountId, req.voucherHeadId);
+                return show();
+            });
         }).catch(function (e) { alert(e && e.message); });
     }
 
@@ -172,13 +219,18 @@
     function del() {
         if (S.recId === 0) { alert('Record Id not found for deletion...'); return; }
         if (!confirm('Are you sure to Delete?')) return;
-        GD.api('POST', API + '/delete', request(S.rows)).then(function (res) { alert(res.message); reset(); }).catch(fail);
+        var req = request(S.rows);
+        busy($('btnDelete'), function () {
+            return GD.api('POST', API + '/delete', req).then(function (res) { alert(res.message); reset(); });
+        }).catch(fail);
     }
 
     // ================================================================== History
     function tab(i) {
         $('tabForm').classList.toggle('on', i === 0); $('tabHistory').classList.toggle('on', i === 1);
         $('pageForm').hidden = i !== 0; $('pageHistory').hidden = i !== 1;
+        // tabControl1_SelectedIndexChanged
+        if (i === 1) focusCombo('cmbDateTypeHistory'); else focusEl('grdWrap');
     }
 
     function dateTypeChanged() {
@@ -194,9 +246,12 @@
         $('cmbDateTypeHistory').value = '3'; dateTypeChanged();
         $('txtFromNoHistory').value = ''; $('txtToDocNoHistory').value = '';
         $('CmbCustomerHistory').value = '';
+        focusCombo('cmbDateTypeHistory');
     }
 
-    function historyBanks() { GD.get(API + '/history-banks').then(fillHistoryBanks).catch(fail); }
+    function historyBanks() {
+        return busy($('BtnRefreshHistory'), function () { return GD.get(API + '/history-banks').then(fillHistoryBanks); }).catch(fail);
+    }
 
     /** FillHistory (:1046) */
     function history() {
@@ -204,7 +259,7 @@
         var p = { dateType: dt, bankAccountId: toInt(val('CmbCustomerHistory')) };
         if ($('chkFrom').checked) p.from = val('txtFromdateHistory');
         if ($('chkTo').checked) p.to = val('txtToDateHistory');
-        GD.get(API + '/history', p).then(function (rows) {
+        busy($('btnshow'), function () { return GD.get(API + '/history', p); }).then(function (rows) {
             S.history = rows || [];
             if (S.history.length === 0) { $('grdHistory').innerHTML = ''; return; }
             var h = '<thead><tr><th>Edit</th><th>Print</th><th>VoucherType</th><th>VoucherNo</th><th>VoucherDate</th><th>AccountTitle</th>'
@@ -214,9 +269,10 @@
             var td = 0, tc = 0;
             S.history.forEach(function (r, i) {
                 td += GD.num(col(r, 'Debit')); tc += GD.num(col(r, 'Credit'));
-                h += '<tr ondblclick="BR.edit(' + i + ')"><td><button type="button" onclick="BR.edit(' + i + ')">Edit</button></td>'
-                    + '<td><button type="button" onclick="BR.printRow(' + i + ')">Print</button></td>'
-                    + '<td>' + GD.esc(col(r, 'VoucherDocumentType')) + '</td><td>' + GD.esc(col(r, 'VoucherNo')) + '</td>'
+                h += '<tr tabindex="-1" data-i="' + i + '" ondblclick="BR.edit(' + i + ')"><td><button type="button" onclick="BR.edit(' + i + ',this)">Edit</button></td>'
+                    + '<td><button type="button" onclick="BR.printRow(' + i + ',this)">Print</button></td>'
+                    + '<td>' + GD.esc(col(r, 'VoucherDocumentType')) + '</td>'
+                    + '<td><a class="vno" href="#" onclick="BR.edit(' + i + ');return false;">' + GD.esc(col(r, 'VoucherNo')) + '</a></td>'
                     + '<td>' + GD.fmtDate(col(r, 'VoucherDate'), 'dd-MMM-yy') + '</td><td>' + GD.esc(col(r, 'AccountTitle')) + '</td>'
                     + '<td>' + GD.esc(col(r, 'AccountCode')) + '</td><td>' + GD.fmtDate(col(r, 'TransactionDate'), 'dd-MMM-yy') + '</td>'
                     + '<td>' + GD.esc(col(r, 'ChequeNo')) + '</td><td>' + GD.esc(col(r, 'Particulars')) + '</td>'
@@ -233,21 +289,21 @@
         }).catch(fail);
     }
 
-    function edit(i) {
+    function edit(i, btn) {
         var r = S.history[i]; if (!r) return;
-        readById(toInt(col(r, 'BankAccountId')), toInt(col(r, 'VoucherHeadId')));
+        busy(btn || null, function () { return readById(toInt(col(r, 'BankAccountId')), toInt(col(r, 'VoucherHeadId'))); });
     }
 
-    function printRow(i) {
+    function printRow(i, btn) {
         var r = S.history[i]; if (!r) return;
-        generateSlip(toInt(col(r, 'BankAccountId')), toInt(col(r, 'VoucherHeadId')));
+        busy(btn || null, function () { return generateSlip(toInt(col(r, 'BankAccountId')), toInt(col(r, 'VoucherHeadId'))); });
     }
 
     /** ReadById (:789) */
     function readById(bankAccountId, voucherHeadId) {
         reset();
         S.recId = voucherHeadId;
-        GD.get(API + '/read', { bankAccountId: bankAccountId, voucherHeadId: voucherHeadId }).then(function (rows) {
+        return GD.get(API + '/read', { bankAccountId: bankAccountId, voucherHeadId: voucherHeadId }).then(function (rows) {
             if (!rows || rows.length === 0) return;
             tab(0);
             $('btnSave').hidden = true; $('btnUpdate').hidden = false; $('btnDelete').hidden = false;
@@ -263,18 +319,47 @@
             $('txtVoucherAmountDr').value = String(col(dr, 'VoucherAmountDr') === null ? '' : col(dr, 'VoucherAmountDr'));
             S.rows = rows.map(rowOf);
             render();
+            focusEl('grdWrap');
         }).catch(fail);
     }
 
     // ================================================================== prints
+    /** GenerateSlip (:1259): the procedure's rows are checked first ("Not Record Found For Display"), then the
+        920_BankReconciliation_Slip.rpt Jasper template prints (print-rpt.js; AccountsPrintController 920 contract). */
     function generateSlip(bankAccountId, voucherHeadId) {
-        GD.get(API + '/slip', { bankAccountId: bankAccountId, voucherHeadId: voucherHeadId }).then(function (rows) {
+        return GD.get(API + '/slip', { bankAccountId: bankAccountId, voucherHeadId: voucherHeadId }).then(function (rows) {
             if (!rows || rows.length === 0) { alert('Not Record Found For Display'); return; }
+            if (typeof window.printRpt === 'function') {
+                return window.printRpt('920_BankReconciliation_Slip.rpt', { bankAccountId: bankAccountId, voucherHeadId: voucherHeadId });
+            }
             GD.printRows('920_BankReconciliation_Slip', rows);
         }).catch(fail);
     }
 
-    function slipClick() { generateSlip(toInt(val('CmbSupplier')), toInt(val('CmbVoucher'))); }
+    function slipClick() {
+        var ba = toInt(val('CmbSupplier')), vh = toInt(val('CmbVoucher'));
+        return busy($('btnSlip'), function () { return generateSlip(ba, vh); });
+    }
+
+    /** Enter -> SendKeys "{TAB}": the next visible, enabled field of the page */
+    function nextField(from) {
+        var page = !$('pageForm').hidden ? $('pageForm') : $('pageHistory');
+        var list = Array.prototype.filter.call(page.querySelectorAll('input, select, button, [tabindex="0"]'), function (el) {
+            return !el.disabled && el.type !== 'hidden' && el.offsetParent !== null && el.tabIndex >= 0;
+        });
+        var i = list.indexOf(from);
+        if (i >= 0 && i + 1 < list.length) list[i + 1].focus();
+    }
+
+    /** grdHistory_KeyDown (:1633): Ctrl+Enter / Ctrl+Space on Edit (Update right) loads, Ctrl+P (Print right) prints */
+    function historyKey(e) {
+        var tr = document.activeElement && document.activeElement.closest ? document.activeElement.closest('#grdHistory tr[data-i]') : null;
+        if (!tr || !e.ctrlKey) return false;
+        var i = toInt(tr.getAttribute('data-i'));
+        if (e.key === 'Enter') { e.preventDefault(); if (S.rights.canUpdate) edit(i); return true; }
+        if (e.key.toLowerCase() === 'p') { e.preventDefault(); if (S.rights.canPrint) printRow(i); return true; }
+        return false;
+    }
 
     function shortcuts() {
         alert(['Ctrl+S  For Save', 'Ctrl+U  For Update', 'Ctrl+Shift+Delete  For Delete', 'Ctrl+E  For Close', 'Ctrl+R  For Refresh',
@@ -287,9 +372,22 @@
 
     document.addEventListener('keydown', function (e) {
         var onForm = !$('pageForm').hidden;
+        var t = e.target;
+        var inCombo = t && t.closest && t.closest('.dtcombo-pop');
+        if (e.key === 'Enter' && !e.ctrlKey && !e.altKey && !inCombo && t && (t.tagName === 'INPUT' || t.tagName === 'SELECT')
+            && t.type !== 'checkbox' && t.type !== 'radio') { e.preventDefault(); nextField(t); return; }
         if (e.ctrlKey && e.altKey) { e.preventDefault(); shortcuts(); return; }
         if (e.ctrlKey && e.key.toLowerCase() === 't') { e.preventDefault(); tab(onForm ? 1 : 0); return; }
-        if (!onForm) return;
+        if (e.ctrlKey && e.key.toLowerCase() === 'e') {               // Ctrl+E -> Close()
+            e.preventDefault(); window.close(); if (!window.closed) window.location.href = '/accounts'; return;
+        }
+        if (!onForm) {
+            if (historyKey(e)) return;
+            if (e.ctrlKey && (e.key === 'F5' || e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === 'ArrowUp')) {
+                e.preventDefault(); focusEl('grdHistoryWrap');
+            }
+            return;
+        }
         if (e.altKey && e.key === '1') { e.preventDefault(); slipClick(); return; }
         if (!e.ctrlKey) return;
         var k = e.key.toLowerCase();
@@ -298,7 +396,13 @@
         else if (k === 'n') { e.preventDefault(); reset(); }
         else if (k === 'r') { e.preventDefault(); refresh(); }
         else if (k === 'p') { e.preventDefault(); slipClick(); }
-        else if (e.key === 'F5' || e.key === 'ArrowUp') { e.preventDefault(); $('CmbSupplier').focus(); }
+        else if (e.key === 'F5' || e.key === 'ArrowUp') { e.preventDefault(); focusCombo('CmbSupplier'); }
+        else if (e.key === 'ArrowDown') { e.preventDefault(); focusEl('grdWrap'); }
+        else if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            if (document.activeElement === $('grdWrap') || ($('grdWrap').contains(document.activeElement))) focusEl('grdPendingWrap');
+            else focusEl('grdWrap');
+        }
     });
 
     window.BR = {

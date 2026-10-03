@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Shipping Consignment FollowUp - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_rpt_c.css?v=20260930c}"/>
+</head>
+<!-- frmshippedConsignment_followup.cs (Architecture.WinApp.ExportReports), screen 203 "5009 Consignment Follow Up Report", ClientSize 1158 x 609.
+     toolStrip1: btnnew "&New" | btnSave "&Save" | btnUpdate "&Update" (hidden until a record loads) | btnRefresh "&Refresh" | btnPrintSlip "511-Print Slip" (Visible=false) |
+     btnPrintRegister "512-Print Register" (Visible=false) | btnLookup "Lookup" (opens ExImLookups) | btnshortcutkey.
+     panel6 (Teal) "Shipping Consignment FollowUp"; panel3 (white) entry: Invoice No (InvoiceNo, Leave loads the record), Document Status (cmbdocstatus, look-up type 5),
+     Current Status (cmbcurrsatatus, type 6), Courier Tracking No, Goods Declaration No (txtGdNo), and the ShowCheckBox dates (dd-MMM-yy): Document To Bank, Document To Party,
+     Loaded On Train, Reached At Loading Port, Loaded On Vessel, Vessel Cut Off Date (datCuttOfDate), ETD Loading Port, ETA Destination Port (txtETDFinalDate4),
+     Reached At Destination Port, Goods Declaration Date, Port Payment.
+     groupBox1 "Filters": Document Status (cmbStatus, checked list), Cut Off Date days (txtCutOffDateDays "3"), ETA Destination days (txtETADestinationPortDays "10"), btnshow "Show".
+     panel10 (Teal) "History" + btnUpdateStatus "Update" (white) + ctrlGrdBar1; grdHistory: Select checkbox | Edit button | InvoiceNo (link -> 521 slip) | ... editable dates and
+     status lists | Update button; CRO_Number link -> 560 CRO slip; NoOfAttachments link. FormattingRow: CuttOfDate within N days red, ETDDestinationPort / ReachedAtDestinationPort within N days dark green. -->
+<body class="pd-body exr-page" data-export-page="cfu203">
+<div class="pd-form ex-form">
+    <div class="win-tool-strip">
+        <button type="button" id="btnnew" class="win-btn-tool" onclick="ExportConsignmentFollowUp.reset()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button> <button type="button" id="btnSave" class="win-btn-tool" onclick="ExportConsignmentFollowUp.save(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button> <button type="button" id="btnUpdate" class="win-btn-tool is-hidden" onclick="ExportConsignmentFollowUp.update(this)"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button> <button type="button" id="btnRefresh" class="win-btn-tool" onclick="ExportConsignmentFollowUp.refresh(this)"><i class="fa fa-refresh"></i> <span><u>R</u>efresh</span></button> <button type="button" id="btnPrintSlip" class="win-btn-tool is-hidden" onclick="ExportConsignmentFollowUp.printSlip(this)"><i class="fa fa-print"></i> <span>511-Print Slip</span></button> <button type="button" id="btnPrintRegister" class="win-btn-tool is-hidden" onclick="ExportConsignmentFollowUp.printRegister(this)"><i class="fa fa-print"></i> <span>512-Print Register</span></button> <button type="button" id="btnLookup" class="win-btn-tool" onclick="ExportConsignmentFollowUp.lookup()"><i class="fa fa-search"></i> <span>Lookup</span></button> <button type="button" id="btnshortcutkey" class="win-btn-tool" onclick="ExportConsignmentFollowUp.shortcuts()"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+    </div>
+    <div class="exr-title teal">Shipping Consignment FollowUp</div>
+    <div class="exr-entry" id="panel3">
+        <div class="ex-field "><label for="InvoiceNo">Invoice No</label><select id="InvoiceNo" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Invoice No"></select></div> <div class="ex-field "><label for="cmbdocstatus">Document Status</label><select id="cmbdocstatus" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Document Status"></select></div> <div class="ex-field "><label for="cmbcurrsatatus">Current Status</label><select id="cmbcurrsatatus" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Current Status"></select></div>
+        <div class="ex-field "><label for="txtCourierTrackingNo">Courier Tracking No</label><input type="text" id="txtCourierTrackingNo" class="win-textbox" autocomplete="off"/></div> <div class="ex-field "><label for="txtGdNo">Goods Declaration No</label><input type="text" id="txtGdNo" class="win-textbox" autocomplete="off"/></div>
+        <div class="ex-field "><label for="txtDocToBank">Document To Bank</label><span class="ex-check"><input type="checkbox" id="txtDocToBankChk"/><input type="date" id="txtDocToBank" class="win-date"/></span></div> <div class="ex-field "><label for="txtDocToParty">Document To Party</label><span class="ex-check"><input type="checkbox" id="txtDocToPartyChk"/><input type="date" id="txtDocToParty" class="win-date"/></span></div> <div class="ex-field "><label for="txtLoadOnTrainDate1">Loaded On Train</label><span class="ex-check"><input type="checkbox" id="txtLoadOnTrainDate1Chk"/><input type="date" id="txtLoadOnTrainDate1" class="win-date"/></span></div> <div class="ex-field "><label for="txtReachedAtLoadingPortDate2">Reached At Loading Port</label><span class="ex-check"><input type="checkbox" id="txtReachedAtLoadingPortDate2Chk"/><input type="date" id="txtReachedAtLoadingPortDate2" class="win-date"/></span></div> <div class="ex-field "><label for="txtLoadedOnVesselDate3">Loaded On Vessel</label><span class="ex-check"><input type="checkbox" id="txtLoadedOnVesselDate3Chk"/><input type="date" id="txtLoadedOnVesselDate3" class="win-date"/></span></div> <div class="ex-field "><label for="datCuttOfDate">Vessel Cut Off Date</label><span class="ex-check"><input type="checkbox" id="datCuttOfDateChk"/><input type="date" id="datCuttOfDate" class="win-date"/></span></div> <div class="ex-field "><label for="txtETDLoadingPort">ETD Loading Port</label><span class="ex-check"><input type="checkbox" id="txtETDLoadingPortChk"/><input type="date" id="txtETDLoadingPort" class="win-date"/></span></div> <div class="ex-field "><label for="txtETDFinalDate4">ETA Destination Port</label><span class="ex-check"><input type="checkbox" id="txtETDFinalDate4Chk"/><input type="date" id="txtETDFinalDate4" class="win-date"/></span></div> <div class="ex-field "><label for="txtReachedDestinationPortDate">Reached At Destination Port</label><span class="ex-check"><input type="checkbox" id="txtReachedDestinationPortDateChk"/><input type="date" id="txtReachedDestinationPortDate" class="win-date"/></span></div> <div class="ex-field "><label for="txtGoodsDeclarationDate">Goods Declaration Date</label><span class="ex-check"><input type="checkbox" id="txtGoodsDeclarationDateChk"/><input type="date" id="txtGoodsDeclarationDate" class="win-date"/></span></div> <div class="ex-field "><label for="txtPortPayment">Port Payment</label><span class="ex-check"><input type="checkbox" id="txtPortPaymentChk"/><input type="date" id="txtPortPayment" class="win-date"/></span></div>
+    </div>
+    <fieldset class="exr-filters"><legend>Filters</legend>
+        <div class="exr-row">
+            <div class="ex-field grow"><label>Document Status</label><div class="exr-multi" id="cmbStatus"></div></div>
+            <div class="ex-field w120"><label for="txtCutOffDateDays">Cut Off Date</label><input type="text" id="txtCutOffDateDays" class="win-textbox num" value="3" data-guard="integer" autocomplete="off"/></div>
+            <div class="ex-field w120"><label for="txtETADestinationPortDays">ETA Destination</label><input type="text" id="txtETADestinationPortDays" class="win-textbox num" value="10" data-guard="integer" autocomplete="off"/></div>
+            <div class="ex-field"><label>&nbsp;</label><button type="button" id="btnshow" class="exr-btn" onclick="ExportConsignmentFollowUp.showGrid(this)">Show</button></div>
+        </div>
+    </fieldset>
+    <div class="pd-caption pd-caption-teal pd-history-bar"><span>History</span><button type="button" id="btnUpdateStatus" class="exr-btn white" style="height:22px;margin-left:12px;" onclick="ExportConsignmentFollowUp.updateStatuses(this)">Update</button>
+        <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdHistoryBox" title="Fullscreen table">&#x26F6;</button><span id="gridBarMount" class="pd-gridbar-mount"></span></span></div>
+    <div class="ex-grid-box" id="grdHistoryBox">
+        <div class="ex-grid-scroll ex-h400">
+            <table class="win-grid" id="grdHistory" data-gridbar="frmshippedConsignment_followup:grdHistory" data-gridbar-mount="#gridBarMount" data-gridbar-reorder="false"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+        </div>
+        <div class="ex-grid-empty is-hidden" id="grdHistoryEmpty">No record found.</div>
+    </div>
+    <div class="win-footer-strip">
+        <span class="ex-footer-left" id="footerInfo"></span>
+        <button type="button" class="win-btn-history" id="btnFooterHistory" onclick="ExportConsignmentFollowUp.toggleHistory()"><i class="fa fa-history"></i> <span>History</span></button>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_export_rpt_c.js?v=20260930c}"></script>
+<script th:src="@{/build/js/countx_export_consignment_follow_up.js?v=20260930c}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+<script src="/js/print-rpt.js?v=20261001a"></script>
+</body>
+</html>

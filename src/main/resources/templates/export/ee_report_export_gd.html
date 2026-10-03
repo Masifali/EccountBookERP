@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>EE Report_Export GD - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_rpt_c.css?v=20260930c}"/>
+</head>
+<!-- EEReport_ExportGD.cs (Architecture.WinApp.ExportReports), screen 257 "EEReport", ClientSize 1136 x 597.
+     toolStrip1: btnNew "&New" | Btnreferesh "&Refresh" | btnPrint "567-Print" | btnPrint567_1 "567-1-Print" | btnprint_02 "567-02-Print" | btnshortcut.
+     panel5 "EE Report_Export GD"; groupBox1 "Filters": Date Type (cmbperemeter, Rows[1] "This Week"), From Date / To Date (dd-MMM-yy), GD Bank (CmbBank),
+     Realized Bank (cmbrealizedbank), ChkDetail "Detail" (Checked) / ChkSummary "Summary", btnshow "Show". panel6 "History" + ctrlGrdBar1; grdfrm.
+     Detail grid is editable: FEReturnPageNo, ITRSNo (numeric only), FEReturnMonth (list Jul-Jun), Schedule, SalesTerm (lists from the data, free text allowed), EERemarks;
+     each edit saves one EEStatement (grdfrm_CellUpdated). Summary grid is read-only. -->
+<body class="pd-body exr-page" data-export-page="eer257">
+<div class="pd-form ex-form">
+    <div class="win-tool-strip">
+        <button type="button" id="btnNew" class="win-btn-tool" onclick="ExportEeReport.reset()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button> <button type="button" id="Btnreferesh" class="win-btn-tool" onclick="ExportEeReport.refresh(this)"><i class="fa fa-refresh"></i> <span><u>R</u>efresh</span></button> <button type="button" id="btnPrint" class="win-btn-tool" onclick="ExportEeReport.print(this, '567-EEReport_ExportGD.rpt')"><i class="fa fa-print"></i> <span>567-Print</span></button> <button type="button" id="btnPrint567_1" class="win-btn-tool" onclick="ExportEeReport.print(this, '567_01-EEReport_ExportGD.rpt')"><i class="fa fa-print"></i> <span>567-1-Print</span></button> <button type="button" id="btnprint_02" class="win-btn-tool" onclick="ExportEeReport.print(this, '567_02-EEReport_ExportGD.rpt')"><i class="fa fa-print"></i> <span>567-02-Print</span></button> <button type="button" id="btnshortcut" class="win-btn-tool" onclick="ExportEeReport.shortcuts()"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+    </div>
+    <div class="exr-title">EE Report_Export GD</div>
+    <fieldset class="exr-filters"><legend>Filters</legend>
+        <div class="exr-row">
+            <div class="ex-field w150"><label>Date Type</label><select id="cmbperemeter" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Parameters"></select></div> <div class="ex-field w150"><label>From Date</label><input type="date" id="gdfrmdate" class="win-date"/></div> <div class="ex-field w150"><label>To Date</label><input type="date" id="gdtodate" class="win-date"/></div> <div class="ex-field w260"><label>GD Bank</label><select id="CmbBank" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="GD Bank"></select></div> <div class="ex-field w260"><label>Realized Bank</label><select id="cmbrealizedbank" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Realized Bank"></select></div>
+            <div class="ex-field"><label>&nbsp;</label><div class="exr-radios"><label><input type="radio" name="eeMode" id="ChkDetail" value="Detail" checked/> Detail</label><label><input type="radio" name="eeMode" id="ChkSummary" value="Summary"/> Summary</label></div></div>
+            <div class="ex-field"><label>&nbsp;</label><button type="button" id="btnshow" class="exr-btn" onclick="ExportEeReport.show(this)">Show</button></div>
+        </div>
+    </fieldset>
+    <div class="pd-caption pd-caption-dark pd-history-bar"><span>History</span>
+        <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdfrmBox" title="Fullscreen table">&#x26F6;</button><span id="gridBarMount" class="pd-gridbar-mount"></span></span></div>
+    <div class="ex-grid-box" id="grdfrmBox">
+        <div class="ex-grid-scroll ex-h400">
+            <table class="win-grid" id="grdfrm" data-gridbar="EEReport_ExportGD:grdfrm" data-gridbar-mount="#gridBarMount" data-gridbar-reorder="false"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+        </div>
+        <div class="ex-grid-empty is-hidden" id="grdfrmEmpty">No record found.</div>
+    </div>
+    <div class="win-footer-strip">
+        <span class="ex-footer-left" id="footerInfo"></span>
+        <button type="button" class="win-btn-history" id="btnFooterHistory" onclick="ExportEeReport.toggleHistory()"><i class="fa fa-history"></i> <span>History</span></button>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_export_rpt_c.js?v=20260930c}"></script>
+<script th:src="@{/build/js/countx_export_ee_report_export_gd.js?v=20260930c}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+<script src="/js/print-rpt.js?v=20261001a"></script>
+</body>
+</html>

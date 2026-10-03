@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>E-Form Registration - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <style>
+        .k-head { display:grid; grid-template-columns:repeat(5, minmax(200px, 1fr)); gap:4px 14px; padding:4px 6px; }
+        .k-head .ex-field > label { width:120px; flex:none; }
+        .k-two { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+        .k-entry { display:flex; flex-wrap:wrap; align-items:flex-end; gap:6px; padding:4px 6px; }
+        .k-entry .ex-field { flex-direction:column; align-items:stretch; }
+        .k-entry .ex-field > label { width:auto; }
+        @media (max-width: 900px) { .k-head { grid-template-columns:1fr; } .k-two { grid-template-columns:1fr; } }
+    </style>
+</head>
+<!-- ExpfrmEformRegistration.cs (Architecture.WinApp.Export), screen 217 "EFrom Registration (Not Use)".
+     tabControl1 Form | History. toolStrip1: New / Save / Update (hidden). panel2 caption "E-Form Registration".
+     groupBox1: Customer (Leave -> FC bank receipts), Issue Bank (Foreign Country banks), Form No., Form Date, Delivery Term /
+       Currency Code, Value FC, Exchange Rate (TextChanged -> Amount Rs.), Amount Rs. (read only), Net Weight Kg /
+       Country, Loading Port, Destination Port.
+     panel5: groupBox3 Payment Terms entry + grdPaymentTerm | groupBox2 Commodity entry + grdCommodity (double-click = edit).
+     panel6: groupBox4 Advance Payment Utilization entry (Bank Reference Leave) + grdPaymentUtilization.
+     History: toolStrip2 New / Print (no handlers), "History", DataGridHistory (double-click -> ReadById). -->
+<body class="pd-body" data-export-page="ef" data-variant="ef">
+<div class="pd-form ex-form">
+    <div class="win-tabs" data-tabs="ef">
+        <button type="button" class="win-tab is-active" data-tab="efForm">Form</button>
+        <button type="button" class="win-tab" data-tab="efHistory">History</button>
+    </div>
+    <div class="win-tab-panel is-active" id="efForm">
+        <div class="win-tool-strip">
+            <button type="button" id="BtnNew" class="win-btn-tool" onclick="ExportEform.btnNew()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="btnSave" class="win-btn-tool" onclick="ExportEform.btnSave(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+            <button type="button" id="btnUpdate" class="win-btn-tool is-hidden" onclick="ExportEform.btnUpdate(this)"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+        </div>
+        <div class="pd-caption pd-caption-teal" style="height:28px;">E-Form Registration</div>
+        <fieldset class="ex-groupbox"><legend>Main</legend><div class="k-head">
+            <div class="ex-field"><label class="ex-req">Customer</label><select id="cmbCustomer" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Customer Name"></select></div>
+            <div class="ex-field"><label class="ex-req">Issue Bank</label><select id="cmbIssueBank" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Bank"></select></div>
+            <div class="ex-field"><label class="ex-req">Form No.</label><input type="text" id="txtFormNo" class="win-textbox" autocomplete="off"/></div>
+            <div class="ex-field"><label class="ex-req">Form Date</label><input type="date" id="txtFormdate" class="win-date"/></div>
+            <div class="ex-field"><label class="ex-req">Delivery Term</label><select id="cmbDeliveryTerm" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Delivery Term"></select></div>
+            <div class="ex-field"><label class="ex-req">Currency Code</label><select id="cmbCurrencyCode" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Currency Code"></select></div>
+            <div class="ex-field"><label class="ex-req">Value FC</label><input type="text" id="txtValueFc" class="win-textbox num" data-guard="decimal" autocomplete="off"/></div>
+            <div class="ex-field"><label>Exchange Rate</label><input type="text" id="txtExchangeRate" class="win-textbox num" data-guard="decimal" autocomplete="off"/></div>
+            <div class="ex-field"><label>Amount Rs.</label><input type="text" id="txtAmountRs" class="win-textbox num" data-guard="decimal" autocomplete="off" readonly/></div>
+            <div class="ex-field"><label>Net Weight Kg</label><input type="text" id="txtNetWeightkg" class="win-textbox num" data-guard="decimal" autocomplete="off"/></div>
+            <div class="ex-field"><label>Country</label><select id="cmbCountry" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Country"></select></div>
+            <div class="ex-field"><label>Loading Port</label><select id="cmbLoadingPort" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Loading Port"></select></div>
+            <div class="ex-field"><label>Destination Port</label><select id="cmbDestinationPort" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Destination Port"></select></div>
+        </div></fieldset>
+
+        <!-- panel5: Payment Terms (left) + Commodity (right) -->
+        <div id="panel5" class="k-two"><div><fieldset class="ex-groupbox"><legend>Payment Terms</legend><div class="k-entry">
+                <div class="ex-field" style="width:170px;"><label>Payment Term</label><select id="cmbPaymentTerm" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Payment Term"></select></div><div class="ex-field"><label>Payment Percent</label><input type="text" id="txtPaymentPercent" class="win-textbox num" data-guard="decimal" autocomplete="off" style="width:120px;"/></div><div class="ex-field"><label>Fc Amount</label><input type="text" id="txtFcAmountPayment" class="win-textbox num" data-guard="decimal" autocomplete="off" style="width:130px;"/></div><div class="ex-field"><label>Due Days</label><input type="text" id="txtDueDays" class="win-textbox" autocomplete="off" style="width:120px;" data-guard="integer"/></div>
+                <button type="button" id="btnAddPayment" class="win-btn-small" onclick="ExportEform.btnAddPayment()">+</button>
+                <button type="button" id="btnUpdatePayment" class="win-btn-small is-hidden" onclick="ExportEform.btnUpdatePayment()">Update</button>
+                <button type="button" id="btnCancelPayment" class="win-btn-small is-hidden" onclick="ExportEform.btnCancelPayment()">Cancel</button>
+            </div></fieldset><div class="pd-caption pd-caption-teal pd-history-bar" style="height:23px;"><span>Payment Terms</span>
+            <span class="ex-bar-right"><span style="font:8pt 'Segoe UI',sans-serif;">double-click a row = edit</span><button type="button" class="ex-fs-btn" data-fullscreen="payBox" title="Fullscreen table">&#x26F6;</button></span></div>
+        <div class="ex-grid-box" id="payBox"><div class="ex-grid-scroll ex-h240">
+            <table class="win-grid"><thead><tr><th data-col="PaymentTerm">Payment Term</th><th class="num" data-col="PaymentPercent">Payment Percent</th><th class="num" data-col="FcAmount">Fc Amount</th><th data-col="DueDays">Due Days</th></tr></thead><tbody id="payBody"></tbody><tfoot id="payFoot"></tfoot></table>
+        </div></div></div><div><fieldset class="ex-groupbox"><legend>Commodity</legend><div class="k-entry">
+                <div class="ex-field"><label>Commodity</label><input type="text" id="txtCommodity" class="win-textbox" autocomplete="off" style="width:165px;"/></div><div class="ex-field"><label>Net Weight</label><input type="text" id="txtNetweightDetail" class="win-textbox num" data-guard="decimal" autocomplete="off" style="width:120px;"/></div><div class="ex-field"><label>FcAmount</label><input type="text" id="txtFCAmount" class="win-textbox num" data-guard="decimal" autocomplete="off" style="width:130px;"/></div>
+                <button type="button" id="btnCommodityAdd" class="win-btn-small" onclick="ExportEform.btnCommodityAdd()">+</button>
+                <button type="button" id="btnUpdateComodity" class="win-btn-small is-hidden" onclick="ExportEform.btnUpdateComodity()">Update</button>
+                <button type="button" id="btnCancelComodity" class="win-btn-small is-hidden" onclick="ExportEform.btnCancelComodity()">Cancel</button>
+            </div></fieldset><div class="pd-caption pd-caption-teal pd-history-bar" style="height:23px;"><span>Commodity Detail</span>
+            <span class="ex-bar-right"><span style="font:8pt 'Segoe UI',sans-serif;">double-click a row = edit</span><button type="button" class="ex-fs-btn" data-fullscreen="comBox" title="Fullscreen table">&#x26F6;</button></span></div>
+        <div class="ex-grid-box" id="comBox"><div class="ex-grid-scroll ex-h240">
+            <table class="win-grid"><thead><tr><th data-col="Commodity">Commodity</th><th class="num" data-col="NetWeight">Net Weight</th><th class="num" data-col="FcAmount">Fc Amount</th></tr></thead><tbody id="comBody"></tbody><tfoot id="comFoot"></tfoot></table>
+        </div></div></div></div>
+        <!-- panel6: Advance Payment Utilization -->
+        <div id="panel6" class=""><fieldset class="ex-groupbox"><legend>Advance Payment Utilization</legend><div class="k-entry">
+                <div class="ex-field" style="width:165px;"><label>Bank Reference</label><select id="cmbBankReerence" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="BankFbpno"></select></div><div class="ex-field" style="width:125px;"><label>Currency Code</label><select id="cmbcurrency" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="CurrencyCode"></select></div><div class="ex-field"><label>Fc Amount</label><input type="text" id="txtFcAmountPaymentUtilization" class="win-textbox num" data-guard="decimal" autocomplete="off" style="width:125px;" disabled readonly/></div><div class="ex-field"><label>Utilized Amount</label><input type="text" id="txtUtilizeAmount" class="win-textbox num" data-guard="decimal" autocomplete="off" style="width:125px;" disabled readonly/></div><div class="ex-field"><label>Balance</label><input type="text" id="txtBalance" class="win-textbox num" data-guard="decimal" autocomplete="off" style="width:125px;" disabled readonly/></div><div class="ex-field"><label>This Utilize</label><input type="text" id="txtThisUtilize" class="win-textbox num" data-guard="decimal" autocomplete="off" style="width:135px;"/></div><div class="ex-field"><label>Remarks</label><input type="text" id="txtremarks" class="win-textbox" autocomplete="off" style="width:290px;"/></div>
+                <button type="button" id="btnAddPaymentUtilization" class="win-btn-small" onclick="ExportEform.btnAddPaymentUtilization()">+</button>
+                <button type="button" id="btnUpdatePaymentUtilization" class="win-btn-small is-hidden" onclick="ExportEform.btnUpdatePaymentUtilization()">Update</button>
+                <button type="button" id="btnCancelPaymentUtilization" class="win-btn-small is-hidden" onclick="ExportEform.btnCancelPaymentUtilization()">Cancel</button>
+            </div></fieldset><div class="pd-caption pd-caption-teal pd-history-bar" style="height:23px;"><span>Advance Payment Utilization</span>
+            <span class="ex-bar-right"><span style="font:8pt 'Segoe UI',sans-serif;">double-click a row = edit</span><button type="button" class="ex-fs-btn" data-fullscreen="utilBox" title="Fullscreen table">&#x26F6;</button></span></div>
+        <div class="ex-grid-box" id="utilBox"><div class="ex-grid-scroll ex-h240">
+            <table class="win-grid"><thead><tr><th data-col="BankReference">Bank Reference</th><th data-col="CurrencyCode">Currency Code</th><th class="num" data-col="ThisUtilize">This Utilize</th><th data-col="Remarks">Remarks</th></tr></thead><tbody id="utilBody"></tbody><tfoot id="utilFoot"></tfoot></table>
+        </div></div></div>
+    </div>
+    <div class="win-tab-panel" id="efHistory">
+        <div class="win-tool-strip">
+            <button type="button" id="toolStripButton1" class="win-btn-tool" onclick="ExportEform.historyNew()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="toolStripButton6" class="win-btn-tool" onclick="ExportEform.historyPrint()"><i class="fa fa-print"></i> <span><u>P</u>rint</span></button>
+        </div>
+        <div class="pd-caption pd-caption-teal pd-history-bar" style="height:28px;"><span>History</span>
+            <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="histBox" title="Fullscreen table">&#x26F6;</button></span></div>
+        <div class="ex-grid-box" id="histBox"><div class="ex-grid-scroll ex-h400">
+            <table class="win-grid" id="DataGridHistory"><thead id="histHead"></thead><tbody id="histBody"></tbody></table>
+        </div><div class="ex-grid-empty is-hidden" id="histEmpty">No record found.</div></div>
+    </div>
+    <div class="win-footer-strip">
+        <span class="ex-footer-left" id="efFooterInfo"></span>
+        <button type="button" class="win-btn-history" id="btnFooterHistory" onclick="ExportEform.toggleHistory()"><i class="fa fa-history"></i> <span>History</span></button>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_export_eform_registration.js?v=20261001k}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

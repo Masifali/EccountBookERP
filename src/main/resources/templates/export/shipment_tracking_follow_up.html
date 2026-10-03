@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Shipment Tracking Follow up - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_rptb.css?v=20260930a}"/>
+</head>
+<!-- ExportPendingShipmentsFollowupReport.cs (Architecture.WinApp.ExportReports), screen 254 "5014 Shipment Tracking Follow up",
+     ClientSize 1539 x 561 (AutoScrollMinSize 1000 x 550).
+     toolStrip3: btnNew "&Reset" | btnRefresh "&Refresh" | btnPrintCurrent "552-Print" | btnShortCutKeys | BtnShipmentForm "Shipment Follow UP" | btnDHLTracking "DHL Tracking".
+     panel8 (Teal) label9 "Export Pending Shipments Followup Report".
+     panel2 (152 high) groupBox1 "Filters": cmbsupplierCustomer (Customer), cmbdestinationport (Destination Port), cmbStatus (Document Status,
+       checked list, look-up type 5), CmbCurrentStatus (Current Status, checked list, look-up type 6), rdNotRealized "Pending" (checked) /
+       rdRealized "Complete" / rdAll "All", RadAllShipments "All Pending Shipments" (checked) / RadForwardingInProcessShipments /
+       RadForwardingButBLNotShipments / RadBlReceivedButPaymentNotShipments, btnshow "Show".
+     panel3 (Teal) label1 "Filtered Records" + ctrlGrdBar1; grd (LinkClicked: InvoiceNo 521, CroBooking 560, LoadingEnd forwarding history,
+       LoadingStart DO history, NoOfAttachments); grdEtaDestination (SortNo hidden, click -> Gridfill(SortNo)).
+     Events: Load, btnNew/btnRefresh/btnshow/btnPrintCurrent/btnShortCutKeys/BtnShipmentForm/btnDHLTracking Click, btnshow Leave,
+       grd LinkClicked, grd ColumnButtonClick ("Delete" -> "this Button functionality is revoked"), grdEtaDestination Click, KeyDown. -->
+<body class="pd-body" data-export-page="rptb-254">
+<div class="pd-form ex-form">
+    <div class="win-tool-strip">
+        <button type="button" id="btnNew" class="win-btn-tool" onclick="ExportTrk.reset()"><i class="fa fa-eraser"></i> <span><u>R</u>eset</span></button>
+        <button type="button" id="btnRefresh" class="win-btn-tool" onclick="ExportTrk.refresh(this)"><i class="fa fa-refresh"></i> <span><u>R</u>efresh</span></button>
+        <button type="button" id="btnPrintCurrent" class="win-btn-tool" onclick="ExportTrk.print552(this)"><i class="fa fa-print"></i> <span>552-Print</span></button>
+        <button type="button" id="btnShortCutKeys" class="win-btn-tool" onclick="ExportTrk.shortcuts()"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+        <button type="button" id="BtnShipmentForm" class="win-btn-tool" onclick="ExportTrk.shipmentForm()"><i class="fa fa-ship"></i> <span>Shipment Follow UP</span></button>
+        <button type="button" id="btnDHLTracking" class="win-btn-tool" onclick="ExportTrk.dhlTracking()"><i class="fa fa-truck"></i> <span>DHL Tracking</span></button>
+    </div>
+    <div class="rptb-title"><span id="label9">Export Pending Shipments Followup Report</span></div>
+
+    <fieldset class="rptb-filters" id="groupBox1"><legend>Filters</legend>
+        <div class="rptb-row">
+            <div class="ex-field w-l"><label for="cmbsupplierCustomer">Customer</label>
+                <select id="cmbsupplierCustomer" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Customer"></select></div>
+            <div class="ex-field w-m"><label for="cmbdestinationport">Destination Port</label>
+                <select id="cmbdestinationport" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Destination Port"></select></div>
+            <div class="ex-field w-m"><label>Document Status</label><div id="cmbStatus"></div></div>
+            <div class="ex-field w-m"><label>Current Status</label><div id="CmbCurrentStatus"></div></div>
+            <div class="ex-field"><label>&nbsp;</label>
+                <div class="rptb-radios">
+                    <label><input type="radio" name="realized" id="rdNotRealized" value="1" checked/> Pending</label>
+                    <label><input type="radio" name="realized" id="rdRealized" value="2"/> Complete</label>
+                    <label><input type="radio" name="realized" id="rdAll" value="0"/> All</label>
+                </div></div>
+        </div>
+        <div class="rptb-row" style="margin-top:4px;">
+            <div class="ex-field grow"><label>&nbsp;</label>
+                <div class="rptb-radios">
+                    <label><input type="radio" name="shipments" id="RadAllShipments" value="0" checked/> All Pending Shipments</label>
+                    <label><input type="radio" name="shipments" id="RadForwardingInProcessShipments" value="1"/> Forwarding Dispatch In Process</label>
+                    <label><input type="radio" name="shipments" id="RadForwardingButBLNotShipments" value="2"/> Forwarding But B/L Not Received</label>
+                    <label><input type="radio" name="shipments" id="RadBlReceivedButPaymentNotShipments" value="3"/> B/L Received But Payment Not Received</label>
+                </div></div>
+            <div class="ex-field"><label>&nbsp;</label><button type="button" id="btnshow" class="win-btn-small rptb-show" onclick="ExportTrk.show(this)">Show</button></div>
+        </div>
+    </fieldset>
+
+    <div class="rptb-two">
+        <div>
+            <div class="pd-caption pd-caption-teal pd-history-bar" style="height:24px;"><span id="label1">Filtered Records</span>
+                <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdBox" title="Fullscreen table">&#x26F6;</button><span id="gridBarMount" class="pd-gridbar-mount"></span></span></div>
+            <div class="ex-grid-box" id="grdBox">
+                <div class="ex-grid-scroll ex-hfill">
+                    <table class="win-grid" id="grd" data-gridbar="ExportPendingShipmentsFollowupReport:grd" data-gridbar-mount="#gridBarMount" data-gridbar-reorder="false"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+                </div>
+                <div class="ex-grid-empty is-hidden" id="grdEmpty">No record found.</div>
+            </div>
+        </div>
+        <div>
+            <div class="pd-caption pd-caption-teal pd-history-bar" style="height:24px;"><span>ETA - Destination Port</span>
+                <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdEtaBox" title="Fullscreen table">&#x26F6;</button></span></div>
+            <div class="ex-grid-box" id="grdEtaBox">
+                <div class="ex-grid-scroll ex-hfill">
+                    <table class="win-grid" id="grdEtaDestination"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="win-footer-strip">
+        <span class="ex-footer-left" id="footerInfo">ExportPendingShipmentsFollowupReport</span>
+    </div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_export_rptb_common.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_export_shipment_tracking_follow_up.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

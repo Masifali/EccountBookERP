@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Shipment Costing Register - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_rpta.css?v=20260930a}"/>
+</head>
+<!-- ExImShipmentCosting.cs (Architecture.WinApp.ExportReports), screen 238 "5006 Shipment Costing Detail", ClientSize 1022 x 665,
+     Text "Shipment Costing Register". tsItemType: New / 542-ShipmentCostingRegister; panel5 "Shipment Costing Register" (white on teal) + ctrlGrdBar1;
+     panel2: Invoice No (cmbInvoiceNo, no blank row) + Show (white text); groupBox1 "Shimpment Summary" (dark green): Sale Value, Stock Value,
+     Packing Value, Logistics Value, Gain & Loss, Commission (all ReadOnly "0"), PL Value label (green > 0, red < 0). grdfrm below.
+     Events: Load (InvoiceId > 0 -> show), KeyDown (Enter, Ctrl+N, Ctrl+E/Esc), btnnew, btnShow, btnRegister. -->
+<body class="pd-body" data-export-page="cst">
+<div class="pd-form ex-form">
+    <div class="win-tool-strip">
+        <button type="button" id="btnnew" class="win-btn-tool" accesskey="n" onclick="ExportCst.btnNew()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+        <button type="button" id="btnRegister" class="win-btn-tool" onclick="ExportCst.btnRegister(this)" data-rpt="542-ShipmentCostingRegister.rpt"><i class="fa fa-print"></i> <span>542-ShipmentCostingRegister</span></button>
+    </div>
+    <div class="pd-caption pd-caption-teal pd-history-bar" style="height:28px;"><span>Shipment Costing Register</span>
+        <span class="ex-bar-right"><span id="gridBarMountCst" class="pd-gridbar-mount"></span></span></div>
+    <div class="rpta-filter">
+        <div class="ex-field" style="width:420px;"><label for="cmbInvoiceNo">Invoice No</label><select id="cmbInvoiceNo" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Invoice No"></select></div>
+        <button type="button" id="btnShow" class="win-btn-small" style="width:70px;height:26px;background:rgb(10,110,110);color:#fff;" onclick="ExportCst.show(this)">Show</button>
+    </div>
+    <fieldset class="ex-groupbox" style="color:rgb(0,64,0);">
+        <legend>Shimpment Summary</legend>
+        <div class="rpta-summary">
+            <div><label for="txtSaleValue">Sale Value</label><input type="text" id="txtSaleValue" class="win-textbox num" value="0" readonly/></div>
+            <div><label for="txtStockValue">Stock Value</label><input type="text" id="txtStockValue" class="win-textbox num" value="0" readonly/></div>
+            <div><label for="txtPackingMaterial">Packing Value</label><input type="text" id="txtPackingMaterial" class="win-textbox num" value="0" readonly/></div>
+            <div><label for="txtLogisticgsValue">Logistics Value</label><input type="text" id="txtLogisticgsValue" class="win-textbox num" value="0" readonly/></div>
+            <div><label for="txtGainLoss">Gain &amp; Loss</label><input type="text" id="txtGainLoss" class="win-textbox num" value="0" readonly/></div>
+            <div><label for="txtCommissionValue">Commission</label><input type="text" id="txtCommissionValue" class="win-textbox num" value="0" readonly/></div>
+            <div><label>PL Value</label><span id="txtPlValue" class="rpta-pl">0</span></div>
+        </div>
+    </fieldset>
+    <div class="pd-caption pd-caption-teal pd-history-bar" style="height:24px;"><span>Costing Detail</span>
+        <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdfrmBox" title="Fullscreen table">&#x26F6;</button></span></div>
+    <div class="ex-grid-box" id="grdfrmBox">
+        <div class="ex-grid-scroll ex-h400"><table class="win-grid" id="grdfrm" tabindex="0"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        <div class="ex-grid-empty is-hidden" id="grdfrmEmpty">No record found.</div>
+    </div>
+    <div class="win-footer-strip">
+        <span class="ex-footer-left">ExImShipmentCosting - screen 238</span>
+        <button type="button" class="win-btn-history" id="btnCstFooterHistory" onclick="ExportCst.show(document.getElementById('btnShow'))"><i class="fa fa-history"></i> <span>History</span></button>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260924a}"></script>
+<script th:src="@{/build/js/countx_export_rpta_common.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_export_shipment_costing.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

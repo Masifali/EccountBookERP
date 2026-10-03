@@ -185,6 +185,10 @@ public class PaymentReceiptVoucherService {
         String rate = VoucherDesktopConfigService.key(m, "BaseCurrencyRate");
         f.put("baseCurrencyRate", rate == null ? null : VoucherDesktopConfigService.toDouble(rate));
         f.put("amountDecimals", toInt(VoucherDesktopConfigService.key(m, "Default NoofDecimal Points For Amount")));
+        /* CommonServices.GetDecimalConfiguration: DecimalRateFormate (txtExchangeRate_Leave / DefaultConfigurations). */
+        f.put("rateDecimals", toInt(VoucherDesktopConfigService.key(m, "Default NoofDecimal Points For Rate")));
+        /* BranchesFill: cmbBranchName.Text = UserAccount.BranchName - the signed-in branch is the default row. */
+        f.put("defaultBranchId", u.getBranchesId() == null ? 0 : u.getBranchesId());
         // SubsidiaryAccountAllownOnVouchers = GetERPFeatureById(4)
         f.put("subsidiaryFeature", config.erpFeature(4));
         f.put("isBookingOffice", isBookingOffice(u));
@@ -363,6 +367,16 @@ public class PaymentReceiptVoucherService {
      * the WHT controls from the IsTaxable == "True" lines - each exactly as the form's own ReadById does.
      */
     public Map<String, Object> load(int doc, int id) {
+        return load(doc, id, false);
+    }
+
+    /**
+     * ReadById(ID, SaveAs). PaymentVoucherNew with SaveAs: header Remarks and line Comments as stored (no
+     * RemarksOtherLingo choice), ChequeDate = DateTime.Now, ChequeId 0, ChequeNo "", PayeeTitle "".
+     * ReceiptsVoucherNew.ReadById ignores the flag; its SaveAs handler clears CheqDate / CmbCheqNo /
+     * txtPayTitle afterwards, which the page does.
+     */
+    public Map<String, Object> load(int doc, int id, boolean saveAs) {
         requireDoc(doc);
         UserAccount u = currentUserContext.requireAccountingUser();
         List<Map<String, Object>> heads = jdbcTemplate.queryForList(
@@ -400,7 +414,7 @@ public class PaymentReceiptVoucherService {
         String hRemarks = str(ci(h, "Remarks")), hOther = (String) ci(h, "RemarksOtherLingo");
         if (isPayment(hDoc)) {
             // ReadById:2574 - BPV shows RemarksOtherLingo (the operator's own text) when auto-remarks rewrote Remarks.
-            out.put("remarks", hDoc != 2 ? hRemarks : (autoPay ? hOther : (hOther != null ? hOther : hRemarks)));
+            out.put("remarks", (saveAs || hDoc != 2) ? hRemarks : (autoPay ? hOther : (hOther != null ? hOther : hRemarks)));
         } else {
             out.put("remarks", hRemarks);
             out.put("payTitle", ci(h, "PayTitle"));
@@ -431,16 +445,16 @@ public class PaymentReceiptVoucherService {
                 r.put("costCenterName", ci(d, "CostCenterName"));
                 if (isPayment(hDoc)) {
                     String c = (String) ci(d, "Comments"), co = (String) ci(d, "CommentsOtherLingo");
-                    r.put("remarks", hDoc != 2 ? c : (!autoPay ? (co != null ? co : c) : co));
+                    r.put("remarks", (saveAs || hDoc != 2) ? c : (!autoPay ? (co != null ? co : c) : co));
                     double tax = toDouble(ci(d, "TaxAmount"));
                     r.put("amount", (inclusive && debit > 0) ? debit + tax : debit);
                     r.put("taxAmount", tax);
                     r.put("financialInstrumentId", ci(d, "InstrumentTypeId"));
                     r.put("financialInstrument", ci(d, "InstrumentType"));
-                    r.put("chequeDate", dateStr(ci(d, "DCheqDate")));
-                    r.put("chequeId", ci(d, "InvoiceNoRefId"));
-                    r.put("chequeNo", ci(d, "CheqNoDetail"));
-                    r.put("payeeTitle", ci(d, "PayeeTitle"));
+                    r.put("chequeDate", saveAs ? java.time.LocalDate.now().toString() : dateStr(ci(d, "DCheqDate")));
+                    r.put("chequeId", saveAs ? 0 : ci(d, "InvoiceNoRefId"));
+                    r.put("chequeNo", saveAs ? "" : ci(d, "CheqNoDetail"));
+                    r.put("payeeTitle", saveAs ? "" : ci(d, "PayeeTitle"));
                     r.put("chequeTypeId", ci(d, "ChequeTypeId"));
                 } else {
                     r.put("remarks", ci(d, "Comments"));
@@ -476,6 +490,70 @@ public class PaymentReceiptVoucherService {
         out.put("includeWHT", wht);
         out.put("wht", whtOut);
         return out;
+    }
+
+    /**
+     * History detail grid - VoucherDetailByHeaderId / VoucherDetailBPVByHeaderId (PaymentVoucherNew),
+     * VoucherDetailByHeaderId / VoucherDetailBRVByHeaderId (ReceiptsVoucherNew): VoucherHead.GetByID ->
+     * Sp_Vouchers_GetMethods 'ReadByID' + 'VoucherDetail_ReadByVoucherHeadID'. Every line is returned as
+     * stored; the page applies each form's own column set, order and Inclusive-tax add-back.
+     */
+    public Map<String, Object> lines(int doc, int id) {
+        requireDoc(doc);
+        UserAccount u = currentUserContext.requireAccountingUser();
+        List<Map<String, Object>> heads = jdbcTemplate.queryForList(
+                "EXEC dbo.Sp_Vouchers_GetMethods @Id=?, @Activity=?", id, "ReadByID");
+        if (heads.isEmpty()) return null;
+        Map<String, Object> h = heads.get(0);
+        if (toInt(ci(h, "OrganizationId")) != u.getOrganizationId() || toInt(ci(h, "CompanyId")) != u.getCompanyId()) {
+            return null;                                      // never another tenant's document
+        }
+        List<Map<String, Object>> rows = new ArrayList<>();
+        for (Map<String, Object> d : jdbcTemplate.queryForList(
+                "EXEC dbo.Sp_Vouchers_GetMethods @Id=?, @Activity=?", id, "VoucherDetail_ReadByVoucherHeadID")) {
+            Map<String, Object> o = new LinkedHashMap<>();
+            o.put("id", toInt(ci(d, "Id")));
+            o.put("accountCode", ci(d, "AccountCode"));
+            o.put("accountTitle", ci(d, "AccountTitle"));
+            o.put("subsidiaryAccount", ci(d, "SubsidiaryAccountTitle"));
+            o.put("jobLot", ci(d, "JobLotDescription"));
+            o.put("remarks", ci(d, "Comments"));
+            o.put("debit", toDouble(ci(d, "DebitAmount")));
+            o.put("credit", toDouble(ci(d, "CreditAmount")));
+            o.put("fcy", toDouble(ci(d, "DCurrencyAmount")));
+            o.put("branchName", ci(d, "BranchName"));
+            o.put("costCenter", ci(d, "CostCenterName"));
+            o.put("taxAmount", toDouble(ci(d, "TaxAmount")));
+            o.put("isTaxable", str(ci(d, "IsTaxable")));
+            o.put("chequeDate", dateStr(ci(d, "DCheqDate")));
+            o.put("chequeNo", ci(d, "CheqNoDetail"));
+            o.put("payeeTitle", ci(d, "PayeeTitle"));
+            rows.add(o);
+        }
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("id", toInt(ci(h, "Id")));
+        out.put("documentTypeId", toInt(ci(h, "DocumentTypeId")));
+        out.put("inclusiveTax", truthy(ci(h, "InclusiveTax")));
+        out.put("rows", rows);
+        return out;
+    }
+
+    /**
+     * cmbCurrency_Leave: a currency other than the base one -> VoucherHead.GetLastExchangeRateAndCurrencyOfVoucher
+     * (BLL 0654) -> Sp_Vouchers_GetMethods @OrganizationId @CompanyId @DocumentTypeIds (CmbVoucherType.Value)
+     * @DMultiCurrencyIds (cmbCurrency.Value) @Activity='GetMultiCurrencyAndLastRate', column LastExchRate;
+     * no row -> "0". The base currency itself takes BaseRate on the page.
+     */
+    public double lastRate(int doc, int currencyId) {
+        requireDoc(doc);
+        UserAccount u = currentUserContext.requireAccountingUser();
+        StringBuilder sql = new StringBuilder("EXEC dbo.Sp_Vouchers_GetMethods @OrganizationId=?, @CompanyId=?, @DocumentTypeIds=?");
+        List<Object> a = new ArrayList<>();
+        a.add(u.getOrganizationId()); a.add(u.getCompanyId()); a.add(String.valueOf(doc));
+        if (currencyId != 0) { sql.append(", @DMultiCurrencyIds=?"); a.add(String.valueOf(currencyId)); }
+        sql.append(", @Activity=?"); a.add("GetMultiCurrencyAndLastRate");
+        List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql.toString(), a.toArray());
+        return rows.isEmpty() ? 0d : toDouble(ci(rows.get(0), "LastExchRate"));
     }
 
     // ================================================================================ save
@@ -710,7 +788,7 @@ public class PaymentReceiptVoucherService {
             if (!ack.contains("glBalance")) {
                 Set<Integer> unique = new HashSet<>();
                 for (ContraVoucherDto.Detail d : details) {
-                    if (unique.add(nz(d.AccountId)) && nzd(d.DebitAmount) > 0) {
+                    if (unique.add(nz(d.AccountId)) && nzd(d.DebitAmount) > 0 && !ack.contains("glBalance:" + nz(d.AccountId))) {
                         List<Map<String, Object>> g = jdbcTemplate.queryForList(
                                 "EXEC [dbo].[USP_GetGLBalanceByAccountTypeIdClassIdAndAccountId] @OrganizationId=?, @CompanyId=?, @AccountId=?, @ToDate=?, @AccountTypeId=?, @AccountClass=?",
                                 org, comp, nz(d.AccountId), voucherDate, 3, 3);
@@ -720,7 +798,7 @@ public class PaymentReceiptVoucherService {
                             String title = "False".equals(d.IsTaxable) ? detailTitles.getOrDefault(nz(d.AccountId), "") : "";
                             throw new ConfirmationRequiredException("The account '" + title
                                     + "' already has a debit ledger balance with an amount of " + num(gl)
-                                    + ". Do you want to add the payment again?", "glBalance");
+                                    + ". Do you want to add the payment again?", "glBalance:" + nz(d.AccountId));
                         }
                     }
                 }
@@ -907,10 +985,12 @@ public class PaymentReceiptVoucherService {
         for (ContraVoucherDto.Detail d : details) {
             if (nzd(d.DebitAmount) <= 0) continue;
             if (!seen.add(nz(d.AccountId))) continue;
+            /* The BLL asks once per account (Yes moves on to the next one): the answer is per account. */
+            if (ack.contains("duplicate:" + nz(d.AccountId))) continue;
             String title = writer.duplicateVoucherTitle(org, comp, date, nz(d.AccountId), nzd(d.DebitAmount), nz(d.ActionId));
             if (title != null) {
                 throw new ConfirmationRequiredException("Voucher against '" + title
-                        + "' with same Debit Amount already exists on this date. Do you want to continue?", "duplicate");
+                        + "' with same Debit Amount already exists on this date. Do you want to continue?", "duplicate:" + nz(d.AccountId));
             }
         }
     }

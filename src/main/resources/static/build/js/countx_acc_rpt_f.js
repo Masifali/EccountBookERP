@@ -98,7 +98,8 @@
        dropdown filled through AccF becomes searchable. The native <select> stays authoritative (.val(),
        change events); the wrap takes over the select's grid placement (grid-column, flex, display). */
     function combo(el) {
-        if (!el || el.tagName !== 'SELECT' || el.multiple || el.hasAttribute('data-dtcombo-skip')) return null;
+        /* 2026-10-02: a multiple select is enhanced only when it opts in to the checked mode (data-dtcombo-checked) */
+        if (!el || el.tagName !== 'SELECT' || (el.multiple && !el.hasAttribute('data-dtcombo-checked')) || el.hasAttribute('data-dtcombo-skip')) return null;
         if (!el.hasAttribute('data-dtcombo')) el.setAttribute('data-dtcombo', 'single');
         const DC = w.DesktopCombo;
         if (!DC || typeof DC.enhance !== 'function') return null;

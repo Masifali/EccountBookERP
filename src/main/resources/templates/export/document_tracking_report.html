@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Export Document Tracking Report - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_sdt.css?v=20260930a}"/>
+</head>
+<!-- frmExportDocumentTrackingReport.cs (Architecture.WinApp.SDT_Reports), screen 625 "Export Document Tracking Report", ClientSize 1234 x 561.
+     toolStrip3: New | Refresh | 841-Print (hidden, empty handler) | 841A-Print (hidden, empty handler) | Color Schedule (opens 619) | ShortCutKeys.
+     panel3 (Teal) "Export Document Tracking Report". groupBox1 "Filters": Date Type (cmbperemeter, fixed DateType table), From && To (check pickers, ticked),
+       groupBox2 "Date": Ready (checked) / Due; Customer Name, Invoice, Document, Provider, Sales Person combos (DropDownFillFromShipmentDocumentSchedule),
+       All (checked) / Ready Docs / Not Ready Docs; All Invoice / Invoice Done (checked) / Invoice Pending; GroupColorAlert "Due Date Alert" 1st/2nd/3rd Level checks + row counts;
+       GroupBoxValuesToUpdateInGrid "Values To Update In Grid" (Save right): Ready Date (check picker), Document Status combo, View I / View II radios, All Rows / Empty Only (checked), Update In Grid;
+       btnshow "Show Records".
+     tabControl1 (opens on "Group Wise"): "Detail" grdDetail (CustomerName 150 | ScheduleCode 120 | InvoiceNo 110 | InvoiceDate | DocumentName | ProviderName | DueDate | ReadyDate | DocumentStatus | Remarks | Original | Duplicate | CriteriaDate | BeforeDays | AfterDays | Contract | NoOfAttachments)
+       "Group Wise": View I grdII (grouped by Description; ScheduleCode | InvoiceNo | InvoiceDate | DueDate | ReadyDate (edit) | DocumentStatus (combo) | Remarks) + BtnUpdateTemplateI,
+                     View II grd (grouped by Description; DocumentName | ProviderName | DueDate | ReadyDate (edit) | DocumentStatus (combo) | Remarks) + BtnUpdateTemplateII.
+       FormattingRow: DueDate cell fore colour = row ColorCode, bold.
+     KeyDown: Enter=Tab, Ctrl+E/Esc close, Ctrl+S show, Ctrl+F5 / Ctrl+Up date type, Ctrl+N new, Ctrl+P / Alt+1 / Alt+2 print (empty), Ctrl+R refresh, Ctrl+Down grid, Ctrl+Alt shortcut keys. -->
+<body class="pd-body" data-export-page="sdt-625">
+<div class="pd-form ex-form">
+    <div class="win-tool-strip">
+        <button type="button" id="btnNew" class="win-btn-tool" accesskey="n" onclick="ExportDocTrackingReport.reset()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+        <button type="button" id="btnRefresh" class="win-btn-tool" accesskey="r" onclick="ExportDocTrackingReport.refresh(this)"><i class="fa fa-refresh"></i> <span><u>R</u>efresh</span></button>
+        <button type="button" id="BtnPrint" class="win-btn-tool is-hidden"><i class="fa fa-print"></i> <span>841-Print</span></button>
+        <button type="button" id="btn335Register" class="win-btn-tool is-hidden"><i class="fa fa-print"></i> <span>841A-Print</span></button>
+        <a id="BtnColorForm" class="win-btn-tool" href="/export/doc-due-color-schedule" target="_blank"><i class="fa fa-paint-brush"></i> <span><u>C</u>olor Schedule</span></a>
+        <button type="button" id="btnShortCutKeys" class="win-btn-tool" onclick="ExportDocTrackingReport.shortcuts()"><i class="fa fa-keyboard-o"></i> <span>ShortCutKeys</span></button>
+    </div>
+    <div class="pd-caption pd-caption-teal" id="label23">Export Document Tracking Report</div>
+
+    <fieldset class="sdt-group" id="groupBox1"><legend>Filters</legend>
+        <div class="sdt-filters">
+            <div class="ex-field" style="width:150px;"><label for="cmbperemeter">Date Type</label>
+                <select id="cmbperemeter" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Parameters"></select></div>
+            <div class="ex-field" style="width:190px;"><label for="GRNfromdate">From &amp; To</label>
+                <span class="ex-check"><input type="checkbox" id="GRNfromdateChk" checked/><input type="date" id="GRNfromdate" class="win-date" style="flex:1;"/></span></div>
+            <div class="ex-field" style="width:170px;"><label for="GRNToDate">&nbsp;</label>
+                <span class="ex-check"><input type="checkbox" id="GRNToDateChk" checked/><input type="date" id="GRNToDate" class="win-date" style="flex:1;"/></span></div>
+            <fieldset class="sdt-group" id="groupBox2" style="margin:0;"><legend>Date</legend>
+                <div class="sdt-inline">
+                    <label><input type="radio" name="dateMode" id="RadReadyDate" value="ready" checked/> Ready</label>
+                    <label><input type="radio" name="dateMode" id="RadDueDate" value="due"/> Due</label>
+                </div></fieldset>
+            <div class="ex-field" style="width:220px;"><label for="CmbCustomerName">Customer Name</label>
+                <select id="CmbCustomerName" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Customer Name"></select></div>
+            <div class="ex-field" style="width:170px;"><label for="CmbInvoiceNo">Invoice</label>
+                <select id="CmbInvoiceNo" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Invoice No"></select></div>
+            <div class="ex-field" style="width:190px;"><label for="CmbDocument">Document</label>
+                <select id="CmbDocument" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Document"></select></div>
+            <div class="ex-field" style="width:170px;"><label for="CmbdocumentProvider">Provider</label>
+                <select id="CmbdocumentProvider" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Document Provider"></select></div>
+            <div class="ex-field" style="width:190px;"><label for="ultraCombo1">Sales Person</label>
+                <select id="ultraCombo1" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Sales Person"></select></div>
+            <div class="ex-radios" id="panel10">
+                <label class="ex-check"><input type="radio" name="readyDocs" id="RadAllDocs" value="0" checked/> All</label>
+                <label class="ex-check"><input type="radio" name="readyDocs" id="RadReadyDocs" value="1"/> Ready Docs</label>
+                <label class="ex-check"><input type="radio" name="readyDocs" id="RadNotReadyDocs" value="2"/> Not Ready Docs</label>
+            </div>
+            <div class="ex-radios" id="panel11">
+                <label class="ex-check"><input type="radio" name="pendingInvoice" id="RadAllInvoice" value="0"/> All Invoice</label>
+                <label class="ex-check"><input type="radio" name="pendingInvoice" id="RadInvoiceDone" value="1" checked/> Invoice Done</label>
+                <label class="ex-check"><input type="radio" name="pendingInvoice" id="RadInvoicePending" value="2"/> Invoice Pending</label>
+            </div>
+            <fieldset class="sdt-group" id="GroupColorAlert" style="margin:0;"><legend>Due Date Alert</legend>
+                <div class="sdt-levels">
+                    <label><input type="checkbox" id="ChkFirstLevel"/> <span id="ChkFirstLevelText">1st Level</span></label><span class="cnt" id="txtFirstLevelRowCount">1st Level Rows Count</span>
+                    <label><input type="checkbox" id="ChkSecondLevel"/> <span id="ChkSecondLevelText">2nd Level</span></label><span class="cnt" id="txtSecondLevelRowCount">2nd Level Rows Count</span>
+                    <label><input type="checkbox" id="ChkThirdLevel"/> <span id="ChkThirdLevelText">3rd Level</span></label><span class="cnt" id="txtThirdLevelRowCount">3rd Level Rows Count</span>
+                </div></fieldset>
+            <div class="ex-field"><label>&nbsp;</label><button type="button" id="btnshow" class="win-btn-small" style="width:110px;" onclick="ExportDocTrackingReport.show(this)">Show Records</button></div>
+        </div>
+    </fieldset>
+
+    <fieldset class="sdt-group is-hidden" id="GroupBoxValuesToUpdateInGrid"><legend>Values To Update In Grid</legend>
+        <div class="sdt-filters">
+            <div class="ex-field" style="width:190px;"><label for="txtReadyDateUpdateInGrid">Ready Date</label>
+                <span class="ex-check"><input type="checkbox" id="txtReadyDateUpdateInGridChk" checked/><input type="date" id="txtReadyDateUpdateInGrid" class="win-date" style="flex:1;"/></span></div>
+            <div class="ex-field" style="width:170px;"><label for="CmbDocmentStausToUpdate">Document Status</label>
+                <select id="CmbDocmentStausToUpdate" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Document Status"></select></div>
+            <div class="sdt-inline">
+                <label><input type="radio" name="gridView" id="chkGrdViewI" value="I"/> View I</label>
+                <label><input type="radio" name="gridView" id="chkGrdViewII" value="II"/> View II</label>
+            </div>
+            <div class="sdt-inline">
+                <label><input type="radio" name="updateScope" id="RadAll" value="all"/> All Rows</label>
+                <label><input type="radio" name="updateScope" id="RadOnlyEmpty" value="empty" checked/> Empty Only</label>
+            </div>
+            <div class="ex-field"><label>&nbsp;</label><button type="button" id="BtnUpdateInGrid" class="win-btn-small" onclick="ExportDocTrackingReport.updateInGrid()">Update In Grid</button></div>
+        </div>
+    </fieldset>
+
+    <div class="win-tabs" data-tabs="main">
+        <button type="button" class="win-tab" data-tab="tabPage1">Detail</button>
+        <button type="button" class="win-tab is-active" data-tab="tabPage2">Group Wise</button>
+    </div>
+    <div class="win-tab-panel" id="tabPage1">
+        <div class="pd-caption pd-caption-teal pd-history-bar"><span>Detail</span>
+            <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdDetailBox" title="Fullscreen table">&#x26F6;</button><span id="gridBarMountD" class="pd-gridbar-mount"></span></span></div>
+        <div class="ex-grid-box" id="grdDetailBox">
+            <div class="ex-grid-scroll ex-h400">
+                <table class="win-grid" id="grdDetail" data-gridbar="frmExportDocumentTrackingReport:grdDetail" data-gridbar-mount="#gridBarMountD" data-gridbar-reorder="false">
+                    <thead><tr>
+                        <th>Customer Name</th><th>Schedule Code</th><th>Invoice No</th><th>Invoice Date</th><th>Document Name</th><th>Provider Name</th><th>Due Date</th><th>Ready Date</th>
+                        <th>Document Status</th><th>Remarks</th><th class="num">Original</th><th class="num">Duplicate</th><th>Criteria Date</th><th class="num">Before Days</th><th class="num">After Days</th>
+                        <th>Contract</th><th class="num">No Of Attachments</th>
+                    </tr></thead>
+                    <tbody id="detBody"></tbody>
+                </table>
+            </div>
+            <div class="ex-grid-empty is-hidden" id="detEmpty">No record found.</div>
+        </div>
+    </div>
+    <div class="win-tab-panel is-active" id="tabPage2">
+        <div class="sdt-views">
+            <div class="sdt-pane" id="panel9">
+                <div class="pd-caption pd-caption-teal pd-history-bar" id="label4"><span>View I</span>
+                    <span class="ex-bar-right sdt-cap-btns">
+                        <button type="button" id="BtnUpdateTemplateI" class="win-btn-cap" title="Update" onclick="ExportDocTrackingReport.updateI(this)"><i class="fa fa-save"></i></button>
+                        <button type="button" class="ex-fs-btn" data-fullscreen="grdIIBox" title="Fullscreen table">&#x26F6;</button><span id="gridBarMount2" class="pd-gridbar-mount"></span></span></div>
+                <div class="ex-grid-box" id="grdIIBox">
+                    <div class="ex-grid-scroll ex-h400">
+                        <table class="win-grid" id="grdII" data-gridbar="frmExportDocumentTrackingReport:grdII" data-gridbar-mount="#gridBarMount2" data-gridbar-reorder="false">
+                            <thead><tr><th>Schedule Code</th><th>Invoice No</th><th>Invoice Date</th><th>Due Date</th><th>Ready Date</th><th>Document Status</th><th>Remarks</th></tr></thead>
+                            <tbody id="g2Body"></tbody>
+                        </table>
+                    </div>
+                    <div class="ex-grid-empty is-hidden" id="g2Empty">No record found.</div>
+                </div>
+            </div>
+            <div class="sdt-pane" id="panel5">
+                <div class="pd-caption pd-caption-teal pd-history-bar" id="label5"><span>View II</span>
+                    <span class="ex-bar-right sdt-cap-btns">
+                        <button type="button" id="BtnUpdateTemplateII" class="win-btn-cap" title="Update" onclick="ExportDocTrackingReport.updateII(this)"><i class="fa fa-save"></i></button>
+                        <button type="button" class="ex-fs-btn" data-fullscreen="grdBox" title="Fullscreen table">&#x26F6;</button><span id="gridBarMount1" class="pd-gridbar-mount"></span></span></div>
+                <div class="ex-grid-box" id="grdBox">
+                    <div class="ex-grid-scroll ex-h400">
+                        <table class="win-grid" id="grd" data-gridbar="frmExportDocumentTrackingReport:grd" data-gridbar-mount="#gridBarMount1" data-gridbar-reorder="false">
+                            <thead><tr><th>Document Name</th><th>Provider Name</th><th>Due Date</th><th>Ready Date</th><th>Document Status</th><th>Remarks</th></tr></thead>
+                            <tbody id="g1Body"></tbody>
+                        </table>
+                    </div>
+                    <div class="ex-grid-empty is-hidden" id="g1Empty">No record found.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="win-footer-strip">
+        <span class="ex-footer-left" id="footerInfo">frmExportDocumentTrackingReport  -  841 / 841A prints are hidden on the desktop (empty handlers)</span>
+        <button type="button" class="win-btn-history" id="btnFooterHistory" onclick="ExportDocTrackingReport.toggleHistory()"><i class="fa fa-history"></i> <span>Detail</span></button>
+    </div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_export_sdt_common.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_export_document_tracking_report.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

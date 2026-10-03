@@ -9,6 +9,8 @@
     <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20261002gv}">
 
     <style>
         *,
@@ -227,7 +229,7 @@
             <div style="display:none; align-items:center; gap:4px; margin-bottom:4px; min-width:0; width:100%;" id="rowMultiAccounts">
                 <span class="win-label" style="width:50px; flex-shrink:0;">Accounts</span>
                 <div style="flex:1; min-width:0; width:100%;">
-                    <select class="win-input" id="cmbMultiAccounts" multiple="multiple">
+                    <select class="win-input" id="cmbMultiAccounts" multiple data-dtcombo="single" data-dtcombo-checked data-dtcombo-caption="Account Title" style="width:100%;">
                         <option th:each="ac : ${accountsList}" th:value="${ac.Id != null ? ac.Id : ac.id}"
                                 th:text="${(ac.AccountCode != null ? ac.AccountCode : ac.accountCode) + ' - ' + (ac.AccountTitle != null ? ac.AccountTitle : ac.accountTitle)}"></option>
                     </select>
@@ -238,7 +240,7 @@
             <div style="display:none; align-items:center; gap:4px; margin-bottom:4px; min-width:0; width:100%;" id="rowBankAccounts">
                 <span class="win-label" style="width:50px; flex-shrink:0;">Bank Acct</span>
                 <div style="flex:1; min-width:0; width:100%;">
-                    <select class="win-input" id="cmbBankAccounts" multiple="multiple">
+                    <select class="win-input" id="cmbBankAccounts" multiple data-dtcombo="single" data-dtcombo-checked data-dtcombo-caption="Account Title" style="width:100%;">
                         <option th:each="ac : ${accountsList}" th:value="${ac.Id != null ? ac.Id : ac.id}"
                                 th:text="${(ac.AccountCode != null ? ac.AccountCode : ac.accountCode) + ' - ' + (ac.AccountTitle != null ? ac.AccountTitle : ac.accountTitle)}"></option>
                     </select>
@@ -360,6 +362,7 @@
     <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
     <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
     <script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
+    <script th:src="@{/build/js/countx_prod_combo.js?v=20261002gv}" data-dtcombo-checked-only></script>
     <script th:inline="javascript">
         function fmt(v) {
             const n = parseFloat(v);
@@ -1200,7 +1203,7 @@
 
         function resetGL() {
             $('#cmbAccountTitle, #cmbDateType').val('').trigger('change.select2');
-            $('#cmbMultiAccounts, #cmbBankAccounts').val([]).trigger('change.select2');
+            $('#cmbMultiAccounts, #cmbBankAccounts').val([]).trigger('change');
             $('#txtFromDate').val('2026-08-01');
             const todayStr = new Date().toISOString().split('T')[0];
             $('#txtToDate').val(todayStr);
@@ -1246,17 +1249,8 @@
                 dropdownAutoWidth: true
             });
 
-            $('#cmbMultiAccounts').select2({
-                width: '100%',
-                dropdownAutoWidth: true,
-                placeholder: 'Select Account(s)...'
-            });
-
-            $('#cmbBankAccounts').select2({
-                width: '100%',
-                dropdownAutoWidth: true,
-                placeholder: 'Select Bank Account(s)...'
-            });
+            /* 2026-10-02: #cmbMultiAccounts / #cmbBankAccounts are checked combos (countx_prod_combo.js,
+               data-dtcombo-checked) - select2 removed; .val() still returns the id array */
 
             $.get('/accounts/api/reports/bank-accounts', function(data) {
                 if (data && data.length > 0) {

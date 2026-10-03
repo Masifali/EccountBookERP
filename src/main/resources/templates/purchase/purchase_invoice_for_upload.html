@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Purchase Invoice For Upload - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}">
+    <link rel="stylesheet" th:href="@{/build/css/purchase/purchase_reports.css?v=20260930r3}">
+    <style>
+        /* panel1 / panel2 / panel3 of the Designer: teal toolstrip caption, white filter panel (1037 x 65), teal grid bar. */
+        .pfu-caption { background: #008080; color: #fff; font: bold 16px Tahoma, sans-serif; height: 26px; line-height: 26px; padding: 0 6px; }
+        .pfu-filters { position: relative; height: 65px; background: #fff; border-bottom: 1px solid #c8c8c8; min-width: 860px; font: 12px "Segoe UI", sans-serif; }
+        .pfu-filters label.pr-abs { font: 600 12px "Segoe UI Semibold", "Segoe UI", sans-serif; }
+        .pfu-filters input[type=text], .pfu-filters input[type=date], .pfu-filters select, .pfu-filters .pr-check > summary {
+            height: 23px; font: 12px Verdana, sans-serif; border: 1px solid #7a9cbf; background: #fff; padding: 1px 3px; width: 100%; }
+        .pfu-filters .pr-radios label { font: 600 12px "Segoe UI Semibold", "Segoe UI", sans-serif; display: flex; align-items: center; gap: 3px; height: 17px; }
+        .pfu-filters button.pfu-search { height: 25px; background: #008080; color: #fff; border: 1px solid #006666; font: bold 12px Tahoma, sans-serif; cursor: pointer; }
+        .pfu-filters button.pfu-search:disabled, .pr-toolstrip button[aria-busy="true"] { opacity: .6; cursor: progress; }
+        #pfuWrap { height: calc(100vh - 175px); }
+        /* grd.FrozenColumns = 2 - the Select column and the first visible column stay in view. */
+        #grd tbody td:nth-child(1), #grd thead th:nth-child(1), #grd tfoot td:nth-child(1) { position: sticky; left: 0; z-index: 1; background: #fff; }
+        #grd tbody td:nth-child(2), #grd thead th:nth-child(2), #grd tfoot td:nth-child(2) { position: sticky; left: 30px; z-index: 1; background: #fff; }
+        #grd thead th:nth-child(1), #grd thead th:nth-child(2) { z-index: 3; background: #eef1f4; }
+        #grd tfoot td:nth-child(1), #grd tfoot td:nth-child(2) { z-index: 3; background: #e8edf2; }
+        .pfu-note { color: #7a4a00; background: #fff6df; border: 1px solid #e6c77a; padding: 3px 6px; margin: 3px; font: 12px "Segoe UI", sans-serif; }
+    </style>
+</head>
+<!-- 910 Architecture.WinApp.DataSyncing.frmPendingPurchaseInvoiceForUpload "Purchase Invoice For Upload" (module 5). -->
+<body class="pr">
+<div id="prLoading" hidden role="status">Please wait...</div>
+<nav class="pr-toolstrip" aria-label="Toolbar">
+    <button type="button" id="btnNew">New</button>
+    <button type="button" id="btnRefresh">Refresh</button>
+    <span class="pr-sep" aria-hidden="true"></span>
+    <button type="button" id="btnShortcutKeys">ShortCut Keys</button>
+    <span class="pr-sep" aria-hidden="true"></span>
+    <button type="button" id="BtnUploadInvoices" title="Ctrl+U">Upload Selected Invoices</button>
+    <a class="pr-right" href="/purchase/supplier" title="Ctrl+E">Exit</a>
+</nav>
+<div class="pfu-caption">Pending Purchase Invoices For Upload</div>
+<div id="prMessage" role="status" aria-live="polite"></div>
+<div class="pfu-note" id="pfuNote">Upload target: the desktop saves each uploaded invoice to the tax server database
+    (App.config connection string "TPSSDb_Server"). That connection is not configured in the web application, so
+    "Upload Selected Invoices" runs the desktop's checks and stops before saving; nothing is written.</div>
+<div class="pfu-filters">
+    <label class="pr-abs" style="left:11px;top:13px" for="CmbBranch">Branches Name</label>
+    <details class="pr-check pr-abs" id="CmbBranch" style="left:106px;top:6px;width:238px"></details>
+    <label class="pr-abs" style="left:11px;top:40px" for="FromDate">From &amp; To Date</label>
+    <div class="pr-abs" style="left:106px;top:36px;width:118px"><input type="date" id="FromDate"></div>
+    <div class="pr-abs" style="left:226px;top:36px;width:118px"><input type="date" id="Todate" aria-label="To Date"></div>
+
+    <label class="pr-abs" style="left:348px;top:13px" for="txtFromDocNo">From &amp; To Doc No</label>
+    <div class="pr-abs" style="left:456px;top:9px;width:90px"><input type="text" id="txtFromDocNo" inputmode="numeric" autocomplete="off"></div>
+    <div class="pr-abs" style="left:547px;top:9px;width:90px"><input type="text" id="TxtToDocNo" inputmode="numeric" autocomplete="off" aria-label="To Doc No"></div>
+    <label class="pr-abs" style="left:348px;top:40px" for="CmbCustomer">Party Name</label>
+    <div class="pr-abs" style="left:456px;top:36px;width:181px"><select id="CmbCustomer" data-dtcombo="single" data-dtcombo-caption="Party Name"></select></div>
+
+    <div class="pr-abs pr-radios vertical" style="left:640px;top:5px" role="radiogroup" aria-label="Accounts">
+        <label><input type="radio" name="accounts" id="radAll" value="0" checked> All</label>
+        <label><input type="radio" name="accounts" id="RadNotCustomAccounts" value="1"> Not Custom Accounts</label>
+        <label><input type="radio" name="accounts" id="RadCustomAccounts" value="2"> Custom Accounts</label>
+    </div>
+    <button type="button" class="pfu-search pr-abs" id="BtnShow" style="left:784px;top:35px;width:64px" title="Ctrl+S">Search</button>
+</div>
+<section id="gridSection">
+    <div class="pr-grid-bar"><span id="lblCount"></span>
+        <span class="pr-right"><button type="button" id="btnGridPrint">Grid Print</button><button type="button" id="btnGridExport">Export</button><button type="button" id="btnFullscreen">Fullscreen</button></span>
+    </div>
+    <div class="pr-wrap" tabindex="0" id="pfuWrap"><table class="pr-grid" id="grd"></table></div>
+</section>
+<script th:src="@{/build/js/purchase/reports/pr_common.js?v=20260930h}"></script>
+<script th:src="@{/build/js/countx_doc_link.js?v=20261001pr}"></script>
+<script th:src="@{/build/js/countx_purchase_invoice_for_upload.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_desktop_combo.js?v=20260927b}"></script>
+</body>
+</html>

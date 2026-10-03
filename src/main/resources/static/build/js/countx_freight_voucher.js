@@ -39,6 +39,33 @@
     function show(id, on) { var e = $id(id); if (e) e.classList.toggle('is-hidden', !on); }
     function box(m) { window.alert(m); }
     function ask(m) { return window.confirm(m); }
+
+    /* Server buttons (user mandate 2026-10-02): disabled at once with a spinner, a second request
+       refused while one is running, and put back to the state they had on success AND on failure. */
+    function lock(b) {
+        if (typeof b === 'string') b = $id(b);
+        if (!b) return true;
+        if (b.getAttribute('data-busy')) return false;
+        b.setAttribute('data-busy', b.disabled ? 'd' : 'e');
+        b.setAttribute('data-html', b.innerHTML);
+        b.disabled = true;
+        b.innerHTML = '<i class="fa fa-spinner fa-spin"></i> ' + b.innerHTML;
+        return true;
+    }
+    function unlock(b) {
+        if (typeof b === 'string') b = $id(b);
+        if (!b || !b.getAttribute('data-busy')) return;
+        b.disabled = b.getAttribute('data-busy') === 'd';
+        b.innerHTML = b.getAttribute('data-html');
+        b.removeAttribute('data-busy'); b.removeAttribute('data-html');
+    }
+    function isBusy(id) { var b = $id(id); return !!(b && b.getAttribute('data-busy')); }
+    function busy(b, fn) {
+        if (!lock(b)) return Promise.resolve();
+        var p;
+        try { p = Promise.resolve(fn()); } catch (x) { p = Promise.reject(x); }
+        return p.catch(function (e) { box(e && e.message ? e.message : e); }).then(function () { unlock(b); });
+    }
     function esc(s) {
         return String(s === null || s === undefined ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
             .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
@@ -187,7 +214,7 @@
         cols.forEach(function (c) { h += '<th style="min-width:' + (c.w || 70) + 'px;">' + esc(c.cap) + '</th>'; });
         h += '</tr></thead><tbody>';
         rows.forEach(function (r, i) {
-            h += '<tr data-i="' + i + '">';
+            h += '<tr data-i="' + i + '" tabindex="-1">';
             cols.forEach(function (c) { h += cell(c, r, i, opts); });
             h += '</tr>';
         });
@@ -209,11 +236,14 @@
     function cell(c, r, i, opts) {
         var v = r[c.key];
         if (c.t === 'btn') return '<td class="c"><button type="button" class="gbtn" data-act="' + c.key + '" data-i="' + i + '">' + esc(c.cap) + '</button></td>';
+        /* the document number in the Register loads that voucher (same as Edit) */
+        if (c.link) return '<td class="c"><a href="#" class="code" title="Load this voucher" data-act="' + c.link + '" data-i="' + i + '">' + esc(str(v)) + '</a></td>';
         if (c.edit && opts.editable) {
             if (c.t === 'combo') {
                 var o = '<option value=""></option>';
                 (c.options || []).forEach(function (a) { o += '<option value="' + a.Id + '"' + (String(a.Id) === String(v) ? ' selected' : '') + '>' + esc(a.AccountTitle) + '</option>'; });
-                return '<td class="ed t"><select data-k="' + c.key + '" data-i="' + i + '">' + o + '</select></td>';
+                /* R3 GUI: the grid-cell UltraCombo is the project's searchable combo (countx_prod_combo.js) */
+                return '<td class="ed t"><select data-dtcombo="single" data-dtcombo-caption="' + esc(c.cap) + '" data-k="' + c.key + '" data-i="' + i + '">' + o + '</select></td>';
             }
             return '<td class="ed' + (c.t === 'text' ? ' t' : '') + '"><input type="text" data-k="' + c.key + '" data-i="' + i + '" value="' + esc(c.t === 'text' ? str(v) : cs(v)) + '"></td>';
         }
@@ -307,7 +337,7 @@
         { key: 'Print', cap: 'Print', w: 50, t: 'btn' },
         { key: 'Voucher', cap: 'Voucher', w: 70, t: 'btn' },
         { key: 'DocDate', cap: 'Doc Date', w: 80, t: 'date' },
-        { key: 'DocNo', cap: 'Doc No', w: 55, t: 'int' },
+        { key: 'DocNo', cap: 'Doc No', w: 55, t: 'int', link: 'Edit' },
         { key: 'GpDate', cap: 'Gp Date', w: 80, t: 'date' },
         { key: 'GpNo', cap: 'Gp No', w: 55, t: 'int' },
         { key: 'SupplierName', cap: 'Supplier Name', w: 200, t: 'text' },
@@ -392,6 +422,9 @@
             setVal('datToDate', isoDay(new Date()));
             if (num(val('CmbCashAccount')) > 0) accountCurrentBalance();
             focusCtl('CmbCashAccount');
+            /* ?id= in the URL loads that voucher (ReadById) */
+            var qid = parseInt(new URLSearchParams(location.search).get('id') || '0', 10);
+            if (qid > 0) readById(qid);
         }).catch(function (e) { box('Error occurred during database call.\n' + e.message); });
     }
 
@@ -754,13 +787,16 @@
 
             var preview = $id('ChkBox').checked ? window.open('', '_blank') : null;
             if (preview) preview.document.write('<p style="font-family:Segoe UI;padding:20px;">Saving…</p>');
-            post('/save', payload()).then(function (res) {
-                box(res.message);
-                reset();
-                if (preview) printSlip241(res.id, preview);
-            }).catch(function (e) {
-                if (preview) preview.close();
-                box('Database Error\n\n' + e.message);
+            var body = payload();
+            busy(RecId === 0 ? 'btnSave' : 'btnUpdate', function () {
+                return post('/save', body).then(function (res) {
+                    box(res.message);
+                    reset();
+                    if (preview) printSlip241(res.id, preview);
+                }).catch(function (e) {
+                    if (preview) preview.close();
+                    box('Database Error\n\n' + e.message);
+                });
             });
         } catch (e) { box('Database Error\n\n' + e.message); }
     }
@@ -804,8 +840,9 @@
     }
 
     /* Save_Click (:1456) / Update_Click (:1469) */
-    function save() { if (!rights.canSave || $id('btnSave').classList.contains('is-hidden')) return; RecId = 0; insert(); }
+    function save() { if (isBusy('btnSave') || isBusy('btnUpdate')) return; if (!rights.canSave || $id('btnSave').classList.contains('is-hidden')) return; RecId = 0; insert(); }
     function update() {
+        if (isBusy('btnSave') || isBusy('btnUpdate')) return;
         if (!rights.canUpdate || $id('btnUpdate').classList.contains('is-hidden')) return;
         if (RecId === 0) { box('Database Error\n\nRecord Id not found please check'); return; }
         insert();
@@ -916,20 +953,23 @@
 
     /* btnNew_Click (:1639) */
     function newForm() {
-        reset();
-        selectValue('CmbCashAccount', '');
-        show('lbldrcr', false);
+        busy('btnNew', function () {
+            var p = reset();
+            selectValue('CmbCashAccount', '');
+            show('lbldrcr', false);
+            return p;
+        });
     }
 
     /* BtnRefresh_Click (:1658) — reload the account and city caches, re-apply configuration */
     function refresh() {
-        Promise.all([get('/accounts'), get('/cities'), get('/config')]).then(function (res) {
+        busy('btnRefresh', function () { return Promise.all([get('/accounts'), get('/cities'), get('/config')]).then(function (res) {
             accounts = res[0] || []; cities = res[1] || []; cfg = res[2] || cfg;
             getConfigurationsFromGlobal();
             cashAccountFillFromGlobal();
             cityDtFillFromGlobalAndBind();
             renderDetail();
-        }).catch(function (e) { box(e.message); });
+        }); });
     }
 
     /* ================================================================== register tab */
@@ -946,7 +986,7 @@
             onlyDiscountedRows: $id('chkOnlyDiscountedRows').checked,
             freightAuditByCity: $id('chkFreightAuditbyCity').checked
         };
-        post('/register', f).then(function (rows) {
+        busy('btnshow', function () { return post('/register', f).then(function (rows) {
             dtRegister = rows || [];
             var grid = dtRegister.map(function (r) {
                 var bilty = num(ci(r, 'BiltyFreight')), fac = num(ci(r, 'FactoryWeight'));
@@ -970,7 +1010,7 @@
             });
             registerGrid = grid;
             renderGrid('grdRegister', REGISTER_COLS, grid, { totals: true, rec: 'recRegister' });
-        }).catch(function (e) { box(e.message); });
+        }); });
     }
     var registerGrid = [];
 
@@ -983,7 +1023,7 @@
     }
     /* btnRefreshRegister_Click (:1704) */
     function refreshRegister() {
-        get('/history-combos').then(historyComboBind).catch(function (e) { box(e.message); });
+        busy('btnRefreshRegister', function () { return get('/history-combos').then(historyComboBind); });
     }
 
     /* ================================================================== prints */
@@ -1232,12 +1272,12 @@
     }
     /* btnRefresh_Click (:700) */
     function breakUpRefresh() {
-        Promise.all([get('/accounts'), get('/instrument-types')]).then(function (res) {
+        busy('btnBuRefresh', function () { return Promise.all([get('/accounts'), get('/instrument-types')]).then(function (res) {
             accounts = res[0] || []; instrumentTypes = res[1] || [];
             bindSelect('CmbInstrumentType', instrumentTypes, 'Id', 'InstrumentType');
             buBindAccounts();
             buCheqNoFill();
-        }).catch(function (e) { box(e.message); });
+        }); });
     }
     /* grdGdBreakUp_DoubleClick (:304) */
     function breakUpEdit(i) {
@@ -1311,7 +1351,11 @@
             e.preventDefault();
             if (currentTab === 'tabRegister') { tab('tabForm'); $id('voucherdatetime').focus(); } else { tab('tabRegister'); $id('datFromDate').focus(); }
         }
-        if (e.ctrlKey && k === 'ArrowDown') { e.preventDefault(); if (currentTab === 'tabForm') $id('grdPendingRecord').focus(); else $id('grdRegister').focus(); }
+        if (e.ctrlKey && k === 'ArrowDown') {          /* grd <-> grdPendingRecord on the Form tab, grdRegister on the Register tab */
+            e.preventDefault();
+            if (currentTab === 'tabForm') { if ($id('grdPendingRecord').contains(document.activeElement)) $id('grd').focus(); else $id('grdPendingRecord').focus(); }
+            else $id('grdRegister').focus();
+        }
         if (e.ctrlKey && k === 'ArrowUp') { e.preventDefault(); if (currentTab === 'tabForm') $id('voucherdatetime').focus(); else $id('datFromDate').focus(); }
         if (e.ctrlKey && k === 'F5') { e.preventDefault(); $id('voucherdatetime').focus(); }
         if (e.ctrlKey && k === 'F10') { e.preventDefault(); attachment(); }
@@ -1355,8 +1399,23 @@
             var b = e.target.closest('button[data-act="Load"]'); if (!b) return;
             loadRecord(pendingRows[+b.getAttribute('data-i')]);
         });
+        /* grdPendingRecord_KeyDown (:2254): Ctrl+Space on the Load column loads the row */
+        $id('grdPendingRecord').addEventListener('keydown', function (e) {
+            if (!e.ctrlKey || !(e.key === ' ' || e.code === 'Space')) return;
+            var b = e.target.closest('button[data-act="Load"]'); if (!b) return;
+            e.preventDefault(); loadRecord(pendingRows[+b.getAttribute('data-i')]);
+        });
+        /* grdRegister_KeyDown (:2275): Ctrl+Enter = Reset + ReadById; Ctrl+Space = the current column's button */
+        $id('grdRegister').addEventListener('keydown', function (e) {
+            if (!e.ctrlKey) return;
+            var tr = e.target.closest('tbody tr'); if (!tr) return;
+            var r = registerGrid[+tr.getAttribute('data-i')]; if (!r) return;
+            if (e.key === 'Enter') { e.preventDefault(); readById(intOf(r.Id)); }
+            else if (e.key === ' ' || e.code === 'Space') { var b = e.target.closest('[data-act]'); if (b) { e.preventDefault(); b.click(); } }
+        });
         $id('grdRegister').addEventListener('click', function (e) {
-            var b = e.target.closest('button[data-act]'); if (!b) return;
+            var b = e.target.closest('[data-act]'); if (!b) return;
+            e.preventDefault();
             var r = registerGrid[+b.getAttribute('data-i')]; if (!r) return;
             var act = b.getAttribute('data-act');
             if (act === 'Edit') { readById(intOf(r.Id)); }

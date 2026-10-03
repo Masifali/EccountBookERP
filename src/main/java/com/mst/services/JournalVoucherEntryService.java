@@ -174,16 +174,24 @@ public class JournalVoucherEntryService {
         head.VoucherAmount = totalDr;                                      // :1826
 
         // ------------------------------------ VoucherHead.VoucherExistWithSameAmountInSameDate :1832
+        /* BLL 0654:2518 asks once PER debit account (group by AccountId, first line) and a No on any of
+           them abandons the save; a Yes goes on to the next account. The accounts already answered Yes
+           come back in duplicateAcknowledgedAccounts (2026-10-02 R2 - before, one Yes skipped the rest). */
         if (!Boolean.TRUE.equals(dto.duplicateAcknowledged)) {
+            Set<Integer> acked = new LinkedHashSet<>();
+            if (dto.duplicateAcknowledgedAccounts != null) {
+                for (Integer a : dto.duplicateAcknowledgedAccounts) if (a != null) acked.add(a);
+            }
             Set<Integer> seen = new LinkedHashSet<>();
             for (ContraVoucherDto.Detail d : details) {
                 if (nzd(d.DebitAmount) <= 0d || !seen.add(nz(d.AccountId))) continue;
+                if (acked.contains(nz(d.AccountId))) continue;
                 String title = writer.duplicateVoucherTitle(u.getOrganizationId(), u.getCompanyId(),
                         head.VoucherDate, nz(d.AccountId), nzd(d.DebitAmount), nz(d.ActionId));
                 if (title != null) {
-                    throw new ContraVoucherService.ConfirmationRequiredException(
+                    throw new DuplicateConfirmation(
                             "Voucher against '" + title + "' with same Debit Amount already exists on this date. Do you want to continue?",
-                            "duplicate");
+                            nz(d.AccountId));
                 }
             }
         }
@@ -196,6 +204,16 @@ public class JournalVoucherEntryService {
         res.put("voucherCode", head.VoucherCode);
         res.put("message", (insert ? "Record Save Successfully...[" : "Record Update Successfully...[") + head.VoucherCode + "]");
         return res;
+    }
+
+    /** The same-amount-same-date question for ONE debit account; the account goes back to the page
+     *  as "confirmKey" so a Yes acknowledges that account only. */
+    public static class DuplicateConfirmation extends ContraVoucherService.ConfirmationRequiredException {
+        public final int accountId;
+        public DuplicateConfirmation(String message, int accountId) {
+            super(message, "duplicate");
+            this.accountId = accountId;
+        }
     }
 
     private static ContraVoucherDto.CostCentre cost(int sortNo, int costCenterId, double amount) {

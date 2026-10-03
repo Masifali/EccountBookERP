@@ -53,7 +53,10 @@ public class AccountsModuleViewController {
 	public String bankBalanceManualEntry(Model model) {
 		model.addAttribute("activeMenu", "accounts");
 		model.addAttribute("moduleTitle", "Bank Balance Manual Entry");
-		model.addAttribute("bankAccountsList", accountsReportService.getBankAccounts());
+		/* Screen 705 - desktop Account_Definition.BankBalanceManualEntry (2026-10-02 port). The desktop form has
+		   no bank-account combo: the grid rows come from Sp_Accounts_CashBankBalancesSummery_Rpt (AccountTypeId 15)
+		   through /accounts/api/banking/bank-balance-manual-entry. The old bankAccountsList (raw SQL on
+		   ChartofAccount without tenancy) is no longer put on the model. */
 		return "accounts/banking/bank_balance_manual_entry";
 	}
 

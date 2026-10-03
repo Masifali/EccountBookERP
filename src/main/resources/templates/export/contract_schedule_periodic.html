@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Export Contract Scheduling Reports - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_rpta.css?v=20260930a}"/>
+</head>
+<!-- frmExportContractSchedulePeriodicB.cs (Architecture.WinApp.ExportReports), screen 236 "5003 Contract Schedule Periodic",
+     ClientSize 1436 x 706. PanelDetail (Top): toolStrip3 New / 551_02-Loading_Date_And_Item_Wise / 551_03-Loading_Date_Item_And_Customer_Wise /
+       ShortCutKeys; "Export Contract Scheduling Reports", "Shipment Schedule Aging Report", "Proactive Planning To Avoid Shipment Delays & Penalties".
+     panel3 (Top, 163): groupBox1 "Filters For Data" (From Date [unchecked], To Date, Add Days, Interval Days, Per FCL MTon [hidden], Not Referred [checked], Show)
+       | grdDueWise 511 (DoubleClick = re-bind with SortNo). panel1: tabControl1 "Schedule Detail" (grdLoadingDateItemCustomer, grouped by GroupCaption;
+       ScheduleCode link -> frmSaleContractSchedule, NoOfAttachments link) | "Loading Date And Item Wise" (grdLoadingDateItem grouped by LoadingDate).
+     Events: Load, KeyDown (Enter, Ctrl+E/Esc, Ctrl+Alt), btnNew, btnShow, tztAddDays TextChanged/KeyPress, grdDueWise DoubleClick, LinkClicked, prints. -->
+<body class="pd-body" data-export-page="sch">
+<div class="pd-form ex-form">
+    <div class="win-tool-strip">
+        <button type="button" id="btnNew" class="win-btn-tool" accesskey="n" onclick="ExportSch.btnNew()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+        <button type="button" id="btnPrint02" class="win-btn-tool" onclick="ExportSch.print02(this)" data-rpt="551_02_ExportContractScheduleLoadingDateItemWise_Slip.rpt"><i class="fa fa-print"></i> <span>551_02-Loading_Date_And_Item_Wise</span></button>
+        <button type="button" id="btnPrint03" class="win-btn-tool" onclick="ExportSch.print03(this)" data-rpt="551_03_ExportContractScheduleLoadingDateCustomerItemWise_Slip.rpt"><i class="fa fa-print"></i> <span>551_03-Loading_Date_Item_And_Customer_Wise</span></button>
+        <button type="button" id="btnShortCutKeys" class="win-btn-tool" onclick="ExportSch.shortcuts()"><i class="fa fa-keyboard-o"></i> <span>ShortCutKeys</span></button>
+    </div>
+    <div class="pd-caption pd-caption-teal" style="height:28px;"><span>Export Contract Scheduling Reports</span></div>
+    <div class="rpta-subtitle"><b>Shipment Schedule Aging Report</b> &nbsp; Proactive Planning To Avoid Shipment Delays &amp; Penalties</div>
+
+    <div class="rpta-side">
+        <fieldset class="ex-groupbox rpta-w241" style="margin:0;">
+            <legend>Filters For Data</legend>
+            <div class="ex-field"><label for="txtDateFrom" style="width:80px;">From Date</label><span class="ex-check"><input type="checkbox" id="txtDateFromChk"/><input type="date" id="txtDateFrom" class="win-date"/></span></div>
+            <div class="ex-field"><label for="txtToDate" style="width:80px;">To Date</label><span class="ex-check"><input type="checkbox" id="txtToDateChk" checked/><input type="date" id="txtToDate" class="win-date"/></span></div>
+            <div class="ex-field"><label for="tztAddDays" style="width:80px;">Add Days</label><input type="text" id="tztAddDays" class="win-textbox num" data-guard="integer" style="width:82px;" autocomplete="off"/></div>
+            <div class="ex-field"><label for="txtIntervalDays" style="width:80px;">Interval Days</label><input type="text" id="txtIntervalDays" class="win-textbox num" data-guard="integer" style="width:82px;" autocomplete="off"/></div>
+            <div class="ex-field is-hidden"><label for="txtprcntfclton" style="width:80px;">Per FCL MTon</label><input type="text" id="txtprcntfclton" class="win-textbox num" data-guard="integer" style="width:82px;" autocomplete="off"/></div>
+            <div class="ex-field"><label class="ex-check"><input type="checkbox" id="chkNotReferredStatus" checked/> Not Referred</label>
+                <button type="button" id="BtnShowbyDates" class="win-btn-small" style="width:59px;height:25px;margin-left:auto;" onclick="ExportSch.show(this)">Show</button></div>
+        </fieldset>
+        <div class="rpta-panel rpta-w511">
+            <div class="pd-caption pd-caption-teal pd-history-bar" style="height:24px;"><span>Periodic (double-click a row to filter)</span><span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdDueWiseBox" title="Fullscreen table">&#x26F6;</button></span></div>
+            <div class="ex-grid-box" id="grdDueWiseBox"><div class="ex-grid-scroll" style="max-height:163px;"><table class="win-grid" id="grdDueWise"><thead></thead><tbody></tbody><tfoot></tfoot></table></div></div>
+        </div>
+    </div>
+
+    <div class="win-tabs" data-tabs="sch" style="margin-top:6px;">
+        <button type="button" class="win-tab is-active" data-tab="tabPage1" onclick="ExportSch.tab('tabPage1')">Schedule Detail</button>
+        <button type="button" class="win-tab" data-tab="tabPage2" onclick="ExportSch.tab('tabPage2')">Loading Date And Item Wise</button>
+    </div>
+    <div class="win-tab-panel is-active" id="tabPage1">
+        <div class="pd-caption pd-caption-teal pd-history-bar" style="height:24px;"><span>Loading Date &amp; Item &amp; Customer</span>
+            <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdLoadingDateItemCustomerBox" title="Fullscreen table">&#x26F6;</button><span id="gridBarMountSch1" class="pd-gridbar-mount"></span></span></div>
+        <div class="ex-grid-box" id="grdLoadingDateItemCustomerBox">
+            <div class="ex-grid-scroll ex-h400"><table class="win-grid" id="grdLoadingDateItemCustomer" tabindex="0"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+            <div class="ex-grid-empty is-hidden" id="grdLoadingDateItemCustomerEmpty">No record found.</div>
+        </div>
+    </div>
+    <div class="win-tab-panel" id="tabPage2">
+        <div class="pd-caption pd-caption-teal pd-history-bar" style="height:24px;"><span>Loading Date &amp; Item</span>
+            <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdLoadingDateItemBox" title="Fullscreen table">&#x26F6;</button><span id="gridBarMountSch2" class="pd-gridbar-mount"></span></span></div>
+        <div class="ex-grid-box" id="grdLoadingDateItemBox">
+            <div class="ex-grid-scroll ex-h400"><table class="win-grid" id="grdLoadingDateItem" tabindex="0"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+            <div class="ex-grid-empty is-hidden" id="grdLoadingDateItemEmpty">No record found.</div>
+        </div>
+    </div>
+
+    <div class="win-footer-strip" id="schFooter">
+        <span class="ex-footer-left">frmExportContractSchedulePeriodicB - screen 236</span>
+        <button type="button" class="win-btn-history" id="btnSchFooterHistory" onclick="ExportSch.show(document.getElementById('BtnShowbyDates'))"><i class="fa fa-history"></i> <span>History</span></button>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260924a}"></script>
+<script th:src="@{/build/js/countx_export_rpta_common.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_export_contract_schedule_periodic.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

@@ -741,11 +741,16 @@ public class AccountReportsDesktopService {
             }
             out.put("receipts", rec);
             out.put("payments", pay);
+            /* dtReciptandPayment as the proc returned it: btnPrintReceiptandPayment_Click (590-BankBalances.rpt) and
+               BtnPrint590II_Click (590_01_BankBalancesWithSummary.rpt) hand this DataTable to the report. */
+            out.put("detailRaw", printRows(raw));
         }
         List<Map<String, Object>> sum = cashBankSummary(15, fromDate, toDate, branchIds, languageId);
         List<Map<String, Object>> grid = new ArrayList<>();
+        List<Map<String, Object>> kept = new ArrayList<>();
         for (Map<String, Object> r : sum) {
             if (excludeZeroFromSummary && !(dbl(r.get("CurrDebit")) > 0.0 || dbl(r.get("CurrCredit")) > 0.0)) continue;
+            kept.add(r);
             Map<String, Object> g = new LinkedHashMap<>();
             g.put("AccountId", r.get("AccountId"));
             g.put("BranchesId", toInt(r.get("BranchesId")));
@@ -772,6 +777,31 @@ public class AccountReportsDesktopService {
             grid.add(g);
         }
         out.put("summary", grid);
+        /* dtSummery as the desktop hands it to 593-CashBankBalancesSummery_Rpt.rpt / 593_01_CashBankBalancesSummeryReport.rpt
+           (btnPrintSummery_Click / BtnPrintII_Click): the proc's Tables[0] rows after the Exclude-0 filter, logo left out. */
+        out.put("summaryRaw", excludeZeroFromSummary && !sum.isEmpty() && kept.isEmpty() ? new ArrayList<>() : printRows(kept));
+        /* SummeryGrd: with chkFilterSummaryOnlyTransactional checked and no row having CurrDebit/CurrCredit > 0,
+           CopyToDataTable() throws "The source contains no DataRows." - the catch shows it and the grid keeps
+           its previous rows (dtSummery was already cleared, so the 593 prints have nothing). */
+        out.put("excludedAll", excludeZeroFromSummary && !sum.isEmpty() && kept.isEmpty());
+        return out;
+    }
+
+    /** A proc DataTable for a print: dates as text, the binary logo column left out (the print layer adds the logo). */
+    private static List<Map<String, Object>> printRows(List<Map<String, Object>> raw) {
+        List<Map<String, Object>> out = new ArrayList<>();
+        SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        for (Map<String, Object> r : raw) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            for (Map.Entry<String, Object> e : r.entrySet()) {
+                Object v = e.getValue();
+                if (v instanceof byte[] || (e.getKey() != null && e.getKey().startsWith("CompLogo"))) continue;
+                if (v instanceof java.util.Date) v = f.format((java.util.Date) v);
+                else if (v instanceof java.time.temporal.TemporalAccessor) v = v.toString().replace('T', ' ');
+                m.put(e.getKey(), v);
+            }
+            out.add(m);
+        }
         return out;
     }
 

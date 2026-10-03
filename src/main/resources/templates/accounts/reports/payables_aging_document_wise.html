@@ -3,62 +3,167 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Supplier Aging Document Wise</title>
-<link rel="stylesheet" href="/vendors/font-awesome/css/font-awesome.min.css">
-<link rel="stylesheet" href="/build/css/countx_acc_rpt_f.css?v=20260930s">
-<link rel="stylesheet" href="/build/css/countx_desktop_combo.css?v=20260930s">
-<link rel="stylesheet" href="/build/css/countx_prod_combo.css?v=20260930s">
-<link rel="stylesheet" href="/build/css/countx_acc_rpt_pay.css?v=20260930s">
-<link rel="stylesheet" href="/css/report-loading.css"><script src="/js/report-loading.js"></script>
-<style>.accf table.wg td.remarks { white-space: normal; }</style>
-</head>
+<title>Supplier Aging Report Document Wise</title>
+<link rel="stylesheet" href="/build/css/countx_desktop_combo.css?v=20261002gm">
+<link rel="stylesheet" href="/build/css/countx_prod_combo.css?v=20261002gm">
 <!--
-  Screen 873 "Supplier Aging Report" - Architecture.WinApp.Account_Reports.frmPayablesAgingDocumentWise (route /accounts/reports/supplier-aging).
-  Read-only. As On Date = today (designer), txtAgingDays "30" after the lists bind (InitializeComponentMethod).
-  Lists (GET /api/accounts/document-aging/supplier/lookups): Supplier = CoaAllocationAccountTitleByAccountTypeIds("3,8","",0,"3"),
-  Custom Group = CustomeGroupsDefine(1), Party Group = CustomerGroup.GetSupplierCustomerGroupFromInventoryStockEvaluation.
-  Grid grouped by PartyName with sub totals and a total row. Page logic: /js/document-aging.js + /js/document-aging-grid.js
-  (shared with frmReceivableAgingDocumentWise, body data-aging-kind).
-  R3 2026-09-30: Account Reports look (countx_acc_rpt_f.css) and searchable combos (countx_prod_combo.js); select2 removed.
+  Screen 873 "Supplier Aging Report" = Architecture.WinApp.Account_Reports.frmPayablesAgingDocumentWise
+  (route /accounts/reports/supplier-aging). 2026-10-02 group M-SUPPLIER-AGING: rebuilt 1:1 on InitializeComponent()
+  (ClientSize 903x636, WindowState Maximized, AutoScrollMinSize 1230x800 set in Load):
+    panel1 Fill = panel2 (Top 29: toolStrip3 27 - &Reset | &Refresh | &Print-127 | ShortCut Keys, Verdana 9.75pt)
+                | panel3 (Top 103, white: panel5 teal 29 "Supplier Aging Report Document Wise" Tahoma 12 bold +
+                  groupBox1 "Filters" @6,29 811x70 Tahoma 9.75 bold)
+                | panel4 Fill (panel6 teal 29 "Filtered Records" + DataGridHistory Fill, Janus Verdana 8.25pt).
+  groupBox1 children (designer Location/Size): label1 "As On Date" 6,18 | datAsOnDate 6,38 121x23 (dd-MMM-yy) |
+  label12 "Supplier" 129,18 | CmbCustomerAccounts 128,36 201x26 | label10 "Custom Group" 328,20 | CmbCustomGroup 331,36 150x26 |
+  label2 "Party Group" 479,19 | CmbPartyGroup 482,36 150x26 | label3 "Aging Days" 634,18 | txtAgingDays 634,38 68x23 |
+  btnShow 705,36 61x26 (teal, flat, Tahoma 9.75 bold, white, text only - no icon).
+  Lists: GET /api/accounts/document-aging/supplier/lookups (InitializeComponentMethod); Refresh: /supplier/accounts only.
+  Report: GET /api/accounts/document-aging/supplier (usp_SupplierAgingReport_DocumentWise). Print-127: Jasper print layer.
+  Page logic: /build/js/countx_supplier_aging_873.js (the customer page keeps /js/document-aging.js).
 -->
-<body class="accf" data-aging-kind="supplier">
-<div class="win-title-bar">
-    <span><i class="fa fa-hourglass-half"></i> Supplier Aging Report Document Wise</span>
-    <a href="/accounts/dashboard"><i class="fa fa-arrow-left"></i> Back to Dashboard</a>
-</div>
-<div class="win-toolbar">
-    <button type="button" class="win-btn" id="reset"><i class="fa fa-plus text-success"></i> Reset</button>
-    <button type="button" class="win-btn" id="refresh"><i class="fa fa-refresh"></i> Refresh</button>
-    <button type="button" class="win-btn" id="print" data-rpt="127-SupplierAgingReport_DocumentWise.rpt"><i class="fa fa-print"></i> Print-127</button>
-    <button type="button" class="win-btn" id="shortcuts"><i class="fa fa-keyboard-o"></i> ShortCut Keys</button>
-    <a class="win-btn" href="/accounts/dashboard"><i class="fa fa-times"></i> Close</a>
-</div>
-<div class="win-header-panel"><span>Supplier Aging Report Document Wise</span></div>
+<style>
+    :root { --teal: #008080; --tsb-border: #c3cbd6; --frame: #a0a0a0; }
+    html, body { margin: 0; height: 100%; }
+    body { background: #f0f0f0; color: #000; overflow: hidden; font: 13px Verdana, Tahoma, sans-serif; }
+    [hidden] { display: none !important; }
+    /* The designer layout keeps its pixels; when the browser is narrower than the form THIS box scrolls, never the page. */
+    .frm-scroll { position: absolute; inset: 0; overflow: auto; }
+    .frm { position: relative; min-width: 903px; min-height: 560px; height: 100%; display: flex; flex-direction: column; background: #fff; }
 
-<div class="filters">
-    <div class="gb" style="width:1130px;">
-        <span class="gb-title">Filters</span>
-        <div class="fgrid" style="grid-template-columns: 65px 120px 48px 200px 78px 170px 64px 160px 60px 45px 70px;">
-            <span class="lbl">As On Date</span><input type="date" id="asOnDate" class="inp">
-            <span class="lbl">Supplier</span><div><select id="account" class="inp" data-dtcombo="single" data-dtcombo-caption="Supplier"></select></div>
-            <span class="lbl">Custom Group</span><div><select id="custom" class="inp" data-dtcombo="single" data-dtcombo-caption="Custom Group"></select></div>
-            <span class="lbl">Party Group</span><div><select id="party" class="inp" data-dtcombo="single" data-dtcombo-caption="Party Group"></select></div>
-            <span class="lbl">Aging Days</span><input id="days" type="number" min="0" value="30" class="inp">
-            <button type="button" id="show" class="win-btn-show"><i class="fa fa-eye"></i> Show</button>
+    /* panel2 (Dock Top 29) - toolStrip3 (27 high, professional renderer) */
+    .p2 { flex: 0 0 29px; height: 29px; background: #f0f0f0; }
+    .ts { height: 27px; display: flex; align-items: center; padding: 0 2px; box-sizing: border-box;
+          background: linear-gradient(#ffffff, #e9eef4); border-bottom: 1px solid var(--tsb-border); }
+    .ts button { font: 13px Verdana, Tahoma, sans-serif; height: 24px; padding: 0 4px 0 3px; margin: 0 1px 0 0; border: 1px solid transparent;
+                 background: transparent; display: inline-flex; align-items: center; gap: 4px; cursor: pointer; white-space: nowrap; color: #000; box-sizing: border-box; }
+    .ts button:hover:not(:disabled) { border-color: #3399ff; background: #cce8ff; }
+    .ts button:disabled { color: #8d8d8d; cursor: progress; }
+    .ts button svg { width: 16px; height: 16px; flex: 0 0 16px; }
+    .ts button.busy svg { animation: spin .7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .teal { background: var(--teal); color: #fff; position: relative; box-sizing: border-box; }
+    .teal .cap { position: absolute; left: 7px; top: 5px; white-space: nowrap; font: bold 16px Tahoma, Verdana, sans-serif; line-height: 19px; color: #fff; }
+
+    /* panel3 (Dock Top 103, White) */
+    .p3 { flex: 0 0 103px; height: 103px; position: relative; background: #fff; }
+    .p5 { position: absolute; left: 0; right: 0; top: 0; height: 29px; }
+    /* GroupBox: caption on the frame line, Tahoma 9.75pt bold */
+    .gb { position: absolute; box-sizing: border-box; font: bold 13px Tahoma, Verdana, sans-serif; }
+    .gb > .gb-frame { position: absolute; left: 0; right: 0; top: 7px; bottom: 0; border: 1px solid #d0d0d0; border-radius: 3px; }
+    .gb > .gb-cap { position: absolute; left: 6px; top: 0; padding: 0 2px; background: #fff; white-space: nowrap; line-height: 14px; }
+    .lbl { position: absolute; white-space: nowrap; font: 600 12px "Segoe UI Semibold", "Segoe UI", Calibri, Carlito, Arial, sans-serif; line-height: 15px; color: #000; }
+    input.tb { position: absolute; box-sizing: border-box; border: 1px solid #7a7a7a; padding: 1px 3px; margin: 0; background: #fff; color: #000;
+               font: 13px Verdana, Tahoma, sans-serif; }
+    input.tb[type=date] { padding: 0 0 0 3px; }
+    input.tb[type=date]::-webkit-calendar-picker-indicator { margin: 0; padding: 0 1px; }
+    .teal-btn { position: absolute; background: var(--teal); color: #fff; font: bold 13px Tahoma, Verdana, sans-serif; border: 1px solid #006666;
+                padding: 0; cursor: pointer; box-sizing: border-box; white-space: nowrap; overflow: hidden; }
+    .teal-btn:hover:not(:disabled) { background: #006d6d; }
+    .teal-btn:focus-visible { outline: 1px dotted #fff; outline-offset: -4px; }
+    .teal-btn:disabled { cursor: progress; }
+    .teal-btn.busy { color: transparent; }
+    .teal-btn.busy::after { content: ""; position: absolute; left: 50%; top: 50%; width: 10px; height: 10px; margin: -7px 0 0 -7px;
+                            border: 2px solid rgba(255,255,255,.4); border-top-color: #fff; border-radius: 50%; animation: spin .6s linear infinite; }
+    .pcx-wrap .dtcombo-input.pcx-field { font: 13px Verdana, Tahoma, sans-serif; }   /* UltraCombo Verdana 9.75pt */
+
+    /* panel4 Fill: panel6 teal 29 + DataGridHistory (Janus GridEX, Office look, Verdana 8.25pt) */
+    .p4 { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+    .p6 { flex: 0 0 29px; height: 29px; }
+    .gridbox { flex: 1 1 auto; min-height: 120px; display: flex; flex-direction: column; border: 1px solid var(--frame); box-sizing: border-box; background: #fff; }
+    .grid { flex: 1 1 auto; min-height: 0; position: relative; overflow: auto; background: #fff; }
+    .grid:focus { outline: 1px dotted var(--teal); outline-offset: -2px; }
+    table.g { border-collapse: separate; border-spacing: 0; table-layout: fixed; width: max-content; font: 11px Verdana, Tahoma, sans-serif; }
+    table.g th { position: sticky; top: 0; z-index: 2; height: 32px; background: linear-gradient(#fdfdfd, #e3e8ef); border-right: 1px solid #c3c9d1;
+                 border-bottom: 1px solid #a9b3bf; padding: 1px 4px; text-align: center; font-weight: normal; white-space: normal;
+                 overflow: hidden; box-sizing: border-box; cursor: default; user-select: none; }   /* HeaderLines 2, HeaderAlignment Center */
+    table.g th .sort { font-size: 8px; margin-left: 3px; color: #555; }
+    table.g tr.flt td { position: sticky; top: 32px; z-index: 2; height: 22px; padding: 1px; background: #f7f9fb; border-bottom: 1px solid #a9b3bf; }
+    table.g tr.flt input { width: 100%; height: 19px; box-sizing: border-box; border: 1px solid #c5ccd4; font: 11px Verdana, Tahoma, sans-serif; padding: 0 2px; }
+    table.g td { border-right: 1px solid #e1e4e8; border-bottom: 1px solid #e1e4e8; padding: 1px 4px; height: 30px; white-space: nowrap;
+                 overflow: hidden; text-overflow: ellipsis; background: #fff; box-sizing: border-box; }   /* RowHeight 30 */
+    table.g td.num { text-align: right; }
+    table.g td.wrap { white-space: normal; line-height: 13px; }          /* Remarks WordWrap */
+    table.g tbody tr.r:hover td { background: #eaf3fb; }
+    table.g tbody tr.r.sel td { background: #cde6f7; }
+    table.g tbody tr.r:focus { outline: none; }
+    table.g a.lnk { color: #0645ad; text-decoration: underline; cursor: pointer; }
+    table.g tr.grp td { height: 22px; background: #e6ebf1; border-bottom: 1px solid #c3c9d1; font-weight: bold; cursor: pointer; }
+    table.g tr.grp .tg { display: inline-block; width: 11px; height: 11px; line-height: 9px; text-align: center; border: 1px solid #8a96a3;
+                         background: #fff; font: 10px Verdana, sans-serif; margin-right: 5px; vertical-align: -1px; }
+    table.g tr.gtot td { height: 22px; background: #f4f6f8; font-weight: bold; border-bottom: 1px solid #c3c9d1; }
+    table.g tfoot td { position: sticky; bottom: 0; z-index: 1; height: 22px; background: #eef1f4; font-weight: bold; border-top: 1px solid #a9b3bf; }
+    /* RecordNavigator */
+    .nav { flex: 0 0 20px; height: 20px; display: flex; align-items: center; gap: 2px; padding: 0 4px; border-top: 1px solid #c3c9d1;
+           background: #f4f6f8; font: 11px Verdana, Tahoma, sans-serif; }
+    .nav button { font: 10px Verdana, sans-serif; height: 16px; min-width: 18px; padding: 0 2px; border: 1px solid #b8c0c9; background: #fff; cursor: pointer; }
+
+    /* ShortCutKeyPopUp */
+    dialog.sck { padding: 0; border: 1px solid #6d7b8a; width: 470px; font: 12px Verdana, Tahoma, sans-serif; }
+    dialog.sck .hd { background: var(--teal); color: #fff; font: bold 13px Tahoma, Verdana, sans-serif; padding: 5px 8px; }
+    dialog.sck table { width: 100%; border-collapse: collapse; }
+    dialog.sck th, dialog.sck td { border: 1px solid #d5dbe2; padding: 3px 6px; text-align: left; }
+    dialog.sck th { background: linear-gradient(#fdfdfd, #e3e8ef); font-weight: normal; }
+    dialog.sck .ft { text-align: right; padding: 6px; }
+    dialog.sck .ft button { font: 12px Verdana, sans-serif; padding: 2px 14px; }
+</style>
+</head>
+<body>
+<div class="frm-scroll">
+<div class="frm" id="frmPayablesAgingDocumentWise">
+
+    <!-- panel2 / toolStrip3: btnNew "&Reset" | btnRefresh "&Refresh" | btnPrint "&Print-127" | btnShortcut "ShortCut Keys" -->
+    <div class="p2"><div class="ts">
+        <button type="button" id="reset" title="Ctrl+N"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#2e9b45"/><path d="M8 4v8M4 8h8" stroke="#fff" stroke-width="2"/></svg><span><u>R</u>eset</span></button>
+        <button type="button" id="refresh" title="Ctrl+R"><svg viewBox="0 0 16 16"><path d="M13 8a5 5 0 1 1-1.5-3.6" fill="none" stroke="#1f6fc5" stroke-width="2"/><path d="M13.5 1.5v4h-4z" fill="#1f6fc5"/></svg><span><u>R</u>efresh</span></button>
+        <button type="button" id="print" title="Ctrl+P" data-rpt="127-SupplierAgingReport_DocumentWise.rpt" data-rpt-own><svg viewBox="0 0 16 16"><rect x="4" y="1.5" width="8" height="4" fill="#fff" stroke="#555"/><rect x="1.5" y="5.5" width="13" height="6" rx="1" fill="#6b7785"/><rect x="4" y="9.5" width="8" height="5" fill="#fff" stroke="#555"/></svg><span><u>P</u>rint-127</span></button>
+        <button type="button" id="shortcuts" title="Ctrl+Alt"><svg viewBox="0 0 16 16"><rect x="1" y="4" width="14" height="8.5" rx="1.5" fill="#4a4f57"/><path d="M3 6.5h1.5M6 6.5h1.5M9 6.5h1.5M12 6.5h1M4 10h8" stroke="#fff" stroke-width="1.2"/></svg><span>ShortCut Keys</span></button>
+    </div></div>
+
+    <!-- panel3 (Top 103, White): panel5 teal 29 + groupBox1 "Filters" (6,29) 811x70 -->
+    <div class="p3">
+        <div class="p5 teal"><span class="cap" id="lblCaption">Supplier Aging Report Document Wise</span></div>
+        <div class="gb" style="left:6px;top:29px;width:811px;height:70px;">
+            <div class="gb-frame"></div><span class="gb-cap">Filters</span>
+            <span class="lbl" style="left:6px;top:18px;">As On Date</span>
+            <input type="date" id="asOnDate" class="tb" style="left:6px;top:38px;width:121px;height:23px;">
+            <span class="lbl" style="left:129px;top:18px;">Supplier</span>
+            <select id="account" data-dtcombo="supAging873" data-dtcombo-caption="Customer" style="position:absolute;left:128px;top:36px;width:201px;height:26px;"></select>
+            <span class="lbl" style="left:328px;top:20px;">Custom Group</span>
+            <select id="custom" data-dtcombo="single" data-dtcombo-caption="Custom Group" style="position:absolute;left:331px;top:36px;width:150px;height:26px;"></select>
+            <span class="lbl" style="left:479px;top:19px;">Party Group</span>
+            <select id="party" data-dtcombo="single" data-dtcombo-caption="CustomerGroup" style="position:absolute;left:482px;top:36px;width:150px;height:26px;"></select>
+            <span class="lbl" style="left:634px;top:18px;">Aging Days</span>
+            <input id="days" class="tb" inputmode="numeric" autocomplete="off" style="left:634px;top:38px;width:68px;height:23px;">
+            <button type="button" id="show" class="teal-btn" style="left:705px;top:36px;width:61px;height:26px;" title="Ctrl+S">Show</button>
+        </div>
+    </div>
+
+    <!-- panel4 Fill: panel6 teal 29 "Filtered Records" + DataGridHistory -->
+    <div class="p4">
+        <div class="p6 teal"><span class="cap">Filtered Records</span></div>
+        <div class="gridbox">
+            <div class="grid" id="grid" tabindex="0"><table class="g" id="results"><colgroup></colgroup><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+            <div class="nav" id="nav" hidden>
+                <button type="button" data-nav="first" title="First">|&lt;</button><button type="button" data-nav="prev" title="Previous">&lt;</button>
+                <span id="navText"></span>
+                <button type="button" data-nav="next" title="Next">&gt;</button><button type="button" data-nav="last" title="Last">&gt;|</button>
+            </div>
         </div>
     </div>
 </div>
+</div>
 
-<div class="grid-caption"><span>Filtered Records</span><input id="search" placeholder="Filter records" aria-label="Filter records"></div>
-<div class="grid-wrap fill" id="grid" tabindex="0"><table class="wg auto" id="results"><thead></thead><tbody></tbody></table></div>
-<div class="status-bar" id="status" role="status"></div>
-<dialog id="shortcutDialog" style="width:420px;"><h2>Shortcut Keys</h2><p>Ctrl+S: Show<br>Ctrl+N: Reset<br>Ctrl+R: Refresh<br>Ctrl+P: Print<br>Ctrl+F5 / Ctrl+Up: As On Date<br>Ctrl+Down: Grid<br>Ctrl+Space: Open selected account ledger</p><button type="button" class="win-btn" id="closeShortcuts">Close</button></dialog>
+<!-- ShortCutKeyPopUp (MakeShortCutKeys) -->
+<dialog class="sck" id="shortcutDialog">
+    <div class="hd">ShortCut Keys</div>
+    <table><thead><tr><th>KeyCombination</th><th>Description</th></tr></thead><tbody id="shortcutRows"></tbody></table>
+    <div class="ft"><button type="button" id="closeShortcuts">Close</button></div>
+</dialog>
 
-<script src="/vendors/jquery/dist/jquery.min.js"></script>
-<script src="/build/js/countx_prod_combo.js?v=20260930s"></script>
-<script src="/js/report-decimal.js"></script>
-<script src="/js/document-aging-grid.js"></script>
-<script src="/js/document-aging.js?v=20260930s"></script>
+<script src="/build/js/countx_prod_combo.js?v=20261002gm"></script>
 <script src="/js/print-rpt.js?v=20261001a"></script>
+<script src="/build/js/countx_supplier_aging_873.js?v=20261002gm"></script>
 </body>
 </html>

@@ -27,6 +27,7 @@ public class ReportDataService {
     @Autowired private JdbcTemplate jdbcTemplate;
     @Autowired private CurrentUserContext currentUserContext;
     @Autowired private ReportRegistry registry;
+    @Autowired private com.mst.repositories.ICompanyRepository companies;
 
     public Map<String, Object> run(String key, Map<String, Object> args) {
         ReportDefinition def = registry.get(key);
@@ -87,21 +88,22 @@ public class ReportDataService {
      *   val.RptPerameter("@CompanyName",    UserAccount.CompName)
      *   val.RptPerameter("@CompanyAddress", UserAccount.CompAddress)
      *
-     * The desktop fills those onto UserAccount at login (LoginNew.cs:224). There is no such
-     * field on the Java session object, so they are read from the company row itself —
-     * Sp_Company_GetAllMethod @Activity='ReadById', columns CompName and CompAddress, which are
-     * the real columns of Architecture.Model.Company. Not invented, not hard-coded.
+     * The desktop fills those onto UserAccount at login (LoginNew.cs:224 - CompName is the selected
+     * company's CompName from sp_UserAccountAllocation_GetAllMethod 'GetCompaniesByUserId', CompAddress
+     * comes with the login row). Both are the signed-in company's dbo.Company.CompName / CompAddress,
+     * read here from that row (ICompanyRepository, as GeneralLedgerPrintService / WeighBridgeReportsService do).
+     * 2026-10-02: this used Sp_Company_GetAllMethod @Activity='ReadById', but the procedure has no such
+     * activity (ReadByOrganizationId / ReadAll / FormHistory / GetHistory / GetNewlyGeneratedCompanyData
+     * only), so it returned no result set and every print lost its company header.
      */
     private Map<String, Object> resolveReportParams() {
         Map<String, Object> m = new LinkedHashMap<>();
         String name = "", address = "";
         try {
-            List<Map<String, Object>> rows = jdbcTemplate.queryForList(
-                    "EXEC Sp_Company_GetAllMethod @Id=?, @Activity=?",
-                    currentUserContext.currentCompanyId(), "ReadById");
-            if (!rows.isEmpty()) {
-                name    = str(ci(rows.get(0), "CompName"));
-                address = str(ci(rows.get(0), "CompAddress"));
+            com.mst.models.Company c = companies.findById(currentUserContext.currentCompanyId()).orElse(null);
+            if (c != null) {
+                name    = str(c.getCompName());
+                address = str(c.getCompAddress());
             }
         } catch (Exception e) {
             /* A missing header is a cosmetic gap; it must not fail the report's data. */
@@ -143,12 +145,22 @@ public class ReportDataService {
             values.add(v);
         }
 
+        /* An ALWAYS parameter without a value is written as a NULL literal, not bound as a null "?".
+           For a null, Spring asks the driver for the parameter type (ParameterMetaData); mssql-jdbc
+           answers for "EXEC proc @A=?, @B=?" by the procedure's DECLARATION ORDER, not by the @name,
+           so the null went out typed as some other parameter's type. 113A: the 3rd placeholder
+           (@LanguageId int) took the 3rd declared parameter's type (@FromDate date) -> SQL Server
+           "Operand type clash: date is incompatible with int" (2026-10-02 log). A NULL literal is the
+           same value with no type guess. */
         StringBuilder sql = new StringBuilder("EXEC ").append(procedure).append(' ');
+        List<Object> bound = new ArrayList<>();
         for (int i = 0; i < names.size(); i++) {
             if (i > 0) sql.append(", ");
+            if (values.get(i) == null) { sql.append(names.get(i)).append("=NULL"); continue; }
             sql.append(names.get(i)).append("=?");
+            bound.add(values.get(i));
         }
-        return jdbcTemplate.queryForList(sql.toString(), values.toArray());
+        return jdbcTemplate.queryForList(sql.toString(), bound.toArray());
     }
 
     @SuppressWarnings("unchecked")

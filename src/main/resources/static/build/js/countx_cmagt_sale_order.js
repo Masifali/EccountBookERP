@@ -245,7 +245,8 @@
     function initSelect2() {
         $('.so-select2').each(function () {
             var $e = $(this);
-            if ($e.data('select2') || this.__dtcombo || this.classList.contains('dtcombo-native')) return;
+            /* 2026-10-03: a checked combo (countx_prod_combo.js, data-dtcombo-checked) never gets select2 */
+            if ($e.data('select2') || this.__dtcombo || this.classList.contains('dtcombo-native') || this.hasAttribute('data-dtcombo-checked')) return;
             $e.select2({ width: $e.css('width'), dropdownAutoWidth: true, placeholder: '' });
         });
     }

@@ -25,18 +25,19 @@
         data.forEach(r => s.add(new Option(r[label] ?? '', r.Id)));
         $(s).val(s.multiple ? [] : '').trigger('change.select2');
     }
-    /* R4 2026-09-30: countx_prod_combo.js replaces select2. It enhances single selects only, so the branch combo is
-       turned back into a native multi-select when BranchFeatureConsolidated (18) makes CmbBranches a checked list. */
+    /* R4 2026-09-30: countx_prod_combo.js replaces select2. When BranchFeatureConsolidated (18) makes CmbBranches a checked
+       list, the single branch combo is unwrapped and re-enhanced in the CHECKED mode (data-dtcombo-checked, 2026-10-02). */
     function nativeMulti(select) {
         const c = select.__dtcombo;
         if (c) {
             c.destroy();
             const wrap = c.wrap; wrap.parentNode.insertBefore(select, wrap); wrap.parentNode.removeChild(wrap);
             select.classList.remove('dtcombo-native'); select.removeAttribute('aria-hidden'); select.removeAttribute('tabindex');
-            delete select.value; delete select.selectedIndex; delete select.__dtcombo;
+            delete select.value; delete select.selectedIndex; delete select.__dtcombo; delete select.__dtcomboHooked;
             if (window.DesktopCombo) { const i = DesktopCombo.instances.indexOf(c); if (i >= 0) DesktopCombo.instances.splice(i, 1); }
         }
-        select.removeAttribute('data-dtcombo'); select.multiple = true; select.style.height = '44px';
+        select.multiple = true; select.setAttribute('data-dtcombo', 'single'); select.setAttribute('data-dtcombo-checked', '');
+        if (window.DesktopCombo) DesktopCombo.enhance(select);
     }
     function columns() {
         return (lookup.branchFeature && branchIds()) ? [['BranchName', 'Branch Name', 120], ...base] : base;

@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="/vendors/font-awesome/css/font-awesome.min.css">
 <link rel="stylesheet" href="/build/css/countx_acc_rpt_f.css?v=20260930s">
 <link rel="stylesheet" href="/build/css/countx_desktop_combo.css?v=20260930s">
-<link rel="stylesheet" href="/build/css/countx_prod_combo.css?v=20260930s">
+<link rel="stylesheet" href="/build/css/countx_prod_combo.css?v=20261002gv">
 <link rel="stylesheet" href="/build/css/countx_acc_rpt_pay.css?v=20260930s">
 <link rel="stylesheet" href="/css/report-loading.css"><script src="/js/report-loading.js"></script>
 <style>
@@ -63,8 +63,8 @@
         <span class="gb-title">Filters</span>
         <div class="fgrid" style="grid-template-columns: 95px 230px 95px 1fr;">
             <span class="lbl">From &amp; To Date</span><span style="display:flex;gap:2px;"><input id="fromDate" type="date" class="inp"><input id="toDate" type="date" class="inp"></span>
-            <span class="lbl">Inventory Group</span><div><select id="inventoryGroups" class="inp" multiple style="height:34px;"></select></div>
-            <span class="lbl">Control Account</span><div><select id="controls" class="inp" multiple style="height:34px;"></select></div>
+            <span class="lbl">Inventory Group</span><div><select id="inventoryGroups" class="inp" multiple data-dtcombo="single" data-dtcombo-checked data-dtcombo-caption="Inventory Group"></select></div>
+            <span class="lbl">Control Account</span><div><select id="controls" class="inp" multiple data-dtcombo="single" data-dtcombo-checked data-dtcombo-caption="Account Title"></select></div>
             <span class="lbl">City Name</span><div><select id="cities" class="inp" data-dtcombo="single" data-dtcombo-caption="City Name"></select></div>
             <span class="lbl">Account Title</span><div><select id="accounts" class="inp" data-dtcombo="single" data-dtcombo-caption="Account Title"></select></div>
             <span class="lbl">Closing From &amp; To</span><span style="display:flex;gap:2px;"><input id="balanceFrom" type="number" value="0" step="any" class="inp"><input id="balanceTo" type="number" step="any" class="inp"></span>
@@ -114,7 +114,7 @@
 <section id="dueDates" hidden><iframe title="Receivables By Due Date"></iframe></section>
 <div class="status-bar" id="status" role="status"></div>
 <script src="/vendors/jquery/dist/jquery.min.js"></script>
-<script src="/build/js/countx_prod_combo.js?v=20260930s"></script>
+<script src="/build/js/countx_prod_combo.js?v=20261002gv"></script>
 <script src="/js/report-decimal.js"></script>
 <script src="/js/trade-grid.js?v=20260930s"></script>
 <script th:inline="none">
@@ -123,8 +123,8 @@ let lookup={},rows=[],requestId=0,aborter;const $id=id=>document.getElementById(
 const columns=[['lvl03_Title','Parent Account',145],['ClassName','Account Class',75],['AccountCode','Account Code',80],['AccountTitle','Account Title',180],['AccountType','Account Type',65],['Opening','Opening',102],['CurrDebit','Debit',102],['CurrCredit','Credit',102],['Closing','Closing',102],['Increase/Decrease','Increase/Decrease',102],['LastBillDate','Last Bill Date',80],['LastBillsAmount','Last Bill Amount',90],['BillDays','Bill Days',50],['LastRcvdDate','Last Paid Date',80],['LastRcvdAmount','Last Paid Amount',90],['RcvdDays','Paid Days',75],['CityName','City Name',120],['MobilePersonal','Mobile#',110]];
 const numeric=new Set(['Opening','CurrDebit','CurrCredit','Closing','Increase/Decrease','LastBillsAmount','LastRcvdAmount']);
 function displayDate(raw){const match=String(raw??'').match(/^(\d{4})-(\d{2})-(\d{2})/);return match?match[3]+'-'+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][Number(match[2])-1]+'-'+match[1].slice(-2):String(raw??'')}
-/* R3 2026-09-30: countx_prod_combo.js skips multi-selects, so the enhanced single Branches combo is unwrapped back to a native multi-select when feature 18 (consolidated) makes it a checked list. */
-function nativeMulti(s){const c=s.__dtcombo;if(c&&c.wrap&&c.wrap.parentNode){c.wrap.parentNode.insertBefore(s,c.wrap);if(c.destroy)c.destroy();c.wrap.remove();s.classList.remove('dtcombo-native');s.removeAttribute('aria-hidden');s.removeAttribute('tabindex');delete s.value;delete s.selectedIndex;delete s.__dtcombo;const l=window.DesktopCombo&&DesktopCombo.instances,i=l?l.indexOf(c):-1;if(i>=0)l.splice(i,1)}s.multiple=true}
+/* R3 2026-09-30 / 2026-10-02: when feature 18 (consolidated) makes Branches a checked list, the enhanced single combo is unwrapped and re-enhanced as the desktop's CHECKED combo (data-dtcombo-checked). */
+function nativeMulti(s){const c=s.__dtcombo;if(c&&c.wrap&&c.wrap.parentNode){c.wrap.parentNode.insertBefore(s,c.wrap);if(c.destroy)c.destroy();c.wrap.remove();s.classList.remove('dtcombo-native');s.removeAttribute('aria-hidden');s.removeAttribute('tabindex');delete s.value;delete s.selectedIndex;delete s.__dtcombo;delete s.__dtcomboHooked;const l=window.DesktopCombo&&DesktopCombo.instances,i=l?l.indexOf(c):-1;if(i>=0)l.splice(i,1)}s.multiple=true;s.setAttribute('data-dtcombo','single');s.setAttribute('data-dtcombo-checked','');if(window.DesktopCombo)DesktopCombo.enhance(s)}
 function message(t){$id('status').textContent=t}
 async function api(url,options){const r=await fetch(url,options);if(!r.ok)throw Error('Report request failed ('+r.status+'). Check the server log for the database error.');return r.json()}
 function bind(id,data,text,key='Id'){const e=$id(id),old=$('#'+id).val();e.replaceChildren();if(!e.multiple)e.add(new Option('',''));data.forEach(r=>e.add(new Option(r[text]??'',r[key])));$('#'+id).val(old).trigger('change.select2')}

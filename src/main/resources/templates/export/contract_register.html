@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Sale Contract Register - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_rpta.css?v=20260930a}"/>
+</head>
+<!-- ExImSaleContractRegister.cs (Architecture.WinApp.ExportReports), screen 251 "5001 Contract Report", ClientSize 1370 x 674, Text "Sale Contract Register".
+     tsItemType: New / Refresh / 518-Print Register [hidden] / 523-Print Register [only with a contract] / 526-Print Register [Summary] /
+       561-Print Register [ProductWise] / ShortCut Keys. Filters: Date Type (cmbperemeter, no blank row), Date From / Date To (both unchecked),
+       Contract No, Customer, Item Name, Trade Type, Farming Type, Sales Person (all without blank row), Status combo [hidden],
+       Open [checked] / Complete / Cancel / All, Skip Zero, Summary [checked] / ProductWise, Selected Criteria [checked] / Export Year / Financial Year, Show;
+       grdCard (GetDataForExportInfo). tabControl1 "Contract Register" (tabControl2: "Contract Summary" grdContractRegister - ContractNo link ->
+       frmContractDetailByContractId, NoOfAttachments link, ActionRemarks editable, Print / Open / Cancel / Complete buttons by status radio;
+       "Contract Product Wise" grdProductWise) + "Contracts Schedule" (frmExportContractSchedulePeriodicB embedded when the user has its View right).
+       "Contracts Current Status" (frmContractCurrentStatusReport) and "Pre Shipment Planning" (frmDepartmentStatusReport) have no web page.
+     Events: Load, KeyDown (Enter, Ctrl+N, Ctrl+R, Ctrl+E/Esc, Ctrl+F5, Ctrl+S, Ctrl+Down, Alt+1..4, Ctrl+Alt), cmbperemeter ValueChanged, btnShow Leave,
+       ChkSummary / ChkProductWise CheckedChanged, grid ColumnButtonClick / LinkClicked / KeyDown Ctrl+Space (501 print). -->
+<body class="pd-body" data-export-page="reg">
+<div class="pd-form ex-form">
+    <div class="win-tool-strip">
+        <button type="button" id="btnnew" class="win-btn-tool" accesskey="n" onclick="ExportReg.btnNew()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+        <button type="button" id="btnRefresh" class="win-btn-tool" onclick="ExportReg.btnRefresh(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+        <button type="button" id="toolStripButton2" class="win-btn-tool is-hidden" onclick="ExportReg.print518(this)" data-rpt="518-ExpRptSalesContractExportRegister.rpt"><i class="fa fa-print"></i> <span>518-Print Register</span></button>
+        <button type="button" id="btnregister523" class="win-btn-tool is-hidden" onclick="ExportReg.print523(this)" data-rpt="523-ExpRptSalesContractWiseInvoiceRegister.rpt"><i class="fa fa-print"></i> <span>523-Print Register</span></button>
+        <button type="button" id="btnregisterprint526" class="win-btn-tool" onclick="ExportReg.print526(this)" data-rpt="526-SaleContractRegister.rpt"><i class="fa fa-print"></i> <span>526-Print Register</span></button>
+        <button type="button" id="btnregister561" class="win-btn-tool is-hidden" onclick="ExportReg.print561(this)" data-rpt="561-SaleContractRegisterItemWise.rpt"><i class="fa fa-print"></i> <span>561-Print Register</span></button>
+        <button type="button" id="btnShortCutKey" class="win-btn-tool" onclick="ExportReg.shortcuts()"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+    </div>
+    <div class="pd-caption pd-caption-teal pd-history-bar" style="height:28px;"><span>Sale Contract Register</span>
+        <span class="ex-bar-right"><span id="gridBarMountReg" class="pd-gridbar-mount"></span></span></div>
+
+    <div class="rpta-side">
+        <div class="rpta-panel" style="flex:1 1 700px;">
+            <div class="rpta-filter">
+                <div class="ex-field w200"><label for="cmbperemeter">Date Type</label><select id="cmbperemeter" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Parameters"></select></div>
+                <div class="ex-field w200"><label for="datDateFrom"><span class="ex-req">*</span> Date From</label><span class="ex-check"><input type="checkbox" id="datDateFromChk"/><input type="date" id="datDateFrom" class="win-date"/></span></div>
+                <div class="ex-field w200"><label for="datDateTo"><span class="ex-req">*</span> Date To</label><span class="ex-check"><input type="checkbox" id="datDateToChk"/><input type="date" id="datDateTo" class="win-date"/></span></div>
+                <div class="ex-field"><label for="cmbcontractNo">Contract No</label><select id="cmbcontractNo" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Contract No"></select></div>
+                <div class="ex-field"><label for="cmbSupplierName">Customer</label><select id="cmbSupplierName" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Customer Name"></select></div>
+                <div class="ex-field"><label for="cmbItemName">Item Name</label><select id="cmbItemName" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Name"></select></div>
+                <div class="ex-field w200"><label for="Cmbtradtype">Trade Type</label><select id="Cmbtradtype" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Trade Type"></select></div>
+                <div class="ex-field w200"><label for="CmbFarmingType">Farming Type</label><select id="CmbFarmingType" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Trade Type"></select></div>
+                <div class="ex-field w200"><label for="CmbSalePerson">Sales Person</label><select id="CmbSalePerson" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Sale Person"></select></div>
+                <div class="ex-field w200 is-hidden"><label for="CmbStatus">Status</label><select id="CmbStatus" class="win-combo"><option value="1">Open</option><option value="2">In-Process</option><option value="3">Complete</option></select></div>
+                <div class="ex-radios">
+                    <label class="ex-check"><input type="radio" name="regStatus" id="rdOpen" value="Open" checked/> Open</label>
+                    <label class="ex-check"><input type="radio" name="regStatus" id="rdComplete" value="Complete"/> Complete</label>
+                    <label class="ex-check"><input type="radio" name="regStatus" id="rdCancel" value="Cancel"/> Cancel</label>
+                    <label class="ex-check"><input type="radio" name="regStatus" id="rdAll" value=""/> All</label>
+                    <label class="ex-check"><input type="checkbox" id="chkSkipZero"/> Skip Zero</label>
+                </div>
+                <div class="ex-radios">
+                    <label class="ex-check"><input type="radio" name="regMode" id="ChkSummary" value="summary" checked/> Summary</label>
+                    <label class="ex-check"><input type="radio" name="regMode" id="ChkProductWise" value="product"/> ProductWise</label>
+                </div>
+                <div class="ex-radios">
+                    <label class="ex-check"><input type="radio" name="regCard" id="rdSelectedCriteria" value="3" checked/> Selected Criteria</label>
+                    <label class="ex-check"><input type="radio" name="regCard" id="rdExportYear" value="2"/> Export Year</label>
+                    <label class="ex-check"><input type="radio" name="regCard" id="rdFinancialYear" value="1"/> Financial Year</label>
+                </div>
+                <button type="button" id="btnShow" class="win-btn-small" style="width:70px;height:26px;" onclick="ExportReg.show(this)">Show</button>
+            </div>
+        </div>
+        <div class="rpta-panel" style="flex:1 1 480px;">
+            <div class="pd-caption pd-caption-teal pd-history-bar" style="height:24px;"><span>Export Info</span><span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdCardBox" title="Fullscreen table">&#x26F6;</button></span></div>
+            <div class="ex-grid-box" id="grdCardBox"><div class="ex-grid-scroll" style="max-height:220px;"><table class="win-grid" id="grdCard"><thead></thead><tbody></tbody><tfoot></tfoot></table></div></div>
+        </div>
+    </div>
+
+    <div class="win-tabs" data-tabs="reg1" style="margin-top:6px;">
+        <button type="button" class="win-tab is-active" data-tab="tabPage1" onclick="ExportReg.tab1('tabPage1')">Contract Register</button>
+        <button type="button" class="win-tab is-hidden" id="tabScheduleBtn" data-tab="tabSchedule" onclick="ExportReg.tab1('tabSchedule')">Contracts Schedule</button>
+    </div>
+    <div class="win-tab-panel is-active" id="tabPage1">
+        <div class="win-tabs" data-tabs="reg2">
+            <button type="button" class="win-tab is-active" data-tab="tabPage2" onclick="ExportReg.tab2('tabPage2')">Contract Summary</button>
+            <button type="button" class="win-tab" data-tab="tabPage3" onclick="ExportReg.tab2('tabPage3')">Contract Product Wise</button>
+        </div>
+        <div class="win-tab-panel is-active" id="tabPage2">
+            <div class="pd-caption pd-caption-teal pd-history-bar" style="height:24px;"><span>Contract Summary</span>
+                <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdContractRegisterBox" title="Fullscreen table">&#x26F6;</button><span id="gridBarMountReg1" class="pd-gridbar-mount"></span></span></div>
+            <div class="ex-grid-box" id="grdContractRegisterBox">
+                <div class="ex-grid-scroll ex-h400"><table class="win-grid" id="grdContractRegister" tabindex="0"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+                <div class="ex-grid-empty is-hidden" id="grdContractRegisterEmpty">No record found.</div>
+            </div>
+        </div>
+        <div class="win-tab-panel" id="tabPage3">
+            <div class="pd-caption pd-caption-teal pd-history-bar" style="height:24px;"><span>Contract Product Wise</span>
+                <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdProductWiseBox" title="Fullscreen table">&#x26F6;</button><span id="gridBarMountReg2" class="pd-gridbar-mount"></span></span></div>
+            <div class="ex-grid-box" id="grdProductWiseBox">
+                <div class="ex-grid-scroll ex-h400"><table class="win-grid" id="grdProductWise" tabindex="0"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+                <div class="ex-grid-empty is-hidden" id="grdProductWiseEmpty">No record found.</div>
+            </div>
+        </div>
+    </div>
+    <div class="win-tab-panel" id="tabSchedule">
+        <iframe id="scheduleFrame" class="rpta-embed" title="Contracts Schedule" data-src="/export/contract-schedule-periodic?embed=1"></iframe>
+    </div>
+
+    <div class="win-footer-strip">
+        <span class="ex-footer-left">ExImSaleContractRegister - screen 251</span>
+        <button type="button" class="win-btn-history" id="btnRegFooterHistory" onclick="ExportReg.show(document.getElementById('btnShow'))"><i class="fa fa-history"></i> <span>History</span></button>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260924a}"></script>
+<script th:src="@{/build/js/countx_export_rpta_common.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_export_contract_register.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

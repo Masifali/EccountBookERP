@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Document Assign To Group - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_sdt.css?v=20260930a}"/>
+</head>
+<!-- frmDocumentOfGroup.cs (Architecture.WinApp.SDT), screen 623 "Document Assign To Group", ClientSize 1084 x 561, DocumentTypeId 243.
+     tabControlMain / "Main Form" -> tabControl1: "Form" | "History".
+     Form: toolStrip1 New | Save/Update (DoHaveSaveRight) | Refresh | Chart Of Document (opens 620) | Define Custom_Group (opens 621) | ShortCut Keys.
+       panel3 (Teal) "Assign Document To Custom Group"; panel6 (white): Custom Group (CmbCustomGroup) + Show (Teal).
+       panel10 (300): panel4 (Teal) "Un-Assigned Document" + toolStrip3 BtnTransferToAssign; grdUnAssignDoc (Select selector 30 | Document 170 | DocProviderName 140, grouped by RequiredLevel, mandatory rows checked)
+       panel12: panel13 (Teal) "Assigned Document"; grdAssignDoc (X first, frozen; Document | RequiredLevel | DocumentProviderId (combo) | Original | Duplicate | CriteriaDateTypeId (combo) | BeforeDays | AfterDays | PrioritySequence | Remarks | Active; Σ Original/Duplicate/BeforeDays/PrioritySequence)
+     History: toolStrip4 New | Refresh; groupBox2 "Filters": Date From / Date To (check pickers), Entry Date (checked) / Modify Date / Approved Date, Custom Group, Document, Required Level, Document Provider, Show (Teal)
+       panel24 (Teal) "History" + ctrlGrdBar7; DataGridHistory (Edit first, frozen; CustomGroup | Document | RequiredLevel | DocumentProvider | Original | Duplicate | CriteriaDateType | BeforeDays | AfterDays | PrioritySequence | Remarks | Active | EntryDate | EntryUser | ModifyDate | ModifyUser | ApprovedDate | ApprovedUser)
+     KeyDown: Enter=Tab, Ctrl+N new (Form), Ctrl+T tab, Ctrl+E/Esc close, Ctrl+S save (Form, Save right) / show (History), Ctrl+F5 / Ctrl+Down / Ctrl+Right grid focus, Ctrl+Alt shortcut keys; history grid Ctrl+Space / Ctrl+Enter = Edit. -->
+<body class="pd-body" data-export-page="sdt-623">
+<div class="pd-form ex-form">
+    <div class="win-tabs" data-tabs="main">
+        <button type="button" class="win-tab is-active" data-tab="tabPage1">Form</button>
+        <button type="button" class="win-tab" data-tab="tabPage3">History</button>
+    </div>
+
+    <div class="win-tab-panel is-active" id="tabPage1">
+        <div class="win-tool-strip">
+            <button type="button" id="btnnew" class="win-btn-tool" accesskey="n" onclick="ExportDocumentOfGroup.reset()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="btnsave" class="win-btn-tool" accesskey="s" onclick="ExportDocumentOfGroup.save(this)"><i class="fa fa-save"></i> <span><u>S</u>ave/Update</span></button>
+            <button type="button" id="BtnRefreshUnAssigned" class="win-btn-tool" accesskey="r" onclick="ExportDocumentOfGroup.refresh(this)"><i class="fa fa-refresh"></i> <span><u>R</u>efresh</span></button>
+            <a id="BtnDefineDocument" class="win-btn-tool" href="/export/define-chart-of-document" target="_blank"><i class="fa fa-file-text-o"></i> <span><u>C</u>hart Of Document</span></a>
+            <a id="BtnDefineCustomGroup" class="win-btn-tool" href="/export/define-custom-group" target="_blank"><i class="fa fa-object-group"></i> <span><u>D</u>efine Custom_Group</span></a>
+            <button type="button" id="BtnShortCutkeys" class="win-btn-tool" onclick="ExportDocumentOfGroup.shortcuts()"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+        </div>
+        <div class="pd-caption pd-caption-teal" id="label12">Assign Document To Custom Group</div>
+        <div class="sdt-header" id="panel6">
+            <div class="ex-field" style="width:300px;"><label for="CmbCustomGroup">Custom Group</label>
+                <select id="CmbCustomGroup" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="CustomGroup Name"></select></div>
+            <div class="ex-field"><label>&nbsp;</label><button type="button" id="btnShowByCustomGroup" class="win-btn-small" style="width:62px;" onclick="ExportDocumentOfGroup.show(this)">Show</button></div>
+        </div>
+        <div class="sdt-split sdt-left-narrow">
+            <div class="sdt-pane" id="panel10">
+                <div class="pd-caption pd-caption-teal pd-history-bar" id="panel4"><span id="label13">Un-Assigned Document</span>
+                    <span class="ex-bar-right sdt-cap-btns">
+                        <button type="button" id="BtnTransferToAssign" class="win-btn-cap" title="Transfer checked rows to Assigned" onclick="ExportDocumentOfGroup.transfer()"><i class="fa fa-arrow-right"></i></button>
+                        <button type="button" class="ex-fs-btn" data-fullscreen="grdUnAssignDocBox" title="Fullscreen table">&#x26F6;</button></span></div>
+                <div class="ex-grid-box" id="grdUnAssignDocBox">
+                    <div class="ex-grid-scroll ex-h400">
+                        <table class="win-grid" id="grdUnAssignDoc">
+                            <thead><tr><th class="ctr" id="unSelTh"><input type="checkbox" title="Select all"/></th><th>Document</th><th>Doc Provider Name</th></tr></thead>
+                            <tbody id="unBody"></tbody>
+                        </table>
+                    </div>
+                    <div class="ex-grid-empty is-hidden" id="unEmpty">No record found.</div>
+                </div>
+            </div>
+            <div class="sdt-pane" id="panel12">
+                <div class="pd-caption pd-caption-teal pd-history-bar" id="panel13"><span id="label14">Assigned Document</span>
+                    <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdAssignDocBox" title="Fullscreen table">&#x26F6;</button></span></div>
+                <div class="ex-grid-box" id="grdAssignDocBox">
+                    <div class="ex-grid-scroll ex-h400">
+                        <table class="win-grid" id="grdAssignDoc">
+                            <thead><tr>
+                                <th class="ctr" title="Delete">X</th><th>Document</th><th>Required Level</th><th>Document Provider</th><th class="num">Original</th><th class="num">Duplicate</th>
+                                <th>Criteria Date Type</th><th class="num">Before Days</th><th class="num">After Days</th><th class="num">Priority Sequence</th><th>Remarks</th><th class="ctr">Active</th>
+                            </tr></thead>
+                            <tbody id="asBody"></tbody>
+                            <tfoot id="asFoot"></tfoot>
+                        </table>
+                    </div>
+                    <div class="ex-grid-empty is-hidden" id="asEmpty">No record found.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="win-tab-panel" id="tabPage3">
+        <div class="win-tool-strip">
+            <button type="button" id="btnLoadAllHistoryNew" class="win-btn-tool" onclick="ExportDocumentOfGroup.historyReset()"><i class="fa fa-plus"></i> <span>New</span></button>
+            <button type="button" id="btnRefreshHistoryCombos" class="win-btn-tool" onclick="ExportDocumentOfGroup.historyRefresh(this)"><i class="fa fa-refresh"></i> <span><u>R</u>efresh</span></button>
+        </div>
+        <fieldset class="sdt-group" id="groupBox2"><legend>Filters</legend>
+            <div class="sdt-filters">
+                <div class="ex-field" style="width:190px;"><label for="txtFromDate">Date From</label>
+                    <span class="ex-check"><input type="checkbox" id="txtFromDateChk" checked/><input type="date" id="txtFromDate" class="win-date" style="flex:1;"/></span></div>
+                <div class="ex-field" style="width:190px;"><label for="txtToDate">Date To</label>
+                    <span class="ex-check"><input type="checkbox" id="txtToDateChk" checked/><input type="date" id="txtToDate" class="win-date" style="flex:1;"/></span></div>
+                <div class="ex-radios">
+                    <label class="ex-check"><input type="radio" name="histDateType" id="rdentrydate" value="entry" checked/> Entry Date</label>
+                    <label class="ex-check"><input type="radio" name="histDateType" id="rdmodifydate" value="modify"/> Modify Date</label>
+                    <label class="ex-check"><input type="radio" name="histDateType" id="rdapproveddate" value="approved"/> Approved Date</label>
+                </div>
+                <div class="ex-field" style="width:200px;"><label for="CmbCustomGroupHis">Custom Group</label>
+                    <select id="CmbCustomGroupHis" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Custom Group"></select></div>
+                <div class="ex-field" style="width:200px;"><label for="CmbDocumentHis">Document</label>
+                    <select id="CmbDocumentHis" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Document Name"></select></div>
+                <div class="ex-field" style="width:170px;"><label for="CmbRequiredLevelHis">Required Level</label>
+                    <select id="CmbRequiredLevelHis" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="RequiredLevel"></select></div>
+                <div class="ex-field" style="width:200px;"><label for="CmbDocumentProviderHis">Document Provider</label>
+                    <select id="CmbDocumentProviderHis" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="document Provider"></select></div>
+                <div class="ex-field"><label>&nbsp;</label><button type="button" id="btnShowHis" class="win-btn-small" style="width:62px;" onclick="ExportDocumentOfGroup.historyShow(this)">Show</button></div>
+            </div>
+        </fieldset>
+        <div class="pd-caption pd-caption-teal pd-history-bar" id="panel24"><span id="label5">History</span>
+            <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="DataGridHistoryBox" title="Fullscreen table">&#x26F6;</button><span id="gridBarMountH" class="pd-gridbar-mount"></span></span></div>
+        <div class="ex-grid-box" id="DataGridHistoryBox">
+            <div class="ex-grid-scroll ex-h400">
+                <table class="win-grid" id="DataGridHistory" data-gridbar="frmDocumentOfGroup:DataGridHistory" data-gridbar-mount="#gridBarMountH" data-gridbar-reorder="false">
+                    <thead><tr>
+                        <th>Edit</th><th>Custom Group</th><th>Document</th><th>Required Level</th><th>Document Provider</th><th class="num">Original</th><th class="num">Duplicate</th>
+                        <th>Criteria Date Type</th><th class="num">Before Days</th><th class="num">After Days</th><th class="num">Priority Sequence</th><th>Remarks</th><th class="ctr">Active</th>
+                        <th>Entry Date</th><th>Entry User</th><th>Modify Date</th><th>Modify User</th><th>Approved Date</th><th>Approved User</th>
+                    </tr></thead>
+                    <tbody id="histBody"></tbody>
+                    <tfoot id="histFoot"></tfoot>
+                </table>
+            </div>
+            <div class="ex-grid-empty is-hidden" id="histEmpty">No record found.</div>
+        </div>
+    </div>
+
+    <div class="win-footer-strip">
+        <span class="ex-footer-left" id="footerInfo">frmDocumentOfGroup  -  Document Type 243</span>
+        <button type="button" class="win-btn-history" id="btnFooterHistory" onclick="ExportDocumentOfGroup.toggleHistory()"><i class="fa fa-history"></i> <span>History</span></button>
+    </div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_export_sdt_common.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_export_document_assign_to_group.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

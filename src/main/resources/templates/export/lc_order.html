@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Lc Order - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <style>
+        .k-head { display:grid; grid-template-columns:repeat(4, minmax(200px, 1fr)); gap:4px 14px; padding:4px 6px; }
+        .k-head .ex-field > label { width:120px; flex:none; }
+        .k-two { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+        .k-entry { display:flex; flex-wrap:wrap; align-items:flex-end; gap:6px; padding:4px 6px; }
+        .k-entry .ex-field { flex-direction:column; align-items:stretch; }
+        .k-entry .ex-field > label { width:auto; }
+        @media (max-width: 900px) { .k-head { grid-template-columns:1fr; } .k-two { grid-template-columns:1fr; } }
+    </style>
+</head>
+<!-- LcOrder.cs (Architecture.WinApp.Export), screen 210 "Export Lc Order (Not Use)", DocumentTypeId 201.
+     tabControl1: Form | History (every tab change runs gridFill). toolStrip2: New / Save / Update (hidden) / Print (no handler) / Attachment.
+     Caption "Lc Order". Header (4 columns at x 125 / 387 / 653 / 914):
+       Branch, Project, Document No, Document Date / Quotation Ref, Inquiry Ref, Customer (Leave -> Performa Invoice), Customer Ref No /
+       Reference Date, Customer Code, Expiry Date, Expiry place / Last Shipment Date, Partial Shipment, Trans Shipment, Performa Invoice /
+       Delivery Term, Payment Term, Importer Bank, Exporter Bank / Loading Port, Destination Port, Inspection, Inspaction Desc /
+       Fcy Code, Total Fc Amount, Exchange Rate, Local Amount (read only) / Commodity Desc, Shipping Marks, Gross Weight(kg), Net Weight(kg) (read only) /
+       No Of Containers, Legalization, Legalization Desc, Status / Remarks.
+     groupBox1 "Detail": Items (Leave -> UOMs), Pack Type, Inner Qty, Inner Pack Uom, Outer Qty, Outer Pack Uom /
+       Weight (read only), Rate, Rate Uom, Amount (read only), Description, Add / Update / Cancel; grdDetail (double-click = edit).
+     History: "History", DataGridHistory (double-click -> ReadById, NoOfAttachments link). -->
+<body class="pd-body" data-export-page="lc">
+<div class="pd-form ex-form">
+    <div class="win-tabs">
+        <button type="button" class="win-tab is-active" data-tab="lcForm">Form</button>
+        <button type="button" class="win-tab" data-tab="lcHistory">History</button>
+    </div>
+    <div class="win-tab-panel is-active" id="lcForm">
+        <div class="win-tool-strip">
+            <button type="button" id="btnNew" class="win-btn-tool" onclick="ExportLc.btnNew()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="btnSave" class="win-btn-tool" onclick="ExportLc.btnSave(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+            <button type="button" id="btnUpdate" class="win-btn-tool is-hidden" onclick="ExportLc.btnUpdate(this)"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+            <button type="button" id="Print" class="win-btn-tool" onclick="ExportLc.print()"><i class="fa fa-print"></i> <span><u>P</u>rint</span></button>
+            <button type="button" id="btnAttachment" class="win-btn-tool" onclick="ExportLc.attachment()"><i class="fa fa-paperclip"></i> <span><u>A</u>ttachment</span></button>
+        </div>
+        <div class="pd-caption pd-caption-teal" style="height:28px;">Lc Order</div>
+        <fieldset class="ex-groupbox"><legend>Header</legend><div class="k-head">
+            <div class="ex-field"><label class="ex-req">Branch</label><select id="cmbbranch" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Branch"></select></div>
+            <div class="ex-field"><label class="ex-req">Project</label><select id="cmbproject" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Project"></select></div>
+            <div class="ex-field"><label class="ex-req">Document No</label><input type="text" id="txtdocno" class="win-textbox num" data-guard="integer" autocomplete="off"/></div>
+            <div class="ex-field"><label>Document Date</label><input type="date" id="txtdocdate" class="win-date"/></div>
+            <div class="ex-field"><label>Quotation Ref</label><input type="text" id="txtquorationref" class="win-textbox" autocomplete="off"/></div>
+            <div class="ex-field"><label>Inquiry Ref</label><input type="text" id="txtinquiryref" class="win-textbox" autocomplete="off"/></div>
+            <div class="ex-field"><label class="ex-req">Customer</label><select id="cmbcustomer" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Customer"></select></div>
+            <div class="ex-field"><label>Customer Ref No</label><input type="text" id="txtcustomerrefno" class="win-textbox" autocomplete="off"/></div>
+            <div class="ex-field"><label>Reference Date</label><input type="date" id="txtreferencedate" class="win-date"/></div>
+            <div class="ex-field"><label>Customer Code</label><input type="text" id="txtcustomercode" class="win-textbox" autocomplete="off"/></div>
+            <div class="ex-field"><label>Expiry Date</label><input type="date" id="txtexpirydate" class="win-date"/></div>
+            <div class="ex-field"><label>Expiry place</label><input type="text" id="txtexpplace" class="win-textbox" autocomplete="off"/></div>
+            <div class="ex-field"><label>Last Shipment Date</label><input type="date" id="txtlastshipmentdate" class="win-date"/></div>
+            <div class="ex-field"><label>Partial Shipment</label><select id="cmbPartialShipment" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Partial Shipment"></select></div>
+            <div class="ex-field"><label>Trans Shipment</label><select id="cmbTransShipment" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Trans Shipment"></select></div>
+            <div class="ex-field"><label>Performa Invoice</label><select id="cmbPerformaInvoice" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Performa Invoice"></select></div>
+            <div class="ex-field"><label class="ex-req">Delivery Term</label><select id="cmbdeliveryterm" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Delivery Term"></select></div>
+            <div class="ex-field"><label class="ex-req">Payment Term</label><select id="cmbpaymenterm" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Payment Term"></select></div>
+            <div class="ex-field"><label class="ex-req">Importer Bank</label><select id="cmbimporterbank" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="ImporterBank"></select></div>
+            <div class="ex-field"><label class="ex-req">Exporter Bank</label><select id="cmbExporterBanks" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="ExporterBank"></select></div>
+            <div class="ex-field"><label class="ex-req">Loading Port</label><select id="cmbloadingport" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Loading Port"></select></div>
+            <div class="ex-field"><label class="ex-req">Destination Port</label><select id="cmbdestinationport" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Destination Port"></select></div>
+            <div class="ex-field"><label>Inspection</label><select id="cmbinspection" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Inspection"></select></div>
+            <div class="ex-field"><label>Inspaction Desc</label><input type="text" id="txtinspectiondesc" class="win-textbox" autocomplete="off"/></div>
+            <div class="ex-field"><label>Fcy Code</label><select id="cmbfc" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Currency"></select></div>
+            <div class="ex-field"><label class="ex-req">Total Fc Amount</label><input type="text" id="txttotalfcamount" class="win-textbox num" data-guard="integer" autocomplete="off"/></div>
+            <div class="ex-field"><label class="ex-req">Exchange Rate</label><input type="text" id="txtexchangerate" class="win-textbox num" data-guard="integer" autocomplete="off"/></div>
+            <div class="ex-field"><label class="ex-req">Local Amount</label><input type="text" id="txtlocalcurramount" class="win-textbox num" readonly/></div>
+            <div class="ex-field"><label>Commodity Desc</label><input type="text" id="txtcommoditydesc" class="win-textbox" autocomplete="off"/></div>
+            <div class="ex-field"><label>Shipping Marks</label><input type="text" id="txtshippingmark" class="win-textbox" autocomplete="off"/></div>
+            <div class="ex-field"><label class="ex-req">Gross Weight(kg)</label><input type="text" id="txtgrossweight" class="win-textbox num" data-guard="integer" autocomplete="off"/></div>
+            <div class="ex-field"><label class="ex-req">Net Weight(kg)</label><input type="text" id="txtnetweight" class="win-textbox num" readonly/></div>
+            <div class="ex-field"><label>No Of Containers</label><input type="text" id="txtnoofcontainer" class="win-textbox num" data-guard="decimal" autocomplete="off"/></div>
+            <div class="ex-field"><label>Legalization</label><select id="cmblegalization" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Legalization"></select></div>
+            <div class="ex-field"><label>Legalization Desc</label><input type="text" id="txtlegalizationdesc" class="win-textbox" autocomplete="off"/></div>
+            <div class="ex-field"><label class="ex-req">Status</label><select id="cmbstatus" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Status"></select></div>
+            <div class="ex-field"><label>Remarks</label><input type="text" id="txtremarks" class="win-textbox" autocomplete="off"/></div>
+        </div></fieldset>
+        <fieldset class="ex-groupbox"><legend>Detail</legend><div class="k-entry">
+            <div class="ex-field" style="width:150px;"><label>Items</label><select id="cmbitem" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item"></select></div><div class="ex-field" style="width:150px;"><label>Pack Type</label><select id="cmbinnerpacktype" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Pack Type"></select></div><div class="ex-field"><label>Inner Qty</label><input type="text" id="txtinnerQty" class="win-textbox num" data-guard="integer" autocomplete="off" style="width:150px;"/></div><div class="ex-field" style="width:150px;"><label>Inner Pack Uom</label><select id="cmbinnerpackuom" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Inner Pack UOM"></select></div><div class="ex-field"><label>Outer Qty</label><input type="text" id="txtOuterQty" class="win-textbox num" data-guard="integer" autocomplete="off" style="width:150px;"/></div><div class="ex-field" style="width:150px;"><label>Outer Pack Uom</label><select id="cmbouterpackuom" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Outer Pack UOM"></select></div>
+            <div style="flex-basis:100%;height:0;"></div>
+            <div class="ex-field"><label>Weight</label><input type="text" id="txtweight" class="win-textbox num" readonly style="width:150px;"/></div><div class="ex-field"><label>Rate</label><input type="text" id="txtrate" class="win-textbox num" data-guard="integer" autocomplete="off" style="width:150px;"/></div><div class="ex-field" style="width:150px;"><label>Rate Uom</label><select id="cmbrateuom" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Rate UOM"></select></div><div class="ex-field"><label>Amount</label><input type="text" id="txtamount" class="win-textbox num" readonly style="width:150px;"/></div><div class="ex-field"><label>Description</label><input type="text" id="txtdescription" class="win-textbox" autocomplete="off" style="width:300px;"/></div>
+            <button type="button" id="btnaddnew" class="win-btn-small" onclick="ExportLc.btnaddnew()">Add</button>
+            <button type="button" id="btnGridUpdate" class="win-btn-small is-hidden" onclick="ExportLc.btnGridUpdate()">Update</button>
+            <button type="button" id="btnCancel" class="win-btn-small is-hidden" onclick="ExportLc.btnCancel()">Cancel</button>
+        </div></fieldset>
+        <div class="pd-caption pd-caption-teal pd-history-bar" style="height:23px;"><span>Detail</span>
+            <span class="ex-bar-right"><span style="font:8pt 'Segoe UI',sans-serif;">double-click a row = edit</span><button type="button" class="ex-fs-btn" data-fullscreen="detBox" title="Fullscreen table">&#x26F6;</button></span></div>
+        <div class="ex-grid-box" id="detBox"><div class="ex-grid-scroll ex-h240">
+            <table class="win-grid" id="grdDetail"><thead><tr>
+                <th data-col="Item">Item</th><th data-col="PackType">PackType</th><th class="num" data-col="InnerQty">InnerQty</th><th data-col="InnerPackUOM">InnerPackUOM</th>
+                <th class="num" data-col="OuterQty">OuterQty</th><th data-col="OuterPackUOM">OuterPackUOM</th><th class="num" data-col="Weigth">Weigth</th><th class="num" data-col="Rate">Rate</th>
+                <th data-col="RateUOM">RateUOM</th><th class="num" data-col="Amount">Amount</th><th data-col="Description">Description</th>
+            </tr></thead><tbody id="detBody"></tbody><tfoot id="detFoot"></tfoot></table>
+        </div></div>
+    </div>
+    <div class="win-tab-panel" id="lcHistory">
+        <div class="pd-caption pd-caption-teal pd-history-bar" style="height:28px;"><span>History</span>
+            <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="histBox" title="Fullscreen table">&#x26F6;</button></span></div>
+        <div class="ex-grid-box" id="histBox"><div class="ex-grid-scroll ex-h400">
+            <table class="win-grid" id="DataGridHistory"><thead><tr>
+                <th data-col="Customer">Customer</th><th data-col="PerformaInvoice">PerformaInvoice</th><th data-col="Quotation Ref">Quotation Ref</th><th data-col="InquiryRef">InquiryRef</th>
+                <th data-col="CustomerCode">CustomerCode</th><th data-col="ExpiryDate">ExpiryDate</th><th data-col="LastShipmentDate">LastShipmentDate</th><th data-col="PartialShipment">PartialShipment</th>
+                <th data-col="LoadingPort">LoadingPort</th><th data-col="DestinationPort">DestinationPort</th><th data-col="ImporterBank">ImporterBank</th><th data-col="ExporterBank">ExporterBank</th>
+                <th data-col="ExchangeRate">ExchangeRate</th><th class="num" data-col="GrossWeight">GrossWeight</th><th data-col="NoOfContainer">NoOfContainer</th><th data-col="NoOfAttachments">NoOfAttachments</th>
+            </tr></thead><tbody id="histBody"></tbody><tfoot id="histFoot"></tfoot></table>
+        </div><div class="ex-grid-empty is-hidden" id="histEmpty">No record found.</div></div>
+    </div>
+    <div class="win-footer-strip">
+        <span class="ex-footer-left" id="lcFooterInfo">LcOrder  -  Document Type 201</span>
+        <button type="button" class="win-btn-history" id="btnFooterHistory" onclick="ExportLc.toggleHistory()"><i class="fa fa-history"></i> <span>History</span></button>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_export_lc_order.js?v=20261001k}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

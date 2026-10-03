@@ -162,7 +162,8 @@ function loadCategories() {
         }
 
         if (window.jQuery && jQuery.fn.select2) {
-            jQuery(sel).filter(function () { return !jQuery(this).data('select2'); })
+            /* 2026-10-03: #parentCats is the checked combo (countx_prod_combo.js) - never select2 on it */
+            jQuery(sel).filter(function () { return !jQuery(this).data('select2') && !this.hasAttribute('data-dtcombo-checked'); })
                        .select2({ width: '100%', placeholder: 'Parent Categories' });
         }
     }).catch(function (e) {

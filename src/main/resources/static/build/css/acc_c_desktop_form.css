@@ -1,0 +1,134 @@
+/* ============================================================================================
+ * The WinForms look of the group-C account screens (round 3, 2026-10-02):
+ * party_voucher_desktop.html (frmPartyPaymentVoucher / frmPartyReceiptVoucher) and
+ * premature_receipts.html (AccountsPrematurePaymentsReceipts).
+ *
+ * Every panel / GroupBox is a box at its designer Location/Size and every control inside it is
+ * absolutely positioned at its designer Location/Size (px = designer px). The designer form is wider
+ * than some browsers, so .dscroll scrolls sideways ITSELF; the page never does.
+ * ============================================================================================ */
+html, body { overflow-x: hidden; }
+body.dwin {
+    margin: 0; background: #f0f0f0; color: #000;
+    font-family: "Segoe UI", Tahoma, "Liberation Sans", Arial, sans-serif; font-size: 12px;
+    display: flex; flex-direction: column; min-height: 100vh;
+}
+.dwin *, .dwin *::before, .dwin *::after { box-sizing: border-box; }
+.dpane { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
+.dscroll { overflow-x: auto; overflow-y: visible; background: #fff; }
+.dform { position: relative; background: #fff; }
+
+/* ---- ToolStrip (Verdana 9.75pt, icon + text, no item borders until hover) ---- */
+.dts {
+    height: 27px; display: flex; align-items: center; gap: 0; padding: 0 2px;
+    background: linear-gradient(#fdfdfe, #e9eef4); border-bottom: 1px solid #c5d0dc;
+    font-family: Verdana, "DejaVu Sans", sans-serif; font-size: 13px; white-space: nowrap;
+}
+.dts.white { background: #fff; }
+.dts .tsi {
+    height: 24px; border: 1px solid transparent; background: transparent; border-radius: 0;
+    padding: 0 6px; margin: 0 1px; display: inline-flex; align-items: center; gap: 5px;
+    font: inherit; color: #000; cursor: pointer; white-space: nowrap;
+}
+.dts .tsi:hover:not(:disabled) { background: #e5f1fb; border-color: #7eb4ea; }
+.dts .tsi:active:not(:disabled) { background: #cce4f7; border-color: #569de5; }
+.dts .tsi:disabled { color: #8d8d8d; cursor: default; }
+.dts .tsi:disabled .fa { opacity: .45; }
+.dts .tsi .fa { font-size: 16px; width: 18px; text-align: center; }
+.dts .tsi .fa.g { color: #2e9d3a; } .dts .tsi .fa.b { color: #1e64b4; } .dts .tsi .fa.o { color: #c77700; }
+.dts .tsi .fa.k { color: #4a4a4a; }
+
+/* ---- teal bars (BackColor 10,110,110 / Teal) ---- */
+.dbar { position: relative; background: #0a6e6e; color: #fff; }
+.dbar.teal { background: #008080; }
+.dbar .cap { position: absolute; font: bold 16px Tahoma, "DejaVu Sans", sans-serif; white-space: nowrap; color: #fff; }
+
+/* ---- GroupBox: caption on the line, Tahoma/Segoe UI bold 9.75pt ---- */
+.dgb { position: absolute; }
+.dgb::before { content: ""; position: absolute; left: 0; right: 0; top: 8px; bottom: 0; border: 1px solid #d5dbe1; border-radius: 3px; pointer-events: none; }
+.dgb > .gbcap { position: absolute; left: 7px; top: 0; padding: 0 2px; background: #fff; font: bold 13px Tahoma, "DejaVu Sans", sans-serif; line-height: 16px; color: #000; white-space: nowrap; }
+.dgb.segoe > .gbcap { font-family: "Segoe UI", Tahoma, "DejaVu Sans", sans-serif; }
+
+/* ---- labels: Segoe UI Semibold 9pt ---- */
+.dl { position: absolute; white-space: nowrap; font-family: "Segoe UI Semibold", "Segoe UI", Tahoma, "Liberation Sans", Arial, sans-serif; font-weight: 600; font-size: 12px; line-height: 15px; color: #000; }
+.dl.req::after { content: " *"; color: #e00; }
+.dl.white { color: #fff; }
+.dl.bal { color: #b00020; }
+
+/* ---- textboxes, date pickers, selects (before the combo wraps them): Verdana 9.75pt ---- */
+.dwin input.f, .dwin select.f, .dwin textarea.f {
+    position: absolute; margin: 0; border: 1px solid #7a7a7a; border-radius: 0; padding: 1px 4px;
+    font-family: Verdana, "DejaVu Sans", sans-serif; font-size: 13px; color: #000; background: #fff; outline: none;
+}
+.dwin input.f:focus, .dwin textarea.f:focus { border-color: #0078d7; }
+.dwin input.f[readonly], .dwin input.f:disabled { background: #f0f0f0; color: #333; }
+.dwin input.f.num { text-align: right; }
+.dwin input.f.segoe { font-family: "Segoe UI Semibold", "Segoe UI", Tahoma, Arial, sans-serif; font-weight: 600; font-size: 12px; }
+.dwin input[type=date].f { padding: 0 2px; font-size: 12px; }
+.dwin textarea.f { resize: none; }
+/* the combo field gets the designer font + height */
+.dwin .pcx-wrap .dtcombo-input.pcx-field { font-family: Verdana, "DejaVu Sans", sans-serif; font-size: 13px; border-color: #7a7a7a; padding-left: 4px; }
+.dwin .pcx-wrap.ms .dtcombo-input.pcx-field { font-family: "Microsoft Sans Serif", Arial, sans-serif; font-size: 13px; }
+.dwin .dbar .pcx-wrap .dtcombo-input.pcx-field { border-color: #0a6e6e; }
+
+/* ---- DateTimePicker with ShowCheckBox = true: the check sits inside the box ---- */
+.dtp { position: absolute; }
+.dtp > input[type=checkbox] { position: absolute; left: 4px; top: 50%; margin: -6px 0 0 0; width: 13px; height: 13px; z-index: 1; }
+.dtp > input[type=date].f { left: 0; top: 0; width: 100%; height: 100%; padding-left: 21px; }
+.dtp > input[type=checkbox]:not(:checked) + input[type=date] { color: #a0a0a0; }
+
+/* ---- check boxes / radios with their caption (AutoSize) ---- */
+.dck { position: absolute; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; margin: 0; cursor: pointer;
+       font-family: "Segoe UI Semibold", "Segoe UI", Tahoma, Arial, sans-serif; font-weight: 600; font-size: 12px; line-height: 15px; }
+.dck input { margin: 0; width: 13px; height: 13px; }
+
+/* ---- buttons: teal flat (BackColor Teal / 10,110,110, white text) and the white icon "+" buttons ---- */
+.dbtn { position: absolute; margin: 0; padding: 0; border: 1px solid #006666; background: #008080; color: #fff; cursor: pointer;
+        font: bold 13px Tahoma, "DejaVu Sans", sans-serif; display: inline-flex; align-items: center; justify-content: center; }
+.dbtn.dk { background: #0a6e6e; border-color: #064b4b; font-family: "Segoe UI", Tahoma, sans-serif; }
+.dbtn.small { font: 10px "Segoe UI", Tahoma, sans-serif; }
+.dbtn:hover:not(:disabled) { filter: brightness(1.12); }
+.dbtn:disabled { opacity: .5; cursor: default; }
+.dbtn.icon { background: #fff; border: 1px solid #adadad; color: #2e9d3a; font-size: 12px; }
+
+/* ---- busy: spinner in place of the caption ---- */
+.busy { position: relative; color: transparent !important; }
+.busy .fa { visibility: hidden; }
+.busy::after { content: ""; position: absolute; left: 50%; top: 50%; width: 12px; height: 12px; margin: -6px 0 0 -6px;
+               border: 2px solid #008080; border-right-color: transparent; border-radius: 50%; animation: dwspin .7s linear infinite; }
+.dbtn.busy::after { border-color: #fff; border-right-color: transparent; }
+@keyframes dwspin { to { transform: rotate(360deg); } }
+
+/* ---- Janus GridEX look: own scroll container, full width ---- */
+.dgrid { position: relative; overflow: auto; background: #fff; border-top: 1px solid #9eb6ce; outline: none; }
+.dgrid:focus { box-shadow: inset 0 0 0 1px #0078d7; }
+table.jg { border-collapse: separate; border-spacing: 0; min-width: 100%; table-layout: fixed; font: 11px Verdana, "DejaVu Sans", sans-serif; color: #000; background: #fff; }
+table.jg th { position: sticky; top: 0; z-index: 1; background: linear-gradient(#fbfcfd, #e3e8ee); border-right: 1px solid #c5ccd4; border-bottom: 1px solid #a9b4c0;
+              padding: 3px 4px; font-weight: normal; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; height: 22px; }
+table.jg td { border-right: 1px solid #e3e6ea; border-bottom: 1px solid #e3e6ea; padding: 2px 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; height: 20px; }
+table.jg td.num, table.jg th.num { text-align: right; }
+table.jg td.c, table.jg th.c { text-align: center; }
+table.jg tbody tr:hover td { background: #eef5fc; }
+table.jg tbody tr.sel td { background: #cce4f7; }
+table.jg tfoot td { position: sticky; bottom: 0; background: #eceff3; border-top: 1px solid #a9b4c0; font-weight: bold; }
+table.jg .tbtn { height: 17px; line-height: 13px; padding: 0 6px; font: 11px Verdana, "DejaVu Sans", sans-serif; border: 1px solid #9aa5b1; background: linear-gradient(#fff, #e6e9ed); color: #000; border-radius: 2px; cursor: pointer; }
+table.jg .tbtn:hover:not(:disabled) { border-color: #569de5; background: #e5f1fb; }
+table.jg .tbtn:disabled { color: #999; cursor: default; }
+table.jg .tbtn.busy::after { width: 10px; height: 10px; margin: -5px 0 0 -5px; }
+a.code-link { color: #0645ad; text-decoration: underline; cursor: pointer; }
+
+/* ---- footer (History on the right) + bottom tab strip (TabAlignment.Bottom) ---- */
+.dfoot { display: flex; justify-content: flex-end; align-items: center; gap: 4px; padding: 3px 6px; background: #f0f0f0; border-top: 1px solid #c5d0dc; }
+.dfoot .tsi { height: 24px; padding: 0 12px; border: 1px solid #adadad; background: linear-gradient(#fff, #e9eef4); font: 13px Verdana, "DejaVu Sans", sans-serif; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
+.dfoot .tsi:hover { border-color: #7eb4ea; background: #e5f1fb; }
+.dtabs { position: sticky; bottom: 0; z-index: 50; display: flex; align-items: flex-start; height: 24px; padding: 0 2px; background: #f0f0f0; border-top: 1px solid #8c8c8c; }
+.dtabs .tab { margin-top: -1px; padding: 2px 14px 3px; border: 1px solid #8c8c8c; border-top: 0; background: #e8e8e8; cursor: pointer;
+              font: 12px "Segoe UI", Tahoma, "Liberation Sans", Arial, sans-serif; color: #000; }
+.dtabs .tab.on { background: #fff; padding-bottom: 5px; }
+.dtabs .back { margin-left: auto; padding: 3px 8px; font: 12px "Segoe UI", Tahoma, Arial, sans-serif; color: #0645ad; }
+
+#msg { position: fixed; right: 12px; top: 8px; z-index: 30000; max-width: 520px; }
+.modal-sc { position: fixed; inset: 0; background: rgba(0, 0, 0, .3); display: none; z-index: 25000; }
+.modal-sc > div { background: #fff; width: 520px; margin: 60px auto; padding: 8px; border: 1px solid #0a6e6e; }
+.modal-sc table.jg { min-width: 0; width: 100%; table-layout: auto; }
+.infobox { position: absolute; border: 1px solid #d5dbe1; background: #fff; }

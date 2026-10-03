@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Pending Work Status - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_rpta.css?v=20260930a}"/>
+</head>
+<!-- frmExportPendingWorksRegister.cs (Architecture.WinApp.ExportReports), screen 239 "5008 Shipments Document Status Report",
+     ClientSize 1017 x 633, Text "Sale Contract Register", caption "Pending Work Status".
+     tsItemType: New / Refresh / 555-Print Register / ShortCut Keys. groupBox1 "Filters": Date Type (cmbperemeter, no blank row),
+       Date From & To (txtdatefrom unchecked, txtdateto), Contract No, Customer Name, InProcess [checked] / Complete / All, Show.
+     tabControl1 "Pending Work Register": grdContractRegister - status link columns coloured Pending red / Complete dark green /
+       InProcess orange (ShipmentClose: Open red, In-Transit dark green); Admin gets Complete Status / Open Status / Print buttons.
+     Events: Load, KeyDown (Enter, Ctrl+N, Ctrl+R, Ctrl+E/Esc, Ctrl+F5, Ctrl+S, Ctrl+Down, Ctrl+P, Ctrl+Alt), cmbperemeter ValueChanged,
+       btnShow Leave/PreviewKeyDown, grid ColumnButtonClick / LinkClicked / KeyDown (Ctrl+Space on Print). -->
+<body class="pd-body" data-export-page="pnd">
+<div class="pd-form ex-form">
+    <div class="win-tool-strip">
+        <button type="button" id="btnnew" class="win-btn-tool" accesskey="n" onclick="ExportPnd.btnNew(this)"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+        <button type="button" id="btnRefresh" class="win-btn-tool" onclick="ExportPnd.btnRefresh(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+        <button type="button" id="BtnPrintRegister" class="win-btn-tool" onclick="ExportPnd.btnPrint(this)" data-rpt="555-PendingWorkExportRegister.rpt"><i class="fa fa-print"></i> <span>555-Print Register</span></button>
+        <button type="button" id="btnShortCutKey" class="win-btn-tool" onclick="ExportPnd.shortcuts()"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+    </div>
+    <div class="pd-caption pd-caption-teal pd-history-bar" style="height:28px;"><span>Pending Work Status</span>
+        <span class="ex-bar-right"><span id="gridBarMountPnd" class="pd-gridbar-mount"></span></span></div>
+    <fieldset class="ex-groupbox">
+        <legend>Filters</legend>
+        <div class="rpta-filter">
+            <div class="ex-field w200"><label for="cmbperemeter">Date Type</label><select id="cmbperemeter" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Parameters"></select></div>
+            <div class="ex-field" style="width:330px;"><label for="txtdatefrom"><span class="ex-req">*</span> Date From &amp; To</label>
+                <span class="ex-check"><input type="checkbox" id="txtdatefromChk"/><input type="date" id="txtdatefrom" class="win-date"/></span><input type="date" id="txtdateto" class="win-date"/></div>
+            <div class="ex-field"><label for="cmbcontractNo">Contract No</label><select id="cmbcontractNo" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Contract No"></select></div>
+            <div class="ex-field"><label for="cmbSupplierName">Customer Name</label><select id="cmbSupplierName" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Customer Name"></select></div>
+            <div class="ex-radios">
+                <label class="ex-check"><input type="radio" name="pndStatus" id="rdInProcess" value="1" checked/> InProcess</label>
+                <label class="ex-check"><input type="radio" name="pndStatus" id="rdComplete" value="2"/> Complete</label>
+                <label class="ex-check"><input type="radio" name="pndStatus" id="rdAll" value="0"/> All</label>
+            </div>
+            <button type="button" id="btnShow" class="win-btn-small" style="width:70px;height:26px;" onclick="ExportPnd.show(this)">Show</button>
+        </div>
+    </fieldset>
+    <div class="win-tabs"><button type="button" class="win-tab is-active">Pending Work Register</button></div>
+    <div class="pd-caption pd-caption-teal pd-history-bar" style="height:24px;"><span>Pending Work Register</span>
+        <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdContractRegisterBox" title="Fullscreen table">&#x26F6;</button></span></div>
+    <div class="ex-grid-box" id="grdContractRegisterBox">
+        <div class="ex-grid-scroll ex-h400"><table class="win-grid" id="grdContractRegister" tabindex="0"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        <div class="ex-grid-empty is-hidden" id="grdContractRegisterEmpty">No record found.</div>
+    </div>
+    <div class="win-footer-strip">
+        <span class="ex-footer-left">frmExportPendingWorksRegister - screen 239</span>
+        <button type="button" class="win-btn-history" id="btnPndFooterHistory" onclick="ExportPnd.show(document.getElementById('btnShow'))"><i class="fa fa-history"></i> <span>History</span></button>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260924a}"></script>
+<script th:src="@{/build/js/countx_export_rpta_common.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_export_shipments_document_status.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>GD Breakup Manual - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_bankgd.css?v=20260930a}"/>
+</head>
+<!-- GdBreakUpManual.cs (Architecture.WinApp.Export), screen 198 "GD Break Up Manual", ClientSize 1125 x 676, Text "GD Breakup Manual".
+     tabControl1 with the single tabPage1 "Form": toolStrip4 New / Save / Update(hidden); panel1 (Teal) "GD Breakup Manual" + ctrlGrdBar1;
+     panel30 (1111 x 107): row 1 GD No (230) | GD Date | Bank Invoice No | Bank Invoice Date | Bank Name (UltraCombo Id/BranchName) | Due Days | Exchange Rate;
+       row 2 GD Value | Freight | FOB Value (disabled) | % FTT (10) | FTT Amount (disabled) | Net Amount (disabled) | Remarks.
+     panel4: grdGdBreakUp = the history (usp_GDBreakUpManual_History), double-click loads the row for Update.
+     Events: btnNew/btnsave/btnupdate Click, txtGDValue/txtFreight/txtFobValue/txtFTTPrcnt/txtFttAmount TextChanged, KeyPress guards, KeyDown
+     (Enter=Tab, Ctrl+S save, Ctrl+N new, Ctrl+E/Esc close, Ctrl+U update). -->
+<body class="pd-body" data-export-page="gdbm">
+<div class="pd-form ex-form">
+    <div class="win-tabs" data-tabs="gbm">
+        <button type="button" class="win-tab is-active" data-tab="gbmForm">Form</button>
+    </div>
+    <div class="win-tab-panel is-active" id="gbmForm">
+        <div class="win-tool-strip">
+            <button type="button" id="btnNew" class="win-btn-tool" accesskey="n" onclick="ExportGdBreakUpManual.reset()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="btnsave" class="win-btn-tool" accesskey="s" onclick="ExportGdBreakUpManual.save(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+            <button type="button" id="btnupdate" class="win-btn-tool is-hidden" accesskey="u" onclick="ExportGdBreakUpManual.update(this)"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+        </div>
+        <div class="pd-caption pd-caption-teal">GD Breakup Manual</div>
+        <div class="ex-entry ex-gbm-entry">
+            <div class="ex-field"><label for="txtGDNoBreakUp">GD No</label><input type="text" id="txtGDNoBreakUp" class="win-textbox" autocomplete="off"/></div>
+            <div class="ex-field"><label for="datGDDateGDBreakUp">GD Date</label><input type="date" id="datGDDateGDBreakUp" class="win-date"/></div>
+            <div class="ex-field"><label for="txtInvoiceNoGDBreakUp">Bank Invoice No</label><input type="text" id="txtInvoiceNoGDBreakUp" class="win-textbox" autocomplete="off"/></div>
+            <div class="ex-field"><label for="datInvoiceDateGdBreakUp">Bank Invoice Date</label><input type="date" id="datInvoiceDateGdBreakUp" class="win-date"/></div>
+            <div class="ex-field"><label for="CmbBankName">Bank Name</label>
+                <select id="CmbBankName" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Bank Name"></select></div>
+            <div class="ex-field"><label for="txtDueDays">Due Days</label><input type="text" id="txtDueDays" class="win-textbox num" value="0" data-guard="integer" autocomplete="off"/></div>
+            <div class="ex-field"><label for="txtExchangeRate">Exchange Rate</label><input type="text" id="txtExchangeRate" class="win-textbox num" value="0" data-guard="decimal" autocomplete="off"/></div>
+
+            <div class="ex-field"><label for="txtGDValue">GD Value</label><input type="text" id="txtGDValue" class="win-textbox num" value="0" data-guard="decimal" autocomplete="off"/></div>
+            <div class="ex-field"><label for="txtFreight">Freight</label><input type="text" id="txtFreight" class="win-textbox num" value="0" data-guard="decimal" autocomplete="off"/></div>
+            <div class="ex-field"><label for="txtFobValue">FOB Value</label><input type="text" id="txtFobValue" class="win-textbox num" value="0" disabled/></div>
+            <div class="ex-field"><label for="txtFTTPrcnt">% FTT</label><input type="text" id="txtFTTPrcnt" class="win-textbox num" value="10" data-guard="decimal" autocomplete="off"/></div>
+            <div class="ex-field"><label for="txtFttAmount">FTT Amount</label><input type="text" id="txtFttAmount" class="win-textbox num" value="0" disabled/></div>
+            <div class="ex-field"><label for="txtNetAmount">Net Amount</label><input type="text" id="txtNetAmount" class="win-textbox num" value="0" disabled/></div>
+            <div class="ex-field"><label for="txtRemarks">Remarks</label><input type="text" id="txtRemarks" class="win-textbox" autocomplete="off"/></div>
+        </div>
+
+        <div class="pd-caption pd-caption-dark pd-history-bar"><span>GD Breakup Manual History</span>
+            <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdGdBreakUpBox" title="Fullscreen table">&#x26F6;</button><span id="gridBarMountGbm" class="pd-gridbar-mount"></span></span></div>
+        <div class="ex-grid-box" id="grdGdBreakUpBox">
+            <div class="ex-grid-scroll ex-h400">
+                <table class="win-grid" id="grdGdBreakUp" data-gridbar="GdBreakUpManual:grdGdBreakUp" data-gridbar-mount="#gridBarMountGbm" data-gridbar-reorder="false">
+                    <thead><tr>
+                        <th data-col="BankInvoiceNo">Bank Invoice No</th><th data-col="BankInvoiceDate">Bank Invoice Date</th>
+                        <th data-col="GDNO">GDNO</th><th data-col="GDDate">GD Date</th>
+                        <th class="num" data-col="GDValue">GD Value</th><th data-col="BankName">Bank Name</th>
+                        <th class="num" data-col="DueDays">Due Days</th><th class="num" data-col="ExchangeRate">Exchange Rate</th>
+                        <th class="num" data-col="Freight">Freight</th><th class="num" data-col="FobValue">Fob Value</th>
+                        <th class="num" data-col="FTTPercent">FTT%</th><th class="num" data-col="FttAmount">Ftt Amount</th>
+                        <th class="num" data-col="NetAmount">Net Amount</th><th data-col="Remarks">Remarks</th>
+                        <th data-col="EntryDate">Entry Date</th><th data-col="EntryUser">Entry User</th>
+                        <th data-col="ModifyDate">Modify Date</th><th data-col="ModifyUser">Modify User</th>
+                    </tr></thead>
+                    <tbody id="gbmBody"></tbody>
+                    <tfoot id="gbmFoot"></tfoot>
+                </table>
+            </div>
+            <div class="ex-grid-empty is-hidden" id="gbmEmpty">No record found.</div>
+        </div>
+    </div>
+
+    <div class="win-footer-strip">
+        <span class="ex-footer-left" id="gbmFooterInfo"></span>
+        <button type="button" class="win-btn-history" id="btnGbmFooterHistory" onclick="ExportGdBreakUpManual.historyRefresh(this)"><i class="fa fa-history"></i> <span>History</span></button>
+    </div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_export_bankgd_common.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_export_gd_break_up_manual.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

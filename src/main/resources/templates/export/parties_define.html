@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Export Parties Define - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_f.css?v=20261001a}"/>
+</head>
+<!-- ExportPartyDefines.cs (Architecture.WinApp.Export), screen 206 "Export Parties Define", AutoScrollMinSize 1052 x 738.
+     tabControl1: tabPage1 "Define Party" | tabPage2 "Define Consignee/Notify".
+     Define Party: panel5 (teal) "Export Parties Define"; toolStrip2 New / Save / Update(hidden) / 292-Print / Bank Detail /
+       ShipToAddress / SupplierLimits / Refresh / ShortCut Keys; panel6 entry: Gl Account* (cmbglac), Advance Ac, Comp Name*,
+       Title, Person Name*, Last Name, CNIC No (mask 00000-0000000-0), CNIC Expiry (dd-MM-yy), Address, Country/Province/City
+       (each with a define button), Town, postal Code, Phone (mask (999) 000-0000), Office Mobile, Mobile#, Email, Website:URL,
+       EORI (txtstrnno), VAT Number (txtntnno), Active (chkactivestatus, Text " "), picture box + Browse, btnAdd "Save";
+       panel8 "History" + ctrlGrdBar1 + btnUpdateRecordsFromGrid "Update"; grdfrm (Select / Update / Print columns, editable cells).
+     Define Consignee/Notify: toolStrip1 New / Save / Update(hidden) / 292_01-Print / Refresh / ShortCut Keys; panel2 (teal)
+       "Consignee/Notify Definition"; groupBox1 "Entry Feilds": Parent Ac*, Consignee*, Country Name (+ define), City Name
+       (+ define), EORI, VAT Number, Email, Website:URL, postal Code, Address, Active (ChkConsigneeStatus, Text "Active");
+       panel3 "History" + ctrlGrdBar2 + btnMultiRecordsUpdateConsignee "Update"; grdExConsignee.
+     Events: btnnew/btnsave/btnupdate/btnPrint/btnRefresh/btnAdd, cmbglac_Leave, cmbcountry_Leave, chkactivestatus_Leave,
+       grdfrm DoubleClick / ColumnButtonClick (Print, Update) / KeyDown Ctrl+Space / CellUpdated, btnUpdateRecordsFromGrid,
+       define Country/Province/City buttons, the consignee counterparts, KeyDown shortcuts. -->
+<body class="pd-body" data-export-page="parties-define">
+<div class="pd-form ex-form">
+    <div class="win-tabs" data-tabs="main">
+        <button type="button" class="win-tab is-active" data-tab="tabPage1">Define Party</button>
+        <button type="button" class="win-tab" data-tab="tabPage2">Define Consignee/Notify</button>
+    </div>
+
+    <!-- ===================================================== tabPage1 Define Party -->
+    <div class="win-tab-panel is-active" id="tabPage1">
+        <div class="pd-caption pd-caption-teal">Export Parties Define</div>
+        <div class="win-tool-strip">
+            <button type="button" id="btnnew" class="win-btn-tool" onclick="ExportParties.partyNew()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="btnsave" class="win-btn-tool" onclick="ExportParties.partySave(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+            <button type="button" id="btnupdate" class="win-btn-tool is-hidden" onclick="ExportParties.partyUpdate(this)"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+            <button type="button" id="btnPrint" class="win-btn-tool" onclick="ExportParties.print292(this)"><i class="fa fa-print"></i> <span>292-Print</span></button>
+            <button type="button" id="btnBankDetail" class="win-btn-tool" onclick="ExportParties.popup('SupfrmBankDetail')"><i class="fa fa-university"></i> <span>Bank Detail</span></button>
+            <button type="button" id="btnShipToAddress" class="win-btn-tool" onclick="ExportParties.popup('SupfrmShipToAddress')"><i class="fa fa-truck"></i> <span>ShipToAddress</span></button>
+            <button type="button" id="btnSupplierLimits" class="win-btn-tool" onclick="ExportParties.popup('SupfrmSupplierLimits')"><i class="fa fa-sliders"></i> <span>SupplierLimits</span></button>
+            <button type="button" id="btnRefresh" class="win-btn-tool" onclick="ExportParties.refresh(this)"><i class="fa fa-refresh"></i> <span><u>R</u>efresh</span></button>
+            <button type="button" id="btnShortCutKeys" class="win-btn-tool" onclick="ExportParties.shortcuts('party')"><i class="fa fa-keyboard-o"></i> <span>ShortCut  Keys</span></button>
+        </div>
+        <div class="ex-entry exf-party-entry" id="panel6">
+            <div class="ex-field"><label for="cmbglac">Gl Account <span class="exf-req">*</span></label>
+                <select id="cmbglac" class="win-combo dtcombo" data-columns="GL Account|AccountCode" data-dtcombo-caption="GL Account"></select></div>
+            <div class="ex-field"><label for="CmbAdvanceAc">Advance Ac</label>
+                <select id="CmbAdvanceAc" class="win-combo dtcombo" data-columns="Account Title|AccountCode" data-dtcombo-caption="Account Title"></select></div>
+            <div class="ex-field"><label for="txtcompany">Comp Name <span class="exf-req">*</span></label><input type="text" id="txtcompany" class="win-textbox" autocomplete="off"/></div>
+            <div class="ex-field"><label for="txttitle">Title</label><input type="text" id="txttitle" class="win-textbox" autocomplete="off"/></div>
+            <div class="ex-field"><label for="txtfirstname">Person Name <span class="exf-req">*</span></label><input type="text" id="txtfirstname" class="win-textbox" autocomplete="off"/></div>
+            <div class="ex-field"><label for="txtlastname">Last Name</label><input type="text" id="txtlastname" class="win-textbox" autocomplete="off"/></div>
+            <div class="ex-field"><label for="txtcnicno">CNIC No</label><input type="text" id="txtcnicno" class="win-textbox" placeholder="00000-0000000-0" maxlength="15" autocomplete="off"/></div>
+            <div class="ex-field"><label for="txtcnicexp">CNIC Expiry</label><input type="date" id="txtcnicexp" class="win-date"/></div>
+            <div class="ex-field exf-span2"><label for="txtaddress1">Address</label><input type="text" id="txtaddress1" class="win-textbox" autocomplete="off"/></div>
+            <div class="ex-field"><label for="cmbcountry">Country </label>
+                <div class="exf-with-btn"><select id="cmbcountry" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Country Name"></select>
+                    <button type="button" id="btnDefineCountry" class="win-btn-small" title="Define Country" onclick="ExportParties.define('country')">...</button></div></div>
+            <div class="ex-field"><label for="cmbprovince">Province</label>
+                <div class="exf-with-btn"><select id="cmbprovince" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Province"></select>
+                    <button type="button" id="btnDefineProvince" class="win-btn-small" title="Define Province" onclick="ExportParties.define('province')">...</button></div></div>
+            <div class="ex-field"><label for="cmbcity">City</label>
+                <div class="exf-with-btn"><select id="cmbcity" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="City Name"></select>
+                    <button type="button" id="btnDefineCity" class="win-btn-small" title="Define City" onclick="ExportParties.define('city')">...</button></div></div>
+            <div class="ex-field"><label for="txttown">Town</label><input type="text" id="txttown" class="win-textbox" autocomplete="off"/></div>
+            <div class="ex-field"><label for="txtzipcode">postal Code</label><input type="text" id="txtzipcode" class="win-textbox" autocomplete="off"/></div>
+            <div class="ex-field"><label for="txtphone">Phone</label><input type="text" id="txtphone" class="win-textbox" placeholder="(999) 000-0000" maxlength="14" autocomplete="off"/></div>
+            <div class="ex-field"><label for="txtofficemobile">Office Mobile</label><input type="text" id="txtofficemobile" class="win-textbox" autocomplete="off"/></div>
+            <div class="ex-field"><label for="txtpermobile">Mobile#</label><input type="text" id="txtpermobile" class="win-textbox" autocomplete="off"/></div>
+            <div class="ex-field"><label for="txtemail">Email </label><input type="text" id="txtemail" class="win-textbox" autocomplete="off"/></div>
+            <div class="ex-field"><label for="txtwebsite">Website:URL</label><input type="text" id="txtwebsite" class="win-textbox" autocomplete="off"/></div>
+            <div class="ex-field"><label for="txtstrnno">EORI</label><input type="text" id="txtstrnno" class="win-textbox" autocomplete="off"/></div>
+            <div class="ex-field"><label for="txtntnno">VAT Number</label><input type="text" id="txtntnno" class="win-textbox" autocomplete="off"/></div>
+            <div class="ex-field ex-inline" style="align-self:end;"><label for="chkactivestatus">Active</label><input type="checkbox" id="chkactivestatus" checked/></div>
+            <div class="ex-field exf-picture">
+                <label>More Details</label>
+                <div class="exf-pic-row">
+                    <div class="exf-picbox" id="box" title="Party picture"><span id="boxName"></span></div>
+                    <button type="button" id="browse" class="win-btn-small" onclick="ExportParties.browse()">Browse</button>
+                    <button type="button" id="btnAdd" class="win-btn-small" onclick="ExportParties.partySave(this)">Save</button>
+                </div>
+            </div>
+        </div>
+        <div class="pd-caption pd-caption-teal pd-history-bar" style="height:24px;"><span>History</span>
+            <span class="ex-bar-right">
+                <button type="button" id="btnUpdateRecordsFromGrid" class="win-btn-small is-hidden" onclick="ExportParties.partyUpdateChecked(this)">Update</button>
+                <button type="button" class="ex-fs-btn" data-fullscreen="grdfrmBox" title="Fullscreen table">&#x26F6;</button>
+                <span id="gridBarMountParty" class="pd-gridbar-mount"></span></span></div>
+        <div class="ex-grid-box" id="grdfrmBox">
+            <div class="ex-grid-scroll ex-h400">
+                <table class="win-grid exf-edit-grid" id="grdfrm" data-gridbar="ExportPartyDefines:grdfrm" data-gridbar-mount="#gridBarMountParty" data-gridbar-reorder="false">
+                    <thead><tr>
+                        <th class="ctr exf-col-select">Select</th><th class="exf-col-btn">Update</th><th class="exf-col-btn exf-col-print">Print</th>
+                        <th data-col="GlAccount">Gl Account</th><th data-col="CompanyName">Party Name</th><th data-col="PersonName">Person Name</th>
+                        <th data-col="Mobile">Mobile</th><th data-col="Country">Country</th><th data-col="Province">Province</th><th data-col="City">City</th>
+                        <th data-col="Email">Email</th><th data-col="EORI">EORI</th><th data-col="VATNo">VAT No</th><th data-col="ZipCode">Zip Code</th>
+                        <th data-col="WebPage">Web Page</th><th data-col="Address">Address</th><th data-col="ParentAccountTitle">Parent Account Title</th>
+                        <th data-col="Status">Status</th><th data-col="EntryDate">Entry Date</th><th data-col="EntryUser">Entry User</th>
+                        <th data-col="ModifyDate">Modify Date</th><th data-col="ModifyUser">Modify User</th>
+                    </tr></thead>
+                    <tbody id="partyBody"></tbody>
+                </table>
+            </div>
+            <div class="ex-grid-empty is-hidden" id="partyEmpty">No record found.</div>
+        </div>
+        <div class="win-footer-strip">
+            <span class="ex-footer-left" id="partyFooterInfo"></span>
+            <button type="button" class="win-btn-history" id="btnPartyFooterHistory" onclick="ExportParties.scrollHistory('grdfrmBox')"><i class="fa fa-history"></i> <span>History</span></button>
+        </div>
+    </div>
+
+    <!-- ===================================================== tabPage2 Define Consignee/Notify -->
+    <div class="win-tab-panel" id="tabPage2">
+        <div class="win-tool-strip">
+            <button type="button" id="btnNewConsignee" class="win-btn-tool" onclick="ExportParties.consigneeNew()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="btnSaveConsignee" class="win-btn-tool" onclick="ExportParties.consigneeSave(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+            <button type="button" id="btnUpdateConsignee" class="win-btn-tool is-hidden" onclick="ExportParties.consigneeUpdate(this)"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+            <button type="button" id="btnPrintConsignee" class="win-btn-tool" onclick="ExportParties.print292_01(this)"><i class="fa fa-print"></i> <span>292_01-Print</span></button>
+            <button type="button" id="btnRefreshConsignee" class="win-btn-tool" onclick="ExportParties.refreshConsignee(this)"><i class="fa fa-refresh"></i> <span><u>R</u>efresh</span></button>
+            <button type="button" id="btnShortCutKeysConsignee" class="win-btn-tool" onclick="ExportParties.shortcuts('consignee')"><i class="fa fa-keyboard-o"></i> <span>ShortCut  Keys</span></button>
+        </div>
+        <div class="pd-caption pd-caption-teal">Consignee/Notify Definition</div>
+        <fieldset class="ex-groupbox" id="groupBox1"><legend>Entry Feilds</legend>
+            <div class="ex-entry exf-consignee-entry">
+                <div class="ex-field"><label for="CmbParentAcConsignee">Parent Ac <span class="exf-req">*</span></label>
+                    <select id="CmbParentAcConsignee" class="win-combo dtcombo" data-columns="Parent Ac|PartyCode" data-dtcombo-caption="Parent Ac"></select></div>
+                <div class="ex-field"><label for="txtConsigneeName">Consignee <span class="exf-req">*</span></label><input type="text" id="txtConsigneeName" class="win-textbox" autocomplete="off"/></div>
+                <div class="ex-field"><label for="CmbCountryNameConsignee">Country Name</label>
+                    <div class="exf-with-btn"><select id="CmbCountryNameConsignee" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Country Name"></select>
+                        <button type="button" id="btnCountryDefineConsignee" class="win-btn-small" title="Define Country" onclick="ExportParties.define('country')">...</button></div></div>
+                <div class="ex-field"><label for="CmbCityNameConsignee">City Name</label>
+                    <div class="exf-with-btn"><select id="CmbCityNameConsignee" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="City Name"></select>
+                        <button type="button" id="btnDefineCityConsignee" class="win-btn-small" title="Define City" onclick="ExportParties.define('city')">...</button></div></div>
+                <div class="ex-field"><label for="txtStrnNoConsignee">EORI</label><input type="text" id="txtStrnNoConsignee" class="win-textbox" autocomplete="off"/></div>
+                <div class="ex-field"><label for="txtNtnNoConsignee">VAT Number</label><input type="text" id="txtNtnNoConsignee" class="win-textbox" autocomplete="off"/></div>
+                <div class="ex-field"><label for="txtEmailConsignee">Email </label><input type="text" id="txtEmailConsignee" class="win-textbox" autocomplete="off"/></div>
+                <div class="ex-field"><label for="txtWebPageConsignee">Website:URL</label><input type="text" id="txtWebPageConsignee" class="win-textbox" autocomplete="off"/></div>
+                <div class="ex-field"><label for="txtZipCodeConsignee">postal Code</label><input type="text" id="txtZipCodeConsignee" class="win-textbox" autocomplete="off"/></div>
+                <div class="ex-field exf-span2"><label for="txtAddressConsignee">Address</label><input type="text" id="txtAddressConsignee" class="win-textbox" autocomplete="off"/></div>
+                <div class="ex-field ex-inline" style="align-self:end;"><input type="checkbox" id="ChkConsigneeStatus" checked/><label for="ChkConsigneeStatus">Active</label></div>
+            </div>
+        </fieldset>
+        <div class="pd-caption pd-caption-teal pd-history-bar" style="height:24px;"><span>History</span>
+            <span class="ex-bar-right">
+                <button type="button" id="btnMultiRecordsUpdateConsignee" class="win-btn-small is-hidden" onclick="ExportParties.consigneeUpdateChecked(this)">Update</button>
+                <button type="button" class="ex-fs-btn" data-fullscreen="grdExConsigneeBox" title="Fullscreen table">&#x26F6;</button>
+                <span id="gridBarMountCons" class="pd-gridbar-mount"></span></span></div>
+        <div class="ex-grid-box" id="grdExConsigneeBox">
+            <div class="ex-grid-scroll ex-h400">
+                <table class="win-grid exf-edit-grid" id="grdExConsignee" data-gridbar="ExportPartyDefines:grdExConsignee" data-gridbar-mount="#gridBarMountCons" data-gridbar-reorder="false">
+                    <thead><tr>
+                        <th class="ctr exf-col-select">Select</th><th class="exf-col-btn exf-col-print">Print</th><th class="exf-col-btn exf-col-update">Update</th>
+                        <th data-col="ParentAccountTitle">Parent Account Title</th><th data-col="GlAccount">Gl Account</th><th data-col="CompanyName">Consignee</th>
+                        <th data-col="Country">Country</th><th data-col="City">City</th><th data-col="EORI">EORI</th><th data-col="VATNo">VAT No</th>
+                        <th data-col="Email">Email</th><th data-col="WebPage">Web Page</th><th data-col="ZipCode">Zip Code</th><th data-col="Address">Address</th>
+                        <th data-col="Status">Status</th><th data-col="EntryDate">Entry Date</th><th data-col="EntryUser">Entry User</th>
+                        <th data-col="ModifyDate">Modify Date</th><th data-col="ModifyUser">Modify User</th>
+                    </tr></thead>
+                    <tbody id="consBody"></tbody>
+                </table>
+            </div>
+            <div class="ex-grid-empty is-hidden" id="consEmpty">No record found.</div>
+        </div>
+        <div class="win-footer-strip">
+            <span class="ex-footer-left" id="consFooterInfo"></span>
+            <button type="button" class="win-btn-history" id="btnConsFooterHistory" onclick="ExportParties.scrollHistory('grdExConsigneeBox')"><i class="fa fa-history"></i> <span>History</span></button>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_export_f_common.js?v=20261001a}"></script>
+<script th:src="@{/build/js/countx_export_parties_define.js?v=20261001a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

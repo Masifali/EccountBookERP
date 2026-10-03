@@ -32,8 +32,46 @@
 
     function toInt(v) { var n = parseInt(String(v === undefined || v === null ? '' : v).replace(/,/g, ''), 10); return isNaN(n) ? 0 : n; }
     function col(r, c) { return GD.col(r, c); }
-    function fail(e) { alert(e && e.message ? e.message : e); }
+    function fail(e) { if (e === BUSY) return; alert(e && e.message ? e.message : e); }
+
+    /* R2 2026-10-02: every server button is disabled at once with a spinner, a second request is
+       refused, and the button goes back to its previous state on success and on failure. */
+    var BUSY = { busy: true }, inflight = {};
+    function busy(id, key, run) {
+        var b = id ? $(id) : null;
+        if (inflight[key]) return Promise.resolve(false);
+        inflight[key] = true;
+        var was = b ? b.disabled : false;
+        if (b) { b.disabled = true; b.classList.add('busy'); }
+        function done() { inflight[key] = false; if (b) { b.classList.remove('busy'); b.disabled = was; } }
+        var p;
+        try { p = Promise.resolve(run()); } catch (e) { done(); return Promise.reject(e); }
+        return p.then(function (v) { done(); return v; }, function (e) { done(); throw e; });
+    }
+
+    /** focus a combo: the searchable field when countx_prod_combo has replaced the select */
+    function focusCombo(id) {
+        var el = $(id); if (!el) return;
+        if (el.__dtcombo && el.__dtcombo.input) el.__dtcombo.input.focus(); else el.focus();
+    }
     function val(id) { var e = $(id); return e ? e.value : ''; }
+
+    /* R3 2026-10-02: desktop column widths - grdPendingOrdersSetting / grdSetting / HistoryGridSetting with
+       Constants.InventoryConstants (DocumentTypeCode 70, DateConstant 73, DocNoConstant 60, VoucherNo 65, AmountConstant 90,
+       AccountTitle 150, AccountCode 100, InvoiceNoConstant 100, RemarksConstants 100, NoOfAttachmentsConstants 100,
+       DateTimeConstantddMMM 135, EntryUser/ModifyUserConstants 80). */
+    var W_PENDING = { Load: 50, PaymentType: 130, 'V.Type': 70, VoucherDate: 73, VoucherCode: 60, AccountCode: 100, AccountTitle: 150,
+        Amount: 90, VoucherRemarks: 130, NoOfAttachments: 100 };
+    var W_GRID = { 'Invoice Type': 70, InvoiceNo: 100, InvoiceDate: 73, InvoiceDueDate: 73, InvoiceAmount: 90, AvailableInvoiceAmount: 90,
+        AdjustmentAmount: 90, BalanceAmount: 90, Remarks: 100 };
+    var W_HISTORY = { Edit: 50, Print: 50, VoucherCode: 65, VoucherDate: 73, VoucherAmount: 90, AccountCode: 100, AccountTitle: 150,
+        PaymentType: 130, 'Invoice Type': 70, InvoiceNos: 100, InvoiceDates: 73, AdjustmentAmount: 90, EntryDate: 135, EntryUserName: 80,
+        ModifyDate: 135, ModifyUserName: 80, VoucherRemarks: 110 };
+    function widths(h, map) {
+        return h.replace(/<th>([^<]*)<\/th>/g, function (m, c) {
+            return map[c] ? '<th style="width:' + map[c] + 'px;min-width:' + map[c] + 'px">' + c + '</th>' : m;
+        });
+    }
 
     /** .NET "#,##.##" : no digits for zero, no trailing zeros */
     function fmtHash(v) {
@@ -61,7 +99,14 @@
             var from = new Date(); from.setDate(from.getDate() - (S.defaultDays > 0 ? S.defaultDays : 3));
             $('txtFromdateHistory').value = GD.iso(from);
             $('txtToDateHistory').value = GD.iso(new Date());
-            $('CmbAccountFilter').focus();
+            /* txtVoucherDate: DateTimePicker, no designer Value -> today until a voucher is picked (:509/:1194). */
+            if (!$('txtVoucherDate').value) $('txtVoucherDate').value = GD.iso(new Date());
+            focusCombo('CmbAccountFilter');
+            /* ?id=<VoucherHeadId>&paymentTypeId=&supplierCustomerId=&partyGlId= opens that adjustment
+               (ReadById needs all four keys - the history row carries them). */
+            var q = new URLSearchParams(window.location.search);
+            if (toInt(q.get('id')) > 0 && toInt(q.get('paymentTypeId')) > 0)
+                readById(toInt(q.get('id')), toInt(q.get('paymentTypeId')), toInt(q.get('supplierCustomerId')), toInt(q.get('partyGlId')));
         }).catch(function () { alert('Error occurred during database call.'); });
     }
 
@@ -101,7 +146,7 @@
         S.shown.forEach(function (r, i) {
             t += GD.num(r.Amount);
             h += '<tr>' + (S.checkMode ? '<td><input type="checkbox" class="pchk" data-i="' + i + '"></td>' : '')
-                + '<td><button type="button" onclick="ADJ.loadPending(' + i + ')">Load</button></td>'
+                + '<td><button type="button" class="pload" onclick="ADJ.loadPending(' + i + ', this)">Load</button></td>'
                 + '<td>' + GD.esc(r.PaymentType) + '</td><td>' + GD.esc(r.DocumentType) + '</td>'
                 + '<td>' + GD.fmtDate(r.VoucherDate, 'dd-MMM-yy') + '</td><td>' + GD.esc(r.VoucherCode) + '</td>'
                 + '<td>' + GD.esc(r.AccountCode) + '</td><td>' + GD.esc(r.AccountTitle) + '</td>'
@@ -109,11 +154,16 @@
                 + '<td class="num"><a href="#" onclick="alert(\'Attachments are not ported to the web.\');return false;">' + GD.esc(r.NoOfAttachments) + '</a></td></tr>';
         });
         h += '</tbody><tfoot><tr><td colspan="' + (S.checkMode ? 8 : 7) + '"></td><td class="num">' + GD.fmtSingle(t) + '</td><td colspan="2"></td></tr></tfoot>';
-        $('grdPendingVouchers').innerHTML = h;
+        $('grdPendingVouchers').innerHTML = widths(h, W_PENDING);
     }
 
     // ======================================== grdPendingOrders_ColumnButtonClick "Load"
-    function loadPending(i) {
+    function loadPending(i, btn) {
+        return busy(null, 'load', function () { if (btn) btn.classList.add('busy'); return loadPendingRow(i); })
+            .then(function (v) { if (btn) btn.classList.remove('busy'); return v; }, function (e) { if (btn) btn.classList.remove('busy'); fail(e); });
+    }
+
+    function loadPendingRow(i) {
         var r = S.shown[i];
         if (!r) return Promise.resolve();
         if ($('btnSave').hidden || $('btnSave').disabled) { alert('Please Reset the Form First to Load New Data'); return Promise.resolve(); }
@@ -121,7 +171,7 @@
         bindPaymentTypeFromPending(r);
         supplierdtFromPendingGrid(toInt(val('CmbVoucher')), toInt(val('CmbPaymentType')));
         bindPartyName();
-        return supplierLeave().then(function () { $('CmbSupplier').focus(); });
+        return supplierLeave().then(function () { focusCombo('CmbSupplier'); });
     }
 
     /** BindVoucherFromPending: the one row Id / VoucherCode / VoucherDate / Amount (as VoucherAmount). */
@@ -204,8 +254,8 @@
         if (S.suppliers.length === 0 || !p) return Promise.resolve();
         var sid = p.sid;
         if (sid !== toInt(val('CmbAccountFilter')) && S.grid.length === 0) {
-            if (toInt(val('CmbVoucher')) === 0) { $('CmbVoucher').focus(); alert('VoucherNo is Required...'); return Promise.resolve(); }
-            if (sid === 0) { $('CmbSupplier').focus(); alert('Party is Required...'); return Promise.resolve(); }
+            if (toInt(val('CmbVoucher')) === 0) { focusCombo('CmbVoucher'); alert('VoucherNo is Required...'); return Promise.resolve(); }
+            if (sid === 0) { focusCombo('CmbSupplier'); alert('Party is Required...'); return Promise.resolve(); }
             S.grid = [];
             return loadInvoiceData(sid);
         } else if (S.multiUtilization && S.grid.length > 0) {
@@ -245,7 +295,7 @@
         });
         h += '</tbody><tfoot><tr><td colspan="4"></td><td class="num">' + GD.fmtSingle(t.i) + '</td><td class="num">' + GD.fmtSingle(t.a)
             + '</td><td class="num">' + GD.fmtSingle(t.j) + '</td><td class="num">' + GD.fmtSingle(t.b) + '</td><td></td></tr></tfoot>';
-        $('grd').innerHTML = h;
+        $('grd').innerHTML = widths(h, W_GRID);
     }
 
     /** grd_CellUpdated (:810) */
@@ -294,7 +344,7 @@
         S.suppliers = []; $('CmbSupplier').innerHTML = '';
         $('txtPartyCellNo').value = ''; $('txtPartyCity').value = '';
         S.grid = []; renderGrid();
-        return GD.get(API + '/pending').then(function (rows) { fillPending(rows || []); $('CmbAccountFilter').focus(); }).catch(fail);
+        return GD.get(API + '/pending').then(function (rows) { fillPending(rows || []); focusCombo('CmbAccountFilter'); }).catch(fail);
     }
 
     function newForm() { return reset().then(function () { $('CmbAccountFilter').value = ''; }); }
@@ -351,7 +401,7 @@
         if (a === '' || a === '0') { alert('VoucherAmount Field is Required'); return false; }
         if (toInt(val('CmbPaymentType')) === 0) { alert('Payment Type Field is Required'); return false; }
         var p = supplierRow();
-        if (!p || p.value === 0) { alert('Party Field is Required'); $('CmbSupplier').focus(); return false; }
+        if (!p || p.value === 0) { alert('Party Field is Required'); focusCombo('CmbSupplier'); return false; }
         return true;
     }
 
@@ -360,7 +410,9 @@
         if (!validateHeader()) return Promise.resolve(false);
         if (!auto && !confirm(S.recId > 0 ? 'Are you sure to Update?' : 'Are you sure to Save?')) return Promise.resolve(false);
         var b = body();
-        return GD.api('POST', API + '/save', b).then(function (res) {
+        var call = function () { return GD.api('POST', API + '/save', b); };
+        return (auto ? call() : busy(S.recId > 0 ? 'btnUpdate' : 'btnSave', 'save', call)).then(function (res) {
+            if (res === false) return false;
             if (auto) return true;
             alert(res.message);
             return reset().then(function () {
@@ -380,14 +432,17 @@
     function del() {
         if (S.recId === 0) { alert('Record Id not found for deletion...'); return; }
         if (!confirm('Are you sure to Delete?')) return;
-        GD.api('POST', API + '/delete', body()).then(function (res) { alert(res.message); reset(); }).catch(fail);
+        busy('btnDelete', 'delete', function () { return GD.api('POST', API + '/delete', body()); })
+            .then(function (res) { if (res === false) return; alert(res.message); return reset(); }).catch(fail);
     }
 
     // ============================================================ BtnAutoUtilizedAllRowsOfPendingGrid
+    function autoAllClick() { return busy('BtnAutoUtilizedAllRowsOfPendingGrid', 'autoAll', autoAll).catch(fail); }
+
     function autoAll() {
         if ($('btnSave').hidden || $('btnSave').disabled) { alert('Please Reset the Form First to Load New Data'); return; }
         var acc = toInt(val('CmbAccountFilter'));
-        if (acc === 0) { $('CmbAccountFilter').focus(); alert('Please select an account first.'); return; }
+        if (acc === 0) { focusCombo('CmbAccountFilter'); alert('Please select an account first.'); return; }
         if (S.shown.length === 0) { alert('Pending Vouchers Detail have no Records...'); return; }
         var checked = Array.prototype.filter.call(document.querySelectorAll('.pchk'), function (c) { return c.checked; })
             .map(function (c) { return S.shown[toInt(c.getAttribute('data-i'))]; });
@@ -403,7 +458,8 @@
                 return supplierLeave().then(function () { autoUtilize(); return insert(true); });
             });
         });
-        chain.then(function () { return reset(); }).then(function () { $('CmbAccountFilter').value = ''; });
+        chain = chain.then(function () { return reset(); }).then(function () { $('CmbAccountFilter').value = ''; });
+        return chain;
     }
 
     // ============================================================================ prints
@@ -412,7 +468,9 @@
         GD.get(API + '/by-voucher-head', { voucherHeadId: voucherHeadId, paymentTypeId: paymentTypeId,
             supplierCustomerId: supplierCustomerId, partyGlId: partyGlId }).then(function (rows) {
             if (!rows || rows.length === 0) { alert(RECEIPT ? 'No Record Found For Display' : 'Not Record Found For Display'); return; }
-            GD.printRows(SLIP, rows);
+            var args = { transactionTypeId: RECEIPT ? 2 : 1, voucherHeadId: voucherHeadId, paymentTypeId: paymentTypeId,
+                         supplierCustomerId: supplierCustomerId, partyGlId: partyGlId };
+            if (window.printRpt) window.printRpt(SLIP + '.rpt', args); else GD.printRows(SLIP, rows);
         }).catch(fail);
     }
 
@@ -436,7 +494,7 @@
 
     /** HistoryComboBind */
     function historyParties() {
-        GD.get(API + '/parties').then(function (rows) {
+        return GD.get(API + '/parties').then(function (rows) {
             var h = '<option value="0" data-sid="0" data-gl="0">' + SELECT_TEXT + '</option>';
             (rows || []).forEach(function (r) {
                 var v = S.feature4 ? col(r, 'SupplierCustomerId') : col(r, 'AccountId');
@@ -477,7 +535,8 @@
             p.supplierCustomerId = toInt(o.getAttribute('data-sid'));
             p.glAccountId = toInt(o.getAttribute('data-gl'));
         }
-        GD.get(API + '/history', p).then(function (rows) {
+        return GD.get(API + '/history', p).then(function (rows) {
+            S.histSel = -1;
             if (!rows || rows.length === 0) { $('grdHistory').innerHTML = ''; S.history = []; return; }
             S.history = rows.map(function (r) {
                 return { VoucherHeadId: col(r, 'VoucherHeadId'), VoucherCode: col(r, 'VoucherCode'), VoucherDate: col(r, 'VoucherDate'),
@@ -495,9 +554,9 @@
             var tv = 0, ta = 0;
             S.history.forEach(function (r, i) {
                 tv += GD.num(r.VoucherAmount); ta += GD.num(r.AdjustmentAmount);
-                h += '<tr><td><button type="button" onclick="ADJ.edit(' + i + ')">Edit</button></td>'
+                h += '<tr data-i="' + i + '" onclick="ADJ.selHist(' + i + ', this)"><td><button type="button" onclick="ADJ.edit(' + i + ')">Edit</button></td>'
                     + '<td><button type="button" onclick="ADJ.printRow(' + i + ')">Print</button></td>'
-                    + '<td>' + GD.esc(r.VoucherCode) + '</td><td>' + GD.fmtDate(r.VoucherDate, 'dd-MMM-yy') + '</td>'
+                    + '<td><a href="#" class="vlink" title="Open this voucher" onclick="ADJ.edit(' + i + ');return false;">' + GD.esc(r.VoucherCode) + '</a></td><td>' + GD.fmtDate(r.VoucherDate, 'dd-MMM-yy') + '</td>'
                     + '<td class="num">' + GD.fmtSingle(r.VoucherAmount) + '</td><td>' + GD.esc(r.AccountCode) + '</td>'
                     + '<td>' + GD.esc(r.AccountTitle) + '</td><td>' + GD.esc(r.PaymentType) + '</td><td>' + GD.esc(r.RefDocumentType) + '</td>'
                     + '<td>' + GD.esc(r.InvoiceNos) + '</td><td>' + GD.esc(r.InvoiceDates) + '</td>'
@@ -508,14 +567,20 @@
             });
             h += '</tbody><tfoot><tr><td colspan="4"></td><td class="num">' + GD.fmtSingle(tv) + '</td><td colspan="6"></td><td class="num">'
                 + GD.fmtSingle(ta) + '</td><td colspan="5"></td></tr></tfoot>';
-            $('grdHistory').innerHTML = h;
+            $('grdHistory').innerHTML = widths(h, W_HISTORY);
         }).catch(fail);
+    }
+
+    function selHist(i, tr) {
+        S.histSel = i;
+        Array.prototype.forEach.call(document.querySelectorAll('#grdHistory tr.sel'), function (x) { x.classList.remove('sel'); });
+        if (tr) tr.classList.add('sel');
     }
 
     /** grdHistory_ColumnButtonClick "Edit" -> ReadById (:1170) */
     function edit(i) {
         var r = S.history[i]; if (!r) return;
-        readById(toInt(r.VoucherHeadId), toInt(r.PaymentTypeId), toInt(r.SupplierCustomerId), toInt(r.PartyGlId));
+        return readById(toInt(r.VoucherHeadId), toInt(r.PaymentTypeId), toInt(r.SupplierCustomerId), toInt(r.PartyGlId));
     }
 
     function printRow(i) {
@@ -524,7 +589,11 @@
     }
 
     function readById(voucherHeadId, paymentTypeId, supplierCustomerId, partyGlId) {
-        reset().then(function () {
+        return busy(null, 'load', function () { return readByIdRun(voucherHeadId, paymentTypeId, supplierCustomerId, partyGlId); });
+    }
+
+    function readByIdRun(voucherHeadId, paymentTypeId, supplierCustomerId, partyGlId) {
+        return reset().then(function () {
             S.recId = voucherHeadId;
             return GD.get(API + '/by-voucher-head', { voucherHeadId: voucherHeadId, paymentTypeId: paymentTypeId,
                 supplierCustomerId: supplierCustomerId, partyGlId: partyGlId });
@@ -569,17 +638,34 @@
         var onForm = !$('pageForm').hidden;
         if (e.ctrlKey && e.altKey) { e.preventDefault(); shortcuts(); return; }
         if (e.ctrlKey && e.key.toLowerCase() === 't') { e.preventDefault(); tab(onForm ? 1 : 0); return; }
-        if (!onForm) return;
+        if (!onForm) {
+            if (!e.ctrlKey) return;
+            /* grdHistory_KeyDown: Ctrl+Enter (Update right) = ReadById, Ctrl+P (Print right) = the slip */
+            var hr = S.history && S.histSel >= 0 ? S.history[S.histSel] : null;
+            if (e.key === 'Enter' && hr) { e.preventDefault(); if (S.rights.canUpdate) edit(S.histSel); return; }
+            if (e.key.toLowerCase() === 'p' && hr) { e.preventDefault(); if (S.rights.canPrint) printRow(S.histSel); return; }
+            /* Ctrl+F5 / Down / Right / Up on the History tab all focus grdHistory */
+            if (e.key === 'F5' || e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === 'ArrowUp') { e.preventDefault(); $('grdHistoryWrap').focus(); }
+            return;
+        }
         if (e.altKey && e.key === '1') { e.preventDefault(); slipClick(); return; }
         if (!e.ctrlKey) return;
         var k = e.key.toLowerCase();
         if (k === 's') { e.preventDefault(); if (!$('btnSave').hidden && !$('btnSave').disabled) save(false); }
         else if (k === 'u') { e.preventDefault(); if (!$('btnUpdate').hidden && !$('btnUpdate').disabled) save(true); }
-        else if (k === 'n') { e.preventDefault(); newForm(); }
-        else if (k === 'r') { e.preventDefault(); refresh(); }
+        else if (k === 'n') { e.preventDefault(); newClick(); }
+        else if (k === 'r') { e.preventDefault(); refreshClick(); }
         else if (k === 'p') { e.preventDefault(); slipClick(); }
-        else if (e.key === 'F5' || e.key === 'ArrowUp') { e.preventDefault(); $('CmbSupplier').focus(); }
+        else if (e.key === 'F5' || e.key === 'ArrowUp') { e.preventDefault(); focusCombo('CmbSupplier'); }
+        else if (e.key === 'ArrowDown') { e.preventDefault(); $('grdWrap').focus(); }
+        else if (e.key === 'ArrowRight') { e.preventDefault(); if (document.activeElement === $('grdWrap') || $('grdWrap').contains(document.activeElement)) $('grdPendingWrap').focus(); else $('grdWrap').focus(); }
     });
+
+    function newClick() { return busy('btnNew', 'new', newForm).catch(fail); }
+    function refreshClick() { return busy('btnRefresh', 'refresh', refresh).catch(fail); }
+    function showClick() { return busy('btnShowRecords', 'show', function () { return showRecords(true); }).catch(fail); }
+    function historyClick() { return busy('btnshow', 'history', history).catch(fail); }
+    function partiesClick() { return busy('BtnRefreshHistory', 'parties', historyParties).catch(fail); }
 
     window.ADJ = {
         tab: tab, newForm: newForm, refresh: refresh, save: save, del: del, slipClick: slipClick, shortcuts: shortcuts,
@@ -587,7 +673,9 @@
         showRecords: showRecords, loadPending: loadPending, checkAll: checkAll, cellUpdated: cellUpdated,
         remarks: function (i, v) { if (S.grid[i]) S.grid[i].Remarks = v; },
         resetHistory: resetHistory, historyParties: historyParties, dateTypeChanged: dateTypeChanged, history: history,
-        edit: edit, printRow: printRow
+        edit: edit, printRow: printRow, selHist: selHist,
+        newClick: newClick, refreshClick: refreshClick, showClick: showClick, historyClick: historyClick,
+        partiesClick: partiesClick, autoAllClick: autoAllClick
     };
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', load); else load();

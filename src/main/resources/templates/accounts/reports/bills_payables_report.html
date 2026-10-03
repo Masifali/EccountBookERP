@@ -7,7 +7,7 @@
 <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
 <link rel="stylesheet" th:href="@{/build/css/countx_acc_rpt_f.css?v=20260930s}">
 <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260930s}">
-<link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260930s}">
+<link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20261002gv}">
 <link rel="stylesheet" th:href="@{/build/css/countx_acc_rpt_pay.css?v=20260930s}">
 <style>.accf table.wg th { white-space: normal; }</style>
 </head>
@@ -49,7 +49,7 @@
             <input type="date" id="fromdate" class="inp"><input type="date" id="todate" class="inp">
             <input type="text" id="txtBalanceFrom" class="inp" style="text-align:right;" inputmode="numeric">
             <input type="text" id="txtBalanceTo" class="inp" style="text-align:right;" inputmode="numeric">
-            <div><select id="cmbAccount" class="inp" multiple style="height:34px;"></select></div>
+            <div><select id="cmbAccount" class="inp" multiple data-dtcombo="single" data-dtcombo-checked data-dtcombo-caption="Account Title"></select></div>
             <div class="br-f"><select id="CmbBranches" class="inp" data-dtcombo="single" data-dtcombo-caption="Branch Name"></select></div>
             <button type="button" id="btnshow" class="win-btn-show" onclick="getData()"><i class="fa fa-eye"></i> Show</button>
         </div>
@@ -60,23 +60,24 @@
 <div class="grid-wrap fill"><table class="wg" id="grd"></table></div>
 
 <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
-<script th:src="@{/build/js/countx_acc_rpt_f.js?v=20260930s}"></script>
-<script th:src="@{/build/js/countx_prod_combo.js?v=20260930s}"></script>
+<script th:src="@{/build/js/countx_acc_rpt_f.js?v=20261002gv}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20261002gv}"></script>
 <script>
     'use strict';
     let CTX = null, LK = null, rows = [], branchFeature = false, consolidated = false, ranFrom = '', ranTo = '', branchShown = false;
 
-    /* countx_prod_combo.js skips multi-selects: with feature 18 the enhanced single Branches combo goes back to a native
-       multi-select (the desktop's checked list). */
+    /* With feature 18 the enhanced single Branches combo is unwrapped and re-enhanced as the desktop's CHECKED combo
+       (multiple + data-dtcombo-checked, countx_prod_combo.js checked mode, 2026-10-02). */
     function nativeMulti(s) {
         const c = s.__dtcombo;
         if (c && c.wrap && c.wrap.parentNode) {
             c.wrap.parentNode.insertBefore(s, c.wrap); if (c.destroy) c.destroy(); c.wrap.remove();
             s.classList.remove('dtcombo-native'); s.removeAttribute('aria-hidden'); s.removeAttribute('tabindex');
-            delete s.value; delete s.selectedIndex; delete s.__dtcombo;
+            delete s.value; delete s.selectedIndex; delete s.__dtcombo; delete s.__dtcomboHooked;
             const l = window.DesktopCombo && DesktopCombo.instances, i = l ? l.indexOf(c) : -1; if (i >= 0) l.splice(i, 1);
         }
-        s.multiple = true; s.style.height = '34px';
+        s.multiple = true; s.setAttribute('data-dtcombo-checked', '');
+        if (window.DesktopCombo) DesktopCombo.enhance(s);
     }
     function columns() {
         return [

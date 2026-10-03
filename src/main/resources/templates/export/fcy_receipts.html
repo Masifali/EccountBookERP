@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Fcy Receipts - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_fcy_receipts.css?v=20261001a}"/>
+</head>
+<!-- Acfrmfcbankreceipt.cs (Architecture.WinApp.Account_Definition), screen 794 "Fcy Receipts", ClientSize 1175 x 752 (AutoScrollMinSize 1700 x 750),
+     DocumentTypeId 203. tabControl1: "Form" | "History".
+     Form: toolstrip New / Save / Update(hidden) / Voucher102 / Attachments / Refresh / 516-Print / Load Invoice, Preview (checked); panel6 "FCY Receipt";
+       groupBox1 "Fcy Receipt" (1352 x 324):
+         col 1 Voucher Date & No (txtdocNumber read-only + txtdate), Payment Term, Customer Name, Invoice # (read-only unless Invoice Payment),
+               Sales Contract No (read-only unless Advanced Payment), Fcy Code (read-only for Invoice Payment), Reference #, AccountType, Foreign Charges (FBC), Remarks;
+         col 2 Account (Dr), Bank FBP #, FCY Amount, Exchange Rate (0), Amount(PKR) (read-only), Bank Dr Amount (read-only), Net Amount FCY (read-only),
+               Gain/Loss Ac, FBC Debit Ac, Consignee (hidden unless Advanced / Invoice Payment);
+         col 3 groupBox4 "Invoice Info" (Invoice Exchange Rate, Invoice Amount, Received Amount, Invoice Balance Amt - all read-only),
+               groupBox3 "Third Currency Info" (Fcy Code, Fcy Amount, Cust Ex.Rate, Hcy Ex.Rate, Rec Ex.Rate, Fcy Amount (read-only)),
+               Local Charges PKR / Foreign Charges PKR (read-only), Financial Instr (F.I) # (hidden unless Advanced / Invoice Payment);
+         col 4 three radios (BANK ONE TIME DEBIT BUT PARTIES MULTI TIME CREDIT / BANK MULTI TIME DEBIT BUT PARTY ONE TIME CREDIT (default) /
+               the same text again), panel10 "Party Payments BreakUp" (grid with X / +, Realized, FBC, Total) visible for the 1st and 3rd radio.
+       panelInvoiceWiseBreakup (Visible = false until term 4 + Bank): groupBox5 "Invoice Wise Breakup" + grdInvoiceWiseBreakUp;
+       panel4: groupBox2 "Export Charges" (FDBS #, Charges Type, Account Title (+ charges type definition), Prcnt, FC Amount, Rs Amount, Remarks,
+         + / Update / Cancel, Generate Remaining), grdPaymentTerms (Invoice Payment only), grdFCBank (X, grouped by FDBCNo), RemainingBalanceGrid.
+     History: toolStrip2 New / Refresh; "Fcy Receipt History"; groupBox6 Filters (From / To Date, From / To Voucher No, Customer, Payment Term,
+       Invoice No, Receiver / Bank Ac, Show); "Filtered Records" + DataGridHistory (Voucher, Slip, Edit, G&LBreakup, Add Attachment buttons). -->
+<body class="pd-body" data-export-page="fcy">
+<div class="pd-form ex-form">
+    <div class="win-tabs" data-tabs="fcy">
+        <button type="button" class="win-tab is-active" data-tab="fcyForm">Form</button>
+        <button type="button" class="win-tab" data-tab="fcyHistory">History</button>
+    </div>
+
+    <!-- ===================================================== tabPage1 Form -->
+    <div class="win-tab-panel is-active" id="fcyForm">
+        <div class="win-tool-strip">
+            <button type="button" id="btnnew" class="win-btn-tool" accesskey="n" onclick="ExportFcy.btnnew()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="btnsave" class="win-btn-tool" accesskey="s" onclick="ExportFcy.btnsave(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+            <button type="button" id="btnUpdate" class="win-btn-tool is-hidden" accesskey="u" onclick="ExportFcy.btnUpdate(this)"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+            <button type="button" id="btnPrint" class="win-btn-tool" onclick="ExportFcy.voucher102(this)"><i class="fa fa-print"></i> <span><u>V</u>oucher102</span></button>
+            <button type="button" id="btnAttachment" class="win-btn-tool" onclick="ExportFcy.notPorted('Attachments')"><i class="fa fa-paperclip"></i> <span>Attachments</span></button>
+            <button type="button" id="btnRefresh" class="win-btn-tool" onclick="ExportFcy.btnRefresh(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+            <button type="button" id="btnSlip" class="win-btn-tool" onclick="ExportFcy.slip516(this)"><i class="fa fa-print"></i> <span>516-Print</span></button>
+            <button type="button" id="BtnLoadInvoice" class="win-btn-tool" onclick="ExportFcy.notPorted('Load Invoice')"><i class="fa fa-download"></i> <span>Load Invoice</span></button>
+            <label class="ex-check" style="margin-left:10px;"><input type="checkbox" id="chkpreview" checked/> Preview</label>
+        </div>
+        <div class="pd-caption pd-caption-teal" style="height:28px;">FCY Receipt</div>
+
+        <fieldset class="ex-groupbox">
+            <legend>Fcy Receipt</legend>
+            <div class="fcy-top">
+                <!-- column 1 -->
+                <div class="fcy-col">
+                    <div class="fcy-row"><label class="ex-req" for="txtdate">Voucher Date &amp; No</label><span class="fcy-pair2"><input type="text" id="txtdocNumber" class="win-textbox num" readonly/><input type="date" id="txtdate" class="win-date"/></span></div>
+                    <div class="fcy-row"><label class="ex-req" for="cmbPaymentTerm">Payment Term</label><select id="cmbPaymentTerm" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Payment Terms"></select></div>
+                    <div class="fcy-row"><label class="ex-req" for="comSuplier">Customer Name</label><select id="comSuplier" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Customer Name"></select></div>
+                    <div class="fcy-row"><label class="ex-req" for="cmbInvoiceNo">Invoice #</label><select id="cmbInvoiceNo" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="InvoiceNo" disabled></select></div>
+                    <div class="fcy-row"><label class="ex-req" for="cmbLCOrder">Sales Contract No</label><select id="cmbLCOrder" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Contract No" disabled></select></div>
+                    <div class="fcy-row"><label class="ex-req" for="cmbcurrency">Fcy Code</label><select id="cmbcurrency" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Fcy Code" disabled></select></div>
+                    <div class="fcy-row"><label for="cmbReferenceNo">Reference #</label><input type="text" id="cmbReferenceNo" class="win-textbox" list="dlReferenceNo" autocomplete="off"/><datalist id="dlReferenceNo"></datalist></div>
+                    <div class="fcy-row"><label class="ex-req" for="cmbaccounttype">AccountType</label><select id="cmbaccounttype" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Accounttype"></select></div>
+                    <div class="fcy-row"><label for="txtFBC">Foreign Charges</label><input type="text" id="txtFBC" class="win-textbox num" data-guard="decimal"/></div>
+                    <div class="fcy-row"><label for="txtRemarks">Remarks</label><input type="text" id="txtRemarks" class="win-textbox"/></div>
+                </div>
+                <!-- column 2 -->
+                <div class="fcy-col">
+                    <div class="fcy-row"><label class="ex-req" for="cmbbankAcc">Account (Dr)</label><select id="cmbbankAcc" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Account Title"></select></div>
+                    <div class="fcy-row"><label class="ex-req" for="txtbankfbpNo">Bank FBP #</label><input type="text" id="txtbankfbpNo" class="win-textbox"/></div>
+                    <div class="fcy-row"><label class="ex-req" for="txtFCGrosamount">FCY Amount</label><input type="text" id="txtFCGrosamount" class="win-textbox num" data-guard="decimal"/></div>
+                    <div class="fcy-row"><label class="ex-req" for="txtexchangeRate">Exchange Rate</label><input type="text" id="txtexchangeRate" class="win-textbox num" value="0" data-guard="decimal"/></div>
+                    <div class="fcy-row"><label class="ex-req" for="txtNetAmount">Amount(PKR)</label><input type="text" id="txtNetAmount" class="win-textbox num" readonly/></div>
+                    <div class="fcy-row"><label class="ex-req" for="txtbankDrAmount">Bank Dr Amount</label><input type="text" id="txtbankDrAmount" class="win-textbox num" readonly/></div>
+                    <div class="fcy-row"><label class="ex-req" for="txtNetAmountFC">Net Amount FCY</label><input type="text" id="txtNetAmountFC" class="win-textbox num" readonly/></div>
+                    <div class="fcy-row"><label for="CmbGainLossAc">Gain/Loss Ac</label><select id="CmbGainLossAc" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Account Title"></select></div>
+                    <div class="fcy-row"><label for="CmbFBCDebitAccount">FBC Debit Ac</label><select id="CmbFBCDebitAccount" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Account Title"></select></div>
+                    <div class="fcy-row is-hidden" id="rowConsignee"><label id="lblConsignee" for="CmbConsignee">Consignee</label><select id="CmbConsignee" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Consignee"></select></div>
+                </div>
+                <!-- column 3 -->
+                <div class="fcy-col">
+                    <fieldset class="ex-custom-values">
+                        <legend>Invoice Info</legend>
+                        <div class="fcy-row"><label for="txtExportvoucherRate">Invoice Exchange Rate</label><input type="text" id="txtExportvoucherRate" class="win-textbox num" value="0" readonly/></div>
+                        <div class="fcy-row"><label for="txtInvoiceAmount">Invoice Amount</label><input type="text" id="txtInvoiceAmount" class="win-textbox num" readonly/></div>
+                        <div class="fcy-row"><label for="txtRecAmount">Received Amount</label><input type="text" id="txtRecAmount" class="win-textbox num" readonly/></div>
+                        <div class="fcy-row"><label for="txtBalanceAmount">Invoice Balance Amt</label><input type="text" id="txtBalanceAmount" class="win-textbox num" readonly/></div>
+                    </fieldset>
+                    <fieldset class="ex-custom-values">
+                        <legend>Third Currency Info</legend>
+                        <div class="fcy-row"><label for="cmbFcycodeThirdParty">Fcy Code</label><select id="cmbFcycodeThirdParty" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Fcy Code"></select></div>
+                        <div class="fcy-row"><label for="txtfcyAmountThirdParty">Fcy Amount</label><input type="text" id="txtfcyAmountThirdParty" class="win-textbox num" data-guard="decimal"/></div>
+                        <div class="fcy-row fcy-row-2"><label for="txtFcyExchRthirdParty">Cust Ex.Rate</label><input type="text" id="txtFcyExchRthirdParty" class="win-textbox num" data-guard="decimal"/>
+                            <label for="txtHcyExchRthirdParty">Hcy Ex.Rate</label><input type="text" id="txtHcyExchRthirdParty" class="win-textbox num" data-guard="decimal"/></div>
+                        <div class="fcy-row fcy-row-2"><label for="txtReceiverExchangeRate">Rec Ex.Rate</label><input type="text" id="txtReceiverExchangeRate" class="win-textbox num" data-guard="decimal"/>
+                            <label for="txtReceiverFcyAmount">Fcy Amount</label><input type="text" id="txtReceiverFcyAmount" class="win-textbox num" readonly/></div>
+                    </fieldset>
+                    <div class="fcy-row"><label for="txtLocalAmount">Local Charges PKR</label><input type="text" id="txtLocalAmount" class="win-textbox num" value="0" readonly/></div>
+                    <div class="fcy-row"><label for="txtForeinchargesPkr">Foreign Charges PKR</label><input type="text" id="txtForeinchargesPkr" class="win-textbox num" value="0" readonly/></div>
+                    <div class="fcy-row is-hidden" id="rowFiNo"><label id="labFiNo" for="txtFINo">Financial Instr (F.I) #</label><input type="text" id="txtFINo" class="win-textbox"/></div>
+                </div>
+                <!-- column 4 -->
+                <div class="fcy-col">
+                    <label class="ex-check"><input type="radio" name="fcyTrans" value="1" id="RDBankSingleAndPartiesMulti"/> BANK ONE TIME DEBIT BUT PARTIES MULTI TIME CREDIT</label>
+                    <label class="ex-check"><input type="radio" name="fcyTrans" value="2" id="RDMultiBankDevice" checked/> BANK MULTI TIME DEBIT BUT PARTY ONE TIME CREDIT</label>
+                    <label class="ex-check"><input type="radio" name="fcyTrans" value="3" id="rdMultiBankAndMultiParties"/> BANK MULTI TIME DEBIT BUT PARTY ONE TIME CREDIT</label>
+                    <div id="panel10" class="is-hidden">
+                        <div class="pd-caption pd-caption-teal" style="height:26px;">Party Payments BreakUp</div>
+                        <div class="ex-grid-scroll fcy-h170">
+                            <table class="win-grid" id="grdPartyPaymentsBreackUp"><thead><tr><th class="ctr">X</th><th class="ctr">+</th>
+                                <th class="num">Realized Amount</th><th class="num">FBC</th><th class="num">Total Amount</th></tr></thead>
+                                <tbody id="partyBody"></tbody><tfoot id="partyFoot"></tfoot></table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </fieldset>
+
+        <div class="fcy-bottom">
+            <!-- panelInvoiceWiseBreakup -->
+            <div id="panelInvoiceWiseBreakup" class="is-hidden fcy-breakup">
+                <fieldset class="ex-groupbox" style="margin:0;">
+                    <legend>Invoice Wise Breakup</legend>
+                    <div class="ex-entry fcy-brk-entry">
+                        <div class="ex-field"><label for="cmbInvoicenobreakup">Invoice No</label><select id="cmbInvoicenobreakup" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="InvoiceNo"></select></div>
+                        <div class="ex-field"><label for="cmbGdNoBreakup">GD #</label><select id="cmbGdNoBreakup" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="GD No"></select></div>
+                        <div class="ex-field"><label for="txtInvoiceAmountBreakup">Total Amount</label><input type="text" id="txtInvoiceAmountBreakup" class="win-textbox num" data-guard="decimal"/></div>
+                        <div class="ex-field"><label for="txtCommisionamtbreakUp">Commission</label><input type="text" id="txtCommisionamtbreakUp" class="win-textbox num" data-guard="decimal"/></div>
+                        <div class="ex-field"><label for="txtRealizedAmtBreakup">Realized Amount</label><input type="text" id="txtRealizedAmtBreakup" class="win-textbox num" data-guard="decimal"/></div>
+                        <div class="ex-field fcy-span2"><label for="txtFDBCNoBreakup">FDBC #</label><input type="text" id="txtFDBCNoBreakup" class="win-textbox"/></div>
+                        <div class="ex-field"><label for="cmbStatusBreakup">Status</label><select id="cmbStatusBreakup" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Status"></select></div>
+                        <div class="ex-actions fcy-span2">
+                            <button type="button" id="btnAddBreakup" class="win-btn-small" onclick="ExportFcy.btnAddBreakup()">+</button>
+                            <button type="button" id="BtnUpdatebreakup" class="win-btn-small is-hidden" onclick="ExportFcy.btnUpdatebreakup()">Update</button>
+                            <button type="button" id="BtnCancelBreakUp" class="win-btn-small is-hidden" onclick="ExportFcy.resetBreakUp()">Cancel</button>
+                        </div>
+                    </div>
+                </fieldset>
+                <div class="ex-grid-scroll ex-h240">
+                    <table class="win-grid" id="grdInvoiceWiseBreakUp"><thead><tr><th class="ctr">X</th><th>Invoice No</th><th>GD NO</th>
+                        <th class="num">Total Amount</th><th class="num">Realized Amount</th><th class="num">Commission</th><th>FDBC No</th><th>Status</th></tr></thead>
+                        <tbody id="brkBody"></tbody><tfoot id="brkFoot"></tfoot></table>
+                </div>
+            </div>
+            <!-- panel4 -->
+            <div class="fcy-charges">
+                <div class="fcy-charges-top">
+                    <fieldset class="ex-groupbox" style="margin:0;flex:1 1 auto;">
+                        <legend>Export Charges</legend>
+                        <div class="ex-entry fcy-chg-entry">
+                            <div class="ex-field"><label for="CmbChargesFDBCNo">FDBS #</label><select id="CmbChargesFDBCNo" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="FDBC #"></select></div>
+                            <div class="ex-field"><label class="ex-req" for="CmbChargesType">Charges Type</label><select id="CmbChargesType" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="ChargesType"></select></div>
+                            <div class="ex-field"><label class="ex-req" for="CmbChargesAccountType">Account Title</label><span class="tpi-with-btn" style="display:flex;gap:3px;">
+                                <select id="CmbChargesAccountType" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Charges Type"></select>
+                                <button type="button" id="button1" class="win-btn-small" title="Fcy Bank Charges Types" onclick="ExportFcy.notPorted('Fcy Bank Charges Types')">...</button></span></div>
+                            <div class="ex-field"><label for="txtChargePercent">Prcnt</label><input type="text" id="txtChargePercent" class="win-textbox num" data-guard="decimal"/></div>
+                            <div class="ex-field"><label for="txtfcamount">FC Amount</label><input type="text" id="txtfcamount" class="win-textbox num" data-guard="decimal"/></div>
+                            <div class="ex-field"><label class="ex-req" for="txtpkramount">Rs Amount</label><input type="text" id="txtpkramount" class="win-textbox num" data-guard="decimal"/></div>
+                            <div class="ex-field fcy-span2"><label for="txtRemarksDetail">Remarks</label><input type="text" id="txtRemarksDetail" class="win-textbox"/></div>
+                            <div class="ex-actions fcy-span2">
+                                <button type="button" id="btnAddinGrid" class="win-btn-small" onclick="ExportFcy.btnAddinGrid()">+</button>
+                                <button type="button" id="btnUpdateDetail" class="win-btn-small is-hidden" onclick="ExportFcy.btnUpdateDetail()">Update</button>
+                                <button type="button" id="btnCancelUpdateDetial" class="win-btn-small is-hidden" onclick="ExportFcy.btnCancelUpdateDetial()">Cancel</button>
+                                <button type="button" id="btnRemaingBreakupBalance" class="win-btn-small is-hidden" onclick="ExportFcy.remainingBalance()">Generate Remaining</button>
+                            </div>
+                        </div>
+                    </fieldset>
+                    <div class="ex-grid-scroll fcy-terms is-hidden" id="grdPaymentTermsBox">
+                        <table class="win-grid" id="grdPaymentTerms"><thead><tr><th>Payment Term</th><th class="num">Amount</th><th class="num">Received</th>
+                            <th class="num">Balance</th><th class="num">This Receipt</th></tr></thead>
+                            <tbody id="termsBody"></tbody><tfoot id="termsFoot"></tfoot></table>
+                    </div>
+                </div>
+                <div class="fcy-charges-grids">
+                    <div class="ex-grid-scroll ex-h240" style="flex:1 1 auto;">
+                        <table class="win-grid" id="grdFCBank"><thead><tr><th class="ctr">X</th><th>FDBC No</th><th>Type</th><th>Charges Type</th>
+                            <th class="num">Prcnt</th><th>Remarks</th><th class="num">FC-Amount</th><th class="num">Rs-Amount</th></tr></thead>
+                            <tbody id="chgBody"></tbody><tfoot id="chgFoot"></tfoot></table>
+                    </div>
+                    <div class="ex-grid-scroll ex-h240 is-hidden" id="RemainingBalanceOfBankDeviceBreakUp" style="flex:0 1 420px;">
+                        <table class="win-grid" id="RemainingBalanceGrid"><thead><tr><th>FDBC No</th><th class="num">Realized</th><th class="num">Ex Rate</th>
+                            <th class="num">Lcy Amount</th><th class="num">Expense</th><th class="num">Net Lcy Amount</th></tr></thead>
+                            <tbody id="remBody"></tbody><tfoot id="remFoot"></tfoot></table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================== tabPage2 History -->
+    <div class="win-tab-panel" id="fcyHistory">
+        <div class="win-tool-strip">
+            <button type="button" id="btnResetHistory" class="win-btn-tool" onclick="ExportFcy.historyReset()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="btnRefreshHistory" class="win-btn-tool" onclick="ExportFcy.historyRefresh(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+        </div>
+        <div class="pd-caption pd-caption-teal" style="height:28px;">Fcy Receipt History</div>
+        <fieldset class="ex-groupbox">
+            <legend>Filters</legend>
+            <div class="ex-filter">
+                <div class="ex-field" style="width:190px;"><label for="FromDateHistory">From Date</label>
+                    <span class="ex-check"><input type="checkbox" id="FromDateHistoryChk" checked/><input type="date" id="FromDateHistory" class="win-date" style="flex:1;"/></span></div>
+                <div class="ex-field" style="width:120px;"><label for="FromDocNoHistory">From Voucher No</label><input type="text" id="FromDocNoHistory" class="win-textbox num" data-guard="integer" autocomplete="off"/></div>
+                <div class="ex-field" style="width:250px;"><label for="CmbCustomerHistory">Customer</label><select id="CmbCustomerHistory" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Party"></select></div>
+                <div class="ex-field" style="width:200px;"><label for="CmbPaymentTermHistory">Payment Term</label><select id="CmbPaymentTermHistory" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Payment Term"></select></div>
+                <div style="flex-basis:100%;height:0;"></div>
+                <div class="ex-field" style="width:190px;"><label for="ToDateHistory">To Date</label>
+                    <span class="ex-check"><input type="checkbox" id="ToDateHistoryChk" checked/><input type="date" id="ToDateHistory" class="win-date" style="flex:1;"/></span></div>
+                <div class="ex-field" style="width:120px;"><label for="ToDocNoHistory">To Voucher No</label><input type="text" id="ToDocNoHistory" class="win-textbox num" data-guard="integer" autocomplete="off"/></div>
+                <div class="ex-field" style="width:250px;"><label for="CmbInvoiceNoHistory">Invoice No</label><select id="CmbInvoiceNoHistory" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Invoice No"></select></div>
+                <div class="ex-field" style="width:200px;"><label for="CmbReceiverAcHistory">Receiver / Bank Ac</label><select id="CmbReceiverAcHistory" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Receiver/Bank Ac"></select></div>
+                <div class="ex-field"><label>&nbsp;</label><button type="button" id="btnShowHistory" class="win-btn-small" style="width:62px;height:26px;" onclick="ExportFcy.historyShow(this)">Show</button></div>
+            </div>
+        </fieldset>
+        <div class="pd-caption pd-caption-teal pd-history-bar" style="height:28px;"><span>Filtered Records</span>
+            <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="DataGridHistoryBox" title="Fullscreen table">&#x26F6;</button><span id="gridBarMountFcyH" class="pd-gridbar-mount"></span></span></div>
+        <div class="ex-grid-box" id="DataGridHistoryBox">
+            <div class="ex-grid-scroll ex-h400">
+                <table class="win-grid" id="DataGridHistory" data-gridbar="Acfrmfcbankreceipt:DataGridHistory" data-gridbar-mount="#gridBarMountFcyH" data-gridbar-reorder="false"><thead><tr>
+                    <th>Voucher</th><th>Slip</th><th>Edit</th><th>G&amp;LBreakup</th>
+                    <th>DocNo</th><th>DocDate</th><th>Customer Name</th><th>InvoiceNo / ContractNo</th><th>Payment Term</th><th>Account Type</th><th>Bank GL Dr Ac</th>
+                    <th>Bank Fbp No</th><th class="num">Bank Dr Amount</th><th>Fcy Code</th><th class="num">Fc Gross Amount</th><th>Reference No</th><th>FBC Account</th>
+                    <th class="num">Fc FB Charges</th><th class="num">Fc Net Amount</th><th class="num">Exchange Rate</th><th class="num">Net Amount Rs</th><th>Entry Date</th>
+                    <th>User Name</th><th class="num">No Of Attachments</th><th>Add Attachment</th></tr></thead>
+                    <tbody id="fcyHistBody"></tbody><tfoot id="fcyHistFoot"></tfoot></table>
+            </div>
+            <div class="ex-grid-empty is-hidden" id="fcyHistEmpty">No record found.</div>
+        </div>
+    </div>
+
+    <div class="win-footer-strip">
+        <span class="ex-footer-left" id="fcyFooterInfo">Acfrmfcbankreceipt  -  Document Type 203</span>
+        <button type="button" class="win-btn-history" id="btnFcyFooterHistory" onclick="ExportFcy.toggleHistory()"><i class="fa fa-history"></i> <span>History</span></button>
+    </div>
+</div>
+
+<!-- GainAndLossBreakUp (minimum pop-up) -->
+<div id="fcyGl" class="is-hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:9000;display:flex;align-items:center;justify-content:center;">
+    <div style="background:#fff;border:1px solid #666;width:min(900px,96vw);max-height:80vh;display:flex;flex-direction:column;">
+        <div class="pd-caption pd-caption-teal" style="height:28px;justify-content:space-between;"><span>Gain &amp; Loss BreakUp</span><button type="button" class="ex-fs-btn" onclick="ExportFcy.glClose()">&times;</button></div>
+        <div class="ex-grid-scroll" style="max-height:66vh;"><table class="win-grid" id="fcyGlGrid"><thead id="fcyGlHead"></thead><tbody id="fcyGlBody"></tbody></table></div>
+    </div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260924a}"></script>
+<script th:src="@{/build/js/countx_export_fcy_receipts.js?v=20261001a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

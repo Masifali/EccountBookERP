@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Delivery Order Register - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_rpta.css?v=20260930a}"/>
+</head>
+<!-- DeliveryOrderHistory.cs (Architecture.WinApp.Inventory_Reports), screen 250 "5015 Delivery Order Report", ClientSize 964 x 585.
+     toolStrip1: New / Refresh / 263-Print / ShortCut Keys; lblCaption "Delivery Order Register"; groupBox1 "Filters": Date Type (row 1 "This Day"
+     active), From Date, To Date, Customer, Item, Delivery Type, Invoice No, Status (Not Approved / Approved / All, All active),
+     All [checked] / 1st Wt Only / With 2nd Wt, All [checked] / Reffered / Not Reffered, Show. "Detail" + grdHistory (Print button column frozen,
+     GpNo link -> OutwardGatePassWithWb 258). URL query dateTypeId / doType / fromDate / toDate / invoiceId plays the public fields another
+     form sets before ShowDialog (frmExportPendingWorksRegister DeliveryOrder link).
+     Events: Load, KeyDown (Enter, Ctrl+P, Ctrl+S, Ctrl+E/Esc, Ctrl+N, Ctrl+R, Ctrl+F5, Ctrl+Down, Ctrl+Up, Ctrl+Alt), cmbdatetype ValueChanged,
+     btnshow Leave, grid ColumnButtonClick / LinkClicked / KeyDown Ctrl+Space. -->
+<body class="pd-body" data-export-page="dor">
+<div class="pd-form ex-form">
+    <div class="win-tool-strip">
+        <button type="button" id="btnnew" class="win-btn-tool" accesskey="n" onclick="ExportDor.btnNew()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+        <button type="button" id="btnrefresh" class="win-btn-tool" accesskey="r" onclick="ExportDor.btnRefresh(this)"><i class="fa fa-refresh"></i> <span><u>R</u>efresh</span></button>
+        <button type="button" id="btnPrint" class="win-btn-tool" onclick="ExportDor.btnPrint(this)" data-rpt="263-InvDeliveryOrderForApproval.rpt"><i class="fa fa-print"></i> <span>263-Print</span></button>
+        <button type="button" id="btnShortCutKeys" class="win-btn-tool" onclick="ExportDor.shortcuts()"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+    </div>
+    <div class="pd-caption pd-caption-teal pd-history-bar" style="height:28px;"><span>Delivery Order Register</span>
+        <span class="ex-bar-right"><span id="gridBarMountDor" class="pd-gridbar-mount"></span></span></div>
+    <fieldset class="ex-groupbox">
+        <legend>Filters</legend>
+        <div class="rpta-filter">
+            <div class="ex-field w200"><label for="cmbdatetype">Date Type</label><select id="cmbdatetype" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Parameters"></select></div>
+            <div class="ex-field w200"><label for="DateFrom">From Date</label><input type="date" id="DateFrom" class="win-date"/></div>
+            <div class="ex-field w200"><label for="DateTo">To Date</label><input type="date" id="DateTo" class="win-date"/></div>
+            <div class="ex-field"><label for="cmbSupplier">Customer</label><select id="cmbSupplier" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Customer Name"></select></div>
+            <div class="ex-field"><label for="cmbItem">Item</label><select id="cmbItem" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Name"></select></div>
+            <div class="ex-field w200"><label for="cmbDeliveryType">Delivery Type</label><select id="cmbDeliveryType" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Delivery Type"></select></div>
+            <div class="ex-field"><label for="CmbInvoice">Invoice No</label><select id="CmbInvoice" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="InvoiceNo"></select></div>
+            <div class="ex-field w200"><label for="cmbStatus">Status</label><select id="cmbStatus" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Status">
+                <option value="0"></option><option value="1">Not Approved</option><option value="2">Approved</option><option value="3" selected>All</option></select></div>
+            <div class="ex-radios">
+                <label class="ex-check"><input type="radio" name="dorWeight" id="RadAll" value="" checked/> All</label>
+                <label class="ex-check"><input type="radio" name="dorWeight" id="RadOnlyfirstWeight" value="first"/> 1st Wt Only</label>
+                <label class="ex-check"><input type="radio" name="dorWeight" id="RadWithSecondWeight" value="second"/> With 2nd Wt</label>
+            </div>
+            <div class="ex-radios">
+                <label class="ex-check"><input type="radio" name="dorRef" id="RadAllRef" value="" checked/> All</label>
+                <label class="ex-check"><input type="radio" name="dorRef" id="RadReffered" value="referred"/> Reffered</label>
+                <label class="ex-check"><input type="radio" name="dorRef" id="RadNotReffered" value="not"/> Not Reffered</label>
+            </div>
+            <button type="button" id="btnshow" class="win-btn-small" style="width:70px;height:26px;" onclick="ExportDor.show(this)">Show</button>
+        </div>
+    </fieldset>
+    <div class="pd-caption pd-caption-teal pd-history-bar" style="height:24px;"><span>Detail</span>
+        <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdHistoryBox" title="Fullscreen table">&#x26F6;</button></span></div>
+    <div class="ex-grid-box" id="grdHistoryBox">
+        <div class="ex-grid-scroll ex-h400"><table class="win-grid" id="grdHistory" tabindex="0"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        <div class="ex-grid-empty is-hidden" id="grdHistoryEmpty">No record found.</div>
+    </div>
+    <div class="win-footer-strip">
+        <span class="ex-footer-left">DeliveryOrderHistory - screen 250</span>
+        <button type="button" class="win-btn-history" id="btnDorFooterHistory" onclick="ExportDor.show(document.getElementById('btnshow'))"><i class="fa fa-history"></i> <span>History</span></button>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260924a}"></script>
+<script th:src="@{/build/js/countx_export_rpta_common.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_export_delivery_order_report.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

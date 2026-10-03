@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Financial Instruments Utilized - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_f.css?v=20261001a}"/>
+</head>
+<!-- FIOrAdvanceUtilizedAgainstInvoice.cs (Architecture.WinApp.Export), screen 915 "Advance Utilize Against Invoice", ClientSize 1014 x 461.
+     tabControl1 Form | History. panel10 (teal) "Financial Instruments Utilized Against Shipment"; toolStrip4 New / Save / Update(hidden) / Refresh / ShortCut Keys.
+     panel20: Invoice No* (CmbInvoiceNo, usp_GetExportInvoicesForFinancialInstruments; disabled until load), Balance (read-only, BankAmount),
+       Invoice Amount (read-only, TotalAmount).
+     tabControl2 / tabPage5 "Payment Detail": Financial Instruments No* (usp_GetFINoForInvoice), Balance (read-only), Payment Term*
+       (ExImLcPaymentTerm), % of Total*, Fcy Amount*, Due Days, + / Update / Cancel; grdpaymentdetail (FcyAmount editable; sums).
+     History: filters Invoice, Financial Instrument No, Show; "Commercial Invoice History" / "Filtered Records" DataGridHistory (Edit button). -->
+<body class="pd-body" data-export-page="advance-utilize-against-invoice">
+<div class="pd-form ex-form">
+    <div class="win-tabs" data-tabs="main">
+        <button type="button" class="win-tab is-active" data-tab="tabPage1">Form</button>
+        <button type="button" class="win-tab" data-tab="tabHistory">History</button>
+    </div>
+
+    <div class="win-tab-panel is-active" id="tabPage1">
+        <div class="pd-caption pd-caption-teal">Financial Instruments Utilized Against Shipment</div>
+        <div class="win-tool-strip">
+            <button type="button" id="btnNew" class="win-btn-tool" onclick="ExportFIU.formReset()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="btnsave" class="win-btn-tool" onclick="ExportFIU.save(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+            <button type="button" id="btnupdate" class="win-btn-tool is-hidden" onclick="ExportFIU.update(this)"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+            <button type="button" id="btnrefersh" class="win-btn-tool" onclick="ExportFIU.refresh(this)"><i class="fa fa-refresh"></i> <span><u>R</u>efresh</span></button>
+            <button type="button" id="btnShortCutKey" class="win-btn-tool" onclick="ExportFIU.shortcuts()"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+        </div>
+        <div class="ex-entry exf-fi-entry" id="panel20">
+            <div class="ex-field exf-span2"><label for="CmbInvoiceNo">Invoice No <span class="exf-req">*</span></label>
+                <select id="CmbInvoiceNo" class="win-combo dtcombo" data-columns="Invoice No|BankAmount" data-dtcombo-caption="Invoice No"></select></div>
+            <div class="ex-field"><label for="txtInvoiceBalanceAmt">Balance</label><input type="text" id="txtInvoiceBalanceAmt" class="win-textbox num" value="0" readonly/></div>
+            <div class="ex-field"><label for="txtInvoiceAmount">Invoice Amount</label><input type="text" id="txtInvoiceAmount" class="win-textbox num" value="0" readonly/></div>
+        </div>
+        <div class="win-tabs" data-tabs="detail"><button type="button" class="win-tab is-active" data-tab="tabPage5">Payment Detail</button></div>
+        <div class="win-tab-panel is-active" id="tabPage5">
+            <div class="ex-entry exf-fi-entry" id="panel21">
+                <div class="ex-field exf-span2"><label for="CmbFinInstruments">Financial Instruments No <span class="exf-req">*</span></label>
+                    <select id="CmbFinInstruments" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="FI No"></select></div>
+                <div class="ex-field"><label for="txtBalanceFI">Balance</label><input type="text" id="txtBalanceFI" class="win-textbox num" value="0" readonly/></div>
+                <div class="ex-field"><label for="dcmbpaymentterm">Payment Term <span class="exf-req">*</span></label>
+                    <select id="dcmbpaymentterm" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Payment Term"></select></div>
+                <div class="ex-field"><label for="dtxtpercentoftotal">% of Total <span class="exf-req">*</span></label><input type="text" id="dtxtpercentoftotal" class="win-textbox num" value="0" data-guard="decimal" autocomplete="off"/></div>
+                <div class="ex-field"><label for="dtxtfcyamount">Fcy Amount <span class="exf-req">*</span></label><input type="text" id="dtxtfcyamount" class="win-textbox num" value="0" data-guard="decimal" autocomplete="off"/></div>
+                <div class="ex-field"><label for="dtxtdueday">Due Days</label><input type="text" id="dtxtdueday" class="win-textbox num" value="0" data-guard="integer" autocomplete="off"/></div>
+                <div class="ex-actions">
+                    <button type="button" id="btndadd" class="win-btn-small" onclick="ExportFIU.addRow()">+</button>
+                    <button type="button" id="btndupdate" class="win-btn-small is-hidden" onclick="ExportFIU.updateRow()">Update</button>
+                    <button type="button" id="btndcancel" class="win-btn-small is-hidden" onclick="ExportFIU.cancelRow()">Cancel</button>
+                </div>
+            </div>
+            <div class="pd-caption pd-caption-teal pd-history-bar" style="height:23px;"><span>Payment Detail</span>
+                <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdpaymentdetailBox" title="Fullscreen table">&#x26F6;</button><span id="gridBarMountD" class="pd-gridbar-mount"></span></span></div>
+            <div class="ex-grid-box" id="grdpaymentdetailBox">
+                <div class="ex-grid-scroll ex-h240">
+                    <table class="win-grid exf-edit-grid" id="grdpaymentdetail" data-gridbar="FIOrAdvanceUtilizedAgainstInvoice:grdpaymentdetail" data-gridbar-mount="#gridBarMountD" data-gridbar-reorder="false">
+                        <thead><tr><th>Financial Instrument No</th><th>Payment Term</th><th class="num">% Of Total</th><th class="num">Fcy Amount</th><th class="num">Due Days</th><th class="num">Received</th><th class="num">Balance</th></tr></thead>
+                        <tbody id="detBody"></tbody><tfoot id="detFoot"></tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="win-footer-strip">
+            <span class="ex-footer-left" id="fiuFooterInfo"></span>
+            <button type="button" class="win-btn-history" id="btnFiuFooterHistory" onclick="ExportFIU.toggleHistory()"><i class="fa fa-history"></i> <span>History</span></button>
+        </div>
+    </div>
+
+    <div class="win-tab-panel" id="tabHistory">
+        <div class="pd-caption pd-caption-teal">Commercial Invoice History</div>
+        <div class="win-tool-strip">
+            <button type="button" id="btnResetHistory" class="win-btn-tool" onclick="ExportFIU.historyReset()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="btnRefreshHistory" class="win-btn-tool" onclick="ExportFIU.historyRefresh(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+        </div>
+        <fieldset class="ex-groupbox" id="groupBox7"><legend>Filters</legend>
+            <div class="ex-filter">
+                <div class="ex-field" style="width:260px;"><label for="CmbInvoiceHistory">Invoice</label><select id="CmbInvoiceHistory" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="InvoiceNo"></select></div>
+                <div class="ex-field" style="width:260px;"><label for="CmbFINoHistory">Financial Instrument No</label><select id="CmbFINoHistory" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Financial Instrument No"></select></div>
+                <div class="ex-field"><label>&nbsp;</label><button type="button" id="btnShowHistory" class="win-btn-small" style="width:60px;" onclick="ExportFIU.historyShow(this)">Show</button></div>
+            </div>
+        </fieldset>
+        <div class="pd-caption pd-caption-dark pd-history-bar"><span>Filtered Records</span>
+            <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="DataGridHistoryBox" title="Fullscreen table">&#x26F6;</button><span id="gridBarMountH" class="pd-gridbar-mount"></span></span></div>
+        <div class="ex-grid-box" id="DataGridHistoryBox">
+            <div class="ex-grid-scroll ex-h400">
+                <table class="win-grid" id="DataGridHistory" data-gridbar="FIOrAdvanceUtilizedAgainstInvoice:DataGridHistory" data-gridbar-mount="#gridBarMountH" data-gridbar-reorder="false">
+                    <thead><tr><th class="exf-col-btn">Edit</th><th>Invoice No</th><th>Financial Instrument No</th><th>Payment Term</th><th class="num">Prcnt Of Total</th><th class="num">Fcy Amount</th>
+                        <th class="num">Due Days</th><th class="num">Sort No</th><th>Payment Remarks</th><th>Entry User Name</th><th>Entry Date</th><th>Modify User Name</th><th>Modify Date</th></tr></thead>
+                    <tbody id="histBody"></tbody><tfoot id="histFoot"></tfoot>
+                </table>
+            </div>
+            <div class="ex-grid-empty is-hidden" id="histEmpty">No record found.</div>
+        </div>
+        <div class="win-footer-strip">
+            <span class="ex-footer-left"></span>
+            <button type="button" class="win-btn-history" onclick="ExportFIU.toggleHistory()"><i class="fa fa-file-text-o"></i> <span>Form</span></button>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_export_f_common.js?v=20261001a}"></script>
+<script th:src="@{/build/js/countx_export_advance_utilize_against_invoice.js?v=20261001a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

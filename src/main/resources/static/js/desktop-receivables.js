@@ -15,7 +15,7 @@
     if (due) {
         /* ReceivablesByDueDatesNew: single "3rd Level A/c" combo, "Due From" is a tick-box picker that starts
            UNTICKED (Designer :1070 Checked=false, :1076 ShowCheckBox) - FillGridData sends @FromDate only when ticked. */
-        el('controls').multiple = false; el('controls').setAttribute('data-dtcombo', 'single'); el('controls').setAttribute('data-dtcombo-caption', 'Account Title');
+        el('controls').multiple = false; el('controls').removeAttribute('data-dtcombo-checked'); el('controls').setAttribute('data-dtcombo', 'single'); el('controls').setAttribute('data-dtcombo-caption', 'Account Title');
         el('fromLabel').textContent = 'Due From'; el('toLabel').textContent = 'Due To'; el('controlsLabel').textContent = '3rd Level A/c';
         el('useFrom').checked = false; el('refresh').hidden = false;
     } else {
@@ -141,6 +141,10 @@
             if(features.has(17)&&!features.has(18)) {
                 /* Feature 18 off: a single-pick branch combo (searchable). */
                 el('branches').multiple=false; el('branches').setAttribute('data-dtcombo','single');
+                if (window.DesktopCombo) DesktopCombo.enhance(el('branches'));
+            } else if(features.has(17)) {
+                /* Feature 18 on (consolidated): the desktop's CHECKED branch combo (countx_prod_combo.js checked mode, 2026-10-02). */
+                el('branches').setAttribute('data-dtcombo','single'); el('branches').setAttribute('data-dtcombo-checked','');
                 if (window.DesktopCombo) DesktopCombo.enhance(el('branches'));
             }
             if(features.has(17)&&lookup.branchId)$('#branches').val(String(lookup.branchId));

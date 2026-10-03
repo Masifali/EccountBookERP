@@ -39,7 +39,8 @@ function initSelect2() {
         dropdownAutoWidth: true
     });
 
-    $('#cmbControlAccount').select2({
+    /* 2026-10-02: a Control Account marked data-dtcombo-checked is the checked combo (countx_prod_combo.js), not select2 */
+    if (!$('#cmbControlAccount').is('[data-dtcombo-checked]')) $('#cmbControlAccount').select2({
         width: '100%',
         placeholder: "Account Title",
         allowClear: true,
@@ -310,6 +311,7 @@ function openShortcutModal() {
 function resetFilters() {
     initDefaults();
     $('.select2').val('0').trigger('change');
+    $('#cmbControlAccount[data-dtcombo-checked]').val([]).trigger('change');
     loadReport();
 }
 

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>BS and PL Breakup</title>
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20261002k}" href="/build/css/countx_desktop_combo.css">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20261003bs}" href="/build/css/countx_prod_combo.css">
+    <link rel="stylesheet" th:href="@{/build/css/countx_acc_rpt_h.css?v=20261003bs}" href="/build/css/countx_acc_rpt_h.css">
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}" href="/build/css/countx_grid_bar.css">
+    <link rel="stylesheet" th:href="@{/build/css/countx_button_busy.css?v=20261002gf}" href="/build/css/countx_button_busy.css">
+<!--
+  Screen 84 "BS and PL Breakup" - desktop Architecture.WinApp.Account_Reports.BSandPLBreakup (BSandPLBreakup.cs).
+  The form is drawn by countx_bs_pl_breakup.js (AccHBreakup.mount) at its designer geometry - the same code the
+  Balance Sheet (62) and Profit & Loss 01 (64) pages open as the ShowDialog breakup.
+  The desktop form has only the (UserAccount, DataTable) constructor, so the menu's Activator.CreateInstance(type, UserAccount)
+  cannot open it on its own; on the web the hub card opens this page. With no parent form the page fetches the parent's own
+  data table (BsPlBreakupService: SpAccounts_BalanceSheetFormatA_Report for BS notes, SpAccounts_ProfitLoassFormatA_Report
+  for PL notes, with the parent's default branch) and Show takes the note from the combo.
+  Query string: ?status=1 (PL notes) &noteId= &fromDate= &toDate=  (yyyy-MM-dd).
+-->
+<style>
+    html, body { margin: 0; padding: 0; height: 100%; background: #fff; overflow: hidden; }
+    #frm { position: absolute; inset: 0; overflow-x: auto; overflow-y: hidden; }
+</style>
+</head>
+<body>
+<div id="frm"></div>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20261002k}" src="/build/js/countx_prod_combo.js"></script>
+<script th:src="@{/build/js/countx_acc_rpt_h.js?v=20260930s}" src="/build/js/countx_acc_rpt_h.js"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}" src="/build/js/countx_grid_bar.js"></script>
+<script th:src="@{/build/js/countx_bs_pl_breakup.js?v=20261003bs}" src="/build/js/countx_bs_pl_breakup.js"></script>
+<script>
+(function () {
+    'use strict';
+    var H = AccH, API = '/accounts/api/reports/bs-pl-breakup';
+    var QS = new URLSearchParams(window.location.search);
+    var status = QS.get('status') === '1' ? 1 : 0;
+    H.api('GET', API + '/init').then(function (c) {
+        c = c || {};
+        /* Load: Status 1 -> fromdate = FromDate (the P&L From Date); else ActiveYr.Start_Period; todate = ToDate (today here) */
+        AccHBreakup.mount(document.getElementById('frm'), {
+            status: status,
+            noteId: +QS.get('noteId') || 0,
+            dec: c.amountDecimals || 0,
+            fromDate: (status === 1 && QS.get('fromDate')) ? QS.get('fromDate') : (c.financialYearStart || ''),
+            toDate: QS.get('toDate') || H.today(),
+            fetch: function (p) {
+                return H.api('POST', API + '/data', { status: p.status, fromDate: p.fromDate, toDate: p.toDate });
+            }
+        });
+    }).catch(function (e) { H.box(e.message); });
+})();
+</script>
+</body>
+</html>

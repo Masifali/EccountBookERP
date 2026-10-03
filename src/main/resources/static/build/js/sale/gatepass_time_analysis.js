@@ -86,18 +86,20 @@
   $('showButton').addEventListener('click',()=>run(show));$('refreshButton').addEventListener('click',()=>run(lookups));
   $('newButton').addEventListener('click',()=>run(async()=>{$('fromNo').value='';$('toNo').value='';$('customerId').value='0';if(window.jQuery)window.jQuery('#customerId').trigger('change.select2');await show();}));
   $('dateType').addEventListener('change',period);
-  if(window.jQuery&&window.jQuery.fn.select2){window.jQuery('.searchable').select2({width:'100%'});}
+  if(window.jQuery&&window.jQuery.fn.select2){window.jQuery('.searchable').attr('data-dtcombo-skip','').select2({width:'100%'});}
   $('branchIds').addEventListener('change',()=>run(lookups));
   /* cmbBranchName: the desktop UltraCombo with check boxes (BranchesFill / CheckedListSettings) - one row per
-     allocated branch, the user's own branch checked; the hidden <select multiple> stays the value source. */
-  function branchMultiSync(){const sel=$('branchIds');const names=Array.from(sel.selectedOptions,o=>o.text);$('branchMultiText').textContent=names.join(', ');$('branchMultiText').title=names.join(', ');}
+     allocated branch, the user's own branch checked. 2026-10-02: drawn by countx_prod_combo.js checked mode
+     (<select multiple data-dtcombo-checked>), the <select multiple> stays the value source; the old
+     branchMulti check list is gone. */
+  /* removed 2026-10-02: function branchMultiSync(){const sel=$('branchIds');const names=Array.from(sel.selectedOptions,o=>o.text);$('branchMultiText').textContent=names.join(', ');$('branchMultiText').title=names.join(', ');}
   function branchMultiBuild(){const sel=$('branchIds'),list=$('branchMultiList');list.innerHTML='';for(const o of sel.options){const l=document.createElement('label');const c=document.createElement('input');c.type='checkbox';c.checked=o.selected;c.addEventListener('change',()=>{o.selected=c.checked;branchMultiSync();sel.dispatchEvent(new Event('change'));});l.append(c,document.createTextNode(o.text));list.append(l);}branchMultiSync();}
   $('branchMultiBtn').addEventListener('click',e=>{e.stopPropagation();$('branchMulti').classList.toggle('open');});
   $('branchMultiList').addEventListener('click',e=>e.stopPropagation());
-  document.addEventListener('click',()=>$('branchMulti').classList.remove('open'));
+  document.addEventListener('click',()=>$('branchMulti').classList.remove('open')); */
   run(async()=>{
     const data=await request('/initial');yearStart=data.yearStart;$('toDate').value=localDate(new Date());period();
     const seen=new Set();for(const branch of data.branches||[]){const id=number(branch.BranchId);if(seen.has(id))continue;seen.add(id);$('branchIds').add(new Option(text(branch.BranchName),String(id),false,id===number(data.branchId)));}
-    branchMultiBuild();await lookups();
+    await lookups();
   });
 })();

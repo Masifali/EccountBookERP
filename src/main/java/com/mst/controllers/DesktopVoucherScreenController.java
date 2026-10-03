@@ -206,6 +206,9 @@ public class DesktopVoucherScreenController {
         } catch (ContraVoucherService.ConfirmationRequiredException e) {
             Map<String, Object> body = fail(e.getMessage());
             body.put("confirm", e.kind);
+            if (e instanceof JournalVoucherEntryService.DuplicateConfirmation) {
+                body.put("confirmKey", ((JournalVoucherEntryService.DuplicateConfirmation) e).accountId);
+            }
             return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(fail(e.getMessage()));

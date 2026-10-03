@@ -30,6 +30,9 @@ public final class DesktopVoucherDtos {
         public List<JournalRow> rows = new ArrayList<>();
         /** The operator answered Yes to the same-amount-same-date warning. */
         public Boolean duplicateAcknowledged = Boolean.FALSE;
+        /** 2026-10-02 R2: the debit accounts whose same-amount-same-date question was answered Yes -
+         *  VoucherExistWithSameAmountInSameDate asks once PER account (BLL 0654:2518). */
+        public List<Integer> duplicateAcknowledgedAccounts = new ArrayList<>();
     }
 
     /** One row of VoucherEntry's "table" (columns added at DayBookVoucher_Load :1451). */

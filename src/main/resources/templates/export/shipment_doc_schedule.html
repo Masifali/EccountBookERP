@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Shipment Doc Schedule - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_sdt.css?v=20260930a}"/>
+</head>
+<!-- frmShipmentDocumentSchedule.cs (Architecture.WinApp.SDT), screen 624 "Shipment Doc Schedule", ClientSize 1184 x 561, ScreenName frmShipmentDocumentSchedule.
+     tabControlMain / "Main Form" -> tabControl1 "Form" (the "History" page is removed on Load and ComboBindForHistory is empty: no history on this form).
+     toolStrip1: New | UpdateLockStatus (BtnUpdate, Insert()) | Refresh | Document_Of_Group (opens 623) | ShortCut Keys | Schedule Attachments / Invoice Attachments (btnAttachment - desktop file dialog, not ported).
+     panel3 (Teal) "Shipment Document Schedule"; panel6 (white): Customer (CmbCustomerContract), Sales Person (CmbSalesPersonContract), Scheduled (checked) / Not Scheduled radios,
+       Schedule / Invoice No (CmbScheduleNo: ScheduleCode | CustomerName | LoadingDate | NoOfContainer | MTon | ExImLcOrderId | ScheduleNo | InvoiceDate | InvoiceMTon | IsForInvoiced),
+       Custom Group (CmbCustomGroup, from the schedule's customer), Lock Schedule (ChkIsLockSchedule), Show (Teal).
+     panel10 (300): panel4 (Teal) "Un-Allocated Document" + toolStrip3 BtnSave (check_line, "Click to Allocate selected rows" -> InsertAuto); grdUnAssignDoc (Select selector | Document | RequiredLevel; mandatory rows checked)
+     panel12: panel13 (Teal) "Allocated Document" + toolStrip2 BtnDelete (delete_bin, "Click to UnAllocate selected rows"); grdAssignDoc (Select | X | CustomGroup 100 | Document 150 | Original 70 | Duplicate 70 |
+       BaseCriteriaDate 90 | BeforeDays 55 | AfterDays 55 | DueDate 90 | ReadyDate 90 (date edit) | DocStatus 100 (combo) | PrioritySequence 80 | Remarks 160 (edit) | DocumentProviderName 120 (edit) | AddAttachments 90 (count)).
+     KeyDown: Enter=Tab, Ctrl+N new, Ctrl+T tab, Ctrl+E/Esc close, Ctrl+S / Ctrl+U UpdateLockStatus (Update right), Ctrl+F5 / Ctrl+Down / Ctrl+Right grid focus, Ctrl+Alt shortcut keys; grid Ctrl+Delete / Ctrl+Space on X = delete row. -->
+<body class="pd-body" data-export-page="sdt-624">
+<div class="pd-form ex-form">
+    <div class="win-tool-strip">
+        <button type="button" id="btnnew" class="win-btn-tool" accesskey="n" onclick="ExportShipmentDocSchedule.reset()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+        <button type="button" id="BtnUpdate" class="win-btn-tool" accesskey="u" onclick="ExportShipmentDocSchedule.save(this)"><i class="fa fa-lock"></i> <span><u>U</u>pdateLockStatus</span></button>
+        <button type="button" id="BtnRefreshUnAssigned" class="win-btn-tool" accesskey="r" onclick="ExportShipmentDocSchedule.refresh(this)"><i class="fa fa-refresh"></i> <span><u>R</u>efresh</span></button>
+        <a id="BtnDefineCustomGroup" class="win-btn-tool" href="/export/document-assign-to-group" target="_blank"><i class="fa fa-object-group"></i> <span><u>D</u>ocument_Of_Group</span></a>
+        <button type="button" id="BtnShortCutkeys" class="win-btn-tool" onclick="ExportShipmentDocSchedule.shortcuts()"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+        <button type="button" id="btnAttachment" class="win-btn-tool" onclick="ExportShipmentDocSchedule.attachments()" title="Desktop attachment dialog (not available on the web)"><i class="fa fa-paperclip"></i> <span>Schedule Attachments</span></button>
+    </div>
+    <div class="pd-caption pd-caption-teal" id="label12">Shipment Document Schedule</div>
+    <div class="sdt-header" id="panel6">
+        <div class="ex-field" style="width:240px;"><label for="CmbCustomerContract">Customer</label>
+            <select id="CmbCustomerContract" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Customer"></select></div>
+        <div class="ex-field" style="width:200px;"><label for="CmbSalesPersonContract">Sales Person</label>
+            <select id="CmbSalesPersonContract" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Sales Person"></select></div>
+        <div class="ex-radios ex-radios-row">
+            <label class="ex-check"><input type="radio" name="refered" id="RadReferedRefDoc" value="1" checked/> Scheduled</label>
+            <label class="ex-check"><input type="radio" name="refered" id="RadReferedNotRefDoc" value="0"/> Not Scheduled</label>
+        </div>
+        <div class="ex-field wide"><label for="CmbScheduleNo">Schedule / Invoice No</label>
+            <select id="CmbScheduleNo" class="win-combo dtcombo" data-columns="Schedule / Invoice No|CustomerName|LoadingDate|NoOfContainer|MTon|ExImLcOrderId|ScheduleNo|InvoiceDate|InvoiceMTon|IsForInvoiced" data-dtcombo-caption="Schedule / Invoice No"></select></div>
+        <div class="ex-field" style="width:220px;"><label for="CmbCustomGroup">Custom Group</label>
+            <select id="CmbCustomGroup" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="CustomGroup"></select></div>
+        <label class="ex-check" style="height:28px;"><input type="checkbox" id="ChkIsLockSchedule"/> Lock Schedule</label>
+        <div class="ex-field"><label>&nbsp;</label><button type="button" id="btnShowByCustomGroup" class="win-btn-small" style="width:62px;" onclick="ExportShipmentDocSchedule.show(this)">Show</button></div>
+    </div>
+    <div class="sdt-split sdt-left-narrow">
+        <div class="sdt-pane" id="panel10">
+            <div class="pd-caption pd-caption-teal pd-history-bar" id="panel4"><span id="label13">Un-Allocated Document</span>
+                <span class="ex-bar-right sdt-cap-btns">
+                    <button type="button" id="BtnSave" class="win-btn-cap" title="Click to Allocate selected rows" onclick="ExportShipmentDocSchedule.allocate(this)"><i class="fa fa-check"></i></button>
+                    <button type="button" class="ex-fs-btn" data-fullscreen="grdUnAssignDocBox" title="Fullscreen table">&#x26F6;</button></span></div>
+            <div class="ex-grid-box" id="grdUnAssignDocBox">
+                <div class="ex-grid-scroll ex-h400">
+                    <table class="win-grid" id="grdUnAssignDoc">
+                        <thead><tr><th class="ctr" id="unSelTh"><input type="checkbox" title="Select all"/></th><th>Document</th><th>Required Level</th></tr></thead>
+                        <tbody id="unBody"></tbody>
+                    </table>
+                </div>
+                <div class="ex-grid-empty is-hidden" id="unEmpty">No record found.</div>
+            </div>
+        </div>
+        <div class="sdt-pane" id="panel12">
+            <div class="pd-caption pd-caption-teal pd-history-bar" id="panel13"><span id="label14">Allocated Document</span>
+                <span class="ex-bar-right sdt-cap-btns">
+                    <button type="button" id="BtnDelete" class="win-btn-cap" title="Click to UnAllocate selected rows" onclick="ExportShipmentDocSchedule.unallocate(this)"><i class="fa fa-trash-o"></i></button>
+                    <button type="button" class="ex-fs-btn" data-fullscreen="grdAssignDocBox" title="Fullscreen table">&#x26F6;</button></span></div>
+            <div class="ex-grid-box" id="grdAssignDocBox">
+                <div class="ex-grid-scroll ex-h400">
+                    <table class="win-grid" id="grdAssignDoc">
+                        <thead><tr>
+                            <th class="ctr" id="asSelTh"><input type="checkbox" title="Select all"/></th><th class="ctr" title="Delete">X</th>
+                            <th>Custom Group</th><th>Document</th><th class="num">Original</th><th class="num">Duplicate</th><th>Base Criteria Date</th>
+                            <th class="num">Before Days</th><th class="num">After Days</th><th>Due Date</th><th>Ready Date</th><th>Doc Status</th>
+                            <th class="num">Priority Sequence</th><th>Remarks</th><th>Document Provider Name</th><th class="num">Add Attachments</th>
+                        </tr></thead>
+                        <tbody id="asBody"></tbody>
+                        <tfoot id="asFoot"></tfoot>
+                    </table>
+                </div>
+                <div class="ex-grid-empty is-hidden" id="asEmpty">No record found.</div>
+            </div>
+        </div>
+    </div>
+    <div class="win-footer-strip">
+        <span class="ex-footer-left" id="footerInfo">frmShipmentDocumentSchedule  -  the desktop removes its History tab on load</span>
+        <button type="button" class="win-btn-history" id="btnFooterHistory" onclick="ExportShipmentDocSchedule.toggleHistory()"><i class="fa fa-history"></i> <span>History</span></button>
+    </div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_export_sdt_common.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_export_shipment_doc_schedule.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

@@ -29,7 +29,7 @@
   for(const tab of ['detail','summary']) {
     field(tab,'fromDate','From Date','date');field(tab,'toDate','To Date','date');
     field(tab,'fromNo','From Doc No','number');field(tab,'toNo','To Doc No','number');
-    field(tab,'branchIds','Branch','select',true).multiple=true;
+    {const b=field(tab,'branchIds','Branch','select',true);b.multiple=true;b.classList.remove('searchable');b.setAttribute('data-dtcombo','single');b.setAttribute('data-dtcombo-checked','');b.setAttribute('data-dtcombo-caption','Branch Name');}
     field(tab,'costCenterId','Cost Center');
     for(const [name,label] of Object.entries(labels))if(tab==='summary'||!['jobLotId','packingTypeId','districtId','cropYear'].includes(name))field(tab,name,label);
     const status=field(tab,'status','Order Status'),approval=field(tab,'approval','Approval Status');
@@ -188,7 +188,7 @@
   $('detailView').addEventListener('change',showDetail);
   document.querySelectorAll('[data-order-action]').forEach(button=>button.addEventListener('click',()=>run(()=>changeOrders(button.dataset.orderAction))));
   for(const tab of ['detail','summary'])$(`${tab}Form`).addEventListener('submit',e=>{e.preventDefault();run(()=>show(tab));});
-  if(window.jQuery&&window.jQuery.fn.select2)window.jQuery('.searchable').select2({width:'100%'});
+  if(window.jQuery&&window.jQuery.fn.select2)window.jQuery('.searchable').attr('data-dtcombo-skip','').select2({width:'100%'});
   for(const tab of ['detail','summary'])for(const name of ['branchIds','costCenterId']) {
     if(window.jQuery&&window.jQuery.fn.select2)window.jQuery(control(tab,name)).on('change',()=>run(()=>lookups(tab)));
     else control(tab,name).addEventListener('change',()=>run(()=>lookups(tab)));

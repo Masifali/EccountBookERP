@@ -4,251 +4,65 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Cash Payment Voucher - WinForms Replica</title>
+    <title>Cash Payment Voucher</title>
 
     <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
-
-    <style>
-        body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background-color: #e4e9ed; font-size: 11px; color: #222; margin: 0; padding: 0; }
-        .win-title-bar { background-color: #00796B; color: #ffffff; padding: 6px 12px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
-        .win-toolbar { background: linear-gradient(to bottom, #ffffff 0%, #e3e8ee 100%); border-bottom: 1px solid #b0bec5; padding: 3px 8px; display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
-        .win-tab-bar { background: #d1d5db; border-bottom: 1px solid #b0bec5; padding: 2px 8px 0 8px; display: flex; gap: 3px; }
-        .win-tab-btn { background: #e5e7eb; border: 1px solid #9ca3af; border-bottom: none; border-radius: 3px 3px 0 0; padding: 4px 14px; font-size: 11px; font-weight: bold; color: #374151; cursor: pointer; }
-        .win-tab-btn.active { background: #ffffff; color: #00796B; border-color: #b0bec5; border-bottom: 2px solid #ffffff; margin-bottom: -1px; }
-        .win-btn { background: #ffffff; border: 1px solid #90a4ae; border-radius: 2px; padding: 3px 8px; font-size: 11px; font-weight: 600; color: #263238; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 1px 1px rgba(0,0,0,0.05); }
-        .win-btn:hover { background: #e0f2f1; border-color: #00796B; color: #004d40; }
-        .win-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .win-btn-teal { background: #00796B; color: #ffffff; border-color: #004d40; }
-        .win-btn-teal:hover { background: #004d40; color: #ffffff; }
-        .win-form-card { background: #ffffff; border: 1px solid #b0bec5; margin: 8px; border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
-        .win-section-header { background-color: #f1f5f9; color: #00796B; font-weight: bold; font-size: 11px; padding: 4px 8px; border-bottom: 1px solid #cbd5e1; border-top: 1px solid #cbd5e1; }
-        .win-label { font-weight: 600; color: #334155; margin-bottom: 2px; font-size: 11px; white-space: nowrap; }
-        .win-input { border: 1px solid #94a3b8; border-radius: 2px; padding: 2px 6px; font-size: 11px; height: 25px; width: 100%; background-color: #ffffff; box-sizing: border-box; }
-        .win-input:focus { border-color: #00796B; outline: none; box-shadow: 0 0 2px rgba(0,121,107,0.4); }
-        .win-input[readonly] { background: #f1f5f9; }
-        .win-textarea { border: 1px solid #94a3b8; border-radius: 2px; padding: 4px 6px; font-size: 11px; width: 100%; height: 40px; resize: none; box-sizing: border-box; }
-        .search-popup { position: absolute; z-index: 1050; background: #ffffff; border: 1px solid #00796B; box-shadow: 0 4px 12px rgba(0,0,0,0.18); max-height: 260px; overflow-y: auto; width: 480px; display: none; }
-        .search-popup table { width: 100%; border-collapse: collapse; font-size: 11px; }
-        .search-popup th { background-color: #00796B; color: white; padding: 4px 6px; position: sticky; top: 0; font-weight: 600; border: 1px solid #004d40; }
-        .search-popup td { padding: 4px 6px; border: 1px solid #e2e8f0; cursor: pointer; }
-        .search-popup tr:hover { background-color: #e0f2f1; font-weight: 600; }
-        .detail-entry-bar { background-color: #fafafa; border: 1px solid #cbd5e1; padding: 8px; margin: 6px 0; }
-        .win-grid-table { width: 100%; border-collapse: collapse; font-size: 11px; background: #ffffff; }
-        .win-grid-table th { background-color: #00796B; color: #ffffff; font-weight: 700; padding: 5px 8px; border: 1px solid #004d40; text-align: left; }
-        .win-grid-table td { padding: 4px 8px; border: 1px solid #cbd5e1; vertical-align: middle; }
-        .win-grid-table tbody tr:hover { background-color: #f0f7f7; }
-        .totals-bar { background: #e0f2f1; font-weight: bold; color: #004d40; font-size: 12px; padding: 6px 12px; border: 1px solid #00796B; border-radius: 2px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-        .wht-bar { background: #fff8e1; border: 1px solid #f0c14b; border-radius: 2px; padding: 8px; margin-top: 8px; }
-    </style>
-    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_payment_receipt_voucher.css?v=20261002ga}">
 </head>
-<body>
-
-    <div class="win-title-bar">
-        <span><i class="fa fa-money"></i> Cash Payment Voucher</span>
-        <a href="/accounts/dashboard" style="color: #ffffff; text-decoration: none; font-weight: normal; font-size: 11px;">
-            <i class="fa fa-arrow-left"></i> Back to Dashboard
-        </a>
+<body class="prv-body">
+    <!-- 2026-10-02 round 3: the PaymentVoucherNew designer layout (Architecture.WinApp.Account_Definition.PaymentVoucherNew,
+         DocumentTypeId 1). The Form and History tab pages are drawn by countx_payment_receipt_voucher.js at the
+         InitializeComponent coordinates; the tab strip is at the bottom as on the desktop (TabAlignment.Bottom). -->
+    <div class="prv-caption">
+        <span>Cash Payment Voucher</span>
+        <a href="/accounts/dashboard"><i class="fa fa-arrow-left"></i> Back to Dashboard</a>
     </div>
 
-    <!-- Toolbar - ditto PaymentVoucherNew.cs's shared ribbon (same form as Bank Payment Voucher). -->
-    <div class="win-toolbar">
-        <button type="button" class="win-btn" onclick="resetForm()"><i class="fa fa-plus text-success"></i> + New</button>
-        <button type="button" class="win-btn" onclick="refreshPage()"><i class="fa fa-refresh text-primary"></i> Refresh</button>
-        <button type="button" class="win-btn win-btn-teal" id="btnSaveUpdate" onclick="submitVoucher()"><i class="fa fa-save"></i> Save</button>
-        <button type="button" class="win-btn"><i class="fa fa-paperclip text-info"></i> Attachment</button>
-        <button type="button" class="win-btn" onclick="printVoucher()" data-rpt="102-ANewAcRptPaymentReceiptsVoucherSlip.rpt" data-rpt-need="id" data-rpt-need-msg="Save or open a voucher first."><i class="fa fa-print text-warning"></i> 102-Print</button>
-        <button type="button" class="win-btn" data-rpt="102-CashPaymentVoucher.rpt" data-rpt-need="id" data-rpt-need-msg="Save or open a voucher first."><i class="fa fa-print"></i> 102-Format-II</button>
-        <button type="button" class="win-btn" data-rpt="102_01_BillsPayablesOrReceiveableVoucher.rpt" data-rpt-need="voucherHeadId" data-rpt-need-msg="Save or open a voucher first."><i class="fa fa-print"></i> 102-III</button>
-        <a href="/accounts/vouchers/payment-by-invoice" class="win-btn" style="text-decoration: none;"><i class="fa fa-file-text-o"></i> Payment By Invoice Voucher</a>
-        <button type="button" class="win-btn" onclick="$('#modalShortcuts').modal('show')"><i class="fa fa-keyboard-o"></i> ShortCut Keys</button>
-        <button type="button" class="win-btn" onclick="SpecialRights.open(28)"><i class="fa fa-key"></i> Special Rights</button>
-        <!-- cbPrintOnSave.Visible = ChequePrintingEnable (same PaymentVoucherNew form for CPV and BPV). -->
-        <label id="lblPrintOnSave" class="win-label" style="display:none;margin-left:auto;font-weight:bold;cursor:pointer;">
-            <input type="checkbox" id="cbPrintOnSave"/> Cheque Print On Save</label>
-    </div>
+    <div class="prv-pages" id="prvPages">
+        <div id="tabFormContent" class="prv-page prv-pay">
+            <!-- panel3 / toolStrip2 - the desktop order; SMS and Delete are Visible = false on the desktop. -->
+            <div class="prv-ts"><div class="prv-ts-in" id="prvToolStrip">
+                <button type="button" class="prv-ts-btn" id="btnNew"><i class="fa fa-plus-circle" style="color:#2e7d32"></i><span><u>N</u>ew</span></button>
+                <button type="button" class="prv-ts-btn" id="btnRefresh"><i class="fa fa-refresh" style="color:#2e7d32"></i><span>Refresh</span></button>
+                <button type="button" class="prv-ts-btn" id="btnUpdate" style="display:none;"><i class="fa fa-pencil" style="color:#e65100"></i><span><u>U</u>pdate</span></button>
+                <button type="button" class="prv-ts-btn" id="btnSave"><i class="fa fa-floppy-o" style="color:#1565c0"></i><span><u>S</u>ave</span></button>
+                <button type="button" class="prv-ts-btn" id="btnSaveAs" style="display:none;"><i class="fa fa-floppy-o" style="color:#1565c0"></i><span>SaveAs</span></button>
+                <button type="button" class="prv-ts-btn" id="btnAttachment"><i class="fa fa-paperclip" style="color:#455a64"></i><span><u>A</u>ttachment</span></button>
+                <button type="button" class="prv-ts-btn" id="btnPrint" data-rpt="102-ANewAcRptPaymentReceiptsVoucherSlip.rpt" data-rpt-own><i class="fa fa-print" style="color:#37474f"></i><span>102-<u>P</u>rint</span></button>
+                <button type="button" class="prv-ts-btn" id="btnPrint2" data-rpt="102-AcRptPaymentReceiptsVoucherSlip.rpt" data-rpt-own><i class="fa fa-print" style="color:#37474f"></i><span>102-Format-II</span></button>
+                <button type="button" class="prv-ts-btn" id="btnPrint3" data-rpt="102-CashPaymentVoucher.rpt" data-rpt-own><i class="fa fa-print" style="color:#37474f"></i><span>102-III</span></button>
+                <a href="/accounts/vouchers/payment-by-invoice" class="prv-ts-btn" id="btnPaymentByInvoice">Payment By Invoice Voucher</a>
+                <button type="button" class="prv-ts-btn" id="btnShortcuts"><span>ShortCut Keys</span></button>
+                <button type="button" class="prv-ts-btn" id="btnSpecialRights"><i class="fa fa-key" style="color:#c49000"></i><span>Special Rights</span></button>
+            </div></div>
+            <!-- panel4, groupBox2 "Main", groupboxdetail "Detail", the grid and the WHT / totals panel -->
+            <div id="prvForm"></div>
+        </div>
 
-    <div class="win-tab-bar">
-        <button type="button" class="win-tab-btn active" id="tabBtnForm" onclick="switchTab('form')"><i class="fa fa-edit"></i> Form Tab</button>
-        <button type="button" class="win-tab-btn" id="tabBtnHistory" onclick="switchTab('history')"><i class="fa fa-history"></i> History Tab</button>
-    </div>
-
-    <div id="tabFormContent" class="win-form-card">
-        <!-- Form tab rendered by countx_payment_receipt_voucher.js - ditto PaymentVoucherNew (Architecture.WinApp.Account_Definition, the non-tax form), DocumentTypeId 1. -->
-        <div id="prvForm"></div>
-    </div>
-
-    <!-- History Tab: CPV History - ditto desktop's PaymentVoucherNew.cs (VouchersWithTax)
-         HistoryFillCpv()/DataGridHistory. Real filters (Date Type radios, From/To Date, From/To Doc No,
-         Account Title, Approved Status) and real grid columns match HistoryGridSettings() 1:1; the
-         FcyCode/ExchangeRate/FcyAmount columns are omitted since they are feature-flagged off by
-         MultiCurrencyFeatureVisibilty for a single-currency (PKR-only) org, ditto desktop. Backed by
-         the already-real GET /accounts/api/vouchers/cpv/history. -->
-    <div id="tabHistoryContent" class="win-form-card" style="display: none;">
-        <div class="win-section-header">CPV History</div>
-        <div style="padding: 10px;">
-            <div class="detail-entry-bar">
-                <div class="row" style="margin-bottom: 6px;">
-                    <div class="col-md-3">
-                        <label class="win-label">Date Type</label><br/>
-                        <label style="font-weight: normal; margin-right: 10px;"><input type="radio" name="cpvHistDateType" value="docdate" checked onchange="loadCpvHistory()"/> Doc Date</label>
-                        <label style="font-weight: normal; margin-right: 10px;"><input type="radio" name="cpvHistDateType" value="entrydate" onchange="loadCpvHistory()"/> Entry Date</label>
-                        <label style="font-weight: normal; margin-right: 10px;"><input type="radio" name="cpvHistDateType" value="modifydate" onchange="loadCpvHistory()"/> Modify Date</label>
-                        <label style="font-weight: normal;"><input type="radio" name="cpvHistDateType" value="approveddate" onchange="loadCpvHistory()"/> Approved Date</label>
-                    </div>
-                    <div class="col-md-2"><label class="win-label">From Date</label><input type="date" id="dtpCpvHistFrom" class="win-input"/></div>
-                    <div class="col-md-2"><label class="win-label">To Date</label><input type="date" id="dtpCpvHistTo" class="win-input"/></div>
-                    <div class="col-md-2"><label class="win-label">From Doc No</label><input type="number" id="txtFromDocNoCpv" class="win-input"/></div>
-                    <div class="col-md-2"><label class="win-label">To Doc No</label><input type="number" id="txtToDocNoCpv" class="win-input"/></div>
-                </div>
-                <div class="row">
-                    <div class="col-md-4"><label class="win-label">Account Title</label><select id="cmbAccountTitleCpv" class="win-input"><option value="0">-- All Accounts --</option></select></div>
-                    <div class="col-md-3">
-                        <label class="win-label">Approved Status</label>
-                        <select id="cmbApprovedStatusCpv" class="win-input" onchange="loadCpvHistory()">
-                            <option value="notapproved" selected>Not Apporved</option>
-                            <option value="approved">Approved</option>
-                            <option value="all">All</option>
-                        </select>
-                    </div>
-                    <div class="col-md-5" style="display: flex; align-items: flex-end; gap: 6px;">
-                        <button type="button" class="win-btn win-btn-teal" onclick="loadCpvHistory()"><i class="fa fa-search"></i> Search History</button>
-                        <button type="button" class="win-btn" onclick="resetCpvHistory()"><i class="fa fa-undo"></i> Reset</button>
-                        <div id="cpvHistTotals" style="margin-left: 12px; font-size: 12px; display: none;">
-                            <b>Total Vouchers:</b> <span id="cpvHistTotalVouchers">0</span> &nbsp;
-                            <b>Approved:</b> <span id="cpvHistTotalApproved">0</span> &nbsp;
-                            <b>Not Approved:</b> <span id="cpvHistTotalUnApproved">0</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div style="max-height: 420px; overflow-y: auto; overflow-x: auto; margin-top: 8px;">
-                <table class="win-grid-table" id="tblCpvHistoryGrid">
-                    <thead>
-                        <tr>
-                            <th style="width: 50px;">Edit</th>
-                            <th style="width: 70px;">V.No</th>
-                            <th style="width: 90px;">V.Date</th>
-                            <th style="width: 60px;">V.Type</th>
-                            <th>Account Title</th>
-                            <th style="width: 350px;">Remarks</th>
-                            <th style="width: 100px; text-align: right;">Voucher Amount</th>
-                            <th style="width: 90px;">Entry User</th>
-                            <th style="width: 130px;">Entry Date</th>
-                            <th style="width: 90px;">Modify User</th>
-                            <th style="width: 130px;">Modify Date</th>
-                            <th style="width: 90px;">Approved User</th>
-                            <th style="width: 130px;">Approved Date</th>
-                            <th style="width: 70px; text-align: center;">Attachment</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tbodyCpvHistoryGrid"><tr><td colspan="14" style="text-align: center; color: #888; padding: 20px;">Loading...</td></tr></tbody>
-                </table>
-            </div>
+        <div id="tabHistoryContent" class="prv-page prv-pay" style="display: none;">
+            <!-- HistoryFillCpv / USP_VoucherFormHistory: toolbar, teal title, Filters box, history grid, detail grid -->
+            <div id="prvHistory"></div>
         </div>
     </div>
 
-    <div class="modal fade" id="modalShortcuts" tabindex="-1" role="dialog">
-        <div class="modal-dialog modal-sm" role="document">
-            <div class="modal-content">
-                <div class="modal-header" style="background: #00796B; color: #fff; padding: 8px 12px;">
-                    <button type="button" class="close" data-dismiss="modal" style="color: #fff;"><span>&times;</span></button>
-                    <h5 class="modal-title" style="font-weight: bold; font-size: 13px;"><i class="fa fa-keyboard-o"></i> Keyboard Shortcuts</h5>
-                </div>
-                <div class="modal-body" style="padding: 10px; font-size: 11px;">
-                    <table class="table table-bordered table-striped" style="margin-bottom: 0;">
-                        <tbody>
-                            <tr><td><code>Ctrl + N</code></td><td>New Voucher</td></tr>
-                            <tr><td><code>Ctrl + S</code></td><td>Save Voucher</td></tr>
-                            <tr><td><code>Ctrl + R</code></td><td>Refresh</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+    <div class="prv-tabs">
+        <button type="button" class="win-tab-btn active" id="tabBtnForm">Form</button>
+        <button type="button" class="win-tab-btn" id="tabBtnHistory">CPV History</button>
     </div>
 
     <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
     <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
     <script th:src="@{/build/js/countx_voucher_desktop_config.js?v=20260930s}"></script>
-    <script th:src="@{/build/js/countx_desktop_combo.js?v=20260930s}"></script>
+    <script th:src="@{/build/js/countx_prod_combo.js?v=20260930s}"></script>
     <script th:src="@{/build/js/countx_crystal_print.js?v=20260930s}"></script>
-    <script th:src="@{/build/js/countx_payment_receipt_voucher.js?v=20260930t}"></script>
+    <script th:src="@{/build/js/countx_payment_receipt_voucher.js?v=20261002ga}"></script>
     <script th:src="@{/build/js/countx_special_rights.js?v=20260930t}"></script>
     <script>
-        /* Form tab: countx_payment_receipt_voucher.js (PRV). History tab below is unchanged. */
+        /* Form and History tabs: countx_payment_receipt_voucher.js (PRV) - one source for screens 28-31. */
         PRV.init({ doc: 1 });
-        function submitVoucher() { PRV.save(); }
-        function resetForm() { PRV.reset(); }
-        function refreshPage() { window.location.reload(); }
-        function printVoucher() { PRV.print(); }
-
-        function switchTab(tab) {
-            if (tab === 'form') {
-                $('#tabBtnForm').addClass('active'); $('#tabBtnHistory').removeClass('active');
-                $('#tabFormContent').show(); $('#tabHistoryContent').hide();
-            } else {
-                $('#tabBtnHistory').addClass('active'); $('#tabBtnForm').removeClass('active');
-                $('#tabFormContent').hide(); $('#tabHistoryContent').show();
-                if (!cpvHistoryAccountsLoaded) loadCpvHistoryAccounts();
-                loadCpvHistory();
-            }
-        }
-
-        let cpvHistoryAccountsLoaded = false;
-        function loadCpvHistoryAccounts() {
-            $.get('/accounts/api/payment-receipt/1/history/accounts', function(accounts) {
-                const sel = $('#cmbAccountTitleCpv');
-                sel.find('option:not(:first)').remove();
-                (accounts || []).forEach(function(a) { sel.append('<option value="' + a.Id + '">' + $('<div>').text(a.name).html() + '</option>'); });
-                cpvHistoryAccountsLoaded = true;
-            });
-        }
-        function resetCpvHistory() {
-            $('input[name="cpvHistDateType"][value="docdate"]').prop('checked', true);
-            $('#dtpCpvHistFrom').val(''); $('#dtpCpvHistTo').val('');
-            $('#txtFromDocNoCpv').val(''); $('#txtToDocNoCpv').val('');
-            $('#cmbAccountTitleCpv').val('0'); $('#cmbApprovedStatusCpv').val('notapproved');
-            loadCpvHistory();
-        }
-        function loadCpvHistory() {
-            const dateType = $('input[name="cpvHistDateType"]:checked').val();
-            const params = {
-                dateType: dateType, fromDate: $('#dtpCpvHistFrom').val(), toDate: $('#dtpCpvHistTo').val(),
-                fromDocNo: $('#txtFromDocNoCpv').val(), toDocNo: $('#txtToDocNoCpv').val(),
-                accountId: $('#cmbAccountTitleCpv').val(), approvedStatus: $('#cmbApprovedStatusCpv').val()
-            };
-            $.get('/accounts/api/payment-receipt/1/history', params, function(res) {
-                const tbody = $('#tbodyCpvHistoryGrid');
-                tbody.empty();
-                const rows = (res && res.rows) || [];
-                if (rows.length === 0) { $('#cpvHistTotals').hide(); tbody.append('<tr><td colspan="14" style="text-align: center; color: #888; padding: 20px;">No vouchers found</td></tr>'); return; }
-                $('#cpvHistTotals').show();
-                $('#cpvHistTotalVouchers').text(res.totalVouchers || 0);
-                $('#cpvHistTotalApproved').text(res.totalApprovedVoucher || 0);
-                $('#cpvHistTotalUnApproved').text(res.totalUnApprovedVoucher || 0);
-                rows.forEach(function(v) {
-                    const row = '<tr style="cursor: pointer;" ondblclick="loadCpvVoucherForEdit(' + v.id + ')">' +
-                        '<td style="text-align:center;"><button type="button" class="win-btn win-btn-teal" style="padding: 1px 6px;" onclick="loadCpvVoucherForEdit(' + v.id + ')"><i class="fa fa-edit"></i></button></td>' +
-                        '<td style="font-weight: bold;">' + (v.voucherCode != null ? v.voucherCode : '') + '</td>' +
-                        '<td>' + (v.voucherDate || '') + '</td>' + '<td>' + (v.documentType || '') + '</td>' +
-                        '<td>' + (v.accountTitle || '') + '</td>' +
-                        '<td>' + (v.remarks || '') + '</td>' +
-                        '<td style="text-align: right; font-weight: bold;">' + (parseFloat(v.voucherAmount || 0)).toFixed(2) + '</td>' +
-                        '<td>' + (v.entryUser || '') + '</td>' + '<td>' + (v.entryDate || '') + '</td>' +
-                        '<td>' + (v.modifyUser || '') + '</td>' + '<td>' + (v.modifyDate || '') + '</td>' +
-                        '<td>' + (v.approvedUser || '') + '</td>' + '<td>' + (v.approvedDate || '') + '</td>' +
-                        '<td style="text-align: center;">' + (v.attachment && v.attachment > 0 ? v.attachment : '') + '</td></tr>';
-                    tbody.append(row);
-                });
-            }).fail(function() { $('#tbodyCpvHistoryGrid').html('<tr><td colspan="14" style="text-align: center; color: red; padding: 20px;">Error loading CPV History</td></tr>'); });
-        }
-
-        // Ditto ReadById(): re-loads the header and every real (non-mirrored) detail row.
-
-        // ReadById()
-        function loadCpvVoucherForEdit(id) { PRV.loadForEdit(id); }
     </script>
 <script src="/js/print-rpt.js?v=20261001a"></script>
 </body>

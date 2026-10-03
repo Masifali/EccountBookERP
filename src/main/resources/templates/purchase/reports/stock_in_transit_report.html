@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Stock In Transit Report - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}">
+    <link rel="stylesheet" th:href="@{/build/css/purchase/purchase_reports.css?v=20260930r3}">
+</head>
+<!-- 869 Architecture.WinApp.SupplierPortal.Reports.frmSupplierDispatchPreBillReport "Stock In Transit Report" (module 52).
+     The designer's hidden combos (Item Class / Category / Type, Crop Year, Packing Type, District, Driver Name, Date Type)
+     are Visible=false and never bound, so they are not drawn. -->
+<body class="pr">
+<div id="prLoading" hidden role="status">Please wait...</div>
+<nav class="pr-toolstrip" aria-label="Toolbar">
+    <button type="button" id="btnNew" title="Ctrl+N">Reset</button>
+    <button type="button" id="btnRefresh" title="Ctrl+R">Refresh</button>
+    <button type="button" id="BtnPrintDropDown" title="Prints the grid rows (the desktop lists the .rpt files of its SupplierDispatchedPreBill folder here)">Print</button>
+    <button type="button" id="btnShortcut">ShortCut Keys</button>
+    <a class="pr-right" href="/purchase/reports" title="Ctrl+E / Esc">Exit</a>
+</nav>
+<div class="pr-caption" id="lblCaption">Supplier Dispatched Report</div>
+<div id="prMessage" role="status" aria-live="polite"></div>
+<div class="pr-panel">
+    <fieldset class="pr-filters" style="width:1071px;height:127px">
+        <legend>Filters</legend>
+        <label class="pr-abs" style="left:6px;top:18px" for="cmbBranchName">Location</label>
+        <details class="pr-check pr-abs" id="cmbBranchName" style="left:89px;top:12px;width:253px"></details>
+        <label class="pr-abs" style="left:6px;top:46px" for="txtDateFrom">Date From,To</label>
+        <div class="pr-abs pr-date" style="left:89px;top:42px;width:126px"><input type="checkbox" id="chkDateFrom" aria-label="Use Date From"><input type="date" id="txtDateFrom"></div>
+        <div class="pr-abs pr-date" style="left:216px;top:42px;width:126px"><input type="checkbox" id="chkToDate" checked aria-label="Use Date To"><input type="date" id="txtToDate" aria-label="Date To"></div>
+        <label class="pr-abs" style="left:6px;top:74px" for="txtFromDocNo">No From,To</label>
+        <div class="pr-abs" style="left:89px;top:70px;width:126px"><input type="text" id="txtFromDocNo" inputmode="numeric"></div>
+        <div class="pr-abs" style="left:216px;top:70px;width:126px"><input type="text" id="txtToDocNo" inputmode="numeric" aria-label="No To"></div>
+        <label class="pr-abs" style="left:6px;top:102px" for="txtOrderNoFrom">Order From,To</label>
+        <div class="pr-abs" style="left:89px;top:98px;width:126px"><input type="text" id="txtOrderNoFrom" inputmode="numeric"></div>
+        <div class="pr-abs" style="left:216px;top:98px;width:126px"><input type="text" id="txtOrderNoTo" inputmode="numeric" aria-label="Order To"></div>
+
+        <label class="pr-abs" style="left:346px;top:18px" for="CmbParentCategory">Parent Category</label>
+        <details class="pr-check pr-abs" id="CmbParentCategory" style="left:455px;top:12px;width:190px"></details>
+        <label class="pr-abs" style="left:346px;top:46px" for="cmbItem">Item Name</label>
+        <div class="pr-abs" style="left:455px;top:40px;width:190px"><select id="cmbItem" data-dtcombo="single" data-dtcombo-caption="Item Name"></select></div>
+        <label class="pr-abs" style="left:346px;top:74px" for="cmbSupplierCustomer">Party Name</label>
+        <div class="pr-abs" style="left:455px;top:68px;width:190px"><select id="cmbSupplierCustomer" data-dtcombo="single" data-dtcombo-caption="Party Name"></select></div>
+        <label class="pr-abs" style="left:346px;top:102px" for="CmbCommissionAgent">Commission Agent</label>
+        <div class="pr-abs" style="left:455px;top:96px;width:190px"><select id="CmbCommissionAgent" data-dtcombo="single" data-dtcombo-caption="CommissionAgent"></select></div>
+
+        <label class="pr-abs" style="left:647px;top:18px" for="CmbRefernceParty">Reference Party</label>
+        <div class="pr-abs" style="left:735px;top:12px;width:243px"><select id="CmbRefernceParty" data-dtcombo="single" data-dtcombo-caption="Reference Party"></select></div>
+        <label class="pr-abs" style="left:647px;top:46px" for="CmbVehicleNo">Vehicle No</label>
+        <div class="pr-abs" style="left:735px;top:40px;width:243px"><select id="CmbVehicleNo" data-dtcombo="single" data-dtcombo-caption="Vehicle No"></select></div>
+        <label class="pr-abs" style="left:647px;top:74px" for="CmbCity">City Name</label>
+        <div class="pr-abs" style="left:735px;top:68px;width:243px"><select id="CmbCity" data-dtcombo="single" data-dtcombo-caption="City Name"></select></div>
+        <label class="pr-abs" style="left:647px;top:102px" for="cmbActivity">Report Type</label>
+        <div class="pr-abs" style="left:735px;top:96px;width:187px"><select id="cmbActivity" data-dtcombo="single" data-dtcombo-caption="Activity"></select></div>
+        <button type="button" class="pr-show pr-abs" id="btnShow" style="left:923px;top:96px;width:55px" title="Ctrl+S">Show</button>
+        <div class="pr-abs pr-radios vertical" style="left:984px;top:14px" role="radiogroup" aria-label="Receiving">
+            <label><input type="radio" name="receiving" value="All" id="RadAll"> All</label>
+            <label><input type="radio" name="receiving" value="Pending" id="RadPending" checked> Pending</label>
+            <label><input type="radio" name="receiving" value="Received" id="RadReceived"> Received</label>
+        </div>
+    </fieldset>
+    <section id="gridSection">
+        <div class="pr-grid-bar">Filtered Records <span id="lblCount"></span>
+            <span class="pr-right"><button type="button" id="btnGridPrint">Grid Print</button><button type="button" id="btnGridExport">Export</button><button type="button" id="btnFullscreen">Fullscreen</button></span>
+        </div>
+        <div class="pr-wrap" tabindex="0" id="gridWrap"><table class="pr-grid" id="DataGridHistory"></table></div>
+    </section>
+</div>
+<script th:src="@{/build/js/countx_doc_link.js?v=20261001pr}"></script>
+<script th:src="@{/build/js/purchase/reports/pr_common.js?v=20261001a}"></script>
+<script th:src="@{/build/js/purchase/reports/stock_in_transit_report.js?v=20261001a}"></script>
+<script th:src="@{/build/js/countx_desktop_combo.js?v=20260927b}"></script>
+</body>
+</html>

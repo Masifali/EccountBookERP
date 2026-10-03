@@ -1,0 +1,206 @@
+/* ============================================================================================
+ * Screens 28-31 - Cash / Bank Payment (PaymentVoucherNew) and Cash / Bank Receipt (ReceiptsVoucherNew).
+ * 2026-10-02 round 3: the desktop designer layout. Every GroupBox / Panel is a box at its
+ * InitializeComponent Location/Size and every label and control is absolutely positioned at its
+ * designer coordinates (countx_payment_receipt_voucher.js render() / renderHistory() hold the numbers).
+ * Fonts as declared: labels "Segoe UI Semibold" 9pt, text boxes / combos Verdana 9.75pt, group box
+ * captions Tahoma 9.75pt bold, the teal bars Tahoma 12pt bold. Tabs at the BOTTOM (TabAlignment.Bottom).
+ * The page itself never scrolls sideways: the tab page scrolls inside its own container.
+ * ============================================================================================ */
+html, body { height: 100%; }
+body.prv-body {
+    margin: 0; padding: 0; overflow: hidden; background: #f0f0f0; color: #000;
+    font-family: "Segoe UI", Tahoma, Arial, sans-serif; font-size: 12px;
+    display: flex; flex-direction: column;
+}
+.prv-body *, .prv-body *::before, .prv-body *::after { box-sizing: border-box; }
+
+/* window caption (the MDI child's title bar) */
+.prv-caption {
+    flex: 0 0 24px; display: flex; align-items: center; justify-content: space-between;
+    padding: 0 8px; background: #0a6e6e; color: #fff; font: bold 12px "Segoe UI", Tahoma, sans-serif;
+}
+.prv-caption a { color: #fff; font-weight: normal; text-decoration: none; font-size: 11px; }
+.prv-caption a:hover { text-decoration: underline; }
+
+/* tab pages area: scrolls by itself (both ways); the page does not */
+.prv-pages { flex: 1 1 auto; min-height: 0; overflow: auto; background: #fff; border: 1px solid #a0a0a0; border-bottom: 0; position: relative; }
+.prv-page { padding: 2px; min-height: 100%; display: flex; flex-direction: column; background: #fff; }
+/* a maximised desktop window: the docked panels follow the window, the group boxes keep their size;
+   below that width the tab page scrolls sideways inside .prv-pages */
+.prv-page.prv-pay { min-width: 1110px; }
+.prv-page.prv-rec { min-width: 1216px; }
+#tabHistoryContent.prv-pay { min-width: 1330px; }
+#tabHistoryContent.prv-rec { min-width: 1316px; }
+#prvForm { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
+#prvHistory { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
+
+/* bottom tab strip (TabAlignment.Bottom) */
+.prv-tabs {
+    flex: 0 0 auto; display: flex; gap: 0; padding: 0 2px 2px; background: #f0f0f0;
+    border-top: 1px solid #a0a0a0;
+}
+.prv-tabs .win-tab-btn {
+    margin-top: -1px; padding: 3px 14px 4px; background: #e8e8e8; border: 1px solid #a0a0a0; border-top: 0;
+    border-radius: 0 0 3px 3px; font: 600 9.75pt "Segoe UI Semibold", "Segoe UI", sans-serif; color: #000; cursor: pointer;
+}
+.prv-tabs .win-tab-btn.active { background: #fff; position: relative; padding-bottom: 6px; z-index: 1; }
+.prv-tabs.prv-tabs-rec .win-tab-btn { font: 8.25pt "Microsoft Sans Serif", "Segoe UI", sans-serif; }
+
+/* ToolStrip (Verdana 9.75pt, icon + text, professional renderer) */
+.prv-ts {
+    height: 30px; background: #fff; flex: 0 0 auto;
+}
+.prv-ts-in {
+    height: 27px; display: flex; align-items: center; gap: 0; padding: 0 2px; white-space: nowrap;
+    background: linear-gradient(#fbfbfb, #f0f0f0 60%, #e6e9ee); border-bottom: 1px solid #c5cbd3;
+    font: 9.75pt Verdana, sans-serif;
+}
+.prv-ts-btn, a.prv-ts-btn {
+    display: inline-flex; align-items: center; gap: 4px; height: 23px; padding: 0 5px; margin: 0;
+    border: 1px solid transparent; border-radius: 0; background: transparent; color: #000;
+    font: 9.75pt Verdana, sans-serif; cursor: pointer; text-decoration: none; white-space: nowrap;
+}
+.prv-ts-btn:hover:not(:disabled), a.prv-ts-btn:hover { background: #fde8b0; border-color: #e5c365; color: #000; text-decoration: none; }
+.prv-ts-btn:disabled { color: #8d8d8d; cursor: default; }
+.prv-ts-btn:disabled .fa { opacity: .45; }
+.prv-ts-btn .fa { font-size: 15px; width: 16px; text-align: center; }
+.prv-ts-btn u { text-decoration: underline; }
+
+/* absolutely positioned designer layer */
+.prv-abs { position: relative; flex: 0 0 auto; }
+.prv-abs > *, .prv-gb > *, .prv-fp > *, .prv-g > *, .prv-ar > * { position: absolute; }
+.prv-g { left: 0; top: 0; width: 0; height: 0; }
+.prv-ar { top: 0; right: 0; pointer-events: none; }
+.prv-ar > * { pointer-events: auto; }
+
+/* panel4: the teal strip */
+.prv-strip { left: 0; right: 0; top: 0; background: #0a6e6e; }
+.prv-strip-title { font: bold 12pt Tahoma, sans-serif; color: #fff; white-space: nowrap; }
+.prv-strip label, .prv-chk { white-space: nowrap; margin: 0; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+.prv-strip label { overflow: hidden; color: #fff; font: 600 9pt "Segoe UI Semibold", "Segoe UI", sans-serif; }
+.prv-strip label.prv-v { font: bold 9.75pt Verdana, sans-serif; }
+.prv-strip input[type=checkbox], .prv-chk input, .prv-rb input { margin: 0; width: 13px; height: 13px; }
+
+/* GroupBox (white, thin grey frame, Tahoma 9.75pt bold caption) */
+.prv-gb { background: #fff; }
+.prv-gb::before {
+    content: ""; position: absolute; left: 0; right: 0; top: 8px; bottom: 0;
+    border: 1px solid #c8c8c8; border-radius: 2px; pointer-events: none;
+}
+.prv-gbc {
+    left: 7px; top: 0; padding: 0 2px; background: #fff; z-index: 1;
+    font: bold 9.75pt Tahoma, sans-serif; line-height: 16px; color: #000; white-space: nowrap;
+}
+.prv-gb.prv-nobg, .prv-gb.prv-nobg .prv-gbc { background: transparent; }
+.prv-gb.prv-nobg .prv-gbc { background: #fff; }
+
+/* labels: Segoe UI Semibold 9pt (bold style) */
+.prv-l {
+    margin: 0; padding: 0; white-space: nowrap; line-height: 15px; color: #000;
+    font: 600 9pt "Segoe UI Semibold", "Segoe UI", sans-serif;
+}
+.prv-l.prv-tah { font: bold 9.75pt Tahoma, sans-serif; line-height: 16px; }
+.prv-l.prv-mss { font: 9pt "Microsoft Sans Serif", "Segoe UI", sans-serif; font-weight: normal; }
+.prv-l.prv-seg { font: 9pt "Segoe UI", sans-serif; font-weight: normal; line-height: 17px; }
+.prv-bal { font: bold 9pt Verdana, sans-serif; color: #000; white-space: nowrap; line-height: 14px; overflow: hidden; }
+.prv-bal.prv-r { text-align: right; }
+#prvRefBalance { font: bold 9.75pt "Segoe UI", sans-serif; line-height: 17px; }
+
+/* text boxes / date pickers: Verdana 9.75pt, FixedSingle border */
+.prv-tb {
+    margin: 0; padding: 1px 4px; border: 1px solid #7a7a7a; border-radius: 0; background: #fff; color: #000;
+    font: 9.75pt Verdana, sans-serif; outline: none; box-shadow: none;
+}
+.prv-tb:focus { border-color: #0078d7; }
+.prv-tb[readonly] { background: #fff; }
+.prv-tb.prv-dis, .prv-tb:disabled { background: #f0f0f0; color: #6d6d6d; }
+.prv-tb.prv-num { text-align: right; }
+textarea.prv-tb { resize: none; padding: 2px 4px; }
+input[type=date].prv-tb { padding: 0 2px 0 4px; font-size: 9pt; }
+.prv-tb.prv-seg { font: 9.75pt "Segoe UI", sans-serif; }
+.prv-tb.prv-segb { font: 600 9pt "Segoe UI Semibold", "Segoe UI", sans-serif; }
+
+/* DateTimePicker with ShowCheckBox: the tick sits inside the box */
+.prv-dtp { }
+.prv-dtp > input[type=checkbox] { position: absolute; left: 4px; top: 5px; margin: 0; width: 13px; height: 13px; z-index: 1; }
+.prv-dtp > input[type=date] { position: absolute; left: 0; top: 0; width: 100%; height: 100%; padding-left: 21px; }
+
+/* combos: countx_prod_combo.js wraps each select; the wrap takes the select's inline geometry */
+.prv-body .pcx-wrap > .dtcombo-input.pcx-field { height: 100%; font: 9.75pt Verdana, sans-serif; border-color: #7a7a7a; padding-left: 3px; }
+.prv-body .pcx-wrap.prv-cmb-mss > .dtcombo-input.pcx-field { font: 9pt "Microsoft Sans Serif", "Segoe UI", sans-serif; }
+.prv-body .pcx-wrap.prv-cmb-mss10 > .dtcombo-input.pcx-field { font: 10.2pt "Microsoft Sans Serif", "Segoe UI", sans-serif; }
+
+/* radio buttons / check boxes */
+.prv-rb { white-space: nowrap; margin: 0; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; line-height: 17px;
+          font: 600 9pt "Segoe UI Semibold", "Segoe UI", sans-serif; }
+.prv-rb.prv-v { font: bold 8.25pt Verdana, sans-serif; }
+.prv-rb.prv-plain { font: 9.75pt "Segoe UI", sans-serif; font-weight: normal; }
+
+/* flat teal buttons (Add / Update / Cancel / Show) */
+.prv-fbtn {
+    margin: 0; padding: 0 2px; border: 1px solid #0a6e6e; border-radius: 0; background: #0a6e6e; color: #fff;
+    font: 8.25pt Verdana, sans-serif; cursor: pointer; line-height: 1;
+}
+.prv-fbtn:hover:not(:disabled) { background: #0c8484; }
+.prv-fbtn:disabled { opacity: .6; cursor: default; }
+.prv-fbtn.prv-tah { font: 8.25pt Tahoma, sans-serif; background: #008080; border-color: #008080; }
+.prv-fbtn.prv-show { font: bold 9.75pt "Segoe UI", sans-serif; }
+.prv-sysbtn {
+    margin: 0; padding: 0 8px; border: 1px solid #adadad; background: #e1e1e1; color: #000;
+    font: 9pt "Segoe UI", sans-serif; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; justify-content: center;
+}
+.prv-sysbtn:hover:not(:disabled) { background: #e5f1fb; border-color: #0078d7; }
+
+/* grid area (panel6): the GridEX docked left, the WHT / totals panel docked bottom */
+.prv-mid { flex: 1 1 auto; position: relative; min-height: 150px; }
+.prv-gridbox { position: absolute; left: 0; top: 0; bottom: 0; overflow: auto; background: #fff; border: 1px solid #7f9db9; }
+
+/* Janus GridEX look */
+.prv-jg { border-collapse: separate; border-spacing: 0; font: 8.25pt Verdana, sans-serif; color: #000; background: #fff; table-layout: fixed; }
+.prv-jg.prv-auto { table-layout: auto; min-width: 100%; }
+.prv-jg th {
+    position: sticky; top: 0; z-index: 2; height: 21px; padding: 2px 4px; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    font-weight: normal; color: #000; background: linear-gradient(#fdfdfd, #ebebeb); border-right: 1px solid #c5c5c5; border-bottom: 1px solid #a5a5a5;
+}
+.prv-jg td {
+    height: 20px; padding: 1px 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    border-right: 1px solid #e3e3e3; border-bottom: 1px solid #e3e3e3; vertical-align: middle;
+}
+.prv-jg th.num, .prv-jg td.num { text-align: right; }
+.prv-jg tbody tr:hover td { background: #f3f8fd; }
+.prv-jg tbody tr.prv-sel td { background: #cce8ff; }
+.prv-jg tfoot td {
+    position: sticky; bottom: 0; z-index: 1; background: #f0f0f0; font-weight: bold; border-top: 1px solid #a5a5a5;
+}
+.prv-jg td.prv-empty { text-align: center; color: #888; padding: 12px; }
+.prv-jg td input, .prv-jg td select { width: 100%; height: 18px; padding: 0 3px; border: 1px solid #c5c5c5; font: 8.25pt Verdana, sans-serif; }
+.prv-jg .pcx-wrap { height: 18px; }
+.prv-jg .pcx-wrap > .dtcombo-input.pcx-field { font: 8.25pt Verdana, sans-serif !important; border-color: #c5c5c5; }
+.prv-jg .prv-cbtn {
+    margin: 0; padding: 0 4px; height: 17px; line-height: 15px; border: 1px solid #adadad; border-radius: 2px;
+    background: linear-gradient(#f6f6f6, #dedede); color: #000; font: 8.25pt Verdana, sans-serif; cursor: pointer;
+}
+.prv-jg .prv-cbtn:hover:not(:disabled) { background: #e5f1fb; border-color: #0078d7; }
+.prv-jg .prv-cbtn:disabled { color: #8d8d8d; cursor: default; }
+.prv-jg a.prv-vno { color: #0645ad; text-decoration: underline; cursor: pointer; font-weight: bold; }
+
+.prv-bot { flex: 0 0 auto; position: relative; }
+
+/* History tab */
+.prv-teal { flex: 0 0 auto; position: relative; background: #008080; }
+.prv-teal > span { position: absolute; color: #fff; font: bold 12pt Tahoma, sans-serif; white-space: nowrap; }
+.prv-hgrid { flex: 0 0 auto; position: relative; overflow: auto; border: 1px solid #7f9db9; background: #fff; }
+.prv-hdet { flex: 1 1 auto; min-height: 120px; position: relative; overflow: auto; border: 1px solid #7f9db9; background: #fff; }
+.prv-info { font: 600 9.75pt "Segoe UI Semibold", "Segoe UI", sans-serif; }
+.prv-info .prv-iv { font: bold 9.75pt "Segoe UI", sans-serif; text-align: right; }
+
+/* shared classes the special-rights and shortcut-keys popups use */
+.win-btn { background: #fff; border: 1px solid #90a4ae; border-radius: 2px; padding: 3px 8px; font-size: 11px; font-weight: 600; color: #263238; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+.win-btn:hover { background: #e0f2f1; border-color: #00796B; }
+.win-btn:disabled { opacity: .5; cursor: not-allowed; }
+.win-input { border: 1px solid #94a3b8; border-radius: 2px; padding: 2px 6px; font-size: 11px; height: 25px; width: 100%; background: #fff; }
+.win-label { font-weight: 600; color: #334155; margin-bottom: 2px; font-size: 11px; white-space: nowrap; }
+.win-grid-table { width: 100%; border-collapse: collapse; font-size: 11px; background: #fff; }
+.win-grid-table th { background: #00796B; color: #fff; font-weight: 700; padding: 5px 8px; border: 1px solid #004d40; text-align: left; }
+.win-grid-table td { padding: 4px 8px; border: 1px solid #cbd5e1; }

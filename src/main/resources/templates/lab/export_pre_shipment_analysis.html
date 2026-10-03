@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Export Pre Shipment Analysis - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_purchase_request.css?v=20260923a}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_stock_in_transit.css?v=20260930a}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_lab_export_pre_shipment_analysis.css?v=20261001a}">
+</head>
+<body>
+<!--
+    Screen 168 "Export Pre Shipment Analysis" — Architecture.WinApp.Export/EximPreProductionLab.cs
+    (ScreenName EximPreProductionLab, form text "FrmPreProductionLotInspection").
+    Designer: ClientSize 1094 x 561, WindowState Maximized. Top to bottom:
+    panel1 (0,0) 1094 x 38 with toolstrip · panel2 white (0,38) 1094 x 94 · panel3 (0,132) Fill with grd.
+    Every id below is the desktop control name. The form has no tabs, no Delete and no key handler.
+    Not rendered: txtQtyKgs / label4 — two designer leftovers parked at (0,0) that no code touches.
+-->
+<div id="rightsNote" class="sit-denied" hidden></div>
+<div class="wf-scroll">
+<div class="wf-root wf-tabctl epa-root" th:attr="data-screen-id=${screenId}">
+
+    <!-- toolstrip — items in designer order: toolStripButton6 (the title, no handler), btnnew, btnsave, btnUpdate,
+         Print (no Click handler on the desktop), btnRefresh. Load hides btnUpdate. -->
+    <div class="wf-strip epa-strip" id="toolstrip">
+        <span class="wf-tool epa-title" id="toolStripButton6">Pre ProductionLotInspection        </span>
+        <button type="button" class="wf-tool" id="btnnew"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+        <button type="button" class="wf-tool" id="btnsave"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+        <button type="button" class="wf-tool" id="btnUpdate" hidden><i class="fa fa-save"></i> <span>Update</span></button>
+        <button type="button" class="wf-tool" id="Print" title="The desktop Print button has no action"><i class="fa fa-print"></i> <span><u>P</u>rint</span></button>
+        <button type="button" class="wf-tool" id="btnRefresh"><span>Refresh</span></button>
+        <a th:href="@{/quality}" href="/quality" class="wf-tool wf-exit" id="lnkExit"><i class="fa fa-arrow-left"></i> Exit</a>
+    </div>
+
+    <!-- panel2 (0,38) 1094 x 94, BackColor White. Labels Calibri 9pt bold at y 8, inputs at y 28. -->
+    <div class="epa-panel-scroll">
+    <div class="epa-panel" id="panel2">
+        <label class="wf-abs epa-lbl" for="cmbInspectionLabName" id="label1" style="left:12px;top:8px;width:266px;">Inspection Lab Name</label>
+        <!-- cmbInspectionLabName (12,28) 266 x 24, TabIndex 0, LimitToList; column caption "LookUpName" -->
+        <select id="cmbInspectionLabName" class="wf-abs wf-cmb" style="left:12px;top:28px;width:266px;height:24px;"
+                data-dtcombo="single" data-dtcombo-caption="LookUpName"></select>
+
+        <label class="wf-abs epa-lbl" for="datDate" id="label9" style="left:281px;top:8px;width:117px;">Date</label>
+        <!-- datDate (281,28) 117 x 25, TabIndex 1, CustomFormat "dd-MMM-yy" -->
+        <input type="date" id="datDate" class="wf-abs wf-dt epa-txt" style="left:281px;top:28px;width:117px;">
+
+        <label class="wf-abs epa-lbl" for="txtReportRefNo" id="label3" style="left:400px;top:8px;width:139px;">Report Ref #</label>
+        <input type="text" id="txtReportRefNo" class="wf-abs wf-txt epa-txt" style="left:400px;top:28px;width:139px;" autocomplete="off">
+
+        <label class="wf-abs epa-lbl" for="txtLotNo" id="label5" style="left:542px;top:8px;width:123px;">Lot #</label>
+        <input type="text" id="txtLotNo" class="wf-abs wf-txt epa-txt" style="left:542px;top:28px;width:123px;" autocomplete="off">
+
+        <label class="wf-abs epa-lbl" for="CmbItem" id="label6" style="left:671px;top:8px;width:227px;">Item</label>
+        <!-- CmbItem (671,28) 227 x 24, TabIndex 4, LimitToList; column caption "Ite mName" (the desktop's own spelling, :140) -->
+        <select id="CmbItem" class="wf-abs wf-cmb" style="left:671px;top:28px;width:227px;height:24px;"
+                data-dtcombo="single" data-dtcombo-caption="Ite mName"></select>
+
+        <label class="wf-abs epa-lbl" for="txtQty" id="label7" style="left:902px;top:7px;width:123px;">Qty Kgs</label>
+        <input type="text" id="txtQty" class="wf-abs wf-txt epa-txt" style="left:902px;top:27px;width:123px;" autocomplete="off">
+
+        <label class="wf-abs epa-lbl" for="txtRemarks" id="label2" style="left:12px;top:55px;width:91px;">Remarks</label>
+        <!-- txtRemarks (93,55) 958 x 24, Multiline, TabIndex 6 -->
+        <textarea id="txtRemarks" class="wf-abs epa-txt" style="left:93px;top:55px;width:958px;height:24px;" rows="1"></textarea>
+    </div>
+    </div>
+
+    <!-- panel3 (0,132) Fill: grd — Janus GridEX, GroupByBoxVisible False, RecordNavigator True, TotalRow True,
+         AllowDelete True. The columns are whatever ReadAll returns (RetrieveStructure, :266); grdSetting hides
+         Id / InspectedByLabId / ItemId and sizes LookUpName 100, ItemName 120, ReportRefNo 80, LotRefNo 80,
+         InspectionRemarks 220. The caption strip with the full-screen button is a web addition. -->
+    <div class="epa-gridbox" id="gridBox">
+        <div class="epa-cap">
+            <span>History</span>
+            <button type="button" id="btnFull" title="Full screen"><i class="fa fa-arrows-alt"></i></button>
+        </div>
+        <div class="wf-grid epa-grid" id="grdWrap" tabindex="0">
+            <table class="win-grid" id="grd"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+        </div>
+        <div class="epa-nav" id="grdNav">
+            <span>Record:</span>
+            <button type="button" id="navFirst" title="First">|&lt;</button>
+            <button type="button" id="navPrev" title="Previous">&lt;</button>
+            <input type="text" id="navPos" readonly>
+            <span id="navCount">of 0</span>
+            <button type="button" id="navNext" title="Next">&gt;</button>
+            <button type="button" id="navLast" title="Last">&gt;|</button>
+        </div>
+    </div>
+
+    <!-- Web footer: History button at the right side (runs ReadAll() and takes the user to the grid). -->
+    <div class="epa-foot">
+        <button type="button" class="wf-btn" id="btnHistory"><i class="fa fa-history"></i> <span>History</span></button>
+    </div>
+
+</div>
+</div>
+
+<script th:src="@{/build/js/countx_purchase_request.js?v=20260923a}"></script>
+<script th:src="@{/build/js/countx_desktop_combo.js?v=20260927b}"></script>
+<script th:src="@{/build/js/lab/countx_lab_export_pre_shipment_analysis.js?v=20261001a}"></script>
+</body>
+</html>

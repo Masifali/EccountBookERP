@@ -106,7 +106,8 @@ function loadSetup() {
         setVal('fromDate', (d && d.fromDate) || today());
 
         if (window.jQuery && jQuery.fn.select2 && sel) {
-            jQuery(sel).filter(function () { return !jQuery(this).data('select2'); })
+            /* 2026-10-03: #branches is the checked combo (countx_prod_combo.js) - never select2 on it */
+            jQuery(sel).filter(function () { return !jQuery(this).data('select2') && !this.hasAttribute('data-dtcombo-checked'); })
                        .select2({ width: '100%', placeholder: 'Branch Name' });
         }
     }).catch(function (e) {

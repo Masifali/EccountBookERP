@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Export Receivable Register by Due Date - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_rpta.css?v=20260930a}"/>
+</head>
+<!-- ExportReceivableByDueDateRegisterA.cs (Architecture.WinApp.ExportReports), screen 235 "5011 Receivable By Due Report",
+     ClientSize 1656 x 599, Text "Export Receivable Register by Due Date".
+     panel1 (Fill): toolStrip1 New / Refresh / 243-Print; panel5 "Export Receivables Due By Date" + ctrlGrdBar1;
+       panel3 (Top, 231): panel2 filters (Due Date from/to pickers unchecked, Invoice No, Customer, Contract No, Delivery Term,
+         Payment Term, Destination, Skip Zero Balance [checked], Show) | grdCustomer 375 | grdEtaDestination 570 (Click = re-bind with SortNo) | grdBank 360;
+       panel4 (Fill): grdfrm (grouped by ExportReceivablesAging, ContractNo link -> frmContractDetailByContractId).
+     grdSaleMan / grdFCY are on panel1 under panel4 (Dock Fill) and are never visible on the desktop - kept hidden.
+     Events: Load, KeyDown (Enter Tab, Ctrl+E/Esc, Ctrl+N, Ctrl+R, Ctrl+P, Ctrl+S), btnNew, btnRefresh, BtnPrint, button1 Show,
+       grdEtaDestination Click, grdfrm LinkClicked. -->
+<body class="pd-body" data-export-page="rcv">
+<div class="pd-form ex-form">
+    <div class="win-tool-strip">
+        <button type="button" id="btnNew" class="win-btn-tool" accesskey="n" onclick="ExportRcv.btnNew()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+        <button type="button" id="btnRefresh" class="win-btn-tool" accesskey="r" onclick="ExportRcv.btnRefresh(this)"><i class="fa fa-refresh"></i> <span><u>R</u>efresh</span></button>
+        <button type="button" id="BtnPrint" class="win-btn-tool" onclick="ExportRcv.btnPrint(this)" data-rpt="243-ExportReceivablesDueByDate.rpt"><i class="fa fa-print"></i> <span>243-Print</span></button>
+    </div>
+    <div class="pd-caption pd-caption-teal pd-history-bar" style="height:28px;"><span>Export Receivables Due By Date</span>
+        <span class="ex-bar-right"><span id="gridBarMountRcv" class="pd-gridbar-mount"></span></span></div>
+
+    <div class="rpta-side">
+        <div class="rpta-panel rpta-w335" id="panel2">
+            <div class="ex-field" style="padding:4px 6px 0;"><label for="datFromDate" style="width:76px;">Due Date</label>
+                <span class="ex-check"><input type="checkbox" id="datFromDateChk"/><input type="date" id="datFromDate" class="win-date"/></span>
+                <span class="ex-check"><input type="checkbox" id="datToDateChk"/><input type="date" id="datToDate" class="win-date"/></span></div>
+            <div class="rpta-filter" style="padding-top:2px;">
+                <div class="ex-field" style="width:100%;"><label for="CmbInvoiceNo">Invoice No</label><select id="CmbInvoiceNo" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Invoice No"></select></div>
+                <div class="ex-field" style="width:100%;"><label for="CmbCustomerName">Customer</label><select id="CmbCustomerName" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Customer Name"></select></div>
+                <div class="ex-field" style="width:100%;"><label for="cmbContractNo">Contract No</label><select id="cmbContractNo" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Contract No"></select></div>
+                <div class="ex-field" style="width:100%;"><label for="cmbDeliveryTerm">Delivery Term</label><select id="cmbDeliveryTerm" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="DeliveryTerms"></select></div>
+                <div class="ex-field" style="width:100%;"><label for="cmbPaymentTerm">Payment Term</label><select id="cmbPaymentTerm" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="PaymentTerms"></select></div>
+                <div class="ex-field" style="width:100%;"><label for="cmbDestinationPort">Destination </label><select id="cmbDestinationPort" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Port Name"></select></div>
+                <div class="ex-field" style="width:100%;"><label>&nbsp;</label><label class="ex-check"><input type="checkbox" id="chkSkipZero" checked/> Skip Zero Balance</label>
+                    <button type="button" id="button1" class="win-btn-small" style="width:59px;height:25px;margin-left:auto;" onclick="ExportRcv.show(this)">Show</button></div>
+            </div>
+        </div>
+        <div class="rpta-panel rpta-w375">
+            <div class="pd-caption pd-caption-teal pd-history-bar" style="height:24px;"><span>Customer</span><span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdCustomerBox" title="Fullscreen table">&#x26F6;</button></span></div>
+            <div class="ex-grid-box" id="grdCustomerBox"><div class="ex-grid-scroll" style="max-height:207px;"><table class="win-grid" id="grdCustomer"><thead></thead><tbody></tbody><tfoot></tfoot></table></div></div>
+        </div>
+        <div class="rpta-panel rpta-w570">
+            <div class="pd-caption pd-caption-teal pd-history-bar" style="height:24px;"><span>Export Receivables Aging (click a row to filter)</span><span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdEtaDestinationBox" title="Fullscreen table">&#x26F6;</button></span></div>
+            <div class="ex-grid-box" id="grdEtaDestinationBox"><div class="ex-grid-scroll" style="max-height:207px;"><table class="win-grid" id="grdEtaDestination"><thead></thead><tbody></tbody><tfoot></tfoot></table></div></div>
+        </div>
+        <div class="rpta-panel rpta-w360">
+            <div class="pd-caption pd-caption-teal pd-history-bar" style="height:24px;"><span>Bank</span><span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdBankBox" title="Fullscreen table">&#x26F6;</button></span></div>
+            <div class="ex-grid-box" id="grdBankBox"><div class="ex-grid-scroll" style="max-height:207px;"><table class="win-grid" id="grdBank"><thead></thead><tbody></tbody><tfoot></tfoot></table></div></div>
+        </div>
+    </div>
+
+    <!-- grdSaleMan (883,305 228x125) and grdFCY (1115,305 229x125) sit behind panel4 on the desktop: bound but never visible -->
+    <div class="rpta-hidden-grid"><table class="win-grid" id="grdSaleMan"><thead></thead><tbody></tbody><tfoot></tfoot></table><table class="win-grid" id="grdFCY"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+
+    <div class="pd-caption pd-caption-teal pd-history-bar" style="height:24px;margin-top:6px;"><span>Register</span>
+        <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdfrmBox" title="Fullscreen table">&#x26F6;</button></span></div>
+    <div class="ex-grid-box" id="grdfrmBox">
+        <div class="ex-grid-scroll ex-h400"><table class="win-grid" id="grdfrm" tabindex="0"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        <div class="ex-grid-empty is-hidden" id="grdfrmEmpty">No record found.</div>
+    </div>
+
+    <div class="win-footer-strip">
+        <span class="ex-footer-left" id="rcvFooterInfo">ExportReceivableByDueDateRegisterA - screen 235</span>
+        <button type="button" class="win-btn-history" id="btnRcvFooterHistory" onclick="ExportRcv.show(document.getElementById('button1'))"><i class="fa fa-history"></i> <span>History</span></button>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260924a}"></script>
+<script th:src="@{/build/js/countx_export_rpta_common.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_export_receivable_by_due_date.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

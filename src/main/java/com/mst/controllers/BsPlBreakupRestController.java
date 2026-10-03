@@ -1,0 +1,56 @@
+package com.mst.controllers;
+
+import com.mst.services.AccountReportsHSupport;
+import com.mst.services.BsPlBreakupService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.function.Supplier;
+
+/**
+ * Screen 84 BS and PL Breakup, standalone page data (BsPlBreakupService). The Account Notes combo is served by
+ * /accounts/api/reports/balance-sheet-62/breakup-notes (BalanceSheetReportService.breakupNotes), the same call the
+ * Balance Sheet's breakup dialog makes. Tenancy comes from CurrentUserContext inside the service.
+ */
+@RestController
+@RequestMapping("/accounts/api/reports/bs-pl-breakup")
+public class BsPlBreakupRestController {
+
+    @Autowired
+    private BsPlBreakupService service;
+
+    @GetMapping("/init")
+    public ResponseEntity<?> init() { return run(service::init); }
+
+    @PostMapping("/data")
+    public ResponseEntity<?> data(@RequestBody Map<String, Object> body) { return run(() -> service.data(body)); }
+
+    private ResponseEntity<?> run(Supplier<Object> body) {
+        try {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("success", true);
+            m.put("data", body.get());
+            return ResponseEntity.ok(m);
+        } catch (AccountReportsHSupport.Refusal e) {
+            return ResponseEntity.badRequest().body(fail(e.getMessage()));
+        } catch (org.springframework.security.access.AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(fail(e.getMessage()));
+        } catch (Exception e) {
+            Throwable t = e;
+            while (t.getCause() != null && t.getCause() != t) t = t.getCause();
+            String msg = t.getMessage() == null || t.getMessage().trim().isEmpty() ? String.valueOf(e.getMessage()) : t.getMessage();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(fail(msg));
+        }
+    }
+
+    private static Map<String, Object> fail(String message) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("success", false);
+        m.put("message", message);
+        return m;
+    }
+}

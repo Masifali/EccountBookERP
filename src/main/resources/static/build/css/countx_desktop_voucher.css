@@ -72,3 +72,168 @@ table.dv-grid td select, table.dv-grid td input { font: inherit; font-size: 11.5
     .dv-grid-form { grid-template-columns: 1fr !important; }
     .dv-row { flex-direction: column; align-items: stretch; }
 }
+
+/* 2026-10-02 R2 additions: busy spinner on server buttons, footer History button, history code
+   links, focusable grid rows, searchable (countx_prod_combo) selects inside the grids. */
+.dv-busy .dv-modal-back { pointer-events: auto; }
+.dv-spin { pointer-events: none; }
+.dv-spin::before { content: ''; display: inline-block; width: 10px; height: 10px; margin-right: 5px; vertical-align: -1px;
+    border: 2px solid #5b7a99; border-top-color: transparent; border-radius: 50%; animation: dv-spin .7s linear infinite; }
+@keyframes dv-spin { to { transform: rotate(360deg); } }
+.dv-footer { display: flex; justify-content: space-between; align-items: center; gap: 6px; padding: 5px 8px;
+    background: linear-gradient(#fdfdfd, #e3e8ee); border-top: 1px solid var(--dv-border); position: sticky; bottom: 0; z-index: 2; }
+.dv-footer .dv-btn { font-weight: 600; }
+a.dv-link { color: #0b5394; text-decoration: underline; cursor: pointer; }
+table.dv-grid tbody tr:focus { outline: 2px solid #7aa7d6; outline-offset: -2px; }
+table.dv-grid td .dtcombo-wrap { min-width: 120px; }
+
+/* ==========================================================================================
+   2026-10-02 R3: the desktop designer geometry (InitializeComponent Location/Size/Font/Colour).
+   Pages opt in with <body class="dv dvx">. Everything below is scoped to .dvx.
+   Fonts: Segoe UI Semibold 9pt = 12px, Verdana 9.75pt = 13px, Tahoma 12pt bold = 16px,
+   Verdana 8.25pt = 11px (grids). Colours: FromArgb(10,110,110) = #0a6e6e, Color.Teal = #008080.
+   ========================================================================================== */
+body.dv.dvx { margin: 0; height: 100vh; overflow: hidden; background: #fff; color: #000;
+    font: 12px "Segoe UI", Selawik, Carlito, Arial, sans-serif; }
+.dvx .dvx-app { display: flex; flex-direction: column; height: 100vh; }
+.dvx .dvx-pages { flex: 1 1 auto; min-height: 0; position: relative; }
+.dvx .dvx-pg { position: absolute; inset: 0; display: flex; flex-direction: column; overflow: hidden; background: #fff; }
+.dvx .dvx-none { flex: none; }
+
+/* ToolStrip (Verdana 9.75pt, image + text) */
+.dvx .dvx-ts { flex: none; height: 27px; display: flex; align-items: center; gap: 0; padding: 0 0 0 3px; box-sizing: border-box;
+    background: linear-gradient(to bottom, #fdfdfd 0%, #f0f0f0 60%, #e4e4e4 100%); border-bottom: 1px solid #c5c5c5; overflow: hidden; }
+.dvx .dvx-ts.w30 { height: 30px; border-bottom: 4px solid #fff; box-shadow: inset 0 -1px 0 #c5c5c5; }
+.dvx .dvx-ts button { height: 24px; display: inline-flex; align-items: center; gap: 0; padding: 0 5px; margin: 0 1px 0 0; background: transparent;
+    border: 1px solid transparent; border-radius: 0; font: 13px Verdana, "DejaVu Sans", sans-serif; color: #000; cursor: pointer; white-space: nowrap; }
+.dvx .dvx-ts button:hover:not(:disabled) { background: #ffe8a6; border-color: #e5c365; }
+.dvx .dvx-ts button:disabled { color: #a0a0a0; cursor: default; }
+.dvx .dvx-ts button:disabled .ic { opacity: .45; }
+.dvx .dvx-ts .ic { display: inline-block; width: 16px; height: 16px; flex: none; margin-right: 4px; background-repeat: no-repeat; background-position: center; background-size: 16px 16px; }
+.dvx .dvx-ts .dv-spin::before { margin-right: 4px; }
+.dvx .dvx-ts .dv-spin .ic { display: none; }
+.dvx .dvx-ts .dvx-tsr { margin-left: auto; }
+
+/* teal bars (panel3 / panel4 / panel12 ...) */
+.dvx .dvx-teal { flex: none; position: relative; background: #0a6e6e; color: #fff; overflow: hidden; }
+.dvx .dvx-teal.c008 { background: #008080; }
+.dvx .dvx-teal .t { position: absolute; font: bold 16px Tahoma, "DejaVu Sans", sans-serif; line-height: 19px; white-space: nowrap; }
+.dvx .dvx-teal .t10 { position: absolute; font: bold 13px Tahoma, "DejaVu Sans", sans-serif; line-height: 17px; white-space: nowrap; }
+.dvx .dvx-teal .w { position: absolute; font: bold 12px "Segoe UI", Carlito, Arial, sans-serif; line-height: 15px; white-space: nowrap; color: #fff; }
+.dvx .dvx-teal label.w { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; line-height: 19px; }
+.dvx .dvx-teal label.w input { margin: 0; width: 13px; height: 13px; }
+.dvx .dvx-cog { position: absolute; width: 38px; height: 21px; box-sizing: border-box; border: 1px solid #9a9a9a; border-radius: 2px;
+    background-color: #f3f3f3; background-repeat: no-repeat; background-position: center; background-size: 15px 15px; cursor: default; padding: 0; }
+.dvx .dvx-teal a.dvx-back { position: absolute; right: 48px; top: 6px; color: #d7f3f3; font: 11px "Segoe UI", Arial, sans-serif; }
+
+/* the designer area: a fixed-size box; a narrow window scrolls THIS box sideways, never the page */
+.dvx .dvx-hs { flex: none; overflow-x: auto; overflow-y: hidden; background: #fff; }
+.dvx .dvx-abs { position: relative; background: #fff; }
+.dvx .x { position: absolute; margin: 0; box-sizing: border-box; }
+
+/* GroupBox: caption Tahoma 9.75pt bold, frame from y=8 */
+.dvx .dvx-gb { position: absolute; box-sizing: border-box; background: #fff; }
+.dvx .dvx-gb::before { content: ''; position: absolute; left: 0; right: 0; top: 8px; bottom: 0; border: 1px solid #c9d1d6; border-radius: 3px; pointer-events: none; }
+.dvx .dvx-gb > .cap { position: absolute; left: 6px; top: 0; padding: 0 2px; background: #fff; font: bold 13px Tahoma, "DejaVu Sans", sans-serif;
+    line-height: 16px; white-space: nowrap; z-index: 1; color: #000; }
+
+/* Label: Segoe UI Semibold 9pt */
+.dvx .l { position: absolute; margin: 0; font: 600 12px "Segoe UI Semibold", "Segoe UI", Selawik, Carlito, Arial, sans-serif; line-height: 15px;
+    white-space: nowrap; color: #000; }
+.dvx .l.l2 { white-space: normal; line-height: 15px; }
+.dvx .l.b975 { font-size: 13px; line-height: 17px; }
+.dvx .dvx-bal { position: absolute; margin: 0; font: bold 12px Verdana, "DejaVu Sans", sans-serif; line-height: 14px; white-space: nowrap; color: #000; }
+
+/* TextBox (BorderStyle FixedSingle, Verdana 9.75pt) */
+.dvx input.x, .dvx textarea.x { font: 13px Verdana, "DejaVu Sans", sans-serif; color: #000; background: #fff; border: 1px solid #7a7a7a;
+    border-radius: 0; padding: 0 3px; height: 23px; outline: none; }
+.dvx textarea.x { padding: 2px 3px; resize: none; line-height: 16px; }
+.dvx input.x:focus, .dvx textarea.x:focus { border-color: #0078d7; }
+.dvx input.x.r { text-align: right; }
+.dvx input.x[readonly] { background: #fff; }
+.dvx input.x:disabled, .dvx textarea.x:disabled { background: #f0f0f0; color: #6d6d6d; border-color: #b5b5b5; }
+.dvx input.x.sui { font: 600 12px "Segoe UI Semibold", "Segoe UI", Carlito, Arial, sans-serif; }
+.dvx input.x[type=date] { padding: 0 2px; }
+/* DateTimePicker with ShowCheckBox = true: the tick sits inside the box */
+.dvx .dvx-dchk { position: absolute; display: flex; align-items: center; box-sizing: border-box; border: 1px solid #7a7a7a; background: #fff; }
+.dvx .dvx-dchk > input[type=checkbox] { margin: 0 2px 0 4px; width: 13px; height: 13px; flex: none; }
+.dvx .dvx-dchk > input[type=date] { flex: 1; min-width: 0; height: 100%; border: 0; padding: 0 2px; font: 13px Verdana, "DejaVu Sans", sans-serif; outline: none; background: transparent; }
+
+/* RadioButton / CheckBox */
+.dvx .rb { position: absolute; display: inline-flex; align-items: center; gap: 3px; margin: 0; white-space: nowrap; cursor: pointer;
+    font: 600 12px "Segoe UI Semibold", "Segoe UI", Selawik, Carlito, Arial, sans-serif; line-height: 15px; color: #000; }
+.dvx .rb.b975 { font-size: 13px; }
+.dvx .rb input { margin: 0; width: 13px; height: 13px; flex: none; }
+
+/* UltraCombo host (DV.Combo) and the absolutely placed searchable selects */
+.dvx .dv-combo.x { width: auto; }
+.dvx .dv-combo > .dtcombo-wrap { display: flex; width: 100%; height: 100%; }
+.dvx .dv-combo .dtcombo-input.pcx-field, .dvx .x.dtcombo-wrap .dtcombo-input.pcx-field { font: 13px Verdana, "DejaVu Sans", sans-serif; border-color: #7a7a7a; height: 100%; padding-left: 3px; }
+.dvx .x.dtcombo-wrap { display: flex; }
+.dvx .mss .dtcombo-input.pcx-field { font: 12px "Microsoft Sans Serif", Arial, sans-serif; }
+
+/* Button (FlatStyle teal) */
+.dvx .tb { position: absolute; margin: 0; padding: 0; box-sizing: border-box; background: #008080; color: #fff; border: 1px solid #006666; border-radius: 0;
+    font: bold 13px Verdana, "DejaVu Sans", sans-serif; cursor: pointer; }
+.dvx .tb.tah { font-family: Tahoma, "DejaVu Sans", sans-serif; }
+.dvx .tb.tah9 { font: bold 12px Tahoma, "DejaVu Sans", sans-serif; }
+.dvx .tb.c0a { background: #0a6e6e; }
+.dvx .tb.sui { font: bold 13px "Segoe UI", Carlito, Arial, sans-serif; }
+.dvx .tb:hover:not(:disabled) { background: #0a8a8a; }
+.dvx .tb:disabled { opacity: .55; cursor: default; }
+
+/* FlowLayoutPanel: fixed-size child panels that wrap, a hidden panel closes the gap */
+.dvx .dvx-flow { position: absolute; display: flex; flex-wrap: wrap; align-content: flex-start; }
+.dvx .dvx-fp { position: relative; flex: none; height: 47px; }
+
+/* VoucherInfoBox */
+.dvx .dvx-info { position: absolute; box-sizing: border-box; border: 1px solid #c9d1d6; border-radius: 3px; background: #fff; }
+.dvx .dvx-info .l { font-size: 13px; line-height: 17px; }
+.dvx .dvx-info b { position: absolute; width: 80px; text-align: right; font: bold 13px "Segoe UI", Carlito, Arial, sans-serif; line-height: 17px; }
+
+/* Janus GridEX: own scroll box, header band, dotted cells, total row at the bottom */
+.dvx .dvx-gh { flex: 1 1 auto; min-height: 90px; overflow: auto; background: #fff; border: 0; border-top: 1px solid #9eb6ce; position: relative; }
+.dvx .dvx-gh.fixed { flex: none; }
+.dvx .dvx-gh table.dv-grid { border-collapse: separate; border-spacing: 0; width: max-content; min-width: 100%; font: 11px Verdana, "DejaVu Sans", sans-serif; }
+.dvx .dvx-gh table.dv-grid th { position: sticky; top: 0; z-index: 2; height: 21px; padding: 1px 5px; box-sizing: border-box; text-align: left; white-space: nowrap;
+    background: linear-gradient(to bottom, #f7faff 0%, #dde8f6 50%, #cbdcf1 100%); color: #15428b; font: 11px Verdana, "DejaVu Sans", sans-serif;
+    border: 0; border-right: 1px solid #9eb6ce; border-bottom: 1px solid #9eb6ce; }
+.dvx .dvx-gh table.dv-grid th.n { text-align: right; }
+.dvx .dvx-gh table.dv-grid td { height: 19px; padding: 1px 4px; border: 0; border-right: 1px dotted #a9c4e4; border-bottom: 1px dotted #a9c4e4; white-space: nowrap;
+    font: 11px Verdana, "DejaVu Sans", sans-serif; }
+.dvx .dvx-gh table.dv-grid tbody tr:hover td { background: #fff4d6; }
+.dvx .dvx-gh table.dv-grid tbody tr.dv-selrow td { background: #fbe7a1; }
+.dvx .dvx-gh table.dv-grid tfoot td { position: sticky; bottom: 0; z-index: 1; background: #f4f7fb; border-top: 1px solid #9eb6ce; border-right: 1px solid #d5e1f0;
+    font-weight: bold; }
+.dvx .dvx-gh table.dv-grid td button { font: 11px Verdana, "DejaVu Sans", sans-serif; padding: 0 6px; height: 17px; border: 1px solid #8c99a4;
+    background: linear-gradient(#fff, #e6e6e6); cursor: pointer; }
+.dvx .dvx-gh table.dv-grid td a.dv-link { color: #0645ad; }
+.dvx .dvx-gh .dv-empty { padding: 10px !important; }
+
+/* TabControl, Alignment = Bottom: the strip at the foot of the window; History button at the right */
+.dvx .dvx-foot { flex: none; height: 30px; display: flex; align-items: flex-start; gap: 6px; padding: 0 6px 0 2px; box-sizing: border-box;
+    background: #f0f0f0; border-top: 1px solid #a0a0a0; }
+.dvx .dvx-foot .dv-tabs { display: flex; gap: 0; padding: 0; background: transparent; border: 0; align-items: flex-start; }
+.dvx .dvx-foot .dv-tabs button { height: 22px; min-width: 64px; padding: 0 12px; margin: 0 -1px 0 0; border: 1px solid #a0a0a0; border-top: 0; border-radius: 0 0 3px 3px;
+    background: #e8e8e8; font: 13px "Microsoft Sans Serif", Arial, sans-serif; cursor: pointer; top: 0; }
+.dvx .dvx-foot .dv-tabs button.active { background: #fff; height: 25px; font-weight: normal; position: relative; top: -1px; z-index: 1; }
+.dvx .dvx-foot .dvx-fr { margin-left: auto; display: flex; gap: 6px; padding-top: 3px; }
+.dvx .dvx-foot .dv-btn { height: 23px; padding: 0 12px; font: bold 12px "Segoe UI", Carlito, Arial, sans-serif; background: #0a6e6e; color: #fff; border: 1px solid #075454; }
+.dvx .dvx-foot .dv-btn:hover { background: #0a8a8a; }
+
+/* TabControl at the top (Expense tabControl2: Detail / Cost Center Breakup) */
+.dvx .dvx-ttabs { flex: none; display: flex; gap: 0; padding: 2px 2px 0; background: #fff; border: 0; border-bottom: 1px solid #a0a0a0; }
+.dvx .dvx-ttabs button { height: 21px; padding: 0 10px; margin: 0 -1px 0 0; border: 1px solid #a0a0a0; border-bottom: 0; border-radius: 3px 3px 0 0; background: #e8e8e8;
+    font: 13px Verdana, "DejaVu Sans", sans-serif; cursor: pointer; }
+.dvx .dvx-ttabs button.active { background: #fff; position: relative; top: 1px; height: 22px; font-weight: normal; }
+.dvx .ic-new { background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='7' fill='%232e9d3e'/%3E%3Cpath d='M8 4v8M4 8h8' stroke='%23fff' stroke-width='2'/%3E%3C/svg%3E"); }
+.dvx .ic-edit { background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M3 13l1-3 7-7 2 2-7 7z' fill='%23f2b134' stroke='%237a5300'/%3E%3Cpath d='M3 13l1-3 2 2z' fill='%23333'/%3E%3C/svg%3E"); }
+.dvx .ic-save { background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Crect x='2' y='2' width='12' height='12' rx='1' fill='%232f6db5'/%3E%3Crect x='4' y='2' width='8' height='4' fill='%23fff'/%3E%3Crect x='4' y='9' width='8' height='5' fill='%23dfe9f5'/%3E%3C/svg%3E"); }
+.dvx .ic-refresh { background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M13 8a5 5 0 1 1-1.5-3.6' fill='none' stroke='%231e88d2' stroke-width='2'/%3E%3Cpath d='M13 2v4H9z' fill='%231e88d2'/%3E%3C/svg%3E"); }
+.dvx .ic-attach { background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M10 4v6a2 2 0 0 1-4 0V3.5a1.5 1.5 0 0 1 3 0V10' fill='none' stroke='%23555' stroke-width='1.3'/%3E%3C/svg%3E"); }
+.dvx .ic-print { background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Crect x='4' y='2' width='8' height='4' fill='%23fff' stroke='%23555'/%3E%3Crect x='2' y='6' width='12' height='6' rx='1' fill='%23666'/%3E%3Crect x='4' y='10' width='8' height='4' fill='%23fff' stroke='%23555'/%3E%3C/svg%3E"); }
+.dvx .ic-cut { background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Ccircle cx='4.5' cy='12' r='2' fill='none' stroke='%23c0392b' stroke-width='1.4'/%3E%3Ccircle cx='11.5' cy='12' r='2' fill='none' stroke='%23c0392b' stroke-width='1.4'/%3E%3Cpath d='M5.5 10.5L11 2M10.5 10.5L5 2' stroke='%23555' stroke-width='1.3'/%3E%3C/svg%3E"); }
+.dvx .ic-keys { background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Crect x='1' y='4' width='14' height='8' rx='1' fill='%23fff' stroke='%23555'/%3E%3Cpath d='M3 6h1M5 6h1M7 6h1M9 6h1M11 6h2M3 8h1M5 8h1M7 8h1M9 8h1M11 8h2M4 10h8' stroke='%23555'/%3E%3C/svg%3E"); }
+.dvx .ic-report { background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Crect x='2' y='9' width='3' height='5' fill='%232e9d3e'/%3E%3Crect x='6.5' y='5' width='3' height='9' fill='%231e88d2'/%3E%3Crect x='11' y='2' width='3' height='12' fill='%23f2b134'/%3E%3C/svg%3E"); }
+.dvx .ic-cog { background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='2.2' fill='none' stroke='%23555' stroke-width='1.4'/%3E%3Cpath d='M8 1.5v2.2M8 12.3v2.2M1.5 8h2.2M12.3 8h2.2M3.4 3.4l1.6 1.6M11 11l1.6 1.6M3.4 12.6L5 11M11 5l1.6-1.6' stroke='%23555' stroke-width='1.4'/%3E%3C/svg%3E"); }
+.dvx .mss10 .dtcombo-input.pcx-field, .dvx .mss10.dtcombo-wrap .dtcombo-input.pcx-field { font: 13.6px "Microsoft Sans Serif", Arial, sans-serif; }

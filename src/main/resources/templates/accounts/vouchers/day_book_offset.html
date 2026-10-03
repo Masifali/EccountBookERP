@@ -5,152 +5,195 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Day Book (Off Set)</title>
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20261002gd}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20261002gd}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_acc_desk_d.css?v=20261002gd}">
     <style>
-        body { font-family: "Segoe UI", Tahoma, Verdana, sans-serif; font-size: 12px; background: #f0f0f0; margin: 0; color: #222; }
-        .tabs { display: flex; gap: 2px; padding: 4px 6px 0; background: #dcdcdc; }
-        .tabs button { border: 1px solid #aaa; border-bottom: none; background: #e9e9e9; padding: 4px 16px; cursor: pointer; font-size: 12px; }
-        .tabs button.on { background: #fff; font-weight: bold; }
-        .page { background: #fff; border: 1px solid #aaa; margin: 0 6px 6px; padding: 4px; }
-        .toolbar { display: flex; gap: 4px; padding: 3px; background: linear-gradient(#fdfdfd, #e6e6e6); border: 1px solid #c8c8c8; }
-        .toolbar button { font-size: 12px; padding: 3px 10px; border: 1px solid #aaa; background: #fafafa; cursor: pointer; }
-        .toolbar button:disabled { color: #999; cursor: default; }
-        .strip { background: #00796b; color: #fff; font-weight: bold; font-size: 14px; padding: 4px 8px; margin-top: 3px; }
-        fieldset { border: 1px solid #b5b5b5; margin: 4px 0; padding: 4px 8px 8px; }
-        legend { font-weight: bold; font-size: 12px; padding: 0 4px; width: auto; }
-        .row { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 4px; }
-        .fld { display: flex; flex-direction: column; }
-        .fld label { font-weight: 600; font-size: 11px; margin-bottom: 1px; }
-        input[type=text], input[type=date], select, textarea { font-size: 12px; border: 1px solid #9a9a9a; padding: 2px 4px; height: 24px; box-sizing: border-box; }
-        textarea { height: 78px; resize: none; }
-        input[readonly], input:disabled, select:disabled { background: #eee; }
-        .num { text-align: right; }
-        .bar { background: #00796b; color: #fff; font-weight: bold; padding: 3px 6px; }
-        .grid { border: 1px solid #aaa; overflow: auto; height: 300px; background: #fff; }
-        table.g { border-collapse: collapse; width: 100%; font-size: 11px; }
-        table.g th { background: #e4e4e4; border: 1px solid #b9b9b9; padding: 3px 4px; text-align: center; position: sticky; top: 0; white-space: nowrap; }
-        table.g td { border: 1px solid #d3d3d3; padding: 2px 4px; white-space: nowrap; }
-        table.g tr.cur td { background: #cfe5ff; }
-        table.g tfoot td { font-weight: bold; background: #f3f3f3; }
-        .bal { font-size: 11px; color: #004d40; font-weight: bold; margin-left: 6px; }
-        .sides { display: flex; gap: 6px; }
-        .side { flex: 1; min-width: 0; }
-        [hidden] { display: none !important; }
+        /* frmDayBook.cs designer: ClientSize 1256x563, tabControl1 Alignment=Bottom, tab pages 1248x537 (panel2 padding 3).
+           Form: panel3 30 (toolstrip) | panel4 293 = panel6 teal 36 + MainBox "Main" (3,35) 1239x138
+                 + groupBox2 "Detail" (3,173) 1239x116 holding flowLayoutPanel1 (2,16) 1212x97 | grdDetail Dock=Fill.
+           frmDayBook_Load / MultiCurrencyFeature() runtime changes reproduced below:
+             TemporaryAccountId <= 0 -> Temporary Ac hidden, MainBox 122 high, remarks 78 high, Sub Code / Cr Total / Dr Total panels hidden,
+                                        CreditAccountPanel 290 (combo 288); and with no subsidiary feature also both remarks panels 600 (box 595);
+             no multi-currency      -> Fcy Code / Exchange Rate / Fcy Amount hidden, Print Preview + Preview Format II move to x771. */
+        .flow { position: absolute; left: 2px; top: 16px; width: 1212px; height: 97px; display: flex; flex-wrap: wrap; align-content: flex-start; }
+        .flow > .fp { position: relative; flex: none; height: 47px; }
+        .flow > .fp > .fpin { position: absolute; inset: 0; }
+        body:has(#rowTemporary[hidden]) #MainBox { height: 122px !important; }
+        body:has(#rowTemporary[hidden]) #txtVoucherRemarks { height: 78px !important; }
+        body:has(#rowTemporary[hidden]) #CreditAccountPanel { width: 290px !important; }
+        body:has(#rowTemporary[hidden]) #CreditAccountPanel .dtcombo-wrap { width: 288px !important; }
+        body:has(#rowTemporary[hidden]):has(#CreditSubsidiaryPanel[hidden]) #CrRemarksPanel,
+        body:has(#rowTemporary[hidden]):has(#CreditSubsidiaryPanel[hidden]) #DrRemarksPanel { width: 600px !important; }
+        body:has(#rowTemporary[hidden]):has(#CreditSubsidiaryPanel[hidden]) #txtCrRemarks,
+        body:has(#rowTemporary[hidden]):has(#CreditSubsidiaryPanel[hidden]) #txtDrRemarks { width: 595px !important; }
+        body:has(#lblFcyCode[hidden]) .pp { left: 771px !important; }
+        #lblRemarksMain { background: #fff; }
     </style>
 </head>
-<body>
-<div class="tabs">
-    <button type="button" id="tabForm" class="on" onclick="DBO.tab(0)">Form</button>
-    <button type="button" id="tabHistory" onclick="DBO.tab(1)">History</button>
-</div>
+<body class="dk">
+<div class="dk-shell">
+<div class="dk-body">
 
 <!-- ====================================================== tabPage1 "Form" -->
-<div class="page" id="pageForm">
-    <div class="toolbar">
-        <button type="button" onclick="DBO.newForm()">New</button>
-        <button type="button" onclick="DBO.refresh()">Refresh</button>
-        <button type="button" id="btnsave" onclick="DBO.save(false)">Save</button>
-        <button type="button" id="btnUpdate" hidden onclick="DBO.save(true)">Update</button>
-        <button type="button" disabled title="Attachments are not ported to the web.">Attachment</button>
-        <button type="button" onclick="DBO.shortcuts()">ShortCut Keys</button>
+<div class="dk-page" id="pageForm" style="width:1248px;">
+    <!-- panel3 -->
+    <div class="dk-dock" style="height:30px;">
+        <div class="dk-ts">
+            <button type="button" class="dk-tsb sm" id="btnNew" onclick="DBO.newForm()"><i class="fa fa-file-o"></i><span><u>N</u>ew</span></button>
+            <button type="button" class="dk-tsb" id="btnRefresh" onclick="DBO.refresh()"><i class="fa fa-refresh g"></i><span>Refresh</span></button>
+            <button type="button" class="dk-tsb sm" id="btnsave" onclick="DBO.save(false)"><i class="fa fa-floppy-o"></i><span><u>S</u>ave</span></button>
+            <button type="button" class="dk-tsb" id="btnUpdate" hidden onclick="DBO.save(true)"><i class="fa fa-pencil-square-o"></i><span>Update</span></button>
+            <button type="button" class="dk-tsb" disabled title="Attachments are not ported to the web."><i class="fa fa-paperclip"></i><span><u>A</u>ttachment</span></button>
+            <button type="button" class="dk-tsb" onclick="DBO.shortcuts()"><span>ShortCut Keys</span></button>
+        </div>
     </div>
-    <div class="strip">Day Book</div>
+    <!-- panel4 -->
+    <div class="dk-dock" style="height:293px;">
+        <div class="dk-teal" style="position:absolute;left:0;top:0;width:100%;height:36px;"><span class="dk-cap" style="left:7px;top:7px;">Day Book</span></div>
 
-    <fieldset id="MainBox">
-        <legend>Main</legend>
-        <div style="display:flex;gap:14px;flex-wrap:wrap;">
-            <div>
-                <div class="row">
-                    <div class="fld"><label>Vocher Code</label><input type="text" id="txtDocNo" readonly style="width:110px;"></div>
-                    <div class="fld"><label>Date</label><input type="date" id="txtDocDate" style="width:130px;"></div>
+        <div class="dk-gb" id="MainBox" style="left:3px;top:35px;width:1239px;height:138px;">
+            <span class="dk-gbcap">Main</span>
+            <label class="dk-l" style="left:12px;top:26px;" for="txtDocNo">Vocher Code</label>
+            <input type="text" class="dk-t" id="txtDocNo" readonly style="left:93px;top:22px;width:116px;">
+            <label class="dk-l" style="left:209px;top:26px;" for="txtDocDate">Date</label>
+            <input type="date" class="dk-t" id="txtDocDate" style="left:255px;top:22px;width:135px;">
+            <label class="dk-l" id="lblRemarksMain" style="left:394px;top:26px;" for="txtVoucherRemarks">Remarks</label>
+            <textarea class="dk-t" id="txtVoucherRemarks" style="left:447px;top:22px;width:319px;height:108px;"></textarea>
+
+            <label class="dk-l" style="left:12px;top:54px;">Cash Account</label>
+            <select id="cmbCashAccount" class="dtcombo" data-dtcombo="gdAccount" data-dtcombo-caption="Cash Account" style="position:absolute;left:93px;top:48px;width:297px;height:26px;" onchange="DBO.cashLeave()"></select>
+            <label class="dk-l" style="left:12px;top:81px;">Opening</label>
+            <input type="text" class="dk-t r" id="txtOpening" readonly style="left:93px;top:77px;width:116px;">
+            <label class="dk-l" style="left:209px;top:81px;">Closing</label>
+            <input type="text" class="dk-t r" id="txtClosing" readonly style="left:255px;top:77px;width:135px;">
+            <div id="rowTemporary" hidden style="position:absolute;left:0;top:0;width:0;height:0;">
+                <label class="dk-l" style="left:12px;top:110px;">Temporary Ac</label>
+                <select id="CmbTemporaryAccount" class="dtcombo" data-dtcombo="gdAccount" data-dtcombo-caption="Temporary Account" style="position:absolute;left:93px;top:104px;width:297px;height:26px;"></select>
+            </div>
+
+            <label class="dk-l mc" id="lblFcyCode" style="left:772px;top:26px;">Fcy Code</label>
+            <select id="cmbCurrency" class="dtcombo mc" data-dtcombo-caption="FcyCode" style="position:absolute;left:856px;top:20px;width:128px;height:26px;" onchange="DBO.currencyLeave()"></select>
+            <label class="dk-l mc" style="left:772px;top:54px;">Exchange Rate</label>
+            <input type="text" class="dk-t r mc" id="txtExchangeRate" style="left:856px;top:50px;width:128px;" oninput="DBO.rateChanged()" onblur="DBO.rateLeave()">
+            <label class="dk-l mc" style="left:772px;top:80px;">Fcy Amount</label>
+            <input type="text" class="dk-t r mc" id="txtFcyAmount" disabled style="left:856px;top:76px;width:128px;">
+            <label class="dk-chk pp" style="left:990px;top:56px;"><input type="checkbox" id="ChkBoxPrintPreview" checked> Print Preview</label>
+            <label class="dk-chk pp" style="left:990px;top:79px;"><input type="checkbox" id="chkformat2"> Preview Format II</label>
+        </div>
+
+        <div class="dk-gb" id="groupBox2" style="left:3px;top:173px;width:1239px;height:116px;">
+            <span class="dk-gbcap">Detail</span>
+            <div class="flow" id="flowLayoutPanel1">
+                <div class="fp tmp" id="SubCodePanel" style="width:79px;">
+                    <label class="dk-l" style="left:1px;top:3px;">Sub Code</label>
+                    <input type="text" class="dk-t" id="txtSubCode" readonly style="left:1px;top:23px;width:76px;">
                 </div>
-                <div class="row">
-                    <div class="fld"><label>Cash Account</label>
-                        <select id="cmbCashAccount" class="dtcombo" data-dtcombo="gdAccount" data-dtcombo-caption="Cash Account" style="width:270px;" onchange="DBO.cashLeave()"></select>
+                <div class="fp" id="CreditAccountPanel" style="width:210px;">
+                    <label class="dk-l" style="left:0;top:2px;">Credit Account</label>
+                    <span class="dk-l" id="CrBalance" hidden style="left:92px;top:2px;"></span>
+                    <select id="cmbCreditAccount" class="dtcombo" data-dtcombo="gdAccount" data-dtcombo-caption="Credit Account" style="position:absolute;left:1px;top:20px;width:209px;height:26px;" onchange="DBO.creditLeave()"></select>
+                </div>
+                <div class="fp sub" id="CreditSubsidiaryPanel" style="width:172px;">
+                    <label class="dk-l" style="left:1px;top:1px;">Credit Subsidiary Account</label>
+                    <select id="CmbCrSubsidiaryAccount" class="dtcombo" data-dtcombo="gdSubsidiary4" data-dtcombo-caption="Account Title" style="position:absolute;left:1px;top:21px;width:171px;height:26px;" onchange="DBO.subPicked('cr')"></select>
+                </div>
+                <div class="fp tmp" id="CrTotalAmountPanel" style="width:130px;height:46px;">
+                    <label class="dk-l" style="left:4px;top:1px;">Cr Total Amount</label>
+                    <input type="text" class="dk-t r" id="txtTotalCrAmount" style="left:1px;top:21px;width:129px;" oninput="DBO.commas(this)">
+                </div>
+                <div class="fp" id="CrRemarksPanel" style="width:329px;">
+                    <label class="dk-l" style="left:1px;top:2px;">Credit Remarks</label>
+                    <input type="text" class="dk-t" id="txtCrRemarks" style="left:1px;top:22px;width:328px;" onblur="DBO.crRemarksLeave()">
+                </div>
+                <div class="fp" id="CheqNoPanel" style="width:154px;">
+                    <div class="fpin" id="pnlChequeNo">
+                        <label class="dk-l" style="left:1px;top:1px;">Cheque No</label>
+                        <select id="CmbChequeNo" class="dtcombo" data-dtcombo-caption="CheqNo" style="position:absolute;left:1px;top:19px;width:153px;height:26px;"></select>
+                    </div>
+                    <div class="fpin" id="pnlChequeRef">
+                        <label class="dk-l" style="left:1px;top:1px;">Cheque Ref</label>
+                        <input type="text" class="dk-t" id="txtChequeRef" style="left:1px;top:21px;width:149px;">
                     </div>
                 </div>
-                <div class="row">
-                    <div class="fld"><label>Opening</label><input type="text" id="txtOpening" readonly class="num" style="width:110px;"></div>
-                    <div class="fld"><label>Closing</label><input type="text" id="txtClosing" readonly class="num" style="width:130px;"></div>
+                <div class="fp" id="AmountPanel" style="width:133px;">
+                    <label class="dk-l" style="left:2px;top:2px;">Amount</label>
+                    <input type="text" class="dk-t r" id="txtAmount" style="left:1px;top:22px;width:130px;" oninput="DBO.commas(this)">
                 </div>
-                <div class="row" id="rowTemporary" hidden>
-                    <div class="fld"><label>Temporary Ac</label>
-                        <select id="CmbTemporaryAccount" disabled style="width:270px;"></select>
-                    </div>
+                <div class="fp" id="DebitAccountPanel" style="width:290px;">
+                    <label class="dk-l" style="left:2px;top:1px;">Debit Account</label>
+                    <span class="dk-l" id="DrBalance" hidden style="left:169px;top:2px;"></span>
+                    <select id="cmbDebitAccount" class="dtcombo" data-dtcombo="gdAccount" data-dtcombo-caption="Debit Account" style="position:absolute;left:1px;top:20px;width:288px;height:26px;" onchange="DBO.debitLeave()"></select>
+                </div>
+                <div class="fp tmp" id="DrTotalAmountPanel" style="width:131px;">
+                    <label class="dk-l" style="left:4px;top:2px;">Dr Total Amount</label>
+                    <input type="text" class="dk-t r" id="txtTotalDrAmount" style="left:1px;top:23px;width:130px;" oninput="DBO.commas(this)">
+                </div>
+                <div class="fp sub" id="DebitSubsidiaryAccountPanel" style="width:172px;">
+                    <label class="dk-l" style="left:1px;top:1px;">Debit Subsidiary Account</label>
+                    <select id="CmbDrSubsidiaryAccount" class="dtcombo" data-dtcombo="gdSubsidiary4" data-dtcombo-caption="Account Title" style="position:absolute;left:1px;top:20px;width:171px;height:26px;" onchange="DBO.subPicked('dr')"></select>
+                </div>
+                <div class="fp" id="DrRemarksPanel" style="width:329px;">
+                    <label class="dk-l" style="left:1px;top:2px;">Debit Remarks</label>
+                    <input type="text" class="dk-t" id="txtDrRemarks" style="left:1px;top:23px;width:328px;">
+                </div>
+                <div class="fp" id="ButtonsPanel" style="width:138px;">
+                    <button type="button" class="dk-btn b" id="btnAddDetail" style="left:1px;top:19px;width:46px;height:27px;" onclick="DBO.addDetail()">+</button>
+                    <button type="button" class="dk-btn b" id="btnUpdateDetail" hidden style="left:1px;top:19px;width:68px;height:27px;" onclick="DBO.updateDetail()">Update </button>
+                    <button type="button" class="dk-btn b" id="btnCancelDetail" hidden style="left:68px;top:19px;width:66px;height:27px;" onclick="DBO.cancelDetail()">Cancel</button>
                 </div>
             </div>
-            <div class="fld"><label>Remarks</label><textarea id="txtVoucherRemarks" style="width:319px;"></textarea></div>
-            <div>
-                <div class="row mc"><div class="fld"><label>Fcy Code</label>
-                    <select id="cmbCurrency" style="width:130px;" onchange="DBO.currencyLeave()"></select></div></div>
-                <div class="row mc"><div class="fld"><label>Exchange Rate</label>
-                    <input type="text" id="txtExchangeRate" class="num" style="width:130px;" oninput="DBO.rateChanged()" onblur="DBO.rateLeave()"></div></div>
-                <div class="row mc"><div class="fld"><label>Fcy Amount</label>
-                    <input type="text" id="txtFcyAmount" class="num" disabled style="width:130px;"></div></div>
-            </div>
-            <div style="display:flex;flex-direction:column;justify-content:flex-end;gap:4px;">
-                <label><input type="checkbox" id="ChkBoxPrintPreview" checked> Print Preview</label>
-                <label><input type="checkbox" id="chkformat2"> Preview Format II</label>
-            </div>
         </div>
-    </fieldset>
-
-    <fieldset>
-        <legend>Detail</legend>
-        <div class="row">
-            <div class="fld tmp"><label>Sub Code</label><input type="text" id="txtSubCode" readonly style="width:74px;"></div>
-            <div class="fld"><label>Credit Account <span class="bal" id="CrBalance" hidden></span></label>
-                <select id="cmbCreditAccount" class="dtcombo" data-dtcombo="gdAccount" data-dtcombo-caption="Credit Account" style="width:288px;" onchange="DBO.creditLeave()"></select>
-            </div>
-            <div class="fld sub"><label>Credit Subsidiary Account</label>
-                <select id="CmbCrSubsidiaryAccount" class="dtcombo" data-dtcombo="gdSubsidiary" data-dtcombo-caption="Account Title" style="width:168px;" onchange="DBO.subPicked('cr')"></select>
-            </div>
-            <div class="fld tmp"><label>Cr Total Amount</label><input type="text" id="txtTotalCrAmount" class="num" style="width:126px;" oninput="DBO.commas(this)"></div>
-            <div class="fld"><label>Credit Remarks</label><input type="text" id="txtCrRemarks" style="width:324px;" onblur="DBO.crRemarksLeave()"></div>
-            <div class="fld" id="pnlChequeNo"><label>Cheque No</label><select id="CmbChequeNo" style="width:150px;"></select></div>
-            <div class="fld" id="pnlChequeRef"><label>Cheque Ref</label><input type="text" id="txtChequeRef" style="width:150px;"></div>
-            <div class="fld"><label>Amount</label><input type="text" id="txtAmount" class="num" style="width:130px;" oninput="DBO.commas(this)"></div>
-        </div>
-        <div class="row">
-            <div class="fld"><label>Debit Account <span class="bal" id="DrBalance" hidden></span></label>
-                <select id="cmbDebitAccount" class="dtcombo" data-dtcombo="gdAccount" data-dtcombo-caption="Debit Account" style="width:288px;" onchange="DBO.debitLeave()"></select>
-            </div>
-            <div class="fld tmp"><label>Dr Total Amount</label><input type="text" id="txtTotalDrAmount" class="num" style="width:126px;" oninput="DBO.commas(this)"></div>
-            <div class="fld sub"><label>Debit Subsidiary Account</label>
-                <select id="CmbDrSubsidiaryAccount" class="dtcombo" data-dtcombo="gdSubsidiary" data-dtcombo-caption="Account Title" style="width:168px;" onchange="DBO.subPicked('dr')"></select>
-            </div>
-            <div class="fld"><label>Debit Remarks</label><input type="text" id="txtDrRemarks" style="width:324px;"></div>
-            <button type="button" id="btnAddDetail" onclick="DBO.addDetail()">+</button>
-            <button type="button" id="btnUpdateDetail" hidden onclick="DBO.updateDetail()">Update </button>
-            <button type="button" id="btnCancelDetail" hidden onclick="DBO.cancelDetail()">Cancel</button>
-        </div>
-    </fieldset>
-    <div class="grid"><table class="g" id="grdDetail"></table></div>
+    </div>
+    <!-- grdDetail Dock=Fill -->
+    <div class="dk-grid" tabindex="-1" style="min-height:208px;"><table class="g" id="grdDetail" data-colw='{"Delete":50}'></table></div>
 </div>
 
 <!-- ====================================================== tabPage2 "History" -->
-<div class="page" id="pageHistory" hidden>
-    <div class="toolbar">
-        <button type="button" id="btnPrint144" onclick="DBO.print144()" data-rpt="144-DayBookSlip.rpt">144-Print</button>
-        <button type="button" onclick="DBO.loadVoucherDates()">Refresh</button>
-    </div>
-    <div class="strip">DAY BOOK HISTORY</div>
-    <div class="row" style="margin-top:4px;">
-        <div class="fld"><label>Voucher Date</label><select id="datVouchderDateForHistory" style="width:178px;"></select></div>
-        <div class="fld"><label>Cash Account</label>
-            <select id="CmbCashAccountForHistory" class="dtcombo" data-dtcombo="gdAccount" data-dtcombo-caption="Cash Account" style="width:235px;"></select>
+<div class="dk-page" id="pageHistory" hidden style="width:1248px;">
+    <!-- panel10 -->
+    <div class="dk-dock" style="height:29px;">
+        <div class="dk-ts">
+            <button type="button" class="dk-tsb" id="btnPrint144" onclick="DBO.print144()" data-rpt="144-DayBookSlip.rpt"><i class="fa fa-print"></i><span>144-Print</span></button>
+            <button type="button" class="dk-tsb" id="btnRefreshHistory" onclick="DBO.loadVoucherDates()"><i class="fa fa-refresh g"></i><span>Refresh</span></button>
         </div>
-        <button type="button" onclick="DBO.history()">Show</button>
-        <label><input type="checkbox" id="chkZkipCashTransaction"> Print Preview Without Cash Account Transactions</label>
     </div>
-    <div class="sides">
-        <div class="side"><div class="bar">Credit Transactions</div><div class="grid" style="height:560px;"><table class="g" id="DataGridCreditHistory"></table></div></div>
-        <div class="side"><div class="bar">Debit Transactions</div><div class="grid" style="height:560px;"><table class="g" id="DataGridDebitHistory"></table></div></div>
+    <!-- panel11 -->
+    <div class="dk-dock dk-teal" style="height:33px;"><span class="dk-cap" style="left:7px;top:7px;">DAY BOOK HISTORY</span></div>
+    <!-- panel5 -->
+    <div class="dk-dock" style="height:57px;">
+        <label class="dk-l" style="left:5px;top:5px;">Voucher Date</label>
+        <select id="datVouchderDateForHistory" class="dtcombo" data-dtcombo-caption="Voucher Date" style="position:absolute;left:5px;top:26px;width:178px;height:26px;"></select>
+        <label class="dk-l" style="left:187px;top:5px;">Cash Account</label>
+        <select id="CmbCashAccountForHistory" class="dtcombo" data-dtcombo="gdAccount" data-dtcombo-caption="Cash Account" style="position:absolute;left:185px;top:26px;width:235px;height:26px;"></select>
+        <button type="button" class="dk-btn b" id="BtnShow" style="left:420px;top:26px;width:58px;height:26px;" onclick="DBO.history()">Show</button>
+        <label class="dk-chk plain" style="left:425px;top:6px;"><input type="checkbox" id="chkZkipCashTransaction"> Print Preview Without Cash Account Transactions</label>
+    </div>
+    <div class="dk-fill" style="min-height:412px;">
+        <div class="dk-col" style="width:627px;">
+            <div class="dk-bar dk-teal s12" style="height:30px;">Credit Transactions</div>
+            <div class="dk-grid"><table class="g" id="DataGridCreditHistory" data-colw='{"Edit":50,"Print":50}'></table></div>
+        </div>
+        <div class="dk-col" style="width:688px;">
+            <div class="dk-bar dk-teal s12" style="height:30px;">Debit Transactions</div>
+            <div class="dk-grid"><table class="g" id="DataGridDebitHistory" data-colw='{"Edit":50,"Print":50}'></table></div>
+        </div>
     </div>
 </div>
 
-<script th:src="@{/build/js/countx_desktop_combo.js?v=20260927b}"></script>
+</div>
+<!-- tabControl1 (Alignment = Bottom) + History on the right of the footer -->
+<div class="dk-tabs">
+    <button type="button" class="dk-tab on" id="tabForm" onclick="DBO.tab(0)">Form</button>
+    <button type="button" class="dk-tab" id="tabHistory" onclick="DBO.tab(1)">History</button>
+    <button type="button" class="dk-hist" id="btnHistoryFooter" onclick="DBO.tab(1)"><i class="fa fa-history"></i> History</button>
+</div>
+</div>
+
+<script th:src="@{/build/js/countx_prod_combo.js?v=20261002gd}"></script>
 <script th:src="@{/build/js/countx_accounts_groupd.js?v=20260930s}"></script>
-<script th:src="@{/build/js/countx_day_book_offset.js?v=20260930s}"></script>
+<script th:src="@{/build/js/countx_acc_desk_d.js?v=20261002gd}"></script>
+<script th:src="@{/build/js/countx_day_book_offset.js?v=20261002gd}"></script>
 <script src="/js/print-rpt.js?v=20261001a"></script>
 </body>
 </html>

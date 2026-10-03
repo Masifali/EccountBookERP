@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>GRN Direct Against Order - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_hrm.css?v=20260929a}"/>
+    <style>
+        table.hrm-grid .ppb-cell-btn { height: 20px; min-width: 0; width: auto; padding: 0 8px; font-size: 8pt; line-height: 18px; }
+        table.hrm-grid .hrm-cell-input, table.hrm-grid .hrm-cell-select { min-width: 70px; }
+        .gdo-toolbar-title { font: bold 10pt Tahoma, sans-serif; color: #004d4d; padding: 0 10px 0 4px; align-self: center; white-space: nowrap; }
+        .gdo-head { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1fr) minmax(0, 1.1fr); gap: 6px 18px; padding: 8px 12px; align-items: start; }
+        .gdo-col { display: grid; gap: 6px; min-width: 0; }
+        .gdo-pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 6px 12px; }
+        .gdo-head .hrm-field { grid-template-columns: 105px minmax(0, 1fr); }
+        .gdo-head .gdo-pair .hrm-field { grid-template-columns: 82px minmax(0, 1fr); }
+        .gdo-remarks { display: grid; grid-template-columns: 105px minmax(0, 1fr) auto; gap: 6px; align-items: start; }
+        .gdo-remarks > label { font-family: "Segoe UI Semibold", "Segoe UI", sans-serif; font-weight: bold; font-size: 9pt; margin: 0; }
+        .gdo-detail { display: grid; grid-template-columns: 0.8fr 1.7fr 1fr 0.8fr 0.9fr 1fr 0.8fr 0.9fr 0.6fr 0.8fr; gap: 4px 8px; padding: 6px 12px 8px 12px; align-items: end; }
+        .gdo-detail2 { display: grid; grid-template-columns: 0.6fr 0.8fr 0.6fr 1fr 1fr 1.5fr 1.7fr 2.3fr auto; gap: 4px 8px; padding: 0 12px 8px 12px; align-items: end; }
+        .gdo-grids .hrm-grid-box { min-height: 140px; }
+        .gdo-grids .hrm-grid-wrap { max-height: 300px; min-height: 90px; }
+        .gdo-bags { max-width: 690px; }
+        .gdo-hist .hrm-grid-wrap { max-height: calc(50vh - 60px); }
+        @media (max-width: 1100px) {
+            .gdo-head { grid-template-columns: 1fr 1fr; }
+            .gdo-detail, .gdo-detail2 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+        }
+        @media (max-width: 680px) {
+            .gdo-head, .gdo-detail, .gdo-detail2, .gdo-pair { grid-template-columns: 1fr; }
+            .gdo-remarks { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<!-- Architecture.WinApp.Purchase.GRNDirectAgainstOrder (ScreenDefinition 133 "GRNDirectAgainstOrder", DocumentTypeId 169), KeyPreview, Maximized.
+     tabControl1: tabPage1 "Form" | tabPage2 "History".
+     Form: toolStrip1 "Goods Receiving Notes" | New | Update (hidden) | Save | 213-Print | Attechment | Refresh | City | Delete (hidden) | Load Order.
+     panel4 (2,33 1259x153): Branch, Project, Doc No, Doc Date | Supplier Name*, Delivery Term*, Transporter, Freight Amount, Vehicle Type* |
+     Vehicle No* + Bilty No*, Supp Weight* + Fact Weight*, Weight Diff, Remarks + ChkBox "Print".
+     panel5 (2,186 1259x118): Order no, Item Name, Packing Type, Pack UOM, Crop Year, JobLot, Qty, Gross Weight, Eb Unit, EB Total /
+     Wt Cut Unit, Wt Cut Total, Ad/Ls, Net Weight, Stock Weight, City/Area, Warehouse, Remarks, Update, Cancel (no "+": Add_Click is not wired).
+     panel10: grd (panel6) + grdEmptyBags (panel9, 690 wide).
+     History: toolStrip2 LoadAll | GrnHistory; GrdHistory (panel8) + GrdHistoryDetail (panel11). -->
+<body class="pd-body hrm-body" data-hrm="grn-direct-against-order" th:attr="data-screen=${screenId}">
+<div class="hrm-form">
+    <div class="hrm-tabs">
+        <button type="button" class="hrm-tab is-active" data-tab="form">Form</button>
+        <button type="button" class="hrm-tab" data-tab="history">History</button>
+    </div>
+
+    <div class="hrm-tab-page is-active" data-page="form">
+        <div class="win-tool-strip">
+            <span class="gdo-toolbar-title">Goods Receiving Notes</span>
+            <button type="button" id="btnNew" class="win-btn-tool" title="Ctrl_N" onclick="GrnDirectAgainstOrder.btnNew(this)"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="btnUpdate" class="win-btn-tool is-hidden" title="Ctrl_U" onclick="GrnDirectAgainstOrder.btnUpdate(this)"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+            <button type="button" id="btnSave" class="win-btn-tool" title="Ctrl_S" onclick="GrnDirectAgainstOrder.btnSave(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+            <button type="button" id="printToolStripButton" class="win-btn-tool" title="Ctrl_P" onclick="GrnDirectAgainstOrder.btnPrint(this)" data-rpt-skip><i class="fa fa-print"></i> <span>213-Print</span></button>
+            <button type="button" id="btnAttachment" class="win-btn-tool" disabled title="Attachments are not ported to the web (Alt_A)"><i class="fa fa-paperclip"></i> <span><u>A</u>ttechment</span></button>
+            <button type="button" id="toolStripButton1" class="win-btn-tool" title="Alt_R" onclick="GrnDirectAgainstOrder.btnRefresh(this)"><i class="fa fa-refresh"></i> <span><u>R</u>efresh</span></button>
+            <button type="button" id="CityDefine" class="win-btn-tool" title="Define City" onclick="GrnDirectAgainstOrder.cityDefine()"><i class="fa fa-map-marker"></i> <span>City</span></button>
+            <button type="button" id="btnDelete" class="win-btn-tool is-hidden" disabled title="Hidden on the desktop form and without a handler"><i class="fa fa-trash"></i> <span>Delete</span></button>
+            <button type="button" id="BtnLoadOrder" class="win-btn-tool" onclick="GrnDirectAgainstOrder.btnLoadOrder(this)"><i class="fa fa-folder-open-o"></i> <span>Load Order</span></button>
+        </div>
+        <fieldset class="hrm-group" id="panel4">
+            <legend>Main</legend>
+            <div class="gdo-head">
+                <div class="gdo-col">
+                    <div class="hrm-field"><label for="combbrnch">Branch</label><select id="combbrnch" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Branch Name"></select></div>
+                    <div class="hrm-field"><label for="combproject">Project</label><select id="combproject" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Project Name"></select></div>
+                    <div class="hrm-field"><label for="txtdocno">Doc No</label><input type="text" id="txtdocno" class="win-textbox" readonly tabindex="-1"/></div>
+                    <div class="hrm-field"><label for="DocDate">Doc Date</label><input type="date" id="DocDate" class="win-textbox"/></div>
+                </div>
+                <div class="gdo-col">
+                    <div class="hrm-field"><label for="combsupplier" class="hrm-req">Supplier Name</label><select id="combsupplier" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Supplier Name"></select></div>
+                    <div class="hrm-field"><label for="CmbDeliveryTerm" class="hrm-req">Delivery Term</label><select id="CmbDeliveryTerm" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Delivery Term"></select></div>
+                    <div class="hrm-field"><label for="CmbTransport">Transporter</label><select id="CmbTransport" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Supplier Name"></select></div>
+                    <div class="hrm-field"><label for="txtcarramount">Freight Amount</label><input type="text" id="txtcarramount" class="win-textbox hrm-al-right" inputmode="numeric" autocomplete="off"/></div>
+                    <div class="hrm-field"><label for="combvehtyp" class="hrm-req">Vehicle Type</label><select id="combvehtyp" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="VehicleDescription"></select></div>
+                </div>
+                <div class="gdo-col">
+                    <div class="gdo-pair">
+                        <div class="hrm-field"><label for="txtvehno" class="hrm-req">Vehicle No</label><input type="text" id="txtvehno" class="win-textbox" autocomplete="off"/></div>
+                        <div class="hrm-field"><label for="txtbltyno" class="hrm-req">Bilty No</label><input type="text" id="txtbltyno" class="win-textbox" autocomplete="off"/></div>
+                    </div>
+                    <div class="gdo-pair">
+                        <div class="hrm-field"><label for="txtsuppwt" class="hrm-req">Supp Weight</label><input type="text" id="txtsuppwt" class="win-textbox hrm-al-right" inputmode="decimal" autocomplete="off"/></div>
+                        <div class="hrm-field"><label for="txtfctwt" class="hrm-req">Fact Weight</label><input type="text" id="txtfctwt" class="win-textbox hrm-al-right" inputmode="decimal" autocomplete="off"/></div>
+                    </div>
+                    <div class="hrm-field"><label for="txtwtdiff">Weight Diff</label><input type="text" id="txtwtdiff" class="win-textbox hrm-al-right" readonly tabindex="-1"/></div>
+                    <div class="gdo-remarks"><label for="txtremarks">Remarks</label><textarea id="txtremarks" class="win-textbox" rows="2"></textarea>
+                        <label class="hrm-check" style="align-self:end"><input type="checkbox" id="ChkBox" checked> Print</label></div>
+                </div>
+            </div>
+        </fieldset>
+        <fieldset class="hrm-group" id="panel5">
+            <legend>Detail</legend>
+            <div class="gdo-detail">
+                <div class="hrm-field hrm-stack"><label for="cmbOrderNo">Order no</label><select id="cmbOrderNo" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Order No"></select></div>
+                <div class="hrm-field hrm-stack"><label for="combitem">Item Name</label><select id="combitem" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="ItemName"></select></div>
+                <div class="hrm-field hrm-stack"><label for="combpcktyp">Packing Type</label><select id="combpcktyp" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="PackingType"></select></div>
+                <div class="hrm-field hrm-stack"><label for="combpckuom">Pack UOM</label><select id="combpckuom" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Pack UOM"></select></div>
+                <div class="hrm-field hrm-stack"><label for="cmbCropYear">Crop Year</label><select id="cmbCropYear" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Crop Year"></select></div>
+                <div class="hrm-field hrm-stack"><label for="CmbJobLot">JobLot</label><select id="CmbJobLot" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="JobLotDescription"></select></div>
+                <div class="hrm-field hrm-stack"><label for="txtqty">Qty</label><input type="text" id="txtqty" class="win-textbox hrm-al-right" inputmode="decimal" autocomplete="off"/></div>
+                <div class="hrm-field hrm-stack"><label for="txtgwt">Gross Weight</label><input type="text" id="txtgwt" class="win-textbox hrm-al-right" inputmode="decimal" autocomplete="off"/></div>
+                <div class="hrm-field hrm-stack"><label for="txtEBUnit">Eb Unit</label><input type="text" id="txtEBUnit" class="win-textbox hrm-al-right" inputmode="decimal" autocomplete="off"/></div>
+                <div class="hrm-field hrm-stack"><label for="txtEbTotal">EB Total</label><input type="text" id="txtEbTotal" class="win-textbox hrm-al-right" disabled/></div>
+            </div>
+            <div class="gdo-detail2">
+                <div class="hrm-field hrm-stack"><label for="txtWtCutUnit">Wt Cut Unit</label><input type="text" id="txtWtCutUnit" class="win-textbox hrm-al-right" inputmode="decimal" autocomplete="off"/></div>
+                <div class="hrm-field hrm-stack"><label for="txtWtCutTotal">Wt Cut Total</label><input type="text" id="txtWtCutTotal" class="win-textbox hrm-al-right" disabled/></div>
+                <div class="hrm-field hrm-stack"><label for="txtadlswt">Ad/Ls</label><input type="text" id="txtadlswt" class="win-textbox hrm-al-right" inputmode="decimal" autocomplete="off"/></div>
+                <div class="hrm-field hrm-stack"><label for="txtnetwt">Net Weight</label><input type="text" id="txtnetwt" class="win-textbox hrm-al-right" readonly tabindex="-1"/></div>
+                <div class="hrm-field hrm-stack"><label for="txtstockwt">Stock Weight</label><input type="text" id="txtstockwt" class="win-textbox hrm-al-right" readonly tabindex="-1"/></div>
+                <div class="hrm-field hrm-stack"><label for="CmbCity">City/Area</label><select id="CmbCity" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="City Name"></select></div>
+                <div class="hrm-field hrm-stack"><label for="CmbWareHouse">Warehouse</label><select id="CmbWareHouse" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="WareHouseName"></select></div>
+                <div class="hrm-field hrm-stack"><label for="txtremarksdetail">Remarks</label><input type="text" id="txtremarksdetail" class="win-textbox" autocomplete="off"/></div>
+                <div class="hrm-field hrm-stack"><label>&nbsp;</label>
+                    <div class="hrm-inline">
+                        <button type="button" id="btnUpdateDetail" class="win-btn-action is-hidden" onclick="GrnDirectAgainstOrder.btnUpdateDetail()">Update</button>
+                        <button type="button" id="btnCancelUpdateDetial" class="win-btn-action is-hidden" onclick="GrnDirectAgainstOrder.btnCancelUpdateDetial()">Cancel</button>
+                    </div></div>
+            </div>
+        </fieldset>
+        <div class="gdo-grids">
+            <div class="hrm-grid-box">
+                <div class="hrm-subcaption"><span>Detail</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+                <div class="hrm-grid-wrap"><table id="grd"></table></div>
+            </div>
+            <div class="hrm-grid-box gdo-bags">
+                <div class="hrm-subcaption"><span>Empty Bags</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+                <div class="hrm-grid-wrap"><table id="grdEmptyBags"></table></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="hrm-tab-page" data-page="history">
+        <div class="win-tool-strip">
+            <button type="button" id="btnLoadAll" class="win-btn-tool" title="Ctrl_L" onclick="GrnDirectAgainstOrder.btnLoadAll(this)"><i class="fa fa-list"></i> <span><u>L</u>oadAll</span></button>
+            <button type="button" id="btnGrnFormHistory" class="win-btn-tool" title="Crtl_H" onclick="GrnDirectAgainstOrder.btnGrnFormHistory()"><i class="fa fa-print"></i> <span>GrnHistory</span></button>
+        </div>
+        <div class="gdo-grids gdo-hist">
+            <div class="hrm-grid-box">
+                <div class="hrm-subcaption"><span>History</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+                <div class="hrm-grid-wrap"><table id="GrdHistory"></table></div>
+            </div>
+            <div class="hrm-grid-box">
+                <div class="hrm-subcaption"><span>Detail</span><button type="button" class="hrm-fs-btn" data-hrm-fullscreen title="Full screen"><i class="fa fa-expand"></i></button></div>
+                <div class="hrm-grid-wrap"><table id="GrdHistoryDetail"></table></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="hrm-footer">
+        <div class="hrm-footer-left"><span id="lblStatus"></span></div>
+        <div class="hrm-footer-right"><button type="button" id="btnHistory" class="win-btn-action"><i class="fa fa-history"></i> History</button></div>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_hrm.js?v=20260929a}"></script>
+<script th:src="@{/build/js/countx_pp_ppb_common.js?v=20260930b}"></script>
+<script th:src="@{/build/js/countx_doc_link.js?v=20261001pr}"></script>
+<script th:src="@{/build/js/countx_grn_direct_against_order.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_desktop_combo.js?v=20260927b}"></script>
+</body>
+</html>

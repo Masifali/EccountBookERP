@@ -4,229 +4,632 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Bank Balances</title>
-    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
-    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
-    <link rel="stylesheet" th:href="@{/build/css/countx_acc_rpt_f.css?v=20260930s}">
-    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260930s}">
-    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260930s}">
-</head>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}" href="/vendors/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20261002k}" href="/build/css/countx_desktop_combo.css">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20261002k}" href="/build/css/countx_prod_combo.css">
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}" href="/build/css/countx_grid_bar.css">
+    <link rel="stylesheet" th:href="@{/build/css/countx_button_busy.css?v=20261002gf}" href="/build/css/countx_button_busy.css">
 <!--
-  Screen 73 "Bank Balances Report" - Architecture.WinApp.Account_Reports.BankBalances.
-  Show -> ReciptandPaymentGrid (VoucherReports.BankBalances -> Sp_Accounts_BankBalances_Rpt)
-        + SummeryGrd (VoucherReports.CashandBankBalancesSummery, AccountTypeId 15 -> Sp_Accounts_CashBankBalancesSummery_Rpt).
+  Screens 73 (Account Reports) / 702 (Banking Managment) "Bank Balances Report" -
+  desktop Architecture.WinApp.Account_Reports.BankBalances (base.Name "BankBalances", ClientSize 1317x670,
+  WindowState Maximized, KeyPreview). 1:1 port of InitializeComponent (2026-10-02, group K):
+    panel1 Dock Fill
+      panel2  Dock Top 55, Teal
+         toolStrip3 (0,0) 27 high, white, Verdana 9.75: &Reset | &Refresh | &593_Print Summary | &593_01_Print Summary |
+                    &590_Print Receipt and Payment | &590_01_Print | Bank Manual Balance (no image)
+         label1 "Bank Balances " (1,30) Tahoma 12 bold white
+         Branches (158,34) Segoe UI 9 bold white + CmbBranches (217,28) 200x26   [only with ERP feature 17]
+      panel3  Dock Top 53, white
+         label12 Date Type (9,3)      cmbperemeter (7,21) 120x26
+         label27 From Date (132,3)    txtFromDate (129,23) 116x23 dd-MMM-yy
+         label33 To Date (249,3)      txtToDate (246,23) 114x23 dd-MMM-yy
+         label3 Available Balances (362,3)   textBox1 (362,24) 105x20
+         label6 OverBrawn Balances (468,3)   textBox2 (468,24) 125x20
+            -> textBox1 / textBox2 are designer placeholders: NO line of BankBalances.cs reads or writes them
+               (they are not ReadOnly, not bound, and neither proc returns an available / overdrawn column).
+               They are reproduced empty and editable, exactly as the desktop shows them.
+         chkFilterSummaryOnlyTransactional (597,4) 105x43 "Exclude 0\nDebit/Credit\nFrom Summary" Segoe UI 8.25 bold
+         btnshow "Show" (700,24) 55x23 flat rgb(10,110,110) Tahoma 9.75 bold white
+         RadGroupbyBankName (759,1) checked | RadGroupbyParty "Group By Account" (759,18) | RadNoGroup "None" (759,33)
+         lblLanguage (914,5) + CmbLanguage (915,21) 156x26 - Visible=false until Ctrl+L
+      tabControl1 Dock Fill, Tahoma 8.25 bold, tabs on top
+         "Summary": panel4 teal 25 (label5 "Summary" Calibri 12 bold, ctrlGrdSummary gear) + grdHistory
+         "Payment/Receipts Detail": panel7 Dock Left 757 (panel8 teal "Payment" + gear, grdPayment)
+                                    panel6 Dock Fill (panel9 teal "Receipts" + gear, grdReceipt)
+  Procs (AccountReportsDesktopService.bankBalances, POST /accounts/api/reports-desktop/bank-balances):
+    ReciptandPaymentGrid -> VoucherReports.BankBalances -> Sp_Accounts_BankBalances_Rpt
+    SummeryGrd           -> VoucherReports.CashandBankBalancesSummery (AccountTypeId 15, ApprovedFilter All) -> Sp_Accounts_CashBankBalancesSummery_Rpt
+    Load / Refresh       -> CommonServices.Vouchers_GetLastRecord(15) -> USP_Vouchers_GetLastRecord
+  Prints hand the desktop's own DataTable to the .rpt through the Jasper layer (POST /reports/print/grid):
+    593 / 593_01 <- dtSummery (proc rows after Exclude-0), 590 / 590_01 <- dtReciptandPayment (proc rows).
 -->
-<body class="accf">
-<div class="win-title-bar">
-    <span><i class="fa fa-university"></i> Bank Balances</span>
-    <a href="/accounts/dashboard"><i class="fa fa-arrow-left"></i> Back to Dashboard</a>
-</div>
-<div class="win-toolbar">
-    <button type="button" class="win-btn" onclick="bbReset()"><i class="fa fa-plus text-success"></i> Reset</button>
-    <button type="button" class="win-btn" onclick="bbRefresh()"><i class="fa fa-refresh"></i> Refresh</button>
-    <button type="button" class="win-btn" onclick="window.print()" data-rpt="593-CashBankBalancesSummery_Rpt.rpt"><i class="fa fa-print"></i> 593_Print Summary</button>
-    <button type="button" class="win-btn" onclick="window.print()" data-rpt="590-BankBalances.rpt"><i class="fa fa-print"></i> 593_01_Print Summary</button>
-    <button type="button" class="win-btn" onclick="window.print()" data-rpt="590_01_BankBalancesWithSummary.rpt"><i class="fa fa-print"></i> 590_Print Receipt and Payment</button>
-    <button type="button" class="win-btn" onclick="window.print()" data-rpt="590_01_BankBalancesWithSummary.rpt"><i class="fa fa-print"></i> 590_01_Print</button>
-    <a class="win-btn" href="/accounts/bank-balance-manual-entry" target="_blank"><i class="fa fa-pencil-square-o"></i> Bank Manual Balance</a>
-</div>
-<div class="win-header-panel"><span>Bank Balances</span></div>
+<style>
+    :root { --teal: #008080; --showbtn: rgb(10,110,110); --jb: #9eb6ce; }
+    html, body { margin: 0; padding: 0; height: 100%; background: #fff; overflow: hidden; }
+    body { font-family: "Segoe UI", Tahoma, sans-serif; font-size: 12px; color: #000; }
+    #frm { position: absolute; inset: 0; overflow-x: auto; overflow-y: hidden; }
+    #panel1 { display: flex; flex-direction: column; height: 100%; min-width: 1080px; }
 
-<div class="filters">
-    <div class="gb" style="width:760px;">
-        <span class="gb-title">Filters</span>
-        <div class="fgrid" style="grid-template-columns: 60px 150px 60px 120px 55px 120px 1fr;">
-            <span class="lbl">Date Type</span><select data-dtcombo="single" data-dtcombo-caption="Date Type" id="cmbperemeter" class="inp"></select>
-            <span class="lbl">From Date</span><input type="date" id="txtFromDate" class="inp">
-            <span class="lbl">To Date</span><input type="date" id="txtToDate" class="inp">
-            <button type="button" id="btnshow" class="win-btn-show" onclick="bbShow()">Show</button>
-            <span class="lbl bb-br" style="display:none;">Branches</span><select id="CmbBranches" class="inp bb-br" style="display:none; grid-column: span 3;"></select>
-            <span class="lbl bb-lang" style="display:none;">Language</span><select data-dtcombo="single" data-dtcombo-caption="Language" id="CmbLanguage" class="inp bb-lang" style="display:none; grid-column: span 2;"></select>
+    /* panel2 (teal) + toolStrip3 */
+    #panel2 { flex: 0 0 55px; height: 55px; position: relative; background: var(--teal); }
+    #toolStrip3 { position: absolute; left: 0; top: 0; right: 0; height: 27px; display: flex; align-items: center;
+                  padding-left: 2px; background: #fff; font: 13px Verdana, sans-serif; white-space: nowrap; overflow: hidden; }
+    #toolStrip3 button { display: inline-flex; align-items: center; gap: 4px; height: 24px; padding: 0 5px; margin: 0 1px;
+                  font: inherit; color: #000; background: transparent; border: 1px solid transparent; cursor: pointer; white-space: nowrap; }
+    #toolStrip3 button:hover:not(:disabled) { background: #cce8ff; border-color: #99d1ff; }
+    #toolStrip3 button:disabled { color: #a0a0a0; cursor: default; }
+    #toolStrip3 svg { width: 20px; height: 20px; flex: 0 0 20px; }
+    #toolStrip3 svg.p16 { width: 16px; height: 16px; flex: 0 0 16px; margin: 0 2px; }
+    #label1 { position: absolute; left: 1px; top: 30px; font: bold 16px Tahoma, sans-serif; color: #fff; line-height: 19px; white-space: pre; }
+    #Branches { position: absolute; left: 158px; top: 34px; font: bold 12px "Segoe UI", sans-serif; color: #fff; line-height: 15px; display: none; }
+
+    /* panel3 (white filters) */
+    #panel3 { flex: 0 0 53px; height: 53px; position: relative; background: #fff; }
+    .lbl { position: absolute; font: 600 12px "Segoe UI Semibold", "Segoe UI", sans-serif; line-height: 15px; color: #000; white-space: nowrap; letter-spacing: -.2px; }
+    #label3 { max-width: 105px; } #label6 { max-width: 128px; }
+    .dtp { position: absolute; box-sizing: border-box; height: 23px; font: 13px Verdana, sans-serif; border: 1px solid #7a7a7a; padding: 0 2px; background: #fff; }
+    .txt { position: absolute; box-sizing: border-box; height: 20px; font: 12px "Microsoft Sans Serif", "Segoe UI", sans-serif; border: 1px solid #7a7a7a; padding: 0 2px; }
+    #chkWrap { position: absolute; left: 597px; top: 4px; width: 105px; height: 43px; display: flex; align-items: flex-start; gap: 3px;
+               font: bold 11px "Segoe UI", sans-serif; line-height: 13px; cursor: pointer; }
+    #chkWrap input { margin: 1px 0 0 0; flex: 0 0 13px; }
+    #btnshow { position: absolute; left: 700px; top: 24px; width: 55px; height: 23px; box-sizing: border-box; padding: 0;
+               background: var(--showbtn); color: #fff; border: 0; font: bold 13px Tahoma, sans-serif; cursor: pointer; }
+    #btnshow:disabled { opacity: .7; cursor: progress; }
+    .rad { position: absolute; left: 759px; height: 18px; display: flex; align-items: center; gap: 3px; font: bold 12px Tahoma, sans-serif; white-space: nowrap; cursor: pointer; }
+    .rad input { margin: 0; }
+    #lblLanguage, #CmbLanguageBox { display: none; }
+    .pcx-wrap .dtcombo-input, .dtcombo-wrap .dtcombo-input { font: 13px Verdana, sans-serif !important; }
+
+    /* tabControl1 */
+    #tabControl1 { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; font: bold 11px Tahoma, sans-serif; }
+    #tabStrip { flex: 0 0 22px; display: flex; align-items: flex-end; padding-left: 2px; background: #fff; border-bottom: 1px solid #898c95; }
+    #tabStrip a { display: inline-block; height: 18px; line-height: 18px; padding: 0 8px; margin-right: -1px; cursor: pointer; user-select: none;
+                  color: #000; background: linear-gradient(#f3f3f3, #e3e3e3); border: 1px solid #898c95; border-bottom: 0; text-decoration: none; }
+    #tabStrip a.on { height: 21px; line-height: 21px; background: #fff; position: relative; top: 1px; }
+    .tabPage { flex: 1 1 auto; display: none; min-height: 0; padding: 3px; box-sizing: border-box; }
+    .tabPage.on { display: flex; }
+    #tabPage1 { flex-direction: column; }
+    #tabPage2 { flex-direction: row; }
+    #panel7 { flex: 0 0 757px; width: 757px; display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+    #panel6 { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+    .bar { flex: 0 0 25px; height: 25px; position: relative; background: var(--teal); }
+    .bar .cap { position: absolute; top: 2px; font: bold 16px Calibri, "Segoe UI", sans-serif; color: #fff; line-height: 19px; }
+    .bar .gb { position: absolute; right: 2px; top: 1px; height: 21px; min-width: 38px; display: flex; align-items: center; justify-content: flex-end; }
+
+    /* Janus GridEX, VisualStyle Office2007, Verdana 8.25 */
+    .jg { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; border: 1px solid var(--jb); }
+    .jg-wrap { flex: 1 1 auto; overflow: auto; min-height: 0; background: #fff; }
+    .jg table { border-collapse: separate; border-spacing: 0; table-layout: fixed; font: 11px Verdana, sans-serif; }
+    .jg th { position: sticky; top: 0; z-index: 3; height: 20px; padding: 0 4px; text-align: left; font-weight: normal; overflow: hidden;
+             white-space: nowrap; text-overflow: ellipsis; background: linear-gradient(#f9fcfd, #d3e2f0); border-right: 1px solid var(--jb); border-bottom: 1px solid var(--jb); }
+    .jg.h3 th { height: 40px; white-space: normal; word-break: break-all; text-align: center; line-height: 13px; }
+    .jg tr.flt td { position: sticky; z-index: 2; background: #fff; padding: 1px; height: 20px; border-bottom: 1px solid var(--jb); }
+    .jg tr.flt input { width: 100%; height: 17px; box-sizing: border-box; border: 1px solid #c5d3e2; font: 11px Verdana, sans-serif; padding: 0 2px; }
+    .jg td { height: 19px; padding: 0 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-sizing: border-box;
+             border-right: 1px solid #e3e9ef; border-bottom: 1px solid #e3e9ef; }
+    .jg td.r, .jg th.r { text-align: right; }
+    .jg.h3 th.r { text-align: center; }
+    .jg tbody tr.row.cur td { background: #ffe8a6; }
+    .jg tbody tr.row td.cc { outline: 1px dotted #000; outline-offset: -2px; }
+    .jg tr.grp td { background: #eef3f8; font-weight: bold; cursor: pointer; border-bottom: 1px solid #c5d3e2; }
+    .jg tr.grp .tg { display: inline-block; width: 11px; text-align: center; border: 1px solid #8ea3b9; line-height: 9px; height: 9px; font-size: 9px; margin-right: 4px; background: #fff; }
+    .jg tr.gt td { background: #f4f7fa; font-weight: bold; border-bottom: 1px solid #c5d3e2; }
+    .jg tfoot td { position: sticky; bottom: 0; z-index: 2; background: #e7eef6; border-top: 1px solid var(--jb); font-weight: bold; height: 20px; }
+    .jg a.lnk { color: #0000ff; text-decoration: underline; cursor: pointer; }
+    .jg-nav { flex: 0 0 22px; height: 22px; display: flex; align-items: center; gap: 2px; padding: 0 4px;
+              background: linear-gradient(#f4f8fb, #dbe6f1); border-top: 1px solid var(--jb); font: 11px Verdana, sans-serif; }
+    .jg-nav button { width: 20px; height: 18px; padding: 0; border: 1px solid transparent; background: transparent; cursor: pointer; font: 10px Verdana; }
+    .jg-nav button:hover:not(:disabled) { border-color: var(--jb); background: #fff; }
+    .jg-nav button:disabled { color: #aaa; cursor: default; }
+    .jg-nav span { padding: 0 6px; white-space: nowrap; }
+
+    /* ShortCutKeyPopUp */
+    #scModal { position: fixed; inset: 0; background: rgba(0,0,0,.25); display: none; align-items: center; justify-content: center; z-index: 50; }
+    #scModal .box { background: #fff; border: 1px solid #555; min-width: 520px; font: 12px "Segoe UI", sans-serif; }
+    #scModal .hd { background: var(--teal); color: #fff; font: bold 13px Tahoma; padding: 4px 8px; display: flex; justify-content: space-between; }
+    #scModal table { border-collapse: collapse; width: 100%; }
+    #scModal td, #scModal th { border: 1px solid #ccc; padding: 2px 6px; text-align: left; }
+</style>
+</head>
+<body>
+<div id="frm"><div id="panel1">
+    <div id="panel2">
+        <div id="toolStrip3" role="toolbar">
+            <button type="button" id="btnNew" title="Ctrl+N"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="8.5" fill="#2e9b45"/><path d="M10 5.5v9M5.5 10h9" stroke="#fff" stroke-width="2.2"/></svg><span><u>R</u>eset</span></button>
+            <button type="button" id="BtnRefresh" title="Ctrl+R"><svg viewBox="0 0 20 20"><path d="M15.5 6.5A6.5 6.5 0 1 0 16.5 11" fill="none" stroke="#1f7a3a" stroke-width="2.2"/><path d="M16.8 2.8v5h-5z" fill="#1f7a3a"/></svg><span><u>R</u>efresh</span></button>
+            <button type="button" id="btnPrintSummery" title="Alt+1" data-rpt-own data-rpt="593-CashBankBalancesSummery_Rpt.rpt"><svg class="p16" viewBox="0 0 16 16"><rect x="4" y="1.5" width="8" height="4" fill="#fff" stroke="#555"/><rect x="1.5" y="5.5" width="13" height="6" rx="1" fill="#6b7d8f"/><rect x="4" y="9.5" width="8" height="5" fill="#fff" stroke="#555"/></svg><span><u>5</u>93_Print Summary</span></button>
+            <button type="button" id="BtnPrintII" data-rpt-own data-rpt="593_01_CashBankBalancesSummeryReport.rpt"><svg class="p16" viewBox="0 0 16 16"><rect x="4" y="1.5" width="8" height="4" fill="#fff" stroke="#555"/><rect x="1.5" y="5.5" width="13" height="6" rx="1" fill="#6b7d8f"/><rect x="4" y="9.5" width="8" height="5" fill="#fff" stroke="#555"/></svg><span><u>5</u>93_01_Print Summary</span></button>
+            <button type="button" id="btnPrintReceiptandPayment" title="Alt+NumPad1" data-rpt-own data-rpt="590-BankBalances.rpt"><svg class="p16" viewBox="0 0 16 16"><rect x="4" y="1.5" width="8" height="4" fill="#fff" stroke="#555"/><rect x="1.5" y="5.5" width="13" height="6" rx="1" fill="#6b7d8f"/><rect x="4" y="9.5" width="8" height="5" fill="#fff" stroke="#555"/></svg><span><u>5</u>90_Print Receipt and Payment</span></button>
+            <button type="button" id="BtnPrint590II" data-rpt-own data-rpt="590_01_BankBalancesWithSummary.rpt"><svg class="p16" viewBox="0 0 16 16"><rect x="4" y="1.5" width="8" height="4" fill="#fff" stroke="#555"/><rect x="1.5" y="5.5" width="13" height="6" rx="1" fill="#6b7d8f"/><rect x="4" y="9.5" width="8" height="5" fill="#fff" stroke="#555"/></svg><span><u>5</u>90_01_Print</span></button>
+            <button type="button" id="btnBankManualBalance"><span>Bank Manual Balance</span></button>
+        </div>
+        <span id="label1">Bank Balances </span>
+        <span id="Branches">Branches</span>
+        <select id="CmbBranches" data-dtcombo-caption="Branch Name" style="position:absolute;left:217px;top:28px;width:200px;height:26px;display:none"></select>
+    </div>
+
+    <div id="panel3">
+        <span class="lbl" id="label12" style="left:9px;top:3px">Date Type</span>
+        <select id="cmbperemeter" data-dtcombo="single" data-dtcombo-caption="Parameters" style="position:absolute;left:7px;top:21px;width:120px;height:26px"></select>
+        <span class="lbl" id="label27" style="left:132px;top:3px">From Date</span>
+        <input type="date" class="dtp" id="txtFromDate" style="left:129px;top:23px;width:116px">
+        <span class="lbl" id="label33" style="left:249px;top:3px">To Date</span>
+        <input type="date" class="dtp" id="txtToDate" style="left:246px;top:23px;width:114px">
+        <span class="lbl" id="label3" style="left:362px;top:3px">Available Balances</span>
+        <input type="text" class="txt" id="textBox1" style="left:362px;top:24px;width:105px">
+        <span class="lbl" id="label6" style="left:468px;top:3px">OverBrawn Balances</span>
+        <input type="text" class="txt" id="textBox2" style="left:468px;top:24px;width:125px">
+        <label id="chkWrap"><input type="checkbox" id="chkFilterSummaryOnlyTransactional"><span>Exclude 0<br>Debit/Credit<br>From Summary</span></label>
+        <button type="button" id="btnshow">Show</button>
+        <label class="rad" style="top:1px"><input type="radio" name="rdGrp" id="RadGroupbyBankName" value="bank" checked>Group By Bank Name</label>
+        <label class="rad" style="top:18px"><input type="radio" name="rdGrp" id="RadGroupbyParty" value="account">Group By Account</label>
+        <label class="rad" style="top:33px"><input type="radio" name="rdGrp" id="RadNoGroup" value="none">None</label>
+        <span class="lbl" id="lblLanguage" style="left:914px;top:5px">Language</span>
+        <span id="CmbLanguageBox"><select id="CmbLanguage" data-dtcombo="single" data-dtcombo-caption="Language Name" style="position:absolute;left:915px;top:21px;width:156px;height:26px"></select></span>
+    </div>
+
+    <div id="tabControl1">
+        <div id="tabStrip"><a data-tab="tabPage1" class="on">Summary</a><a data-tab="tabPage2">Payment/Receipts Detail</a></div>
+        <div class="tabPage on" id="tabPage1">
+            <div class="bar" id="panel4"><span class="cap" style="left:3px">Summary</span><div class="gb" id="gbSummary"></div></div>
+            <div class="jg h3" id="jgHistory">
+                <div class="jg-wrap" data-gridbar-form="BankBalances" data-gridbar-grid="grdHistory" data-gridbar-mount="#gbSummary"
+                     data-gridbar-reorder="false" data-gridbar-title="Summary"><table id="grdHistory" tabindex="0"></table></div>
+                <div class="jg-nav" data-for="grdHistory"></div>
+            </div>
+        </div>
+        <div class="tabPage" id="tabPage2">
+            <div id="panel7">
+                <div class="bar" id="panel8"><span class="cap" style="left:4px">Payment</span><div class="gb" id="gbPayment"></div></div>
+                <div class="jg" id="jgPayment">
+                    <div class="jg-wrap" data-gridbar-form="BankBalances" data-gridbar-grid="grdPayment" data-gridbar-mount="#gbPayment"
+                         data-gridbar-reorder="false" data-gridbar-hide="chooser,save" data-gridbar-title="Payment"><table id="grdPayment" tabindex="0"></table></div>
+                    <div class="jg-nav" data-for="grdPayment"></div>
+                </div>
+            </div>
+            <div id="panel6">
+                <div class="bar" id="panel9"><span class="cap" style="left:5px">Receipts</span><div class="gb" id="gbReceipt"></div></div>
+                <div class="jg" id="jgReceipt">
+                    <div class="jg-wrap" data-gridbar-form="BankBalances" data-gridbar-grid="grdReceipt" data-gridbar-mount="#gbReceipt"
+                         data-gridbar-reorder="false" data-gridbar-hide="chooser,save" data-gridbar-title="Receipts"><table id="grdReceipt" tabindex="0"></table></div>
+                    <div class="jg-nav" data-for="grdReceipt"></div>
+                </div>
+            </div>
         </div>
     </div>
-    <div class="gb">
-        <span class="gb-title">&nbsp;</span>
-        <label class="chk"><input type="checkbox" id="chkFilterSummaryOnlyTransactional"> Exclude 0 Debit/Credit From Summary</label><br>
-        <label class="chk"><input type="radio" name="rdGrp" id="RadGroupbyBankName" value="bank" checked> Group By Bank Name</label><br>
-        <label class="chk"><input type="radio" name="rdGrp" id="RadGroupbyParty" value="account"> Group By Account</label><br>
-        <label class="chk"><input type="radio" name="rdGrp" id="RadNoGroup" value="none"> None</label>
-    </div>
-</div>
+</div></div>
 
-<ul class="win-tabs">
-    <li class="active" data-tab="s"><a onclick="bbTab('s')">Summary</a></li>
-    <li data-tab="d"><a onclick="bbTab('d')">Payment/Receipts Detail</a></li>
-</ul>
-<div id="tabS">
-    <div class="grid-caption"><span>Summary</span><span id="lblSummary"></span></div>
-    <div class="grid-wrap"><table class="wg" id="grdHistory"></table></div>
-</div>
-<div id="tabD" style="display:none;">
-    <div class="grid-caption"><span>Receipts</span></div>
-    <div class="grid-wrap" style="max-height:calc(50vh - 150px);"><table class="wg" id="grdReceipt"></table></div>
-    <div class="grid-caption"><span>Payment</span></div>
-    <div class="grid-wrap" style="max-height:calc(50vh - 150px);"><table class="wg" id="grdPayment"></table></div>
-</div>
+<div id="scModal"><div class="box"><div class="hd"><span>ShortCut Keys</span><a href="#" id="scClose" style="color:#fff">X</a></div>
+    <table><thead><tr><th>KeyCombination</th><th>Description</th></tr></thead><tbody id="scBody"></tbody></table></div></div>
 
-<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
-<script th:src="@{/build/js/countx_doc_link.js?v=20261001pr}"></script>
-<script th:src="@{/build/js/countx_prod_combo.js?v=20260930s}"></script>
-<script th:src="@{/build/js/countx_acc_rpt_f.js?v=20260930s}"></script>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}" src="/vendors/jquery/dist/jquery.min.js"></script>
+<script th:src="@{/build/js/countx_doc_link.js?v=20261001pr}" src="/build/js/countx_doc_link.js"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20261002k}" src="/build/js/countx_prod_combo.js"></script>
+<script th:src="@{/build/js/countx_acc_rpt_f.js?v=20261002k}" src="/build/js/countx_acc_rpt_f.js"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}" src="/build/js/countx_grid_bar.js"></script>
 <script>
-    /* Searchable dropdowns (countx_prod_combo.js, 2026-09-30 R2): every single select carries data-dtcombo="single";
-       the wrap takes the select's grid placement and its initial hidden state; multi-selects stay native. */
-    function comboInit() {
-        if (!window.DesktopCombo) return;
-        $('select[data-dtcombo]').each(function () {
-            const c = window.DesktopCombo.enhance(this);
-            if (!c || !c.wrap) return;
-            if (this.style.gridColumn) c.wrap.style.gridColumn = this.style.gridColumn;
-            if (this.style.display === 'none') c.wrap.style.display = 'none';
+(function ($) {
+    'use strict';
+    var CTX = null, LAST_RECORD = null;
+    var QS = new URLSearchParams(window.location.search);
+    var summary = [];          // grdHistory DataSource (dtcol)
+    var summaryRaw = [];       // dtSummery - what 593 / 593_01 print
+    var receipts = [], payments = [];
+    var detailRaw = [];        // dtReciptandPayment - what 590 / 590_01 print (btnNew does not clear it)
+    var branchShown = false;
+
+    /* ------------------------------------------------------------------ helpers */
+    function busy(btn, on) {
+        var $b = $(btn);
+        if (on) { $b.prop('disabled', true).addClass('btn-busy'); }
+        else { $b.removeClass('btn-busy').prop('disabled', false); }
+    }
+    function isBusy(btn) { return $(btn).hasClass('btn-busy'); }
+    function fmt(type, v) {
+        if (type === 'both') return AccF.both(v);
+        if (type === 'single') return AccF.single(v);
+        if (type === 'date') return AccF.dmy(v);
+        return v == null ? '' : String(v);
+    }
+    function esc(v) { return AccF.esc(v); }
+
+    /* ------------------------------------------------------------------ Janus-style grid */
+    var GRIDS = {};
+    function Grid(id, opts) {
+        this.id = id; this.$t = $('#' + id); this.opts = opts;
+        this.rows = []; this.view = []; this.filters = {}; this.cur = -1; this.curCol = null; this.collapsed = {};
+        this.$nav = $('.jg-nav[data-for="' + id + '"]');
+        this.$nav.html('<button type="button" data-nav="first" title="First">|&#9664;</button><button type="button" data-nav="prev" title="Previous">&#9664;</button>'
+            + '<span class="t">Record 0 of 0</span><button type="button" data-nav="next" title="Next">&#9654;</button><button type="button" data-nav="last" title="Last">&#9654;|</button>');
+        var self = this;
+        this.$nav.on('click', 'button', function () {
+            var a = $(this).data('nav'), n = self.view.length;
+            self.setCur(a === 'first' ? 0 : a === 'last' ? n - 1 : a === 'prev' ? self.cur - 1 : self.cur + 1);
+        });
+        this.$t.on('click', 'tr.row td', function () {
+            self.curCol = $(this).data('k') || null;
+            self.setCur(+$(this).closest('tr').data('i'));
+        });
+        this.$t.on('click', 'a.lnk', function (e) {
+            e.preventDefault();
+            var r = self.view[+$(this).closest('tr').data('i')], k = $(this).closest('td').data('k');
+            if (r && self.opts.onLink) self.opts.onLink(k, r);
+        });
+        this.$t.on('click', 'tr.grp', function () {
+            var g = $(this).data('g'); self.collapsed[g] = !self.collapsed[g]; self.render(true);
+        });
+        this.$t.on('input', 'tr.flt input', function () {
+            self.focusKey = $(this).data('k'); self.filters[self.focusKey] = $(this).val(); self.render(true);
+        });
+        /* grid KeyDown: Ctrl+Space on a link column runs that link (the grid's own key handler) */
+        this.$t.on('keydown', function (e) {
+            if ($(e.target).is('input')) return;
+            if (e.ctrlKey && (e.key === ' ' || e.code === 'Space')) {
+                e.preventDefault();
+                var r = self.view[self.cur];
+                if (r && self.curCol && self.opts.onKey) self.opts.onKey(self.curCol, r);
+            } else if (e.key === 'ArrowDown' && !e.ctrlKey) { e.preventDefault(); self.setCur(self.cur + 1); }
+            else if (e.key === 'ArrowUp' && !e.ctrlKey) { e.preventDefault(); self.setCur(self.cur - 1); }
         });
     }
-    function comboFocus(sel) { const $i = $(sel).closest('.dtcombo-wrap').find('.dtcombo-input'); ($i.length ? $i : $(sel)).focus(); }
-    /* CmbBranches is a native multi-select under ERP feature 18 (consolidated), otherwise a single searchable combo. */
-    function branchesCombo(consolidated) {
-        if (consolidated) return;
-        $('#CmbBranches').attr({ 'data-dtcombo': 'single', 'data-dtcombo-caption': 'Branches' });
-        comboInit();
-    }
-    let CTX = null, LAST_RECORD = null, summary = [], receipts = [], payments = [], branchShown = false;
-    const QS = new URLSearchParams(window.location.search);
+    Grid.prototype.columns = function () { return this.opts.columns().filter(function (c) { return c.visible !== false; }); };
+    Grid.prototype.load = function (rows) { this.rows = rows || []; this.filters = {}; this.focusKey = null; this.collapsed = {}; this.cur = this.rows.length ? 0 : -1; this.render(false); };
+    Grid.prototype.clear = function () { this.rows = []; this.view = []; this.cur = -1; this.$t.empty(); this.nav(); };   // ClearStructure / DataSource = null
+    Grid.prototype.render = function (keepFilters) {
+        var self = this, cols = this.columns(), group = this.opts.groupBy ? this.opts.groupBy() : null;
+        var fl = this.filters;
+        var view = this.rows.filter(function (r) {
+            return cols.every(function (c) {
+                var f = fl[c.key]; if (!f) return true;
+                return fmt(c.type, r[c.key]).toLowerCase().indexOf(String(f).toLowerCase()) >= 0;
+            });
+        });
+        if (group) {           // Janus groups sort by the group value, rows keep their order inside a group
+            var order = [], by = {};
+            view.forEach(function (r) { var g = r[group.key] == null ? '' : String(r[group.key]); if (!by[g]) { by[g] = []; order.push(g); } by[g].push(r); });
+            order.sort(function (a, b) { return a.localeCompare(b); });
+            view = []; order.forEach(function (g) { view = view.concat(by[g]); });
+            cols = cols.filter(function (c) { return !(self.opts.hideGrouped && c.key === group.key); });   // HideColumnsWhenGrouped
+        }
+        this.view = view;
+        var h = '<colgroup>' + cols.map(function (c) { return '<col style="width:' + (c.width || 100) + 'px">'; }).join('') + '</colgroup>';
+        h += '<thead><tr>' + cols.map(function (c) { return '<th class="' + (c.sum || c.right ? 'r' : '') + '" title="' + esc(c.caption || c.key) + '">' + esc(c.caption || c.key) + '</th>'; }).join('') + '</tr>';
+        h += '<tr class="flt">' + cols.map(function (c) { return '<td><input type="text" data-k="' + esc(c.key) + '" value="' + esc(fl[c.key] || '') + '"></td>'; }).join('') + '</tr></thead><tbody>';
+        var totals = {};
+        function add(acc, r) { cols.forEach(function (c) { if (c.sum) acc[c.key] = (acc[c.key] || 0) + AccF.num(r[c.key]); }); }
+        function rowHtml(r, i) {
+            return '<tr class="row' + (i === self.cur ? ' cur' : '') + '" data-i="' + i + '">' + cols.map(function (c) {
+                var txt = fmt(c.type, r[c.key]);
+                var cell = c.link && txt !== '' ? '<a class="lnk">' + esc(txt) + '</a>' : esc(txt);
+                return '<td data-k="' + esc(c.key) + '" class="' + (c.sum || c.right ? 'r' : '') + (self.curCol === c.key && i === self.cur ? ' cc' : '') + '" title="' + esc(txt) + '">' + cell + '</td>';
+            }).join('') + '</tr>';
+        }
+        function totalCells(acc, label) {
+            return cols.map(function (c, idx) {
+                if (c.sum) return '<td class="r">' + esc(fmt(c.totalType || c.type, acc[c.key] || 0)) + '</td>';
+                return '<td>' + (idx === 0 ? esc(label) : '') + '</td>';
+            }).join('');
+        }
+        if (group) {
+            var i = 0;
+            while (i < view.length) {
+                var g = view[i][group.key] == null ? '' : String(view[i][group.key]), gt = {}, start = i, body = '';
+                while (i < view.length && String(view[i][group.key] == null ? '' : view[i][group.key]) === g) { add(gt, view[i]); add(totals, view[i]); body += rowHtml(view[i], i); i++; }
+                var col = !!this.collapsed[g];
+                h += '<tr class="grp" data-g="' + esc(g) + '"><td colspan="' + cols.length + '"><span class="tg">' + (col ? '+' : '&minus;') + '</span>'
+                    + esc(group.caption + ': ' + g) + ' (' + (i - start) + ')</td></tr>';
+                if (!col) { h += body; if (this.opts.groupTotals) h += '<tr class="gt">' + totalCells(gt, 'Total') + '</tr>'; }
+            }
+        } else {
+            view.forEach(function (r, idx) { add(totals, r); h += rowHtml(r, idx); });
+        }
+        h += '</tbody>';
+        if (cols.some(function (c) { return c.sum; })) h += '<tfoot><tr>' + totalCells(totals, 'Total') + '</tr></tfoot>';   // TotalRow, BottomFixed
+        this.$t.html(h).css('width', cols.reduce(function (a, c) { return a + (c.width || 100); }, 0) + 'px');
+        if (keepFilters && this.focusKey) { var foc = this.$t.find('tr.flt input').filter(function () { return $(this).data('k') === self.focusKey; }); if (foc.length) { var v = foc.val(); foc.focus().val('').val(v); } }
+        if (this.cur >= view.length) this.cur = view.length - 1;
+        if (this.cur < 0 && view.length) this.cur = 0;
+        this.nav();
+        var hdr = this.$t.find('thead tr:first th').outerHeight() || 20;
+        this.$t.find('tr.flt td').css('top', hdr + 'px');
+    };
+    Grid.prototype.setCur = function (i) {
+        if (!this.view.length) { this.cur = -1; this.nav(); return; }
+        this.cur = Math.max(0, Math.min(this.view.length - 1, i));
+        this.$t.find('tr.row').removeClass('cur').find('td').removeClass('cc');
+        var $tr = this.$t.find('tr.row[data-i="' + this.cur + '"]').addClass('cur');
+        if (this.curCol) $tr.find('td[data-k="' + this.curCol + '"]').addClass('cc');
+        if ($tr.length && $tr[0].scrollIntoView) $tr[0].scrollIntoView({ block: 'nearest' });
+        this.nav();
+    };
+    Grid.prototype.nav = function () {
+        var n = this.view.length;
+        this.$nav.find('.t').text('Record ' + (this.cur >= 0 ? this.cur + 1 : 0) + ' of ' + n);
+        this.$nav.find('[data-nav=first],[data-nav=prev]').prop('disabled', this.cur <= 0);
+        this.$nav.find('[data-nav=next],[data-nav=last]').prop('disabled', this.cur < 0 || this.cur >= n - 1);
+    };
 
-    function bbTab(t) {
-        $('.win-tabs li').removeClass('active'); $('.win-tabs li[data-tab="' + t + '"]').addClass('active');
-        $('#tabS').toggle(t === 's'); $('#tabD').toggle(t === 'd');
+    function from() { return $('#txtFromDate').val(); }
+    function to() { return $('#txtToDate').val(); }
+
+    /* grdHistory: GridSetting() - grouped on CustomGroup (hidden), group totals, total row, HeaderLines 3 centred */
+    GRIDS.grdHistory = new Grid('grdHistory', {
+        groupBy: function () { return { key: 'CustomGroup', caption: 'CustomGroup' }; },
+        groupTotals: true, hideGrouped: true,
+        columns: function () {
+            return [
+                { key: 'BranchName', width: 120, visible: branchShown },
+                { key: 'AccountCode', width: 80, link: true },
+                { key: 'AccountTitle', width: 250 },
+                { key: 'Opening', width: 110, type: 'both', sum: true },
+                { key: 'Debit', width: 110, type: 'single', sum: true },
+                { key: 'Credit', width: 110, type: 'single', sum: true },
+                { key: 'Closing', width: 110, type: 'both', sum: true },
+                { key: 'PendingPrematureReceipts', width: 110, type: 'both', sum: true },
+                { key: 'PendingPrematurePayments', width: 110, type: 'both', sum: true },
+                { key: 'BalanceAfterPrematureReceiptsClearance', width: 130, type: 'both', sum: true },
+                { key: 'PostDateCheqsReceipts', width: 110, type: 'both', sum: true },
+                { key: 'PostDateCheqsPayments', width: 110, type: 'both', sum: true },
+                { key: 'BalanceAfterCheqClearance', width: 110, type: 'both', sum: true },
+                { key: 'PostDatedCheqAmount', width: 110, type: 'both', sum: true },
+                { key: 'BalanceTime', width: 65 },
+                { key: 'ManualBalance', width: 90, type: 'both', sum: true },
+                { key: 'Source', width: 140 },
+                { key: 'ConfirmBy', width: 140 }
+            ];
+        },
+        /* grdHistory_LinkClicked: AccountCode -> GoToGeneralLedgerFromLinkedEvent(AccountId, From, To, 0, BranchesId) */
+        onLink: function (k, r) { if (k === 'AccountCode') AccF.openLedger(r.AccountId, from(), to(), 0, r.BranchesId); },
+        /* grdHistory_KeyDown: Ctrl+Space on AccountCode, same call */
+        onKey: function (k, r) { if (k === 'AccountCode') AccF.openLedger(r.AccountId, from(), to(), 0, r.BranchesId); }
+    });
+
+    /* GetSlipsByDocumentTypeId (CommonServices.cs) for the document types a bank voucher row can carry:
+       16/24/29/39/40 -> VoucherReport_118(Id); 8/9 -> DayBookSlip(Id) (144); every other accounting type -> 102 slip (default case). */
+    var INV_SLIP_TYPES = [56, 166, 172, 1502, 46, 137, 68, 86, 124, 170, 145, 205, 210, 806, 451, 701, 1503, 1509, 1510, 95, 171, 99, 139,
+        98, 57, 138, 61, 131, 64, 58, 59, 452, 66, 70, 80, 112, 181, 111, 110, 101, 810, 702, 204, 162, 1056, 1603, 1604, 1654, 1608, 1609,
+        1660, 1661, 1662, 1611, 1859, 1865, 1856, 1861, 1862, 1850, 1104, 155, 1304];
+    function slip(r) {
+        var t = parseInt(r.DocumentTypeId, 10) || 0, id = parseInt(r.Id, 10) || 0;
+        if (!window.printRpt) { alert('Print layer not loaded.'); return; }
+        if ([16, 24, 29, 39, 40].indexOf(t) >= 0) {
+            if (!id) { alert('VoucherId Not Found'); return; }
+            window.printRpt('118-AcRptVoucherSlip.rpt', { id: id });
+        } else if (t === 8 || t === 9) {
+            window.printRpt('144-DayBookSlip.rpt', { id: id });
+        } else if (INV_SLIP_TYPES.indexOf(t) >= 0) {
+            alert('The slip of document type ' + t + ' is not available from this report on the web.');
+        } else {
+            if (!id) { alert('VoucherId Not Found'); return; }
+            window.printRpt('102-ANewAcRptPaymentReceiptsVoucherSlip.rpt', { id: id });
+        }
     }
-    /* cmbperemeter_ValueChanged (BankBalances.cs): every choice also sets To = today */
-    function onParameter() {
-        const id = parseInt($('#cmbperemeter').val(), 10);
-        if (id === 1) $('#txtFromDate').val(AccF.today());
-        else if (id === 2) $('#txtFromDate').val(AccF.addDays(-7));
-        else if (id === 3) $('#txtFromDate').val(AccF.monthStart());
-        else if (id === 4) $('#txtFromDate').val(AccF.yearStart());
-        else if (id === 5) $('#txtFromDate').val(CTX.activeYear.startPeriod);
-        else if (id === 6) $('#txtFromDate').val(LAST_RECORD || '');
-        if (id >= 1 && id <= 6) $('#txtToDate').val(AccF.today());
+    function detailGrid(id, accountCol, keyCol) {
+        return new Grid(id, {
+            /* BindAndSetupGrid / GroupBySettingOfReceiptPaymentGrid: BankName or the account column, group totals; None = no group */
+            groupBy: function () {
+                var g = $('input[name="rdGrp"]:checked').val();
+                return g === 'bank' ? { key: 'BankName', caption: 'BankName' } : (g === 'account' ? { key: accountCol, caption: accountCol } : null);
+            },
+            groupTotals: true, hideGrouped: true,
+            columns: function () {
+                return [
+                    { key: 'BranchName', width: 120, visible: branchShown },
+                    { key: 'V.Date', width: 90, type: 'date' },
+                    { key: 'V.Type', width: 68, link: true },
+                    { key: 'V.No', width: 40, link: true },
+                    { key: 'BankName', width: 180 },
+                    { key: accountCol, width: 180, link: true },
+                    { key: 'Amount', width: 100, type: 'both', sum: true },
+                    { key: 'ChequeNo', width: 80 }
+                ];
+            },
+            onLink: function (k, r) { linkAction(k, r, accountCol); },
+            /* grdReceipt_KeyDown tests "RecivedFrom" (typo), so Ctrl+Space on ReceivedFrom does nothing there */
+            onKey: function (k, r) { if (k === 'V.No' || k === 'V.Type' || k === keyCol) linkAction(k, r, keyCol); }
+        });
+    }
+    function linkAction(k, r, accountCol) {
+        if (k === 'V.No') AccF.editLinked(r.DocumentTypeId, r.Id, r.DocumentTypeSrNo, 0);          // EditMethodFromLinked
+        else if (k === 'V.Type') slip(r);                                                            // GetSlipsByDocumentTypeId
+        else if (k === accountCol) AccF.openLedger(r.AgainstAccountId, from(), to(), r.SubsidiaryAccountId, r.BranchesId);
+    }
+    GRIDS.grdPayment = detailGrid('grdPayment', 'PaidTo', 'PaidTo');
+    GRIDS.grdReceipt = detailGrid('grdReceipt', 'ReceivedFrom', 'RecivedFrom');
+
+    function mapDetail(list, accountCol) {
+        return (list || []).map(function (r) { var o = $.extend({}, r); o[accountCol] = r.Account; delete o.Account; return o; });
     }
 
-    function detailColumns(accountCol) {
-        return [
-            { key: 'BranchName', visible: branchShown },
-            { key: 'V.Date', type: 'date' },
-            { key: 'V.Type' },
-            { key: 'V.No', link: function (r) { AccF.editLinked(r.DocumentTypeId, r.Id, r.DocumentTypeSrNo, 0); } },
-            { key: 'BankName' },
-            { key: 'Account', caption: accountCol, link: function (r) {
-                AccF.openLedger(r.AgainstAccountId, $('#txtFromDate').val(), $('#txtToDate').val(), r.SubsidiaryAccountId, r.BranchesId); } },
-            { key: 'Amount', type: 'both', sum: true },
-            { key: 'ChequeNo' }
-        ];
-    }
-    /* BindAndSetupGrid: grouped on BankName or on the account column (group totals) unless None */
-    function renderDetail() {
-        const g = $('input[name="rdGrp"]:checked').val();
-        const groupBy = g === 'bank' ? 'BankName' : (g === 'account' ? 'Account' : null);
-        AccF.renderGrid({ table: '#grdReceipt', columns: detailColumns('ReceivedFrom'), rows: receipts, groupBy: groupBy, groupTotals: !!groupBy, emptyText: '' });
-        AccF.renderGrid({ table: '#grdPayment', columns: detailColumns('PaidTo'), rows: payments, groupBy: groupBy, groupTotals: !!groupBy, emptyText: '' });
-    }
-    /* GridSetting: grouped on CustomGroup with group totals */
-    function renderSummary() {
-        AccF.renderGrid({ table: '#grdHistory', rows: summary, groupBy: 'CustomGroup', groupTotals: true, emptyText: '', columns: [
-            { key: 'BranchName', visible: branchShown },
-            { key: 'AccountCode', link: function (r) { AccF.openLedger(r.AccountId, $('#txtFromDate').val(), $('#txtToDate').val(), 0, r.BranchesId); } },
-            { key: 'AccountTitle' },
-            { key: 'Opening', type: 'both', sum: true },
-            { key: 'Debit', type: 'single', sum: true },
-            { key: 'Credit', type: 'single', sum: true },
-            { key: 'Closing', type: 'both', sum: true },
-            { key: 'PendingPrematureReceipts', type: 'both', sum: true },
-            { key: 'PendingPrematurePayments', type: 'both', sum: true },
-            { key: 'BalanceAfterPrematureReceiptsClearance', type: 'both', sum: true },
-            { key: 'PostDateCheqsReceipts', type: 'both', sum: true },
-            { key: 'PostDateCheqsPayments', type: 'both', sum: true },
-            { key: 'BalanceAfterCheqClearance', type: 'both', sum: true },
-            { key: 'PostDatedCheqAmount', type: 'both', sum: true },
-            { key: 'BalanceTime' },
-            { key: 'ManualBalance', type: 'both', sum: true },
-            { key: 'Source' },
-            { key: 'ConfirmBy' }
-        ] });
-        $('#lblSummary').text('Records: ' + summary.length);
-    }
-
+    /* ------------------------------------------------------------------ requests */
+    function branchIds() { return AccF.selectedIds('#CmbBranches'); }
     function request(withDetail) {
-        const br = $('#CmbBranches').val();
         return {
-            fromDate: $('#txtFromDate').val(), toDate: $('#txtToDate').val(), withDetail: withDetail,
-            branchesIds: br ? (Array.isArray(br) ? br.join(',') : br) : null,
+            fromDate: from(), toDate: to(), withDetail: withDetail,
+            branchesIds: CTX && CTX.branchFeature ? (branchIds() || null) : null,
             languageId: $('#CmbLanguage').val() || null,
             excludeZero: $('#chkFilterSummaryOnlyTransactional').is(':checked')
         };
     }
-    async function bbShow() {
-        const btn = $('#btnshow');
-        AccF.busy(btn, true);
-        try {
-            const res = await AccF.post('/bank-balances', request(true));
-            branchShown = !!(CTX.branchFeature && $('#CmbBranches').val() && $('#CmbBranches').val().length);
-            receipts = res.receipts || []; payments = res.payments || []; summary = res.summary || [];
-            renderDetail(); renderSummary();
-        } catch (e) { alert(e.message); }
-        finally { AccF.busy(btn, false); }
+    /* BranchName visible = BranchFeature && CmbBranches.Text != "" */
+    function setBranchShown() { branchShown = !!(CTX && CTX.branchFeature && branchIds()); }
+    /* SummeryGrd(): rows -> grid; no rows -> ClearStructure; Exclude-0 leaving nothing -> CopyToDataTable throws,
+       the catch shows the message and the grid keeps what it had (dtSummery is already empty). */
+    function applySummary(res) {
+        summaryRaw = res.summaryRaw || [];
+        if (res.excludedAll) { alert('The source contains no DataRows.'); return; }
+        summary = res.summary || [];
+        if (summary.length) GRIDS.grdHistory.load(summary); else GRIDS.grdHistory.clear();
     }
-    /* summary only (SummeryGrd) for the dates on screen */
-    async function summaryOnly() {
-        try { summary = (await AccF.post('/bank-balances', request(false))).summary || []; renderSummary(); } catch (e) { alert(e.message); }
+    /* ReciptandPaymentGrid(): no rows -> ClearStructure on both grids */
+    function applyDetail(res) {
+        detailRaw = res.detailRaw || [];
+        receipts = mapDetail(res.receipts, 'ReceivedFrom');
+        payments = mapDetail(res.payments, 'PaidTo');
+        if (detailRaw.length) { GRIDS.grdReceipt.load(receipts); GRIDS.grdPayment.load(payments); }
+        else { GRIDS.grdReceipt.clear(); GRIDS.grdPayment.clear(); }
     }
-    /* btnNew_Click: From = ActiveYr.Start_Period, To = now, Receipts/Payments cleared, SummeryGrd */
-    async function bbReset() {
-        $('#txtFromDate').val(CTX.activeYear.startPeriod || AccF.today());
+    /* btnshow_Click: ReciptandPaymentGrid + SummeryGrd */
+    function show(btn) {
+        btn = btn || '#btnshow';
+        if (isBusy(btn)) return $.Deferred().resolve().promise();
+        busy(btn, true);
+        setBranchShown();
+        return AccF.post('/bank-balances', request(true))
+            .then(function (res) { applyDetail(res); applySummary(res); })
+            .catch(function (e) { alert(e.message); })
+            .then(function () { busy(btn, false); });
+    }
+    function summaryOnly() {
+        setBranchShown();
+        return AccF.post('/bank-balances', request(false)).then(applySummary).catch(function (e) { alert(e.message); });
+    }
+    /* btnNew_Click: From = ActiveYr.Start_Period, To = Now, focus From, Payment/Receipt DataSource = null, SummeryGrd */
+    function reset() {
+        var b = '#btnNew'; if (isBusy(b)) return;
+        busy(b, true);
+        $('#txtFromDate').val(CTX && CTX.activeYear && CTX.activeYear.startPeriod ? CTX.activeYear.startPeriod : AccF.today());
         $('#txtToDate').val(AccF.today());
-        receipts = []; payments = []; $('#grdReceipt, #grdPayment').empty();
-        await summaryOnly();
+        $('#txtFromDate').focus();
+        GRIDS.grdPayment.clear(); GRIDS.grdReceipt.clear(); receipts = []; payments = [];
+        summaryOnly().then(function () { busy(b, false); });
     }
-    /* BtnRefresh_Click: re-read Vouchers_GetLastRecord(15) only */
-    async function bbRefresh() {
-        try { LAST_RECORD = await AccF.lookup('last-record-date', { accountTypeId: 15 }); } catch (e) { alert(e.message); }
+    /* BtnRefresh_Click: only Vouchers_GetLastRecord(15) -> LastRecordDate */
+    function refresh() {
+        var b = '#BtnRefresh'; if (isBusy(b)) return;
+        busy(b, true);
+        AccF.lookup('last-record-date', { accountTypeId: 15 }).then(function (d) { if (d) LAST_RECORD = d; })
+            .catch(function (e) { alert(e.message); }).then(function () { busy(b, false); });
+    }
+    /* cmbperemeter_ValueChanged */
+    function onParameter() {
+        var id = parseInt($('#cmbperemeter').val(), 10);
+        if (id === 1) $('#txtFromDate').val(AccF.today());
+        else if (id === 2) $('#txtFromDate').val(AccF.addDays(-7));
+        else if (id === 3) $('#txtFromDate').val(AccF.monthStart());
+        else if (id === 4) $('#txtFromDate').val(AccF.yearStart());
+        else if (id === 5) $('#txtFromDate').val(CTX && CTX.activeYear ? CTX.activeYear.startPeriod || '' : '');
+        else if (id === 6) $('#txtFromDate').val(LAST_RECORD || '');
+        if (id >= 1 && id <= 6) $('#txtToDate').val(AccF.today());
     }
 
-    $('input[name="rdGrp"]').on('change', renderDetail);
+    /* ------------------------------------------------------------------ prints (ShowReportWithDataTable -> Jasper) */
+    function printRows(btn, rpt, rows) {
+        if (isBusy(btn)) return;
+        var win = window.open('about:blank', '_blank');
+        busy(btn, true);
+        fetch('/reports/print/grid', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rpt: rpt, title: null, rows: rows }) })
+            .then(function (r) {
+                var type = r.headers.get('Content-Type') || '';
+                if (r.ok && type.indexOf('application/pdf') === 0) return r.blob().then(function (b) { win.location = URL.createObjectURL(b); });
+                return r.text().then(function (t) { try { win.close(); } catch (x) { } alert(t || ('Print failed (' + r.status + ')')); });
+            })
+            .catch(function (e) { try { win.close(); } catch (x) { } alert(e.message); })
+            .then(function () { busy(btn, false); });
+    }
+    /* btnPrintSummery_Click / BtnPrintII_Click: only when dtSummery has rows (otherwise nothing happens) */
+    function printSummary(btn, rpt) { if (summaryRaw.length > 0) printRows(btn, rpt, summaryRaw); }
+    /* btnPrintReceiptandPayment_Click / BtnPrint590II_Click */
+    function printDetail(btn, rpt) {
+        if (!detailRaw.length) { alert('Not Record Found For Display'); return; }
+        printRows(btn, rpt, detailRaw);
+    }
+
+    /* MakeShortCutKeys (the desktop's own list, text unchanged) */
+    var SHORTCUTS = [['Ctrl+S', 'For Shoe Record'], ['Ctrl+E', 'For Close'], ['Ctrl+R', 'For Refresh'], ['Ctrl+N', 'For New'],
+        ['Alt+1', 'For Print 334-Register'], ['Alt+2', 'For Print 335-Register'], ['Ctrl+F5', 'For Focus on Combo Date'],
+        ['Ctrl+alt', 'To Show ShortCut Keys Form'], ['Ctrl+ArrowDown', 'For Focus On Grid History'],
+        ['Ctrl+ArrowUp', 'For Focus On Date combo in Filters Box'], ['Ctrl+Space', "When Focus On Any Grid To Call Function's On Button Or Link"]];
+    function shortcuts() {
+        $('#scBody').html(SHORTCUTS.map(function (s) { return '<tr><td>' + esc(s[0]) + '</td><td>' + esc(s[1]) + '</td></tr>'; }).join(''));
+        $('#scModal').css('display', 'flex');
+    }
+
+    function tab(id) {
+        $('#tabStrip a').removeClass('on').filter('[data-tab="' + id + '"]').addClass('on');
+        $('.tabPage').removeClass('on'); $('#' + id).addClass('on');
+    }
+    function comboOpen() { return $('.dtcombo-pop').filter(function () { return this.style.display === 'block'; }).length > 0; }
+
+    /* ------------------------------------------------------------------ wiring */
+    $('#tabStrip').on('click', 'a', function () { tab($(this).data('tab')); });
+    $('#btnshow').on('click', function () { show(this); });
+    $('#btnNew').on('click', reset);
+    $('#BtnRefresh').on('click', refresh);
+    $('#btnPrintSummery').on('click', function () { printSummary(this, '593-CashBankBalancesSummery_Rpt.rpt'); });
+    $('#BtnPrintII').on('click', function () { printSummary(this, '593_01_CashBankBalancesSummeryReport.rpt'); });
+    $('#btnPrintReceiptandPayment').on('click', function () { printDetail(this, '590-BankBalances.rpt'); });
+    $('#BtnPrint590II').on('click', function () { printDetail(this, '590_01_BankBalancesWithSummary.rpt'); });
+    /* btnBankManualBalance_Click: new BankBalanceManualEntry(UserAccount).Show() */
+    $('#btnBankManualBalance').on('click', function () { window.open('/accounts/bank-balance-manual-entry', '_blank'); });
+    /* RadGroupbyBankName / RadGroupbyParty / RadNoGroup CheckedChanged -> GroupBySettingOfReceiptPaymentGrid (only grids with rows) */
+    $('input[name="rdGrp"]').on('change', function () {
+        if (GRIDS.grdReceipt.rows.length) GRIDS.grdReceipt.render(true);
+        if (GRIDS.grdPayment.rows.length) GRIDS.grdPayment.render(true);
+    });
+    $('#scClose').on('click', function (e) { e.preventDefault(); $('#scModal').hide(); });
+
+    /* BankBalances_KeyDown (KeyPreview) */
     $(document).on('keydown', function (e) {
-        if (e.ctrlKey && (e.key === 'l' || e.key === 'L')) { e.preventDefault(); $('.bb-lang').show(); }
-        if (e.ctrlKey && (e.key === 's' || e.key === 'S')) { e.preventDefault(); bbShow(); }
+        var k = e.key, K = (k || '').toUpperCase();
+        if ($('#scModal').is(':visible')) { if (k === 'Escape') { e.preventDefault(); $('#scModal').hide(); } return; }
+        if (k === 'Enter' && !e.ctrlKey && !e.altKey && !e.shiftKey && !comboOpen() && !$(e.target).is('button, a, tr.flt input')) {
+            /* SendKeys.Send("{TAB}") */
+            var f = $('#panel1').find('input:visible:not([readonly]), .dtcombo-input:visible, button:visible:enabled').toArray();
+            var i = f.indexOf(e.target); if (i >= 0 && i < f.length - 1) { e.preventDefault(); f[i + 1].focus(); }
+        }
+        if ((e.ctrlKey && !e.altKey && K === 'E') || (k === 'Escape' && !comboOpen())) { e.preventDefault(); window.location.href = '/accounts/dashboard'; return; }
+        if (e.ctrlKey && !e.altKey && K === 'S') { e.preventDefault(); show('#btnshow'); }
+        if (e.ctrlKey && k === 'F5') { e.preventDefault(); AccF.focus('#cmbperemeter'); }
+        if (e.ctrlKey && !e.altKey && K === 'N') { e.preventDefault(); reset(); }
+        if (e.altKey && !e.ctrlKey && e.code === 'Digit1') { e.preventDefault(); $('#btnPrintSummery').click(); }
+        if (e.altKey && !e.ctrlKey && e.code === 'Numpad1') { e.preventDefault(); $('#btnPrintReceiptandPayment').click(); }
+        if (e.ctrlKey && !e.altKey && K === 'R') { e.preventDefault(); refresh(); }
+        if (e.ctrlKey && k === 'ArrowDown') { e.preventDefault(); tab('tabPage1'); $('#grdHistory').focus(); }
+        if (e.ctrlKey && k === 'ArrowUp') { e.preventDefault(); AccF.focus('#cmbperemeter'); }
+        if (e.ctrlKey && !e.altKey && K === 'L') { e.preventDefault(); $('#lblLanguage').show(); $('#CmbLanguageBox').show(); }
+        if (e.ctrlKey && e.altKey && (k === 'Control' || k === 'Alt')) { e.preventDefault(); shortcuts(); }
     });
 
-    $(async function () {
-        comboInit();
-        try {
-            CTX = await AccF.context();
-            if (CTX.branchFeature) {
-                const brs = await AccF.lookup('branches');
-                if (CTX.branchConsolidated) $('#CmbBranches').attr('multiple', 'multiple');
-                branchesCombo(CTX.branchConsolidated);
-                AccF.fillSelect('#CmbBranches', brs, 'Id', 'BranchName', CTX.branchConsolidated ? null : '');
-                const pre = QS.get('branchesIds');
-                if (pre) $('#CmbBranches').val(CTX.branchConsolidated ? pre.split(',') : pre.split(',')[0]);
-                else $('#CmbBranches').val(CTX.branchConsolidated ? [String(CTX.userBranchId)] : String(CTX.userBranchId));
-                $('.bb-br').show();
-            }
-            AccF.fillSelect('#CmbLanguage', await AccF.lookup('languages'), 'Id', 'LanguageDescription', '');
-            $('#txtFromDate, #txtToDate').val(AccF.today());
-            // BankBalances_Load: a drill-in with dates fills Receipts/Payments; the summary is always filled; then
-            // Vouchers_GetLastRecord(15) and ParameterFill (Rows[5] "Last Record Date" -> From = last record, To = today).
-            if (QS.get('fromDate') && QS.get('toDate')) {
-                $('#txtFromDate').val(QS.get('fromDate')); $('#txtToDate').val(QS.get('toDate'));
-                await bbShow();
-            } else {
-                await summaryOnly();
-            }
-            LAST_RECORD = await AccF.lookup('last-record-date', { accountTypeId: 15 });
-            AccF.fillSelect('#cmbperemeter', [{ Id: 1, P: 'This Day' }, { Id: 2, P: 'This Week' }, { Id: 3, P: 'This Month' },
-                { Id: 4, P: 'This Year' }, { Id: 5, P: 'Financial Year' }, { Id: 6, P: 'Last Record Date' }], 'Id', 'P', null).val('6');
-            onParameter();
-            $('#cmbperemeter').on('change', onParameter);
-        } catch (e) { alert(e.message); }
+    /* ------------------------------------------------------------------ BankBalances_Load */
+    $(function () {
+        (async function () {
+            try {
+                CTX = await AccF.context();
+                if (CTX.branchFeature) {
+                    /* BranchesFill: GetBranchesFromVouchersByAccountId; feature 18 -> checked combo, Text = UserAccount.BranchName */
+                    if (CTX.branchConsolidated) { $('#CmbBranches').attr({ multiple: 'multiple', 'data-dtcombo-checked': '' }); }
+                    var brs = await AccF.lookup('branches');
+                    AccF.fillSelect('#CmbBranches', brs, 'Id', 'BranchName', CTX.branchConsolidated ? null : '');
+                    var pre = QS.get('branchesIds');
+                    if (pre) $('#CmbBranches').val(CTX.branchConsolidated ? pre.split(',') : pre.split(',')[0]);
+                    else if (CTX.userBranchId) $('#CmbBranches').val(CTX.branchConsolidated ? [String(CTX.userBranchId)] : String(CTX.userBranchId));
+                    $('#Branches').show(); AccF.ctl('#CmbBranches').show(); $('#CmbBranches').trigger('change');
+                } else {
+                    AccF.ctl('#CmbBranches').hide();
+                }
+                /* MultiLanguages */
+                AccF.fillSelect('#CmbLanguage', await AccF.lookup('languages'), 'Id', 'LanguageDescription', '');
+                /* the DateTimePickers start at Now; a drill-in hands FromDate / ToDate and fills Payment/Receipts first */
+                $('#txtFromDate, #txtToDate').val(AccF.today());
+                if (QS.get('fromDate') && QS.get('toDate')) {
+                    $('#txtFromDate').val(QS.get('fromDate')); $('#txtToDate').val(QS.get('toDate'));
+                    await show('#btnshow');
+                } else {
+                    await summaryOnly();
+                }
+                /* Vouchers_GetLastRecord(15), then ParameterFill: Rows[5] "Last Record Date" -> From = LastRecordDate, To = today */
+                LAST_RECORD = await AccF.lookup('last-record-date', { accountTypeId: 15 });
+                AccF.fillSelect('#cmbperemeter', [{ Id: 1, P: 'This Day' }, { Id: 2, P: 'This Week' }, { Id: 3, P: 'This Month' },
+                    { Id: 4, P: 'This Year' }, { Id: 5, P: 'Financial Year' }, { Id: 6, P: 'Last Record Date' }], 'Id', 'P', null);
+                $('#cmbperemeter').val('6');
+                onParameter();
+                $('#cmbperemeter').on('change', onParameter);
+            } catch (e) { alert(e.message); }
+        })();
     });
+})(window.jQuery);
 </script>
 <script src="/js/print-rpt.js?v=20261001a"></script>
 </body>

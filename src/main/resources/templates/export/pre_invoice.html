@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Pre Invoice - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_pre_invoice.css?v=20261001a}"/>
+</head>
+<!-- PreCommiercialInvoice.cs (Architecture.WinApp.Export), screen 192 "Pre Invoice", DocumentTypeId 209, ClientSize 1100 x 739.
+     tabControl1 "Form" | "History".
+     Form: toolStrip4 New / Update(hidden) / Print-546 / Save / Bank Print-546 / Refresh / Attachment / Load_Pending Proforma;
+       panel10 caption "Pre Invoice"; HeaderGropBox "Main Header" (1066 x 295): column x1 Doc No & Date*, Invoice No*, Customer/Importer
+       (read-only, filled by the loader), Notify Party 1/2, Importer Bank, Exporter Bank, Health Permit No (Certificate2);
+       column x320 Payment Term, Delivery Term*, Carier Type*, Lot Ref No.*, Fcy Code*, Exchange Rate*, Add Less Amt, Ad/Ls Remarks;
+       column x540 GD No, GD Date, Loading Port*, Destination Port*, Fcy-Amount (read-only), Local Amount (read-only), Total Amount*;
+       column x784 groupBox1 "Commission" (Agent / Comm % / Amount, disabled), groupBox2 "Detail For Bank" (Customer Name /
+       Destination Port), No.Of Container*, Gross Weight KG*, Net Weight KG* (read-only); Remarks; Special Remarks (Certificate1);
+       Preview (checked). Branch / Project combos are hidden (first row used).
+       tabControl2 "Proforma Detail" (GroupDetail entry + grdDetail with Delete and + buttons), "Other Items" (CmbOtherItem / Qty / Rate / Amount / Remarks) and "Payment Detail" (FI No / Payment Term / Balance / % of Total / Fcy Amount / Due Days).
+     History: toolStrip3 New / Refresh; "Pre Invoice History"; Filters (From/To Date with checkboxes, From/To Doc No, Customer, Show,
+       Doc / Modify / Entry / Approved Date); DataGridHistory (Slip / BankSlip / Edit buttons, double-click = Edit); gridDetailHistory.
+     Events: cmbSupCust Leave, combitem Leave, CmbPackUom / CmbRateUom TextChanged, txtCostMTon / txtPackingWeight /
+       txtNoOfContainersDetail / txtNoOfBagsPerCntnr / txtOtherRateDetail TextChanged, txtExRate / txtaddlessamount / txtfcyAmount /
+       txtCommPercent TextChanged, grdDetail ColumnButtonClick + DoubleClick, CmbFinInstruments ValueChanged, dtxtpercentoftotal /
+       dtxtfcyamount Leave, grdpaymentdetail / grdotheritems DoubleClick, CmbOtherItem / txtoQty TextChanged, the form KeyDown. -->
+<body class="pd-body" data-export-page="pi" data-form="pre-invoice">
+<div class="pd-form ex-form">
+    <div class="win-tabs" data-tabs="pi">
+        <button type="button" class="win-tab is-active" data-tab="piForm">Form</button>
+        <button type="button" class="win-tab" data-tab="piHistory">History</button>
+    </div>
+
+    <!-- ===================================================== tabPage1 Form -->
+    <div class="win-tab-panel is-active" id="piForm">
+        <div class="win-tool-strip">
+            <button type="button" id="btnNew" class="win-btn-tool" accesskey="n" onclick="ExportPi.btnNew()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="btnupdate" class="win-btn-tool is-hidden" accesskey="u" onclick="ExportPi.btnsave(this)"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+            <button type="button" id="btnPrint" class="win-btn-tool" onclick="ExportPi.printSlip('btnPrint', this)" data-rpt="546-ExportPreInvoiceSlip.rpt"><i class="fa fa-print"></i> <span>Print-546</span></button>
+            <button type="button" id="btnsave" class="win-btn-tool" accesskey="s" onclick="ExportPi.btnsave(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+            <button type="button" id="btnPrint546" class="win-btn-tool" onclick="ExportPi.printSlip('btnPrint546', this)" data-rpt="546-ExportPreInvoiceSlip.rpt (desktop quirk: the bank button prints the plain slip)"><i class="fa fa-print"></i> <span>Bank Print-546 </span></button>
+            <button type="button" id="btnrefersh" class="win-btn-tool" accesskey="r" onclick="ExportPi.btnRefresh(this)"><i class="fa fa-refresh"></i> <span><u>R</u>efresh</span></button>
+            <button type="button" id="btnAttachment" class="win-btn-tool" disabled title="DMS attachments are not part of this web screen"><i class="fa fa-paperclip"></i> <span><u>A</u>ttachment</span></button>
+            <button type="button" id="btnLoaderForm" class="win-btn-tool" onclick="ExportPi.loaderOpen(this)"><i class="fa fa-download"></i> <span><u>L</u>oad_Pending Proforma</span></button>
+        </div>
+        <div class="pd-caption pd-caption-teal" style="height:26px;">Pre Invoice</div>
+        <fieldset class="ex-groupbox">
+            <legend>Main Header</legend>
+            <select id="cmbbranches" class="xi-hidden-field" aria-hidden="true"></select>
+            <select id="cmbproject" class="xi-hidden-field" aria-hidden="true"></select>
+            <div class="xi-header">
+                <div class="xi-col">
+                    <div class="xi-row"><label class="xi-req" for="txtdocno">Doc No &amp; Date</label>
+                        <div class="ex-pair"><input type="text" id="txtdocno" class="win-textbox" readonly/><input type="date" id="txtDocDate" class="win-date"/></div></div>
+                    <div class="xi-row"><label class="xi-req" for="txtinvoiceno">Invoice No</label><input type="text" id="txtinvoiceno" class="win-textbox" autocomplete="off" readonly/></div>
+                    <div class="xi-row"><label for="cmbSupCust">Customer/Importer</label>
+                        <select id="cmbSupCust" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Customer/Importer Name" disabled></select></div>
+                    <div class="xi-row"><label for="cmbNotifyParty1">Notify Party 1</label>
+                        <select id="cmbNotifyParty1" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Notify Party"></select></div>
+                    <div class="xi-row"><label for="cmbNotifyParty2">Notify Party 2</label>
+                        <select id="cmbNotifyParty2" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Notify Party"></select></div>
+                    <div class="xi-row"><label for="cmbimporterBankNew">Importer Bank</label>
+                        <select id="cmbimporterBankNew" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="ImporterBank"></select></div>
+                    <div class="xi-row"><label for="cmbexporterBankNew">Exporter Bank</label>
+                        <select id="cmbexporterBankNew" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="ExporterBank"></select></div>
+                    <div class="xi-row"><label for="txtcertificateOfOrigion">Health Permit No</label><input type="text" id="txtcertificateOfOrigion" class="win-textbox" autocomplete="off"/></div>
+                </div>
+                <div class="xi-col">
+                    <div class="xi-row"><label for="cmbPaymentTermsNew">Payment Term</label>
+                        <select id="cmbPaymentTermsNew" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="PaymentTerms"></select></div>
+                    <div class="xi-row"><label class="xi-req" for="cmbdeliverytermnew">Delivery Term</label>
+                        <select id="cmbdeliverytermnew" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="DeliveryTerms"></select></div>
+                    <div class="xi-row"><label class="xi-req" for="cmbcareiertype">Carier Type</label>
+                        <select id="cmbcareiertype" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Carier type"></select></div>
+                    <div class="xi-row"><label class="xi-req" for="txtLotRef">Lot Ref No.</label><input type="text" id="txtLotRef" class="win-textbox" autocomplete="off"/></div>
+                    <div class="xi-row"><label class="xi-req" for="cmbfcycode">Fcy Code</label>
+                        <select id="cmbfcycode" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="CurrencyName"></select></div>
+                    <div class="xi-row"><label class="xi-req" for="txtExRate">Exchange Rate</label><input type="text" id="txtExRate" class="win-textbox num" value="0" data-guard="decimal" autocomplete="off"/></div>
+                    <div class="xi-row"><label for="txtaddlessamount">Add Less Amt</label><input type="text" id="txtaddlessamount" class="win-textbox num" value="0" data-guard="decimal" autocomplete="off"/></div>
+                </div>
+                <div class="xi-col">
+                    <div class="xi-row"><label for="txtIformNo">GD No</label><input type="text" id="txtIformNo" class="win-textbox" autocomplete="off"/></div>
+                    <div class="xi-row"><label for="txtIformDate">GD Date</label><input type="date" id="txtIformDate" class="win-date"/></div>
+                    <div class="xi-row"><label class="xi-req" for="cmbLoadingPort">Loading Port</label>
+                        <select id="cmbLoadingPort" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Loading Port"></select></div>
+                    <div class="xi-row"><label class="xi-req" for="cmbDestinationPort">Destination Port</label>
+                        <select id="cmbDestinationPort" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Destination Port"></select></div>
+                    <div class="xi-row"><label for="txtfcyAmount">Fcy-Amount</label><input type="text" id="txtfcyAmount" class="win-textbox num" value="0" readonly/></div>
+                    <div class="xi-row"><label for="txtLocalAmt">Local Amount</label><input type="text" id="txtLocalAmt" class="win-textbox num" value="0" readonly/></div>
+                    <div class="xi-row"><label class="xi-req" for="txtTotalNetAmount">Total Amount</label><input type="text" id="txtTotalNetAmount" class="win-textbox num" value="0" readonly/></div>
+                </div>
+                <div class="xi-col">
+                    <fieldset class="xi-box"><legend>Commission</legend>
+                        <div class="xi-row"><label for="cmbCommissionAgent">Agent</label>
+                            <select id="cmbCommissionAgent" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Commission Agent" disabled></select></div>
+                        <div class="xi-row"><label for="txtCommPercent">Comm %</label>
+                            <div class="xi-inline" style="flex:1;"><input type="text" id="txtCommPercent" class="win-textbox num" value="0" style="width:65px;" disabled/>
+                                <span style="font:600 9pt 'Segoe UI';">Amount</span><input type="text" id="txtCommAmount" class="win-textbox num" value="0" style="flex:1;" disabled readonly/></div></div>
+                    </fieldset>
+                    <fieldset class="xi-box"><legend>Detail For Bank </legend>
+                        <div class="xi-row"><label for="cmbOtherCustomer">Customer Name</label>
+                            <select id="cmbOtherCustomer" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Other Cutomer/Importer Name"></select></div>
+                        <div class="xi-row"><label for="cmbOtherDestinationPort">Destination Port</label>
+                            <select id="cmbOtherDestinationPort" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Other Destination Port"></select></div>
+                    </fieldset>
+                    <div class="xi-row"><label class="xi-req" for="txtNoOfContainer">No.Of Container</label><input type="text" id="txtNoOfContainer" class="win-textbox num" value="0" data-guard="decimal" autocomplete="off"/></div>
+                    <div class="xi-row"><label class="xi-req" for="txtGrossWeight">Gross Weight KG</label><input type="text" id="txtGrossWeight" class="win-textbox num" value="0" data-guard="decimal" autocomplete="off"/></div>
+                    <div class="xi-row"><label class="xi-req" for="txtNetWeight">Net Weight KG</label><input type="text" id="txtNetWeight" class="win-textbox num" value="0" readonly/></div>
+                </div>
+                <div class="xi-row xi-wide2" style="grid-column:2 / 4;"><label for="txtaddlesscommnets">Ad/Ls Remarks</label><input type="text" id="txtaddlesscommnets" class="win-textbox" autocomplete="off"/></div>
+                <div class="xi-row xi-wide"><label for="txtremarksheader">Remarks</label><input type="text" id="txtremarksheader" class="win-textbox" autocomplete="off"/></div>
+                <div class="xi-row xi-wide"><label for="txtcertificate">Special Remarks</label><input type="text" id="txtcertificate" class="win-textbox" autocomplete="off"/></div>
+                <div class="xi-row xi-right"><label class="ex-check" style="width:auto;flex:none;"><input type="checkbox" id="ChkPrintPreview" checked/> Preview</label></div>
+            </div>
+        </fieldset>
+
+        <div class="xi-subtabs" data-subtabs="pi">
+            <button type="button" class="win-tab is-active" data-subtab="tabPage3">Proforma Detail</button>
+            <button type="button" class="win-tab" data-subtab="tabPage4">Other Items</button>
+            <button type="button" class="win-tab" data-subtab="tabPage5">Payment Detail</button>
+        </div>
+        <!-- tabPage3 Proforma Detail -->
+        <div class="win-tab-panel is-active" id="tabPage3" data-subpanel="pi">
+            <div class="pd-caption pd-caption-teal" style="height:22px;font-size:9.5pt;">Pre Invoice</div>
+            <fieldset class="ex-groupbox" style="margin-top:2px;">
+                <legend>Detail</legend>
+                <div class="xi-entry xi-entry-10">
+                    <div class="ex-field"><label for="combitem">Item Name</label><select id="combitem" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Name"></select></div>
+                    <div class="ex-field"><label for="txtItemHsCodeDetail">Item HS Code</label><input type="text" id="txtItemHsCodeDetail" class="win-textbox" autocomplete="off"/></div>
+                    <div class="ex-field"><label for="combpcktype">Packing Type</label><select id="combpcktype" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Packing Type"></select></div>
+                    <div class="ex-field"><label for="txtPackingWeight">Packing Wt</label><input type="text" id="txtPackingWeight" class="win-textbox num" value="0" data-guard="decimal" autocomplete="off"/></div>
+                    <div class="ex-field"><label for="CmbCropYear">CropYear</label><select id="CmbCropYear" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="CropYear"></select></div>
+                    <div class="ex-field"><label for="txtNoOfContainersDetail">NoOfContainers</label><input type="text" id="txtNoOfContainersDetail" class="win-textbox num" value="0" autocomplete="off"/></div>
+                    <div class="ex-field"><label for="txtNoOfBagsPerCntnr">NoOfBags/Cntnr</label><input type="text" id="txtNoOfBagsPerCntnr" class="win-textbox num" autocomplete="off"/></div>
+                    <div class="ex-field"><label for="CmbPackUom">Pack UOM</label><select id="CmbPackUom" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Pack Uom"></select></div>
+                    <div class="ex-field"><label for="txtQtyMTon">M.Ton</label><input type="text" id="txtQtyMTon" class="win-textbox num" value="0" disabled/></div>
+                    <div class="ex-field"><label for="txtNoOfBags">No Of Bags</label><input type="text" id="txtNoOfBags" class="win-textbox num" value="0" disabled/></div>
+                    <div class="ex-field"><label for="txtNetWeightdetail">Net Weight Kg</label><input type="text" id="txtNetWeightdetail" class="win-textbox num" value="0" disabled readonly/></div>
+                    <div class="ex-field"><label for="txttotalpackingweight">Total Packing Wt</label><input type="text" id="txttotalpackingweight" class="win-textbox num" value="0" disabled/></div>
+                    <div class="ex-field"><label for="txtgrossWeightdetail">Gross Weight Kg</label><input type="text" id="txtgrossWeightdetail" class="win-textbox num" value="0" disabled/></div>
+                    <div class="ex-field"><label for="txtCostMTon">Rate/M.Ton</label><input type="text" id="txtCostMTon" class="win-textbox num" value="0" data-guard="decimal" autocomplete="off"/></div>
+                    <div class="ex-field"><label for="CmbRateUom">Rate UOM</label><select id="CmbRateUom" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Rate Uom"></select></div>
+                    <div class="ex-field"><label for="txtAmount">Amount</label><input type="text" id="txtAmount" class="win-textbox num" value="0" readonly/></div>
+                    <div class="ex-field"><label for="txtOtherRateDetail">Bank Rate</label><input type="text" id="txtOtherRateDetail" class="win-textbox num" data-guard="decimal" autocomplete="off"/></div>
+                    <div class="ex-field"><label for="txtOtherAmountDetil">Bank Amount</label><input type="text" id="txtOtherAmountDetil" class="win-textbox num" disabled/></div>
+                    <div class="ex-field"><label for="txtOtherHSCodeDetail">Bank HS Code</label><input type="text" id="txtOtherHSCodeDetail" class="win-textbox" autocomplete="off"/></div>
+                    <div class="ex-field"><label for="txtPackingExpiryDate">Packing Expiry Date</label><input type="text" id="txtPackingExpiryDate" class="win-textbox" autocomplete="off"/></div>
+                    <div class="ex-field xi-span5"><label for="txtItemCommodityDetail">Item Commodity Detail</label><input type="text" id="txtItemCommodityDetail" class="win-textbox" autocomplete="off"/></div>
+                    <div class="ex-field xi-span3"><label for="txtHealthPermitnodetail">Health Permit No</label><input type="text" id="txtHealthPermitnodetail" class="win-textbox" autocomplete="off"/></div>
+                    <div class="xi-btns xi-span2">
+                        <button type="button" id="btnAddinGrid" class="win-btn-small" onclick="ExportPi.btnAddinGrid()">+</button>
+                        <button type="button" id="btnGridUpdate" class="win-btn-small is-hidden" onclick="ExportPi.btnGridUpdate(this)">Update</button>
+                        <button type="button" id="btnCancel" class="win-btn-small is-hidden" onclick="ExportPi.btnCancel()">Cancel</button>
+                    </div>
+                    <input type="hidden" id="txtweightcheck" value="0"/><input type="hidden" id="txtqtycheck" value="0"/>
+                </div>
+            </fieldset>
+            <div class="pd-caption pd-caption-teal pd-history-bar" style="height:24px;"><span>Pre Invoice</span>
+                <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdDetailBox" title="Fullscreen table">&#x26F6;</button><span id="gridBarMountPi" class="pd-gridbar-mount"></span></span></div>
+            <div class="ex-grid-box" id="grdDetailBox">
+                <div class="ex-grid-scroll ex-h300">
+                    <table class="win-grid" id="grdDetail" data-gridbar="PreCommiercialInvoice:grdDetail" data-gridbar-mount="#gridBarMountPi" data-gridbar-reorder="false">
+                        <thead><tr>
+                            <th class="ctr">Delete</th><th class="ctr">+</th>
+                            <th class="num" data-col="PerformaDocNo">PerformaDocNo</th><th data-col="PerformaDate">PerformaDate</th><th data-col="PriRefNo">PRI-RefNo</th>
+                            <th data-col="ItemName">ItemName</th><th data-col="ItemHSCode">ItemHSCode</th><th data-col="PackType">Packing Type</th>
+                            <th class="num" data-col="PackingWeight">PackingWeight</th><th data-col="CropYear">CropYear</th><th class="num" data-col="NoOfContainers">NoOfContainers</th>
+                            <th class="num" data-col="NoOfBagsCntnr">NoOfBags/Cntnr</th><th data-col="PackSize">Pack Uom</th><th class="num" data-col="QtyMTon">M.Ton</th>
+                            <th class="num" data-col="NoOfBags">NoOfBags</th><th class="num" data-col="NetWeight">NetWeight</th><th class="num" data-col="TotalPackingWeight">TotalPackingWeight</th>
+                            <th class="num" data-col="GrossWeight">GrossWeight</th><th class="num" data-col="CostMTon">Rate/M.Ton</th><th class="num" data-col="ContractRate">Proforma Rate</th>
+                            <th data-col="RateUOM">RateUOM</th><th class="num" data-col="Amount">Amount</th><th class="num" data-col="OtherRate">Bank Rate</th>
+                            <th class="num" data-col="OtherAmount">Bank Amount</th><th data-col="OtherHSCode">Bank HS Code</th><th data-col="PackingExpiryDate">PackingExpiryDate</th>
+                            <th data-col="ItemCommodityDetail">ItemCommodityDetail</th><th data-col="HealthPermitNo">HealthPermitNo</th>
+                        </tr></thead>
+                        <tbody id="piBody"></tbody>
+                        <tfoot id="piFoot"></tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <!-- tabPage4 Other Items -->
+        <div class="win-tab-panel" id="tabPage4" data-subpanel="pi">
+            <div class="pd-caption pd-caption-teal" style="height:22px;font-size:9.5pt;">Other Items</div>
+            <div class="xi-entry xi-entry-other">
+                <div class="ex-field"><label for="CmbOtherItem">Item Name</label><select id="CmbOtherItem" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Name"></select></div>
+                <div class="ex-field"><label for="txtoQty">Qty</label><input type="text" id="txtoQty" class="win-textbox num" value="0" data-guard="decimal" autocomplete="off"/></div>
+                <div class="ex-field"><label for="txtoRate">Rate</label><input type="text" id="txtoRate" class="win-textbox num" value="0" readonly/></div>
+                <div class="ex-field"><label for="txtoAmount">Amount</label><input type="text" id="txtoAmount" class="win-textbox num" value="0" readonly/></div>
+                <div class="ex-field"><label for="txtoRemarks">Remarks</label><input type="text" id="txtoRemarks" class="win-textbox" autocomplete="off"/></div>
+                <div class="xi-btns">
+                    <button type="button" id="btnoadd" class="win-btn-small" onclick="ExportPi.btnoadd()">+</button>
+                    <button type="button" id="btnoUpdate" class="win-btn-small is-hidden" onclick="ExportPi.btnoUpdate()">Update</button>
+                    <button type="button" id="btnoCancel" class="win-btn-small is-hidden" onclick="ExportPi.btnoCancel()">Cancel</button>
+                </div>
+            </div>
+            <div class="ex-grid-box"><div class="ex-grid-scroll ex-h240">
+                <table class="win-grid" id="grdotheritems"><thead><tr><th>ItemName</th><th class="num">Qty</th><th class="num">Rate</th><th class="num">Amount</th><th>Remarks</th></tr></thead>
+                    <tbody id="piOtherBody"></tbody><tfoot id="piOtherFoot"></tfoot></table>
+            </div></div>
+        </div>
+        <!-- tabPage5 Payment Detail -->
+        <div class="win-tab-panel" id="tabPage5" data-subpanel="pi">
+            <div class="pd-caption pd-caption-teal" style="height:22px;font-size:9.5pt;">Payment Detail</div>
+            <div class="xi-entry xi-entry-pay">
+                <div class="ex-field"><label class="xi-req" for="CmbFinInstruments">Financial Instruments No</label><select id="CmbFinInstruments" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="FI No"></select></div>
+                <div class="ex-field"><label class="xi-req" for="dcmbpaymentterm">Payment Term</label><select id="dcmbpaymentterm" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Payment Term " disabled></select></div>
+                <div class="ex-field"><label for="txtBalanceFI">Balance</label><input type="text" id="txtBalanceFI" class="win-textbox num" value="0" readonly/></div>
+                <div class="ex-field"><label class="xi-req" for="dtxtpercentoftotal">% of Total</label><input type="text" id="dtxtpercentoftotal" class="win-textbox num" value="0" data-guard="decimal" autocomplete="off"/></div>
+                <div class="ex-field"><label class="xi-req" for="dtxtfcyamount">Fcy Amount</label><input type="text" id="dtxtfcyamount" class="win-textbox num" value="0" data-guard="decimal" autocomplete="off"/></div>
+                <div class="ex-field"><label for="dtxtdueday">Due Days</label><input type="text" id="dtxtdueday" class="win-textbox num" value="0" autocomplete="off"/></div>
+                <div class="xi-btns">
+                    <button type="button" id="btndadd" class="win-btn-small" onclick="ExportPi.btndadd()">+</button>
+                    <button type="button" id="btndupdate" class="win-btn-small is-hidden" onclick="ExportPi.btndupdate()">Update</button>
+                    <button type="button" id="btndcancel" class="win-btn-small is-hidden" onclick="ExportPi.btndcancel()">Cancel</button>
+                </div>
+            </div>
+            <div class="ex-grid-box"><div class="ex-grid-scroll ex-h240">
+                <table class="win-grid" id="grdpaymentdetail"><thead><tr><th>FinancialInstrumentNo</th><th>PaymentTerm</th><th class="num">%OfTotal</th><th class="num">FcyAmount</th><th class="num">DueDays</th></tr></thead>
+                    <tbody id="piPayBody"></tbody><tfoot id="piPayFoot"></tfoot></table>
+            </div></div>
+        </div>
+    </div>
+
+    <!-- ===================================================== tabPage2 History -->
+    <div class="win-tab-panel" id="piHistory">
+        <div class="win-tool-strip">
+            <button type="button" id="btnResetHistory" class="win-btn-tool" onclick="ExportPi.historyReset()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="btnRefreshHistory" class="win-btn-tool" onclick="ExportPi.historyRefresh(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+        </div>
+        <div class="pd-caption pd-caption-teal" style="height:24px;">Pre Invoice History</div>
+        <fieldset class="ex-groupbox">
+            <legend>Filters</legend>
+            <div class="ex-filter">
+                <div class="ex-field" style="width:190px;"><label for="FromDateHistory">From Date</label>
+                    <span class="ex-check"><input type="checkbox" id="FromDateHistoryChk" checked/><input type="date" id="FromDateHistory" class="win-date" style="flex:1;"/></span></div>
+                <div class="ex-field" style="width:120px;"><label for="FromDocNoHistory">From Doc No</label><input type="text" id="FromDocNoHistory" class="win-textbox num" data-guard="integer" autocomplete="off"/></div>
+                <div class="ex-field" style="width:300px;"><label for="CmbCustomerHistory">Customer</label>
+                    <select id="CmbCustomerHistory" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Party"></select></div>
+                <div class="ex-radios">
+                    <label class="ex-check"><input type="radio" name="dateBy" value="doc" checked/> Doc Date</label>
+                    <label class="ex-check"><input type="radio" name="dateBy" value="entry"/> Entry Date</label>
+                </div>
+                <div class="ex-radios">
+                    <label class="ex-check"><input type="radio" name="dateBy" value="modify"/> Modify Date</label>
+                    <label class="ex-check"><input type="radio" name="dateBy" value="approved"/> Approved Date</label>
+                </div>
+                <div style="flex-basis:100%;height:0;"></div>
+                <div class="ex-field" style="width:190px;"><label for="ToDateHistory">To Date</label>
+                    <span class="ex-check"><input type="checkbox" id="ToDateHistoryChk" checked/><input type="date" id="ToDateHistory" class="win-date" style="flex:1;"/></span></div>
+                <div class="ex-field" style="width:120px;"><label for="ToDocNoHistory">To Doc No</label><input type="text" id="ToDocNoHistory" class="win-textbox num" data-guard="integer" autocomplete="off"/></div>
+                <div class="ex-field"><label>&nbsp;</label><button type="button" id="btnShowHistory" class="win-btn-small" style="width:62px;height:26px;" onclick="ExportPi.historyShow(this)">Show</button></div>
+            </div>
+        </fieldset>
+        <div class="pd-caption pd-caption-teal pd-history-bar" style="height:28px;"><span>Filtered Records</span>
+            <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="DataGridHistoryBox" title="Fullscreen table">&#x26F6;</button><span id="gridBarMountPiH" class="pd-gridbar-mount"></span></span></div>
+        <div class="ex-grid-box" id="DataGridHistoryBox">
+            <div class="ex-grid-scroll ex-h300">
+                <table class="win-grid" id="DataGridHistory" data-gridbar="PreCommiercialInvoice:DataGridHistory" data-gridbar-mount="#gridBarMountPiH" data-gridbar-reorder="false">
+                    <thead><tr>
+                        <th>Slip</th><th>BankSlip</th><th>Edit</th>
+                        <th data-col="InvoiceNo">InvoiceNo</th><th class="num" data-col="DocCode">DocCode</th><th data-col="DocDate">DocDate</th><th data-col="CustomerName">CustomerName</th>
+                        <th class="num" data-col="NoOfContainers">NoOfContainers</th><th class="num" data-col="GrossWeight">GrossWeight</th><th class="num" data-col="NetWeight">NetWeight</th>
+                        <th class="num" data-col="FcyAmount">FcyAmount</th><th class="num" data-col="AddLess">Add/Less</th><th class="num" data-col="TotalAmount">TotalAmount</th>
+                        <th data-col="LoadingPort">LoadingPort</th><th data-col="DestinationPort">DestinationPort</th><th data-col="EntryUser">EntryUser</th><th data-col="EntryDate">EntryDate</th>
+                        <th data-col="ModifyUser">ModifyUser</th><th data-col="ModifyDate">ModifyDate</th><th data-col="ApprovedStatus">ApprovedStatus</th><th data-col="ApprovedUser">ApprovedUser</th>
+                        <th data-col="ApprovedDate">ApprovedDate</th><th data-col="NoOfAttachments">NoOfAttachments</th>
+                    </tr></thead>
+                    <tbody id="piHistBody"></tbody>
+                    <tfoot id="piHistFoot"></tfoot>
+                </table>
+            </div>
+            <div class="ex-grid-empty is-hidden" id="piHistEmpty">No record found.</div>
+        </div>
+        <div class="pd-caption" style="background:#fff;color:#000;height:22px;font:9pt 'Segoe UI',sans-serif;border-top:1px solid #ddd;">Detail Of Above Selected Row</div>
+        <div class="ex-grid-box" id="gridDetailHistoryBox">
+            <div class="ex-grid-scroll ex-h240">
+                <table class="win-grid" id="gridDetailHistory">
+                    <thead><tr>
+                        <th class="num">ProformaDocNo</th><th>ProformaRefNo</th><th>ItemName</th><th>ItemHSCode</th><th>PackingType</th><th class="num">PackingWeight</th><th>CropYear</th>
+                        <th class="num">NoOfContainers</th><th class="num">NoOfBags/Cntnr</th><th>PackUom</th><th class="num">M.Ton</th><th class="num">NoOfBags</th><th class="num">NetWeight</th>
+                        <th class="num">TotalPackingWeight</th><th class="num">Gross Weight</th><th class="num">Rate/M.Ton</th><th class="num">ProformaRate</th><th>RateUOM</th><th class="num">Amount</th>
+                        <th class="num">BankRate</th><th class="num">BankAmount</th><th>BankHSCode</th><th>PackingExpiryDate</th><th>ItemCommodityDetail</th><th>HealthPermitNo</th>
+                    </tr></thead>
+                    <tbody id="piHistDetailBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="win-footer-strip">
+        <span class="ex-footer-left" id="piFooterInfo"></span>
+        <button type="button" class="win-btn-history" id="btnPiFooterHistory" onclick="ExportPi.toggleHistory()"><i class="fa fa-history"></i> <span>History</span></button>
+    </div>
+</div>
+
+<!-- LoadExportPerformaInvoice (812 x 661) - "Pending Performa Invoice": Filters (From Date / To Date - not passed by the desktop,
+     Party Name, Item Name, Currency, Search, Reset), grd (Select check column with header selector), grddetail, Load. -->
+<div id="piLoader" class="xi-modal is-hidden">
+    <div class="xi-modal-box">
+        <div class="pd-caption pd-caption-teal" style="height:28px;"><span>Pending Performa Invoice</span><button type="button" class="ex-fs-btn" onclick="ExportPi.loaderClose()">&times;</button></div>
+        <fieldset class="ex-groupbox"><legend>Filters</legend>
+            <div class="ex-filter">
+                <div class="ex-field" style="width:150px;"><label for="ldFromDate">From Date</label><input type="date" id="ldFromDate" class="win-date"/></div>
+                <div class="ex-field" style="width:150px;"><label for="ldToDate">To Date</label><input type="date" id="ldToDate" class="win-date"/></div>
+                <div class="ex-field" style="width:240px;"><label for="ldCmbPartyName">Party Name</label><select id="ldCmbPartyName" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Party Name"></select></div>
+                <div class="ex-field" style="width:240px;"><label for="ldCmbItemName">Item Name</label><select id="ldCmbItemName" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Name"></select></div>
+                <div class="ex-field" style="width:180px;"><label for="ldCmbCurrency">Currency</label><select id="ldCmbCurrency" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Currency Name"></select></div>
+                <div class="ex-field"><label>&nbsp;</label><div class="xi-inline">
+                    <button type="button" id="btngrnlod" class="win-btn-small" onclick="ExportPi.loaderSearch(this)">Search</button>
+                    <button type="button" id="btnLdReset" class="win-btn-small" onclick="ExportPi.loaderReset(this)">Reset</button>
+                    <button type="button" id="btnLoadOnInvoice" class="win-btn-small" onclick="ExportPi.loaderLoad(this)">Load</button></div></div>
+            </div>
+        </fieldset>
+        <div class="ex-grid-scroll ex-h240" style="margin:4px;">
+            <table class="win-grid" id="ldGrid">
+                <thead><tr>
+                    <th class="win-cell-chk"><input type="checkbox" id="ldSelectAll" title="Select all"/></th>
+                    <th class="num">DocNo</th><th>DocDate</th><th>Pri_Ref#</th><th>Pri_RefDate</th><th>PartyName</th><th>SalesMan</th><th>CommissionAgent</th>
+                    <th class="num">Comm%</th><th class="num">CommAmount</th><th>CurrencyCode</th><th>DeliveryTerm</th><th>PaymentTerm</th><th>LoadingPort</th>
+                    <th>DestinationPort</th><th>InsuranceRemarks</th><th>RemarksHeader</th><th>EntryUser</th><th>EntryDate</th><th>ModifyUser</th><th>ModifyDate</th><th class="num">NoOfAttachments</th>
+                </tr></thead>
+                <tbody id="ldBody"></tbody>
+            </table>
+        </div>
+        <div class="ex-grid-scroll ex-h240" style="margin:4px;">
+            <table class="win-grid" id="ldDetailGrid">
+                <thead><tr>
+                    <th>ItemName</th><th>PackingType</th><th class="num">PackingWeight</th><th>CropYear</th><th class="num">NoOfContainers</th><th class="num">ShipContainer</th>
+                    <th class="num">BalContainers</th><th class="num">NoOfBags/Cntnr</th><th>PackUom</th><th class="num">MTon</th><th class="num">ShipMTon</th><th class="num">BalMTon</th>
+                    <th class="num">NoOfBags</th><th class="num">ShipBags</th><th class="num">BalBags</th><th class="num">PackingTotalWeight</th><th class="num">NetWeight</th><th class="num">ShipWeight</th>
+                    <th class="num">BalWeight</th><th class="num">ItemRate</th><th class="num">Amount</th><th class="num">ShipAmount</th><th class="num">BalAmount</th><th>PackingExpiryDate</th>
+                    <th>ContainerSize</th><th>OtherDescription</th><th>OuterPackUomDescription</th>
+                </tr></thead>
+                <tbody id="ldDetailBody"></tbody>
+                <tfoot id="ldDetailFoot"></tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260924a}"></script>
+<script th:src="@{/build/js/countx_export_pre_invoice.js?v=20261001a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

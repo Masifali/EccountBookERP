@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Export Contract Schedule - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_g.css?v=20261001a}"/>
+</head>
+<!-- frmSaleContractSchedule.cs (Architecture.WinApp.Export), screen 216 "Export Contract Schedule", ClientSize 1619 x 699,
+     ScreenName FrmExportSalesContractSchedule, DocumentTypeId 244.
+     tabControlMain: "Main Form" | "Pre Shipment Planning".
+     Main Form -> tabControl1: "Form" | "History" ("HistoryNotInUse" is removed at Load).
+       Form: "Sale Contract Schedule"; toolStrip2 New / Load All / 395-Slip / ShortCut Keys; All / Reffered / Not Reffered (default) radios;
+         "Contracts Info" grdPendingContract (ContractNo button -> ReadbyMainScheduleByContractId + ReadScheduleDetailByContactId, "Are you sure to Reload Contract?",
+         "Please select approved contract" when ExportSalesContractApprovalMandatory).
+         "Contract Schedule": toolStrip1 New / Refresh / Save/Update / Attachment(hidden) / Shipment Document Schedule (ERP feature 12);
+         grdContractShedule (AllowEdit; X / + columns, Add Attachment, Document Custom Group Save buttons; CellUpdated FCL / WeightM_Ton checks
+         against the pending grid's contract totals; Destination Port and Document Custom Group value lists).
+         "Contract Schedule Brand Detail Loading Date wise": toolStrip3 New / Refresh / Save/Update / Contract Pm Detail Form (ERP feature 23);
+         groupBox1 "Detail": Loading Date (schedule), M.Ton of the schedule, Item / Brand (Name/Code), Bal MTon, Crop Year, Packing Type,
+         No Of Bags <-> Weight / M.Ton via Pack Uom, Inner Qty, + / Update / Cancel; grd (X).
+       History: toolStrip4 New / Refresh / 551-Print / 551_01-Print; groupBox2 "Filters" (Loading Date From / To, Port, Customer Name, Item, Show);
+         DataGridHistory (Select check, Edit -> ReadById(ExImLcOrderId), Attachments link).
+     Pre Shipment Planning: From Date Loading (checked) / Add Days / To Date Loading (checked) / Show; grdDepartmentDetail (Edit, links
+       ContractNo / ScheduleCode / ItemCode / ItemName / ProductionStart / InspectionStart / PackMaterialStart); groupBox3 "Detail"
+       (Contract No, Schedule No, Customer Name, Port, FCL, M.Tons, Loading Date, Item Name, Item M.Ton, Production Days <-> Production Schedule,
+       Inspection Days <-> Inspection Schedule (checked), P.M Days <-> Packing Material Schedule (checked), Plant, Schedule Lock Status;
+       toolStrip5 New / Refresh; Update / Cancel). -->
+<body class="pd-body" data-export-page="cs">
+<div class="pd-form ex-form">
+    <div class="win-tabs" data-tabs="csMain">
+        <button type="button" class="win-tab is-active" data-tab="tabPageMain">Main Form</button>
+        <button type="button" class="win-tab" data-tab="tabPageDepartmentStatus">Pre Shipment Planning</button>
+    </div>
+
+    <!-- ===================================================== tabPageMain -->
+    <div class="win-tab-panel is-active" id="tabPageMain">
+        <div class="win-tabs exg-sub-tabs" data-tabs="cs1">
+            <button type="button" class="win-tab is-active" data-tab="csForm">Form</button>
+            <button type="button" class="win-tab" data-tab="csHistory">History</button>
+        </div>
+
+        <!-- ------------------------------------------------- tabPage1 Form -->
+        <div class="win-tab-panel is-active" id="csForm">
+            <div class="exg-side">
+                <!-- Contracts Info -->
+                <div>
+                    <div class="exg-head"><span class="pd-title" id="label12">Sale Contract Schedule</span></div>
+                    <div class="win-tool-strip">
+                        <button type="button" id="BtnNewMain" class="win-btn-tool" onclick="ExportContractSchedule.newMain(this)"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+                        <button type="button" id="BtnLoadAllPendingContracts" class="win-btn-tool" onclick="ExportContractSchedule.loadAllPending(this)"><i class="fa fa-download"></i> <span>Load All</span></button>
+                        <button type="button" id="BtnContractWiseSlip" class="win-btn-tool" onclick="ExportContractSchedule.slip395(this)"><i class="fa fa-print"></i> <span>395-Slip</span></button>
+                        <button type="button" id="BtnShortCutkeys" class="win-btn-tool" onclick="ExportContractSchedule.shortcuts()"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+                        <span class="ex-radios" style="margin-left:auto;">
+                            <label class="exg-inline-check"><input type="radio" name="csReferred" id="rdAll" value="0"/> All</label>
+                            <label class="exg-inline-check"><input type="radio" name="csReferred" id="rdReffered" value="2"/> Reffered</label>
+                            <label class="exg-inline-check"><input type="radio" name="csReferred" id="rdNotReffered" value="1" checked/> Not Reffered</label>
+                        </span>
+                    </div>
+                    <div class="pd-caption pd-caption-teal pd-history-bar" style="height:23px;"><span>Contracts Info</span>
+                        <span class="ex-bar-right"><span class="exg-bar-note">Click the Contract No to load</span>
+                            <button type="button" class="ex-fs-btn" data-fullscreen="grdPendingContractBox" title="Fullscreen table">&#x26F6;</button><span id="gridBarMountPend" class="pd-gridbar-mount"></span></span></div>
+                    <div class="ex-grid-box" id="grdPendingContractBox">
+                        <div class="ex-grid-scroll ex-h300">
+                            <table class="win-grid" id="grdPendingContract" data-gridbar="FrmExportSalesContractSchedule:grdPendingContract" data-gridbar-mount="#gridBarMountPend" data-gridbar-reorder="false">
+                                <thead><tr><th data-col="ContractNo">ContractNo</th><th data-col="ContractDate">ContractDate</th><th class="num" data-col="NoOfContainers">NoOfContainers</th>
+                                    <th class="num" data-col="WeightM_Ton">WeightM_Ton</th><th data-col="CustomerName">CustomerName</th><th data-col="ApprovedStatus">ApprovedStatus</th></tr></thead>
+                                <tbody></tbody><tfoot></tfoot>
+                            </table>
+                        </div>
+                        <div class="ex-grid-empty is-hidden" id="csPendEmpty">No record found.</div>
+                    </div>
+                </div>
+
+                <!-- Contract Schedule (main) -->
+                <div>
+                    <div class="exg-head"><span class="pd-title" id="label14">Contract Schedule</span><span class="exg-status" id="csContractInfo"></span></div>
+                    <div class="win-tool-strip">
+                        <button type="button" id="btnnew" class="win-btn-tool" onclick="ExportContractSchedule.btnNew()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+                        <button type="button" id="BtnRefreshScheduleMain" class="win-btn-tool" onclick="ExportContractSchedule.refreshMain(this)"><i class="fa fa-refresh"></i> <span><u>R</u>efresh</span></button>
+                        <button type="button" id="btnsave" class="win-btn-tool" onclick="ExportContractSchedule.saveMain(this)"><i class="fa fa-save"></i> <span><u>S</u>ave/Update</span></button>
+                        <button type="button" id="btnattachment" class="win-btn-tool is-hidden" disabled><i class="fa fa-paperclip"></i> <span>Attachment</span></button>
+                        <button type="button" id="BtnShipmentDocumentForm" class="win-btn-tool is-hidden" onclick="ExportContractSchedule.popup('shipmentDocs')"><i class="fa fa-file-text-o"></i> <span>Shipment Document Schedule</span></button>
+                    </div>
+                    <div class="pd-caption pd-caption-teal pd-history-bar" style="height:23px;"><span>Schedule Main</span>
+                        <span class="ex-bar-right"><span class="exg-bar-note">Edit in the grid; + splits the row; X deletes</span>
+                            <button type="button" class="ex-fs-btn" data-fullscreen="grdContractSheduleBox" title="Fullscreen table">&#x26F6;</button></span></div>
+                    <div class="ex-grid-box" id="grdContractSheduleBox">
+                        <div class="ex-grid-scroll ex-h300">
+                            <table class="win-grid" id="grdContractShedule">
+                                <thead><tr><th class="ctr">X</th><th class="ctr">+</th><th data-col="ScheduleNo">ScheduleNo</th><th data-col="CustomerName">CustomerName</th><th data-col="CustomerContractNo">CustomerContractNo</th>
+                                    <th class="num" data-col="NoOfContainers">NoOfContainers</th><th class="num" data-col="WeightM_Ton">WeightM_Ton</th><th data-col="AttentiveLoadingDate">AttentiveLoadingDate</th>
+                                    <th data-col="DestinationPortId">Destination Port</th><th data-col="AttentiveProductionDate">AttentiveProductionDate</th><th data-col="AttentiveInspectionDate">AttentiveInspectionDate</th>
+                                    <th data-col="PackingMaterialDate">PackingMaterialDate</th><th data-col="CustomGroupId" id="thCustomGroup" class="is-hidden">Document Custom Group</th><th data-col="Remarks">Remarks</th>
+                                    <th data-col="Status">Status</th><th data-col="ReferredStatus">ReferredStatus</th><th class="num" data-col="NoOfAttachments">NoOfAttachments</th><th>Add Attachment</th><th>Document Custom Group Save</th></tr></thead>
+                                <tbody id="csMainBody"></tbody><tfoot id="csMainFoot"></tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contract Schedule Brand Detail Loading Date wise -->
+            <div class="exg-head" style="margin-top:6px;"><span class="pd-title" id="label18">Contract Schedule Brand Detail Loading Date wise</span></div>
+            <div class="win-tool-strip">
+                <button type="button" id="btnNewDetailSchedule" class="win-btn-tool" onclick="ExportContractSchedule.newDetail()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+                <button type="button" id="BtnRefreshScheduleDetail" class="win-btn-tool" onclick="ExportContractSchedule.refreshDetail(this)"><i class="fa fa-refresh"></i> <span><u>R</u>efresh</span></button>
+                <button type="button" id="btnSavedetailSchedule" class="win-btn-tool" onclick="ExportContractSchedule.saveDetail(this)"><i class="fa fa-save"></i> <span><u>S</u>ave/Update</span></button>
+                <button type="button" id="BtnContractPmDetailForm" class="win-btn-tool is-hidden" onclick="ExportContractSchedule.popup('pmDetail')"><i class="fa fa-cubes"></i> <span>Contract Pm Detail Form</span></button>
+            </div>
+            <fieldset class="ex-groupbox" id="groupBox1">
+                <legend>Detail</legend>
+                <div class="exg-grid exg-grid-8">
+                    <div class="ex-field exg-span-2"><label class="ex-req" for="cmbAttentiveLoadDateBySchedule">Loading Date</label><select id="cmbAttentiveLoadDateBySchedule" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="ex-field"><label for="txtMtonOfSelectedDate">Schedule M.Ton</label><input type="text" id="txtMtonOfSelectedDate" class="win-textbox num" value="0" readonly/></div>
+                    <div class="ex-field exg-span-2">
+                        <div class="exg-label-row"><label class="ex-req" for="cmbItem">Item / Brand</label>
+                            <span class="ex-radios"><label class="exg-inline-check"><input type="radio" name="csItemSearch" id="rdbtnItemCode" value="code"/> Code</label>
+                            <label class="exg-inline-check"><input type="radio" name="csItemSearch" id="rdbtnItemName" value="name" checked/> Name</label></span></div>
+                        <select id="cmbItem" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="ex-field"><label for="txtBalMton">Bal MTon</label><input type="text" id="txtBalMton" class="win-textbox num" value="0" readonly/></div>
+                    <div class="ex-field"><label class="ex-req" for="cmbCropYear">Crop Year</label><select id="cmbCropYear" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="ex-field"><label class="ex-req" for="cmbPackingtype">Packing Type</label><select id="cmbPackingtype" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+
+                    <div class="ex-field"><label class="ex-req" for="txtNoOfBagsDetail">No Of Bags</label><input type="text" id="txtNoOfBagsDetail" class="win-textbox num" data-tag="NoOfBags" value="0"/></div>
+                    <div class="ex-field"><label class="ex-req" for="cmbPackUom">Pack Uom</label><select id="cmbPackUom" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="ex-field"><label for="txtInnerQty">Inner Qty</label><input type="text" id="txtInnerQty" class="win-textbox num" value="0" readonly/></div>
+                    <div class="ex-field"><label class="ex-req" for="txtMTonDetail">Weight / M.Ton</label><input type="text" id="txtMTonDetail" class="win-textbox num" data-tag="WeightMton" value="0"/></div>
+                    <div class="ex-field"><label>&nbsp;</label>
+                        <div class="exg-btns">
+                            <button type="button" id="btnAdd" class="win-btn-small">+</button>
+                            <button type="button" id="btnGridUpdate" class="win-btn-small is-hidden">Update</button>
+                            <button type="button" id="btnCancel" class="win-btn-small is-hidden">Cancel</button></div></div>
+                </div>
+            </fieldset>
+            <div class="pd-caption pd-caption-teal pd-history-bar" style="height:23px;"><span>Schedule Detail</span>
+                <span class="ex-bar-right"><span class="exg-bar-note">Double-click = edit &nbsp; Ctrl+Space on X = delete</span>
+                    <button type="button" class="ex-fs-btn" data-fullscreen="grdBox" title="Fullscreen table">&#x26F6;</button><span id="gridBarMountDet" class="pd-gridbar-mount"></span></span></div>
+            <div class="ex-grid-box" id="grdBox">
+                <div class="ex-grid-scroll ex-h240">
+                    <table class="win-grid" id="grd" data-gridbar="FrmExportSalesContractSchedule:grd" data-gridbar-mount="#gridBarMountDet" data-gridbar-reorder="false">
+                        <thead><tr><th class="ctr">X</th><th data-col="DestinationPort">Loading Date / Port / Schedule</th><th data-col="Item">Item</th><th data-col="ItemCode">ItemCode</th><th data-col="CropYear">CropYear</th>
+                            <th data-col="PackingType">PackingType</th><th class="num" data-col="NoOfBags">NoOfBags</th><th data-col="PackUom">PackUom</th><th class="num" data-col="InnerQty">InnerQty</th>
+                            <th class="num" data-col="WeightM_Ton">WeightM_Ton</th><th data-col="Status">Status</th><th data-col="ReferredStatus">ReferredStatus</th></tr></thead>
+                        <tbody></tbody><tfoot></tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ------------------------------------------------- tabPage3 History -->
+        <div class="win-tab-panel" id="csHistory">
+            <div class="win-tool-strip">
+                <button type="button" id="btnLoadAllHistoryNew" class="win-btn-tool" onclick="ExportContractSchedule.historyNew()"><i class="fa fa-plus"></i> <span>New</span></button>
+                <button type="button" id="btnRefreshHistoryCombos" class="win-btn-tool" onclick="ExportContractSchedule.historyRefresh(this)"><i class="fa fa-refresh"></i> <span><u>R</u>efresh</span></button>
+                <button type="button" id="BtnHistoryPrint" class="win-btn-tool" onclick="ExportContractSchedule.print551(this)"><i class="fa fa-print"></i> <span>551-<u>P</u>rint</span></button>
+                <button type="button" id="BtnPrint551_01" class="win-btn-tool" onclick="ExportContractSchedule.print55101(this)"><i class="fa fa-print"></i> <span>551_01-<u>P</u>rint</span></button>
+            </div>
+            <div class="exg-head"><span class="pd-title" id="label1">Sale Contract Schedule History</span></div>
+            <fieldset class="ex-groupbox" id="groupBox2">
+                <legend>Filters</legend>
+                <div class="ex-filter">
+                    <div class="ex-field"><label for="txtdatefrom">Loading Date From</label><input type="date" id="txtdatefrom" class="win-date"/></div>
+                    <div class="ex-field"><label for="txtdateto">loading Date To</label><input type="date" id="txtdateto" class="win-date"/></div>
+                    <div class="ex-field" style="min-width:200px;"><label for="cmbPort">Port</label><select id="cmbPort" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="ex-field" style="min-width:240px;"><label for="cmbSupplierName">Customer Name</label><select id="cmbSupplierName" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="ex-field" style="min-width:220px;"><label for="CmbItemHistory">Item</label><select id="CmbItemHistory" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                    <div class="ex-actions"><button type="button" id="btnShow" class="win-btn-small" onclick="ExportContractSchedule.historyShow(this)">Show</button></div>
+                </div>
+            </fieldset>
+            <div class="pd-caption pd-caption-teal pd-history-bar" style="height:23px;"><span>History</span>
+                <span class="ex-bar-right"><span class="exg-bar-note">Tick rows for 551-Print (none ticked = all)</span>
+                    <button type="button" class="ex-fs-btn" data-fullscreen="DataGridHistoryBox" title="Fullscreen table">&#x26F6;</button><span id="gridBarMountHist" class="pd-gridbar-mount"></span></span></div>
+            <div class="ex-grid-box" id="DataGridHistoryBox">
+                <div class="ex-grid-scroll ex-h400">
+                    <table class="win-grid" id="DataGridHistory" data-gridbar="FrmExportSalesContractSchedule:DataGridHistory" data-gridbar-mount="#gridBarMountHist" data-gridbar-reorder="false">
+                        <thead><tr><th class="ctr">Select</th><th>Edit</th><th class="num" data-col="RecordNo">RecordNo</th><th data-col="ContractNo">ContractNo</th><th data-col="CustomerName">CustomerName</th><th data-col="ItemName">ItemName</th>
+                            <th class="num" data-col="NoOfContainer">NoOfContainer</th><th class="num" data-col="MTon">Schedule_MTon</th><th class="num" data-col="Contract_MTon">Contract_MTon</th>
+                            <th class="num" data-col="MtonUsedInForwarding">MtonUsedInForwarding</th><th class="num" data-col="ContractBalMton">ContractBalMton</th><th data-col="DestinationPort">DestinationPort</th>
+                            <th data-col="LoadingDate">LoadingDate</th><th data-col="ProductionDate">ProductionDate</th><th data-col="PackingMaterialDate">PackingMaterialDate</th><th data-col="Remarks">Remarks</th>
+                            <th data-col="Status">Status</th><th data-col="EntryDate">EntryDate</th><th data-col="EntryUser">EntryUser</th><th class="num" data-col="NoOfAttachments">NoOfAttachments</th></tr></thead>
+                        <tbody></tbody><tfoot></tfoot>
+                    </table>
+                </div>
+                <div class="ex-grid-empty is-hidden" id="csHistEmpty">No record found.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================== tabPageDepartmentStatus -->
+    <div class="win-tab-panel" id="tabPageDepartmentStatus">
+        <div class="exg-head"><span class="pd-title" id="label27">Pre Shipment Planning and FollowUp</span></div>
+        <div class="win-tool-strip">
+            <button type="button" id="BtnNewDepartmentDetail" class="win-btn-tool" onclick="ExportContractSchedule.deptNew(this)"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="BtnRefreshDepartmentDetail" class="win-btn-tool" onclick="ExportContractSchedule.deptRefresh(this)"><i class="fa fa-refresh"></i> <span><u>R</u>efresh</span></button>
+        </div>
+        <div class="ex-filter">
+            <div class="ex-field"><label class="exg-inline-check"><input type="checkbox" id="chkDateFromDepart" checked/> From Date Loading</label><input type="date" id="txtDateFromDepart" class="win-date"/></div>
+            <div class="ex-field"><label for="tztAddDays">Add Days</label><input type="text" id="tztAddDays" class="win-textbox num" inputmode="numeric" value="0"/></div>
+            <div class="ex-field"><label class="exg-inline-check"><input type="checkbox" id="chkDatetoDepart" checked/> To Date Loading</label><input type="date" id="txtDatetoDepart" class="win-date"/></div>
+            <div class="ex-actions"><button type="button" id="BtnShowbyDates" class="win-btn-small" onclick="ExportContractSchedule.deptShow(this)">Show</button></div>
+        </div>
+        <div class="pd-caption pd-caption-teal pd-history-bar" style="height:23px;"><span>Planning Grid</span>
+            <span class="ex-bar-right"><span class="exg-bar-note">Edit / double-click = load the row; links open the slips</span>
+                <button type="button" class="ex-fs-btn" data-fullscreen="grdDepartmentDetailBox" title="Fullscreen table">&#x26F6;</button><span id="gridBarMountDept" class="pd-gridbar-mount"></span></span></div>
+        <div class="ex-grid-box" id="grdDepartmentDetailBox">
+            <div class="ex-grid-scroll ex-h300">
+                <table class="win-grid" id="grdDepartmentDetail" data-gridbar="FrmExportSalesContractSchedule:grdDepartmentDetail" data-gridbar-mount="#gridBarMountDept" data-gridbar-reorder="false">
+                    <thead><tr><th>Edit</th><th data-col="ScheduleCode">ScheduleCode</th><th data-col="ContractNo">ContractNo</th><th data-col="CustomerName">CustomerName</th><th data-col="DestinationPort">DestinationPort</th>
+                        <th class="num" data-col="FCL">FCL</th><th class="num" data-col="ScheduleMTon">ScheduleMTon</th><th data-col="LoadingDate">LoadingDate</th><th data-col="ItemCode">ItemCode</th><th data-col="ItemName">ItemName</th>
+                        <th class="num" data-col="ItemMTon">ItemMTon</th><th class="num" data-col="ProductionDays">ProductionDays</th><th data-col="ProductionSchedule">ProductionSchedule</th><th data-col="ProductionStart">ProductionStart</th>
+                        <th data-col="InspectionSchedule">InspectionSchedule</th><th data-col="InspectionStart">InspectionStart</th><th data-col="PackMaterialSchedule">PackMaterialSchedule</th><th data-col="PackMaterialStart">PackMaterialStart</th>
+                        <th data-col="PlantName">PlantName</th><th data-col="ScheduleLockStatus">ScheduleLockStatus</th></tr></thead>
+                    <tbody></tbody><tfoot></tfoot>
+                </table>
+            </div>
+            <div class="ex-grid-empty is-hidden" id="csDeptEmpty">No record found.</div>
+        </div>
+        <fieldset class="ex-groupbox" id="groupBox3">
+            <legend>Detail</legend>
+            <div class="exg-grid exg-grid-6">
+                <div class="ex-field"><label class="ex-req" for="CmbContractDepartmentDetail">Contract No</label><select id="CmbContractDepartmentDetail" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="ex-field"><label class="ex-req" for="CmbScheduleNoDepartmentDetail">Schedule No</label><select id="CmbScheduleNoDepartmentDetail" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="ex-field"><label class="ex-req" for="CmbCustomerDepartmentDetail">Customer Name</label><select id="CmbCustomerDepartmentDetail" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="ex-field"><label class="ex-req" for="CmbPortDepartmentDetail">Port</label><select id="CmbPortDepartmentDetail" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="ex-field"><label for="txtFclDepartmentDetail">FCL</label><input type="text" id="txtFclDepartmentDetail" class="win-textbox num" readonly/></div>
+                <div class="ex-field"><label class="ex-req" for="txtScheduleMtonDepartmentDetail">M.Tons</label><input type="text" id="txtScheduleMtonDepartmentDetail" class="win-textbox num" readonly/></div>
+
+                <div class="ex-field"><label for="txtLoadingDateDepartmentDetail">Loading Date</label><input type="date" id="txtLoadingDateDepartmentDetail" class="win-date" readonly/></div>
+                <div class="ex-field exg-span-2"><label class="ex-req" for="CmbItemDepartmentDetail">Item Name</label><select id="CmbItemDepartmentDetail" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="ex-field"><label class="ex-req" for="txtItemMtonDepartmentDetail">Item M.Ton</label><input type="text" id="txtItemMtonDepartmentDetail" class="win-textbox num" readonly/></div>
+                <div class="ex-field"><label class="ex-req" for="CmbPlantDepartmentDetail">Plant</label><select id="CmbPlantDepartmentDetail" class="win-combo dtcombo" data-dtcombo="single"></select></div>
+                <div class="ex-field"><label class="ex-req" for="CmbScheduleLockStatusDepartmentDetail">Schedule Lock Status</label><select id="CmbScheduleLockStatusDepartmentDetail" class="win-combo dtcombo" data-dtcombo="single"><option value="1">Confirmed</option><option value="2" selected>Not_Confirmed</option></select></div>
+
+                <div class="ex-field"><label class="ex-req" for="txtProductionDays">Production Days</label><input type="text" id="txtProductionDays" class="win-textbox num" inputmode="numeric"/></div>
+                <div class="ex-field"><label for="txtProductionDateDepartmentDetail">Production Schedule</label><input type="date" id="txtProductionDateDepartmentDetail" class="win-date"/></div>
+                <div class="ex-field"><label for="txtInspectionDays">Inspection Days</label><input type="text" id="txtInspectionDays" class="win-textbox num" inputmode="numeric"/></div>
+                <div class="ex-field"><label class="exg-inline-check"><input type="checkbox" id="chkInspectionDateDepartmentDetail" checked/> Inspection Schedule</label><input type="date" id="txtInspectionDateDepartmentDetail" class="win-date"/></div>
+                <div class="ex-field"><label for="txtPackingMaterialScheduleDays">P.M Days</label><input type="text" id="txtPackingMaterialScheduleDays" class="win-textbox num" inputmode="numeric"/></div>
+                <div class="ex-field"><label class="exg-inline-check"><input type="checkbox" id="chkPMDateDepartmentDetail" checked/> Packing Material Schedule</label><input type="date" id="txtPMDateDepartmentDetail" class="win-date"/></div>
+
+                <div class="ex-field exg-span-all"><div class="exg-btns">
+                    <button type="button" id="BtnUpdateDepartmentDetail" class="win-btn-small is-hidden" onclick="ExportContractSchedule.deptUpdate(this)">Update</button>
+                    <button type="button" id="BtnCancelDepartmentDetail" class="win-btn-small is-hidden" onclick="ExportContractSchedule.deptCancel()">Cancel</button></div></div>
+            </div>
+        </fieldset>
+    </div>
+
+    <div class="win-footer-strip">
+        <span class="ex-footer-left" id="csFooterInfo"></span>
+        <button type="button" class="win-btn-history" id="btnCsFooterHistory" onclick="ExportContractSchedule.toggleHistory()"><i class="fa fa-history"></i> <span>History</span></button>
+    </div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260924a}"></script>
+<script th:src="@{/build/js/countx_export_g_common.js?v=20261001a}"></script>
+<script th:src="@{/build/js/countx_export_contract_schedule.js?v=20261001a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

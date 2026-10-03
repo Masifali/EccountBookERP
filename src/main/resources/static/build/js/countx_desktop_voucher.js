@@ -54,7 +54,11 @@
                 if (res.status === 409 && res.body && res.body.confirm) {
                     return DV.confirm(res.body.message, 'Confirm').then(function (yes) {
                         if (!yes) return null;
-                        if (res.body.confirm === 'duplicate') payload.duplicateAcknowledged = true;
+                        /* 2026-10-02 R2: a question asked per account (confirmKey) is acknowledged for that
+                           account only - VoucherExistWithSameAmountInSameDate asks once per debit account. */
+                        if (res.body.confirm === 'duplicate' && res.body.confirmKey != null) {
+                            payload.duplicateAcknowledgedAccounts = (payload.duplicateAcknowledgedAccounts || []).concat([res.body.confirmKey]);
+                        } else if (res.body.confirm === 'duplicate') payload.duplicateAcknowledged = true;
                         if (res.body.confirm === 'negativeBalance') payload.negativeBalanceAcknowledged = true;
                         return attempt();
                     });
@@ -159,72 +163,150 @@
      *   valueKey: 'Id', displayKey: 'AccountTitle', columns: [{key, caption, hidden}],
      *   header: 'Debit Account', limitToList: true, onChange: fn(row), onLeave: fn()
      * })
+     * 2026-10-02 R3: the combo IS the project's searchable dropdown (countx_prod_combo.js,
+     * window.DesktopCombo): a hidden native <select> built from the rows (store format:
+     * data-columns="A|B|C" + data-extra per option) and enhanced by DesktopCombo.enhance. The
+     * public API the voucher pages use (rows, row, value, setData, setValue, setFree, clear, text,
+     * cell, find, focus, setEnabled, setDisplayKey, opts.limitToList, onChange, onLeave) is kept.
+     * limitToList:false (the cheque-number combos) still lets the user type a value that is not in
+     * the list, as the UltraCombo does.
      */
     DV.Combo = function (host, opts) {
         var self = this;
         this.opts = opts || {};
-        this.rows = [];
+        this._rows = [];
         this.row = null;
         this.value = 0;
         this.host = host;
         host.classList.add('dv-combo');
         host.innerHTML = '';
-        this.input = document.createElement('input');
-        this.input.className = 'dv-in';
-        this.input.autocomplete = 'off';
+        var sel = document.createElement('select');
+        sel.className = 'dv-csel';
+        host.appendChild(sel);
+        this.sel = sel;
+        this.pc = (w.DesktopCombo && typeof w.DesktopCombo.enhance === 'function') ? w.DesktopCombo.enhance(sel) : null;
+        this.input = this.pc ? this.pc.input : sel;
         if (opts.id) this.input.id = opts.id;
-        var arrow = document.createElement('button');
-        arrow.type = 'button'; arrow.className = 'dv-combo-arrow'; arrow.tabIndex = -1; arrow.textContent = '▼';
-        host.appendChild(this.input); host.appendChild(arrow);
-        this.panel = null;
-        this.hot = -1;
-        this.filtered = [];
+        this.wrap = this.pc ? this.pc.wrap : host;
+        this._typed = false;
+        this.build();
 
-        arrow.addEventListener('mousedown', function (e) { e.preventDefault(); self.input.focus(); self.toggle(); });
-        this.input.addEventListener('input', function () { self.open(self.input.value); });
-        this.input.addEventListener('keydown', function (e) {
-            if (e.key === 'ArrowDown') { e.preventDefault(); if (!self.panel) self.open(''); else self.move(1); }
-            else if (e.key === 'ArrowUp') { e.preventDefault(); self.move(-1); }
-            else if (e.key === 'Enter') {
-                if (self.panel && self.hot >= 0) { e.preventDefault(); self.choose(self.filtered[self.hot]); }
-            } else if (e.key === 'Escape') { self.close(); }
-            else if (e.key === 'Tab') { if (self.panel && self.hot >= 0) self.choose(self.filtered[self.hot], true); }
+        sel.addEventListener('change', function () {
+            if (self._quiet) return;
+            var v = sel.value;
+            var r = (v === '' || v === '__free__') ? null : self.find(v);
+            self.row = r;
+            self.value = r ? Number(DV.pick(r, self.opts.valueKey)) : 0;
+            self._typed = false;
+            if (typeof self.opts.onChange === 'function') self.opts.onChange(self.row);
         });
-        this.input.addEventListener('blur', function () {
+        /* limitToList:false - printable keys type into the field instead of opening the search box */
+        this.wrap.addEventListener('keydown', function (e) {
+            if (self.opts.limitToList !== false || e.target !== self.input || e.ctrlKey || e.metaKey || e.altKey) return;
+            if ((e.key && e.key.length === 1 && e.key !== ' ') || e.key === 'Backspace' || e.key === 'Delete') {
+                self.input.readOnly = false;
+                self.input.style.caretColor = 'auto';
+                e.stopPropagation();
+            }
+        }, true);
+        /* ... a click in the field puts the caret there (the arrow still opens the list) ... */
+        this.wrap.addEventListener('mousedown', function (e) {
+            if (self.opts.limitToList !== false || e.target !== self.input || self.sel.disabled) return;
+            self.input.readOnly = false;
+            self.input.style.caretColor = 'auto';
+            e.stopPropagation();
+        }, true);
+        /* ... and Enter / Tab in the search box with no matching row takes the typed text as the value */
+        if (this.pc) this.wrap.addEventListener('keydown', function (e) {
+            if (self.opts.limitToList !== false || e.target !== self.pc.search) return;
+            if ((e.key !== 'Enter' && e.key !== 'Tab') || self.pc.active >= 0) return;
+            var t = self.pc.search.value.trim();
+            if (!t) return;
+            if (e.key === 'Enter') e.preventDefault();
+            e.stopPropagation();
+            self.pc.closePop(true);
+            self.input.value = t;
+            self._typed = true;
+            if (e.key === 'Enter') self.commitText();
+        }, true);
+        this.input.addEventListener('input', function () { if (self.opts.limitToList === false) self._typed = true; });
+        this.wrap.addEventListener('focusout', function () {
             setTimeout(function () {
-                if (self._picking) return;
-                self.close();
+                if (self.wrap.contains(document.activeElement)) return;
                 self.commitText();
+                if (self.pc) { self.input.readOnly = true; self.input.style.caretColor = ''; }
                 if (typeof self.opts.onLeave === 'function') self.opts.onLeave(self.row);
-            }, 150);
+            }, 0);
         });
     };
+    Object.defineProperty(DV.Combo.prototype, 'rows', {
+        get: function () { return this._rows; },
+        set: function (v) { this._rows = v || []; this.build(); }
+    });
     DV.Combo.prototype.cols = function () {
-        return (this.opts.columns || [{ key: this.opts.displayKey, caption: this.opts.header || this.opts.displayKey }])
-            .filter(function (c) { return !c.hidden; });
+        var dk = this.opts.displayKey, hd = this.opts.header;
+        var cols = (this.opts.columns || [{ key: dk, caption: hd || dk }]).filter(function (c) { return !c.hidden; });
+        var first = null, rest = [];
+        cols.forEach(function (c) { if (!first && c.key === dk) first = c; else rest.push(c); });
+        first = { key: dk, caption: hd || (first && first.caption) || dk };
+        return [first].concat(rest);
+    };
+    /** Rebuild the <option> list from this.rows, keeping the current row selected. */
+    DV.Combo.prototype.build = function () {
+        var cols = this.cols(), vk = this.opts.valueKey;
+        this.sel.setAttribute('data-columns', cols.map(function (c) { return String(c.caption || c.key).replace(/\|/g, '/'); }).join('|'));
+        var h = '<option value=""></option>';
+        for (var i = 0; i < this._rows.length; i++) {
+            var r = this._rows[i];
+            var extra = [];
+            for (var c = 1; c < cols.length; c++) { var x = DV.pick(r, cols[c].key); extra.push(x == null ? '' : String(x).replace(/\|/g, '/')); }
+            var t = DV.pick(r, cols[0].key);
+            h += '<option value="' + DV.esc(DV.pick(r, vk)) + '"' + (extra.length ? ' data-extra="' + DV.esc(extra.join('|')) + '"' : '') + '>'
+                + DV.esc(t == null ? '' : t) + '</option>';
+        }
+        this._quiet = true;
+        this.sel.innerHTML = h;
+        var keep = this.row && this.find(DV.pick(this.row, vk));
+        if (keep) this.sel.value = String(DV.pick(keep, vk)); else this.sel.value = '';
+        if (!keep && this.row) { this.row = null; this.value = 0; }
+        this._quiet = false;
+        if (this.pc) this.pc.syncFromSelect();
     };
     DV.Combo.prototype.setData = function (rows, keepValue) {
         var keep = keepValue ? this.value : 0;
+        this.row = null; this.value = 0;
         this.rows = rows || [];
         if (keep) this.setValue(keep, true); else this.clear(true);
     };
     DV.Combo.prototype.setDisplayKey = function (key, header) {
         this.opts.displayKey = key;
         if (header) this.opts.header = header;
-        if (this.row) this.input.value = DV.pick(this.row, key) == null ? '' : DV.pick(this.row, key);
+        this.build();
     };
     DV.Combo.prototype.find = function (v) {
         var vk = this.opts.valueKey;
-        for (var i = 0; i < this.rows.length; i++) {
-            if (String(DV.pick(this.rows[i], vk)) === String(v)) return this.rows[i];
+        for (var i = 0; i < this._rows.length; i++) {
+            if (String(DV.pick(this._rows[i], vk)) === String(v)) return this._rows[i];
         }
         return null;
+    };
+    DV.Combo.prototype._select = function (val, text) {
+        this._quiet = true;
+        var free = this.sel.querySelector('option[value="__free__"]');
+        if (val === '__free__') {
+            if (!free) { free = document.createElement('option'); free.value = '__free__'; free.hidden = true; this.sel.appendChild(free); }
+            free.textContent = text == null ? '' : text;
+        } else if (free) { free.parentNode.removeChild(free); }
+        this.sel.value = val;
+        this._quiet = false;
+        if (this.pc) this.pc.syncFromSelect();
+        this._typed = false;
     };
     DV.Combo.prototype.setValue = function (v, silent) {
         var r = (v === null || v === undefined || v === '' || Number(v) === 0) ? null : this.find(v);
         this.row = r;
         this.value = r ? Number(DV.pick(r, this.opts.valueKey)) : 0;
-        this.input.value = r ? (DV.pick(r, this.opts.displayKey) == null ? '' : DV.pick(r, this.opts.displayKey)) : '';
+        this._select(r ? String(DV.pick(r, this.opts.valueKey)) : '');
         if (!silent && typeof this.opts.onChange === 'function') this.opts.onChange(this.row);
         return !!r;
     };
@@ -232,89 +314,48 @@
     DV.Combo.prototype.setFree = function (value, text) {
         this.row = null;
         this.value = Number(value) || 0;
-        this.input.value = text == null ? '' : text;
+        this._select('__free__', text);
     };
     DV.Combo.prototype.clear = function (silent) {
-        this.row = null; this.value = 0; this.input.value = '';
+        this.row = null; this.value = 0;
+        this._select('');
         if (!silent && typeof this.opts.onChange === 'function') this.opts.onChange(null);
     };
-    DV.Combo.prototype.text = function () { return this.input.value; };
+    DV.Combo.prototype.text = function () {
+        if (this.pc) return this.input.value;
+        var o = this.sel.options[this.sel.selectedIndex];
+        return o ? o.textContent : '';
+    };
     DV.Combo.prototype.cell = function (key) { return this.row ? DV.pick(this.row, key) : undefined; };
     DV.Combo.prototype.focus = function () { this.input.focus(); };
-    DV.Combo.prototype.setEnabled = function (on) { this.input.disabled = !on; };
+    DV.Combo.prototype.setEnabled = function (on) { this.sel.disabled = !on; if (this.pc) this.pc.reflectDisabled(); };
+    /** Text typed into a limitToList:false combo: a list entry when it matches one, otherwise free text. */
     DV.Combo.prototype.commitText = function () {
-        var t = this.input.value.trim();
-        if (t === '') { if (this.row || this.value) this.clear(); return; }
-        if (this.row && String(DV.pick(this.row, this.opts.displayKey)) === this.input.value) return;
-        var dk = this.opts.displayKey, match = null;
-        for (var i = 0; i < this.rows.length; i++) {
-            if (String(DV.pick(this.rows[i], dk) || '').toLowerCase() === t.toLowerCase()) { match = this.rows[i]; break; }
+        if (!this._typed) return;
+        this._typed = false;
+        var t = this.input.value.trim(), dk = this.opts.displayKey, match = null;
+        if (t === '') { var had = this.row || this.value; this.clear(true); if (had && typeof this.opts.onChange === 'function') this.opts.onChange(null); return; }
+        for (var i = 0; i < this._rows.length; i++) {
+            if (String(DV.pick(this._rows[i], dk) || '').toLowerCase() === t.toLowerCase()) { match = this._rows[i]; break; }
         }
         if (match) { this.setValue(DV.pick(match, this.opts.valueKey)); return; }
-        if (this.opts.limitToList !== false) { this.clear(); }
-        else { var had = this.row; this.row = null; this.value = 0; if (had && typeof this.opts.onChange === 'function') this.opts.onChange(null); }
+        var hadRow = this.row;
+        this.setFree(0, t);
+        if (hadRow && typeof this.opts.onChange === 'function') this.opts.onChange(null);
     };
-    DV.Combo.prototype.toggle = function () { if (this.panel) this.close(); else this.open(''); };
-    DV.Combo.prototype.open = function (filter) {
-        var self = this, dk = this.opts.displayKey, f = (filter || '').toLowerCase();
-        this.filtered = this.rows.filter(function (r) {
-            return !f || String(DV.pick(r, dk) || '').toLowerCase().indexOf(f) >= 0;
+    DV.Combo.prototype.open = function () { if (this.pc) { this.input.focus(); this.pc.openPop(''); } };
+    DV.Combo.prototype.close = function () { if (this.pc) this.pc.closePop(false); };
+    DV.Combo.prototype.toggle = function () { if (this.pc && this.pc.open) this.close(); else this.open(); };
+    /** 2026-10-02 R3: a FlowLayoutPanel whose panels wrap onto a third line (855 with every feature on)
+     *  grows its GroupBox and the designer area instead of hiding the "+" button. */
+    DV.fitFlow = function (flow, box, area, base) {
+        if (!flow) return;
+        var extra = Math.max(0, flow.scrollHeight - base);
+        [box, area].forEach(function (el) {
+            if (!el) return;
+            if (el.__dvH == null) el.__dvH = parseInt(el.style.height, 10) || el.offsetHeight;
+            el.style.height = (el.__dvH + extra) + 'px';
         });
-        if (!this.panel) {
-            this.panel = document.createElement('div');
-            this.panel.className = 'dv-combo-panel';
-            this.panel.addEventListener('mousedown', function (e) { e.preventDefault(); self._picking = true; });
-            this.panel.addEventListener('mouseup', function () { setTimeout(function () { self._picking = false; }, 0); });
-            document.body.appendChild(this.panel);
-        }
-        var cols = this.cols();
-        var h = '<table><thead><tr>' + cols.map(function (c) {
-            var cap = (c.key === dk && self.opts.header) ? self.opts.header : (c.caption || c.key);
-            return '<th>' + DV.esc(cap) + '</th>';
-        }).join('') + '</tr></thead><tbody>';
-        var max = Math.min(this.filtered.length, 500);
-        for (var i = 0; i < max; i++) {
-            var r = this.filtered[i];
-            h += '<tr data-i="' + i + '">' + cols.map(function (c) {
-                var v = DV.pick(r, c.key);
-                return '<td>' + DV.esc(v == null ? '' : v) + '</td>';
-            }).join('') + '</tr>';
-        }
-        h += '</tbody></table>';
-        this.panel.innerHTML = h;
-        Array.prototype.forEach.call(this.panel.querySelectorAll('tbody tr'), function (tr) {
-            tr.addEventListener('click', function () {
-                self._picking = false;
-                self.choose(self.filtered[Number(tr.getAttribute('data-i'))]);
-                self.input.focus();
-            });
-        });
-        var rc = this.input.getBoundingClientRect();
-        this.panel.style.left = rc.left + 'px';
-        this.panel.style.top = (rc.bottom + 1) + 'px';
-        this.panel.style.minWidth = Math.max(rc.width, 260) + 'px';
-        this.hot = this.filtered.length ? 0 : -1;
-        this.paintHot();
-    };
-    DV.Combo.prototype.move = function (d) {
-        if (!this.filtered.length) return;
-        this.hot = Math.max(0, Math.min(this.filtered.length - 1, this.hot + d));
-        this.paintHot();
-    };
-    DV.Combo.prototype.paintHot = function () {
-        if (!this.panel) return;
-        var trs = this.panel.querySelectorAll('tbody tr');
-        for (var i = 0; i < trs.length; i++) trs[i].classList.toggle('dv-hot', i === this.hot);
-        if (trs[this.hot]) trs[this.hot].scrollIntoView({ block: 'nearest' });
-    };
-    DV.Combo.prototype.choose = function (row, keepFocus) {
-        if (!row) return;
-        this.setValue(DV.pick(row, this.opts.valueKey));
-        this.close();
-    };
-    DV.Combo.prototype.close = function () {
-        if (this.panel) { this.panel.parentNode.removeChild(this.panel); this.panel = null; }
-        this.hot = -1;
     };
 
     /** Fill a plain <select> (used for in-grid editors). */
@@ -362,6 +403,67 @@
     DV.digitsOnly = function (input) {
         input.addEventListener('keypress', function (e) {
             if (e.key.length === 1 && !/[0-9]/.test(e.key)) e.preventDefault();
+        });
+    };
+
+    // ------------------------------------------------- 2026-10-02 R2 additions (additive only)
+    /** A server button: disabled at once with a spinner, a repeat click is refused while the request
+     *  runs, and the button is restored (to the state it had before) on success AND on failure. */
+    DV.busy = function (btn, fn) {
+        if (!btn) { try { return Promise.resolve(fn()); } catch (e) { return Promise.reject(e); } }
+        if (btn.getAttribute('data-dv-busy') === '1') return Promise.resolve(null);
+        var wasDisabled = btn.disabled;
+        btn.setAttribute('data-dv-busy', '1');
+        btn.disabled = true;
+        btn.classList.add('dv-spin');
+        function done() { btn.removeAttribute('data-dv-busy'); btn.classList.remove('dv-spin'); btn.disabled = wasDisabled; }
+        var p;
+        try { p = Promise.resolve(fn()); } catch (e) { done(); return Promise.reject(e); }
+        return p.then(function (v) { done(); return v; }, function (e) { done(); throw e; });
+    };
+    /** A PDF print in a new window (opened at once, so a pop-up blocker lets it through); the
+     *  server's text ("No Record Found For Display" ...) is shown as a message box. */
+    DV.printPdf = function (url) {
+        var win = null;
+        try { win = window.open('about:blank', '_blank'); } catch (e) { win = null; }
+        return fetch(url, { credentials: 'same-origin' }).then(function (r) {
+            var type = r.headers.get('Content-Type') || '';
+            if (r.ok && type.indexOf('application/pdf') === 0) {
+                return r.blob().then(function (b) { var u = URL.createObjectURL(b); if (win) win.location = u; else window.open(u, '_blank'); });
+            }
+            return r.text().then(function (t) { try { if (win) win.close(); } catch (x) { } return DV.msg(t || ('Print failed (' + r.status + ')')); });
+        }).catch(function (e) { try { if (win) win.close(); } catch (x) { } return DV.msg(e.message); });
+    };
+    /** CommonServices.AcRptPaymentReceiptsVoucherSlip_102(VoucherHeadId, DocumentTypeId) (:6129) -
+     *  VoucherReports.VoucherReport {Id, DocumentTypeId, ApprovedFilter "All"} ->
+     *  Sp_Vouchers_PaymentReceiptVoucherSlip_Rpt, 102-AcRptPaymentReceiptsVoucherSlip.rpt
+     *  (the registered print contract "acc-102": @Id, @DocumentTypeId; @IsApproved not sent). */
+    DV.printAcRpt102 = function (id, documentTypeId) {
+        if (!(Number(id) > 0)) return DV.msg('VoucherId Not Found');
+        return DV.printPdf('/api/print/acc-102/pdf?id=' + encodeURIComponent(id)
+            + '&documentTypeId=' + encodeURIComponent(documentTypeId || 0));
+    };
+    /** CommonServices.ANewAcRptPaymentReceiptsVoucherSlip_102(VoucherHeadId) (:5841) -
+     *  102-ANewAcRptPaymentReceiptsVoucherSlip.rpt through print-rpt.js (the traced contract). */
+    DV.printANew102 = function (id) {
+        if (!(Number(id) > 0)) return DV.msg('VoucherId Not Found');
+        if (typeof window.printRpt === 'function') return window.printRpt('102-ANewAcRptPaymentReceiptsVoucherSlip.rpt', { id: Number(id) });
+        return DV.printPdf('/api/print/by-template/102-ANewAcRptPaymentReceiptsVoucherSlip.rpt/pdf?id=' + encodeURIComponent(id));
+    };
+    /** The forms' KeyDown: e.KeyData == Keys.Return -> SendKeys.Send("{TAB}") - Enter moves to the
+     *  next field. A combo / message box that uses Enter itself (preventDefault) keeps it. */
+    DV.enterAsTab = function (root) {
+        (root || document).addEventListener('keydown', function (e) {
+            if (e.key !== 'Enter' || e.defaultPrevented || e.ctrlKey || e.altKey || e.shiftKey || e.metaKey) return;
+            var t = e.target;
+            if (!t || !t.tagName || (t.tagName !== 'INPUT' && t.tagName !== 'SELECT')) return;
+            if (document.querySelector('.dv-modal-back')) return;
+            if (t.closest && (t.closest('.dtcombo-pop') || t.closest('.dv-combo-panel'))) return;
+            var list = Array.prototype.filter.call(document.querySelectorAll('input,select,textarea,button,a[href],[tabindex]'), function (el) {
+                return !el.disabled && el.tabIndex >= 0 && el.type !== 'hidden' && el.offsetParent !== null;
+            });
+            var i = list.indexOf(t);
+            if (i >= 0 && i + 1 < list.length) { e.preventDefault(); list[i + 1].focus(); }
         });
     };
 

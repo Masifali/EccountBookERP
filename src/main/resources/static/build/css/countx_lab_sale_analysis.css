@@ -1,0 +1,80 @@
+/* Screen 161 "Sale Analysis" (InvLabSaleAnalysis.cs). The header panel (panel7, 1213 x 206) keeps the
+   desktop geometry 1:1 in px; everything docked Fill on the desktop (toolbar, teal bands, grids)
+   takes the full page width. Same visual vocabulary as the other ported Lab forms (wf-* / win-grid);
+   the combos are enhanced by countx_desktop_combo.js. */
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body { background: #fff; margin: 0; padding: 0; overflow-x: hidden; }
+.wf-root { position: relative; width: 100%; box-sizing: border-box; font-family: "Microsoft Sans Serif", Tahoma, sans-serif; font-size: 11px; display: flex; flex-direction: column; height: 100vh; min-height: 520px; border: 1px solid #a0a0a0; background: #fff; }
+.lsl-page { display: none; flex: 1 1 auto; min-height: 0; flex-direction: column; padding: 3px; box-sizing: border-box; background: #fff; }
+.lsl-page.is-active { display: flex; }
+.wf-abs { position: absolute; box-sizing: border-box; margin: 0; }
+.wf-rel { position: relative; }
+.lsl-head-scroll { flex: 0 0 auto; overflow-x: auto; overflow-y: hidden; }
+.lsl-head { position: relative; height: 206px; min-width: 1060px; font-family: "Segoe UI", Tahoma, sans-serif; }
+.wf-lbl { font-family: "Segoe UI", Tahoma, sans-serif; font-size: 13px; white-space: nowrap; line-height: 17px; color: #000; }
+.wf-txt { box-sizing: border-box; font-family: "Segoe UI", Tahoma, sans-serif; font-size: 13px; height: 25px; border: 1px solid #7a7a7a; padding: 1px 3px; background: #fff; }
+.wf-txt:disabled { background: #f0f0f0; color: #4d4d4d; }
+.wf-cmb { font-family: "Microsoft Sans Serif", Tahoma, sans-serif; font-size: 13px; height: 25px; border: 1px solid #7a7a7a; background: #fff; padding: 0 2px; }
+.wf-dt { font-family: "Segoe UI", Tahoma, sans-serif; font-size: 13px; height: 25px; border: 1px solid #7a7a7a; background: #fff; padding: 0 2px; }
+.wf-teal { background: #008080; position: relative; flex: 0 0 auto; }
+.wf-teal-title { position: absolute; font-family: Calibri, Tahoma, sans-serif; font-size: 21px; font-weight: bold; color: #fff; white-space: nowrap; line-height: 26px; }
+.lsl-pic-cap { font-family: "Times New Roman", serif; font-size: 13px; color: #000; white-space: nowrap; line-height: 15px; }
+.wf-strip { flex: 0 0 auto; height: 27px; display: flex; align-items: center; background: linear-gradient(to bottom, #fcfcfc 0%, #e0e0e0 100%); border-bottom: 1px solid #b5b5b5; box-sizing: border-box; }
+.wf-strip-title { font-family: Calibri, Tahoma, sans-serif; font-size: 16px; font-weight: bold; padding: 0 14px 0 4px; white-space: nowrap; }
+.wf-tool { font-family: "Segoe UI", Tahoma, sans-serif; font-size: 12px; height: 24px; background: transparent; border: 1px solid transparent; display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 0 5px; cursor: pointer; box-sizing: border-box; white-space: nowrap; color: #000; text-decoration: none; }
+.wf-tool:hover:not(:disabled) { background: #ffe4a0; border-color: #e59d00; }
+.wf-tool:disabled { color: #9a9a9a; cursor: default; }
+.wf-sep { width: 1px; height: 19px; background: #b5b5b5; margin: 0 4px; }
+.wf-exit { margin-left: auto; color: #004d40; font-size: 11px; font-weight: bold; }
+.wf-btn { background: #e1e1e1; color: #000; border: 1px solid #adadad; font-family: "Segoe UI", Tahoma, sans-serif; font-size: 13px; cursor: pointer; padding: 0 4px; }
+.wf-btn:hover:not(:disabled) { background: #e5f1fb; border-color: #0078d7; }
+.wf-btn:disabled { color: #9a9a9a; cursor: default; }
+/* rule 5: a button whose request is in flight */
+.btn-busy { position: relative; pointer-events: none; opacity: .75; }
+.btn-busy::after { content: ""; display: inline-block; width: 10px; height: 10px; margin-left: 5px; border: 2px solid #008080; border-right-color: transparent; border-radius: 50%; animation: lsl-spin .7s linear infinite; vertical-align: middle; }
+@keyframes lsl-spin { to { transform: rotate(360deg); } }
+/* grids: full width, scroll only inside the container, sticky header */
+.lsl-grid-cap { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; background: #008080; color: #fff; font: bold 12px Tahoma, sans-serif; padding: 2px 6px; height: 22px; box-sizing: border-box; }
+.lsl-grid-cap button { background: transparent; border: 1px solid transparent; color: #fff; cursor: pointer; font-size: 12px; height: 18px; padding: 0 4px; }
+.lsl-grid-cap button:hover { border-color: #fff; }
+.wf-grid { overflow: auto; background: #fff; border: 1px solid #9eb6ce; box-sizing: border-box; width: 100%; }
+.lsl-fill { flex: 1 1 0; min-height: 120px; }
+.lsl-block { display: flex; flex-direction: column; min-height: 0; }
+.lsl-block.grow { flex: 1 1 0; }
+.lsl-block.grow3 { flex: 3 1 0; }
+.lsl-block.grow2 { flex: 2 1 0; }
+.lsl-block.is-full { position: fixed; inset: 0; z-index: 99990; background: #fff; }
+.win-grid { border-collapse: collapse; width: 100%; font-family: Verdana, sans-serif; font-size: 11px; }
+.win-grid th { background: linear-gradient(to bottom, #e3efff 0%, #c4dcf8 100%); border: 1px solid #9eb6ce; font-weight: normal; text-align: left; padding: 2px 4px; white-space: nowrap; position: sticky; top: 0; z-index: 2; }
+.win-grid td { border: 1px solid #d5e1f0; padding: 1px 3px; white-space: nowrap; height: 20px; }
+.win-grid td.c { text-align: center; }
+.win-grid td.wrap { white-space: normal; }
+.win-grid td.ro { background: #f7f7f7; }
+.win-grid tbody tr:hover { background: #fff0cf; }
+.win-grid tbody tr.is-sel { background: #cfe3ff; }
+.win-grid tr.flt th { padding: 0; background: #f7fbff; top: 21px; z-index: 2; }
+.win-grid tr.flt input { width: 100%; box-sizing: border-box; border: 1px solid #c9d7e6; font-size: 11px; height: 18px; }
+.win-grid td input[type=text] { width: 100%; min-width: 60px; box-sizing: border-box; font-family: Verdana, sans-serif; font-size: 11px; height: 19px; border: 1px solid #b8c8d8; }
+.win-grid .gbtn { font-size: 11px; padding: 0 6px; height: 18px; cursor: pointer; border: 1px solid #8aa; background: #f4f4f4; }
+.win-grid .gbtn:disabled { color: #9a9a9a; cursor: default; }
+.win-grid a.lnk { color: #0645ad; text-decoration: underline; cursor: pointer; }
+.lsl-empty { padding: 6px 8px; color: #666; font: 11px Verdana, sans-serif; }
+/* footer: tabControl1 headers (Alignment Bottom) on the left, the History button on the right */
+.wf-tabs { flex: 0 0 auto; display: flex; align-items: center; gap: 0; padding: 0 6px 0 2px; border-top: 1px solid #a0a0a0; background: #f0f0f0; height: 28px; box-sizing: border-box; }
+.wf-tabs .win-tab { width: 64px; text-align: center; padding: 3px 0; font-family: "Segoe UI", Tahoma, sans-serif; font-size: 12px; background: #f0f0f0; border: 1px solid #a0a0a0; border-top: none; border-radius: 0 0 3px 3px; color: #000; cursor: pointer; align-self: flex-start; }
+.wf-tabs .win-tab.is-active { background: #fff; }
+.lsl-foot-right { margin-left: auto; display: flex; gap: 6px; align-items: center; }
+.lsl-foot-btn { height: 22px; padding: 0 12px; background: #008080; color: #fff; border: 1px solid #005959; font: bold 12px "Segoe UI", Tahoma, sans-serif; cursor: pointer; }
+.lsl-foot-btn:disabled { background: #7fb3b3; cursor: default; }
+/* PictureBox, SizeMode StretchImage */
+.lsl-pic { border: 1px solid #c8c8c8; background: #fff; overflow: hidden; }
+.lsl-pic img { display: block; width: 100%; height: 100%; object-fit: fill; }
+.lsl-denied { background: #fff3cd; border: 1px solid #e0b100; color: #6b4e00; padding: 6px 10px; font: 12px Verdana, sans-serif; }
+.lsl-modal { position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 100000; display: flex; align-items: flex-start; justify-content: center; padding-top: 3vh; }
+.lsl-modal-box { background: #fff; border: 1px solid #555; box-shadow: 0 6px 24px rgba(0,0,0,.35); max-height: 94vh; display: flex; flex-direction: column; }
+.lsl-modal-head { background: #008080; color: #fff; font: bold 13px Tahoma, sans-serif; padding: 5px 8px; display: flex; justify-content: space-between; align-items: center; }
+.lsl-modal-head button { background: transparent; border: none; color: #fff; font-size: 18px; cursor: pointer; }
+.lsl-modal-body { padding: 6px; overflow: auto; }
+.lsl-modal-foot { padding: 6px; display: flex; gap: 6px; justify-content: flex-end; border-top: 1px solid #ddd; }
+.lsl-modal-foot .wf-btn { height: 26px; min-width: 70px; }

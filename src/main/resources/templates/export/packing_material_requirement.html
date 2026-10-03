@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Packing Material Requirement - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <style>
+        .k-pmr { display:grid; grid-template-columns:minmax(0, 71%) minmax(0, 29%); gap:8px; }
+        .k-row { display:flex; flex-wrap:wrap; align-items:flex-end; gap:6px; padding:4px 6px; }
+        .k-row .ex-field { flex-direction:column; align-items:stretch; }
+        .k-row .ex-field > label { width:auto; }
+        .k-top { display:flex; flex-wrap:wrap; gap:6px 18px; padding:4px 6px; }
+        .k-top .ex-field > label { width:110px; flex:none; }
+        @media (max-width: 900px) { .k-pmr { grid-template-columns:1fr; } }
+    </style>
+</head>
+<!-- PackingMaterialRequirement.cs (Architecture.WinApp.Export), screen 219 "Packing Material Requirement (Not Use)", tabControl1 1140 x 699.
+     Form: toolStrip "btn" New / Update (hidden, no Click handler on the desktop) / Save.
+       panel5 (799 wide, left): panel6 Customer Name (Leave -> sales contracts) + Sales Contract (Leave -> items);
+         panel7 grdSalesContractDetail (ItemId / ItemUomId hidden, "Load" button column, Qty total);
+         panel8: Item Name (read only), Pack Uom (read only), Item Qty (read only) / Packing Item (ValueChanged -> UOM),
+           UOM, Req Qty (decimal keys only), Total Order Qty (read only), Available Stock (read only), + / Update / Cancel;
+         panel3 grdPMRequirement (double-click = edit, ReqQty total).
+       panel2 (327 wide, right): grdMain - every row of every item; what Save sends.
+     History: grdhistory (Id hidden, LcOrderNo, EntryDate, UserName), double-click -> ReadById. -->
+<body class="pd-body" data-export-page="pmr">
+<div class="pd-form ex-form">
+    <div class="win-tabs">
+        <button type="button" class="win-tab is-active" data-tab="pmrForm">Form</button>
+        <button type="button" class="win-tab" data-tab="pmrHistory">History</button>
+    </div>
+
+    <div class="win-tab-panel is-active" id="pmrForm">
+        <div class="win-tool-strip">
+            <button type="button" id="btnNew" class="win-btn-tool" onclick="ExportPmr.btnNew()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="btnUpdate" class="win-btn-tool is-hidden" onclick="ExportPmr.btnUpdate()"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+            <button type="button" id="btnSave" class="win-btn-tool" onclick="ExportPmr.btnSave(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+        </div>
+        <div class="pd-caption pd-caption-teal" style="height:28px;">Packing Material Requirement</div>
+        <div class="k-pmr">
+            <div>
+                <div class="k-top">
+                    <div class="ex-field" style="width:340px;"><label for="CmbCustomerName">Customer Name</label>
+                        <select id="CmbCustomerName" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Customer Name"></select></div>
+                    <div class="ex-field" style="width:340px;"><label for="CmbSalesContract">Sales Contract</label>
+                        <select id="CmbSalesContract" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Sales Contract"></select></div>
+                </div>
+                <div class="pd-caption pd-caption-teal pd-history-bar" style="height:23px;"><span>Sales Contract Detail</span>
+                    <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="scBox" title="Fullscreen table">&#x26F6;</button></span></div>
+                <div class="ex-grid-box" id="scBox"><div class="ex-grid-scroll" style="max-height:189px;">
+                    <table class="win-grid" id="grdSalesContractDetail">
+                        <thead><tr>
+                            <th data-col="ContractDetailId" class="num">ContractDetailId</th><th data-col="ItemName">ItemName</th><th data-col="ItemCode">ItemCode</th>
+                            <th data-col="PackSize">PackSize</th><th data-col="InvPackingMaterialTypeId" class="num">InvPackingMaterialTypeId</th><th data-col="PackType">PackType</th>
+                            <th data-col="CropYearId" class="num">CropYearId</th><th data-col="CropYear">CropYear</th><th data-col="Qty" class="num">Qty</th>
+                            <th data-col="MTon" class="num">MTon</th><th data-col="RatePrice" class="num">RatePrice</th><th data-col="IsApproved">IsApproved</th><th>Load</th>
+                        </tr></thead>
+                        <tbody id="scBody"></tbody><tfoot id="scFoot"></tfoot>
+                    </table>
+                </div></div>
+                <div class="k-row">
+                    <div class="ex-field" style="width:285px;"><label for="CmbMainItem">Item Name</label><input type="text" id="CmbMainItem" class="win-textbox" readonly/></div>
+                    <div class="ex-field" style="width:90px;"><label for="cmbItemUOM">Pack Uom</label><input type="text" id="cmbItemUOM" class="win-textbox" readonly/></div>
+                    <div class="ex-field" style="width:90px;"><label for="txtItemQty">Item Qty</label><input type="text" id="txtItemQty" class="win-textbox num" readonly/></div>
+                </div>
+                <div class="k-row">
+                    <div class="ex-field" style="width:253px;"><label for="cmbPMitem">Packing Item</label>
+                        <select id="cmbPMitem" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Name"></select></div>
+                    <div class="ex-field" style="width:95px;"><label for="cmbPMItemUom">UOM</label>
+                        <select id="cmbPMItemUom" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="PackUom"></select></div>
+                    <div class="ex-field" style="width:80px;"><label for="txtReqQty">Req Qty</label><input type="text" id="txtReqQty" class="win-textbox num" data-guard="decimal" autocomplete="off"/></div>
+                    <div class="ex-field" style="width:103px;"><label for="txtTotalOrderQty">Total Order Qty</label><input type="text" id="txtTotalOrderQty" class="win-textbox num" readonly/></div>
+                    <div class="ex-field" style="width:116px;"><label for="txtAvailableStock">Available Stock</label><input type="text" id="txtAvailableStock" class="win-textbox num" readonly/></div>
+                    <button type="button" id="BtnAdd" class="win-btn-small" style="width:29px;" onclick="ExportPmr.add()">+</button>
+                    <button type="button" id="btnUpdateDetail" class="win-btn-small is-hidden" onclick="ExportPmr.btnUpdateDetail()">Update</button>
+                    <button type="button" id="btnCancelDetail" class="win-btn-small is-hidden" onclick="ExportPmr.btnCancelDetail()">Cancel</button>
+                </div>
+                <div class="pd-caption pd-caption-teal pd-history-bar" style="height:23px;"><span>Packing Material (selected item)</span>
+                    <span class="ex-bar-right"><span style="font:8pt 'Segoe UI',sans-serif;">double-click a row = edit</span><button type="button" class="ex-fs-btn" data-fullscreen="pmBox" title="Fullscreen table">&#x26F6;</button></span></div>
+                <div class="ex-grid-box" id="pmBox"><div class="ex-grid-scroll ex-h300">
+                    <table class="win-grid" id="grdPMRequirement">
+                        <thead><tr><th data-col="ItemName">ItemName</th><th data-col="PackUom">PackUom</th><th data-col="Qty" class="num">Qty</th>
+                            <th data-col="PackingItem">PackingItem</th><th data-col="PmPackUom">PmPackUom</th><th data-col="ReqQty" class="num">ReqQty</th></tr></thead>
+                        <tbody id="pmBody"></tbody><tfoot id="pmFoot"></tfoot>
+                    </table>
+                </div></div>
+            </div>
+            <div>
+                <div class="pd-caption pd-caption-teal pd-history-bar" style="height:23px;"><span>All Items</span>
+                    <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="mainBox" title="Fullscreen table">&#x26F6;</button></span></div>
+                <div class="ex-grid-box" id="mainBox"><div class="ex-grid-scroll" style="max-height:640px;">
+                    <table class="win-grid" id="grdMain">
+                        <thead><tr><th data-col="ItemName">ItemName</th><th data-col="PackUom">PackUom</th><th data-col="Qty" class="num">Qty</th>
+                            <th data-col="PackingItem">PackingItem</th><th data-col="PmPackUom">PmPackUom</th><th data-col="ReqQty" class="num">ReqQty</th></tr></thead>
+                        <tbody id="mainBody"></tbody><tfoot id="mainFoot"></tfoot>
+                    </table>
+                </div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="win-tab-panel" id="pmrHistory">
+        <div class="pd-caption pd-caption-teal pd-history-bar" style="height:28px;"><span>History</span>
+            <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="histBox" title="Fullscreen table">&#x26F6;</button></span></div>
+        <div class="ex-grid-box" id="histBox"><div class="ex-grid-scroll ex-h400">
+            <table class="win-grid" id="grdhistory">
+                <thead><tr><th data-col="LcOrderNo">LcOrderNo</th><th data-col="EntryDate">EntryDate</th><th data-col="UserName">UserName</th></tr></thead>
+                <tbody id="histBody"></tbody>
+            </table>
+        </div><div class="ex-grid-empty is-hidden" id="histEmpty">No record found.</div></div>
+    </div>
+
+    <div class="win-footer-strip">
+        <span class="ex-footer-left" id="pmrFooterInfo">PackingMaterialRequirement</span>
+        <button type="button" class="win-btn-history" id="btnFooterHistory" onclick="ExportPmr.toggleHistory()"><i class="fa fa-history"></i> <span>History</span></button>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_export_packing_material_requirement.js?v=20261001k}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

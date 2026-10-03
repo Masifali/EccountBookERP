@@ -6,163 +6,235 @@
     <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
     <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
     <title>Balance Sheet</title>
-    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
-    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
-    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260930s}">
-    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260930s}">
-    <link rel="stylesheet" th:href="@{/build/css/countx_acc_rpt_f.css?v=20260930s}">
-    <link rel="stylesheet" th:href="@{/build/css/countx_acc_rpt_h.css?v=20260930s}">
-</head>
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20261002k}" href="/build/css/countx_desktop_combo.css">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20261003bs}" href="/build/css/countx_prod_combo.css">
+    <link rel="stylesheet" th:href="@{/build/css/countx_acc_rpt_h.css?v=20261003bs}" href="/build/css/countx_acc_rpt_h.css">
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}" href="/build/css/countx_grid_bar.css">
+    <link rel="stylesheet" th:href="@{/build/css/countx_button_busy.css?v=20261002gf}" href="/build/css/countx_button_busy.css">
 <!--
-  Screen 62 "Balance Sheet" - Architecture.WinApp.Account_Reports.BalanceSheet (BalanceSheet.cs, ScreenName frmBalanceSheet).
-  Read-only. Data: /accounts/api/reports/balance-sheet-62 (BalanceSheetReportService):
-    Load / Show  BindDatainGrid -> SpAccounts_BalanceSheetFormatA_Report (@OrganizationId, @CompanyId, @UserId, @ToDate,
-                 @BranchesIds only when GetBranchesIdsByFeature returned one). The statement is the form's own sums per AccountNoteId.
-    153-Print    SpAccounts_BalanceSheetFormatA_ForCrystal (@ClassIds '1,2,3') - browser output, not the Crystal layout.
-    Caption click AccountNotefilter -> BS and PL Breakup (screen 84) as a dialog; "Net Profit/Loss" opens Profit & Loss 01.
-  To Date: the DateTimePicker default (today). Rebuilt 2026-09-30 (R5) after the page was rolled back to the old mock-up.
+  Screen 62 "Balance Sheet" - desktop Architecture.WinApp.Account_Reports.BalanceSheet (BalanceSheet.cs, base.Name
+  "BalanceSheet", Text "Balance Sheet", ClientSize 936x734, WindowState Maximized, KeyPreview with no key handler).
+  1:1 port of InitializeComponent (2026-10-03, group R-BALANCE-SHEET-BSPL). The form has NO tab control: the
+  "Profit & Loss 01" tab the earlier page showed was invented (screen 64 has its own route /accounts/reports/profit-and-loss).
+    panel1 Dock Fill
+      panel2 Dock Top 27   toolStrip3 Verdana 9.75: &Refresh (icons8_pencil_16, 80x24) | 153-Print (icons8_print_16, 92x24)
+      panel3 Dock Top 25   rgb(10,110,110); label23 "Balance Sheet" (3,3) Tahoma 12 bold white
+      panel4 Dock Fill
+        panel5 Dock Top 36 white: label33 "To Date" (5,11) Segoe UI Semibold 9 bold; todate (59,7) 132x23 dd-MMM-yy Verdana 9.75;
+               lblBranch "Branch" (194,11); cmbbranch (242,5) 204x26 Verdana 9.75; btnshow "Show" (448,7) 51x23 flat rgb(10,110,110)
+               Tahoma 9.75 bold white. Without ERP feature 17 Branch/cmbbranch are hidden and btnshow moves to (194,7).
+        panel6 Dock Fill, AutoScroll, ControlLightLight: groupBox1 Owner Equity (22,5 468x185), groupBox2 Non Current Liabilities
+               (22,196 468x122), groupBox4 Current Liabilities (22,319 468x276), groupBox6 Non Current Assets (496,5 408x185),
+               groupBox5 Current assets (496,196 408x399) - Calibri 14 bold captions; Teal caption labels Calibri 12 bold white,
+               amounts Calibri 11.25 bold right-aligned; panel7 Teal (0,600 904x33) Total Capital and Liabilites / Total Assets.
+  Data (BalanceSheetReportService, /accounts/api/reports/balance-sheet-62):
+    Load / Show  BindDatainGrid -> VoucherReports.AccountsBalanceSheetStandardFormatII -> SpAccounts_BalanceSheetFormatA_Report
+                 @OrganizationId, @CompanyId, @UserId, @ToDate, @BranchesIds only when GetBranchesIdsByFeature returned one.
+                 Sums per AccountNoteId (10..39), caption = the row's AccountsNotes; empty result -> nothing changes.
+    153-Print    VoucherReports.AccountsBalanceSheetStandardForCrystal -> SpAccounts_BalanceSheetFormatA_ForCrystal
+                 (@ClassIds '1,2,3', @BranchesId when feature 17 and a value) -> "Not Record Found For Display" or the rows go to
+                 153-BalanceSheetStatementRpt.rpt through the Jasper layer (POST /reports/print/grid).
+    Caption click  AccountNotefilter(caption) -> dt.Select(AccountsNotes = caption) -> ItemArray[5] AccountNoteId ->
+                 BSandPLBreakup(UserAccount, dt).ShowDialog() (screen 84, countx_bs_pl_breakup.js dialog).
+    Net Profit/Loss click -> new frmProfitLossHararical(UserAccount).Show() (screen 64 page).
+    MouseHover / MouseLeave on every caption: Blue on White / White on Teal.
 -->
-<body class="accf">
-<div class="win-title-bar">
-    <span><i class="fa fa-balance-scale"></i> Balance Sheet</span>
-    <a href="/accounts/dashboard"><i class="fa fa-arrow-left"></i> Back to Dashboard</a>
-</div>
-<ul class="win-tabs">
-    <li class="active"><a>Balance Sheet</a></li>
-    <li><a href="/accounts/reports/profit-and-loss">Profit &amp; Loss 01</a></li>
-</ul>
-<div class="win-toolbar" id="toolStrip3">
-    <button type="button" class="win-btn" id="btnNew"><i class="fa fa-refresh text-success"></i> <span><u>R</u>efresh</span></button>
-    <button type="button" class="win-btn" id="toolStripButton1" data-rpt="153-BalanceSheetStatementRpt.rpt"><i class="fa fa-print"></i> 153-Print</button>
-</div>
-<div class="win-header-panel" id="panel3"><span>Balance Sheet</span></div>
+<style>
+    :root { --teal: #008080; --showbtn: rgb(10,110,110); }
+    html, body { margin: 0; padding: 0; height: 100%; background: #fff; overflow: hidden; }
+    body { font-family: "Segoe UI", Tahoma, sans-serif; font-size: 12px; color: #000; }
+    #frm { position: absolute; inset: 0; overflow-x: auto; overflow-y: hidden; }
+    #panel1 { display: flex; flex-direction: column; height: 100%; min-width: 936px; }
+    #panel2 { flex: 0 0 27px; height: 27px; position: relative; background: #fff; }
+    #toolStrip3 { position: absolute; left: 0; top: 0; right: 0; height: 27px; display: flex; align-items: center; padding-left: 2px;
+                  background: linear-gradient(#fdfdfd, #eef0f3); border-bottom: 1px solid #d6dbe2; font: 13px Verdana, sans-serif; white-space: nowrap; overflow: hidden; }
+    #toolStrip3 button { display: inline-flex; align-items: center; gap: 4px; height: 24px; padding: 0 5px; margin: 0 1px;
+                  font: inherit; color: #000; background: transparent; border: 1px solid transparent; cursor: pointer; white-space: nowrap; }
+    #toolStrip3 button:hover:not(:disabled) { background: #cce8ff; border-color: #99d1ff; }
+    #toolStrip3 button:disabled { color: #a0a0a0; cursor: default; }
+    #toolStrip3 svg { width: 16px; height: 16px; flex: 0 0 16px; margin: 0 2px; }
+    #panel3 { flex: 0 0 25px; height: 25px; position: relative; background: var(--showbtn); }
+    #label23 { position: absolute; left: 3px; top: 3px; font: bold 16px Tahoma, sans-serif; color: #fff; line-height: 19px; white-space: nowrap; }
+    #panel4 { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
+    #panel5 { flex: 0 0 36px; height: 36px; position: relative; background: #fff; }
+    .lbl { position: absolute; font: 600 12px "Segoe UI Semibold", "Segoe UI", sans-serif; line-height: 15px; color: #000; white-space: nowrap; }
+    .dtp { position: absolute; box-sizing: border-box; height: 23px; font: 13px Verdana, sans-serif; border: 1px solid #7a7a7a; padding: 0 2px; background: #fff; }
+    #btnshow { position: absolute; left: 448px; top: 7px; width: 51px; height: 23px; box-sizing: border-box; padding: 0; white-space: nowrap; overflow: visible;
+               background: var(--showbtn); color: #fff; border: 0; font: bold 13px Tahoma, sans-serif; cursor: pointer; }
+    #btnshow.nobranch { left: 194px; }
+    #btnshow:disabled { opacity: .75; cursor: progress; }
+    #btnshow.btn-busy::after { position: absolute; right: -16px; top: 5px; margin: 0; }
+    .pcx-wrap .dtcombo-input, .dtcombo-wrap .dtcombo-input { font: 13px Verdana, sans-serif !important; }
+    .is-hidden { display: none !important; }
 
-<div class="filters" id="panel5">
-    <div class="gb" style="width:560px;">
-        <span class="gb-title">Filters</span>
-        <div class="fgrid" style="grid-template-columns: 50px 132px 44px 204px 1fr;">
-            <span class="lbl" id="label33">To Date</span>
-            <input type="date" id="todate" class="inp">
-            <span class="lbl" id="lblBranch">Branch</span>
-            <div id="cmbbranch"></div>
-            <div class="show-cell"><button type="button" id="btnshow" class="win-btn-show"><i class="fa fa-eye"></i> Show</button></div>
+    /* panel6: AutoScroll, ControlLightLight; the group boxes keep their designer coordinates */
+    #panel6 { flex: 1 1 auto; position: relative; overflow: auto; background: #fff; min-height: 0; }
+    #stmt { position: relative; width: 908px; height: 637px; }
+    .gbx { position: absolute; box-sizing: border-box; }
+    .gbx::before { content: ""; position: absolute; left: 0; right: 0; top: 11px; bottom: 0; border: 1px solid #d5dfe5; border-radius: 3px; pointer-events: none; }
+    .gbx .gbt { position: absolute; left: 6px; top: 0; padding: 0 2px; background: #fff; font: bold 18.67px Calibri, Carlito, "Segoe UI", sans-serif; line-height: 22px; white-space: nowrap; }
+    .gbx > div { position: absolute; box-sizing: border-box; white-space: nowrap; overflow: hidden; }
+    .cap { background: var(--teal); color: #fff; font: bold 16px Calibri, Carlito, "Segoe UI", sans-serif; line-height: 19px; padding-left: 1px; cursor: default; }
+    .cap#lblStoreSparePartsCaption { white-space: normal; }
+    .cap:hover { background: #fff; color: #0000ff; }
+    .amt { color: #000; font: bold 15px Calibri, Carlito, "Segoe UI", sans-serif; line-height: 19px; text-align: right; }
+    .tamt { background: var(--teal); color: #fff; border: 1px solid #000; font: bold 16px Calibri, Carlito, "Segoe UI", sans-serif; line-height: 21px; text-align: right; padding-right: 1px; }
+    .tcap { background: #add8e6; color: #000; border: 1px solid #000; font: bold 16px Calibri, Carlito, "Segoe UI", sans-serif; line-height: 21px; padding-left: 1px; }
+    .ln3d { border-top: 1px solid #a0a0a0; border-bottom: 1px solid #fff; height: 2px !important; }
+    #panel7 { position: absolute; background: var(--teal); }
+    #panel7 > div { position: absolute; box-sizing: border-box; border: 1px solid #000; color: #fff; font: bold 16.33px Tahoma, sans-serif; line-height: 21px; white-space: nowrap; overflow: hidden; padding: 0 1px; }
+    #panel7 .gtot { background: var(--teal); text-align: right; }
+</style>
+</head>
+<body>
+<div id="frm"><div id="panel1">
+    <div id="panel2">
+        <div id="toolStrip3" role="toolbar">
+            <button type="button" id="btnNew" title="Alt+R"><svg viewBox="0 0 16 16"><path d="M2 14l1-4 8-8 3 3-8 8z" fill="#f5c542" stroke="#8a6d1c"/><path d="M2 14l1-4 3 3z" fill="#555"/></svg><span><u>R</u>efresh</span></button>
+            <button type="button" id="toolStripButton1"><svg viewBox="0 0 16 16"><rect x="4" y="1.5" width="8" height="4" fill="#fff" stroke="#555"/><rect x="1.5" y="5.5" width="13" height="6" rx="1" fill="#6b7d8f"/><rect x="4" y="9.5" width="8" height="5" fill="#fff" stroke="#555"/></svg><span>153-Print</span></button>
         </div>
     </div>
-</div>
+    <div id="panel3"><span id="label23">Balance Sheet</span></div>
+    <div id="panel4">
+        <div id="panel5">
+            <span class="lbl" id="label33" style="left:5px;top:11px">To Date</span>
+            <input type="date" class="dtp" id="todate" style="left:59px;top:7px;width:132px" tabindex="1">
+            <span class="lbl is-hidden" id="lblBranch" style="left:194px;top:11px">Branch</span>
+            <span id="cmbbranchBox" class="is-hidden"><select id="cmbbranch" data-dtcombo-caption="Branch Name" style="position:absolute;left:242px;top:5px;width:204px;height:26px" tabindex="2"></select></span>
+            <button type="button" id="btnshow" tabindex="3">Show</button>
+        </div>
+        <div id="panel6"><div id="stmt">
+            <div class="gbx" id="groupBox1" style="left:22px;top:5px;width:468px;height:185px;color:rgb(0,0,192)"><span class="gbt">Owner Equity</span>
+              <div class="cap" id="lblNetPLCaption" data-note="PL" style="left:6px;top:130px;width:258px;height:21px">Net Profit/Loss</div>
+              <div class="amt" id="lblNetPLAmount" style="left:311px;top:130px;width:145px;height:19px">0</div>
+              <div class="cap" id="lblUnAppropriatedCaption" data-note="34" style="left:6px;top:81px;width:258px;height:21px">Un-Appropriated P/L</div>
+              <div class="amt" id="lblUnAppropriatedAmt" style="left:311px;top:81px;width:145px;height:19px">0</div>
+              <div class="cap" id="lblSharDepositCaption" data-note="36" style="left:6px;top:56px;width:258px;height:21px">Shared Deposit</div>
+              <div class="amt" id="lblShareDepositAmt" style="left:311px;top:56px;width:145px;height:19px">0</div>
+              <div class="cap" id="lblReserveCaption" data-note="35" style="left:6px;top:106px;width:258px;height:21px">Reserves</div>
+              <div class="amt" id="lblReserveAmt" style="left:311px;top:106px;width:145px;height:19px">0</div>
+              <div class="ln3d" id="label7" style="left:3px;top:153px;width:398px;height:3px"></div>
+              <div class="tamt" id="lblToOwnerEquityAmt" style="left:309px;top:156px;width:150px;height:23px">0</div>
+              <div class="tcap" id="label1" style="left:6px;top:156px;width:258px;height:23px">Total Owner Equity</div>
+              <div class="cap" id="lblShareCapitalCaption" data-note="29" style="left:6px;top:31px;width:258px;height:21px">Share Capital</div>
+              <div class="amt" id="lblCapitalShareAmt" style="left:311px;top:31px;width:145px;height:19px">0</div>
+            </div>
+            <div class="gbx" id="groupBox2" style="left:22px;top:196px;width:468px;height:122px;color:#0000cd"><span class="gbt">Non Current Liabilities</span>
+              <div class="amt" id="lblTaxationAmt" style="left:311px;top:71px;width:145px;height:19px">0</div>
+              <div class="cap" id="lblTaxationCaption" data-note="17" style="left:6px;top:70px;width:258px;height:21px">Taxation</div>
+              <div class="ln3d" id="label21" style="left:5px;top:91px;width:402px;height:2px"></div>
+              <div class="tamt" id="lblToNonCurrLiabilitiesAmt" style="left:309px;top:94px;width:150px;height:23px">0</div>
+              <div class="tcap" id="label9" style="left:6px;top:94px;width:258px;height:21px">Total Non Curr Liabilities</div>
+              <div class="cap" id="lblfinancialLeaseCaption" data-note="37" style="left:6px;top:26px;width:258px;height:21px">Financial Lease</div>
+              <div class="amt" id="lblongTermLoansAmt" style="left:311px;top:49px;width:145px;height:19px">0</div>
+              <div class="amt" id="lblFinancialLeaseAmt" style="left:311px;top:26px;width:145px;height:19px">0</div>
+              <div class="cap" id="lblLongTermLoanCaption" data-note="21" style="left:6px;top:48px;width:258px;height:21px">Long Term Loans</div>
+            </div>
+            <div class="gbx" id="groupBox4" style="left:22px;top:319px;width:468px;height:276px;color:#0000cd"><span class="gbt">Current Liabilities</span>
+              <div class="amt" id="lblAccuredLiabiltyAmt" style="left:312px;top:216px;width:145px;height:19px">0</div>
+              <div class="cap" id="lblAccuredLiabiltyCaption" data-note="38" style="left:4px;top:216px;width:258px;height:21px">Accrued Liabilty</div>
+              <div class="amt" id="lblCreditorStoreAmt" style="left:312px;top:192px;width:145px;height:19px">0</div>
+              <div class="cap" id="lblCreditorStoreCaption" data-note="26" style="left:4px;top:192px;width:258px;height:21px">Creditor Store</div>
+              <div class="amt" id="lblLoanAndAdvancesAmt" style="left:312px;top:169px;width:145px;height:19px">0</div>
+              <div class="cap" id="lblLoanAndAdvanceCaption" data-note="16" style="left:4px;top:169px;width:258px;height:21px">Loan And Advances</div>
+              <div class="amt" id="lblOtherPayablesAmt" style="left:312px;top:146px;width:145px;height:19px">0</div>
+              <div class="cap" id="lbltradeOthPayableCaption" data-note="28" style="left:4px;top:146px;width:258px;height:21px">Trade Others Payables</div>
+              <div class="amt" id="lblOtherCreditorsAmt" style="left:312px;top:123px;width:145px;height:19px">0</div>
+              <div class="cap" id="lblOtherCreditorCaption" data-note="27" style="left:4px;top:123px;width:258px;height:21px">Other Creditors</div>
+              <div class="amt" id="lblCreditorsSupplierAmt" style="left:312px;top:78px;width:145px;height:19px">0</div>
+              <div class="cap" id="lblCreditorSuppCaption" data-note="24" style="left:4px;top:78px;width:258px;height:21px">Crediters Suppliers</div>
+              <div class="amt" id="lblTradeCreditorsServiceAmt" style="left:312px;top:100px;width:145px;height:19px">0</div>
+              <div class="cap" id="lblTradeCreditorServiceCaption" data-note="25" style="left:4px;top:100px;width:258px;height:21px">Trade Creditors -Service</div>
+              <div class="ln3d" id="label29" style="left:4px;top:245px;width:400px;height:3px"></div>
+              <div class="tamt" id="lblToCurrLiabilitiesAmt" style="left:309px;top:249px;width:150px;height:23px">0</div>
+              <div class="tcap" id="label16" style="left:4px;top:249px;width:258px;height:21px">Total Current Liabilities</div>
+              <div class="cap" id="lblShortTermBorrowingCaption" data-note="22" style="left:4px;top:32px;width:258px;height:21px">Short Term Borrowings</div>
+              <div class="amt" id="lblShorttermBorrowingAmt" style="left:312px;top:32px;width:145px;height:19px">0</div>
+              <div class="amt" id="lblSalariesPayablesAmt" style="left:312px;top:55px;width:145px;height:19px">0</div>
+              <div class="cap" id="lblSalariesPayableCaption" data-note="23" style="left:4px;top:55px;width:258px;height:21px">Salaries Payables</div>
+            </div>
+            <div class="gbx" id="groupBox6" style="left:496px;top:5px;width:408px;height:185px;color:rgb(0,0,192)"><span class="gbt">Non Current Assets</span>
+              <div class="cap" id="lblCWIPCaption" data-note="11" style="left:6px;top:106px;width:199px;height:21px">Capital Work In Progress</div>
+              <div class="amt" id="lblAcCWIPAmt" style="left:255px;top:106px;width:145px;height:19px">0</div>
+              <div class="cap" id="lblPropPlantEquipCaption" data-note="30" style="left:6px;top:81px;width:199px;height:21px">Property, Plant  Equipment</div>
+              <div class="amt" id="lblAsPropertyPlantAmt" style="left:255px;top:81px;width:145px;height:19px">0</div>
+              <div class="cap" id="lblLongTermInvestCaption" data-note="31" style="left:6px;top:56px;width:199px;height:21px">Long Term Investment</div>
+              <div class="amt" id="lblAsLongTrmInvestmentAmt" style="left:255px;top:56px;width:145px;height:19px">0</div>
+              <div class="ln3d" id="label71" style="left:6px;top:129px;width:398px;height:3px"></div>
+              <div class="tamt" id="lblToNonCurrAssestsAmt" style="left:253px;top:131px;width:150px;height:23px">0</div>
+              <div class="tcap" id="label73" style="left:6px;top:131px;width:210px;height:23px">Total Non Current Assest</div>
+              <div class="cap" id="lblIntangibleassetCaption" data-note="10" style="left:6px;top:31px;width:199px;height:21px">Intangible Assets</div>
+              <div class="amt" id="lblIntangibleAssestAmt" style="left:255px;top:31px;width:145px;height:19px">0</div>
+            </div>
+            <div class="gbx" id="groupBox5" style="left:496px;top:196px;width:408px;height:399px;color:#0000cd"><span class="gbt">Current assets</span>
+              <div class="amt" id="lblStoreSpareAmt" style="left:256px;top:184px;width:145px;height:19px">0</div>
+              <div class="cap" id="lblStoreSparePartsCaption" data-note="39" style="left:6px;top:183px;width:199px;height:38px">Store Spare Parts and Loose Tools</div>
+              <div class="amt" id="lblSundaryDebitorAmt" style="left:256px;top:160px;width:145px;height:19px">0</div>
+              <div class="cap" id="lblSundryDebitorCaption" data-note="15" style="left:6px;top:159px;width:199px;height:19px">Sundry Debitors</div>
+              <div class="amt" id="lblTradeDebitorExportAmt" style="left:255px;top:139px;width:145px;height:19px">0</div>
+              <div class="cap" id="lblTradeExportCaption" data-note="14" style="left:6px;top:138px;width:199px;height:19px">Trade Debtors -Export</div>
+              <div class="amt" id="lblAsAdvancesOtherAmt" style="left:255px;top:94px;width:145px;height:19px">0</div>
+              <div class="cap" id="lblAdvanceOtherCaption" data-note="18" style="left:6px;top:93px;width:199px;height:19px">Advance Others</div>
+              <div class="amt" id="lblTradeDebitorsLocalAmt" style="left:255px;top:116px;width:145px;height:19px">0</div>
+              <div class="cap" id="lblTradeLocalCaption" data-note="13" style="left:6px;top:115px;width:199px;height:19px">Trade Debtors -Local</div>
+              <div class="amt" id="lblStockInTradeAmt" style="left:255px;top:71px;width:145px;height:19px">0</div>
+              <div class="cap" id="lblStockTradeCaption" data-note="12" style="left:6px;top:70px;width:199px;height:19px">Stock - In -Trade</div>
+              <div class="ln3d" id="label58" style="left:4px;top:318px;width:402px;height:2px"></div>
+              <div class="tamt" id="lblToCurrAssestsAmt" style="left:253px;top:321px;width:150px;height:23px">0</div>
+              <div class="tcap" id="label60" style="left:6px;top:321px;width:210px;height:23px">Total Current Assests</div>
+              <div class="cap" id="lblCashBankBlncCaption" data-note="20" style="left:6px;top:26px;width:199px;height:19px">Cash and Bank Balances</div>
+              <div class="amt" id="lblAdvPrePaymentsAmt" style="left:255px;top:49px;width:145px;height:19px">0</div>
+              <div class="amt" id="lblCashBankAmt" style="left:255px;top:26px;width:145px;height:19px">0</div>
+              <div class="cap" id="lblAdvancePrePaymCaption" data-note="19" style="left:6px;top:48px;width:199px;height:19px">Advances &amp; PrePayments</div>
+            </div>
+            <div id="panel7" style="left:0px;top:600px;width:904px;height:33px">
+              <div class="gcap" id="label17" style="left:25px;top:4px;width:255px;height:23px">Total Capital and Liabilites</div>
+              <div class="gtot" id="lblToCapitalAndLiabilitiesAmt" style="left:324px;top:4px;width:157px;height:23px">0</div>
+              <div class="gcap" id="label35" style="left:502px;top:4px;width:216px;height:23px">Total Assets</div>
+              <div class="gtot" id="lblTotalAssestsAmt" style="left:744px;top:4px;width:156px;height:23px">0</div>
+            </div>
+        </div></div>
+    </div>
+</div></div>
 
-<div class="grid-caption"><span>Balance Sheet</span><span id="lblStatus"></span></div>
-<div class="stmt-wrap"><div class="stmt" id="panel6" style="width:916px;height:640px;"></div></div>
-
-<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
-<script th:src="@{/build/js/countx_prod_combo.js?v=20260930s}"></script>
-<script th:src="@{/build/js/countx_acc_rpt_h.js?v=20260930s}"></script>
-<script th:src="@{/build/js/countx_bs_pl_breakup.js?v=20260930s}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20261002k}" src="/build/js/countx_prod_combo.js"></script>
+<script th:src="@{/build/js/countx_acc_rpt_h.js?v=20260930s}" src="/build/js/countx_acc_rpt_h.js"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}" src="/build/js/countx_grid_bar.js"></script>
+<script th:src="@{/build/js/countx_bs_pl_breakup.js?v=20261003bs}" src="/build/js/countx_bs_pl_breakup.js"></script>
 <script>
 (function () {
     'use strict';
     var H = AccH, API = '/accounts/api/reports/balance-sheet-62';
-    var ctx = {}, branch = null, dec = 0, dt = [];
+    var ctx = {}, dec = 0, dt = [];
+    var sel = H.$('cmbbranch'), branchMulti = false;
 
-    /* BalanceSheet.InitializeComponent: [groupbox, caption, left, top, width, height, caption width, amount left,
-       rows [captionId, AccountNoteId, default text, top, amountId, amount top, tall],
-       line top, total [label, labelWidth, amountId, amount left, top]] */
-    var GB = [
-        ['groupBox1', 'Owner Equity', 22, 5, 468, 185, 258, 311, [
-            ['lblShareCapitalCaption', 29, 'Share Capital', 31, 'lblCapitalShareAmt', 31],
-            ['lblSharDepositCaption', 36, 'Shared Deposit', 56, 'lblShareDepositAmt', 56],
-            ['lblUnAppropriatedCaption', 34, 'Un-Appropriated P/L', 81, 'lblUnAppropriatedAmt', 81],
-            ['lblReserveCaption', 35, 'Reserves', 106, 'lblReserveAmt', 106],
-            ['lblNetPLCaption', 'PL', 'Net Profit/Loss', 130, 'lblNetPLAmount', 130]],
-            153, ['Total Owner Equity', 258, 'lblToOwnerEquityAmt', 309, 156]],
-        ['groupBox2', 'Non Current Liabilities', 22, 196, 468, 122, 258, 311, [
-            ['lblfinancialLeaseCaption', 37, 'Financial Lease', 26, 'lblFinancialLeaseAmt', 26],
-            ['lblLongTermLoanCaption', 21, 'Long Term Loans', 48, 'lblongTermLoansAmt', 49],
-            ['lblTaxationCaption', 17, 'Taxation', 70, 'lblTaxationAmt', 71]],
-            91, ['Total Non Curr Liabilities', 258, 'lblToNonCurrLiabilitiesAmt', 309, 94]],
-        ['groupBox4', 'Current Liabilities', 22, 319, 468, 276, 258, 312, [
-            ['lblShortTermBorrowingCaption', 22, 'Short Term Borrowings', 32, 'lblShorttermBorrowingAmt', 32],
-            ['lblSalariesPayableCaption', 23, 'Salaries Payables', 55, 'lblSalariesPayablesAmt', 55],
-            ['lblCreditorSuppCaption', 24, 'Crediters Suppliers', 78, 'lblCreditorsSupplierAmt', 78],
-            ['lblTradeCreditorServiceCaption', 25, 'Trade Creditors -Service', 100, 'lblTradeCreditorsServiceAmt', 100],
-            ['lblOtherCreditorCaption', 27, 'Other Creditors', 123, 'lblOtherCreditorsAmt', 123],
-            ['lbltradeOthPayableCaption', 28, 'Trade Others Payables', 146, 'lblOtherPayablesAmt', 146],
-            ['lblLoanAndAdvanceCaption', 16, 'Loan And Advances', 169, 'lblLoanAndAdvancesAmt', 169],
-            ['lblCreditorStoreCaption', 26, 'Creditor Store', 192, 'lblCreditorStoreAmt', 192],
-            ['lblAccuredLiabiltyCaption', 38, 'Accrued Liabilty', 216, 'lblAccuredLiabiltyAmt', 216]],
-            245, ['Total Current Liabilities', 258, 'lblToCurrLiabilitiesAmt', 309, 249]],
-        ['groupBox6', 'Non Current Assets', 496, 5, 408, 185, 199, 255, [
-            ['lblIntangibleassetCaption', 10, 'Intangible Assets', 31, 'lblIntangibleAssestAmt', 31],
-            ['lblLongTermInvestCaption', 31, 'Long Term Investment', 56, 'lblAsLongTrmInvestmentAmt', 56],
-            ['lblPropPlantEquipCaption', 30, 'Property, Plant  Equipment', 81, 'lblAsPropertyPlantAmt', 81],
-            ['lblCWIPCaption', 11, 'Capital Work In Progress', 106, 'lblAcCWIPAmt', 106]],
-            129, ['Total Non Current Assest', 210, 'lblToNonCurrAssestsAmt', 253, 131]],
-        ['groupBox5', 'Current assets', 496, 196, 408, 399, 199, 255, [
-            ['lblCashBankBlncCaption', 20, 'Cash and Bank Balances', 26, 'lblCashBankAmt', 26],
-            ['lblAdvancePrePaymCaption', 19, 'Advances & PrePayments', 48, 'lblAdvPrePaymentsAmt', 49],
-            ['lblStockTradeCaption', 12, 'Stock - In -Trade', 70, 'lblStockInTradeAmt', 71],
-            ['lblAdvanceOtherCaption', 18, 'Advance Others', 93, 'lblAsAdvancesOtherAmt', 94],
-            ['lblTradeLocalCaption', 13, 'Trade Debtors -Local', 115, 'lblTradeDebitorsLocalAmt', 116],
-            ['lblTradeExportCaption', 14, 'Trade Debtors -Export', 138, 'lblTradeDebitorExportAmt', 139],
-            ['lblSundryDebitorCaption', 15, 'Sundry Debitors', 159, 'lblSundaryDebitorAmt', 160],
-            ['lblStoreSparePartsCaption', 39, 'Store Spare Parts and Loose Tools', 183, 'lblStoreSpareAmt', 184, true]],
-            318, ['Total Current Assests', 210, 'lblToCurrAssestsAmt', 253, 321]]
-    ];
+    function busy(b, on) { b.disabled = !!on; b.classList.toggle('btn-busy', !!on); }
+    function isBusy(b) { return b.classList.contains('btn-busy'); }
 
-    function build() {
-        var h = '';
-        GB.forEach(function (g) {
-            h += '<div class="sgb" id="' + g[0] + '" style="left:' + g[2] + 'px;top:' + (g[3] + 4) + 'px;width:' + g[4] + 'px;height:' + g[5] + 'px">'
-               + '<span class="gb-title">' + H.esc(g[1]) + '</span>';
-            g[8].forEach(function (r) {
-                h += '<div class="cap' + (r[6] ? ' tall' : '') + '" id="' + r[0] + '" data-note="' + r[1] + '" style="left:' + (r[0] === 'lblStoreSparePartsCaption' ? 6 : (g[0] === 'groupBox4' ? 4 : 6))
-                   + 'px;top:' + r[3] + 'px;width:' + g[6] + 'px' + (r[6] ? ';height:38px' : '') + '">' + H.esc(r[2]) + '</div>'
-                   + '<div class="amt" id="' + r[4] + '" style="left:' + g[7] + 'px;top:' + r[5] + 'px">0</div>';
-            });
-            var t = g[10];
-            h += '<div class="ln" style="left:4px;top:' + g[9] + 'px;width:' + (g[4] - 10) + 'px"></div>'
-               + '<div class="tl" style="left:6px;top:' + t[4] + 'px;width:' + t[1] + 'px">' + H.esc(t[0]) + '</div>'
-               + '<div class="ta" id="' + t[2] + '" style="left:' + t[3] + 'px;top:' + t[4] + 'px;width:150px">0</div>';
-            h += '</div>';
-        });
-        /* panel7 (Teal, 0,600 904x33) */
-        h += '<div class="grand" id="panel7" style="left:0;top:604px;width:904px;height:33px">'
-           + '<span style="left:25px;width:255px">Total Capital and Liabilites</span>'
-           + '<span class="v" id="lblToCapitalAndLiabilitiesAmt" style="left:324px;width:157px">0</span>'
-           + '<span style="left:502px;width:216px">Total Assets</span>'
-           + '<span class="v" id="lblTotalAssestsAmt" style="left:744px;width:156px">0</span></div>';
-        H.$('panel6').innerHTML = h;
-    }
+    /* caption label -> its amount label (the assignments at the end of BindDatainGrid) */
+    var AMT = { 10: 'lblIntangibleAssestAmt', 11: 'lblAcCWIPAmt', 12: 'lblStockInTradeAmt', 13: 'lblTradeDebitorsLocalAmt', 14: 'lblTradeDebitorExportAmt',
+        15: 'lblSundaryDebitorAmt', 16: 'lblLoanAndAdvancesAmt', 17: 'lblTaxationAmt', 18: 'lblAsAdvancesOtherAmt', 19: 'lblAdvPrePaymentsAmt', 20: 'lblCashBankAmt',
+        21: 'lblongTermLoansAmt', 22: 'lblShorttermBorrowingAmt', 23: 'lblSalariesPayablesAmt', 24: 'lblCreditorsSupplierAmt', 25: 'lblTradeCreditorsServiceAmt',
+        26: 'lblCreditorStoreAmt', 27: 'lblOtherCreditorsAmt', 28: 'lblOtherPayablesAmt', 29: 'lblCapitalShareAmt', 30: 'lblAsPropertyPlantAmt',
+        31: 'lblAsLongTrmInvestmentAmt', 34: 'lblUnAppropriatedAmt', 35: 'lblReserveAmt', 36: 'lblShareDepositAmt', 37: 'lblFinancialLeaseAmt',
+        38: 'lblAccuredLiabiltyAmt', 39: 'lblStoreSpareAmt' };
+    var CAP = {};
+    Array.prototype.forEach.call(document.querySelectorAll('.cap[data-note]'), function (c) { var n = c.getAttribute('data-note'); if (n !== 'PL') CAP[n] = c; });
 
-    /* AccountNotefilter(caption.Text): dt.Select("AccountsNotes='" + Notes + "'") -> ItemArray[5] (AccountNoteId) -> GetBsBreakup */
-    H.$('panel6').addEventListener('click', function (e) {
-        var c = e.target.closest('.cap'); if (!c) return;
-        if (c.id === 'lblNetPLCaption') { window.open('/accounts/reports/profit-and-loss', '_blank'); return; }   /* new frmProfitLossHararical(UserAccount).Show() */
-        var r = dt.filter(function (x) { return String(H.ci(x, 'AccountsNotes')) === c.textContent; });
-        if (!r.length) return;
-        AccHBreakup.open({ status: 0, noteId: +H.ci(r[0], 'AccountNoteId') || 0, rows: dt, dec: dec,
-                           fromDate: ctx.financialYearStart || '', toDate: H.$('todate').value });
-    });
-
-    function body() {
-        return { toDate: H.$('todate').value, branchText: branch ? branch.text() : '', branchId: branch ? branch.id() : 0 };
-    }
     function t(id, v) { H.$(id).textContent = H.both(v, dec); }
 
-    /* BindDatainGrid (:261): the sums per AccountNoteId; the caption takes the row's AccountsNotes. dt.Rows.Clear() first;
-       an empty result returns before any label is touched (the previous figures stay). */
+    /* BindDatainGrid (:266) */
     function bind(rows) {
         dt = rows || [];
-        H.$('lblStatus').textContent = 'Records: ' + dt.length;
-        if (!dt.length) return;
-        var s = {}, cap = {};
-        GB.forEach(function (g) { g[8].forEach(function (r) { if (r[1] !== 'PL') { s[r[1]] = 0; cap[r[1]] = r; } }); });
-        var net = 0;
+        if (!dt.length) return;                                     /* if (dt.Rows.Count <= 0) return; */
+        var s = {}, net = 0;
+        Object.keys(AMT).forEach(function (n) { s[n] = 0; });
         dt.forEach(function (r) {
             if (H.toNum(H.ci(dt[0], 'NetProfitLoss')) !== 0) net = H.toNum(H.ci(dt[0], 'NetProfitLoss'));
-            var n = +H.ci(r, 'AccountNoteId') || 0;
-            if (cap[n]) { s[n] += H.toNum(H.ci(r, 'Amount')); H.$(cap[n][0]).textContent = H.ci(r, 'AccountsNotes') == null ? '' : String(H.ci(r, 'AccountsNotes')); }
+            var n = String(+H.ci(r, 'AccountNoteId') || 0);
+            if (CAP[n]) { s[n] += H.toNum(H.ci(r, 'Amount')); CAP[n].textContent = H.ci(r, 'AccountsNotes') == null ? '' : String(H.ci(r, 'AccountsNotes')); }
         });
-        Object.keys(cap).forEach(function (n) { t(cap[n][4], s[n]); });
+        Object.keys(AMT).forEach(function (n) { t(AMT[n], s[n]); });
         t('lblNetPLAmount', net);
         var ShareCapital = s[29], SharedDeposit = s[36], UnAppropriated = s[34], Reserves = s[35];
         var LongTermLoans = s[21], FinancialLease = s[37], Taxation = s[17];
@@ -171,51 +243,102 @@
         var IntangibleAssets = s[10], LongTermInvestment = s[31], PropertyPlantEquipment = s[30], CWIP = s[11];
         var CashandBank = s[20], AdvancesAndPrePayments = s[19], StockInTrade = s[12], SundryDebtors = s[15], StoresSpare = s[39], AdvanceOthers = s[18],
             TradeDebtorLocal = s[13], TradeDebtorsExport = s[14];
-        var equity = ShareCapital + SharedDeposit + UnAppropriated + Reserves + net;
-        var nonCurrLiab = LongTermLoans + FinancialLease + Taxation;
-        var currLiab = ShortTermBorrowings + SaleriesPayables + CreditorsPaddyRice + TradeCreditorService + OtherCreditors + CreditorsAccrued + TradeOthersPayables + LoanAndAdvances + CreditorsStore;
-        var nonCurrAssets = IntangibleAssets + (LongTermInvestment + (PropertyPlantEquipment + CWIP));
-        var currAssets = CashandBank + AdvancesAndPrePayments + StockInTrade + SundryDebtors + StoresSpare + AdvanceOthers + TradeDebtorLocal + TradeDebtorsExport;
-        t('lblToOwnerEquityAmt', equity);
-        t('lblToNonCurrLiabilitiesAmt', nonCurrLiab);
-        t('lblToCurrLiabilitiesAmt', currLiab);
-        t('lblToCapitalAndLiabilitiesAmt', nonCurrLiab + currLiab + equity);
-        t('lblToNonCurrAssestsAmt', nonCurrAssets);
-        t('lblToCurrAssestsAmt', currAssets);
-        t('lblTotalAssestsAmt', currAssets + nonCurrAssets);
+        t('lblToOwnerEquityAmt', ShareCapital + SharedDeposit + UnAppropriated + Reserves + net);
+        t('lblToNonCurrLiabilitiesAmt', LongTermLoans + FinancialLease + Taxation);
+        t('lblToCurrLiabilitiesAmt', ShortTermBorrowings + SaleriesPayables + CreditorsPaddyRice + TradeCreditorService + OtherCreditors + CreditorsAccrued + TradeOthersPayables + LoanAndAdvances + CreditorsStore);
+        t('lblToCapitalAndLiabilitiesAmt', LongTermLoans + FinancialLease + Taxation + ShortTermBorrowings + SaleriesPayables + CreditorsPaddyRice + TradeCreditorService
+            + OtherCreditors + CreditorsAccrued + TradeOthersPayables + LoanAndAdvances + CreditorsStore + ShareCapital + SharedDeposit + UnAppropriated + Reserves + net);
+        t('lblToNonCurrAssestsAmt', IntangibleAssets + (LongTermInvestment + (PropertyPlantEquipment + CWIP)));
+        t('lblToCurrAssestsAmt', CashandBank + AdvancesAndPrePayments + StockInTrade + SundryDebtors + StoresSpare + AdvanceOthers + TradeDebtorLocal + TradeDebtorsExport);
+        t('lblTotalAssestsAmt', CashandBank + SundryDebtors + StoresSpare + AdvancesAndPrePayments + StockInTrade + AdvanceOthers + TradeDebtorLocal + TradeDebtorsExport
+            + IntangibleAssets + LongTermInvestment + PropertyPlantEquipment + CWIP);
     }
 
+    /* cmbbranch: Text (checked names joined by ",") for features 17+18, Value for 17 only */
+    function branchText() {
+        if (!ctx.branchFeature) return '';
+        if (branchMulti) return Array.prototype.filter.call(sel.options, function (o) { return o.selected && o.value !== ''; }).map(function (o) { return o.text; }).join(',');
+        return sel.selectedIndex >= 0 && sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : '';
+    }
+    function branchId() { return ctx.branchFeature && !branchMulti ? (+sel.value || 0) : 0; }
+    function body() { return { toDate: H.$('todate').value, branchText: branchText(), branchId: branchId() }; }
+
+    /* btnshow_Click (:504): wf.Show(); BindDatainGrid(); MessageBox on error */
     function show() {
-        var btn = H.$('btnshow'); btn.disabled = true;
+        var b = H.$('btnshow');
+        if (isBusy(b)) return Promise.resolve();
+        busy(b, true);
         return H.api('POST', API + '/show', body()).then(bind)
             .catch(function (e) { H.box(e.message); })
-            .then(function () { btn.disabled = false; });
-    }
-    /* toolStripButton1_Click - 153-BalanceSheetStatementRpt.rpt over SpAccounts_BalanceSheetFormatA_ForCrystal */
-    function print153() {
-        H.api('POST', API + '/print153', body()).then(function (rows) {
-            H.printRows('153 - Balance Sheet', 'Browser output of SpAccounts_BalanceSheetFormatA_ForCrystal - not the Crystal layout.', Object.keys(rows[0]), rows,
-                function (c, v) { return typeof v === 'number' && /Amount|Debit|Credit|Balance|NetProfit/i.test(c) ? H.both(v, dec) : (v == null ? '' : v); });
-        }).catch(function (e) { H.box(e.message); });
+            .then(function () { busy(b, false); });
     }
 
-    build();
-    /* todate: DateTimePicker default = today; reset() (Refresh) only focuses it */
-    H.$('todate').value = H.today();
+    /* toolStripButton1_Click (:522): AccountsBalanceSheetStandardForCrystal -> "Not Record Found For Display" or
+       ShowReportWithDataTable(dt, "153-BalanceSheetStatementRpt.rpt") with @CompanyName / @CompanyAddress (server side). */
+    function print153() {
+        var b = H.$('toolStripButton1');
+        if (isBusy(b)) return;
+        busy(b, true);
+        var win = window.open('about:blank', '_blank');          /* opened inside the click so no pop-up blocker stops it */
+        H.api('POST', API + '/print153', body()).then(function (rows) {
+            return fetch('/reports/print/grid', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ rpt: '153-BalanceSheetStatementRpt.rpt', title: null, rows: rows }) })
+                .then(function (r) {
+                    var type = r.headers.get('Content-Type') || '';
+                    if (r.ok && type.indexOf('application/pdf') === 0) return r.blob().then(function (bl) { win.location = URL.createObjectURL(bl); });
+                    return r.text().then(function (x) { try { win.close(); } catch (e) { } H.box(x || ('Print failed (' + r.status + ')')); });
+                });
+        }).catch(function (e) { try { if (win) win.close(); } catch (x) { } H.box(e.message); })
+          .then(function () { busy(b, false); });
+    }
+
+    /* Caption Click -> AccountNotefilter(caption.Text) -> GetBsBreakup(NoteId, dt) (BSandPLBreakup.ShowDialog);
+       lblNetPLCaption_Click -> new frmProfitLossHararical(UserAccount).Show() */
+    H.$('stmt').addEventListener('click', function (e) {
+        var c = e.target.closest('.cap'); if (!c) return;
+        if (c.id === 'lblNetPLCaption') { window.open('/accounts/reports/profit-and-loss', '_blank'); return; }
+        var r = dt.filter(function (x) { return String(H.ci(x, 'AccountsNotes')) === c.textContent; });
+        if (!r.length) return;
+        AccHBreakup.open({ status: 0, noteId: +H.ci(r[0], 'AccountNoteId') || 0, rows: dt, dec: dec,
+                           fromDate: ctx.financialYearStart || '', toDate: H.$('todate').value });
+    });
+
     H.$('btnshow').addEventListener('click', show);
+    /* btnNew_Click -> reset(): todate.Focus() only */
     H.$('btnNew').addEventListener('click', function () { H.$('todate').focus(); });
     H.$('toolStripButton1').addEventListener('click', print153);
+    /* toolStrip mnemonic &Refresh (the form has no KeyDown handler) */
+    document.addEventListener('keydown', function (e) {
+        if (e.altKey && !e.ctrlKey && (e.key || '').toUpperCase() === 'R') { e.preventDefault(); H.$('btnNew').click(); }
+    });
 
-    /* BalanceSheet_Load: features 17/18, BranchFill when 17 is on (else the Branch label/combo are hidden), then BindDatainGrid */
+    /* DateTimePicker default = Now */
+    H.$('todate').value = H.today();
+
+    /* BalanceSheet_Load (:563): features 17/18; BranchFill when 17 is on, else Branch hidden + btnshow at (194,7); BindDatainGrid */
+    H.$('btnshow').disabled = true;
     H.api('GET', API + '/init').then(function (c) {
-        ctx = c; dec = c.amountDecimals || 0;
-        if (!c.branchFeature) { H.$('lblBranch').classList.add('is-hidden'); H.$('cmbbranch').classList.add('is-hidden'); }
-        else branch = H.branchCombo(H.$('cmbbranch'), c);
+        ctx = c || {}; dec = ctx.amountDecimals || 0;
+        H.$('btnshow').disabled = false;
+        if (!ctx.branchFeature) {
+            H.$('btnshow').classList.add('nobranch');
+        } else {
+            /* BranchFill: GetBranchesFromVouchersByAccountId, BindDDL Id/BranchName ("Branch Name"), checked list with 17+18,
+               Text = UserAccount.BranchName */
+            branchMulti = !!ctx.branchFeatureConsolidated;
+            if (branchMulti) { sel.multiple = true; sel.setAttribute('data-dtcombo', 'single'); sel.setAttribute('data-dtcombo-checked', ''); }
+            else sel.setAttribute('data-dtcombo', 'single');
+            sel.innerHTML = (branchMulti ? '' : '<option value=""></option>') + (ctx.branches || []).map(function (b) {
+                return '<option value="' + H.esc(b.Id) + '">' + H.esc(b.BranchName) + '</option>';
+            }).join('');
+            Array.prototype.forEach.call(sel.options, function (o) { if (o.value !== '' && o.text === String(ctx.userBranchName || '')) o.selected = true; });
+            H.$('lblBranch').classList.remove('is-hidden'); H.$('cmbbranchBox').classList.remove('is-hidden');
+            if (window.DesktopCombo && DesktopCombo.enhance) DesktopCombo.enhance(sel);
+        }
         H.$('todate').focus();
         return show();
-    }).catch(function (e) { H.box(e.message); });
+    }).catch(function (e) { H.$('btnshow').disabled = false; H.box(e.message); });
 })();
 </script>
-<script src="/js/print-rpt.js?v=20261001a"></script>
 </body>
 </html>

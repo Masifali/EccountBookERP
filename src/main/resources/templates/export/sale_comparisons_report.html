@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Sale Comparisons Report - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_rptb.css?v=20260930a}"/>
+</head>
+<!-- ExportCustomerWiseComparisonsSummeryReport.cs (Architecture.WinApp.ExportReports), screen 759 "5007 Sale Comparisons Report",
+     ClientSize 1128 x 511 (AutoScrollMinSize 980 x 600).
+     tsItemType: btnnew "&New" | btnRefreshSummary "&Refresh" | btnReport "Format1-534" (hidden) | btnFormat2 "Format2-535" (hidden) |
+       btn536Report "536-CustomerWiseComparison" | btnPrint536_01 "536_01 Print" | btnShortcut "ShortCut Keys" - GridBind shows the buttons of the
+       chosen report type (534/535 for the two-group comparisons, 536 for the other comparisons, 536_01 for Detail).
+     panel5 (Teal) label3 "Export Sale Report With Activities". panel3 filters: CmbReportType "Report Type" (SpStaticColumnNames, Rows[0] Detail),
+       datFromDate / datToDate "From && To Date" (ShowCheckBox; From = today - 15), CmbItemCategory "Item Category", CmbItemType "Item Type",
+       CmbItemName "Item Name", CmbCustomerName "Customer Name", CmbSalePerson "Sales Person", CmbContractNo "Contract No", CmbInvoiceNo "Invoice No",
+       CmbSeaPort "Destination Port", CmbItemStockAccountHistory "Item Stock A/c" (never bound on the desktop - only set by a calling form), BtnShow "Show".
+     panel2 (Teal) label10 "Filtered Records" + ctrlGrdBar1; grdfrm (Detail: links InvoiceNo 521, ContractNo contract detail, ContainerNos 560,
+       NoOfAttachments; summary: GroupName captioned by GroupCaption, two-group types grouped by GroupName with group totals).
+     Events: Load, BtnShow/btnnew/btnRefreshSummary/btnReport/btnFormat2/btn536Report/btnPrint536_01/btnShortcut Click, grdfrm LinkClicked, KeyDown. -->
+<body class="pd-body" data-export-page="rptb-759">
+<div class="pd-form ex-form">
+    <div class="win-tool-strip">
+        <button type="button" id="btnnew" class="win-btn-tool" onclick="ExportCmp.reset()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+        <button type="button" id="btnRefreshSummary" class="win-btn-tool" onclick="ExportCmp.refresh(this)"><i class="fa fa-refresh"></i> <span><u>R</u>efresh</span></button>
+        <button type="button" id="btnReport" class="win-btn-tool is-hidden" onclick="ExportCmp.print('exp-534', this)"><i class="fa fa-print"></i> <span>Format1-534</span></button>
+        <button type="button" id="btnFormat2" class="win-btn-tool is-hidden" onclick="ExportCmp.print('exp-535', this)"><i class="fa fa-print"></i> <span>Format2-535</span></button>
+        <button type="button" id="btn536Report" class="win-btn-tool" onclick="ExportCmp.print('exp-536', this)"><i class="fa fa-print"></i> <span>536-CustomerWiseComparison</span></button>
+        <button type="button" id="btnPrint536_01" class="win-btn-tool" onclick="ExportCmp.print('exp-536-01', this)"><i class="fa fa-print"></i> <span>536_01 Print</span></button>
+        <button type="button" id="btnShortcut" class="win-btn-tool" onclick="ExportCmp.shortcuts()"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+    </div>
+    <div class="rptb-title"><span id="label3">Export Sale Report With Activities</span></div>
+
+    <div class="rptb-filters">
+        <div class="rptb-row">
+            <div class="ex-field w-l"><label for="CmbReportType">Report Type</label>
+                <select id="CmbReportType" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Report Name"></select></div>
+            <div class="ex-field w-xl"><label for="datFromDate">From &amp; To Date</label>
+                <div class="ex-pair" style="grid-template-columns:1fr 1fr;">
+                    <span class="ex-check"><input type="checkbox" id="datFromDateChk" checked/><input type="date" id="datFromDate" class="win-date" style="flex:1;"/></span>
+                    <span class="ex-check"><input type="checkbox" id="datToDateChk" checked/><input type="date" id="datToDate" class="win-date" style="flex:1;"/></span>
+                </div></div>
+            <div class="ex-field w-m"><label for="CmbItemCategory">Item Category</label>
+                <select id="CmbItemCategory" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Category"></select></div>
+            <div class="ex-field w-m"><label for="CmbItemType">Item Type</label>
+                <select id="CmbItemType" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Type"></select></div>
+            <div class="ex-field w-l"><label for="CmbItemName">Item Name</label>
+                <select id="CmbItemName" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Name"></select></div>
+        </div>
+        <div class="rptb-row" style="margin-top:4px;">
+            <div class="ex-field w-l"><label for="CmbCustomerName">Customer Name</label>
+                <select id="CmbCustomerName" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Customer Name"></select></div>
+            <div class="ex-field w-m"><label for="CmbSalePerson">Sales Person</label>
+                <select id="CmbSalePerson" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Sales Person"></select></div>
+            <div class="ex-field w-m"><label for="CmbContractNo">Contract No</label>
+                <select id="CmbContractNo" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Contract No"></select></div>
+            <div class="ex-field w-m"><label for="CmbInvoiceNo">Invoice No</label>
+                <select id="CmbInvoiceNo" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Invoice No"></select></div>
+            <div class="ex-field w-m"><label for="CmbSeaPort">Destination Port</label>
+                <select id="CmbSeaPort" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Port Name"></select></div>
+            <div class="ex-field w-m"><label for="CmbItemStockAccountHistory">Item Stock A/c</label>
+                <select id="CmbItemStockAccountHistory" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Stock A/c"><option value="0"></option></select></div>
+            <div class="ex-field"><label>&nbsp;</label><button type="button" id="BtnShow" class="win-btn-small rptb-show" onclick="ExportCmp.show(this)">Show</button></div>
+        </div>
+    </div>
+
+    <div class="pd-caption pd-caption-teal pd-history-bar" style="height:24px;"><span id="label10">Filtered Records</span>
+        <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdBox" title="Fullscreen table">&#x26F6;</button><span id="gridBarMount" class="pd-gridbar-mount"></span></span></div>
+    <div class="ex-grid-box" id="grdBox">
+        <div class="ex-grid-scroll ex-hfill">
+            <table class="win-grid" id="grdfrm" data-gridbar="ExportCustomerWiseComparisonsSummeryReport:grdfrm" data-gridbar-mount="#gridBarMount" data-gridbar-reorder="false"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+        </div>
+        <div class="ex-grid-empty is-hidden" id="grdEmpty">No record found.</div>
+    </div>
+    <div class="win-footer-strip"><span class="ex-footer-left">ExportCustomerWiseComparisonsSummeryReport</span></div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_export_rptb_common.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_export_sale_comparisons_report.js?v=20260930a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

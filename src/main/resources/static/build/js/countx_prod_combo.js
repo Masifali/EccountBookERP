@@ -25,6 +25,8 @@
  *     `wrap .dtcombo-input`, tests `.dtcombo-pop[style*="block"]` and treats focus inside the wrap
  *     or the popup as "still in the combo" (the UltraCombo Leave events). The popup therefore lives
  *     INSIDE the wrap, so moving focus into its search box is not a Leave;
+ *   - 2026-10-02: a CHECKED multi-select mode, opt-in only: <select multiple data-dtcombo="single"
+ *     data-dtcombo-checked> (the desktop's checked UltraCombo - see CheckedCombo below).
  *   - the column families (data-dtcombo="prJobOrder" etc.) for the multi-column combos, hidden
  *     options, disabled options, rows added to the document later.
  * ============================================================================================ */
@@ -36,6 +38,20 @@
     var openInstance = null;
     var seq = 0;
     var MAX_ROWS = 500;
+
+    /* 2026-10-03 (additive): CHECKED-ONLY companion mode, for a page that keeps ANOTHER dropdown
+       library for its single combos (countx_desktop_combo.js on Sale / Purchase / CMAGT, select2 on
+       the dashboards) and loads this file only for its checked multi-selects. Switched on by
+       <script src=".../countx_prod_combo.js" data-dtcombo-checked-only>, by window.DTCOMBO_CHECKED_ONLY,
+       or automatically when countx_desktop_combo.js already defined window.DesktopCombo. In this mode
+       only <select multiple data-dtcombo-checked> is enhanced, nothing else is claimed, and the existing
+       window.DesktopCombo is left alone (this API is window.DesktopCheckedCombo). A page that loads this
+       file on its own behaves exactly as before. */
+    var CUR_SCRIPT = doc.currentScript;
+    var CHECKED_ONLY = !!(global.DTCOMBO_CHECKED_ONLY
+        || (CUR_SCRIPT && CUR_SCRIPT.hasAttribute && CUR_SCRIPT.hasAttribute('data-dtcombo-checked-only'))
+        || (global.DesktopCombo && global.DesktopCombo.design !== 'store'));
+    var CHECKED_SELECTOR = 'select[multiple][data-dtcombo-checked]';
 
     function esc(v) {
         return String(v === undefined || v === null ? '' : v)
@@ -656,6 +672,188 @@
         if (this.pop && this.pop.parentNode) this.pop.parentNode.removeChild(this.pop);
     };
 
+    // ------------------------------------------------- checked (multi-select) mode, 2026-10-02
+    /* The desktop's CHECKED UltraCombo (VoucherValidation.cs VouchertypeFill, cmbdoctype): a bool
+       "Selected" column at VisiblePosition 0 with a header check box (HeaderCheckBoxVisibility.Always),
+       CheckedListSettings.EditorValueSource = CheckedItems, ListSeparator ",", ItemCheckArea = Item
+       (a click anywhere on the row toggles it). The field shows the checked texts joined by ",".
+       OPT-IN ONLY: <select multiple data-dtcombo="single" data-dtcombo-checked>. A single select never
+       reaches this code, and a multiple select without data-dtcombo-checked is still left alone.
+       The native <select multiple> stays authoritative: option.selected is what a pick toggles,
+       jQuery .val() returns the array, .val([...]) / .val([]) refresh the field, and every toggle
+       fires a bubbling input + change (the UltraCombo's ValueChanged per check). */
+    function CheckedCombo(sel) { Combo.call(this, sel); }
+    CheckedCombo.prototype = Object.create(Combo.prototype);
+    CheckedCombo.prototype.constructor = CheckedCombo;
+    CheckedCombo.prototype.checkedMode = true;
+    CheckedCombo.prototype.multi = function () { return false; };
+
+    CheckedCombo.prototype.build = function () {
+        Combo.prototype.build.call(this);
+        this.wrap.classList.add('pcx-checked');
+        this.pop.classList.add('pcx-checked-pop');
+        this.search.placeholder = 'Search...';
+    };
+
+    CheckedCombo.prototype.checkedTexts = function () {
+        var out = [], opts = this.sel.options;
+        for (var i = 0; i < opts.length; i++) if (opts[i].selected && (opts[i].value !== '' || opts[i].textContent.trim())) out.push(opts[i].textContent.trim());
+        return out;
+    };
+
+    /** The checked values, in list order (what jQuery .val() returns, without the empty slot). */
+    CheckedCombo.prototype.values = function () {
+        var out = [], opts = this.sel.options;
+        for (var i = 0; i < opts.length; i++) if (opts[i].selected && opts[i].value !== '') out.push(opts[i].value);
+        return out;
+    };
+
+    CheckedCombo.prototype.syncFromSelect = function () {
+        if (this.__inSync) return;
+        this.__inSync = true;
+        try {
+            this.cols = columnsFor(this.sel);
+            this.readOptions();
+            this.input.value = this.checkedTexts().join(',');
+            this.input.title = this.input.value;
+        } finally { this.__inSync = false; }
+    };
+
+    CheckedCombo.prototype.applyFilter = function (q) {
+        Combo.prototype.applyFilter.call(this, q);
+        /* the "nothing selected" slot has nothing to check */
+        this.filtered = this.filtered.filter(function (r) { return !((r.value === '0' || r.value === '') && !String(r.text).trim()); });
+        if (this.active >= this.filtered.length) this.active = this.filtered.length ? 0 : -1;
+        if (this.active < 0 && this.filtered.length) this.active = 0;
+    };
+
+    CheckedCombo.prototype.render = function () {
+        var self = this, rows = this.filtered;
+        this.pop.classList.remove('is-cols');
+        if (!rows.length) { this.list.innerHTML = '<div class="cx-combo-empty">No match</div>'; return; }
+        var all = rows.every(function (r) { return r.disabled || r.opt.selected; });
+        var some = rows.some(function (r) { return r.opt.selected; });
+        var caption = (this.cols[0] && this.cols[0].caption) || '';
+        var keep = this.list.scrollTop;
+        this.list.innerHTML = '<table class="cx-combo-table pcx-check-table"><thead><tr>'
+            + '<th class="pcx-check"><input type="checkbox" class="pcx-check-all" tabindex="-1"' + (all ? ' checked' : '') + ' title="Check / uncheck all"></th>'
+            + '<th>' + esc(caption) + '</th></tr></thead><tbody>'
+            + rows.map(function (r, i) {
+                return '<tr class="cx-combo-item' + (i === self.active ? ' is-active' : '') + (r.disabled ? ' is-disabled' : '')
+                     + (r.opt.selected ? ' is-checked' : '') + '" data-i="' + i + '">'
+                     + '<td class="pcx-check"><input type="checkbox" tabindex="-1"' + (r.opt.selected ? ' checked' : '') + (r.disabled ? ' disabled' : '') + '></td>'
+                     + '<td>' + (String(r.text) ? esc(r.text) : '&nbsp;') + '</td></tr>';
+            }).join('')
+            + '</tbody></table>';
+        var hc = this.list.querySelector('.pcx-check-all');
+        if (hc) hc.indeterminate = some && !all;
+        this.list.scrollTop = keep;
+    };
+
+    /** ItemCheckArea = Item: a click anywhere on the row toggles it; the box stays open. */
+    CheckedCombo.prototype.toggle = function (row) {
+        if (!row || row.disabled) return;
+        row.opt.selected = !row.opt.selected;
+        this.syncFromSelect();
+        this.render();
+        this.fire();
+    };
+
+    /** The header check box: checks every row the search shows, or unchecks them when all are checked. */
+    CheckedCombo.prototype.toggleAll = function () {
+        var rows = this.filtered.filter(function (r) { return !r.disabled; });
+        if (!rows.length) return;
+        var to = !rows.every(function (r) { return r.opt.selected; });
+        rows.forEach(function (r) { r.opt.selected = to; });
+        this.syncFromSelect();
+        this.render();
+        this.fire();
+    };
+
+    /** Programmatic: setValues(['5','7']) / setValues([]) - checks exactly those values, fires change once. */
+    CheckedCombo.prototype.setValues = function (vals, silent) {
+        var want = {};
+        (vals || []).forEach(function (v) { want[String(v)] = true; });
+        var opts = this.sel.options, changed = false;
+        for (var i = 0; i < opts.length; i++) {
+            var on = !!want[opts[i].value];
+            if (opts[i].selected !== on) { opts[i].selected = on; changed = true; }
+        }
+        this.syncFromSelect();
+        if (this.open) this.render();
+        if (changed && !silent) this.fire();
+    };
+
+    /* Enter / a click toggle without closing (a choose() would close the box), Tab and Esc close. */
+    CheckedCombo.prototype.choose = function (row) { this.toggle(row); };
+
+    CheckedCombo.prototype.bindEvents = function () {
+        var self = this, input = this.input, search = this.search;
+
+        function toggleOpen(e) {
+            if (e.button !== 0 || self.sel.disabled) return;
+            e.preventDefault();
+            if (self.open) { self.closePop(true); return; }
+            input.focus({ preventScroll: true });
+            self.openPop('');
+        }
+        input.addEventListener('mousedown', toggleOpen);
+        this.caret.addEventListener('mousedown', toggleOpen);
+
+        input.addEventListener('keydown', function (e) {
+            if (self.sel.disabled || e.ctrlKey || e.metaKey) return;
+            if (e.key && e.key.length === 1 && !e.altKey && e.key !== ' ') { e.preventDefault(); self.openPop(e.key); }
+            else if (e.key === 'F4' || (e.altKey && e.key === 'ArrowDown') || e.key === ' ') { e.preventDefault(); self.openPop(''); }
+            else if (e.key === 'Delete') { e.preventDefault(); self.setValues([]); }
+        });
+
+        search.addEventListener('input', function () { self.applyFilter(search.value); self.list.scrollTop = 0; self.render(); });
+        search.addEventListener('keydown', function (e) {
+            var k = e.key;
+            if (k === 'ArrowDown') { e.preventDefault(); e.stopPropagation(); self.move(1); }
+            else if (k === 'ArrowUp') { e.preventDefault(); e.stopPropagation(); self.move(-1); }
+            else if (k === 'Enter') {
+                e.preventDefault(); e.stopPropagation();
+                if (self.active >= 0) self.toggle(self.filtered[self.active]);
+            }
+            else if (k === 'Escape') { e.preventDefault(); e.stopPropagation(); self.closePop(true); }
+            else if (k === 'Tab') { self.closePop(false); }
+        });
+
+        this.pop.addEventListener('mousedown', function (e) {
+            if (e.target === search) return;
+            e.preventDefault();
+            if (e.target.closest && e.target.closest('.pcx-check-all, thead')) { self.toggleAll(); return; }
+            var it = e.target.closest ? e.target.closest('.cx-combo-item') : null;
+            if (it && !it.classList.contains('is-disabled')) {
+                self.active = parseInt(it.getAttribute('data-i'), 10);
+                self.toggle(self.filtered[self.active]);
+            }
+        });
+        /* the check boxes are drawn, not used: their own click must not flip them a second time */
+        this.pop.addEventListener('click', function (e) {
+            if (e.target && e.target.type === 'checkbox') e.preventDefault();
+        });
+        this.pop.addEventListener('mousemove', function (e) {
+            var it = e.target.closest ? e.target.closest('.cx-combo-item') : null;
+            if (!it) return;
+            var i = parseInt(it.getAttribute('data-i'), 10);
+            if (i !== self.active) {
+                self.active = i;
+                var items = self.list.querySelectorAll('.cx-combo-item');
+                for (var j = 0; j < items.length; j++) items[j].classList.toggle('is-active', j === i);
+            }
+        });
+
+        this.wrap.addEventListener('focusout', function (e) {
+            if (!self.open) return;
+            if (e.relatedTarget && self.wrap.contains(e.relatedTarget)) return;
+            setTimeout(function () {
+                if (self.open && !self.wrap.contains(doc.activeElement)) self.closePop(false);
+            }, 0);
+        });
+    };
+
     // ------------------------------------------------------------------ public API
 
     var CLAIMED = [
@@ -670,7 +868,16 @@
     function enhance(sel) {
         if (!sel || sel.tagName !== 'SELECT') return null;
         if (sel.__dtcombo) return sel.__dtcombo;
-        if (sel.multiple || sel.size > 1) return null;
+        if (CHECKED_ONLY && !(sel.multiple && sel.hasAttribute('data-dtcombo-checked'))) return null;
+        if (sel.multiple || sel.size > 1) {
+            /* 2026-10-02: the checked mode is opt-in (data-dtcombo-checked); every other multiple /
+               list-box select is left alone, exactly as before. */
+            if (!sel.multiple || !sel.hasAttribute('data-dtcombo-checked') || sel.hasAttribute('data-dtcombo-skip')) return null;
+            var cc = new CheckedCombo(sel);
+            sel.__dtcombo = cc;
+            INSTANCES.push(cc);
+            return cc;
+        }
         if (sel.hasAttribute('data-dtcombo-skip')) return null;
         if (sel.hasAttribute('data-select2-id')) return null;
         if (sel.previousElementSibling && sel.previousElementSibling.classList
@@ -682,7 +889,7 @@
     }
 
     function init(selector) {
-        var list = doc.querySelectorAll(selector || CLAIMED);
+        var list = doc.querySelectorAll(selector || (CHECKED_ONLY ? CHECKED_SELECTOR : CLAIMED));
         var n = 0;
         for (var i = 0; i < list.length; i++) if (enhance(list[i])) n++;
         return n;
@@ -695,13 +902,17 @@
         openInstance.closePop(false);
     }, true);
     doc.addEventListener('scroll', function (e) {
-        if (openInstance && !openInstance.pop.contains(e.target)) openInstance.closePop(false);
+        /* 2026-10-03: ticking a row in checked mode toggles option.selected on the hidden native <select multiple>,
+           which makes the browser scroll that select - that scroll must not close the popup. */
+        var t = e.target;
+        if (openInstance && t && (t === openInstance.sel || (t.classList && t.classList.contains('dtcombo-native')))) return;
+        if (openInstance && !openInstance.pop.contains(t)) openInstance.closePop(false);
     }, true);
     global.addEventListener('resize', function () { if (openInstance) openInstance.closePop(false); });
 
     tryHookJQuery();
 
-    global.DesktopCombo = {
+    var API = {
         init: init,
         enhance: enhance,
         claimed: CLAIMED,
@@ -711,6 +922,8 @@
         define: function (name, cols) { FAMILIES[name] = cols; },
         refresh: function () { return init(); }
     };
+    global.DesktopCheckedCombo = API;
+    if (!CHECKED_ONLY) global.DesktopCombo = API;   /* checked-only: keep the page's own DesktopCombo */
 
     /* Rows built after load ("+ Add Row", re-rendered grids) are enhanced too, one pass per batch. */
     var rescanQueued = false;

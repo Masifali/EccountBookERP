@@ -8,7 +8,7 @@
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
     <link rel="stylesheet" th:href="@{/build/css/countx_acc_rpt_f.css?v=20260930s}">
     <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260930s}">
-    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20261002gv}">
 </head>
 <!--
   Screen 69 "Accounts Activity Summary Report" - Architecture.WinApp.Account_Reports.ActicitySummery.
@@ -36,7 +36,7 @@
             <span class="lbl as-rt" style="display:none;">Report Type</span><select data-dtcombo="single" data-dtcombo-caption="Report Type" id="CmbReportType" class="inp as-rt" style="display:none;"></select>
             <span class="lbl">From Date</span><input type="date" id="fromdate" class="inp">
             <span class="lbl">To Date</span><input type="date" id="todate" class="inp">
-            <span class="lbl">Doc_Types</span><select id="CmbDocumentType" class="inp" multiple style="grid-column: span 3;"></select>
+            <span class="lbl">Doc_Types</span><select id="CmbDocumentType" class="inp" multiple data-dtcombo="single" data-dtcombo-checked data-dtcombo-caption="Document Type" style="grid-column: span 3;"></select>
             <span class="lbl as-br" style="display:none;">Branches</span><select id="CmbBranches" class="inp as-br" style="display:none; grid-column: span 3;"></select>
             <span class="lbl as-lang" style="display:none;">Language</span><select data-dtcombo="single" data-dtcombo-caption="Language" id="CmbLanguage" class="inp as-lang" style="display:none; grid-column: span 3;"></select>
         </div>
@@ -60,11 +60,12 @@
 <div class="grid-wrap"><table class="wg" id="grd"></table></div>
 
 <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
-<script th:src="@{/build/js/countx_prod_combo.js?v=20260930s}"></script>
-<script th:src="@{/build/js/countx_acc_rpt_f.js?v=20260930s}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20261002gv}"></script>
+<script th:src="@{/build/js/countx_acc_rpt_f.js?v=20261002gv}"></script>
 <script>
     /* Searchable dropdowns (countx_prod_combo.js, 2026-09-30 R2): every single select carries data-dtcombo="single";
-       the wrap takes the select's grid placement and its initial hidden state; multi-selects stay native. */
+       the wrap takes the select's grid placement and its initial hidden state. 2026-10-02: the multi-selects (Doc_Types,
+       consolidated Branches) are the desktop's CHECKED combos (data-dtcombo-checked, countx_prod_combo.js checked mode). */
     function comboInit() {
         if (!window.DesktopCombo) return;
         $('select[data-dtcombo]').each(function () {
@@ -75,9 +76,9 @@
         });
     }
     function comboFocus(sel) { const $i = $(sel).closest('.dtcombo-wrap').find('.dtcombo-input'); ($i.length ? $i : $(sel)).focus(); }
-    /* CmbBranches is a native multi-select under ERP feature 18 (consolidated), otherwise a single searchable combo. */
+    /* CmbBranches is a checked multi-select combo under ERP feature 18 (consolidated), otherwise a single searchable combo. */
     function branchesCombo(consolidated) {
-        if (consolidated) return;
+        if (consolidated) $('#CmbBranches').attr({ multiple: 'multiple', 'data-dtcombo-checked': '' });
         $('#CmbBranches').attr({ 'data-dtcombo': 'single', 'data-dtcombo-caption': 'Branches' });
         comboInit();
     }

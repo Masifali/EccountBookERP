@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Third Party Inspection - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_export_third_party_inspection.css?v=20261001a}"/>
+</head>
+<!-- frmThirdPartyInspection.cs (Architecture.WinApp.Export), screen 857 "Third Party Inspection", ClientSize 1362 x 754,
+     ScreenName frmThirdPartyInspection. tabControl1: "Form" | "History".
+     Form: toolstrip New / Refresh / Save / Update(hidden) / Attachment / 514-Print / 514_01-Print / Stock Reserved Form / Tracking Report /
+       Country Definition / ShortCut Keys; panel28 "Pre Shipment 3rd Party Inspection Request";
+       panel1 (1348 x 418): groupBox1 "Requesting Company (Export Department)" (352) - All / Pending(default) / Complete radios, Lot Code /
+         Tracking No (editable combo, Leave -> ReadById), Request Lodge Date, Request Reference No, Requested By (+lookup), Request Medium,
+         Job Lot (+define), Exporter Lot / Ref #, Item / Product (Name / Code radios), M.Tons, Inspection Agency, Agency Country, Product
+         Origin, Farming N Trade, Sampling Responsibility;
+       groupBox2 "Inspection Company" (331) - Courier Tracking No., Sample Dispatched (chk), Transit Days (3), Sample ETA Destination (disabled),
+         Sample ATA Destination (chk), Remarks, Report / Certificate No., Report Date, Date of Inspection, Result Date, Result Status, Result
+         Remarks, Lot Current Stage (disabled);
+       groupBox4 "Required Analysis" (Analysis Group + grdParameters with selector) and groupBox3 "Lab Information" (Enabled = false);
+       panel9 "Lot Sampling" (Enabled = false); Instructions / Remarks.
+       panel2: "Generate Sub-Lots and Map to Shipment Schedule and Invoice" - panel12 entry (Sub Lot, Customer / Buyer, Buyer P.O / Ref,
+         Contract Schedule No., Invoice No. (disabled), M.Tons, Inspection Seal No, Shipper Seal No., Remarks, + / Update / Cancel), grd (X column,
+         double-click = edit) and grdContractInfo.
+     History: toolStrip3 New / Refresh; "Pre Shipment 3rd Party Inspection Request History"; groupBox5 Filters (From / To Date with check
+       boxes, Tracking No, Item, Show, Request / Entry / Modify / Approved Date radios, All / Pending(default) / Complete); DataGridHistory (Edit,
+       Print, NoOfAttachments link); "Detail of Above Selected Row" grdDetail. -->
+<body class="pd-body" data-export-page="tpi" data-tpi="857">
+<div class="pd-form ex-form">
+    <div class="win-tabs" data-tabs="tpi">
+        <button type="button" class="win-tab is-active" data-tab="tpiForm">Form</button>
+        <button type="button" class="win-tab" data-tab="tpiHistory">History</button>
+    </div>
+
+    <!-- ===================================================== tabPage1 Form -->
+    <div class="win-tab-panel is-active" id="tpiForm">
+        <div class="win-tool-strip">
+            <button type="button" id="btnNew" class="win-btn-tool" accesskey="n" onclick="ExportTpi.btnNew()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="btnRefresh" class="win-btn-tool" onclick="ExportTpi.btnRefresh(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+            <button type="button" id="btnsave" class="win-btn-tool" accesskey="s" onclick="ExportTpi.btnsave(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+            <button type="button" id="btnUpdate" class="win-btn-tool is-hidden" onclick="ExportTpi.btnUpdate(this)"><i class="fa fa-pencil"></i> <span>Update</span></button>
+            <button type="button" id="btnAttachment" class="win-btn-tool" onclick="ExportTpi.notPorted('Attachment')"><i class="fa fa-paperclip"></i> <span>Attachment</span></button>
+            <button type="button" id="btnPrint" class="win-btn-tool" onclick="ExportTpi.print(this)"><i class="fa fa-print"></i> <span>514-Print</span></button>
+            <button type="button" id="BtnPrintStockReserved" class="win-btn-tool" onclick="ExportTpi.printStockReserved(this)"><i class="fa fa-print"></i> <span>514_01-Print</span></button>
+            <button type="button" id="BtnStockReservedForm" class="win-btn-tool" onclick="ExportTpi.notPorted('Stock Reserved Form')"><i class="fa fa-cubes"></i> <span>Stock Reserved Form</span></button>
+            <button type="button" id="BtnTrackingReport" class="win-btn-tool" onclick="ExportTpi.openRoute('/export/third-party-inspection-lot-tracking-report')"><i class="fa fa-line-chart"></i> <span>Tracking Report</span></button>
+            <button type="button" id="btnCountryDefinition" class="win-btn-tool" onclick="ExportTpi.openRoute('/master-data/country')"><i class="fa fa-globe"></i> <span>Country Definition</span></button>
+            <button type="button" id="btnShortCutKey" class="win-btn-tool" onclick="ExportTpi.shortcuts()"><i class="fa fa-keyboard-o"></i> <span>ShortCut Keys</span></button>
+        </div>
+        <div class="pd-caption pd-caption-teal" style="height:28px;">Pre Shipment 3rd Party Inspection Request</div>
+
+        <div class="tpi-top">
+            <!-- groupBox1 -->
+            <fieldset class="ex-groupbox tpi-box">
+                <legend>Requesting Company (Export Department)</legend>
+                <div class="tpi-row"><label></label><span class="ex-radios ex-radios-row">
+                    <label class="ex-check"><input type="radio" name="tpiStatus" value="all" id="RadAll"/> All</label>
+                    <label class="ex-check"><input type="radio" name="tpiStatus" value="not" id="RadNotReffered" checked/> Pending</label>
+                    <label class="ex-check"><input type="radio" name="tpiStatus" value="complete" id="RadReffered"/> Complete</label></span></div>
+                <div class="tpi-row"><label class="ex-req" for="CmbLotTrackingNo">Lot Code / Tracking No.</label>
+                    <input type="text" id="CmbLotTrackingNo" class="win-textbox" list="dlTracking" autocomplete="off"/><datalist id="dlTracking"></datalist></div>
+                <div class="tpi-row"><label for="txtRequestLodgDate">Request Lodge Date</label><input type="date" id="txtRequestLodgDate" class="win-date"/></div>
+                <div class="tpi-row"><label for="txtRequestReferenceNo">Request Reference No</label><input type="text" id="txtRequestReferenceNo" class="win-textbox" maxlength="50"/></div>
+                <div class="tpi-row"><label class="ex-req" for="CmbRequestedBy">Requested By</label><span class="tpi-with-btn">
+                    <select id="CmbRequestedBy" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Requested By"></select>
+                    <button type="button" id="BtnInspectionTeam" class="win-btn-small" title="Export Lookups" onclick="ExportTpi.notPorted('Export Lookups')">...</button></span></div>
+                <div class="tpi-row"><label class="ex-req" for="CmbMedium">Request Medium</label><select id="CmbMedium" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Medium"></select></div>
+                <div class="tpi-row"><label for="CmbJobLot">Job Lot</label><span class="tpi-with-btn">
+                    <select id="CmbJobLot" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="job Lot"></select>
+                    <button type="button" id="btnDefineJobLot" class="win-btn-small" title="Define Lots" onclick="ExportTpi.notPorted('Define Lots')">...</button></span></div>
+                <div class="tpi-row"><label for="txtExporterLotNo">Exporter Lot / Ref #</label><input type="text" id="txtExporterLotNo" class="win-textbox" maxlength="50"/></div>
+                <div class="tpi-row"><label class="ex-req" for="CmbItemMain">Item / Product</label><span class="tpi-with-btn">
+                    <span class="tpi-mini-radios"><label class="ex-check"><input type="radio" name="tpiItemBy" value="name" id="rdSearchByName" checked/> Name</label>
+                    <label class="ex-check"><input type="radio" name="tpiItemBy" value="code" id="rdSearchByCode"/> Code</label></span>
+                    <select id="CmbItemMain" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item"></select></span></div>
+                <div class="tpi-row"><label class="ex-req" for="txtHeaderMtons">M.Tons</label><input type="text" id="txtHeaderMtons" class="win-textbox num" value="0" data-guard="decimal"/></div>
+                <div class="tpi-row"><label class="ex-req" for="CmbInspectionAgency">Inspection Agency</label><select id="CmbInspectionAgency" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Inspection Agency"></select></div>
+                <div class="tpi-row"><label for="CmbCountryOfInspection">Agency Country</label><select id="CmbCountryOfInspection" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Country Of Inspection"></select></div>
+                <div class="tpi-row"><label class="ex-req" for="CmbCountryOfOrigin">Product Origin</label><select id="CmbCountryOfOrigin" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Country Of Origin"></select></div>
+                <div class="tpi-row"><label for="CmbFarmingNTrade">Farming N Trade</label><select id="CmbFarmingNTrade" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Farming N Trade"></select></div>
+                <div class="tpi-row"><label class="ex-req" for="CmbSamplingResponsibity">Sampling Responsibility</label><select id="CmbSamplingResponsibity" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Sampling Responsibility"></select></div>
+            </fieldset>
+
+            <!-- groupBox2 -->
+            <fieldset class="ex-groupbox tpi-box">
+                <legend>Inspection Company</legend>
+                <div class="tpi-row"><label for="txtCourierTrackingNo">Courier Tracking No.</label><input type="text" id="txtCourierTrackingNo" class="win-textbox" maxlength="50"/></div>
+                <div class="tpi-row"><label for="txtSampleDispatchedDate">Sample Dispatched</label><span class="ex-check tpi-dt"><input type="checkbox" id="txtSampleDispatchedDateChk"/><input type="date" id="txtSampleDispatchedDate" class="win-date"/></span></div>
+                <div class="tpi-row"><label for="txtTransitDays">Transit Days</label><input type="text" id="txtTransitDays" class="win-textbox num" value="3" data-guard="integer"/></div>
+                <div class="tpi-row"><label for="txtSampleETADesDate">Sample ETA Destination</label><span class="ex-check tpi-dt"><input type="checkbox" id="txtSampleETADesDateChk" disabled/><input type="date" id="txtSampleETADesDate" class="win-date" disabled/></span></div>
+                <div class="tpi-row"><label for="txtSampleATADesDate">Sample ATA Destination</label><span class="ex-check tpi-dt"><input type="checkbox" id="txtSampleATADesDateChk"/><input type="date" id="txtSampleATADesDate" class="win-date"/></span></div>
+                <div class="tpi-row"><label for="txtInspectionRemarks">Remarks</label><input type="text" id="txtInspectionRemarks" class="win-textbox" maxlength="300"/></div>
+                <div class="tpi-row"><label for="txtReportCertificateNo">Report / Certificate No.</label><input type="text" id="txtReportCertificateNo" class="win-textbox" maxlength="50"/></div>
+                <div class="tpi-row"><label for="txtReportDate">Report Date</label><span class="ex-check tpi-dt"><input type="checkbox" id="txtReportDateChk"/><input type="date" id="txtReportDate" class="win-date"/></span></div>
+                <div class="tpi-row"><label for="txtDateOfInspection">Date of Inspection</label><span class="ex-check tpi-dt"><input type="checkbox" id="txtDateOfInspectionChk"/><input type="date" id="txtDateOfInspection" class="win-date"/></span></div>
+                <div class="tpi-row"><label for="txtResultDate">Result Date</label><span class="ex-check tpi-dt"><input type="checkbox" id="txtResultDateChk"/><input type="date" id="txtResultDate" class="win-date"/></span></div>
+                <div class="tpi-row"><label class="ex-req" for="CmbResultStatus">Result Status</label><select id="CmbResultStatus" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Result Status"></select></div>
+                <div class="tpi-row"><label for="CmbResultRemarks">Result Remarks</label><select id="CmbResultRemarks" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Result Remarks"></select></div>
+                <div class="tpi-row"><label for="CmbLotCurrentStage">Lot Current Stage</label><textarea id="CmbLotCurrentStage" class="win-textbox" rows="2" disabled>Pending For Inspection</textarea></div>
+            </fieldset>
+
+            <!-- groupBox4 + groupBox3 -->
+            <div class="tpi-col">
+                <fieldset class="ex-groupbox tpi-box">
+                    <legend>Required Analysis</legend>
+                    <div class="tpi-row"><label for="CmbRequiredAnalysisGroup">Analysis Group</label><select id="CmbRequiredAnalysisGroup" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Analysis Group"></select></div>
+                    <div class="ex-grid-scroll tpi-h110">
+                        <table class="win-grid" id="grdParameters"><thead><tr><th class="ctr" style="width:30px;"><input type="checkbox" id="grdParametersAll" title="Select all"/></th><th data-col="Parameter">Parameter</th><th data-col="Remarks">Remarks</th></tr></thead>
+                            <tbody id="grdParametersBody"></tbody><tfoot id="grdParametersFoot"></tfoot></table>
+                    </div>
+                </fieldset>
+                <fieldset class="ex-groupbox tpi-box" id="groupBox3" disabled>
+                    <legend>Lab Information</legend>
+                    <div class="tpi-row"><label for="txtStockReservedDate">Stock Reserved</label><span class="ex-check tpi-dt"><input type="checkbox" id="txtStockReservedDateChk"/><input type="date" id="txtStockReservedDate" class="win-date"/></span></div>
+                    <div class="tpi-row"><label for="txtSampleTakenDate">Sample Taken</label><span class="ex-check tpi-dt"><input type="checkbox" id="txtSampleTakenDateChk"/><input type="date" id="txtSampleTakenDate" class="win-date"/></span></div>
+                    <div class="tpi-row"><label for="txtStockSealedDate">Stock Sealed</label><span class="ex-check tpi-dt"><input type="checkbox" id="txtStockSealedDateChk"/><input type="date" id="txtStockSealedDate" class="win-date"/></span></div>
+                    <div class="tpi-row"><label for="CmbSampleHandOver">Sample Handed Over</label><span class="tpi-with-btn">
+                        <select id="CmbSampleHandOver" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="SampleHand Over"></select>
+                        <button type="button" id="BtnInspectionTeam2" class="win-btn-small" onclick="ExportTpi.notPorted('Export Lookups')">...</button></span></div>
+                    <div class="tpi-row"><label for="txtHandOverDate">Handed Over Date</label><span class="ex-check tpi-dt"><input type="checkbox" id="txtHandOverDateChk"/><input type="date" id="txtHandOverDate" class="win-date"/></span></div>
+                    <div class="tpi-row"><label for="txtLabRemarks">Lab Remarks</label><textarea id="txtLabRemarks" class="win-textbox" rows="3"></textarea></div>
+                </fieldset>
+            </div>
+
+            <!-- panel9 Lot Sampling (Enabled = false on this form) -->
+            <div class="tpi-box tpi-sampling" id="panel9">
+                <div class="pd-caption pd-caption-teal" style="height:23px;">Lot Sampling
+                    <span class="ex-bar-right" style="margin-left:auto;"><button type="button" class="ex-fs-btn" data-fullscreen="grdLotSamplingBox" title="Fullscreen table">&#x26F6;</button></span></div>
+                <div class="ex-grid-box" id="grdLotSamplingBox">
+                    <div class="ex-grid-scroll tpi-h340">
+                        <table class="win-grid" id="grdLotSampling"><thead><tr>
+                            <th data-col="ThirdPartyType">Third Party Type</th><th class="num" data-col="NoOfSample">No Of Sample</th><th class="num" data-col="SampleWeight_Kg">Sample Weight Kg</th>
+                            <th class="num" data-col="TotalWeight_Kg">Total Weight Kg</th><th data-col="SealNo">Seal No</th></tr></thead>
+                            <tbody id="grdLotSamplingBody"></tbody><tfoot id="grdLotSamplingFoot"></tfoot></table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="tpi-instr"><label for="txtInstructionRemarks">Instructions / Remarks</label><input type="text" id="txtInstructionRemarks" class="win-textbox"/></div>
+
+        <!-- panel2 -->
+        <div class="pd-caption pd-caption-teal pd-history-bar" style="height:28px;"><span>Generate Sub-Lots and Map to Shipment Schedule and Invoice</span>
+            <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="grdBox" title="Fullscreen table">&#x26F6;</button><span id="gridBarMountTpi" class="pd-gridbar-mount"></span></span></div>
+        <div class="tpi-bottom">
+            <div class="tpi-detail">
+                <div class="ex-entry tpi-entry">
+                    <div class="ex-field"><label for="txtSubLot">Sub Lot</label><input type="text" id="txtSubLot" class="win-textbox" maxlength="100"/></div>
+                    <div class="ex-field"><label for="CmbCustomer">Customer / Buyer</label><select id="CmbCustomer" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Customer Name"></select></div>
+                    <div class="ex-field"><label for="cmbContractNo">Buyer P.O / Ref</label><select id="cmbContractNo" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Contract No"></select></div>
+                    <div class="ex-field"><label for="CmbScheduleNo">Contract Schedule No.</label><select id="CmbScheduleNo" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="ContractSchedule No"></select></div>
+                    <div class="ex-field"><label for="CmbInvoiceNoDetail">Invoice No.</label><select id="CmbInvoiceNoDetail" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Invoice No" disabled></select></div>
+                    <div class="ex-field"><label for="txtMtons">M.Tons</label><input type="text" id="txtMtons" class="win-textbox num" value="0" data-guard="decimal"/></div>
+                    <div class="ex-field"><label for="txtSealNoForBuyer">Inspection Seal No</label><input type="text" id="txtSealNoForBuyer" class="win-textbox" maxlength="50"/></div>
+                    <div class="ex-field"><label for="txtSealNoForShipper">Shipper Seal No.</label><input type="text" id="txtSealNoForShipper" class="win-textbox" maxlength="50"/></div>
+                    <div class="ex-field tpi-span2"><label for="txtDetailRemarks">Remarks</label><input type="text" id="txtDetailRemarks" class="win-textbox" maxlength="150"/></div>
+                    <div class="ex-actions">
+                        <button type="button" id="btnAdd" class="win-btn-small" onclick="ExportTpi.btnAdd()">+</button>
+                        <button type="button" id="btnUpdateDetail" class="win-btn-small is-hidden" onclick="ExportTpi.btnUpdateDetail()">Update</button>
+                        <button type="button" id="btnCancelDetial" class="win-btn-small is-hidden" onclick="ExportTpi.btnCancelDetial()">Cancel</button>
+                    </div>
+                </div>
+                <div class="ex-grid-box" id="grdBox">
+                    <div class="ex-grid-scroll ex-h240">
+                        <table class="win-grid" id="grd" data-gridbar="frmThirdPartyInspection:grd" data-gridbar-mount="#gridBarMountTpi" data-gridbar-reorder="false"><thead><tr>
+                            <th class="ctr">X</th><th data-col="Lot">Lot</th><th data-col="Customer">Customer</th><th data-col="ContractNo">Contract No</th>
+                            <th data-col="ContractScheduleNo">Contract Schedule No</th><th data-col="InvoiceNo">Invoice No</th><th class="num" data-col="MTons">M.Tons</th>
+                            <th data-col="SealNoForBuyer">Seal No For Buyer</th><th data-col="SealNoForShipper">Seal No For Shipper</th><th data-col="Remarks">Remarks</th>
+                            <th data-col="ReferredStatus">Referred Status</th></tr></thead>
+                            <tbody id="grdBody"></tbody><tfoot id="grdFoot"></tfoot></table>
+                    </div>
+                </div>
+            </div>
+            <div class="ex-grid-box tpi-contract-info">
+                <div class="ex-grid-scroll ex-h240" style="max-height:330px;">
+                    <table class="win-grid" id="grdContractInfo"><thead><tr><th data-col="ContractNo">Contract No</th><th class="num" data-col="Mton">Mton</th>
+                        <th class="num" data-col="ShippedMton">Shipped Mton</th><th class="num" data-col="BalanceMton">Balance Mton</th></tr></thead>
+                        <tbody id="grdContractInfoBody"></tbody><tfoot id="grdContractInfoFoot"></tfoot></table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================== tabPage2 History -->
+    <div class="win-tab-panel" id="tpiHistory">
+        <div class="win-tool-strip">
+            <button type="button" id="btnResetHistory" class="win-btn-tool" onclick="ExportTpi.historyReset()"><i class="fa fa-plus"></i> <span>New</span></button>
+            <button type="button" id="BtnRefreshHistory" class="win-btn-tool" onclick="ExportTpi.historyRefresh(this)"><i class="fa fa-refresh"></i> <span>Refresh</span></button>
+        </div>
+        <div class="pd-caption pd-caption-teal" style="height:28px;">Pre Shipment 3rd Party Inspection Request History</div>
+        <fieldset class="ex-groupbox">
+            <legend>Filters</legend>
+            <div class="ex-filter">
+                <div class="ex-field" style="width:190px;"><label for="FromDateHistory">From Date</label>
+                    <span class="ex-check"><input type="checkbox" id="FromDateHistoryChk" checked/><input type="date" id="FromDateHistory" class="win-date" style="flex:1;"/></span></div>
+                <div class="ex-field" style="width:270px;"><label for="CmbTrackingNoHistory">Tracking No</label>
+                    <select id="CmbTrackingNoHistory" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="TrackingNo"></select></div>
+                <div class="ex-radios">
+                    <label class="ex-check"><input type="radio" name="tpiDateBy" value="doc" checked/> Request Date</label>
+                    <label class="ex-check"><input type="radio" name="tpiDateBy" value="entry"/> Entry Date</label>
+                </div>
+                <div class="ex-radios">
+                    <label class="ex-check"><input type="radio" name="tpiDateBy" value="modify"/> Modify Date</label>
+                    <label class="ex-check"><input type="radio" name="tpiDateBy" value="approved"/> Approved Date</label>
+                </div>
+                <div class="ex-radios">
+                    <label class="ex-check"><input type="radio" name="tpiHistStatus" value="all" id="RadAllHistory"/> All</label>
+                    <label class="ex-check"><input type="radio" name="tpiHistStatus" value="not" id="RadNotRefferedHistory" checked/> Pending</label>
+                    <label class="ex-check"><input type="radio" name="tpiHistStatus" value="complete" id="RadRefferedHistory"/> Complete</label>
+                </div>
+                <div style="flex-basis:100%;height:0;"></div>
+                <div class="ex-field" style="width:190px;"><label for="ToDateHistory">To Date</label>
+                    <span class="ex-check"><input type="checkbox" id="ToDateHistoryChk" checked/><input type="date" id="ToDateHistory" class="win-date" style="flex:1;"/></span></div>
+                <div class="ex-field" style="width:270px;"><label for="CmbItemHistory">Item</label>
+                    <select id="CmbItemHistory" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item"></select></div>
+                <div class="ex-field"><label>&nbsp;</label><button type="button" id="btnShow" class="win-btn-small" style="width:62px;height:26px;" onclick="ExportTpi.historyShow(this)">Show</button></div>
+            </div>
+        </fieldset>
+        <div class="pd-caption pd-caption-teal pd-history-bar" style="height:28px;"><span>Filtered Records</span>
+            <span class="ex-bar-right"><button type="button" class="ex-fs-btn" data-fullscreen="DataGridHistoryBox" title="Fullscreen table">&#x26F6;</button><span id="gridBarMountTpiH" class="pd-gridbar-mount"></span></span></div>
+        <div class="ex-grid-box" id="DataGridHistoryBox">
+            <div class="ex-grid-scroll ex-h300">
+                <table class="win-grid" id="DataGridHistory" data-gridbar="frmThirdPartyInspection:DataGridHistory" data-gridbar-mount="#gridBarMountTpiH" data-gridbar-reorder="false"><thead><tr>
+                    <th id="tpiHistEditTh">Edit</th><th id="tpiHistPrintTh">Print</th>
+                    <th>Lot Ref No</th><th>Request Date</th><th>Request Ref No</th><th>Requested By Name</th><th>Requested By</th><th>Request Medium</th>
+                    <th>Exporter Lot Ref No</th><th>Item Name</th><th class="num">M.Ton</th><th>Inspection Agency</th><th>Country Of Origin</th><th>Country Of Inspection</th>
+                    <th>Place Of Inspection</th><th>Courier Tracking No</th><th>Sample Dispatched Date</th><th class="num">Transit Days</th><th>Sample ETA Destination Date</th>
+                    <th>Sample ATA Destination Date</th><th>Inspection Remarks</th><th>Report Ref No</th><th>Report Date</th><th>Date Of Inspection</th><th>Report Status</th>
+                    <th>Lot Current Stage</th><th>Required Analysis Group</th><th>Stock Reserved Date</th><th>Sample Taken Date</th><th>Stock R Sealed Date</th>
+                    <th>Sample Handed Over</th><th>Sample Handed Over Date</th><th>Lab Remarks</th><th>Sample Status</th><th>Entry User Name</th><th>Entry Date</th>
+                    <th>Modify User Name</th><th>Modify Date</th><th>Approved User</th><th>Approved Date</th><th class="num">No Of Attachments</th></tr></thead>
+                    <tbody id="tpiHistBody"></tbody><tfoot id="tpiHistFoot"></tfoot></table>
+            </div>
+            <div class="ex-grid-empty is-hidden" id="tpiHistEmpty">No record found.</div>
+        </div>
+        <div class="pd-caption" style="background:#fff;color:#000;height:22px;font:9pt 'Segoe UI',sans-serif;border-top:1px solid #ddd;">Detail of Above Selected Row</div>
+        <div class="ex-grid-box">
+            <div class="ex-grid-scroll ex-h240">
+                <table class="win-grid" id="grdDetail"><thead><tr><th>Lot</th><th>Customer</th><th>Contract No</th><th>Contract Schedule No</th><th>Invoice No</th>
+                    <th class="num">M.Tons</th><th>Seal No For Buyer</th><th>Seal No For Shipper</th><th>Remarks</th></tr></thead>
+                    <tbody id="grdDetailBody"></tbody><tfoot id="grdDetailFoot"></tfoot></table>
+            </div>
+        </div>
+    </div>
+
+    <div class="win-footer-strip">
+        <span class="ex-footer-left" id="tpiFooterInfo"></span>
+        <button type="button" class="win-btn-history" id="btnTpiFooterHistory" onclick="ExportTpi.toggleHistory()"><i class="fa fa-history"></i> <span>History</span></button>
+    </div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20260924a}"></script>
+<script th:src="@{/build/js/countx_export_third_party_inspection.js?v=20261001a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20260925a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+</body>
+</html>

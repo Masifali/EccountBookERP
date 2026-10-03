@@ -95,18 +95,36 @@ public class PaymentReceiptVoucherController {
         return ResponseEntity.ok(service.historyAccounts(doc));
     }
 
-    /** ReadById(). */
+    /** ReadById(ID, SaveAs) - saveAs=true is the history grid's "Save As" button. */
     @GetMapping("/{doc}/{id}")
-    public ResponseEntity<Map<String, Object>> load(@PathVariable("doc") int doc, @PathVariable("id") int id) {
-        Map<String, Object> r = service.load(doc, id);
+    public ResponseEntity<Map<String, Object>> load(@PathVariable("doc") int doc, @PathVariable("id") int id,
+                                                    @RequestParam(value = "saveAs", defaultValue = "false") boolean saveAs) {
+        Map<String, Object> r = service.load(doc, id, saveAs);
         if (r == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).body(fail("Voucher not found"));
+        return ResponseEntity.ok(r);
+    }
+
+    /** History grid SelectionChanged -> the detail grid under it (VoucherDetailByHeaderId and the bank variants). */
+    @GetMapping("/{doc}/{id}/lines")
+    public ResponseEntity<Map<String, Object>> lines(@PathVariable("doc") int doc, @PathVariable("id") int id) {
+        Map<String, Object> r = service.lines(doc, id);
+        if (r == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).body(fail("Voucher not found"));
+        return ResponseEntity.ok(r);
+    }
+
+    /** cmbCurrency_Leave - the last exchange rate used for this currency on this voucher type. */
+    @GetMapping("/{doc}/last-rate")
+    public ResponseEntity<Map<String, Object>> lastRate(@PathVariable("doc") int doc,
+                                                        @RequestParam("currencyId") int currencyId) {
+        Map<String, Object> r = new LinkedHashMap<>();
+        r.put("lastRate", service.lastRate(doc, currencyId));
         return ResponseEntity.ok(r);
     }
 
     /**
      * Save (Id = 0) or Update (Id = the loaded voucher).
      *   200 {success, id, voucherCode, voucherAmount, detailLines, costCentreLines, message}
-     *   409 {success:false, confirm: whtMismatch|negativeBalance|duplicate|glBalance, message}
+     *   409 {success:false, confirm: whtMismatch|negativeBalance|duplicate:<AccountId>|glBalance:<AccountId>, message}
      *       - a desktop Yes/No; re-post with the kind added to "acknowledged" to answer Yes.
      *   400 validation refusal in the desktop's words; 403 missing Save/Update right;
      *   500 a RAISERROR from the procedure chain (e.g. USP_VoucherBalanceCheck, approved record), passed through.

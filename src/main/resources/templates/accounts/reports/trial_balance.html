@@ -8,7 +8,7 @@
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
     <link rel="stylesheet" th:href="@{/build/css/countx_acc_rpt_f.css?v=20260930s}">
     <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260930s}">
-    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20261002gv}">
     <style>
         .accf .sort-bar { background: var(--f-teal); color: #fff; padding: 2px 8px; display: flex; align-items: center; gap: 10px; margin: 4px 4px 0 4px; }
         .accf .sort-bar .chk { color: #fff; }
@@ -34,13 +34,15 @@
 <ul class="win-tabs">
     <li class="active"><a>Trial Balance</a></li>
     <li><a href="/accounts/reports/selected-trial-balance">Trial Balance Selected</a></li>
-    <li><a href="/accounts/reports/trial-balances-all-level">Trial Balances All Level</a></li>
+    <!-- TrialBalance.tabControl1 has only tabTrialBalance + tabTrialbalanceselected; "Trial Balances All Level" is a separate form (screen 82) -->
 </ul>
 <div class="win-toolbar">
     <button type="button" class="win-btn" onclick="resetTB()"><i class="fa fa-plus text-success"></i> Reset</button>
-    <button type="button" class="win-btn" onclick="window.print()" data-rpt="111A-AcRptTrialBalances.rpt"><i class="fa fa-print"></i> Print</button>
-    <button type="button" class="win-btn" onclick="window.print()" data-rpt="111A-AcRptTrialBalances.rpt"><i class="fa fa-print"></i> 111APrint</button>
-    <button type="button" class="win-btn" title="131 - Accounts Trial Balance (level wise)" data-rpt="131-AccountsTrialBalance.rpt">Level Wise <i class="fa fa-caret-down"></i></button>
+    <!-- toolStrip3: Reset, Print (tsDrowdownTrial), [131-TrialBalance, 135-TrialBalanceUpto5thLevel: Visible=false], 111A&Print
+         (btntrialMultisubPrint), Level Wise (tsDropDownLevelWise), [Load For Vouchers: Visible=false] -->
+    <span class="tbp-dd"><button type="button" class="win-btn" id="tsDrowdownTrial"><i class="fa fa-print"></i> Print <i class="fa fa-caret-down"></i></button><div class="tbp-menu" hidden></div></span>
+    <button type="button" class="win-btn" id="btntrialMultisubPrint" data-rpt="111A-AcRptTrialBalances.rpt" data-rpt-own accesskey="p"><i class="fa fa-print"></i> 111A<u>P</u>rint</button>
+    <span class="tbp-dd"><button type="button" class="win-btn" id="tsDropDownLevelWise"><i class="fa fa-print"></i> Level Wise <i class="fa fa-caret-down"></i></button><div class="tbp-menu" hidden></div></span>
 </div>
 <div class="win-header-panel"><span>Trial Balance</span></div>
 
@@ -57,7 +59,7 @@
             <label class="chk"><input type="checkbox" id="SkipZero" checked> Skip Zero</label>
 
             <span class="lbl">Documents Not To Include</span>
-            <select id="cmbDocumentTypeIds" class="inp" multiple style="grid-column: span 3;"></select>
+            <select id="cmbDocumentTypeIds" class="inp" multiple data-dtcombo="single" data-dtcombo-checked data-dtcombo-caption="Document Type" style="grid-column: span 3;"></select>
             <label class="chk"><input type="checkbox" id="chkSkipCGSAc"> Skip CGS Accounts</label>
 
             <span class="lbl">Group Account</span>
@@ -104,10 +106,14 @@
 <div class="grid-wrap"><table class="wg" id="tbTable"></table></div>
 
 <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
-<script th:src="@{/build/js/countx_prod_combo.js?v=20260930s}"></script>
-<script th:src="@{/build/js/countx_acc_rpt_f.js?v=20260930s}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20261002gv}"></script>
+<script th:src="@{/build/js/countx_acc_rpt_f.js?v=20261002gv}"></script>
+<script th:src="@{/build/js/countx_tb_family_print.js?v=20261002gl}"></script>
 <script>
     let TB_CTX = null, tbData = [], tbBranchShown = false;
+    /* 2026-10-02: the filters of the last successful Show (dtTrial was built from them). 111A&Print sends them as the
+       arguments of the 111a contract (VoucherReports.TrialBalanceReport -> Sp_TrialBalance_Rpt); before, the button sent none. */
+    let tbPrintArgs = null;
 
     function sortCols() {
         const cols = [];
@@ -196,12 +202,23 @@
         const btn = $('#btnshow');
         AccF.busy(btn, true);
         try {
-            tbData = (await AccF.post('/trial-balance', buildTbRequest())) || [];
+            const req = buildTbRequest();
+            tbData = (await AccF.post('/trial-balance', req)) || [];
+            tbPrintArgs = {
+                fromDate: req.fromDate, toDate: req.toDate,
+                zeroBalanceType: req.skipZero ? 1 : 0,                       // always sent
+                languageId: req.languageId || 0,                             // always sent
+                isApproved: req.includeUnposted ? '' : 1,                    // ApprovedFilter "All" -> not sent
+                documentTypeIds: req.documentTypeIds || '', branchesIds: (TB_CTX && TB_CTX.branchFeature && req.branchesIds) || '',
+                debit: req.clDebit || '', credit: req.clCredit || '', accountTypeIds: req.accountTypeIds || '',
+                groupAccountId: req.groupAccountId || '', customGroupId: req.customGroupId || '',
+                skipCgsAccounts: req.skipCgs ? 1 : '', pageNumber: '', pageSize: ''
+            };
             const br = $('#CmbBranches').val();
             tbBranchShown = !!(TB_CTX && TB_CTX.branchFeature && br && br.length);
             renderTb();
         } catch (e) {
-            tbData = []; $('#tbTable').empty(); $('#lblStatus').text('');
+            tbData = []; tbPrintArgs = null; $('#tbTable').empty(); $('#lblStatus').text('');
             alert(e.message);
         } finally { AccF.busy(btn, false); }
     }
@@ -213,6 +230,22 @@
     }
 
     $('input[name="rdColumns"], #chkGroupOnParent').on('change', function () { if (tbData.length) renderTb(); });
+
+    /* btntrialMultisubPrint_Click (111A&Print): dtTrial -> 111A-AcRptTrialBalances.rpt, or "Record not found for Display" */
+    $('#btntrialMultisubPrint').on('click', function () {
+        if (!tbData.length || !tbPrintArgs) { alert('Record not found for Display'); return; }
+        window.printRpt('111A-AcRptTrialBalances.rpt', Object.assign({}, tbPrintArgs));
+    });
+    /* tsDrowdownTrial (DynamicReportsLoad("TrialBalance")) and tsDropDownLevelWise (DynamicReportsLoad("Trial Balance Level Wise")):
+       dtTrial (the Show rows, in the DataView.Sort order) -> the clicked .rpt; the desktop's messages when the grid is empty */
+    TbPrint.menu('#tsDrowdownTrial', 'TrialBalance', function (item) {
+        if (!tbData.length) { alert('Record not found for Display'); return; }
+        TbPrint.rows(item, sortedRows(), '#tsDrowdownTrial');
+    });
+    TbPrint.menu('#tsDropDownLevelWise', 'Trial Balance Level Wise', function (item) {
+        if (!tbData.length) { alert('Record Not Found For Display'); return; }
+        TbPrint.rows(item, sortedRows(), '#tsDropDownLevelWise');
+    });
     $('#rdAscending, #rdDescending, #chkAccountCodeSorting, #chkAccountTitleSorting, #chkClosingSorting').on('change', applySorting);
 
     $(document).on('keydown', function (e) {
@@ -230,7 +263,7 @@
             AccF.fillSelect('#cmbDocumentTypeIds', await AccF.lookup('document-types'), 'Id', 'DocumentTypeDescription', null);
             if (TB_CTX.branchFeature) {
                 const brs = await AccF.lookup('branches');
-                if (TB_CTX.branchConsolidated) $('#CmbBranches').attr('multiple', 'multiple');
+                if (TB_CTX.branchConsolidated) $('#CmbBranches').attr({ multiple: 'multiple', 'data-dtcombo-checked': '' }); /* 2026-10-02: checked combo */
                 AccF.fillSelect('#CmbBranches', brs, 'Id', 'BranchName', TB_CTX.branchConsolidated ? null : '');
                 $('#CmbBranches').val(TB_CTX.branchConsolidated ? [String(TB_CTX.userBranchId)] : String(TB_CTX.userBranchId));
                 AccF.ctl('#CmbBranches'); $('.tb-branch').show();

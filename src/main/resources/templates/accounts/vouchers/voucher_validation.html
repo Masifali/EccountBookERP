@@ -8,185 +8,475 @@
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
     <link rel="stylesheet" th:href="@{/build/css/countx_acc_rpt_f.css?v=20260930s}">
     <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260930s}">
-    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20261002gv}">
+    <style>
+        /* VoucherValidation.cs InitializeComponent, 1:1 - ClientSize 1101 x 640:
+           panel2 (Dock Top, 27)  toolStrip3: Reset | Refresh | 115-Print | 119-Print (Verdana 9.75, image + text)
+           panel3 (Dock Top, 28)  Teal - label23 "Voucher Validation" Tahoma 12 bold white (5,4); lblLanguage (205,5) +
+                                  CmbLanguage (274,1 173x26) hidden until Ctrl+L
+           panel5 (Dock Top, 135) White - groupBox1 "Filters" (4,3 812x130) Tahoma 9.75 bold, every control at its Location
+           panel7 (Dock Top, 28)  Teal - label3 "History"; ctrlGrdBar1 (1053,1)
+           grd    (Dock Fill)     Janus GridEX, Verdana 8.25, grouped on VoucherCode, filter row, group totals, total row bottom */
+        html, body.vvf { height: 100%; overflow: hidden; }
+        body.vvf { background: #fff; }
+        .vvf .vv-form { display: flex; flex-direction: column; height: calc(100vh - 23px); min-height: 0; }
+
+        /* ---- panel2 / toolStrip3: the WinForms ToolStrip (Professional renderer) */
+        .vvf .vv-strip { flex: 0 0 27px; height: 27px; display: flex; align-items: center; gap: 0; padding: 0 2px;
+            background: linear-gradient(to bottom, #fdfeff 0%, #e9eef5 55%, #dbe3ee 100%); border-bottom: 1px solid #b6c3d4; box-sizing: border-box; overflow: hidden; }
+        .vvf .ts-btn { height: 24px; border: 1px solid transparent; background: transparent; padding: 0 6px 0 4px; margin: 0 1px;
+            font: 9.75pt Verdana, Geneva, sans-serif; color: #000; display: inline-flex; align-items: center; gap: 5px; cursor: default; white-space: nowrap; border-radius: 0; }
+        .vvf .ts-btn:hover { background: linear-gradient(to bottom, #fff8e1, #ffe8a6); border-color: #e5c365; }
+        .vvf .ts-btn:active { background: linear-gradient(to bottom, #fbdb8f, #f8c55c); border-color: #c2a24a; }
+        .vvf .ts-btn:disabled { opacity: .55; }
+        .vvf .ts-btn .fa { width: 20px; font-size: 16px; text-align: center; }
+        .vvf .ts-btn .ic-new { color: #2e7d32; } .vvf .ts-btn .ic-ref { color: #1565c0; } .vvf .ts-btn .ic-prt { color: #37474f; }
+
+        /* ---- panel3 / panel7: Teal bars with the Tahoma 12 bold white caption at (5,4) */
+        .vvf .vv-teal { position: relative; flex: 0 0 28px; height: 28px; background: #008080; color: #fff; overflow: visible; }
+        .vvf .vv-teal .cap { position: absolute; left: 5px; top: 4px; font: bold 12pt/19px Tahoma, Verdana, sans-serif; white-space: nowrap; }
+        .vvf #lblLanguage { position: absolute; left: 205px; top: 5px; font: bold 9.75pt/17px "Segoe UI", Tahoma, sans-serif; color: #fff; margin: 0; }
+        .vvf .vv-teal .rt { position: absolute; right: 8px; top: 5px; font: bold 9pt/17px Tahoma, sans-serif; }
+        .vvf .vv-teal .grdbar { position: absolute; right: 8px; top: 2px; height: 24px; display: flex; gap: 6px; align-items: center; }
+
+        /* ---- panel5: white, 135 high; the designer canvas scrolls ITSELF when the window is narrower */
+        .vvf .vv-panel5 { flex: 0 0 135px; height: 135px; background: #fff; overflow-x: auto; overflow-y: hidden; }
+        .vvf .vv-canvas { position: relative; width: 822px; height: 135px; }
+        .vvf .vv-gb { position: absolute; box-sizing: border-box; }
+        .vvf .vv-gb::before { content: ""; position: absolute; left: 0; right: 0; top: 8px; bottom: 0; border: 1px solid #c5c5c5; border-radius: 3px; pointer-events: none; }
+        .vvf .vv-gb > .gb-cap { position: absolute; left: 7px; top: 0; padding: 0 2px; background: #fff; font: bold 9.75pt/16px Tahoma, Verdana, sans-serif; color: #000; white-space: nowrap; z-index: 1; }
+        .vvf .vv-gb .gb-cap.sub { font: 9.75pt/16px Tahoma, Verdana, sans-serif; font-weight: bold; }
+        .vvf .vv-gb .L { position: absolute; margin: 0; font: 600 9pt/15px "Segoe UI Semibold", "Segoe UI", Tahoma, Arial, sans-serif; font-weight: 700; color: #000; white-space: nowrap; letter-spacing: -.1px; }
+        .vvf .vv-gb .T { position: absolute; box-sizing: border-box; margin: 0; border: 1px solid #7a7a7a; border-radius: 0; padding: 1px 3px;
+            font: 9.75pt Verdana, Geneva, sans-serif; color: #000; background: #fff; }
+        .vvf .vv-gb .T:focus { outline: 1px solid #008080; outline-offset: -2px; border-color: #008080; }
+        .vvf .vv-gb input[type="date"].T { padding: 0 2px 0 4px; }
+        .vvf .vv-gb .R { position: absolute; margin: 0; height: 19px; display: inline-flex; align-items: center; gap: 4px; cursor: pointer;
+            font: 600 9pt "Segoe UI Semibold", "Segoe UI", Tahoma, Arial, sans-serif; font-weight: 700; color: #000; white-space: nowrap; }
+        .vvf .vv-gb .R input { margin: 0; width: 13px; height: 13px; cursor: pointer; }
+        .vvf #button1 { position: absolute; left: 535px; top: 102px; width: 63px; height: 23px; padding: 0; border: 0; background: #008080; color: #fff;
+            font: bold 9.75pt Verdana, Geneva, sans-serif; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 4px; }
+        .vvf #button1:hover { background: #006b6b; }
+        .vvf #button1:disabled { background: #5f9e9e; cursor: wait; }
+        /* the countx combo fields inside the designer box: Verdana 9.75 like the UltraCombo, full designer height */
+        .vvf .vv-gb .pcx-wrap .dtcombo-input.pcx-field, .vvf .vv-teal .pcx-wrap .dtcombo-input.pcx-field {
+            height: 100% !important; font: 9.75pt Verdana, Geneva, sans-serif !important; padding: 1px 20px 1px 4px !important; border: 1px solid #7a7a7a !important; }
+        .vvf .vv-gb .pcx-wrap .dtcombo-input.pcx-field:focus { border-color: #008080 !important; outline: 1px solid #008080; outline-offset: -2px; }
+        .vvf .vv-teal .dtcombo-wrap { display: inline-flex; }
+
+        /* ---- grd: Janus GridEX (Office 2007 style), own scroll container, full width */
+        .vvf .vv-gbybox { flex: 0 0 auto; background: #c3d4e9; border-bottom: 1px solid #8ba0bc; padding: 3px 6px; font: 8.25pt Verdana, sans-serif; color: #3b4f6b; }
+        .vvf .vv-gbybox .chip { display: inline-block; padding: 1px 8px; border: 1px solid #7f9db9; background: linear-gradient(#fdfeff, #dbe6f4); color: #000; }
+        .vvf .vv-grid { flex: 1 1 auto; min-height: 60px; overflow: auto; background: #fff; border-top: 0; }
+        .vvf table.jg { border-collapse: separate; border-spacing: 0; table-layout: fixed; font: 8.25pt Verdana, Geneva, sans-serif; color: #000; background: #fff; }
+        .vvf table.jg th { position: sticky; top: 0; z-index: 3; background: linear-gradient(to bottom, #f6f9fd 0%, #dfe8f5 50%, #cfdcee 51%, #dfe8f5 100%);
+            border-right: 1px solid #a5bbd8; border-bottom: 1px solid #a5bbd8; padding: 3px 4px; font-weight: normal; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; height: 20px; box-sizing: border-box; }
+        .vvf table.jg tr.flt td { position: sticky; top: 20px; z-index: 3; background: #f4f7fb; border-right: 1px solid #d0dbea; border-bottom: 1px solid #a5bbd8; padding: 1px; height: 21px; box-sizing: border-box; }
+        .vvf table.jg tr.flt input { width: 100%; height: 18px; box-sizing: border-box; border: 1px solid #c3d0e2; font: 8.25pt Verdana, sans-serif; padding: 0 3px; }
+        .vvf table.jg td { padding: 1px 4px; border-right: 1px solid #e3e9f2; border-bottom: 1px solid #e3e9f2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; height: 19px; box-sizing: border-box; }
+        .vvf table.jg td.r { text-align: right; }
+        .vvf table.jg td.c { text-align: center; }
+        .vvf table.jg tbody tr.dr:hover td { background: #eaf2fb; }
+        .vvf table.jg tbody tr.dr.sel td { background: #fbe6a6; }
+        .vvf table.jg tr.grp td { background: #e8eef7; border-bottom: 1px solid #b9c9df; font-weight: bold; color: #1d3f6e; cursor: default; padding-left: 4px; }
+        .vvf table.jg tr.grp .tg { display: inline-block; width: 11px; height: 11px; line-height: 9px; text-align: center; border: 1px solid #7f9db9; background: #fff; color: #000; font-size: 9px; margin-right: 5px; cursor: pointer; vertical-align: -1px; }
+        .vvf table.jg tr.gt td { background: #f3f6fa; font-weight: bold; border-bottom: 1px solid #c8d4e4; }
+        .vvf table.jg tfoot td { position: sticky; bottom: 0; z-index: 2; background: #dfe8f5; font-weight: bold; border-top: 1px solid #8ba0bc; }
+        .vvf table.jg a.lnk { color: #0000ee; text-decoration: underline; cursor: pointer; }
+        .vvf table.jg .gbtn { height: 16px; padding: 0 4px; font: 8.25pt Verdana, sans-serif; border: 1px solid #8ba0bc; background: linear-gradient(#fff, #dde6f2); cursor: pointer; line-height: 14px; }
+        .vvf table.jg td.empty { padding: 10px; color: #666; text-align: left; }
+        .vvf .vv-nav { flex: 0 0 22px; height: 22px; background: linear-gradient(#f6f9fd, #dbe5f2); border-top: 1px solid #a5bbd8; font: 8.25pt Verdana, sans-serif; display: flex; align-items: center; gap: 10px; padding: 0 6px; }
+    </style>
 </head>
 <!--
   Screen 83 "Voucher Validation" - Architecture.WinApp.Account_Reports.VoucherValidation (route /accounts/vouchers/voucher-validation).
-  Load: RdAll; AllowEditOnVoucherNoinReports; MultiLanguagesGetAll (hidden, Ctrl+L), VouchertypeFill (checked list -> multi),
-  GetAllDetailAccount, CustomeGroupsDefine(1); fromdate = Now, todate keeps today. Nothing runs until Show.
+  2026-10-02 (round 3, GUI): rebuilt to the designer geometry (InitializeComponent) - every control absolutely placed at its
+  Location/Size inside groupBox1; Document Type is the desktop's CHECKED combo (countx_prod_combo.js checked mode);
+  Account Title / Custom Group / Language are countx_prod_combo searchable combos.
+  Load: RdAll; AllowEditOnVoucherNoinReports; MultiLanguagesGetAll (hidden, Ctrl+L), VouchertypeFill (checked list),
+  GetAllDetailAccount, CustomeGroupsDefine(1); fromdate = Now. Nothing runs until Show.
   Show (btnshow_Click): VoucherReports.VoucherValidationReport -> Sp_Accounts_VouchersValidation_Rpt through
   /accounts/api/voucher-validation/report (VoucherValidationService: @UserId, doc or entry dates, doc-no range, account,
   custom group, @DocumentTypeIds as the desktop builds it (",id,id"), @IsApproved unless All, @ManualBillNo, @IsCGS, @LanguageId).
-  Grid (GridSettings): grouped on VoucherCode (V.Code), Debit/Credit summed in stringFormatsingle, AccountCode -> General Ledger,
-  V.Code -> the voucher when AllowEditOnVoucherNoinReports.
+  Grid (GridSettings): grouped on VoucherCode (V.Code, column hidden when grouped), Debit/Credit summed in stringFormatsingle,
+  AccountCode -> General Ledger, V.Code -> the voucher when AllowEditOnVoucherNoinReports, "print" button column -> 115 for the row.
 -->
-<body class="accf">
+<body class="accf vvf">
 <div class="win-title-bar">
     <span><i class="fa fa-check-square-o"></i> Voucher Validation</span>
     <a href="/accounts/dashboard"><i class="fa fa-arrow-left"></i> Back to Dashboard</a>
 </div>
-<div class="win-toolbar">
-    <button type="button" class="win-btn" onclick="resetForm()"><i class="fa fa-plus text-success"></i> Reset</button>
-    <button type="button" class="win-btn" onclick="refreshForm()"><i class="fa fa-refresh text-primary"></i> Refresh</button>
-    <button type="button" class="win-btn" onclick="window.print()" data-rpt="115-AcRptVoucherValidation.rpt"><i class="fa fa-print"></i> 115-Print</button>
-    <button type="button" class="win-btn" onclick="window.print()" data-rpt="119-AcRptVoucherValidation2.rpt"><i class="fa fa-print"></i> 119-Print</button>
-</div>
-<div class="win-header-panel">
-    <span>Voucher Validation</span>
-    <label class="vv-lang hidden-ctl">Language <select id="CmbLanguage" class="inp" style="width:170px;" data-dtcombo-caption="Language Name"></select></label>
-</div>
+<div class="vv-form">
+    <!-- panel2 / toolStrip3 -->
+    <div class="vv-strip" role="toolbar">
+        <button type="button" class="ts-btn" id="btnNew" onclick="resetForm()" title="Reset (Ctrl+N)"><i class="fa fa-file-o ic-new"></i>Reset</button>
+        <button type="button" class="ts-btn" id="btnRefresh" onclick="refreshForm()" title="Refresh"><i class="fa fa-refresh ic-ref"></i>Refresh</button>
+        <button type="button" class="ts-btn" id="print" onclick="printToolbar(this)" data-rpt="115-AcRptVoucherValidation.rpt" data-rpt-own title="115-Print (Ctrl+P)"><i class="fa fa-print ic-prt"></i>115-Print</button>
+        <button type="button" class="ts-btn" id="btnPrint119" onclick="printToolbar(this)" data-rpt="119-AcRptVoucherValidation2.rpt" data-rpt-own title="119-Print"><i class="fa fa-print ic-prt"></i>119-Print</button>
+    </div>
 
-<div class="filters">
-    <div class="gb" style="width:620px;">
-        <span class="gb-title">Filters</span>
-        <div class="fgrid" style="grid-template-columns: 95px 150px 80px 1fr;">
-            <span class="lbl">From Date</span><input type="date" id="fromdate" class="inp">
-            <span class="lbl">Manual No</span><input type="text" id="txtManualNo" class="inp">
+    <!-- panel3 -->
+    <div class="vv-teal" id="panel3">
+        <span class="cap" id="label23">Voucher Validation</span>
+        <label id="lblLanguage" class="vv-lang hidden-ctl" for="CmbLanguage">Language</label>
+        <select id="CmbLanguage" class="vv-lang hidden-ctl" data-dtcombo="single" data-dtcombo-caption="Language Name"
+                style="position:absolute;left:274px;top:1px;width:173px;height:26px;"></select>
+    </div>
 
-            <span class="lbl">To Date</span><input type="date" id="todate" class="inp">
-            <span class="lbl">Account Title</span><select id="CmbAccountTitle" class="inp" data-dtcombo-caption="AccountTitle"></select>
+    <!-- panel5 / groupBox1 -->
+    <div class="vv-panel5" id="panel5">
+        <div class="vv-canvas">
+            <div class="vv-gb" id="groupBox1" style="left:4px;top:3px;width:812px;height:130px;">
+                <span class="gb-cap">Filters</span>
 
-            <span class="lbl">Document Type</span><select id="cmbdoctype" class="inp" multiple></select>
-            <span class="lbl">Custom Group</span><select id="CmbCustomGroup" class="inp" data-dtcombo-caption="Custome Group"></select>
+                <label class="L" for="fromdate" style="left:7px;top:24px;">From Date</label>
+                <input type="date" id="fromdate" class="T" style="left:114px;top:20px;width:203px;height:23px;">
+                <label class="L" for="todate" style="left:7px;top:52px;">To Date</label>
+                <input type="date" id="todate" class="T" style="left:114px;top:48px;width:203px;height:23px;">
+                <label class="L" style="left:7px;top:80px;">Document Type</label>
+                <select id="cmbdoctype" multiple data-dtcombo="single" data-dtcombo-checked data-dtcombo-caption="Document Type"
+                        style="position:absolute;left:114px;top:74px;width:203px;height:26px;"></select>
+                <label class="L" for="txtdocnofrom" style="left:7px;top:106px;">Doc No From &amp; To</label>
+                <input type="text" id="txtdocnofrom" class="T" inputmode="numeric" autocomplete="off" style="left:114px;top:102px;width:90px;height:23px;">
+                <input type="text" id="txtdocnoto" class="T" inputmode="numeric" autocomplete="off" style="left:210px;top:102px;width:107px;height:23px;">
 
-            <span class="lbl">Doc No From &amp; To</span>
-            <span style="display:flex; gap:4px;"><input type="text" id="txtdocnofrom" class="inp"><input type="text" id="txtdocnoto" class="inp"></span>
-            <span></span>
-            <span style="text-align:right;"><button type="button" id="button1" class="win-btn-show" onclick="btnshow_Click()"><i class="fa fa-eye"></i> Show</button></span>
+                <label class="L" for="txtManualNo" style="left:323px;top:24px;">Manual No</label>
+                <input type="text" id="txtManualNo" class="T" autocomplete="off" style="left:407px;top:20px;width:191px;height:23px;">
+                <label class="L" style="left:323px;top:52px;">Account Title</label>
+                <select id="CmbAccountTitle" data-dtcombo="single" data-dtcombo-caption="AccountTitle"
+                        style="position:absolute;left:407px;top:46px;width:191px;height:26px;"></select>
+                <label class="L" style="left:323px;top:80px;">Custom Group</label>
+                <select id="CmbCustomGroup" data-dtcombo="single" data-dtcombo-caption="Custome Group"
+                        style="position:absolute;left:407px;top:74px;width:191px;height:26px;"></select>
+                <button type="button" id="button1" onclick="btnshow_Click()">Show</button>
+
+                <label class="R" style="left:603px;top:23px;"><input type="radio" id="rdApproved" name="rdApproval" value="Approved">Approved</label>
+                <label class="R" style="left:603px;top:51px;"><input type="radio" id="RdUnApproved" name="rdApproval" value="UnApproved">Un Approved</label>
+                <label class="R" style="left:603px;top:79px;"><input type="radio" id="RdAll" name="rdApproval" value="All" checked>All</label>
+                <label class="R" style="left:603px;top:105px;"><input type="checkbox" id="chkSkipCgs">Skip CGS Entries</label>
+
+                <div class="vv-gb" id="groupBox2" style="left:700px;top:9px;width:107px;height:65px;">
+                    <span class="gb-cap sub">Filter Type</span>
+                    <label class="R" style="left:6px;top:21px;"><input type="radio" id="rdDocFromToDate" name="rdFilterType" value="DocDate" checked>Doc Date</label>
+                    <label class="R" style="left:6px;top:44px;"><input type="radio" id="rdEntryFromToDate" name="rdFilterType" value="EntryDate">Entry Date</label>
+                </div>
+            </div>
         </div>
     </div>
-    <div class="gb">
-        <span class="gb-title">Approval</span>
-        <div class="fcol" style="gap:5px; margin-top:3px;">
-            <label class="chk"><input type="radio" id="rdApproved" name="rdApproval" value="Approved"> Approved</label>
-            <label class="chk"><input type="radio" id="RdUnApproved" name="rdApproval" value="UnApproved"> Un Approved</label>
-            <label class="chk"><input type="radio" id="RdAll" name="rdApproval" value="All" checked> All</label>
-            <label class="chk"><input type="checkbox" id="chkSkipCgs"> Skip CGS Entries</label>
-        </div>
-    </div>
-    <div class="gb">
-        <span class="gb-title">Filter Type</span>
-        <div class="fcol" style="gap:5px; margin-top:3px;">
-            <label class="chk"><input type="radio" id="rdDocFromToDate" name="rdFilterType" value="DocDate" checked> Doc Date</label>
-            <label class="chk"><input type="radio" id="rdEntryFromToDate" name="rdFilterType" value="EntryDate"> Entry Date</label>
-        </div>
-    </div>
-</div>
 
-<div class="grid-caption"><span>History</span><span id="lblStatusText"></span></div>
-<div class="grid-wrap"><table class="wg" id="grd"></table></div>
+    <!-- panel7 -->
+    <div class="vv-teal" id="panel7">
+        <span class="cap" id="label3">History</span>
+        <span class="rt" id="lblStatusText"></span>
+    </div>
+    <div class="vv-gbybox"><span class="chip">V.Code</span></div>
+    <div class="vv-grid" id="grdWrap"><table class="jg" id="grd"></table></div>
+    <div class="vv-nav"><span id="lblNav">Record: 0 of 0</span></div>
+</div>
 
 <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
-<script th:src="@{/build/js/countx_prod_combo.js?v=20260930s}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20261002gv}"></script>
 <script th:src="@{/build/js/countx_doc_link.js?v=20261001pr}"></script>
 <script th:src="@{/build/js/countx_acc_rpt_f.js?v=20260930s}"></script>
 <script>
-    let VV_CTX = null, vvRows = [];
+    let VV_CTX = null, vvRows = [], vvLastArgs = null, vvBusy = false, vvSelRow = null;
+    const vvFilter = {};
     function pick(r, a, b) { return r[a] !== undefined ? r[a] : r[b]; }
+    function n0(v) { const n = parseInt(v, 10); return isNaN(n) ? 0 : n; }
 
+    /* DDL.BindDDLNew(dt, combo, "Id", <display>, <caption>, false) - the UltraCombo starts with nothing chosen. */
+    function fillDocTypes(rows) {
+        const sel = document.getElementById('cmbdoctype');
+        const keep = $('#cmbdoctype').val() || [];
+        $(sel).empty();
+        (rows || []).forEach(function (r) {
+            $(sel).append($('<option>').val(pick(r, 'Id', 'id')).text(pick(r, 'DocumentTypeDescription', 'documentTypeDescription') || ''));
+        });
+        if (sel.__dtcombo && sel.__dtcombo.setValues) sel.__dtcombo.setValues(keep, true); else $(sel).val(keep);
+    }
     async function fillLists() {
         AccF.fillSelect('#CmbLanguage', await AccF.lookup('languages'), 'Id', 'LanguageDescription', '');
-        AccF.fillSelect('#cmbdoctype', await AccF.lookup('document-types'), 'Id', 'DocumentTypeDescription', null);
+        fillDocTypes(await AccF.lookup('document-types'));
         AccF.fillSelect('#CmbAccountTitle', await AccF.lookup('detail-accounts'), 'Id', 'AccountTitle', '');
         AccF.fillSelect('#CmbCustomGroup', await AccF.lookup('custom-groups'), 'Id', 'AcLookUpsDescription', '');
     }
 
-    function btnshow_Click() {
-        const ids = AccF.selectedIds('#cmbdoctype');
+    /* btnshow_Click: the ReportsParameters it builds. DocumentTypeIds = "," + Id for every checked Document Type
+       (the desktop splits cmbdoctype.Text on "," and looks each DocumentTypeDescription up in dtDocType). */
+    function docTypeIdsAsDesktop() {
+        const sel = document.getElementById('cmbdoctype');
+        let ids = '';
+        Array.prototype.forEach.call(sel.options, function (o) { if (o.selected && o.value !== '') ids += ',' + o.value; });
+        return ids;
+    }
+    function buildRequest() {
         const lang = $('#CmbLanguage').val();
-        const req = {
+        const ids = docTypeIdsAsDesktop();
+        return {
             fromDate: $('#fromdate').val(), toDate: $('#todate').val(),
             manualNo: $('#txtManualNo').val(),
             accountId: $('#CmbAccountTitle').val() ? parseInt($('#CmbAccountTitle').val(), 10) : null,
-            /* btnshow_Click builds DocumentTypeIds as "," + id for every checked row -> ",5,6" */
-            documentTypeIds: ids ? ',' + ids : null,
+            documentTypeIds: ids ? ids : null,
             customGroupId: $('#CmbCustomGroup').val() ? parseInt($('#CmbCustomGroup').val(), 10) : null,
             docNoFrom: parseInt($('#txtdocnofrom').val(), 10) || null,
             docNoTo: parseInt($('#txtdocnoto').val(), 10) || null,
-            approvedFilter: $('input[name="rdApproval"]:checked').val(),
-            filterType: $('input[name="rdFilterType"]:checked').val(),
+            approvedFilter: $('input[name="rdApproval"]:checked').val() || '',
+            filterType: $('#rdDocFromToDate').is(':checked') ? 'DocDate' : ($('#rdEntryFromToDate').is(':checked') ? 'EntryDate' : 'None'),
             skipCgs: $('#chkSkipCgs').is(':checked'),
             languageId: lang ? parseInt(lang, 10) : null
         };
+    }
+    /* The same ReportsParameters for the 115 / 119 prints (dtvoucher is what the desktop hands the .rpt). */
+    function printArgsFrom(req) {
+        const a = {};
+        if (req.filterType === 'DocDate') { if (req.fromDate) a.fromDate = req.fromDate; if (req.toDate) a.toDate = req.toDate; }
+        else if (req.filterType === 'EntryDate') { if (req.fromDate) a.entryDateFrom = req.fromDate; if (req.toDate) a.entryDateTo = req.toDate; }
+        if (req.docNoFrom) a.fromDocNo = req.docNoFrom;
+        if (req.docNoTo) a.toDocNo = req.docNoTo;
+        if (req.accountId) a.accountId = req.accountId;
+        if (req.customGroupId) a.customerGroupId = req.customGroupId;
+        if (req.manualNo) a.manualBillNo = req.manualNo;
+        if (req.approvedFilter === 'Approved') a.isApproved = 1;
+        else if (req.approvedFilter === 'UnApproved') a.isApproved = 0;
+        if (req.skipCgs) a.actionId = 1;
+        if (req.documentTypeIds) a.saleInvoiceDocumentTypeIds = req.documentTypeIds;
+        if (req.languageId) a.languageId = req.languageId;
+        return a;
+    }
+
+    function btnshow_Click() {
+        if (vvBusy) return;                                   /* a second click while the report runs is refused */
+        const req = buildRequest();
         const btn = $('#button1');
-        AccF.busy(btn, true);
+        vvBusy = true;
+        btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
         $.ajax({ url: '/accounts/api/voucher-validation/report', type: 'POST', contentType: 'application/json', data: JSON.stringify(req), dataType: 'json' })
             .done(function (res) {
-                if (res && res.success === false) { vvRows = []; render(); alert(res.message || 'Unable to load Voucher Validation Report.'); return; }
+                if (res && res.success === false) { vvRows = []; vvLastArgs = null; render(); alert(res.message || 'Unable to load Voucher Validation Report.'); return; }
                 vvRows = (res && res.data) || [];
+                vvLastArgs = printArgsFrom(req);
                 render();
             })
             .fail(function (x) {
-                vvRows = []; render();
+                vvRows = []; vvLastArgs = null; render();
                 alert((x.responseJSON && x.responseJSON.message) || 'Unable to load Voucher Validation Report.');
             })
-            .always(function () { AccF.busy(btn, false); });
+            .always(function () { vvBusy = false; btn.prop('disabled', false).text('Show'); });
     }
 
-    /* GridSettings */
+    /* ---- GridSettings ----------------------------------------------------------------------------------------- */
+    /* Visible columns in the dtGrid order; Id, DocumentTypeId, DocumentTypeSrNo, AccountId hidden; VoucherCode hidden
+       because the grid is grouped on it (HideColumnsWhenGrouped); "Slip" (caption "print") added last as a button. */
+    const VV_COLS = [
+        { key: 'DocumentType', caption: 'DocumentType', width: 110 },
+        { key: 'VoucherDate', caption: 'VoucherDate', width: 95 },
+        { key: 'AccountCode', caption: 'AccountCode', width: 100, link: 'ledger' },
+        { key: 'AccountTitle', caption: 'AccountTitle', width: 140 },
+        { key: 'AccountTitleCoag', caption: 'Offset Account', width: 140 },
+        { key: 'DebitAmount', caption: 'DebitAmount', width: 100, num: true },
+        { key: 'CreditAmount', caption: 'CreditAmount', width: 100, num: true },
+        { key: 'ChequeNo', caption: 'ChequeNo', width: 95 },
+        { key: 'ManualBillNo', caption: 'ManualBillNo', width: 100 },
+        { key: 'RefInvoiceNo', caption: 'RefInvoiceNo', width: 90 },
+        { key: 'Comments', caption: 'Comments', width: 250 },
+        { key: 'NoOfAttachments', caption: 'NoOfAttachments', width: 100, align: 'r' },
+        { key: 'Slip', caption: 'print', width: 40, button: true }
+    ];
+    function mapRow(r) {
+        return {
+            Id: pick(r, 'id', 'Id'), AccountId: pick(r, 'accountId', 'AccountId'), DocumentType: pick(r, 'documentType', 'DocumentType'),
+            DocumentTypeId: pick(r, 'documentTypeId', 'DocumentTypeId'), DocumentTypeSrNo: pick(r, 'documentTypeSrNo', 'DocumentTypeSrNo'),
+            VoucherCode: pick(r, 'voucherCode', 'VoucherCode'), VoucherDate: pick(r, 'voucherDate', 'VoucherDate'),
+            AccountCode: pick(r, 'accountCode', 'AccountCode'), AccountTitle: pick(r, 'accountTitle', 'AccountTitle'),
+            AccountTitleCoag: pick(r, 'offsetAccount', 'OffsetAccount'),
+            DebitAmount: pick(r, 'debitAmount', 'DebitAmount'), CreditAmount: pick(r, 'creditAmount', 'CreditAmount'),
+            ChequeNo: pick(r, 'chequeNo', 'ChequeNo'), ManualBillNo: pick(r, 'manualBillNo', 'ManualBillNo'),
+            RefInvoiceNo: pick(r, 'refInvoiceNo', 'RefInvoiceNo'), Comments: pick(r, 'comments', 'Comments'),
+            NoOfAttachments: pick(r, 'noOfAttachments', 'NoOfAttachments')
+        };
+    }
+    function cellText(c, r) {
+        if (c.button) return '';
+        const v = r[c.key];
+        if (c.num) return AccF.single(v);
+        return v == null ? '' : String(v);
+    }
     function render() {
-        const voucherLink = VV_CTX && VV_CTX.allowEditOnVoucherNoinReports;
-        const rows = vvRows.map(function (r) {
-            return {
-                Id: pick(r, 'id', 'Id'), AccountId: pick(r, 'accountId', 'AccountId'), DocumentType: pick(r, 'documentType', 'DocumentType'),
-                DocumentTypeId: pick(r, 'documentTypeId', 'DocumentTypeId'), DocumentTypeSrNo: pick(r, 'documentTypeSrNo', 'DocumentTypeSrNo'),
-                VoucherCode: pick(r, 'voucherCode', 'VoucherCode'), VoucherDate: pick(r, 'voucherDate', 'VoucherDate'),
-                AccountCode: pick(r, 'accountCode', 'AccountCode'), AccountTitle: pick(r, 'accountTitle', 'AccountTitle'),
-                AccountTitleCoag: pick(r, 'offsetAccount', 'OffsetAccount'),
-                DebitAmount: pick(r, 'debitAmount', 'DebitAmount'), CreditAmount: pick(r, 'creditAmount', 'CreditAmount'),
-                ChequeNo: pick(r, 'chequeNo', 'ChequeNo'), ManualBillNo: pick(r, 'manualBillNo', 'ManualBillNo'),
-                RefInvoiceNo: pick(r, 'refInvoiceNo', 'RefInvoiceNo'), Comments: pick(r, 'comments', 'Comments'),
-                NoOfAttachments: pick(r, 'noOfAttachments', 'NoOfAttachments'), print: 'print'
-            };
+        const $t = $('#grd').empty();
+        const $cg = $('<colgroup>');
+        VV_COLS.forEach(function (c) { $cg.append($('<col>').css('width', c.width + 'px')); });
+        const total = VV_COLS.reduce(function (s, c) { return s + c.width; }, 0);
+        $t.css('width', total + 'px').append($cg);
+        const $h = $('<tr>'), $f = $('<tr class="flt">');
+        VV_COLS.forEach(function (c) {
+            $h.append($('<th>').text(c.caption).attr('title', c.caption));
+            const $td = $('<td>');
+            if (!c.button) {
+                $td.append($('<input type="text" autocomplete="off">').attr('data-k', c.key).val(vvFilter[c.key] || '')
+                    .on('input', function () { vvFilter[c.key] = this.value; renderBody(); }));
+            }
+            $f.append($td);
         });
-        AccF.renderGrid({
-            table: '#grd', rows: rows, emptyText: '', groupBy: 'VoucherCode', groupCaption: 'V.Code', groupTotals: true,
-            columns: [
-                { key: 'DocumentType' },
-                { key: 'VoucherDate' },
-                { key: 'AccountCode', link: function (r) { AccF.openLedger(r.AccountId, $('#fromdate').val(), $('#todate').val()); } },
-                { key: 'AccountTitle' },
-                { key: 'AccountTitleCoag', caption: 'Offset Account' },
-                { key: 'DebitAmount', type: 'single', sum: true },
-                { key: 'CreditAmount', type: 'single', sum: true },
-                { key: 'ChequeNo' }, { key: 'ManualBillNo' }, { key: 'RefInvoiceNo' },
-                { key: 'Comments', wrap: true },
-                { key: 'NoOfAttachments', align: 'c' },
-                { key: 'print', caption: 'print', align: 'c' }
-            ]
+        $t.append($('<thead>').append($h, $f), $('<tbody>'), $('<tfoot>'));
+        renderBody();
+    }
+    function renderBody() {
+        const rows = vvRows.map(mapRow).filter(function (r) {
+            return Object.keys(vvFilter).every(function (k) {
+                const q = String(vvFilter[k] || '').trim().toLowerCase();
+                if (!q) return true;
+                const c = VV_COLS.find(function (x) { return x.key === k; });
+                return cellText(c, r).toLowerCase().indexOf(q) >= 0;
+            });
         });
-        if (voucherLink) {
-            $('#grd tr.grp').each(function () {
-                const $td = $(this).find('td').first();
-                const code = $td.text().replace(/^.*V\.Code:\s*/, '').replace(/\s*\(\d+\)\s*$/, '');
-                const first = rows.find(function (r) { return String(r.VoucherCode) === code; });
-                if (!first) return;
-                $td.append($('<a class="lnk" style="margin-left:8px;">').text('open').on('click', function (e) {
+        const allowLink = !!(VV_CTX && VV_CTX.allowEditOnVoucherNoinReports);
+        const $tb = $('#grd tbody').empty(), $tf = $('#grd tfoot').empty();
+        const span = VV_COLS.length;
+        if (!vvRows.length) {
+            /* grd.ClearStructure() when the procedure returns nothing */
+            $tb.append($('<tr>').append($('<td class="empty">').attr('colspan', span).text('')));
+        }
+        /* Groups.Add("VoucherCode"): ascending group order (Janus sorts the group column) */
+        const order = [], groups = {};
+        rows.forEach(function (r) { const g = r.VoucherCode == null ? '' : String(r.VoucherCode); if (!groups[g]) { groups[g] = []; order.push(g); } groups[g].push(r); });
+        order.sort(function (a, b) { const x = parseFloat(a), y = parseFloat(b); return (isNaN(x) || isNaN(y)) ? String(a).localeCompare(String(b)) : x - y; });
+        let td = 0, tc = 0;
+        order.forEach(function (g) {
+            const gr = groups[g];
+            let gd = 0, gc = 0;
+            const $g = $('<tr class="grp">'), $gtd = $('<td>').attr('colspan', span);
+            const $tg = $('<span class="tg">').text('−');
+            $gtd.append($tg, document.createTextNode('V.Code: '));
+            if (allowLink) {
+                /* LinkClicked on VoucherCode -> CommonServices.EditMethodFromLinked(DocumentTypeId, Id, DocumentTypeSrNo) */
+                const first = gr[0];
+                $gtd.append($('<a class="lnk">').text(g).attr('title', 'Open the voucher').on('click', function (e) {
                     e.preventDefault(); e.stopPropagation(); AccF.editLinked(first.DocumentTypeId, first.Id, first.DocumentTypeSrNo, 0);
                 }));
+            } else {
+                $gtd.append(document.createTextNode(g));
+            }
+            $g.append($gtd);
+            $tb.append($g);
+            const bodies = [];
+            gr.forEach(function (r) {
+                gd += AccF.num(r.DebitAmount); gc += AccF.num(r.CreditAmount);
+                const $r = $('<tr class="dr">');
+                VV_COLS.forEach(function (c) {
+                    const $c = $('<td>');
+                    if (c.num || c.align === 'r') $c.addClass('r');
+                    if (c.button) {
+                        $c.addClass('c').append($('<button type="button" class="gbtn">').text('print').on('click', function (e) {
+                            e.stopPropagation(); printRow(r, this);
+                        }));
+                    } else if (c.link === 'ledger' && r.AccountCode) {
+                        /* LinkClicked on AccountCode -> CommonServices.GoToGeneralLedgerFromLinkedEvent(AccountId, fromdate, todate) */
+                        $c.append($('<a class="lnk">').text(cellText(c, r)).on('click', function (e) {
+                            e.preventDefault(); AccF.openLedger(r.AccountId, $('#fromdate').val(), $('#todate').val());
+                        }));
+                    } else {
+                        const t = cellText(c, r);
+                        $c.text(t).attr('title', t);
+                    }
+                    $r.append($c);
+                });
+                $r.on('click', function () { $('#grd tr.dr.sel').removeClass('sel'); $r.addClass('sel'); vvSelRow = r; });
+                bodies.push($r);
+                $tb.append($r);
             });
-        }
-        $('#lblStatusText').text(vvRows.length ? 'Records: ' + vvRows.length : '');
+            /* GroupTotals = Always */
+            const $gt = $('<tr class="gt">');
+            VV_COLS.forEach(function (c, i) {
+                const $c = $('<td>');
+                if (c.key === 'DebitAmount') $c.addClass('r').text(AccF.single(gd));
+                else if (c.key === 'CreditAmount') $c.addClass('r').text(AccF.single(gc));
+                else if (i === 0) $c.text('Total');
+                $gt.append($c);
+            });
+            $tb.append($gt);
+            td += gd; tc += gc;
+            $tg.on('click', function () {
+                const open = $tg.text() !== '+';
+                bodies.forEach(function ($x) { $x.toggle(!open); });
+                $gt.toggle(!open);
+                $tg.text(open ? '+' : '−');
+            });
+        });
+        /* TotalRow, TotalRowPosition = BottomFixed */
+        const $ft = $('<tr>');
+        VV_COLS.forEach(function (c, i) {
+            const $c = $('<td>');
+            if (c.key === 'DebitAmount') $c.addClass('r').text(AccF.single(td));
+            else if (c.key === 'CreditAmount') $c.addClass('r').text(AccF.single(tc));
+            else if (i === 0) $c.text('Total');
+            $ft.append($c);
+        });
+        if (vvRows.length) $tf.append($ft);
+        $('#lblStatusText').text(vvRows.length ? 'Records: ' + rows.length + (rows.length !== vvRows.length ? ' of ' + vvRows.length : '') : '');
+        $('#lblNav').text('Record: ' + (rows.length ? 1 : 0) + ' of ' + rows.length);
     }
 
-    /* VoucherValidation.reset(): doc-no range, Account Title and Custom Group cleared, RdAll; nothing re-run */
+    /* ---- prints ------------------------------------------------------------------------------------------------ */
+    function withBusy(btn, fn) {
+        const $b = $(btn);
+        if ($b.data('busy')) return;
+        $b.data('busy', true).prop('disabled', true);
+        const $i = $b.find('.fa').first(), cls = $i.attr('class');
+        $i.attr('class', 'fa fa-spinner fa-spin');
+        Promise.resolve().then(fn).catch(function (e) { alert(e && e.message ? e.message : e); })
+            .then(function () { $b.data('busy', false).prop('disabled', false); $i.attr('class', cls); });
+    }
+    /* print_Click_1 (115) / btnPrint119_Click: the rows on screen (dtvoucher), else "Record Not Found For Display". */
+    function printToolbar(btn) {
+        if (!vvRows.length || !vvLastArgs) { alert('Record Not Found For Display'); return; }
+        if (typeof window.printRpt !== 'function') { alert('Printing is not available on this page.'); return; }
+        withBusy(btn, function () { return window.printRpt(btn.getAttribute('data-rpt'), Object.assign({}, vvLastArgs), btn); });
+    }
+    /* grd_ColumnButtonClick: VoucherValidationReport for this row's Id (+ FinancialYearId) -> 115-AcRptVoucherValidation.rpt */
+    function printRow(r, btn) {
+        if (typeof window.printRpt !== 'function') { alert('Printing is not available on this page.'); return; }
+        const fy = VV_CTX && VV_CTX.activeYear && (VV_CTX.activeYear.id || VV_CTX.activeYear.Id);
+        const a = { id: r.Id };
+        if (fy) a.financialYearId = fy;
+        withBusy(btn, function () { return window.printRpt('115-AcRptVoucherValidation.rpt', a, null); });
+    }
+
+    /* ---- VoucherValidation.reset(): doc-no range, Account Title and Custom Group cleared, RdAll; nothing re-run --- */
     function resetForm() {
         $('#txtdocnofrom, #txtdocnoto').val('');
         $('#CmbAccountTitle, #CmbCustomGroup').val('');
         $('#RdAll').prop('checked', true);
-        $('#cmbdoctype').focus();
+        AccF.focus('#cmbdoctype');
     }
-    /* btnRefresh_Click: the four fills again */
-    async function refreshForm() { try { await fillLists(); } catch (e) { alert(e.message); } }
+    /* btnRefresh_Click: VouchertypeFill, GetAllDetailAccount, CustomeGroupsDefine, MultiLanguagesGetAll again */
+    function refreshForm() {
+        withBusy(document.getElementById('btnRefresh'), function () { return fillLists(); });
+    }
 
+    /* txtdocnofrom / txtdocnoto KeyPress -> CommonServices.OnlytextNumberFunction: digits and control keys only */
+    $(document).on('keypress', '#txtdocnofrom, #txtdocnoto', function (e) {
+        if (e.ctrlKey || e.metaKey || e.which < 32) return;
+        if (!/[0-9]/.test(String.fromCharCode(e.which))) e.preventDefault();
+    });
+    $(document).on('paste', '#txtdocnofrom, #txtdocnoto', function () {
+        const el = this; setTimeout(function () { el.value = el.value.replace(/\D+/g, ''); }, 0);
+    });
+
+    /* VoucherValidation_KeyDown: Ctrl+P 115-Print, Ctrl+E / Esc close, Ctrl+N Reset, Ctrl+L shows Language */
     $(document).on('keydown', function (e) {
-        if (e.ctrlKey && (e.key === 'l' || e.key === 'L')) { e.preventDefault(); $('.vv-lang').removeClass('hidden-ctl'); AccF.focus('#CmbLanguage'); }
-        if (e.ctrlKey && (e.key === 'n' || e.key === 'N')) { e.preventDefault(); resetForm(); }
+        const k = (e.key || '').toLowerCase();
+        if (e.ctrlKey && k === 'p') { e.preventDefault(); printToolbar(document.getElementById('print')); }
+        else if (e.ctrlKey && k === 'n') { e.preventDefault(); resetForm(); }
+        else if (e.ctrlKey && k === 'l') { e.preventDefault(); $('.vv-lang').removeClass('hidden-ctl'); AccF.focus('#CmbLanguage'); }
+        else if ((e.ctrlKey && k === 'e') || (k === 'escape' && !$('.dtcombo-pop:visible').length)) { e.preventDefault(); window.location.href = '/accounts/dashboard'; }
     });
 
     $(function () { (async function () {
+        /* VoucherValidation_Load: RdAll; fromdate = Now (todate keeps its own default, today) */
+        $('#RdAll').prop('checked', true);
         $('#fromdate').val(AccF.today());
         $('#todate').val(AccF.today());
+        render();
         try {
             VV_CTX = await AccF.context();
             await fillLists();
