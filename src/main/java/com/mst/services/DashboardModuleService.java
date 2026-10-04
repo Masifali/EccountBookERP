@@ -1169,10 +1169,13 @@ public class DashboardModuleService {
         /* frmMenue.DynamicallyGenerateCards (:91): ScreenViewReights.Where(x => x.ModuleID == ModId
            && x.Value) - the module id alone, every row in the procedure's order. The rows are
            already only this user's, so no other test is added (appId is kept in the signature). */
+        java.util.Set<String> favs = favoriteScreenNames();
         for (Map<String, Object> r : rights()) {
             if (asInt(moduleIdOf(r)) != moduleId) continue;
             moduleTitle = str(col(r, "ModuleDescription"));
-            screens.add(screenCard(r));
+            Map<String, Object> sc = screenCard(r);
+            sc.put("isFavorite", favs.contains(str(col(r, "ScreenName")).toLowerCase()));
+            screens.add(sc);
         }
         out.put("moduleTitle", moduleTitle);
         out.put("screens", screens);
@@ -1295,6 +1298,57 @@ public class DashboardModuleService {
     public String desktopFormFor(String className) {
         if (className == null || className.isEmpty()) return null;
         return DESKTOP_FORMS.getOrDefault(className, className + ".cs");
+    }
+
+    // ---------------------------------------------------------------- favourites
+    /* ScreenDynamicallyGenerateCards: the red star on each screen card. Fav_Star_Fill when the screen is
+       in FavoriteScreens (Sp_FavoriteScreens_ReadAll @Activity='ReadByUserId', matched on ScreenName),
+       Fav_Star_Empty otherwise. pictureBox1_Click: not favourite -> FavoriteScreens.save
+       (Sp_FavoriteScreens_Insert); favourite -> Sp_FavoriteScreens_ReadAll 'DeleteByScreenNameAndUserId'. */
+
+    /** Lower-cased ScreenNames of the current user's favourites; empty if the read fails. */
+    public java.util.Set<String> favoriteScreenNames() {
+        java.util.Set<String> out = new java.util.HashSet<>();
+        try {
+            List<Map<String, Object>> rows = jdbcTemplate.queryForList(
+                    "EXEC Sp_FavoriteScreens_ReadAll @OrganizationId=?, @CompanyId=?, @UserId=?, @Activity='ReadByUserId'",
+                    currentUserContext.currentOrganizationId(), currentUserContext.currentCompanyId(),
+                    currentUserContext.currentUserId());
+            for (Map<String, Object> f : rows) out.add(str(col(f, "ScreenName")).toLowerCase());
+        } catch (Exception e) {
+            LOG.warn("Sp_FavoriteScreens_ReadAll ReadByUserId failed: {}", e.getMessage());
+        }
+        return out;
+    }
+
+    /** Toggles one screen; the screen must be one of the user's View rights. Returns the new state. */
+    public Map<String, Object> toggleFavorite(int screenId) {
+        Map<String, Object> row = null;
+        for (Map<String, Object> r : rights()) {
+            Integer id = asIntOrNull(col(r, "ScreenID"));
+            if (id == null) id = asIntOrNull(col(r, "ScreenId"));
+            if (id != null && id == screenId) { row = r; break; }
+        }
+        if (row == null) throw new IllegalArgumentException("This screen is not in your view rights.");
+        String screenName = str(col(row, "ScreenName"));
+        String alias = str(col(row, "ScreenAlias"));
+        int userId = currentUserContext.currentUserId();
+        boolean favourite = favoriteScreenNames().contains(screenName.toLowerCase());
+        if (favourite) {
+            jdbcTemplate.update("EXEC Sp_FavoriteScreens_ReadAll @UserId=?, @ScreenName=?, @Activity='DeleteByScreenNameAndUserId'",
+                    userId, screenName);
+        } else {
+            jdbcTemplate.queryForList("EXEC Sp_FavoriteScreens_Insert @Id=0, @UserId=?, @ScreenName=?, @ScreenId=?, @ScreenTitle=?, "
+                            + "@ScreenRoute='', @CompanyId=?, @OrganizationId=?, @TargetUrl=?",
+                    userId, screenName, screenId, alias.isEmpty() ? screenName : alias,
+                    currentUserContext.currentCompanyId(), currentUserContext.currentOrganizationId(),
+                    str(col(row, "TargetUrl")));
+        }
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("success", true);
+        out.put("isFavorite", !favourite);
+        out.put("message", favourite ? "Removed from favourites." : "Added to favourites.");
+        return out;
     }
 
     // ---------------------------------------------------------------- helpers

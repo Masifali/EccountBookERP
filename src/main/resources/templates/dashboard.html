@@ -435,6 +435,12 @@
                 <i class="fa" th:classappend="${appRoute == '/app/packing-material' or sc['built']} ? 'fa-university' : 'fa-wrench'"></i>
                 <span class="n" th:text="${sc['title']}">Screen</span>
                 <span class="f" th:text="${sc['built']} ? ${sc['route']} : 'not on the web yet'">x</span>
+                <!-- ScreenDynamicallyGenerateCards pictureBox1: Fav_Star_Fill / Fav_Star_Empty (red) -->
+                <span class="dbs-fav" role="button" tabindex="0"
+                      th:classappend="${sc['isFavorite'] == true} ? 'on' : ''"
+                      th:attr="data-screen-id=${sc['screenId']},aria-pressed=${sc['isFavorite'] == true}"
+                      th:title="${sc['isFavorite'] == true} ? 'Remove from favourites' : 'Add to favourites'">
+                    <i class="fa" th:classappend="${sc['isFavorite'] == true} ? 'fa-star' : 'fa-star-o'" aria-hidden="true"></i></span>
             </a>
         </div>
     </div>
@@ -445,6 +451,37 @@
 </div>
 <div th:if="${appRoute == '/app/packing-material'}" id="packingMenuLoading" class="packing-menu-loading" role="status" aria-live="polite" hidden><span class="packing-menu-spinner" aria-hidden="true"></span><span>Opening…</span></div>
 <script th:if="${appRoute == '/app/packing-material'}" th:src="@{/build/js/packing_material_menu.js?v=20260927-1}"></script>
-<div th:replace="fragments/gear_button :: gear"></div>
+<script>
+/* Star click (desktop pictureBox1_Click): toggle FavoriteScreens without opening the card's screen. */
+(function () {
+    function toggle(star) {
+        if (star.classList.contains('busy')) return;
+        star.classList.add('busy');
+        fetch((document.body.getAttribute('data-ctx') || '') + '/api/dashboard/favorite?screenId=' + encodeURIComponent(star.getAttribute('data-screen-id')),
+              { method: 'POST', credentials: 'same-origin', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+            .then(function (res) {
+                if (!res.ok || !res.j || res.j.success === false) throw new Error((res.j && res.j.message) || 'Favourite could not be saved.');
+                var on = !!res.j.isFavorite, i = star.querySelector('i');
+                star.classList.toggle('on', on);
+                star.setAttribute('aria-pressed', String(on));
+                star.title = on ? 'Remove from favourites' : 'Add to favourites';
+                i.classList.toggle('fa-star', on); i.classList.toggle('fa-star-o', !on);
+            })
+            .catch(function (e) { alert(e.message); })
+            .then(function () { star.classList.remove('busy'); });
+    }
+    document.addEventListener('click', function (e) {
+        var star = e.target.closest && e.target.closest('.dbs-fav');
+        if (!star) return;
+        e.preventDefault(); e.stopPropagation();
+        toggle(star);
+    }, true);
+    document.addEventListener('keydown', function (e) {
+        var star = e.target.closest && e.target.closest('.dbs-fav');
+        if (star && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); e.stopPropagation(); toggle(star); }
+    }, true);
+})();
+</script>
 </body>
 </html>

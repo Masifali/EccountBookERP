@@ -38,7 +38,7 @@
 <div class="win-toolbar">
     <button type="button" class="win-btn" onclick="resetCL()"><i class="fa fa-plus text-success"></i> Reset</button>
     <button type="button" class="win-btn" onclick="refreshCL()"><i class="fa fa-refresh text-primary"></i> Refresh</button>
-    <button type="button" class="win-btn" onclick="printCL()" data-rpt="130-RptAcSupplierCustomerQuantativeGL.rpt"><i class="fa fa-print"></i> 130-Print</button>
+    <button type="button" class="win-btn" onclick="printCL()" data-rpt="130-RptAcSupplierCustomerQuantativeGL.rpt" data-rpt-own><i class="fa fa-print"></i> 130-Print</button>
     <button type="button" class="win-btn" onclick="shortcutKeys()"><i class="fa fa-keyboard-o"></i> ShortCut Keys</button>
 </div>
 <div class="win-header-panel"><span>Party  Ledger</span></div>
@@ -181,8 +181,17 @@
     }
     /* btnRefresh_Click: suppliercustomer() */
     async function refreshCL() { try { await suppliercustomer(); } catch (e) { alert(e.message); } }
-    /* print_Click_1: "Record Not Found For Display" when the grid is empty; 130-RptAcSupplierCustomerQuantativeGL.rpt is a Crystal report */
-    function printCL() { if (!clRows.length) { alert('Record Not Found For Display'); return; } window.print(); }
+    /* Both the toolbar and Ctrl+P use report 130 with the selected party and dates. */
+    function printCL() {
+        if (!clRows.length) { alert('Record Not Found For Display'); return; }
+        const supplierCustomerId = parseInt($('#comSupplier').val(), 10);
+        if (!(supplierCustomerId > 0)) { alert('Party Name required. Please Check!'); return; }
+        const fromDate = $('#txtfromdate').val(), toDate = $('#txttodate').val();
+        if (!fromDate || !toDate || fromDate > toDate) { alert('Select a valid From Date and To Date.'); return; }
+        return window.printRpt('130-RptAcSupplierCustomerQuantativeGL.rpt', {
+            supplierCustomerId: supplierCustomerId, fromDate: fromDate, toDate: toDate
+        });
+    }
     function shortcutKeys() {
         alert(['Ctrl+N  For Reset', 'Ctrl+R  For Refresh', 'Ctrl+E  For Close', 'Ctrl+P  For Print', 'Ctrl+S  For Show Data',
             'Ctrl+F5  For Focus on Date Type', 'Ctrl+alt  To Show ShortCut Keys Form', 'Ctrl+ArrowDown  For Focus On Grids'].join('\n'));
