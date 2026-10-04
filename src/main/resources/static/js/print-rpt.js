@@ -33,6 +33,8 @@
 
     function readEl(el) {
         if (!el) return undefined;
+        // A record count / progress message is presentation, never a report filter.
+        if (el.getAttribute && el.getAttribute('role') === 'status') return undefined;
         if (el.type === 'checkbox' || el.type === 'radio') return el.checked ? 1 : 0;
         if (el.tagName === 'SELECT' && el.multiple)
             return Array.prototype.filter.call(el.options, function (o) { return o.selected; }).map(function (o) { return o.value; }).join(',');

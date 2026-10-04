@@ -30,6 +30,33 @@ public final class SaleActivitiesReportColumns {
         "INVOICE WISE PROFITABLITY",
         "Sales Summary HsCode"
     );
+    private static final Map<String,String> PRINTS=Map.ofEntries(
+        Map.entry("Sales Register","312-SalesRegisterSummary"),
+        Map.entry("Sales Summary By Item","316-SalesRegisterSummaryByItemWithoutPacking"),
+        Map.entry("Sales Summary By Item & City","342-SalesSummaryByItem&City"),
+        Map.entry("Sales Summary By Item & Pack Size","314-SalesRegisterSummaryByItem"),
+        Map.entry("Sales Summary By Item & Warehouse","317-SalesRegisterSummaryByWarehouse"),
+        Map.entry("Sales Summary By Item,Pack Size & City","344-SalesSummaryByItemPackSize&City"),
+        Map.entry("Sales Summary By Customer","313-SalesRegisterSummaryByCustomer"),
+        Map.entry("Sales Summary By Customer & Item","315-SalesRegisterSummaryByCustomer&Item"),
+        Map.entry("Sales Summary By Customer & City","343-SalesSummaryByCustomer&City"),
+        Map.entry("Sales Summary By Customer,Item & City","345-SalesSummaryByCustomerItem&City"),
+        Map.entry("Sales Summary By Customer & Pack Size","346-SalesSummaryByCustomer&PackSize"),
+        Map.entry("Sales Summary By Parent Category","347-SalesSummaryByParentCategory"),
+        Map.entry("Sales Summary By Parent Category & Item","348-SalesSummaryByParentCategory&Item"),
+        Map.entry("Sales Summary By Parent Category & Customer","349-SalesSummaryByParentCategory&Customer"),
+        Map.entry("Sales Summary By ReferenceParty","350-SalesSummaryByReferenceParty"),
+        Map.entry("Sales Summary By ReferenceParty & City","351-SalesSummaryByReferenceParty&City"),
+        Map.entry("Sales Summary By ReferenceParty & Pack Size","352-SalesSummaryByReferenceParty&PackSize"),
+        Map.entry("Sales Summary By Customer & ReferenceParty","378-SalesSummaryByCustomer&ReferenceParty"),
+        Map.entry("Sales Summary By Customer,Item & ReferenceParty","376-SalesSummaryByCustomer,ItemReferenceParty"),
+        Map.entry("Sales Summary By ReferenceParty & Item","377-SalesSummaryByReferenceParty&Item"),
+        Map.entry("Sales Summary By ReferenceParty,Item & Pack Size","379-SalesSummaryByReferenceParty,Item&PackSize"),
+        Map.entry("INVOICE WISE PROFITABLITY","381-SaleInvoicewiseProfitablity"),
+        Map.entry("Sales Summary HsCode","397-SaleSummaryByHsCode")
+    );
+    public static Map<String,String> printLabels(){return PRINTS;}
+    public static String printTemplate(String activity){spec(activity);return PRINTS.get(activity)+".rpt";}
     private static final Map<String,String> SPECS = Map.ofEntries(
         Map.entry("Sales Register", "Id:RefDocIdNo,DocumentTypeId:RefDocumentTypeId,BranchName:BranchName,DocType:DocumentTypeCode,SoNo:SoNo,GpNo:GpNoDcNo,GdnNo:GdnNo,BillDate:DocDate,BillNo:DocCodeNo,BranchSrNo:BranchSrNo,ManualBillNo:ReferenceNo,PartyName:Customer,WareHouseName:WarehouseName,ItemCode:ItemCode,ItemName:ItemName,HsCode:HsCode,PackUom:UOMCode,CropYear:CropBatch,JobLot:JobLotCode,PackingType:PackTypeCode,VehicleNo:VehicleNo,ItemQty:QtyOut,BillWeight:BillWeightOut,StockWeight:StockWeight,ItemRate:ItemRate,RateCut:RateCut,NetRate:$NetRate,ItemAmountWithoutExpense:ItemAmountWithoutExpense,AvgRate:AvgRate,AvgRate40Kg:AvgRate40Kg,Expenses:Expenses,Freight:Freight,Commission:Commission,Amount:AmountOut,PrctByAmount:PrcntOfTotal,PrctByWeight:PrcntOfTotalWeight,CityName:CityName,TicketNos:TicketNos"),
         Map.entry("Sales Summary By Item", "ItemCode:ItemCode,ItemName:ItemName,HsCode:HsCode,ItemQty:QtyOut,BillWeight:BillWeightOut,Amount:AmountOut,AvgRate:AvgRate40Kg,PrctByAmount:PrcntOfTotal,PrctByWeight:PrcntOfTotalWeight,CityName:CityName"),

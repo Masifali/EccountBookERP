@@ -1,15 +1,20 @@
-/* Shared application rail; page controls and report layouts keep their own styles. */
-body.erp-with-navigation {
+/* Reserve space as soon as the rail is rendered, even before its script loads. */
+body.erp-with-navigation, body:has(> #erp-navigation) {
     --erp-sidebar-width: 100px;
     margin-left: var(--erp-sidebar-width) !important;
     width: auto;
 }
-body.erp-navigation-expanded { --erp-sidebar-width: 230px; }
+body.erp-navigation-expanded, body.erp-navigation-expanded:has(> #erp-navigation) { --erp-sidebar-width: 230px; }
 .erp-navigation, .erp-navigation * { box-sizing: border-box; }
 .erp-navigation { font: 12px/1.4 "Segoe UI", Tahoma, sans-serif; color: #34495e; }
 /* Keep the rail's internal z-index below page dialogs and fullscreen grids.
    Isolation also works for legacy dialogs whose z-index is auto. */
 #erp-navigation { position: relative; isolation: isolate; flex: 0 0 auto; }
+/* An open menu must cover positioned form fields and sticky grid headings.
+   Keep the normal rail below page dialogs again as soon as its menus close. */
+#erp-navigation:has(.erp-shortcut-panel:not([hidden]), .erp-user-dropdown:not([hidden]), .gb-root.is-open) {
+    z-index: 2200;
+}
 /* Desktop forms that fill the viewport must share its height with the app bar. */
 body.erp-with-navigation.erp-viewport-page { display: flex; flex-direction: column; height: 100vh; }
 body.erp-with-navigation.erp-viewport-page > #frm,
@@ -70,7 +75,7 @@ body.erp-with-navigation.erp-viewport-page > .win-title-bar { flex: 0 0 auto; }
 .erp-with-navigation .left_col, .erp-with-navigation .top_nav { display: none !important; }
 .erp-with-navigation .right_col, .erp-with-navigation .main_container > footer { margin-left: 0 !important; }
 @media (max-width: 767px) {
-    body.erp-with-navigation { margin-left: 0 !important; }
+    body.erp-with-navigation, body:has(> #erp-navigation) { margin-left: 0 !important; }
     .erp-module-sidebar { width: 230px; transform: translateX(-100%); }
     .erp-navigation-expanded .erp-module-sidebar { transform: translateX(0); }
     .erp-navigation-expanded #erp-navigation { z-index: 2100; }
@@ -83,7 +88,7 @@ body.erp-with-navigation.erp-viewport-page > .win-title-bar { flex: 0 0 auto; }
 }
 @media print {
     .erp-navigation { display: none !important; }
-    body.erp-with-navigation { margin-left: 0 !important; }
+    body.erp-with-navigation, body:has(> #erp-navigation) { margin-left: 0 !important; }
 }
 
 /* user dropdown (2026-10-04) */

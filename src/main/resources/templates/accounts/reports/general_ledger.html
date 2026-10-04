@@ -8,9 +8,9 @@
 
     <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
-    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
     <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260930s}">
     <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20261002gv}">
+    <link rel="stylesheet" th:href="@{/build/css/general_ledger_ui.css?v=20261004multi}">
 
     <style>
         *,
@@ -51,7 +51,7 @@
         .win-nav-tabs > li > a { border: 1px solid #99aab8; border-bottom: none; background: #e4ebf2; color: #222; padding: 2px 8px; font-size: 10.5px; font-weight: normal; border-radius: 2px 2px 0 0; text-decoration: none; display: block; }
         .win-nav-tabs > li.active > a { background: #ffffff; color: #000; font-weight: bold; border-color: #99aab8; }
 
-        .win-toolbar { background: linear-gradient(to bottom, #ffffff 0%, #d8e0e8 100%); border-bottom: 1px solid #a0b0c0; padding: 2px 6px; display: flex; gap: 4px; align-items: center; height: 25px; box-sizing: border-box; }
+        .win-toolbar { background: linear-gradient(to bottom, #ffffff 0%, #d8e0e8 100%); border-bottom: 1px solid #a0b0c0; padding: 2px 6px; display: flex; flex-wrap: wrap; gap: 4px; align-items: center; min-height: 25px; box-sizing: border-box; }
 
         .win-btn { background: linear-gradient(to bottom, #ffffff 0%, #e4e9ed 100%); border: 1px solid #849ca8; border-radius: 2px; padding: 1px 7px; font-size: 10.5px; font-weight: 600; color: #000; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; height: 20px; box-shadow: inset 0 1px 0 #fff; text-decoration: none; }
         .win-btn:hover { background: #e0f2f1; border-color: #00796B; text-decoration: none; color: #000; }
@@ -106,16 +106,14 @@
         .win-label { font-weight: 600; color: #222; margin-bottom: 1px; font-size: 10px; white-space: nowrap; }
         .win-input { border: 1px solid #7f9db9; border-radius: 1px; padding: 1px 3px; font-size: 10.5px; font-family: Tahoma, sans-serif; height: 20px; width: 100%; background-color: #ffffff; box-sizing: border-box; }
         .win-input:focus { border-color: #00796B; outline: none; }
+        .win-input.dtcombo-wrap .dtcombo-input { font: 10.5px Tahoma, sans-serif; height: 20px; min-height: 20px; }
         
         .win-btn-show { background: #00796B; color: #ffffff; border: 1px solid #004d40; font-weight: bold; font-size: 11px; padding: 1px 10px; height: 21px; border-radius: 2px; cursor: pointer; }
         .win-btn-show:hover { background: #004d40; }
 
-        /* Select2 custom compact styles */
-        .select2-container { width: 100% !important; max-width: 100% !important; min-width: 0 !important; box-sizing: border-box !important; }
-        .select2-container--default .select2-selection--single { height: 20px !important; padding: 0px 3px; font-size: 10.5px; font-family: Tahoma, sans-serif; border: 1px solid #7f9db9; border-radius: 1px; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; }
-        .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 18px !important; padding-left: 0px; color: #000; overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important; max-width: calc(100% - 15px) !important; display: block !important; }
-        .select2-container--default .select2-selection--single .select2-selection__arrow { height: 18px !important; }
-        .select2-container--default .select2-selection--multiple { min-height: 20px !important; font-size: 10.5px; font-family: Tahoma, sans-serif; border: 1px solid #7f9db9; border-radius: 1px; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; }
+        body { padding-bottom: 28px; }
+        body:has(> #erp-navigation) .ledger-footer { left: var(--erp-sidebar-width, 100px) !important; }
+        @media (max-width:767px) { body:has(> #erp-navigation) .ledger-footer { left: 0 !important; } }
 
         /* Table Scroll Wrapper & Grid Table Styling */
         .table-scroll-wrapper {
@@ -362,9 +360,17 @@
 
     <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
     <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.min.js}"></script>
-    <script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
-    <script th:src="@{/build/js/countx_prod_combo.js?v=20261002gv}" data-dtcombo-checked-only></script>
+    <script th:src="@{/build/js/countx_prod_combo.js?v=20261004ledger}"></script>
+    <script th:src="@{/build/js/general_ledger_ui.js?v=20261004accounts}"></script>
     <script th:inline="javascript">
+        const ledgerAccounts = GeneralLedgerUi.normalizeAccounts(/*[[${accountsList}]]*/ []);
+        let bankAccounts = [];
+        function refreshAccountPickers() {
+            const byTitle = document.getElementById('rdAcByName').checked;
+            GeneralLedgerUi.fillAccounts(document.getElementById('cmbAccountTitle'), ledgerAccounts, byTitle);
+            GeneralLedgerUi.fillAccounts(document.getElementById('cmbMultiAccounts'), ledgerAccounts, byTitle);
+            GeneralLedgerUi.fillAccounts(document.getElementById('cmbBankAccounts'), bankAccounts, byTitle);
+        }
         function fmt(v) {
             const n = parseFloat(v);
             if (isNaN(n)) return '0';
@@ -807,7 +813,7 @@
                         <td style="text-align:right;">${debit ? fmt(debit) : '0'}</td>
                         <td style="text-align:right;">${credit ? fmt(credit) : '0'}</td>
                         <td style="text-align:right; font-weight:bold;">${balFmt}</td>
-                        <td>${r.Comments || r.Remarks || ''}</td>
+                        <td>${$('<div>').text(r.Comments || r.Remarks || '').html()}</td>
                     </tr>
                 `);
             });
@@ -822,6 +828,7 @@
                     <td></td>
                 </tr>
             `);
+            GeneralLedgerUi.comments(document.getElementById('glTable'));
         }
 
         function renderGrid(data) {
@@ -1122,7 +1129,7 @@
                             <td style="text-align:right;">${r.BillAmount ? fmt(r.BillAmount) : '0'}</td>
                             <td style="text-align:center;">${r.DueDays || '0'}</td>
                             <td style="text-align:center;">${dDate}</td>
-                            <td style="white-space:normal; word-break:break-word; min-width:250px;">${comments}</td>
+                            <td>${$('<div>').text(comments).html()}</td>
                             <td>${chequeNo}</td>
                             <td style="text-align:center;">${chequeDate}</td>
                             <td>${payeeTitle}</td>
@@ -1150,6 +1157,7 @@
                     </tr>
                 `);
             }
+            GeneralLedgerUi.comments(document.getElementById('glTable'));
         }
 
         function toggleAllCheckboxes(master) {
@@ -1217,7 +1225,7 @@
         }
 
         function resetGL() {
-            $('#cmbAccountTitle, #cmbDateType').val('').trigger('change.select2');
+            $('#cmbAccountTitle, #cmbDateType').val('');
             $('#cmbMultiAccounts, #cmbBankAccounts').val([]).trigger('change');
             $('#txtFromDate').val('2026-08-01');
             const todayStr = new Date().toISOString().split('T')[0];
@@ -1259,31 +1267,28 @@
             if (paramToDate) $('#txtToDate').val(paramToDate);
             else if (!$('#txtToDate').val()) $('#txtToDate').val(todayStr);
 
-            $('#cmbAccountTitle, #cmbDateType').select2({
-                width: '100%',
-                dropdownAutoWidth: true
-            });
+            refreshAccountPickers();
+            $('input[name="rdAcBy"]').on('change', refreshAccountPickers);
+            document.getElementById('cmbDateType').setAttribute('data-dtcombo', 'single');
+            DesktopCombo.enhance(document.getElementById('cmbDateType'));
 
-            /* 2026-10-02: #cmbMultiAccounts / #cmbBankAccounts are checked combos (countx_prod_combo.js,
-               data-dtcombo-checked) - select2 removed; .val() still returns the id array */
+            // Checked account pickers keep their native selection arrays for the report requests.
 
             $.get('/accounts/api/reports/bank-accounts', function(data) {
                 if (data && data.length > 0) {
-                    const $b = $('#cmbBankAccounts').empty();
-                    data.forEach(function(ac) {
+                    bankAccounts = data.map(function(ac) {
                         const id = ac.id || ac.Id || ac.ID;
                         const code = ac.accountCode || ac.AccountCode || '';
                         const title = ac.accountTitle || ac.AccountTitle || '';
-                        if (id && title) {
-                            $b.append(new Option((code ? code + ' - ' : '') + title, id));
-                        }
-                    });
-                    $b.trigger('change.select2');
+                        const details = ledgerAccounts.find(row => String(row.Id) === String(id)) || ac;
+                        return {...details, Id:id, AccountCode:code, AccountTitle:title};
+                    }).filter(ac => ac.Id && ac.AccountTitle);
+                    GeneralLedgerUi.fillAccounts(document.getElementById('cmbBankAccounts'), bankAccounts, $('#rdAcByName').is(':checked'));
                 }
             });
 
             if (paramAccountId) {
-                $('#cmbAccountTitle').val(paramAccountId).trigger('change.select2');
+                $('#cmbAccountTitle').val(paramAccountId);
                 loadAccountInfo();
                 executeGL();
             }
@@ -1291,7 +1296,7 @@
     </script>
 
     <!-- Bottom Footer Tabs Bar matching Desktop C# screenshot -->
-    <div style="position: fixed; bottom: 0; left: 0; right: 0; background: #c0c7cf; border-top: 1px solid #999; padding: 2px 8px 0 8px; display: flex; gap: 4px; z-index: 1000; font-size: 10.5px;">
+    <div class="ledger-footer" style="position: fixed; bottom: 0; left: 0; right: 0; background: #c0c7cf; border-top: 1px solid #999; padding: 2px 8px 0 8px; display: flex; gap: 4px; z-index: 1000; font-size: 10.5px;">
         <a href="/accounts/reports/general-ledger" style="background: #ffffff; color: #00796B; font-weight: bold; border: 1px solid #00796B; border-bottom: none; padding: 2px 10px; text-decoration: none; border-radius: 2px 2px 0 0; box-shadow: 0 -1px 2px rgba(0,0,0,0.1);">General Ledger</a>
         <a href="/accounts/reports/customer-ledger" style="background: #d8e0e8; color: #333; font-weight: bold; border: 1px solid #94a3b8; border-bottom: none; padding: 2px 10px; text-decoration: none; border-radius: 2px 2px 0 0;">Party_Ledger</a>
     </div>

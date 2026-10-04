@@ -9,6 +9,7 @@
     <link rel="stylesheet" th:href="@{/build/css/countx_acc_rpt_f.css?v=20260930s}">
     <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260930s}">
     <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/general_ledger_ui.css?v=20261004multi}">
     <style>
         .accf .info { display: grid; grid-template-columns: 90px 110px 70px 110px 26px; gap: 2px 6px; font-size: 10.5px; font-weight: bold; align-items: center; }
         .accf .info .v { text-align: right; }
@@ -135,6 +136,7 @@
 <script th:src="@{/build/js/countx_prod_combo.js?v=20260930s}"></script>
 <script th:src="@{/build/js/countx_doc_link.js?v=20261001pr}"></script>
 <script th:src="@{/build/js/countx_acc_rpt_f.js?v=20260930s}"></script>
+<script th:src="@{/build/js/general_ledger_ui.js?v=20261004accounts}"></script>
 <script th:inline="javascript">
     const PRESET = {
         accountId: /*[[${selectedAccountId}]]*/ null,
@@ -149,9 +151,7 @@
 
     function accountDisplay() {
         const byName = $('#RdAcByName').is(':checked');
-        const cur = $('#cmbAccountTitle').val();
-        AccF.fillSelect('#cmbAccountTitle', ACCOUNTS, 'Id', byName ? 'AccountTitle' : 'AccountCode', '');
-        if (cur) $('#cmbAccountTitle').val(cur);
+        GeneralLedgerUi.fillAccounts(document.getElementById('cmbAccountTitle'), ACCOUNTS, byName);
     }
 
     async function loadAccounts() {
@@ -242,7 +242,7 @@
             { key: 'BillAmount', type: 'both' },
             { key: 'DueDays' },
             { key: 'DueDate', type: 'date' },
-            { key: 'Comments', wrap: true },
+            { key: 'Comments' },
             { key: 'ChequeNo' },
             { key: 'ChequeDate', type: 'date' },
             { key: 'PayeeTitle' },
@@ -301,6 +301,7 @@
     function render(rows) {
         const cols = shownMode === 'summary1' ? summary1Columns() : (shownMode === 'summary2' ? summary2Columns() : detailColumns());
         AccF.renderGrid({ table: '#grd', columns: cols, rows: rows, emptyText: '' });
+        GeneralLedgerUi.comments(document.getElementById('grd'), cols);
         $('#lblStatus').text('Records: ' + rows.length);
     }
 
@@ -472,7 +473,10 @@
             if (CTX.branchFeature) {
                 AccF.fillSelect('#cmbbranch', await AccF.lookup('branches'), 'Id', 'BranchName', '');
                 $('#gbBranchesWithBalance').show();
-            } else { $('#cmbbranch').hide(); $('#cmbbranch').prev('.lbl').hide(); }
+            } else {
+                $('#cmbbranch').hide(); $('#cmbbranch').prev('.lbl').hide();
+                AccF.ctl('#CmbDateType').css('grid-column', 'span 3');
+            }
             // Default mode: DefaulLedgerDetail / SummaryOne / SummaryTwo configuration, else Detail.
             if (CFG.defaulLedgerSummaryOne && !CFG.defaulLedgerDetail) $('#ChkSummery1').prop('checked', true);
             else if (CFG.defaulLedgerSummaryTwo && !CFG.defaulLedgerDetail && !CFG.defaulLedgerSummaryOne) $('#ChkSummery2').prop('checked', true);

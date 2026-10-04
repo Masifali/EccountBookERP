@@ -3,6 +3,7 @@ package com.mst.repositories;
 import com.mst.models.SaleActivitiesReportFilter;
 import com.mst.models.UserAccount;
 import com.mst.repositories.support.DesktopProc;
+import com.mst.repositories.support.SaleActivitiesQuery;
 import java.sql.Date;
 import java.util.*;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -26,7 +27,7 @@ public class SaleActivitiesReportRepository {
     public List<Map<String,Object>> lookups(UserAccount u,String branches) {
         var p=tenant(u);p.put("AppId",Objects.requireNonNullElse(u.getAppId(),0));p.put("UserId",u.getId());p.put("DocType","Sale");p.put("BranchesIds",branches);
         // Native Activity is unset; ADO.NET omits the null parameter and SQL returns every lookup category.
-        return DesktopProc.rows(jdbc,"USP_GetDataFromInventoryStocksEvaluationsForSales",p);
+        return SaleActivitiesQuery.lookups(jdbc,p);
     }
     public String yearStart(UserAccount u,int year) {
         return DesktopProc.rows(jdbc,"Proc_FinancialYear_ReadActiveByOrganizationIdNCompanyId",tenant(u)).stream()
@@ -55,7 +56,7 @@ public class SaleActivitiesReportRepository {
         number(p,"StockAccountId",f.stockAccountId());number(p,"CGSAccountId",f.cgsAccountId());
         if(f.cropYear()!=null&&!f.cropYear().isEmpty())p.put("CropYear",f.cropYear());
         // The form does not assign CostCenterId, AccountId, single CustomGroupId or FinancialYearId.
-        return DesktopProc.rows(jdbc,"SpInventory_EvaulationDetailSalesReports",p);
+        return SaleActivitiesQuery.rows(jdbc,p);
     }
     private static void number(Map<String,Object> p,String key,int value) { if(value!=0)p.put(key,value); }
     private static Map<String,Object> tenant(UserAccount u) { return DesktopProc.params("OrganizationId",u.getOrganizationId(),"CompanyId",u.getCompanyId()); }

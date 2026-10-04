@@ -27,6 +27,27 @@ public final class SaleOrderReportColumns {
         "Order Summary By ReferenceParty & City",
         "Order Summary By ReferenceParty & Item"
     );
+    private static final Map<String, String> PRINTS = Map.ofEntries(
+        Map.entry("Order Register", "347-OrderRegister"),
+        Map.entry("Order Summary By Item", "351-OrderSummaryByItem"),
+        Map.entry("Order Summary By Item & Pack Size", "348-OrderSummaryByItem&PackSize"),
+        Map.entry("Order Summary By Item & City", "352-OrderSummaryByItem&City"),
+        Map.entry("Order Summary By Item,Pack Size & City", "349-OrderSummaryByItem,PackSize&City"),
+        Map.entry("Order Summary By Customer", "353-OrderSummaryByCustomer"),
+        Map.entry("Order Summary By Customer & Item", "355-OrderSummaryByCustomer&Item"),
+        Map.entry("Order Summary By Customer & Pack Size", "350-OrderSummaryByCustomer&PackSize"),
+        Map.entry("Order Summary By Customer & City", "354-OrderSummaryByCustomer&City"),
+        Map.entry("Order Summary By Customer,Item & City", "356-OrderSummaryByCustomer,Item&City"),
+        Map.entry("Order Summary By Customer and ReferenceParty", "357-OrderSummaryByCustomerandReferenceParty"),
+        Map.entry("Order Summary By Customer & Item & ReferenceParty", "358-OrderSummaryByCustomer&Item&ReferenceParty"),
+        Map.entry("Order Summary By ReferenceParty", "359-OrderSummaryByReferenceParty"),
+        Map.entry("Order Summary By ReferenceParty & City", "360-OrderSummaryByReferenceParty&City"),
+        Map.entry("Order Summary By ReferenceParty & Item", "361-OrderSummaryByReferenceParty&Item")
+    );
+    public static Map<String,String> summaryPrintLabels() { return PRINTS; }
+    public static String summaryPrintTemplate(String activity) {
+        summary(activity); return PRINTS.get(activity) + ".rpt";
+    }
     private static final Map<String, String> SUMMARY = Map.ofEntries(
         Map.entry("Order Register", "Id:Id,DocumentTypeId:DocumentTypeId,BranchName:BranchName,DocType:DocumentTypeCode,DocDate:DocDate,DocNo:DocNo,PartyName:Customer,BookingPerson:BookingPerson,ReferenceParty:ReferencePartyDetail,ItemCode:ItemCode,ItemName:ItemName,PackUom:UOMCode,CropYear:CropBatch,JobLot:JobLotCode,PackingType:PackTypeCode,OrderQty:OrderQty,DispatchedQty:DispatchQty,BalQty:BalQty,OrderWeight:OrderWeight,DispatchedWeight:DispatchWeight,BalWeight:BalWeight,OrderAmount:OrderAmount,DispatchedAmount:DispatchAmount,BalAmount:BalAmount,AvgRate:AvgRate,PercentOfTotal:PrcntOfTotal,CityName:CityName"),
         Map.entry("Order Summary By Item", "Id:Id,ItemCode:ItemCode,ItemName:ItemName,OrderQty:OrderQty,DispatchedQty:DispatchQty,BalQty:BalQty,OrderWeight:OrderWeight,DispatchedWeight:DispatchWeight,BalWeight:BalWeight,OrderAmount:OrderAmount,DispatchedAmount:DispatchAmount,BalAmount:BalAmount,AvgRate:AvgRate,PercentOfTotal:PrcntOfTotal"),

@@ -65,11 +65,18 @@ public abstract class ReportPrintSupport {
         arguments.put("companyId", currentUserContext.currentCompanyId());
         arguments.put("clsGlobalVariables", currentUserContext.currentUserId());
         Map<String, Object> result = reportDataService.run(key, arguments);
+        printReportData(response, definition.template, result);
+    }
+
+    /** Render data loaded by a screen's own report service using the normal Jasper pipeline. */
+    @SuppressWarnings("unchecked")
+    protected void printReportData(HttpServletResponse response, String template, Map<String, Object> result) throws Exception {
+        currentUserContext.currentUserId();
         List<Map<String, Object>> rows = (List<Map<String, Object>>) result.get("rows");
         if (rows == null || rows.isEmpty()) { printError(response, 404, "No Record Found For Display"); return; }
 
         // 2. Open and compile the report's JRXML (including configured, edited templates).
-        ReportTemplateService.Source source = reportTemplates.source(definition.template, rows);
+        ReportTemplateService.Source source = reportTemplates.source(template, rows);
         JasperReport jasperReport;
         try (InputStream input = source.openMain()) {
             jasperReport = JasperCompileManager.compileReport(input);
@@ -112,7 +119,7 @@ public abstract class ReportPrintSupport {
 
         // 5. Export directly to this response. Concurrent print requests never share an output file.
         byte[] pdf = JasperExportManager.exportReportToPdf(jasperPrint);
-        String fileName = CrystalJasperPrinter.stem(definition.template) + ".pdf";
+        String fileName = CrystalJasperPrinter.stem(template) + ".pdf";
         response.setContentType("application/pdf");
         response.setHeader("Content-Disposition", "inline; filename=\"" + fileName + "\"");
         response.setContentLength(pdf.length);

@@ -26,6 +26,7 @@ public class SaleOrderReportService {
         return Map.of("branches", branches, "branchId", currentAllowed ? u.getBranchesId() : 0,
                 "costCenters", costs, "costCenterLocked", Objects.equals(u.getAppId(), 5),
                 "activities", SaleOrderReportColumns.ACTIVITIES,
+                "summaryPrintLabels", SaleOrderReportColumns.summaryPrintLabels(),
                 "actionRights", repo.actionRights(u),
                 "packUoms", List.of(1, 5, 10, 20, 25, 40, 50, 60, 65, 80, 100)); // native ItemUOMFill, not DB values
     }
@@ -34,8 +35,7 @@ public class SaleOrderReportService {
         return repo.lookups(u, branchFilter(u, branchIds), costCenterId);
     }
     public Map<String, Object> detail(SaleOrderReportFilter f) {
-        var u = user(); validate(u, f);
-        var raw = repo.detail(u, f, branchFilter(u, f.branchIds()));
+        var raw = detailRows(f);
         var detail = raw.stream().map(r -> SaleOrderReportColumns.project(r, SaleOrderReportColumns.DETAIL)).toList();
         Map<Integer, List<Map<String, Object>>> grouped = new LinkedHashMap<>();
         for (var row : raw) grouped.computeIfAbsent(((Number) row.get("Id")).intValue(), ignored -> new ArrayList<>()).add(row);
@@ -56,14 +56,27 @@ public class SaleOrderReportService {
                 "headers", headers, "headerColumns", SaleOrderReportColumns.names(SaleOrderReportColumns.HEADER),
                 "lines", lines, "lineColumns", SaleOrderReportColumns.names(SaleOrderReportColumns.LINES));
     }
+    /** The desktop's 270/271/271A buttons print the same native data table as Show. */
+    public List<Map<String, Object>> detailRows(SaleOrderReportFilter f) {
+        var u = user(); validate(u, f);
+        return repo.detail(u, f, branchFilter(u, f.branchIds()));
+    }
     public Map<String, Object> summary(SaleOrderReportFilter f) {
-        var u = user(); validate(u, f); String spec = SaleOrderReportColumns.summary(f.activity());
-        var rows = repo.summary(u, f, branchFilter(u, f.branchIds()));
+        var rows = summaryRows(f); String spec = SaleOrderReportColumns.summary(f.activity());
         return Map.of("rows", rows.stream().map(r -> SaleOrderReportColumns.project(r, spec)).toList(),
-                "columns", SaleOrderReportColumns.names(spec));
+                "columns", SaleOrderReportColumns.names(spec), "activity", f.activity(),
+                "printLabel", SaleOrderReportColumns.summaryPrintLabels().get(f.activity()));
+    }
+    public List<Map<String,Object>> summaryRows(SaleOrderReportFilter f) {
+        var u = user(); validate(u, f); SaleOrderReportColumns.summary(f.activity());
+        return repo.summary(u, f, branchFilter(u, f.branchIds()));
     }
     private void validate(UserAccount u, SaleOrderReportFilter f) {
         if (f == null || f.toDate() == null) throw new IllegalArgumentException("To Date is required");
+        if (f.fromDate() != null && f.fromDate().isAfter(f.toDate()))
+            throw new IllegalArgumentException("From Date must not be after To Date");
+        if (f.fromNo() < 0 || f.toNo() < 0 || (f.toNo() > 0 && f.fromNo() > f.toNo()))
+            throw new IllegalArgumentException("Select a valid SO From and To range");
         if (f.status() != null && !Set.of("", "Open", "Cancel", "Complete").contains(f.status()))
             throw new IllegalArgumentException("Select a valid order status");
         if (f.approval() == null || !Set.of("UnApprove", "Approve", "All").contains(f.approval()))

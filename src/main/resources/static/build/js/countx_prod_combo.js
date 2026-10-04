@@ -686,7 +686,7 @@
     CheckedCombo.prototype = Object.create(Combo.prototype);
     CheckedCombo.prototype.constructor = CheckedCombo;
     CheckedCombo.prototype.checkedMode = true;
-    CheckedCombo.prototype.multi = function () { return false; };
+    CheckedCombo.prototype.multi = function () { return this.cols.length > 1; };
 
     CheckedCombo.prototype.build = function () {
         Combo.prototype.build.call(this);
@@ -728,21 +728,20 @@
     };
 
     CheckedCombo.prototype.render = function () {
-        var self = this, rows = this.filtered;
-        this.pop.classList.remove('is-cols');
+        var self = this, rows = this.filtered, cols = this.cols;
+        this.pop.classList.toggle('is-cols', this.multi());
         if (!rows.length) { this.list.innerHTML = '<div class="cx-combo-empty">No match</div>'; return; }
         var all = rows.every(function (r) { return r.disabled || r.opt.selected; });
         var some = rows.some(function (r) { return r.opt.selected; });
-        var caption = (this.cols[0] && this.cols[0].caption) || '';
         var keep = this.list.scrollTop;
         this.list.innerHTML = '<table class="cx-combo-table pcx-check-table"><thead><tr>'
             + '<th class="pcx-check"><input type="checkbox" class="pcx-check-all" tabindex="-1"' + (all ? ' checked' : '') + ' title="Check / uncheck all"></th>'
-            + '<th>' + esc(caption) + '</th></tr></thead><tbody>'
+            + cols.map(function (col) { return '<th>' + esc(col.caption || '') + '</th>'; }).join('') + '</tr></thead><tbody>'
             + rows.map(function (r, i) {
                 return '<tr class="cx-combo-item' + (i === self.active ? ' is-active' : '') + (r.disabled ? ' is-disabled' : '')
                      + (r.opt.selected ? ' is-checked' : '') + '" data-i="' + i + '">'
                      + '<td class="pcx-check"><input type="checkbox" tabindex="-1"' + (r.opt.selected ? ' checked' : '') + (r.disabled ? ' disabled' : '') + '></td>'
-                     + '<td>' + (String(r.text) ? esc(r.text) : '&nbsp;') + '</td></tr>';
+                     + cols.map(function (col, j) { return self.cellHtml(col, r.cells[j]); }).join('') + '</tr>';
             }).join('')
             + '</tbody></table>';
         var hc = this.list.querySelector('.pcx-check-all');

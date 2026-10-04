@@ -52,6 +52,7 @@ import org.springframework.http.*;
 public class AccountsPrintController extends ReportPrintSupport {
     @Autowired private GeneralLedgerPrintService generalLedgerPrintService;
     @Autowired private AccountsReportService accountsReportService;
+    @Autowired private com.mst.services.TradeReportService tradeReportService;
     @Autowired private CrystalJasperPrinter crystalJasperPrinter;
     @Autowired private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
     @Autowired private com.mst.repositories.IAccountOpeningBalanceRepository accountOpeningBalanceRepository;
@@ -62,6 +63,27 @@ public class AccountsPrintController extends ReportPrintSupport {
 
     public AccountsPrintController(GeneralLedgerSummaryService generalLedgerSummaryService) {
         this.generalLedgerSummaryService = generalLedgerSummaryService;
+    }
+
+    /** TradeDebitorsReport.cs:1194-1230 prints the TradeDebtorsAndCreditors data, not ReceivablesReport. */
+    @GetMapping("/reports/print/trade-accounts")
+    public void printTradeAccounts(HttpServletResponse response,
+            @ModelAttribute com.mst.models.dto.TradeReportRequest request,
+            @RequestParam(name = "cityWise", defaultValue = "false") boolean cityWise) throws Exception {
+        currentUserContext.currentUserId();
+        List<Map<String, Object>> rows = new ArrayList<>(tradeReportService.load(request));
+        if (cityWise) rows.sort(java.util.Comparator
+                .comparing((Map<String, Object> row) -> Objects.toString(row.get("CityName"), ""), String.CASE_INSENSITIVE_ORDER)
+                .thenComparing(row -> Objects.toString(row.get("AccountTitle"), ""), String.CASE_INSENSITIVE_ORDER));
+        Map<String, Object> parameters = new HashMap<>();
+        Company company = companyRepository.findById(currentUserContext.currentCompanyId()).orElse(null);
+        parameters.put("CompanyName", company == null ? "" : Objects.toString(company.getCompName(), ""));
+        parameters.put("CompanyAddress", company == null ? "" : Objects.toString(company.getCompAddress(), ""));
+        parameters.put("FromDate", request.getFromDate().toString());
+        parameters.put("ToDate", request.getToDate().toString());
+        String template = cityWise ? "122A-CityWise-AcRptAccounts_ReceivablesWithStatus.rpt"
+                                  : "122A-AcRptAccounts_ReceivablesWithStatus.rpt";
+        printReportData(response, template, Map.of("rows", rows, "reportParameters", parameters));
     }
 
     /** Browser URL: /reports/general-ledger-summary?accountId=23967&fromDate=2026-08-01&toDate=2026-10-03 */

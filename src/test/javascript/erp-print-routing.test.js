@@ -6,9 +6,11 @@ const vm = require('node:vm');
 const script = fs.readFileSync('src/main/resources/static/js/print-rpt.js', 'utf8');
 const calls = [], windows = [], messages = [];
 let tables = [];
+const fields = {};
+let printInfo = { args: ['id'], controls: {}, pdf: '/reports/print/273-sale-order-slip' };
 const document = {
     readyState: 'loading', title: 'Current report',
-    addEventListener() {}, getElementById() { return null; }, getElementsByName() { return []; },
+    addEventListener() {}, getElementById(id) { return fields[id] || null; }, getElementsByName() { return []; },
     querySelector() { return null; },
     querySelectorAll(selector) { return selector === 'table' ? tables : []; }
 };
@@ -18,7 +20,7 @@ const context = vm.createContext({ window, document, URLSearchParams,
     setTimeout, clearTimeout, alert: message => messages.push(message),
     fetch: async (url, options) => {
         calls.push({ url, options });
-        if (url.startsWith('/reports/print/controls?')) return { ok: true, json: async () => ({ args: ['id'], controls: {}, pdf: '/reports/print/273-sale-order-slip' }) };
+        if (url.startsWith('/reports/print/controls?')) return { ok: true, json: async () => printInfo };
         return { ok: true, headers: { get: () => 'application/pdf' }, blob: async () => new Uint8Array([1]) };
     }
 });
@@ -41,6 +43,21 @@ function table(title, bodies, foot = null) {
     assert.equal(calls[0].url, '/reports/print/controls?rpt=273-InvRptSaleOrderSlip.rpt');
     assert.equal(calls[1].url, '/reports/print/273-sale-order-slip?id=123');
     assert.equal(windows[0].location, 'blob:report');
+
+    printInfo = { args: ['fromDate', 'toDate', 'status'], controls: {}, pdf: '/reports/print/122a-city-wise-ac-accounts-receivables-with-status' };
+    fields.fromDate = { tagName: 'INPUT', value: '2026-08-01' };
+    fields.toDate = { tagName: 'INPUT', value: '2026-10-04' };
+    fields.status = { tagName: 'DIV', textContent: '227 records', getAttribute: name => name === 'role' ? 'status' : null };
+    await window.printRpt('122A-CityWise-AcRptAccounts_ReceivablesWithStatus.rpt');
+    let query = new URL(calls.at(-1).url, 'http://localhost').searchParams;
+    assert.equal(query.get('fromDate'), '2026-08-01');
+    assert.equal(query.get('toDate'), '2026-10-04');
+    assert.equal(query.has('status'), false, 'A record count must never become a SQL filter');
+    fields.status = { tagName: 'SELECT', value: '58,59' };
+    await window.printRpt('122A-CityWise-AcRptAccounts_ReceivablesWithStatus.rpt');
+    query = new URL(calls.at(-1).url, 'http://localhost').searchParams;
+    assert.equal(query.get('status'), '58,59', 'Real status / legacy account-filter inputs still work');
+    Object.keys(fields).forEach(key => delete fields[key]);
 
     tables = [
         table('Invoices', [[row([cell('First'), cell('Private', false), cell('1,000.00')]),

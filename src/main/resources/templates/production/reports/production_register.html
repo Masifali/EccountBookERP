@@ -11,7 +11,7 @@
     <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20260925a}"/>
     <style>
         body { font-family: "Segoe UI", Verdana, Tahoma, sans-serif; background-color: #d4d0c8; font-size: 11px; color: #000; margin: 0; }
-        .win-tool-strip { background: linear-gradient(to bottom, #fcfcfc 0%, #e0e0e0 100%); border-bottom: 1px solid #999; height: 30px; display: flex; align-items: center; padding: 0 4px; gap: 4px; }
+        .win-tool-strip { background: linear-gradient(to bottom, #fcfcfc 0%, #e0e0e0 100%); border-bottom: 1px solid #999; min-height: 30px; display: flex; flex-wrap: wrap; align-items: center; padding: 0 4px; gap: 4px; }
         .win-btn-tool { background: transparent; border: 1px solid transparent; padding: 3px 8px; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 4px; height: 24px; border-radius: 2px; }
         .win-btn-tool:hover { background-color: #ffe4a0; border-color: #e59d00; }
         .win-teal-header { background-color: #008080; color: #fff; height: 28px; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; }
@@ -70,19 +70,25 @@
             .win-grid-scroll { max-height: none !important; overflow: visible !important; }
             .win-grid th, .win-grid td { border: 1px solid #000 !important; }
         }
-        .pr-filters { display: inline-block; max-width: 100%; }
-        .pr-grid { display: grid; grid-template-columns: 90px 225px 95px 225px 90px 190px auto; gap: 3px 6px; align-items: center; }
+        .pr-filters { display: block; width: 1220px; max-width: 100%; min-width: 0; container-type: inline-size; }
+        .pr-grid { display: grid; grid-template-columns: minmax(0, 1.3fr) repeat(2, minmax(0, 1fr)) max-content; gap: 10px 12px; align-items: start; }
+        .pr-column { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 6px; align-items: center; min-width: 0; }
         .pr-l { font-size: 8.5pt; font-weight: 600; color: #222; white-space: nowrap; margin: 0; }
         .pr-f { min-width: 0; }
-        .pr-dates { display: flex; gap: 2px; }
-        .pr-chkdate { display: flex; align-items: center; gap: 2px; border: 1px solid #7a9a9e; background: #fff; padding-left: 2px; }
-        .pr-chkdate .win-datepicker { border: none; }
-        .pr-r { padding-left: 6px; }
+        .pr-dates { display: flex; flex-wrap: wrap; gap: 4px; }
+        .pr-chkdate { display: flex; flex: 1 1 145px; min-width: 0; height: 24px; align-items: center; gap: 2px; border: 1px solid #7a9a9e; background: #fff; padding-left: 2px; }
+        .pr-chkdate input[type="checkbox"] { flex: 0 0 auto; margin: 0; }
+        .pr-chkdate .win-datepicker { flex: 1 1 0; width: 0; min-width: 0; height: 22px; border: none; }
+        .pr-dates > .win-datepicker { flex: 1 1 135px; width: auto; min-width: 0; }
+        .pr-date-mode { display: flex; flex-direction: column; gap: 4px; }
+        .pr-date-mode .win-radio-inline { min-height: 24px; margin: 0; }
         .pr-history-head { background-color: #008080; color: #fff; font-family: Tahoma, sans-serif; font-size: 11pt; font-weight: bold; padding: 3px 10px; display: flex; justify-content: space-between; align-items: center; }
         .pr-history-head button:not(.gb-gear) { background: #fff; border: 1px solid #7a9a9e; font-size: 8pt; padding: 1px 6px; cursor: pointer; color: #004d40; font-weight: normal; }
         .pr-groupbox { background: #a7c0e0; padding: 4px 6px; }
         .pr-groupbox span { background: #dbe7f5; border: 1px solid #7a9ac0; color: #1f3f6f; font-size: 8pt; padding: 2px 6px; display: inline-block; }
-        @media (max-width: 1100px) { .pr-grid { grid-template-columns: 90px 1fr 95px 1fr; } .pr-r { grid-column: span 4; } }
+        /* Use the space left by the sidebar, including when it is expanded. */
+        @container (max-width: 1080px) { .pr-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+        @container (max-width: 760px) { .pr-grid { grid-template-columns: minmax(0, 1fr); } }
     </style>
 </head>
 <body>
@@ -117,7 +123,8 @@
     <fieldset class="win-group-box pr-filters">
         <legend>Filters</legend>
         <div class="pr-grid">
-            <label class="pr-l">Branch Name</label>
+          <div class="pr-column">
+            <label class="pr-l" for="txtBranchName">Branch Name</label>
             <div class="pr-f cx-multi" id="branchBox">
                 <input type="text" id="txtBranchName" class="win-textbox" readonly onclick="ProductionRegister.toggle('branchBox')"/>
                 <div class="cx-multi-panel">
@@ -125,7 +132,18 @@
                     <div id="branchRows"></div>
                 </div>
             </div>
-            <label class="pr-l">Entry Type</label>
+            <label class="pr-l" for="datFromDate">Date From &amp; To</label>
+            <div class="pr-f pr-dates">
+                <span class="pr-chkdate"><input type="checkbox" id="chkFromDate" aria-label="Include From Date" checked autocomplete="off" onchange="ProductionRegister.toggleFrom()"/><input type="date" id="datFromDate" aria-label="From Date" class="win-datepicker"/></span>
+                <input type="date" id="datToDate" aria-label="To Date" class="win-datepicker" required/>
+            </div>
+            <label class="pr-l" for="cmbJobOrder">Job Order</label>
+            <div class="pr-f"><select id="cmbJobOrder" class="win-combo dtcombo" data-dtcombo="prJobOrder"></select></div>
+            <label class="pr-l" for="cmbPlant">Plant</label>
+            <div class="pr-f"><select id="cmbPlant" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Plant"></select></div>
+          </div>
+          <div class="pr-column">
+            <label class="pr-l" for="txtEntryType">Entry Type</label>
             <div class="pr-f cx-multi" id="entryTypeBox">
                 <input type="text" id="txtEntryType" class="win-textbox" readonly onclick="ProductionRegister.toggle('entryTypeBox')"/>
                 <div class="cx-multi-panel">
@@ -133,38 +151,29 @@
                     <div id="entryTypeRows"></div>
                 </div>
             </div>
-            <label class="pr-l">Wip Ac</label>
-            <div class="pr-f"><select id="cmbWipAccount" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="WipAccount"></select></div>
-            <div class="pr-r"><label class="win-radio-inline"><input type="radio" name="dateMode" value="doc" checked/> Doc Date</label></div>
-
-            <label class="pr-l">Date From &amp; To</label>
-            <div class="pr-f pr-dates">
-                <span class="pr-chkdate"><input type="checkbox" id="chkFromDate" checked autocomplete="off" onchange="ProductionRegister.toggleFrom()"/><input type="date" id="datFromDate" class="win-datepicker"/></span>
-                <input type="date" id="datToDate" class="win-datepicker" required/>
-            </div>
-            <label class="pr-l">Parent Category</label>
+            <label class="pr-l" for="cmbParentCategory">Parent Category</label>
             <div class="pr-f"><select id="cmbParentCategory" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Parent Category"></select></div>
-            <label class="pr-l">Stock Account</label>
-            <div class="pr-f"><select id="cmbStockAccount" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Stock Account"></select></div>
-            <div class="pr-r"><label class="win-radio-inline"><input type="radio" name="dateMode" value="entry"/> Entry Date</label></div>
-
-            <label class="pr-l">Job Order</label>
-            <div class="pr-f"><select id="cmbJobOrder" class="win-combo dtcombo" data-dtcombo="prJobOrder"></select></div>
-            <label class="pr-l">Item Name</label>
+            <label class="pr-l" for="cmbItem">Item Name</label>
             <div class="pr-f"><select id="cmbItem" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item"></select></div>
-            <label class="pr-l">Activity Type</label>
-            <div class="pr-f"><select id="cmbActivity" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Activity Type"></select></div>
-            <div class="pr-r"></div>
-
-            <label class="pr-l">Plant</label>
-            <div class="pr-f"><select id="cmbPlant" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Plant"></select></div>
-            <label class="pr-l">Warehouse</label>
+            <label class="pr-l" for="cmbWarehouse">Warehouse</label>
             <div class="pr-f"><select id="cmbWarehouse" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Warehouse"></select></div>
+          </div>
+          <div class="pr-column">
+            <label class="pr-l" for="cmbWipAccount">Wip Ac</label>
+            <div class="pr-f"><select id="cmbWipAccount" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="WipAccount"></select></div>
+            <label class="pr-l" for="cmbStockAccount">Stock Account</label>
+            <div class="pr-f"><select id="cmbStockAccount" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Stock Account"></select></div>
+            <label class="pr-l" for="cmbActivity">Activity Type</label>
+            <div class="pr-f"><select id="cmbActivity" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Activity Type"></select></div>
             <span></span>
             <div class="pr-f" style="text-align:right;">
                 <button type="button" id="btnShow" class="win-btn-action" onclick="ProductionRegister.show()">Show</button>
             </div>
-            <div class="pr-r"></div>
+          </div>
+          <div class="pr-date-mode">
+            <label class="win-radio-inline"><input type="radio" name="dateMode" value="doc" checked/> Doc Date</label>
+            <label class="win-radio-inline"><input type="radio" name="dateMode" value="entry"/> Entry Date</label>
+          </div>
         </div>
     </fieldset>
 

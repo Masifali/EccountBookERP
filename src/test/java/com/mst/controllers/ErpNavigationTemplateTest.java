@@ -3,6 +3,12 @@ package com.mst.controllers;
 import com.mst.services.DashboardModuleService;
 import com.mst.services.ErpNavigationService;
 import com.mst.services.DesktopUserRightsService;
+import com.mst.services.AccountsReportService;
+import com.mst.security.CurrentUserContext;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.util.LinkedCaseInsensitiveMap;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -77,6 +83,39 @@ class ErpNavigationTemplateTest {
             assertEquals(1, ledger.split("id=\"erp-navigation\"", -1).length - 1);
             assertTrue(ledger.contains("Single Account Ledger"));
             Files.writeString(Path.of("target/navigation-preview.html"), ledger);
+            request.setContextPath("");
+            request.setRequestURI("/accounts/reports/general-ledger-multi");
+            List<Map<String, Object>> accountRows = List.of(
+                    Map.of("Id", 1, "AccountTitle", "Sample Rice Traders", "AccountCode", "250404993", "ClassName", "Liabilities", "AccountType", "Receivables & Payables", "ParentAccountTitle", "TRADE SUPPLIERS"),
+                    Map.of("Id", 2, "AccountTitle", "Sample Flour Mills", "AccountCode", "150404994", "ClassName", "Assets", "AccountType", "Receivables & Payables", "ParentAccountTitle", "TRADE DEBTORS"),
+                    Map.of("Id", 3, "AccountTitle", "Sample Bank", "AccountCode", "150104001", "ClassName", "Assets", "AccountType", "Bank", "ParentAccountTitle", "BANK ACCOUNTS"));
+            // Use the real service and JDBC map semantics: aliases change serialized key casing.
+            List<Map<String, Object>> jdbcRows = new java.util.ArrayList<>();
+            for (var row : accountRows) {
+                Map<String, Object> jdbcRow = new LinkedCaseInsensitiveMap<>();
+                jdbcRow.putAll(row);
+                jdbcRows.add(jdbcRow);
+            }
+            var jdbc = mock(JdbcTemplate.class);
+            when(jdbc.queryForList(anyString(), eq(0), eq(0), eq(0), eq(0), eq("DetailAccount"))).thenReturn(jdbcRows);
+            var reports = new AccountsReportService();
+            ReflectionTestUtils.setField(reports, "jdbcTemplate", jdbc);
+            ReflectionTestUtils.setField(reports, "currentUserContext", mock(CurrentUserContext.class));
+            var accounts = reports.getAllDetailAccounts();
+            assertEquals(3, accounts.size());
+            String accountJson = new ObjectMapper().writeValueAsString(accounts);
+            assertTrue(accountJson.contains("\"accountTitle\""));
+            assertTrue(accountJson.contains("\"ID\""));
+            Files.writeString(Path.of("target/ui-verification/ledger-account-lookup.json"), accountJson);
+            context.setVariable("accountsList", accounts);
+            context.setVariable("dateTypesList", List.of());
+            String multiLedger = engine.process("accounts/reports/general_ledger", context);
+            assertTrue(multiLedger.contains("general_ledger_ui.js"));
+            assertFalse(multiLedger.contains("select2.full.min.js"));
+            assertTrue(multiLedger.contains("ParentAccountTitle"));
+            Files.writeString(Path.of("target/ui-verification/multi-ledger-rendered.html"), multiLedger);
+            request.setContextPath("/erp");
+            request.setRequestURI("/erp/accounts/reports/general-ledger");
 
             // The same child form must fill its iframe without a second rail or
             // another menu lookup, while retaining navigation when opened alone.
