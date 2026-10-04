@@ -6,7 +6,7 @@
           th:with="nav=${@erpNavigationService.forRequest(#httpServletRequest, appName, selectedModuleId)}">
     <th:block th:if="${nav != null}">
         <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
-        <link rel="stylesheet" th:href="@{/build/css/erp_navigation.css?v=20261004right}">
+        <link rel="stylesheet" th:href="@{/build/css/erp_navigation.css?v=20261004shortcuts}">
         <div id="erp-navigation" class="erp-navigation" th:attr="data-parent-url=${nav.parentRoute != null ? #httpServletRequest.contextPath + nav.parentRoute : ''},data-parent-title=${nav.parentTitle}">
             <!-- Desktop report templates style bare nav/header/aside tags for their own panels.
                  Use explicit landmark roles so those rules cannot turn this rail into a toolbar. -->
@@ -15,6 +15,28 @@
                     <!-- DashboardNew btnHome: BackgroundImage = Resources.home_4_fill (Remix Icon "home-4-fill", white 32x32) -->
                     <svg class="erp-home-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20 20C20 20.5523 19.5523 21 19 21H5C4.44772 21 4 20.5523 4 20V11L1 11L11.3273 1.6115C11.7087 1.26475 12.2913 1.26475 12.6727 1.6115L23 11L20 11V20ZM11 13V19H13V13H11Z"/></svg><span>Main pages</span>
                 </a>
+                <div class="erp-shortcuts" aria-label="Screen shortcuts">
+                    <button type="button" class="erp-shortcut" data-erp-panel="erp-favorites" aria-controls="erp-favorites" aria-expanded="false" title="Favorites">
+                        <i class="fa fa-star" aria-hidden="true"></i><span>Favorites</span>
+                    </button>
+                    <button type="button" class="erp-shortcut" data-erp-panel="erp-recent" aria-controls="erp-recent" aria-expanded="false" title="Recently opened screens">
+                        <i class="fa fa-history" aria-hidden="true"></i><span>Recent</span>
+                    </button>
+                    <a class="erp-shortcut" th:if="${@desktopUserRightsService.canManage()}"
+                       th:href="@{/user-management/rights(tab=${nav.currentModuleType == 2 ? 'report' : 'rights'},screenId=${nav.currentScreenId})}" title="View Rights Report">
+                        <i class="fa fa-users" aria-hidden="true"></i><span>View Rights</span>
+                    </a>
+                </div>
+                <section id="erp-favorites" class="erp-shortcut-panel" aria-label="Favorites" hidden>
+                    <strong>Favorites</strong>
+                    <a th:each="screen : ${nav.favoriteScreens}" th:href="@{${screen.route}}" th:text="${screen.title}">Report</a>
+                    <p th:if="${#lists.isEmpty(nav.favoriteScreens)}">Use the star on a screen card to add favorites.</p>
+                </section>
+                <section id="erp-recent" class="erp-shortcut-panel" aria-label="Recently opened screens" hidden>
+                    <strong>Recently opened screens</strong>
+                    <a th:each="screen : ${nav.recentScreens}" th:href="@{${screen.route}}" th:text="${screen.title}">Report</a>
+                    <p th:if="${#lists.isEmpty(nav.recentScreens)}">Opened screens will appear here.</p>
+                </section>
                 <div class="erp-module-list" role="navigation" aria-label="Applications">
                     <div class="erp-nav-app" th:each="app : ${nav.apps}" th:classappend="${app.active} ? 'is-active' : ''">
                         <a class="erp-app-link" th:href="@{${app.route}}" th:title="${app.title}"
@@ -67,7 +89,7 @@
             </div>
             <button class="erp-navigation-shade" type="button" aria-label="Close module sidebar" tabindex="-1"></button>
         </div>
-        <script th:src="@{/build/js/erp_navigation.js?v=20261004right}"></script>
+        <script th:src="@{/build/js/erp_navigation.js?v=20261004shortcuts}"></script>
     </th:block>
 </th:block>
 </body>

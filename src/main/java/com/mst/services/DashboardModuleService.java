@@ -1300,6 +1300,17 @@ public class DashboardModuleService {
         return DESKTOP_FORMS.getOrDefault(className, className + ".cs");
     }
 
+    /**
+     * /modules hub: the applications this user may open, as squashed App names ("accounts",
+     * "qualitycontrol", ...). Same rows as frmModules.DynamicallyGenerateCardsForApp - an App
+     * appears only when the user has at least one viewable screen in it.
+     */
+    public java.util.Set<String> allowedAppKeys() {
+        java.util.Set<String> out = new java.util.HashSet<>();
+        for (Map<String, Object> r : rights()) out.add(squash(str(col(r, "App"))));
+        return out;
+    }
+
     // ---------------------------------------------------------------- favourites
     /* ScreenDynamicallyGenerateCards: the red star on each screen card. Fav_Star_Fill when the screen is
        in FavoriteScreens (Sp_FavoriteScreens_ReadAll @Activity='ReadByUserId', matched on ScreenName),

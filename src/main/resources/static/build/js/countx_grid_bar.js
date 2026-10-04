@@ -294,7 +294,7 @@
         var html = '<div class="gb-title-row"><input type="text" class="gb-title" readonly tabindex="-1" aria-label="Grid title"></div>';
         ITEMS.forEach(function (it) {
             html += '<button type="button" role="menuitem" class="gb-item gb-i-' + it[0] + '" data-a="' + it[0] + '">'
-                + '<span class="gb-ico" aria-hidden="true"></span>' + esc(it[1]) + '</button>';
+                + '<span class="gb-ico" aria-hidden="true"></span>' + esc(it[0] === 'remove' ? (self.scope.getAttribute('data-gridbar-remove-caption') || it[1]) : it[1]) + '</button>';
         });
         menu.innerHTML = html;
         menu.addEventListener('click', function (e) {
@@ -304,7 +304,7 @@
             self.run(b.getAttribute('data-a'));
         });
         menu.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape') { self.closeMenu(); btn.focus(); return; }
+            if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); self.closeMenu(); btn.focus(); return; }
             if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
             e.preventDefault();
             var items = toArr(menu.querySelectorAll('.gb-item')).filter(function (x) { return !x.disabled && x.style.display !== 'none'; });
@@ -476,7 +476,7 @@
         box.style.top = Math.max(4, Math.min(r.bottom + 2, global.innerHeight - box.offsetHeight - 4)) + 'px';
 
         box.querySelector('.gb-ch-x').addEventListener('click', function () { self.closeChooser(); });
-        box.addEventListener('keydown', function (e) { if (e.key === 'Escape') self.closeChooser(); });
+        box.addEventListener('keydown', function (e) { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); self.closeChooser(); } });
         box.querySelector('.gb-ch-list').addEventListener('change', function (e) {
             var cb = e.target.closest('input[type=checkbox]');
             if (!cb) return;

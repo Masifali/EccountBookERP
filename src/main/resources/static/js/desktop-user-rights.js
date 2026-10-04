@@ -69,5 +69,17 @@ async function initializeLookups(){
  else message(rows.length?'Select a user to load Applications, then Show.':'No users are allocated to the selected company.',!rows.length);
 }
 if(el('retry-lookups'))bind('retry-lookups',initializeLookups);
-run(null,initializeLookups);
+run(null,async()=>{
+ await initializeLookups();
+ const query=new URLSearchParams(location.search),kind=query.get('tab');
+ if(kind!=='report'&&kind!=='rights')return;
+ // Sidebar View Rights opens the same section and screen as DashboardNew.
+ for(const page of document.querySelectorAll('.page'))page.hidden=page.id!==kind;
+ for(const tab of document.querySelectorAll('[data-tab]'))tab.setAttribute('aria-selected',String(tab.dataset.tab===kind));
+ const screenId=Number(query.get('screenId'))||0;
+ if(screenId&&(lookupScreens[kind]||[]).some(screen=>Number(screen.Id)===screenId)){
+  $('#'+kind+'-screen').val(String(screenId)).trigger('change.select2');
+  await showRights(kind==='report');
+ }
+});
 })();

@@ -58,12 +58,39 @@ public class ErpNavigationService {
         Map<String, Object> navigation = build(rows, path, request.getParameterMap(), appName, selectedModuleId);
         navigation.put("username", user.getName());
         navigation.put("unavailable", unavailable);
+        addQuickLinks(request, navigation, user.getName());
         return navigation;
+    }
+
+    @SuppressWarnings("unchecked")
+    private void addQuickLinks(HttpServletRequest request, Map<String, Object> navigation, String username) {
+        Map<Integer, Map<String, Object>> screens = (Map<Integer, Map<String, Object>>) navigation.remove("screenLinks");
+        var favorites = menus.favoriteScreenNames();
+        navigation.put("favoriteScreens", screens.values().stream()
+                .filter(screen -> favorites.contains(string(screen.get("name")).toLowerCase(Locale.ROOT))).toList());
+        // Keep only screen identifiers in this signed-in browser session. Re-resolve every
+        // title/route against current view rights; removed rights never survive in Recent.
+        var session = request.getSession();
+        String key = "erp.recentScreens." + username;
+        synchronized (session) {
+            List<Integer> recent = new ArrayList<>();
+            if (session.getAttribute(key) instanceof List<?> previous) {
+                for (Object id : previous) if (id instanceof Integer && screens.containsKey(id)) recent.add((Integer) id);
+            }
+            Integer current = integer(navigation.get("currentScreenId"));
+            if (current != null && screens.containsKey(current)) { recent.remove(current); recent.add(0, current); }
+            if (recent.size() > 20) recent = new ArrayList<>(recent.subList(0, 20));
+            session.setAttribute(key, recent);
+            navigation.put("recentScreens", recent.stream().map(screens::get).toList());
+        }
     }
 
     Map<String, Object> build(List<Map<String, Object>> rows, String path, Map<String, String[]> query,
                               String appName, Integer selectedModuleId) {
         Map<Integer, Map<String, Object>> apps = new LinkedHashMap<>();
+        Map<Integer, Map<String, Object>> screens = new LinkedHashMap<>();
+        Integer currentScreenId = null;
+        int currentModuleType = 0;
         Map<String, Object> activeApp = null, activeModule = null;
         String currentTitle = "Main pages";
         int bestMatch = -1;
@@ -98,6 +125,12 @@ public class ErpNavigationService {
             if (route == null && !target.isBlank()) {
                 route = "/dashboard/screen?name=" + encode(target.substring(target.lastIndexOf('.') + 1));
             }
+            String screenTitle = string(value(row, "ScreenAlias"));
+            if (screenTitle.isBlank()) screenTitle = string(value(row, "ScreenName"));
+            if (screenId != null && route != null && route.startsWith("/") && !route.startsWith("//")) {
+                screens.putIfAbsent(screenId, Map.of("id", screenId, "title", screenTitle, "route", route,
+                        "name", string(value(row, "ScreenName"))));
+            }
             int match = match(route, path, query);
             if (screenId != null && match < 0) {
                 for (SidebarScreenCatalog.Entry entry : SidebarScreenCatalog.all()) {
@@ -110,6 +143,9 @@ public class ErpNavigationService {
                 activeModule = module;
                 currentTitle = string(value(row, "ScreenAlias"));
                 if (currentTitle.isBlank()) currentTitle = string(value(row, "ScreenName"));
+                currentScreenId = screenId;
+                Integer type = integer(value(row, "ModuleTypeId"));
+                currentModuleType = type == null ? 0 : type;
             }
         }
 
@@ -177,6 +213,9 @@ public class ErpNavigationService {
         out.put("parentRoute", parentRoute);
         out.put("parentTitle", parentTitle);
         out.put("currentTitle", currentTitle);
+        out.put("screenLinks", screens);
+        out.put("currentScreenId", currentScreenId);
+        out.put("currentModuleType", currentModuleType);
         return out;
     }
 

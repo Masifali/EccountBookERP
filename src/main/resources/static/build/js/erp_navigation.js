@@ -44,6 +44,39 @@
     });
     smallScreen.addEventListener('change', function () { expand(false, false); });
 
+    var shortcutButtons = navigation.querySelectorAll('[data-erp-panel]');
+    function closeShortcuts() {
+        shortcutButtons.forEach(function (button) {
+            document.getElementById(button.getAttribute('data-erp-panel')).hidden = true;
+            button.setAttribute('aria-expanded', 'false');
+        });
+    }
+    shortcutButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
+            var panel = document.getElementById(button.getAttribute('data-erp-panel'));
+            var open = panel.hidden;
+            closeShortcuts();
+            panel.hidden = !open;
+            button.setAttribute('aria-expanded', String(open));
+            if (open) {
+                var first = panel.querySelector('a');
+                if (first) first.focus();
+            }
+        });
+    });
+    document.addEventListener('click', function (event) {
+        if (!event.target.closest('.erp-shortcuts, .erp-shortcut-panel')) closeShortcuts();
+    });
+    document.addEventListener('keydown', function (event) {
+        if (event.key !== 'Escape') return;
+        var active = navigation.querySelector('[data-erp-panel][aria-expanded="true"]');
+        if (!active) return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        closeShortcuts();
+        active.focus();
+    }, true);
+
     /* user menu: click opens / closes, outside click or Escape closes, arrows move between items */
     var userBtn = document.getElementById('erp-username');
     var userMenu = document.getElementById('erp-user-dropdown');

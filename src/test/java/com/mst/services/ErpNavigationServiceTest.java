@@ -79,6 +79,33 @@ class ErpNavigationServiceTest {
         verifyNoInteractions(menus);
     }
 
+    @Test void favoritesAndRecentScreensRespectCurrentRightsAndUserSession() {
+        var ledger = row(2, "Accounts", 3, 79, "General Ledger");
+        var trade = row(2, "Accounts", 3, 65, "Trade Debtors");
+        trade.put("ModuleTypeId", 2);
+        when(menus.viewRights()).thenReturn(List.of(ledger, trade));
+        when(menus.favoriteScreenNames()).thenReturn(java.util.Set.of("general ledger"));
+        when(menus.webRouteFor(eq(79), anyString(), anyString())).thenReturn("/accounts/reports/general-ledger");
+        when(menus.webRouteFor(eq(65), anyString(), anyString())).thenReturn("/accounts/reports/trade-receivables");
+        var request = new MockHttpServletRequest("GET", "/accounts/reports/general-ledger");
+        request.setUserPrincipal(() -> "first");
+        var first = navigation.forRequest(request, null, null);
+        assertEquals(1, ((List<?>) first.get("favoriteScreens")).size());
+        request.setRequestURI("/accounts/reports/trade-receivables");
+        var second = navigation.forRequest(request, null, null);
+        assertEquals(65, second.get("currentScreenId"));
+        assertEquals(2, second.get("currentModuleType"));
+        assertEquals(List.of(65, 79), ((List<Map<String,Object>>)second.get("recentScreens")).stream().map(r -> r.get("id")).toList());
+        assertEquals(2, ((List<?>) navigation.forRequest(request, null, null).get("recentScreens")).size(), "Reload must not duplicate history");
+        when(menus.viewRights()).thenReturn(List.of(trade));
+        var revoked = navigation.forRequest(request, null, null);
+        assertTrue(((List<?>)revoked.get("favoriteScreens")).isEmpty());
+        assertEquals(1, ((List<?>)revoked.get("recentScreens")).size());
+        request.setUserPrincipal(() -> "second");
+        request.setRequestURI("/apps");
+        assertTrue(((List<?>)navigation.forRequest(request, null, null).get("recentScreens")).isEmpty());
+    }
+
     @Test void usernamesAndRightsAreResolvedForEachRequest() {
         when(menus.viewRights()).thenReturn(List.of(row(2, "Accounts", 3, 79, "Ledger")), List.of());
         var request = new MockHttpServletRequest("GET", "/erp/apps");

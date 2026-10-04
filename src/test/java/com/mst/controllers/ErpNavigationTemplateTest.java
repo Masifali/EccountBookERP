@@ -2,6 +2,7 @@ package com.mst.controllers;
 
 import com.mst.services.DashboardModuleService;
 import com.mst.services.ErpNavigationService;
+import com.mst.services.DesktopUserRightsService;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -39,6 +40,10 @@ class ErpNavigationTemplateTest {
         try (var application = new StaticWebApplicationContext()) {
             application.setServletContext(servlet);
             application.getBeanFactory().registerSingleton("erpNavigationService", new ErpNavigationService(menus));
+            var rights = mock(DesktopUserRightsService.class);
+            when(rights.canManage()).thenReturn(true);
+            application.getBeanFactory().registerSingleton("desktopUserRightsService", rights);
+            application.getBeanFactory().registerSingleton("gearMenuController", mock(GearMenuController.class));
             application.refresh();
             var context = new WebContext(request, new MockHttpServletResponse(), servlet);
             context.setVariable(ThymeleafEvaluationContext.THYMELEAF_EVALUATION_CONTEXT_CONTEXT_VARIABLE_NAME,
@@ -56,7 +61,18 @@ class ErpNavigationTemplateTest {
             assertFalse(html.contains("Asif <Admin>"));
             assertTrue(html.contains("id=\"erp-parent-back\""));
             assertTrue(html.contains("/erp/app/Purchase"));
+            assertTrue(html.contains("id=\"erp-favorites\""));
+            assertTrue(html.contains("id=\"erp-recent\""));
+            assertTrue(html.contains("/erp/user-management/rights?tab=rights&amp;screenId=79"));
+            when(rights.canManage()).thenReturn(false);
+            assertFalse(engine.process("fragments/erp_navigation", context).contains("title=\"View Rights Report\""));
+            when(rights.canManage()).thenReturn(true);
             Files.writeString(Path.of("target/navigation-fragment-preview.html"), html);
+            context.setVariable("accountClass", 2);
+            request.setContextPath("");
+            Files.createDirectories(Path.of("target/ui-verification"));
+            Files.writeString(Path.of("target/ui-verification/trade-tools-rendered.html"), engine.process("accounts/reports/trade_accounts", context));
+            request.setContextPath("/erp");
             String ledger = engine.process("accounts/reports/general_ledger_desktop", context);
             assertEquals(1, ledger.split("id=\"erp-navigation\"", -1).length - 1);
             assertTrue(ledger.contains("Single Account Ledger"));
