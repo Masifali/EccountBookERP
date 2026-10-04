@@ -94,7 +94,7 @@ public class AppMenuController {
      * underneath without leaving the page.
      */
     @GetMapping("/app/{appName}")
-    public String app(@PathVariable String appName,
+    public String app(@PathVariable("appName") String appName,
                       @RequestParam(value = "module", required = false) Integer moduleId,
                       Model model) {
         // Keep the sidebar's Inventory entry on the existing dashboard and its page links.
@@ -203,15 +203,15 @@ public class AppMenuController {
     private String renderApp(String appName, Integer moduleId, Model model) {
         model.addAttribute("activeMenu", "apps");
         model.addAttribute("moduleTitle", appName);
+        model.addAttribute("appName", appName);
+        model.addAttribute("appRoute", "/app/" + urlPath(appName));
 
         Map<String, Object> app = dashboardModuleService.getAppByName(appName);
         if (app == null) {
-            /* The same panel /dashboard shows when its own name does not match: the distinct
-               { AppId, App } pairs this user actually has, so the real spelling is visible
-               instead of an empty page. */
-            model.addAttribute("appMissing", true);
-            model.addAttribute("parentDiag", dashboardModuleService.parentDiagnostics(appName));
-            model.addAttribute("loadError", dashboardModuleService.getLastError());
+            // A failed read must stay a load error; another diagnostic query can clear it.
+            String loadError = dashboardModuleService.getLastError();
+            model.addAttribute("appMissing", loadError == null);
+            model.addAttribute("loadError", loadError);
             model.addAttribute("cards", new ArrayList<>());
             model.addAttribute("cardCount", 0);
             return "dashboard";
@@ -220,9 +220,6 @@ public class AppMenuController {
         int appId = ((Number) app.get("appId")).intValue();
         List<Map<String, Object>> cards = dashboardModuleService.getModuleCards(appId);
         String loadError = dashboardModuleService.getLastError();
-        if (cards.isEmpty() && loadError == null) {
-            model.addAttribute("parentDiag", dashboardModuleService.parentDiagnostics(appName));
-        }
 
         int screenCount = 0, builtCount = 0;
         for (Map<String, Object> c : cards) {

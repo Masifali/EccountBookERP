@@ -168,7 +168,7 @@
         var h = '<tr>';
         vc.forEach(function (c) { h += '<th' + (c.width ? ' style="min-width:' + c.width + 'px;width:' + c.width + 'px"' : '') + '>' + esc(c.caption) + '</th>'; });
         h += '<th class="fill"></th></tr><tr class="filter">';
-        vc.forEach(function (c) { h += '<td><input type="text" data-f="' + esc(c.key) + '" value="' + esc(self.filters[c.key] || '') + '"></td>'; });
+        vc.forEach(function (c) { h += '<td><input type="text" aria-label="Filter ' + esc(c.caption) + '" data-f="' + esc(c.key) + '" value="' + esc(self.filters[c.key] || '') + '"></td>'; });
         h += '<td class="fill"></td></tr>';
         thead.innerHTML = h;
         var b = '';
@@ -252,20 +252,20 @@
         return [
             { key: 'PlBsId', caption: 'PlBsId', hidden: true },
             { key: 'ChartofAccountId', caption: 'ChartofAccountId', hidden: true },
-            { key: 'AccountTitle', caption: 'AccountTitle' },
-            { key: 'NoteTitle', caption: noteCaption, width: 250, display: noteText,
+            { key: 'AccountTitle', caption: 'Account title' },
+            { key: 'NoteTitle', caption: noteCaption.replace(/([a-zA-Z])(Notes|Title)/g, '$1 $2'), width: 280, display: noteText,
               cell: function (row, i) {
                   var picked = row.cur !== row.NoteTitle;
-                  var h = '<td class="combo"><select data-dtcombo data-row="' + i + '" style="width:250px;height:20px">';
+                  var h = '<td class="combo"><select aria-label="Note for ' + esc(row.AccountTitle) + '" data-dtcombo data-row="' + i + '" style="width:280px;height:34px">';
                   h += '<option value="" hidden' + (picked ? '' : ' selected') + '>' + esc(row.NoteTitle) + '</option>';
                   valueList.forEach(function (n) {
                       h += '<option value="' + esc(n.Id) + '"' + (picked && String(n.Id) === String(row.cur) ? ' selected' : '') + '>' + esc(n.NoteTitle) + '</option>';
                   });
                   return h + '</select></td>';
               } },
-            { key: 'NoteRole', caption: 'NoteRole' },
+            { key: 'NoteRole', caption: 'Note role' },
             { key: 'AccountClassId', caption: 'AccountClassId', hidden: true },
-            { key: 'ClassName', caption: 'ClassName' }
+            { key: 'ClassName', caption: 'Class name' }
         ];
     }
 
@@ -366,21 +366,21 @@
        AccountClassId and makes all but NoteTitle read-only. */
     grdNoteChange.cols = [
         { key: 'Id', caption: 'Id', hidden: true },
-        { key: 'NoteTitle', caption: 'NoteTitle',
+        { key: 'NoteTitle', caption: 'Note title',
           cell: function (row, i) { return '<td class="ed" style="min-width:' + noteW + 'px"><input type="text" class="cell" data-row="' + i + '" value="' + esc(row.NoteTitle) + '"></td>'; } },
-        { key: 'NoteRole', caption: 'NoteRole' },
+        { key: 'NoteRole', caption: 'Note role' },
         { key: 'AccountClassId', caption: 'AccountClassId', hidden: true },
-        { key: 'ClassName', caption: 'ClassName' }
+        { key: 'ClassName', caption: 'Class name' }
     ];
 
     /* GridAutoAdjustmentNew: Columns[i].AutoSize() - the editable NoteTitle column is sized to its longest text */
     var noteW = 80;
     var measure = document.createElement('canvas').getContext('2d');
     function autoSizeNoteTitle() {
-        measure.font = '8.25pt Verdana';
-        var w = measure.measureText('NoteTitle').width;
+        measure.font = window.getComputedStyle(grdNoteChange.table).font;
+        var w = measure.measureText('Note title').width;
         grdNoteChange.rows.forEach(function (r) { w = Math.max(w, measure.measureText(String(r.NoteTitle == null ? '' : r.NoteTitle)).width); });
-        noteW = Math.ceil(w) + 16;
+        noteW = Math.max(240, Math.ceil(w) + 24);
     }
 
     function gridNoteTitleFill() {
@@ -425,7 +425,10 @@
     function selectTab(i) {
         tabIndex = i;
         var tabs = document.querySelectorAll('#tabstrip .tab');
-        for (var k = 0; k < tabs.length; k++) tabs[k].classList.toggle('on', k === i);
+        for (var k = 0; k < tabs.length; k++) {
+            tabs[k].classList.toggle('on', k === i);
+            tabs[k].setAttribute('aria-pressed', String(k === i));
+        }
         $('tabPage1').classList.toggle('on', i === 0);
         $('tabPage2').classList.toggle('on', i === 1);
         /* tabControl1_SelectedIndexChanged: empty on the desktop */

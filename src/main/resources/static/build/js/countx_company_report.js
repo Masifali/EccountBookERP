@@ -344,7 +344,7 @@
             t.classList.toggle('on', t.getAttribute('data-tab') === name);
         });
         $('formPane').style.display = name === 'form' ? '' : 'none';
-        $('historyPane').style.display = name === 'history' ? '' : 'none';
+        $('historyPane').style.display = name === 'history' ? 'block' : 'none';
         if (name === 'history' && !historyLoaded) { historyLoaded = true; loadHistory(); }
     }
 
@@ -361,6 +361,8 @@
 
     $('grdFull').addEventListener('click', function () { $('grdWrap').classList.toggle('full'); });
     $('hstFull').addEventListener('click', function () { $('historyWrap').classList.toggle('full'); });
+    $('grdExitFull').addEventListener('click', function () { $('grdWrap').classList.remove('full'); $('grdFull').focus(); });
+    $('hstExitFull').addEventListener('click', function () { $('historyWrap').classList.remove('full'); $('hstFull').focus(); });
 
     /* frmCompanyReport_KeyDown, condition for condition. */
     document.addEventListener('keydown', function (e) {
@@ -378,6 +380,10 @@
             e.preventDefault(); RecId = 0; Insert(save);
         }
         if (e.ctrlKey && e.key.toLowerCase() === 'n' && tab === 'form') { e.preventDefault(); Reset(); }
+        if (e.key === 'Escape') {
+            var fullGrid = document.querySelector('.gridWrap.full');
+            if (fullGrid) { e.preventDefault(); fullGrid.querySelector('.exit-fullscreen').click(); return; }
+        }
         if ((e.ctrlKey && e.key.toLowerCase() === 'e') || e.key === 'Escape') { window.close(); }
         if (upd.style.display !== 'none' && !upd.disabled && tab === 'form'
             && e.ctrlKey && e.key.toLowerCase() === 'u' && UpdateMode) {

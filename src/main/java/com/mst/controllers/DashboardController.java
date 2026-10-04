@@ -48,14 +48,13 @@ public class DashboardController {
                                Model model) {
         model.addAttribute("activeMenu", "dashboard");
         model.addAttribute("moduleTitle", MODULE);
+        model.addAttribute("appName", MODULE);
 
         Map<String, Object> app = dashboardModuleService.getAppByName(MODULE);
         if (app == null) {
-            /* No AppModules row is named "DashBoard". Show what the table does contain - the
-               parent/child tree and this user's modules by AppId - rather than an empty page. */
-            model.addAttribute("appMissing", true);
-            model.addAttribute("parentDiag", dashboardModuleService.parentDiagnostics(MODULE));
-            model.addAttribute("loadError", dashboardModuleService.getLastError());
+            String loadError = dashboardModuleService.getLastError();
+            model.addAttribute("appMissing", loadError == null);
+            model.addAttribute("loadError", loadError);
             model.addAttribute("cards", new ArrayList<>());
             model.addAttribute("cardCount", 0);
             return "dashboard";
@@ -64,11 +63,6 @@ public class DashboardController {
         int appId = (Integer) app.get("appId");
         List<Map<String, Object>> cards = dashboardModuleService.getModuleCards(appId);
         String loadError = dashboardModuleService.getLastError();
-        /* Found the row but it has no children this user may view - same panel, so the page can
-           still say why instead of showing nothing. */
-        if (cards.isEmpty() && loadError == null) {
-            model.addAttribute("parentDiag", dashboardModuleService.parentDiagnostics(MODULE));
-        }
 
         int screenCount = 0, builtCount = 0;
         for (Map<String, Object> c : cards) {
@@ -100,9 +94,6 @@ public class DashboardController {
         model.addAttribute("builtCount", builtCount);
         model.addAttribute("loadError", loadError);
         model.addAttribute("noScreens", cards.isEmpty() && loadError == null);
-        if (cards.isEmpty() && loadError == null) {
-            model.addAttribute("diagnostics", dashboardModuleService.diagnose(null));
-        }
         return "dashboard";
     }
 

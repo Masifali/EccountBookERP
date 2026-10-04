@@ -219,7 +219,7 @@
     function showTab(which) {
         tab = which;
         $('formPane').style.display    = which === 'form' ? '' : 'none';
-        $('historyPane').style.display = which === 'history' ? '' : 'none';
+        $('historyPane').style.display = which === 'history' ? 'block' : 'none';
         document.querySelectorAll('#tabstrip .tab').forEach(function (t) {
             t.classList.toggle('on', t.dataset.tab === which);
         });
@@ -228,6 +228,9 @@
 
     /* ----------------------------------------------------------- frmReportConfig_KeyDown */
     function keyDown(e) {
+        if (e.key === 'Escape' && $('gridWrap').classList.contains('full')) {
+            e.preventDefault(); $('gridWrap').classList.remove('full'); $('grdFull').focus(); return;
+        }
         if (e.key === 'Enter' && !e.ctrlKey) {           // Keys.Return -> SendKeys "{TAB}"
             var f = Array.prototype.filter.call(
                 document.querySelectorAll('#panel4 input, .toolstrip button'),
@@ -270,6 +273,7 @@
         });
 
         $('grdFull').addEventListener('click', function () { $('gridWrap').classList.toggle('full'); });
+        $('grdExitFull').addEventListener('click', function () { $('gridWrap').classList.remove('full'); $('grdFull').focus(); });
         $('grdExport').addEventListener('click', function () {
             var csv = [COLS.map(function (c) { return '"' + c.t + '"'; }).join(',')];
             view.forEach(function (r) {

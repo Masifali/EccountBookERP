@@ -960,7 +960,19 @@ function soToggleFullscreen(wrapId, btn) {
     if (!w) return;
     var on = w.classList.toggle('fs');
     if (btn) btn.textContent = on ? 'Exit Fullscreen' : 'Fullscreen';
-    document.body.style.overflow = on ? 'hidden' : '';
+    if (on) {
+        w.dataset.previousOverflow = document.body.style.overflow;
+        var exit = document.createElement('button');
+        exit.type = 'button'; exit.className = 'so-exit-fullscreen'; exit.textContent = 'Exit fullscreen';
+        exit.addEventListener('click', function () { soToggleFullscreen(wrapId, btn); if (btn) btn.focus(); });
+        w.insertBefore(exit, w.firstChild);
+        document.body.style.overflow = 'hidden';
+        exit.focus();
+    } else {
+        var exitButton = w.querySelector('.so-exit-fullscreen');
+        if (exitButton) exitButton.remove();
+        document.body.style.overflow = w.dataset.previousOverflow || '';
+    }
 }
 
 /* ---------------------------------------------------- supplier other charges */
@@ -2289,6 +2301,9 @@ function soPartyNameModeChanged() {
 
 /* frmSupplierOfferCmagt_KeyDown (:4532) - the form's own shortcuts. */
 function soKeyDown(e) {
+    if (e.defaultPrevented) return;
+    var fullscreenExit = document.querySelector('.grid-wrap.fs .so-exit-fullscreen');
+    if (e.key === 'Escape' && fullscreenExit) { e.preventDefault(); fullscreenExit.click(); return; }
     if (e.key === 'F2') { e.preventDefault(); soSave(); }
     else if (e.key === 'F3') { e.preventDefault(); soNew(); }
     else if (e.key === 'F5') { e.preventDefault(); soRefresh(); }

@@ -125,7 +125,6 @@
     <div class="gb" id="gbDocType" style="display:none; min-width:200px;">
         <span class="gb-title">Doc Types</span>
         <table class="wg" id="GrdDocType"></table>
-        <button type="button" class="win-btn" style="margin-top:3px;" onclick="glShowFilteredRecords()">Show</button>
     </div>
 </div>
 
@@ -183,7 +182,7 @@
         else if (id === 2) $('#txtFromDate').val(AccF.addDays(-7));
         else if (id === 3) { $('#txtFromDate').val(AccF.monthStart()); $('#txtToDate').val(AccF.today()); }
         else if (id === 4) { $('#txtFromDate').val(AccF.yearStart()); $('#txtToDate').val(AccF.today()); }
-        else if (id === 5) $('#txtFromDate').val(CTX.activeYear.startPeriod);
+        else if (id === 5) $('#txtFromDate').val(CTX.activeYear.startPeriod || '');
     }
 
     function signLbl(v) { return v > 0 ? ' Dr' : (v < -0.99 ? ' Cr' : ''); }
@@ -318,14 +317,25 @@
         });
         const list = order.map(function (k) { return map[k]; }).sort(function (a, b) { return AccF.num(a.DocumentTypeId) - AccF.num(b.DocumentTypeId); });
         AccF.renderGrid({ table: '#GrdDocType', rows: list, columns: [
-            { key: 'sel', caption: '', render: function (r) { return '<input type="checkbox" class="dt-sel" value="' + AccF.esc(r.DocumentTypeId) + '">'; }, align: 'c' },
+            { key: 'sel', caption: '', render: function (r) { return '<input type="checkbox" class="dt-sel" checked value="' + AccF.esc(r.DocumentTypeId) + '">'; }, align: 'c' },
             { key: 'D.Type' }, { key: 'Balance', type: 'both' }] });
         $('#gbDocType').toggle(list.length > 0);
+        /* no Show button: ticking / unticking a D.Type re-filters the loaded rows at once */
+        /* header selector (UseHeaderSelector): one box ticks / unticks every D.Type */
+        $('#GrdDocType thead th:first').html('<input type="checkbox" class="dt-all" checked title="Check / uncheck all">');
+        $('#GrdDocType').off('change.dt')
+            .on('change.dt', '.dt-all', function () { $('#GrdDocType .dt-sel').prop('checked', this.checked); glShowFilteredRecords(); })
+            .on('change.dt', '.dt-sel', function () {
+                const all = $('#GrdDocType .dt-sel'), on = all.filter(':checked').length;
+                $('#GrdDocType .dt-all').prop('checked', on === all.length).prop('indeterminate', on > 0 && on < all.length);
+                glShowFilteredRecords();
+            });
     }
     /* BtnShowFilteredRecords_Click: re-filter the already loaded table by the selected document types */
     function glShowFilteredRecords() {
         const ids = $('.dt-sel:checked').map(function () { return String($(this).val()); }).get();
-        render(ids.length ? gridRows.filter(function (r) { return ids.indexOf(String(r.DocumentTypeId)) >= 0; }) : gridRows);
+        /* every D.Type starts ticked (all rows); unticking one drops its rows straight away */
+        render(gridRows.filter(function (r) { return ids.indexOf(String(r.DocumentTypeId)) >= 0; }));
     }
 
     function setModeButtons(m) {
@@ -486,6 +496,8 @@
             const acc = PRESET.accountId || QS.get('accountId');
             if (acc) {
                 $('#cmbAccountTitle').val(String(acc));
+                /* GeneralLedger_Load :802-816 - Date Type stays "Financial Year" (Rows[4]); a linked call only
+                   replaces the From / To dates (GeneralLedgerId > 0), exactly as the desktop does */
                 if (PRESET.fromDate || QS.get('fromDate')) $('#txtFromDate').val(PRESET.fromDate || QS.get('fromDate'));
                 if (PRESET.toDate || QS.get('toDate')) $('#txtToDate').val(PRESET.toDate || QS.get('toDate'));
                 if (QS.get('branchId') && CTX.branchFeature) $('#cmbbranch').val(QS.get('branchId'));
