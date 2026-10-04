@@ -45,7 +45,15 @@ public class TradeReportRepository {
         result.put("amountDecimals", amountDecimals >= 1 && amountDecimals <= 4 ? amountDecimals : 0);
         List<Map<String,Object>> years=execute("Proc_FinancialYear_ReadActiveByOrganizationIdNCompanyId",context(u));
         if(years.size()!=1) throw new IllegalStateException("Select a single active financial year before opening this report");
-        result.put("year",years.get(0));
+        Map<String,Object> year = new LinkedHashMap<>(years.get(0));
+        // These are calendar dates. Serializing a midnight SQL timestamp in UTC shifts
+        // 1-Aug to 31-Jul before the browser takes the date portion of the value.
+        for (String column : List.of("Start_Period", "End_Period")) {
+            Object date = year.get(column);
+            if (date instanceof java.sql.Timestamp timestamp) year.put(column, timestamp.toLocalDateTime().toLocalDate().toString());
+            else if (date instanceof java.sql.Date sqlDate) year.put(column, sqlDate.toLocalDate().toString());
+        }
+        result.put("year",year);
         result.put("branchId",u.getBranchesId()); result.put("appId",u.getAppId());
         result.put("features",execute("USP_GetERPFeaturesByCompanyId",context(u)));
         result.put("cities",execute("SP_City_GetAllMethod",params(u,"MethodType","GetAll")));

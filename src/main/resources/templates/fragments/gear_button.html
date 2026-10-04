@@ -6,7 +6,7 @@
   the same lists /admin-panel and /system-utilities show. Unported items are greyed, not hidden.
   Use:  <div th:replace="fragments/gear_button :: gear"></div>
 -->
-<div th:fragment="gear" class="gb-root"
+<div th:fragment="gear" class="gb-root gb-in-header"
      th:with="adminItems=${@gearMenuController.adminItemsForView()}, utilItems=${@gearMenuController.utilityItemsForView()}">
     <style>
         .gb-root { position: fixed; left: 10px; bottom: 10px; z-index: 2000; font-family: "Segoe UI", Tahoma, sans-serif; }
@@ -27,8 +27,9 @@
         .gb-root .gb-sub a:hover { background: #cce8ff; }
         .gb-root .gb-sub span.gb-off { color: #8a8a8a; cursor: not-allowed; }
         .erp-navigation .gb-root.gb-in-header { position: relative; inset: auto; flex: 0 0 auto; z-index: 2200; }
-        .gb-root.gb-in-header .gb-btn { width: 32px; height: 32px; border: 0; border-radius: 3px; background: transparent; color: #34495e; box-shadow: none; font-size: 18px; }
-        .gb-root.gb-in-header .gb-btn:hover { background: #e6ebef; }
+        /* desktop DashboardNew btnSetting: white gear on the teal shell colour, round */
+        .gb-root.gb-in-header .gb-btn { width: 30px; height: 30px; border: 0; border-radius: 50%; background: #00796B; color: #fff; box-shadow: none; font-size: 18px; }
+        .gb-root.gb-in-header .gb-btn:hover, .gb-root.gb-in-header.is-open .gb-btn { background: #004d40; }
         .gb-root.gb-in-header .gb-menu { left: auto; right: 0; top: 100%; bottom: auto; text-align: left; }
         .gb-root.gb-in-header .gb-sub { left: auto; right: 100%; top: -3px; bottom: auto; max-height: calc(100vh - 100px); overflow-y: auto; }
         .gb-root.gb-in-header .gb-item::after { content: "\25C2"; }
@@ -62,7 +63,9 @@
         (function () {
             var root = document.currentScript.parentNode;
             var logout = document.querySelector('.erp-navigation-bar .erp-logout');
-            if (logout) {
+            if (root.closest && root.closest('.erp-navigation-bar')) {
+                root.classList.add('gb-in-header');          /* already in the header, beside GOLDEN */
+            } else if (logout) {
                 root.classList.add('gb-in-header');
                 logout.parentNode.insertBefore(root, logout);
             }
