@@ -1,459 +1,196 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Labour Wages Manual</title>
-
-    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Contractor Labour Wages - Manual</title>
     <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
-    <link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
-
-<style>
-        body {
-            font-family: "Segoe UI", "Tahoma", "Geneva", "Verdana", sans-serif;
-            background-color: #e4e9ed;
-            font-size: 11px;
-            color: #222;
-            margin: 0;
-            padding: 0;
-        }
-
-        .win-sub-header {
-            font-size: 10px;
-            color: #4f5d65;
-            padding: 2px 10px;
-            background: #d8e0e6;
-            border-bottom: 1px solid #b0bec5;
-        }
-
-        .win-toolbar {
-            background: linear-gradient(to bottom, #ffffff 0%, #e3e8ee 100%);
-            border-bottom: 1px solid #b0bec5;
-            padding: 3px 8px;
-            display: flex;
-            gap: 4px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .win-btn {
-            background: #ffffff;
-            border: 1px solid #90a4ae;
-            border-radius: 2px;
-            padding: 3px 10px;
-            font-size: 11px;
-            font-weight: 600;
-            color: #263238;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            box-shadow: 0 1px 1px rgba(0,0,0,0.05);
-            height: 25px;
-        }
-        .win-btn:hover { background: #e0f2f1; border-color: #0f5959; color: #004d40; }
-        .win-btn-teal { background: #0f5959; color: #ffffff; border-color: #083b3b; }
-        .win-btn-teal:hover { background: #083b3b; color: #ffffff; }
-
-        .win-title-bar {
-            background-color: #0f5959;
-            color: #ffffff;
-            padding: 6px 12px;
-            font-size: 14px;
-            font-weight: bold;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid #083b3b;
-        }
-
-        .win-form-card {
-            background: #ffffff;
-            border: 1px solid #b0bec5;
-            margin: 6px;
-            padding: 8px;
-            border-radius: 2px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-        }
-
-        .win-group-box {
-            border: 1px solid #cbd5e1;
-            border-radius: 3px;
-            padding: 12px 10px 8px 10px;
-            margin-bottom: 8px;
-            background-color: #ffffff;
-            position: relative;
-        }
-
-        .win-group-title {
-            font-weight: bold;
-            font-size: 11px;
-            color: #0f5959;
-            background: #ffffff;
-            padding: 0 6px;
-            position: absolute;
-            top: -9px;
-            left: 10px;
-        }
-
-        .win-label {
-            font-weight: 600;
-            color: #334155;
-            margin-bottom: 2px;
-            font-size: 11px;
-            white-space: nowrap;
-        }
-
-        .win-input {
-            border: 1px solid #94a3b8;
-            border-radius: 2px;
-            padding: 2px 6px;
-            font-size: 11px;
-            height: 24px;
-            width: 100%;
-            background-color: #ffffff;
-            box-sizing: border-box;
-        }
-        .win-input:focus { border-color: #0f5959; outline: none; box-shadow: 0 0 2px rgba(15,89,89,0.4); }
-
-        .win-textarea {
-            border: 1px solid #94a3b8;
-            border-radius: 2px;
-            padding: 4px 6px;
-            font-size: 11px;
-            width: 100%;
-            height: 98px;
-            resize: none;
-            box-sizing: border-box;
-        }
-
-        /* Select2 styling override for WinForms ERP look */
-        .select2-container--default .select2-selection--single {
-            height: 24px !important;
-            line-height: 22px !important;
-            font-size: 11px !important;
-            border: 1px solid #94a3b8 !important;
-            border-radius: 2px !important;
-        }
-        .select2-container--default .select2-selection--single .select2-selection__rendered {
-            line-height: 22px !important;
-            padding-left: 6px !important;
-            color: #222 !important;
-        }
-        .select2-container--default .select2-selection--single .select2-selection__arrow {
-            height: 22px !important;
-        }
-        .select2-dropdown {
-            border: 1px solid #0f5959 !important;
-            font-size: 11px !important;
-        }
-
-        .detail-entry-bar {
-            background-color: #ffffff;
-            border: 1px solid #cbd5e1;
-            padding: 6px 10px;
-            margin-bottom: 6px;
-            border-radius: 2px;
-        }
-
-        .win-grid-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 11px;
-            background: #ffffff;
-        }
-        .win-grid-table th {
-            background-color: #0f5959;
-            color: #ffffff;
-            font-weight: 700;
-            padding: 4px 8px;
-            border: 1px solid #083b3b;
-            text-align: left;
-        }
-        .win-grid-table td {
-            padding: 4px 8px;
-            border: 1px solid #cbd5e1;
-            vertical-align: middle;
-        }
-        .win-grid-table tbody tr:hover { background-color: #e0f2f1; }
-
-        .btn-add-green {
-            background-color: #00796b;
-            color: white;
-            border: 1px solid #004d40;
-            height: 24px;
-            width: 28px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 2px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .btn-add-green:hover { background-color: #004d40; }
-
-        .totals-bar {
-            background: #e0f2f1;
-            font-weight: bold;
-            color: #0f5959;
-            font-size: 12px;
-            padding: 4px 12px;
-            border: 1px solid #0f5959;
-            border-radius: 2px;
-            display: flex;
-            justify-content: space-between;
-            margin-top: 6px;
-        }
-
-        .win-tab-bar {
-            background: #d1d5db;
-            border-bottom: 1px solid #b0bec5;
-            padding: 2px 8px 0 8px;
-            display: flex;
-            gap: 3px;
-        }
-        .win-tab-btn {
-            background: #e5e7eb;
-            border: 1px solid #9ca3af;
-            border-bottom: none;
-            border-radius: 3px 3px 0 0;
-            padding: 4px 14px;
-            font-size: 11px;
-            font-weight: bold;
-            color: #374151;
-            cursor: pointer;
-        }
-        .win-tab-btn.active {
-            background: #ffffff;
-            color: #0f5959;
-            border-color: #b0bec5;
-            border-bottom: 2px solid #ffffff;
-            margin-bottom: -1px;
-        }
-    </style>
-    <style>
-        /* select2 sized to the desktop combo height so the two sit on one line */
-        .select2-container--default .select2-selection--single { height: 24px; border: 1px solid #7f9db9; border-radius: 0; }
-        .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 22px; font-size: 11px; padding-left: 4px; }
-        .select2-container--default .select2-selection--single .select2-selection__arrow { height: 22px; }
-
-        /* Button busy state: disabled + spinner while a request is in flight. */
-        .btn-busy { position: relative; color: transparent !important; pointer-events: none; }
-        .btn-busy::after {
-            content: ""; position: absolute; top: 50%; left: 50%; width: 11px; height: 11px;
-            margin: -6px 0 0 -6px; border: 2px solid rgba(0,0,0,.25); border-top-color: #00564C;
-            border-radius: 50%; animation: btnspin .6s linear infinite;
-        }
-        @keyframes btnspin { to { transform: rotate(360deg); } }
-
-        /* Large table: scrolls inside its own container, never the page. */
-        .cw-grid-scroll { max-height: 420px; overflow: auto; border: 1px solid #b5b5b5; background: #fff; }
-        .cw-grid-scroll thead th { position: sticky; top: 0; z-index: 2; }
-        .cw-grid-scroll table { margin: 0; }
-        #grdWagesAccount tbody tr { cursor: pointer; }
-        #grdWagesAccount tbody tr.selected { background: #cde6f7; }
-        #cwMessage { display: none; margin: 4px 0; padding: 4px 8px; font-size: 11px; font-weight: bold; }
-        #cwMessage.ok  { display: block; background: #e6f4ea; color: #0a6b2e; border: 1px solid #a8d5b5; }
-        #cwMessage.err { display: block; background: #fdecea; color: #a3160b; border: 1px solid #f0b3ad; }
-        .cw-fullscreen { position: fixed; inset: 0; z-index: 3000; background: #fff; padding: 10px; overflow: auto; }
-        .cw-fullscreen .cw-grid-scroll { max-height: calc(100vh - 90px); }
-    </style>
-
-    <style>
-        .lw-tabwrap { padding: 0 8px; }
-        .lw-grid-wide { width: 100%; }
-        .lw-note { font-size: 10px; color: #555; margin: 2px 0 4px 0; font-style: italic; }
-        .win-grid-table td input, .win-grid-table td select { width: 100%; border: 1px solid #b6c3cc; font-size: 11px; height: 20px; box-sizing: border-box; }
-        .win-grid-table td input[readonly] { background: #f2f4f6; color: #555; }
-        .lw-row-btn { border: 1px solid #90a4ae; background: #fff; border-radius: 2px; padding: 0 6px; height: 20px; cursor: pointer; font-size: 11px; }
-        .lw-footer { position: sticky; bottom: 0; background: linear-gradient(to bottom,#ffffff 0%,#e3e8ee 100%); border-top: 1px solid #b0bec5; padding: 5px 8px; display: flex; align-items: center; gap: 6px; }
-        .lw-docno-link { color: #00564C; font-weight: bold; text-decoration: underline; cursor: pointer; }
-        .lw-totals input { text-align: right; }
-    </style>
-    <style>
-        .wm-head { display: grid; grid-template-columns: minmax(200px,1fr) minmax(260px,1.3fr) minmax(280px,1.7fr); gap: 5px 12px; }
-        @media (max-width: 900px) { .wm-head { grid-template-columns: 1fr; } }
-        #grdDetail td select { min-width: 130px; }
-        #grdDetail td input.wm-dec { min-width: 70px; }
-        #grdDetail td, #grdHistory td { white-space: nowrap; }
-        .wm-row { display: flex; gap: 6px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 4px; }
-        .wm-f { display: flex; flex-direction: column; }
-        .wm-f .win-label { margin-bottom: 1px; }
-        .wm-inline { display: flex; align-items: center; gap: 6px; }
-        .wm-inline .win-label { margin: 0; min-width: 88px; }
-        .wm-hidden { display: none !important; }
-        #grdDetail td.num, #grdHistory td.num, #grdHistoryDetail td.num { text-align: right; }
-        #grdDetail tr.foc td, #grdHistoryDetail tr.foc td { color: #d00000; }
-        #grdDetail tr.cur td, #grdHistory tr.cur td { background: #fff4c2; }
-        #grdDetail td.btncell, #grdHistory td.btncell { width: 1%; white-space: nowrap; text-align: center; }
-        .wm-tfoot td { font-weight: bold; background: #eef2f5; text-align: right; }
-        .wm-caption { font-weight: bold; padding: 3px 4px; background: #d8e0e6; border: 1px solid #b0bec5; border-bottom: 0; font-size: 11px; }
-        .wm-modal-back { position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 3000; display: flex; align-items: center; justify-content: center; }
-        .wm-modal { background: #fff; border: 1px solid #607d8b; width: 460px; max-width: calc(100vw - 32px); max-height: 80vh; display: flex; flex-direction: column; }
-        .wm-modal header { background: #0f5959; color: #fff; padding: 5px 8px; font-weight: bold; display: flex; justify-content: space-between; }
-        .wm-modal .body { padding: 6px; overflow: auto; }
-        .wm-modal table { width: 100%; }
-        .wm-modal tbody tr { cursor: pointer; }
-        .wm-modal tbody tr.sel td { background: #cfe8e6; }
-        .wm-scroll { overflow: auto; border: 1px solid #b0bec5; background: #fff; }
-        .wm-scroll table { margin: 0; }
-        .wm-scroll thead th { position: sticky; top: 0; z-index: 1; }
-    </style>
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_wages_schedule.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_labour_wages.css?v=20261001a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_labour_wages_manual.css?v=20261004a}"/>
 </head>
 <body>
 <div th:replace="~{fragments/erp_navigation :: navigation}"></div>
-
 <!-- ==========================================================================
-     Labour Wages Manual - ditto Architecture.WinApp.Contractor_Wages\frmWagesBillManual.cs
-     (form text "Contractor Labour Wages", title label15 "Labour Wages"), screen 187,
-     DocumentTypeId 810. Tabs: tabPage1 "Form", tabPage2 "History".
+     frmWagesBillManual.cs - "Contractor Labour Wages", ClientSize 1084 x 661, screen 187, DocumentTypeId 810.
+     tabIncomingLabourwages (Fill): tabPage1 "Form" / tabPage2 "History".
+     Form page (Dock = Top unless noted):
+       panel2  29  toolStrip1 - New, Refresh | Save, Update | Print-004 | Wages Schedule, Wages Exempt Item | ShortCut Keys
+       panel3  24  Teal, label15 "Labour Wages", ChkPreview "Is Preview" (white) at 963,2
+       panel4 196  White: groupBox1 "Main Information" 1060 x 74 at (1,2); groupBox2 "Main Information" 1064 x 117 at (1,76)
+       panel6 fill tabControl1 - tabPage3 "Regular Wages": panel15 Teal 27 (label2) + grdwagesDetail
+     Runtime (:378-394): Is Approved and Is Preview shown; Job Order hidden until Document Type = Production (112);
+     WareHouse To hidden; Is Company / Stock Party only with ERP feature 8.
      ========================================================================== -->
-<div class="win-title-bar">Labour Wages Manual</div>
-<div class="win-sub-header"><span>&#128193; Screens &gt; Contractor Wages &gt; Labour Wages Manual</span></div>
-
-<div class="win-tab-bar">
-    <div class="win-tab-btn active" id="tabForm"    onclick="wmTab(0)">Form</div>
-    <div class="win-tab-btn"        id="tabHistory" onclick="wmTab(1)">History</div>
-</div>
-
-<div id="cwMessage"></div>
-
-<!-- ============================ tabPage1 "Form" ============================ -->
-<div id="viewForm" class="lw-tabwrap" style="padding-top:6px;">
-    <!-- toolStrip1: New, Refresh | Save, Update | Print-004 | Wages Schedule, Wages Exempt Item | ShortCut Keys -->
-    <div class="win-toolbar">
-        <button type="button" class="win-btn" id="btnNew"     onclick="wmNew()"><i class="fa fa-file-o"></i> New</button>
-        <button type="button" class="win-btn" id="btnRefresh" onclick="wmRefresh()"><i class="fa fa-refresh"></i> Refresh</button>
-        <button type="button" class="win-btn" id="btnSave"    onclick="wmSave()"><i class="fa fa-save"></i> Save</button>
-        <button type="button" class="win-btn" id="btnUpdate"  onclick="wmUpdate()" style="display:none;"><i class="fa fa-pencil"></i> Update</button>
-        <button type="button" class="win-btn" id="btnPrint"   onclick="wmPrint()" data-rpt="004-ContractorWagesBillManualSlip.rpt"><i class="fa fa-print"></i> Print-004</button>
-        <button type="button" class="win-btn" onclick="window.open('/accounts/vouchers/wages-rate-schedule','_blank')">Wages Schedule</button>
-        <button type="button" class="win-btn" onclick="window.open('/production/wages-exempt-item-schedule','_blank')">Wages Exempt Item</button>
-        <button type="button" class="win-btn" onclick="wmShortcuts()">ShortCut Keys</button>
+<div class="ws-form lw lwm" id="frmWagesBillManual">
+    <div class="tabs">
+        <span class="tabbtn act" id="tabForm" onclick="wmTab(0)">Form</span>
+        <span class="tabbtn" id="tabHistory" onclick="wmTab(1)">History</span>
     </div>
-    <!-- panel3: label15 "Labour Wages" + ChkPreview "Is Preview" -->
-    <div style="display:flex; justify-content:space-between; align-items:center; padding:3px 2px;">
-        <span style="font-weight:bold; font-size:13px; color:#0f5959;">Labour Wages</span>
-        <label class="wm-inline" style="margin:0;"><input type="checkbox" id="chkPreview"> Is Preview</label>
-    </div>
+    <div id="cwMessage"></div>
 
-    <div class="win-form-card" style="margin:0 0 6px 0;">
-        <!-- groupBox1 "Main Information" -->
-        <div class="win-group-box">
-            <div class="win-group-title">Main Information</div>
-            <div class="wm-head">
-                <div>
-                    <div class="wm-inline"><label class="win-label" for="txtDocNo">Doc No</label>
-                        <input type="text" id="txtDocNo" class="win-input win-textbox-readonly" readonly></div>
+    <!-- ================================================================ tabPage1 "Form" -->
+    <div class="tabpage" id="viewForm">
+        <div class="tool" id="toolStrip1">
+            <button type="button" id="btnNew" onclick="wmNew()"><i class="fa fa-plus-circle ic-new"></i><span><u>N</u>ew</span></button>
+            <button type="button" id="btnRefresh" onclick="wmRefresh()"><i class="fa fa-refresh"></i>Refresh</button>
+            <span class="sep"></span>
+            <button type="button" id="btnSave" onclick="wmSave()"><i class="fa fa-floppy-o ic-save"></i><span><u>S</u>ave</span></button>
+            <button type="button" id="btnUpdate" onclick="wmUpdate()" style="display:none;"><i class="fa fa-check-circle ic-upd"></i><span><u>U</u>pdate</span></button>
+            <span class="sep"></span>
+            <button type="button" id="btnPrint" onclick="wmPrint()" data-rpt="004-ContractorWagesBillManualSlip.rpt"><i class="fa fa-print ic-print"></i><span><u>P</u>rint-004</span></button>
+            <span class="sep"></span>
+            <button type="button" id="btnWagesSchedule" onclick="window.open('/accounts/vouchers/wages-rate-schedule','_blank')"><i class="fa fa-calendar"></i>Wages Schedule</button>
+            <button type="button" id="btnWagesExempt" onclick="window.open('/production/wages-exempt-item-schedule','_blank')"><i class="fa fa-ban"></i>Wages Exempt Item</button>
+            <span class="sep"></span>
+            <button type="button" id="btnShortcutKeys" onclick="wmShortcuts()"><i class="fa fa-keyboard-o"></i>ShortCut Keys</button>
+        </div>
+        <div class="teal band24">
+            <span class="ttl" style="left:3px; top:2px;">Labour Wages</span>
+            <label class="g chkw" style="left:963px; top:2px;"><input type="checkbox" id="chkPreview"> Is Preview</label>
+        </div>
+
+        <!-- panel4 (196, White) - controls at the designer's x / y, measured from each GroupBox's corner -->
+        <div class="panel4m">
+            <div class="gbx" id="groupBox1" style="left:1px; top:2px; width:1060px; height:74px;">
+                <div class="gbx-b"></div><span class="gbx-cap">Main Information</span>
+                <span class="g lbl" style="left:7px; top:20px;">Doc No</span>
+                <input type="text" id="txtDocNo" class="g tx" style="left:69px; top:16px; width:150px;" readonly tabindex="-1">
+                <span class="g lbl" style="left:7px; top:48px;">Doc Date</span>
+                <input type="date" id="txtDocDate" class="g dt" style="left:69px; top:44px; width:150px;" tabindex="1">
+
+                <span class="g lbl" style="left:223px; top:20px;">Document Type</span>
+                <select id="cmbReferenceDocType" class="g win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Document Type"
+                        style="left:319px; top:14px; width:287px;" tabindex="2"></select>
+                <span class="g lbl wm-hidden" id="labelJobOrder" style="left:223px; top:48px;">Job Order</span>
+                <div class="g wm-hidden" id="wrapJobOrder" style="left:319px; top:42px; width:191px; height:26px;">
+                    <select id="cmbJobOrder" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Job Order No"
+                            style="left:0; top:0; width:191px;" tabindex="3"></select>
                 </div>
-                <div>
-                    <div class="wm-inline"><label class="win-label" for="cmbReferenceDocType">Document Type</label>
-                        <div style="flex:1; min-width:0;"><select id="cmbReferenceDocType" class="win-input wm-s2" style="width:100%;"></select></div></div>
+                <label class="g chk" style="left:516px; top:46px;"><input type="checkbox" id="chkIsApprove"> Is Approved</label>
+
+                <span class="g lbl" style="left:611px; top:20px;">Remarks</span>
+                <textarea id="txtRemarks" class="g rt" style="left:676px; top:14px; width:378px; height:23px;" tabindex="4"></textarea>
+                <div class="wm-hidden" id="wrapStockParty">
+                    <span class="g lbl" style="left:611px; top:47px;">Stock Party</span>
+                    <select id="cmbStockParty" class="g win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Stock Party"
+                            style="left:676px; top:41px; width:378px;" tabindex="5"></select>
                 </div>
-                <div>
-                    <div class="wm-inline"><label class="win-label" for="txtRemarks">Remarks</label>
-                        <textarea id="txtRemarks" class="win-input" rows="1" style="flex:1; height:23px;"></textarea></div>
+            </div>
+
+            <div class="gbx" id="groupBox2" style="left:1px; top:76px; width:1064px; height:117px;">
+                <div class="gbx-b"></div><span class="gbx-cap">Main Information</span>
+                <span class="g lbl" style="left:5px; top:18px;">Contractor</span>
+                <select id="cmbContractor" class="g win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Contractor"
+                        style="left:5px; top:37px; width:218px;" tabindex="6"></select>
+                <span class="g lbl" style="left:224px; top:18px;">Labour / Wages Activity</span>
+                <select id="cmbWagesAccount" class="g win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Wages Account"
+                        style="left:224px; top:37px; width:185px;" tabindex="7"></select>
+                <span class="g lbl" style="left:411px; top:18px;">Pack Size</span>
+                <input type="text" id="txtPackSize" class="g tx num wm-dec" inputmode="decimal" style="left:411px; top:39px; width:80px;" tabindex="8">
+                <span class="g lbl" style="left:495px; top:18px;">Qty</span>
+                <input type="text" id="txtQty" class="g tx num wm-dec" inputmode="decimal" style="left:493px; top:39px; width:86px;" tabindex="9">
+                <span class="g lbl" style="left:583px; top:18px;">Weight</span>
+                <input type="text" id="txtWeight" class="g tx num wm-dec" inputmode="decimal" style="left:581px; top:39px; width:93px;" tabindex="10">
+                <span class="g lbl" style="left:678px; top:18px;">Rate</span>
+                <input type="text" id="txtWagesRate" class="g tx num" style="left:676px; top:39px; width:82px;" disabled>
+                <span class="g lbl" style="left:763px; top:18px;">Amount</span>
+                <input type="text" id="txtAmount" class="g tx num" style="left:759px; top:39px; width:100px;" disabled>
+                <span class="g lbl" style="left:857px; top:18px;">Item</span>
+                <label class="g rdo" style="left:892px; top:16px;"><input type="radio" name="rdbItem" id="rdbtnItemName" checked> Name</label>
+                <label class="g rdo" style="left:945px; top:16px;"><input type="radio" name="rdbItem" id="rdbtnItemCode"> Code</label>
+                <select id="comItem" class="g win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Item"
+                        style="left:860px; top:37px; width:198px;" tabindex="11"></select>
+
+                <span class="g lbl" style="left:5px; top:66px;">Crop Year</span>
+                <select id="cmbCropYear" class="g win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Crop Year"
+                        style="left:5px; top:85px; width:97px;" tabindex="12"></select>
+                <span class="g lbl" style="left:102px; top:66px;">Packing Type</span>
+                <select id="cmbPackingType" class="g win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Packing Type"
+                        style="left:105px; top:85px; width:118px;" tabindex="13"></select>
+                <span class="g lbl" style="left:224px; top:66px;">Job Lot</span>
+                <select id="cmbJobLot" class="g win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Job Lot"
+                        style="left:224px; top:85px; width:185px;" tabindex="14"></select>
+                <div id="wrapWhFrom">
+                    <span class="g lbl" style="left:411px; top:66px;">WareHouse From</span>
+                    <select id="cmbWarehouseFrom" class="g win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="WareHouse"
+                            style="left:411px; top:85px; width:171px;" tabindex="15"></select>
                 </div>
-                <div>
-                    <div class="wm-inline"><label class="win-label" for="txtDocDate">Doc Date</label>
-                        <input type="date" id="txtDocDate" class="win-input"></div>
+                <div class="wm-hidden" id="wrapWhTo">
+                    <span class="g lbl" style="left:583px; top:66px;">WareHouse To</span>
+                    <select id="cmbWareHouseTo" class="g win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="WareHouse"
+                            style="left:583px; top:85px; width:175px;" tabindex="16"></select>
                 </div>
-                <div>
-                    <div class="wm-inline">
-                        <label class="win-label wm-hidden" id="labelJobOrder" for="cmbJobOrder">Job Order</label>
-                        <div id="wrapJobOrder" class="wm-hidden" style="flex:1; min-width:0;"><select id="cmbJobOrder" class="win-input wm-s2" style="width:100%;"></select></div>
-                        <label class="wm-inline" style="margin:0 0 0 auto; white-space:nowrap;"><input type="checkbox" id="chkIsApprove"> Is Approved</label>
-                    </div>
-                </div>
-                <div>
-                    <div class="wm-inline wm-hidden" id="wrapStockParty"><label class="win-label" for="cmbStockParty">Stock Party</label>
-                        <div style="flex:1; min-width:0;"><select id="cmbStockParty" class="win-input wm-s2" style="width:100%;"></select></div></div>
-                </div>
+                <span class="g lbl" style="left:761px; top:66px;">Wages Type</span>
+                <input type="text" id="txtWagesType" class="g tx" style="left:759px; top:87px; width:158px;" disabled>
+                <label class="g chk wm-hidden" id="wrapIsCompany" style="left:920px; top:66px;"><input type="checkbox" id="chkIsCompany" checked> Is Company</label>
+                <button type="button" class="g tealbtn" id="btnAdd" onclick="wmAdd()" style="left:920px; top:85px; width:39px; height:27px;" tabindex="17">+</button>
+                <button type="button" class="g tealbtn" id="btnUpdateDetail" onclick="wmUpdateDetail()" style="left:920px; top:85px; width:70px; height:27px; display:none;">Update</button>
+                <button type="button" class="g tealbtn" id="btnCancelUpdateDetail" onclick="wmCancelUpdateDetail()" style="left:990px; top:85px; width:68px; height:27px; display:none;">Cancel</button>
             </div>
         </div>
 
-        <!-- groupBox2 "Main Information" - the detail entry box -->
-        <div class="win-group-box" style="margin-bottom:0;">
-            <div class="win-group-title">Main Information</div>
-            <div class="wm-row">
-                <div class="wm-f" style="width:218px;"><label class="win-label">Contractor</label><select id="cmbContractor" class="win-input wm-s2" style="width:100%;"></select></div>
-                <div class="wm-f" style="width:185px;"><label class="win-label">Labour / Wages Activity</label><select id="cmbWagesAccount" class="win-input wm-s2" style="width:100%;"></select></div>
-                <div class="wm-f" style="width:80px;"><label class="win-label">Pack Size</label><input type="text" id="txtPackSize" class="win-input wm-dec" inputmode="decimal"></div>
-                <div class="wm-f" style="width:86px;"><label class="win-label">Qty</label><input type="text" id="txtQty" class="win-input wm-dec" inputmode="decimal"></div>
-                <div class="wm-f" style="width:93px;"><label class="win-label">Weight</label><input type="text" id="txtWeight" class="win-input wm-dec" inputmode="decimal"></div>
-                <div class="wm-f" style="width:82px;"><label class="win-label">Rate</label><input type="text" id="txtWagesRate" class="win-input" disabled></div>
-                <div class="wm-f" style="width:100px;"><label class="win-label">Amount</label><input type="text" id="txtAmount" class="win-input" disabled></div>
-                <div class="wm-f" style="width:198px;">
-                    <label class="win-label" style="display:flex; gap:8px;">Item
-                        <span style="margin-left:auto;"><label style="font-weight:normal;"><input type="radio" name="rdbItem" id="rdbtnItemName" checked> Name</label>
-                        <label style="font-weight:normal;"><input type="radio" name="rdbItem" id="rdbtnItemCode"> Code</label></span></label>
-                    <select id="comItem" class="win-input wm-s2" style="width:100%;"></select>
+        <!-- panel6 - tabControl1 / tabPage3 "Regular Wages" -->
+        <div class="itab t1m" id="tabControl1">
+            <div class="tabs"><span class="tabbtn act">Regular Wages</span></div>
+            <div class="ipage">
+                <div class="teal band27">
+                    <span class="band-l" style="left:3px; top:6px;">In this Grid User Will add Regular Wages</span>
+                    <span class="gear"><i class="fa fa-cog"></i> <i class="fa fa-caret-down"></i></span>
                 </div>
-            </div>
-            <div class="wm-row">
-                <div class="wm-f" style="width:97px;"><label class="win-label">Crop Year</label><select id="cmbCropYear" class="win-input wm-s2" style="width:100%;"></select></div>
-                <div class="wm-f" style="width:118px;"><label class="win-label">Packing Type</label><select id="cmbPackingType" class="win-input wm-s2" style="width:100%;"></select></div>
-                <div class="wm-f" style="width:185px;"><label class="win-label">Job Lot</label><select id="cmbJobLot" class="win-input wm-s2" style="width:100%;"></select></div>
-                <div class="wm-f" id="wrapWhFrom" style="width:344px;"><label class="win-label">WareHouse From</label><select id="cmbWarehouseFrom" class="win-input wm-s2" style="width:100%;"></select></div>
-                <div class="wm-f wm-hidden" id="wrapWhTo" style="width:175px;"><label class="win-label">WareHouse To</label><select id="cmbWareHouseTo" class="win-input wm-s2" style="width:100%;"></select></div>
-                <div class="wm-f" style="width:158px;"><label class="win-label">Wages Type</label><input type="text" id="txtWagesType" class="win-input" disabled></div>
-                <div class="wm-f">
-                    <label class="win-label wm-hidden" id="wrapIsCompany" style="font-weight:normal;"><input type="checkbox" id="chkIsCompany" checked> Is Company</label>
-                    <div style="display:flex; gap:3px;">
-                        <button type="button" class="win-btn btn-add-green" id="btnAdd" onclick="wmAdd()" title="Add">+</button>
-                        <button type="button" class="win-btn" id="btnUpdateDetail" onclick="wmUpdateDetail()" style="display:none;">Update</button>
-                        <button type="button" class="win-btn" id="btnCancelUpdateDetail" onclick="wmCancelUpdateDetail()" style="display:none;">Cancel</button>
-                    </div>
+                <div class="grid-wrap" id="grdDetailWrap">
+                    <table class="grid" id="grdDetail" tabindex="0"><thead></thead><tbody></tbody><tfoot class="wm-tfoot"></tfoot></table>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- tabControl1 / tabPage3 "Regular Wages" -->
-    <div class="wm-caption">Regular Wages &mdash; <span style="font-weight:normal;">In this Grid User Will add Regular Wages</span></div>
-    <div class="wm-scroll" style="max-height:340px;" id="grdDetailWrap">
-        <table class="win-grid-table" id="grdDetail" tabindex="0">
-            <thead></thead><tbody></tbody><tfoot class="wm-tfoot"></tfoot>
-        </table>
-    </div>
-</div>
-
-<!-- ============================ tabPage2 "History" ============================ -->
-<div id="viewHistory" class="lw-tabwrap" style="display:none; padding-top:6px;">
-    <div class="win-toolbar">
-        <button type="button" class="win-btn" onclick="wmNewHistory()"><i class="fa fa-file-o"></i> New</button>
-        <button type="button" class="win-btn" onclick="wmRefreshHistory()"><i class="fa fa-refresh"></i> Refresh</button>
-    </div>
-    <div style="font-weight:bold; font-size:13px; color:#0f5959; padding:3px 2px;">Labour Wages History</div>
-    <div class="win-group-box">
-        <div class="win-group-title">Filters</div>
-        <div class="wm-row">
-            <div class="wm-inline"><label class="win-label" style="min-width:0;">From Date</label>
-                <input type="checkbox" id="chkFromDate" checked><input type="date" id="FromDateHistory" class="win-input" style="width:136px;"></div>
-            <div class="wm-inline"><label class="win-label" style="min-width:0;">To Date</label>
-                <input type="checkbox" id="chkToDate" checked><input type="date" id="ToDateHistory" class="win-input" style="width:136px;"></div>
-            <div class="wm-inline"><label class="win-label" style="min-width:0;">From Doc No</label><input type="text" id="FromDocNoHistory" class="win-input" style="width:73px;"></div>
-            <div class="wm-inline"><label class="win-label" style="min-width:0;">To Doc No</label><input type="text" id="ToDocNoHistory" class="win-input" style="width:73px;"></div>
-            <div class="wm-inline"><label class="win-label" style="min-width:0;">Document Type</label>
-                <div style="width:205px;"><select id="CmbDocumentTypeHistory" class="win-input wm-s2" style="width:100%;"></select></div></div>
-            <button type="button" class="win-btn win-btn-teal" id="btnShowHistory" onclick="wmShowHistory()">Show</button>
+    <!-- ================================================================ tabPage2 "History" -->
+    <div class="tabpage" id="viewHistory" style="display:none;">
+        <!-- panel7 (51, Teal): toolStrip2 New / Refresh, label26 "Labour Wages History" at 3,30 -->
+        <div class="tool" id="toolStrip2">
+            <button type="button" onclick="wmNewHistory()"><i class="fa fa-plus-circle ic-new"></i><span><u>N</u>ew</span></button>
+            <button type="button" onclick="wmRefreshHistory()"><i class="fa fa-refresh"></i>Refresh</button>
         </div>
-    </div>
-    <div class="wm-caption">Filtered Record</div>
-    <div class="wm-scroll" style="max-height:300px;">
-        <table class="win-grid-table" id="grdHistory" tabindex="0"><thead></thead><tbody></tbody><tfoot class="wm-tfoot"></tfoot></table>
-    </div>
-    <div class="wm-caption" style="margin-top:6px;">This grid shows the Detail of above Selected row</div>
-    <div class="wm-scroll" style="max-height:260px;">
-        <table class="win-grid-table" id="grdHistoryDetail"><thead></thead><tbody></tbody><tfoot class="wm-tfoot"></tfoot></table>
+        <div class="teal band24"><span class="ttl" style="left:3px; top:2px;">Labour Wages History</span></div>
+        <!-- panel9 (47, White): groupBox4 "Filters" 1060 x 44 at (5,1) -->
+        <div class="panel9m">
+            <div class="gbx" id="groupBox4" style="left:5px; top:1px; width:1060px; height:44px;">
+                <div class="gbx-b"></div><span class="gbx-cap">Filters</span>
+                <span class="g lbl" style="left:6px; top:18px;">From Date</span>
+                <span class="g dtc" style="left:69px; top:14px; width:136px;"><input type="checkbox" id="chkFromDate" checked><input type="date" id="FromDateHistory"></span>
+                <span class="g lbl" style="left:206px; top:18px;">To Date</span>
+                <span class="g dtc" style="left:260px; top:14px; width:136px;"><input type="checkbox" id="chkToDate" checked><input type="date" id="ToDateHistory"></span>
+                <span class="g lbl" style="left:398px; top:18px;">From Doc No</span>
+                <input type="text" id="FromDocNoHistory" class="g tx" style="left:480px; top:14px; width:73px;">
+                <span class="g lbl" style="left:554px; top:18px;">To Doc No</span>
+                <input type="text" id="ToDocNoHistory" class="g tx" style="left:621px; top:14px; width:73px;">
+                <span class="g lbl" style="left:696px; top:18px;">Document Type</span>
+                <select id="CmbDocumentTypeHistory" class="g win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Document Type"
+                        style="left:789px; top:12px; width:205px;"></select>
+                <button type="button" class="g tealbtn" id="btnShowHistory" onclick="wmShowHistory()" style="left:996px; top:12px; width:59px; height:26px;">Show</button>
+            </div>
+        </div>
+        <div class="teal band24"><span class="band-l" style="left:3px; top:3px;">Filtered Record</span>
+            <span class="gear"><i class="fa fa-cog"></i> <i class="fa fa-caret-down"></i></span></div>
+        <div class="grid-wrap hist-top">
+            <table class="grid" id="grdHistory" tabindex="0"><thead></thead><tbody></tbody><tfoot class="wm-tfoot"></tfoot></table>
+        </div>
+        <div class="teal band24"><span class="band-l" style="left:3px; top:4px;">This grid shows the Detail of above Selected row</span></div>
+        <div class="grid-wrap hist-bot">
+            <table class="grid" id="grdHistoryDetail"><thead></thead><tbody></tbody><tfoot class="wm-tfoot"></tfoot></table>
+        </div>
     </div>
 </div>
 
 <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
-<script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
 <script th:src="@{/build/js/countx_crystal_print.js?v=20261003erp}"></script>
-<script th:src="@{/build/js/countx_labour_wages_manual.js?v=20260929b}"></script>
+<script th:src="@{/build/js/countx_labour_wages_manual.js?v=20261004a}"></script>
 <script src="/js/print-rpt.js?v=20261003erp"></script>
 </body>
 </html>

@@ -2,6 +2,12 @@
     'use strict';
     var navigation = document.getElementById('erp-navigation');
     if (!navigation) return;
+    // Hosted forms use their outer page's navigation. This also handles browsers
+    // that do not send Sec-Fetch-Dest, before any sidebar space is reserved.
+    if (window.self !== window.top) {
+        navigation.remove();
+        return;
+    }
     var toggle = document.getElementById('erp-navigation-toggle');
     var body = document.body;
     var smallScreen = window.matchMedia('(max-width: 767px)');

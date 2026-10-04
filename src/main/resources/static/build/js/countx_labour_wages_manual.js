@@ -146,7 +146,8 @@ function qs(o) {
 }
 function box(m) { window.alert(m); }                                   // MessageBox.Show
 
-/* ------------------------------------------------------------------ combos (select2) */
+/* ------------------------------------------------------------------ combos (searchable store combo, countx_prod_combo.js;
+   the native <select> stays authoritative - jQuery .val() refreshes the visible field) */
 function listText(list, idKey, textKey, id) {
     for (var i = 0; i < list.length; i++) if (String(ci(list[i], idKey)) === String(id)) return txt(ci(list[i], textKey));
     return null;
@@ -154,26 +155,32 @@ function listText(list, idKey, textKey, id) {
 /* DDL.BindDDLNew / BindDDL, keeping the previous value when it is still in the list. */
 function bind(id, list, idKey, textKey) {
     var sel = el(id), prev = sel.value;
-    var h = ['<option value=""></option>'];
+    /* every combo on this form is bound with ZeroIndex = true: "...Select Any Value..." (0) first */
+    var h = ['<option value="0">...Select Any Value...</option>'];
     list.forEach(function (r) { h.push('<option value="' + esc(ci(r, idKey)) + '">' + esc(ci(r, textKey)) + '</option>'); });
     sel.innerHTML = h.join('');
     var keep = prev && listText(list, idKey, textKey, prev) !== null;
-    $(sel).val(keep ? prev : '').trigger('change.select2');
+    $(sel).val(keep && prev !== '0' ? prev : '0');
 }
 function setCombo(id, v) {
     var sel = el(id), has = false;
     for (var i = 0; i < sel.options.length; i++) if (sel.options[i].value === String(v)) { has = true; break; }
-    $(sel).val(has && v !== null && v !== undefined ? String(v) : '').trigger('change.select2');
+    $(sel).val(has && v !== null && v !== undefined ? String(v) : '0');
+}
+/* UltraCombo.Focus() / dropdown open: the visible field of the searchable combo */
+function focusCombo(id) {
+    var s = el(id), w = s && s.closest ? s.closest('.dtcombo-wrap') : null, f = w ? w.querySelector('.dtcombo-input') : null;
+    (f || s).focus();
 }
 function comboVal(id) { return toInt(el(id).value); }
-function comboText(id) { var s = el(id); return s.selectedIndex >= 0 && s.value !== '' ? s.options[s.selectedIndex].text.trim() : ''; }
+function comboText(id) { var s = el(id); return s.selectedIndex >= 0 && s.value !== '' && s.value !== '0' ? s.options[s.selectedIndex].text.trim() : ''; }
 
 /* ------------------------------------------------------------------ tabs */
 window.wmTab = function (i) {
     el('viewForm').style.display = i === 0 ? '' : 'none';
     el('viewHistory').style.display = i === 1 ? '' : 'none';
-    el('tabForm').classList.toggle('active', i === 0);
-    el('tabHistory').classList.toggle('active', i === 1);
+    el('tabForm').classList.toggle('act', i === 0);
+    el('tabHistory').classList.toggle('act', i === 1);
     if (i === 1) el('FromDateHistory').focus(); else el('txtDocDate').focus();        // tabControl1_SelectedIndexChanged
 };
 
@@ -322,8 +329,8 @@ function calculateDetailAmount() {
 /* FormValidationDetail :1203 */
 function formValidationDetail() {
     function empty0(id) { var t = el(id).value.trim(); return t === '' || t === '0'; }
-    if (comboText('cmbContractor') === '' || comboVal('cmbContractor') === 0) { box('Contractor Field Required'); $('#cmbContractor').select2('open'); return false; }
-    if (comboText('cmbWagesAccount') === '' || comboVal('cmbWagesAccount') === 0) { box('Wages Account Field Required'); $('#cmbWagesAccount').select2('open'); return false; }
+    if (comboText('cmbContractor') === '' || comboVal('cmbContractor') === 0) { box('Contractor Field Required'); focusCombo('cmbContractor'); return false; }
+    if (comboText('cmbWagesAccount') === '' || comboVal('cmbWagesAccount') === 0) { box('Wages Account Field Required'); focusCombo('cmbWagesAccount'); return false; }
     if (empty0('txtPackSize')) { box('Pack Size Field Required'); el('txtPackSize').focus(); return false; }
     if (empty0('txtQty')) { box('Qty Field Required'); el('txtQty').focus(); return false; }
     if (empty0('txtWeight')) { box('Weight Field Required'); el('txtWeight').focus(); return false; }
@@ -386,7 +393,7 @@ window.wmUpdateDetail = function () {
             el('btnCancelUpdateDetail').style.display = 'none';
             renderDetail();
             formRestDetail();
-            $('#cmbContractor').select2('focus');
+            focusCombo('cmbContractor');
         }).catch(function (e) { box(e.message); });
 };
 
@@ -432,7 +439,7 @@ function editRow(i) {
     el('btnAdd').style.display = 'none';
     el('btnUpdateDetail').style.display = '';
     el('btnCancelUpdateDetail').style.display = '';
-    $('#cmbContractor').select2('focus');
+    focusCombo('cmbContractor');
 }
 
 /* FormRestDetail :1294 */
@@ -756,11 +763,11 @@ function formValidation() {
     var dn = el('txtDocNo').value.trim();
     if (dn === '' || dn === '0') { box('Document Number Field Required'); el('txtDocNo').focus(); return false; }
     if (comboText('cmbReferenceDocType') === '' || comboVal('cmbReferenceDocType') === 0) {
-        box('Document Type Field Required'); $('#cmbReferenceDocType').select2('open'); return false;
+        box('Document Type Field Required'); focusCombo('cmbReferenceDocType'); return false;
     }
     var t = comboVal('cmbReferenceDocType');
     if ((t === 112 || t === 80) && comboVal('cmbJobOrder') === 0) {
-        box('JobOrder Field Required when Document Type is Production'); $('#cmbJobOrder').select2('open'); return false;
+        box('JobOrder Field Required when Document Type is Production'); focusCombo('cmbJobOrder'); return false;
     }
     return true;
 }
@@ -1038,7 +1045,7 @@ window.wmShortcuts = function () {                                // MakeShortCu
     document.body.appendChild(back);
 };
 function modalOpen() { return !!document.querySelector('.wm-modal-back'); }
-function select2Open() { return !!document.querySelector('.select2-container--open'); }
+function select2Open() { return !!document.querySelector('.dtcombo-pop[style*="block"]'); }
 function focusFirstGridCell() { var x = el('grdDetail').querySelector('tbody [data-k],tbody button'); if (x) x.focus(); else el('grdDetail').focus(); }
 
 /* frmWagesBillManualKeyDown :2252 */
@@ -1048,6 +1055,7 @@ function formKeyDown(e) {
     var inGrid = !!(e.target.closest && e.target.closest('#grdDetail,#grdHistory'));
     if (k === 'Enter' && !ctrl && !e.altKey && !inGrid) {
         var tg = e.target;
+        if (select2Open()) return;                                  // Enter picks the combo row first
         if (tg.tagName === 'INPUT' && tg.type !== 'button' && tg.type !== 'checkbox' || tg.tagName === 'SELECT') {
             e.preventDefault(); focusNext(tg);
         }
@@ -1064,14 +1072,17 @@ function formKeyDown(e) {
     if (ctrl && lower === 'r') { e.preventDefault(); wmRefresh(); }
     if (ctrl && k === 'F5') { e.preventDefault(); el('txtDocDate').focus(); }
     if (ctrl && k === 'ArrowDown') { e.preventDefault(); focusFirstGridCell(); }
-    if (ctrl && k === 'ArrowUp') { e.preventDefault(); $('#cmbContractor').select2('focus'); }
+    if (ctrl && k === 'ArrowUp') { e.preventDefault(); focusCombo('cmbContractor'); }
     if (ctrl && lower === 'p') { e.preventDefault(); wmPrint(); }
     if (e.altKey && (k === '1' || e.code === 'Numpad1' || e.code === 'Digit1')) { e.preventDefault(); wmPrint(); }
 }
 function focusNext(from) {
-    var all = Array.prototype.filter.call(document.querySelectorAll('#viewForm input, #viewForm select, #viewForm textarea, #viewForm button, #viewForm .select2-selection'),
-        function (x) { return !x.disabled && x.offsetParent !== null && x.tabIndex >= 0 && !(x.tagName === 'SELECT' && x.classList.contains('select2-hidden-accessible')); });
-    var i = all.indexOf(from.classList.contains('select2-hidden-accessible') ? from.nextElementSibling : from);
+    var all = Array.prototype.filter.call(document.querySelectorAll('#viewForm input, #viewForm select, #viewForm textarea, #viewForm button'),
+        function (x) { return !x.disabled && x.offsetParent !== null && x.tabIndex >= 0 && !(x.tagName === 'SELECT' && x.classList.contains('dtcombo-native'))
+                       && !(x.closest && x.closest('.dtcombo-pop')); });
+    var w = from.closest && from.closest('.dtcombo-wrap');
+    if (w) from = w.querySelector('.dtcombo-input') || from;          // Enter inside a combo's search box
+    var i = all.indexOf(from);
     if (i >= 0 && all[i + 1]) all[i + 1].focus();
 }
 
@@ -1087,7 +1098,6 @@ function decimalOnly(e) {
 
 /* ------------------------------------------------------------------ wiring */
 $(function () {
-    $('.wm-s2').each(function () { $(this).select2({ width: '100%', allowClear: true, placeholder: '' }); });
     var n = new Date();
     el('txtDocDate').value = isoDate(n);
     var f = new Date(); f.setDate(f.getDate() - 3);
@@ -1095,8 +1105,8 @@ $(function () {
     el('ToDateHistory').value = isoDate(n);
 
     /* "Leave" of the two combos -> GetRateAmount + weight + amount */
-    $('#cmbWagesAccount, #cmbContractor').on('select2:select select2:clear', function () { getRateAmount(); });
-    $('#cmbReferenceDocType').on('select2:select select2:clear', refDocTypeLeave);
+    $('#cmbWagesAccount, #cmbContractor').on('change', function () { getRateAmount(); });
+    $('#cmbReferenceDocType').on('change', refDocTypeLeave);
     el('txtDocDate').addEventListener('change', function () { getRateAmount(); });
     el('txtPackSize').addEventListener('input', function () { getRateAmount(); });
     el('txtQty').addEventListener('input', function () { calculateDetailWeight(); calculateDetailAmount(); });

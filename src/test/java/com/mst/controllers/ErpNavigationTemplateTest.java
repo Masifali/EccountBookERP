@@ -61,6 +61,22 @@ class ErpNavigationTemplateTest {
             assertEquals(1, ledger.split("id=\"erp-navigation\"", -1).length - 1);
             assertTrue(ledger.contains("Single Account Ledger"));
             Files.writeString(Path.of("target/navigation-preview.html"), ledger);
+
+            // The same child form must fill its iframe without a second rail or
+            // another menu lookup, while retaining navigation when opened alone.
+            clearInvocations(menus);
+            request.addHeader("Sec-Fetch-Dest", "iframe");
+            String embedded = engine.process("production/p280_input", context);
+            assertFalse(embedded.contains("id=\"erp-navigation\""));
+            assertFalse(embedded.contains("/build/js/erp_navigation.js"));
+            assertTrue(embedded.contains("id=\"viewForm\""));
+            verifyNoInteractions(menus);
+
+            request.removeHeader("Sec-Fetch-Dest");
+            request.addHeader("Sec-Fetch-Dest", "document");
+            String standalone = engine.process("production/p280_input", context);
+            assertEquals(1, standalone.split("id=\"erp-navigation\"", -1).length - 1);
+            verify(menus).viewRights();
         }
     }
 }

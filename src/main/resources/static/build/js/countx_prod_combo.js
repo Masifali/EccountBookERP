@@ -906,6 +906,10 @@
            which makes the browser scroll that select - that scroll must not close the popup. */
         var t = e.target;
         if (openInstance && t && (t === openInstance.sel || (t.classList && t.classList.contains('dtcombo-native')))) return;
+        /* 2026-10-04: a text box scrolls its own text when it loses focus with a value wider than itself (a long
+           combo caption, e.g. "GANJI TO HODI ROOM KATIE"): clicking the next combo blurred the previous field, its
+           text scrolled back, and that scroll closed the popup that had just opened. Field-internal scrolls are ignored. */
+        if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) return;
         if (openInstance && !openInstance.pop.contains(t)) openInstance.closePop(false);
     }, true);
     global.addEventListener('resize', function () { if (openInstance) openInstance.closePop(false); });
