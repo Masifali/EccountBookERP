@@ -244,13 +244,34 @@ public class ReportRegistry {
 
         /* -------------------------------------------------------------------------- GRN / GDN */
 
-        add(new ReportDefinition("grn-211", "211-InvRptGoodsReceiptsNotesRiceSlip.rpt",
-                "Sp_InvGrn_RiceSlip_Rpt", "CommonServices.GrnSlipReport211",
-                ps(P("@OrganizationId","session:organizationId"),
-                   P("@CompanyId","session:companyId"),
-                   P("@Id","arg:id")),
-                subs(new ReportDefinition.SubReport("InvGrnDetailEmptyBagsSubReport.rpt",
-                            "Sp_InvGrnDetailEmptyBagsSubReport", ps(P("@Id","arg:id"))))));
+        /* frmGRNHistory.GenerateReport -> CommonServices.GrnSlipWithSubReports :14619.
+           Register the seeded key too: template routes prefer it over grn-211. The empty-bags
+           BLL takes @GrnId (not @Id), and its template name has no "Inv" prefix. Wages use
+           the GRN as a reference document, never as the wages header's own @Id. */
+        {
+            List<ReportDefinition.Param> grnParams = ps(
+                    P("@OrganizationId", "session:organizationId"), P("@CompanyId", "session:companyId"),
+                    G("@FromDate", "arg:fromDate"), G("@ToDate", "arg:toDate"),
+                    G("@GpDateF", "arg:gpDateF"), G("@GpDateT", "arg:gpDateT"),
+                    G("@GpSrNoF", "arg:gpSrNoF"), G("@GpSrNoT", "arg:gpSrNoT"),
+                    P("@Id", "arg:id"), new ReportDefinition.Param("@DocumentTypeId", "arg:documentTypeId", ALWAYS, 46),
+                    G("@FromDocNo", "arg:fromDocNo"), G("@ToDocNo", "arg:toDocNo"),
+                    G("@SupplierCustomerId", "arg:supplierCustomerId"),
+                    P("rpt:CompanyName", "same:@CompanyName"), P("rpt:CompanyAddress", "same:@CompanyAddress"));
+            List<ReportDefinition.SubReport> grnSubs = subs(
+                    new ReportDefinition.SubReport("GrnDetailEmptyBagsSubReport.rpt",
+                            "Sp_InvGrnDetailEmptyBagsSubReport", ps(P("@GrnId", "arg:id"))),
+                    new ReportDefinition.SubReport("InvContractorWagesSubReport.rpt",
+                            "Sp_InvContractorWagesBillHeader_SlipandRegister", ps(
+                            P("@OrganizationId", "session:organizationId"), P("@CompanyId", "session:companyId"),
+                            P("@DocumentTypeId", "const:101"),
+                            new ReportDefinition.Param("@RefDocumentTypeId", "arg:documentTypeId", ALWAYS, 46),
+                            P("@RefDocNoId", "arg:id"), P("@FreeOfCost", "const:0"))));
+            for (String key : List.of("grn-211", "211-invrptgoodsreceiptsnotesriceslip")) {
+                add(new ReportDefinition(key, "211-InvRptGoodsReceiptsNotesRiceSlip.rpt",
+                        "Sp_InvGrn_RiceSlip_Rpt", "CommonServices.GrnSlipWithSubReports", grnParams, grnSubs));
+            }
+        }
 
         /* InvGrnandGdnReports.GrnSlipStore (BLL 0131 :326) always sends @DocumentTypeId, and the
            procedure filters on Grh.DocumentTypeId = @DocumentTypeId - omitting it returns no rows.
@@ -265,7 +286,7 @@ public class ReportRegistry {
 
         add(new ReportDefinition("grn-213", "213-GoodsReceiptsNotesAgainstOrderSlip.rpt",
                 "Sp_InvGrn_RiceSlip_Rpt", "CommonServices.GrnSlipReport213",
-                byKey.get("grn-211").params, byKey.get("grn-211").subReports));
+                byKey.get("grn-211").params, subs(byKey.get("grn-211").subReports.get(0))));
 
         /* PurchsaeOrderPmNew.GenerateReport :2815 -> CommonServices.PurchaseOrderPackingMaterialSlip215
            :8542 -> PurchaseOrderReports.PurchaseOrderSlipReport201 (BLL 0134 :14). The form sets

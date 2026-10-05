@@ -2,14 +2,44 @@ package com.mst.controllers.ERPPrint;
 
 import com.mst.controllers.ERPPrint.requests.LabPrintRequests.*;
 import com.mst.reports.prints.ReportPdfService;
+import com.mst.repositories.ICompanyRepository;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import javax.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.stereotype.Controller;
 
 /** Lab print actions. Generated from the verified seeder contracts. */
 @Controller
 public class LabPrintController extends ReportPrintSupport {
+    @Autowired private ICompanyRepository companies;
+
+    /** Desktop Print_Click sends DS_Table00 and DS_Table01 from the displayed report together. */
+    @PostMapping("/reports/lab/purchase-analysis-by-vehicle")
+    public void printPurchaseAnalysisByVehicle(HttpServletResponse response,
+            @RequestBody VehicleAnalysisPrintRequest request) throws Exception {
+        currentUserContext.currentUserId();
+        if (request.summary() == null || request.summary().isEmpty()) {
+            response.setStatus(404);
+            response.setContentType("text/plain;charset=UTF-8");
+            response.getWriter().write("No Record Found For Display");
+            return;
+        }
+        var company = companies.findById(currentUserContext.currentCompanyId()).orElse(null);
+        Map<String, Object> parameters = new LinkedHashMap<>();
+        parameters.put("CompanyName", company == null ? "" : Objects.toString(company.getCompName(), ""));
+        parameters.put("CompanyAddress", company == null ? "" : Objects.toString(company.getCompAddress(), ""));
+        printReportData(response, "665-LabDataVehicleWiseByParentIdRegister.rpt", Map.of(
+                "rows", request.detail() == null ? List.of() : request.detail(),
+                "reportParameters", parameters,
+                "subReports", List.of(Map.of("template", "LabDataVehicleWiseSummary_Report.rpt", "rows", request.summary()))));
+    }
+
+    public record VehicleAnalysisPrintRequest(List<Map<String, Object>> detail, List<Map<String, Object>> summary) { }
+
     // BEGIN GENERATED PRINT ACTIONS
 
     /**

@@ -140,6 +140,7 @@ public class ReportDataService {
         for (ReportDefinition.Param p : params) {
             if (p.name.startsWith(RPT_PARAM)) continue;
             Object v = resolve(p.source, args);
+            if (p.defaultValue != null && isUnset(v)) v = p.defaultValue;
             if (p.mode == ReportDefinition.Mode.GUARDED && isUnset(v)) continue;  // omit, never NULL
             names.add(p.name);
             values.add(v);

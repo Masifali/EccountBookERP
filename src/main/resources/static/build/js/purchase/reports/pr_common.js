@@ -12,6 +12,7 @@
  *                            total row, link / button cells, selector column
  *   PR.printGrid             ShowReportWithDataTable(dt, rpt) -> POST /reports/print/grid (the desktop's dt)
  *   PR.printTemplate         a slip by .rpt name -> POST /reports/print/by-template/{rpt}/pdf
+ *   PR.printReport           a module print endpoint with its own request (including detail and summary datasets)
  * ============================================================================================ */
 (function (global) {
     'use strict';
@@ -369,6 +370,12 @@
             return r.text().then(function (x) { throw new Error(x || ('Print failed (' + r.status + ')')); });
         }).catch(function (e) { if (w) w.close(); throw e; });
     }
+    /** Open the PDF produced by a module's print action using the normal session/error handling. */
+    PR.printReport = function (url, body) {
+        return openPdf(fetch(url, { method: 'POST', credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/pdf, text/plain' },
+            body: JSON.stringify(body) }));
+    };
     /** Reporting.ShowReportWithDataTable(dt, rpt): the rows the desktop hands to the report. */
     PR.printGrid = function (rpt, title, rows) {
         if (!rows || !rows.length) return Promise.reject(new Error('Not Record Found For Display'));

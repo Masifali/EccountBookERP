@@ -25,8 +25,14 @@ public final class ReportDefinition {
         public final String name;      // @OrganizationId
         public final String source;    // session:organizationId | arg:orderId | const:41
         public final Mode mode;
+        /** A traced desktop default, used only when the argument is unset. */
+        public final Object defaultValue;
         public Param(String name, String source, Mode mode) {
+            this(name, source, mode, null);
+        }
+        public Param(String name, String source, Mode mode, Object defaultValue) {
             this.name = name; this.source = source; this.mode = mode;
+            this.defaultValue = defaultValue;
         }
     }
 

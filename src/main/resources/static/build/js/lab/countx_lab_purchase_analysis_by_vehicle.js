@@ -114,7 +114,11 @@
     /** Print_Click :746 - DS_Table00 into 665-LabDataVehicleWiseByParentIdRegister.rpt (DS_Table01 is its sub-report). */
     function Print_Click() {
         if (!st.rawSummary.length) { PR.box('No Record Found For Display'); return; }     // :766-769
-        return LabRep.run('Print', function () { return PR.printGrid('665-LabDataVehicleWiseByParentIdRegister.rpt', 'Purchase Analysis By Vehicle', st.rawDetail); });
+        return LabRep.run('Print', function () {
+            return PR.printReport('/reports/lab/purchase-analysis-by-vehicle', {
+                detail: st.rawDetail, summary: st.rawSummary
+            });
+        });
     }
 
     /** Reset :262 (btnNew_Click). */

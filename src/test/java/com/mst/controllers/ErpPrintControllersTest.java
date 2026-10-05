@@ -11,7 +11,6 @@ import com.mst.reports.ReportRegistry;
 import com.mst.reports.jasper.ReportTemplateService;
 import com.mst.reports.prints.ReportPdfService;
 import com.mst.security.CurrentUserContext;
-import com.mst.services.GeneralLedgerSummaryService;
 import com.mst.services.InventoryUomGridOutputService;
 import com.mst.services.banking.ChequePrintingDesktopService;
 import org.junit.jupiter.api.BeforeEach;
@@ -53,9 +52,10 @@ class ErpPrintControllersTest {
         var templateService = new ReportTemplateService(templates.toString());
         for (var bean : scanner.findCandidateComponents("com.mst.controllers.ERPPrint")) {
             Class<?> type = Class.forName(bean.getBeanClassName());
-            Object instance = type == AccountsPrintController.class
-                    ? new AccountsPrintController(mock(GeneralLedgerSummaryService.class))
-                    : type.getDeclaredConstructor().newInstance();
+            var constructor = type.getConstructors()[0];
+            Object[] dependencies = java.util.Arrays.stream(constructor.getParameterTypes())
+                    .map(dependency -> mock(dependency)).toArray();
+            Object instance = constructor.newInstance(dependencies);
             ReflectionTestUtils.setField(instance, "reportDataService", data);
             ReflectionTestUtils.setField(instance, "reportRegistry", registry);
             ReflectionTestUtils.setField(instance, "reportPdfService", pdfs);

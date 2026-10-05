@@ -90,7 +90,10 @@
 
     function button(col, r) {
         // GenerateReport :1021 -> CommonServices.GrnSlipWithSubReports(Id, DocumentTypeId): the 211 GRN slip.
-        if (col === 'Print') PR.run(function () { return PR.printTemplate('211-InvRptGoodsReceiptsNotesRiceSlip.rpt', { id: PR.int(r.Id), documentTypeId: PR.int(r.DocumentTypeId) }); });
+        if (col === 'Print') PR.run(function () {
+            return PR.printReport('/reports/print/211-goods-receipts-notes-rice-slip',
+                { id: PR.int(r.Id), documentTypeId: PR.int(r.DocumentTypeId) || 46 });
+        });
     }
     /** DataGridHistory_LinkClicked :671. */
     function link(col, r) {
