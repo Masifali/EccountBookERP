@@ -26,5 +26,11 @@ public class DesktopUserRightsController {
  @PostMapping("/user-management/rights/api/{action:allocate|unallocate|company-allocate|company-unallocate|update|special-update}") @ResponseBody public Object write(@PathVariable String action,@RequestBody DesktopUserRightsChange change,@RequestHeader("X-Rights-CSRF") String token,HttpSession session){if(!Objects.equals(token,session.getAttribute("rightsCsrf")))throw new AccessDeniedException("Reload User Rights before saving.");if(action.endsWith("update"))service.update(change,action.startsWith("special"));else service.allocation(change,!action.endsWith("unallocate"),action.startsWith("company"));return Map.of("message","Rights updated successfully.");}
  @ExceptionHandler(AccessDeniedException.class) @ResponseBody public ResponseEntity<?> denied(Exception e){return ResponseEntity.status(403).body(Map.of("message",e.getMessage()));}
  @ExceptionHandler(IllegalArgumentException.class) @ResponseBody public ResponseEntity<?> invalid(Exception e){return ResponseEntity.badRequest().body(Map.of("message",e.getMessage()));}
- @ExceptionHandler(org.springframework.dao.DataAccessException.class) @ResponseBody public ResponseEntity<?> database(Exception e){return ResponseEntity.status(409).body(Map.of("message","The desktop rights query could not complete. Refresh and retry; no partial changes were saved."));}
+ @ExceptionHandler(org.springframework.dao.DataAccessException.class) @ResponseBody public ResponseEntity<?> database(Exception e){
+  /* The desktop shows ex.Message; the SQL Server text (procedure error, timeout, missing object) is what tells
+     the user - and the log - which query failed. */
+  Throwable t=e;while(t.getCause()!=null&&t.getCause()!=t)t=t.getCause();
+  String sql=t.getMessage()==null||t.getMessage().isBlank()?e.getClass().getSimpleName():t.getMessage();
+  org.slf4j.LoggerFactory.getLogger(DesktopUserRightsController.class).error("User Rights query failed",e);
+  return ResponseEntity.status(409).body(Map.of("message","The desktop rights query could not complete: "+sql+" (no partial changes were saved)."));}
 }

@@ -201,7 +201,24 @@
     el('sort').onclick = () => { if (result.rows.length) { applySort(); render(); } };
     el('search').oninput = render;
     el('closePopup').onclick = () => el('popup').close();
-    el('print').onclick = () => status(result.rows.length ? (payable ? '124_Payables_New.rpt' : '123_Receivables_New.rpt') + ' print parity is pending.' : 'Not Record Found For Display');
+    /* Receivables_New / Payables_New.Print_Click: if dtGrid has rows, Reporting.ShowReportWithDataTable(dtGrid,
+       "123_Receivables_New.rpt" / "124_Payables_New.rpt") with @CompanyName / @CompanyAddress; otherwise
+       "Not Record Found For Display". dtGrid is the procedure's own table, so the rows go as returned (raw
+       numbers, original column names) - never re-read from the formatted screen. The server adds company
+       name and address (ReportPdfService.gridPdf). */
+    el('print').onclick = () => {
+        if (!result.rows.length) { status('Not Record Found For Display'); alert('Not Record Found For Display'); return; }
+        const rpt = payable ? '124_Payables_New.rpt' : '123_Receivables_New.rpt';
+        const win = window.open('about:blank', '_blank');
+        fetch('/reports/print/grid', {method: 'POST', credentials: 'same-origin', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({rpt, title: null, rows: result.rows})})
+            .then(r => {
+                const type = r.headers.get('Content-Type') || '';
+                if (r.ok && type.startsWith('application/pdf')) return r.blob().then(b => { if (win) win.location = URL.createObjectURL(b); });
+                return r.text().then(t => { if (win) win.close(); alert(t || ('Print failed (' + r.status + ')')); });
+            })
+            .catch(e => { try { win && win.close(); } catch (x) { } alert(e.message); });
+    };
     el('help').onclick = () => el('shortcutDialog').showModal();
     el('closeShortcuts').onclick = () => el('shortcutDialog').close();
     document.addEventListener('keydown', e => {
