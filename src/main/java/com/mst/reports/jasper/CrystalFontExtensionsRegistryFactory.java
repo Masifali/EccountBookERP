@@ -24,6 +24,14 @@ public class CrystalFontExtensionsRegistryFactory implements ExtensionsRegistryF
         {"Tahoma", "tahoma.ttf", "tahomabd.ttf", null, null},
         {"tahoma", "tahoma.ttf", "tahomabd.ttf", null, null},
         {"Segoe UI", "segoeui.ttf", "segoeuib.ttf", "segoeuii.ttf", "segoeuiz.ttf"},
+        {"Segoe UI Symbol", "seguisym.ttf", null, null, null},
+        {"Verdana", "verdana.ttf", "verdanab.ttf", "verdanai.ttf", "verdanaz.ttf"},
+        {"Arial Black", "ariblk.ttf", null, null, null},
+        {"Candara", "Candara.ttf", "Candarab.ttf", "Candarai.ttf", "Candaraz.ttf"},
+        {"Goudy Stout", "GOUDYSTO.TTF", null, null, null},
+        {"Gadugi", "gadugi.ttf", "gadugib.ttf", null, null},
+        {"Microsoft Sans Serif", "micross.ttf", null, null, null},
+        {"Jameel Noori Nastaleeq", "Jameel Noori Nastaleeq.ttf", null, null, null},
         {"Courier New", "cour.ttf", "courbd.ttf", "couri.ttf", "courbi.ttf"}
     };
 
@@ -34,6 +42,8 @@ public class CrystalFontExtensionsRegistryFactory implements ExtensionsRegistryF
         if (configured != null && !configured.isBlank()) directories.add(Path.of(configured));
         String windows = System.getenv("WINDIR");
         if (windows != null) directories.add(Path.of(windows, "Fonts"));
+        String local = System.getenv("LOCALAPPDATA");
+        if (local != null) directories.add(Path.of(local, "Microsoft", "Windows", "Fonts"));
         List<FontFamily> families = new ArrayList<>();
         for (String[] spec : FAMILIES) {
             Path normal = find(directories, spec[1]);
@@ -63,8 +73,24 @@ public class CrystalFontExtensionsRegistryFactory implements ExtensionsRegistryF
     }
 
     private static SimpleFontFace face(Path path) {
-        SimpleFontFace face = new SimpleFontFace(DefaultJasperReportsContext.getInstance());
-        // Loading here would recurse into extension discovery through the repository service.
+        SimpleFontFace face = new SimpleFontFace(DefaultJasperReportsContext.getInstance()) {
+            private java.awt.Font localFont;
+
+            @Override public synchronized java.awt.Font getFont() {
+                if (localFont == null) {
+                    try {
+                        // A direct local read avoids recursive Jasper extension discovery and
+                        // supplies metrics even for fonts not registered with the operating system.
+                        localFont = java.awt.Font.createFont(java.awt.Font.TRUETYPE_FONT, path.toFile());
+                    } catch (java.awt.FontFormatException | java.io.IOException exception) {
+                        throw new IllegalStateException("Cannot read report font " + path, exception);
+                    }
+                }
+                return localFont;
+            }
+
+            @Override public String getName() { return getFont().getFontName(); }
+        };
         face.setTtf(path.toString(), false);
         return face;
     }

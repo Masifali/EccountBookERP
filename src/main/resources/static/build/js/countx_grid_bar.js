@@ -127,6 +127,30 @@
     function storeSet(k, v) { global.localStorage.setItem(STORE_PREFIX + k, JSON.stringify(v)); }   /* throws to caller */
     function storeDel(k) { global.localStorage.removeItem(STORE_PREFIX + k); }                        /* throws to caller */
 
+    /* Text for txtGridTitle when the page does not set one: the caption strip just above the grid
+     * (e.g. "History  Production Register"), else the page heading, else document.title. */
+    function cleanText(el) {
+        if (!el) return '';
+        var c = el.cloneNode(true);
+        toArr(c.querySelectorAll('button, select, input, textarea, script, style, .gb-gear, .gb-bar')).forEach(function (x) { x.remove(); });
+        return String(c.textContent || '').replace(/\s+/g, ' ').trim();
+    }
+    function autoTitle(scope) {
+        var CAP = '.pd-caption, .win-caption, [class*="caption"], [class*="-title"], .grid-caption, .caption, .panel-heading, .card-header, .section-title, legend, h1, h2, h3, h4, h5';
+        var el = scope;
+        for (var depth = 0; el && el !== doc.body && depth < 6; depth++, el = el.parentElement) {
+            for (var sib = el.previousElementSibling; sib; sib = sib.previousElementSibling) {
+                if (sib.classList && sib.classList.contains('gb-bar')) continue;
+                var c = (sib.matches && sib.matches(CAP)) ? sib : (sib.querySelector ? sib.querySelector(CAP) : null);
+                var tx = cleanText(c);
+                if (tx && tx.length <= 80) return tx;
+                if (cleanText(sib).length > 0) break;
+            }
+        }
+        var h = doc.querySelector('.page-title, .pd-title, .form-title, h1, h2');
+        return cleanText(h) || String(doc.title || '').trim();
+    }
+
     /* ------------------------------------------------------------------ session user name */
     var userPromise = null;
     function userName() {
@@ -261,7 +285,9 @@
 
     Bar.prototype.title = function () {
         if (this.opts.title !== undefined) return String(this.opts.title || '');
-        return this.scope.getAttribute('data-gridbar-title') || '';   /* txtGridTitle is empty unless a form sets it */
+        var t = this.scope.getAttribute('data-gridbar-title');
+        if (t) return t;
+        return autoTitle(this.scope);   /* txtGridTitle: nearest grid caption, else the page heading */
     };
 
     Bar.prototype.canReorder = function (table) {
@@ -325,7 +351,10 @@
             b.disabled = !self.opts[it[2]];
             b.style.display = self.opts[it[3]] ? '' : 'none';
         });
-        this.menu.querySelector('.gb-title').value = this.title();
+        var tt = this.title();
+        this.menu.querySelector('.gb-title').value = tt;
+        this.menu.querySelector('.gb-title').title = tt;
+        this.menu.querySelector('.gb-title-row').classList.toggle('gb-title-empty', !tt);
     };
 
     /** Mount the gear: a desktop panel strip (data-gridbar-mount / opts.mount), else float it over the grid. */
@@ -874,7 +903,52 @@
     global.addEventListener('resize', function () { if (openMenu) openMenu.closeMenu(); });
     global.addEventListener('scroll', function () { if (openMenu) openMenu.closeMenu(); }, true);
 
-    function boot() { scan(doc); }
+    /* Grids a page script builds later (innerHTML), declared in the template:
+     *   <div hidden data-gridbar-dynamic="FormName" data-gridbar-tables="#grid1,#grid2"></div>
+     * Each matching table is marked data-gridbar="FormName:<table id>" when it appears. Marked tables that a
+     * script inserts after load are attached too, so a re-rendered grid keeps its gear. */
+    function markDynamic() {
+        toArr(doc.querySelectorAll('[data-gridbar-dynamic]')).forEach(function (d) {
+            var form = d.getAttribute('data-gridbar-dynamic');
+            String(d.getAttribute('data-gridbar-tables') || '').split(',').forEach(function (sel) {
+                sel = sel.trim();
+                if (!sel) return;
+                var list;
+                try { list = doc.querySelectorAll(sel); } catch (e) { return; }
+                toArr(list).forEach(function (t, i) {
+                    if (t.tagName !== 'TABLE' || t.hasAttribute('data-gridbar')) return;
+                    var host = t.parentElement ? t.parentElement.closest('[id]') : null;
+                    t.setAttribute('data-gridbar', form + ':' + (t.id || (host && host.id) || ('grid' + (i + 1))));
+                });
+            });
+        });
+    }
+    var rescanQueued = false;
+    function queueRescan() {
+        if (rescanQueued) return;
+        rescanQueued = true;
+        (global.requestAnimationFrame || global.setTimeout)(function () {
+            rescanQueued = false;
+            markDynamic();
+            toArr(doc.querySelectorAll('table[data-gridbar], table[data-gridbar-form]')).forEach(function (t) { if (!find(t)) attach(t); });
+        });
+    }
+    function boot() {
+        markDynamic();
+        scan(doc);
+        if (global.MutationObserver && doc.body) {
+            new MutationObserver(function (muts) {
+                for (var i = 0; i < muts.length; i++) {
+                    var add = muts[i].addedNodes;
+                    for (var j = 0; j < add.length; j++) {
+                        var n = add[j];
+                        if (n.nodeType === 1 && !(n.classList && (n.classList.contains('gb-menu') || n.classList.contains('gb-chooser') || n.classList.contains('gb-bar')))
+                            && (n.tagName === 'TABLE' || (n.querySelector && n.querySelector('table')))) { queueRescan(); return; }
+                    }
+                }
+            }).observe(doc.body, { childList: true, subtree: true });
+        }
+    }
     if (doc.readyState === 'loading') doc.addEventListener('DOMContentLoaded', boot); else boot();
 
     global.GridBar = {
