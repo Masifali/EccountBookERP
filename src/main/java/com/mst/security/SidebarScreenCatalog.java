@@ -165,6 +165,7 @@ public final class SidebarScreenCatalog {
         e.add(new Entry("Chart of Account Allocate Cost Center", "Accounts", "/accounts/banking/coa-allocate-cost-center", "BNK_COA_COST_CENTER", "ACCOUNTS", null, 4));
         e.add(new Entry("Define Brand", "Inventory", "/inventory/brands", "INVENTORY_BRANDS", "INVENTORY", 876, 4));
         e.add(new Entry("Pos Define Item", "Inventory", "/inventory/pos-define-item", "INVENTORY_POS_ITEMS", "INVENTORY", 106, 4));
+        e.add(new Entry("Item List", "Inventory", "/inventory/reports/item-list", "INVENTORY_ITEM_LIST", "INVENTORY", 171, 8));
         e.add(new Entry("Inventory Stock Transactions Report", "Inventory", "/inventory/stock-transactions", "INVENTORY_STOCK_TRANSACTIONS", "INVENTORY", 580, 93));
         e.add(new Entry("Item Ledger (Inventory)", "Inventory", "/stocks/item_ledger", "INVENTORY_ITEM_LEDGER", "INVENTORY", 287, 19));
         e.add(new Entry("Stock Report Store", "Inventory", "/stocks/store-stock-report", "INVENTORY_STORE_STOCK", "INVENTORY", 288, 19));

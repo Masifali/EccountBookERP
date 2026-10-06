@@ -33,8 +33,8 @@
  *   <table data-gridbar="FormName:GridName">                 explicit (GridName defaults to the table id)
  *   <div data-gridbar-form="FormName" [data-gridbar-grid="GridName"]>  host whose inner <table> is (re)rendered
  *   optional attributes on the table / host:
- *     data-gridbar-placement="toolbar"    opt in to placing the gear in a separate toolbar (default: grid header)
- *     data-gridbar-mount="#selector"      toolbar destination when placement="toolbar"
+ *     data-gridbar-placement="toolbar|header"  optionally override the gear position
+ *     data-gridbar-mount="#selector"      explicit toolbar destination; used automatically unless placement="header"
  *     data-gridbar-title="text"           txtGridTitle (print page header)
  *     data-gridbar-disable="chooser,save,print,export,collapse,expand,autosize,remove"   Enabled = false
  *     data-gridbar-hide="chooser,save,remove,..."                                           Visible = false
@@ -357,12 +357,12 @@
         this.menu.querySelector('.gb-title-row').classList.toggle('gb-title-empty', !tt);
     };
 
-    /** Keep the gear beside column names by default; toolbar placement must be explicitly requested. */
+    /** Honor each screen's configured toolbar mount; grids without one use the column header. */
     Bar.prototype.placeGear = function () {
-        var placement = this.opts.placement || this.scope.getAttribute('data-gridbar-placement') || 'header';
-        var mount = placement === 'toolbar'
-            ? (resolveEl(this.opts.mount) || resolveEl(this.scope.getAttribute('data-gridbar-mount')))
-            : null;
+        var mountSelector = this.opts.mount || this.scope.getAttribute('data-gridbar-mount');
+        var placement = this.opts.placement || this.scope.getAttribute('data-gridbar-placement')
+            || (mountSelector ? 'toolbar' : 'header');
+        var mount = placement === 'toolbar' ? resolveEl(mountSelector) : null;
         if (mount) {
             if (this.gear.parentNode !== mount) mount.appendChild(this.gear);
             this.gear.classList.add('gb-gear-inline');

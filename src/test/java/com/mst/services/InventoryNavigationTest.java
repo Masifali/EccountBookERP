@@ -3,6 +3,7 @@ package com.mst.services;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mst.controllers.*;
+import com.mst.security.SidebarScreenCatalog;
 import com.mst.serviceInterface.IBrandService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,7 +39,8 @@ class InventoryNavigationTest {
             Map.entry(115, "inventory/item_uom_schedule"), Map.entry(116, "inventory/warehouses"),
             Map.entry(876, "inventory/brands"), Map.entry(287, "stocks/item_ledger"),
             Map.entry(288, "stocks/store_stock_report"), Map.entry(291, "stocks/transaction_vehicle_wise"),
-            Map.entry(301, "inventory/stock_report"), Map.entry(580, "inventory/stock_transactions"));
+            Map.entry(171, "inventory/item_list_report"), Map.entry(301, "inventory/stock_report"),
+            Map.entry(580, "inventory/stock_transactions"));
 
     @BeforeEach void setup() throws Exception {
         JsonNode seed = new ObjectMapper().readTree(Path.of("migration/user-rights/reconciliation-input.json").toFile());
@@ -73,6 +75,7 @@ class InventoryNavigationTest {
                 new InventoryVehicleTransactionsController(mock(InventoryVehicleTransactionsService.class)),
                 new InventoryStoreStockController(mock(InventoryStoreStockService.class)),
                 new InventoryStockReportController(mock(InventoryStockReportService.class)),
+                new InventoryItemListController(mock(InventoryItemListService.class)),
                 new InventoryTransactionsController(mock(InventoryTransactionsService.class))).build();
     }
 
@@ -121,6 +124,18 @@ class InventoryNavigationTest {
         assertEquals(11, definitions.get("built"));
         assertEquals(11, definitions.get("count"));
         assertEquals("/inventory/reports/item-list", menus.webRouteFor(171, "", ""));
+        var itemList = menus.getScreenCards(5, 8).get("screens");
+        assertEquals(1, ((List<?>) itemList).size());
+        @SuppressWarnings("unchecked") Map<String, Object> itemListCard = (Map<String, Object>) ((List<?>) itemList).get(0);
+        assertEquals(171, itemListCard.get("screenId"));
+        assertEquals("Item List", itemListCard.get("title"));
+        assertEquals("/inventory/reports/item-list", itemListCard.get("route"));
+        var catalogEntry = SidebarScreenCatalog.all().stream()
+                .filter(entry -> "INVENTORY_ITEM_LIST".equals(entry.authorityCode)).findFirst().orElseThrow();
+        assertEquals("Item List", catalogEntry.screenName);
+        assertEquals("/inventory/reports/item-list", catalogEntry.targetUrl);
+        assertEquals(171, catalogEntry.realScreenDefinitionId);
+        assertEquals(8, catalogEntry.realModuleId);
         assertEquals("/stocks/stock-evaluation-vehicle-wise", menus.webRouteFor(292, "", ""));
         assertEquals("/inventory/stock-transactions-with-value", menus.webRouteFor(293, "", ""));
         assertNull(menus.webRouteFor(297, "", ""));
