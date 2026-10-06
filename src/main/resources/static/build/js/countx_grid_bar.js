@@ -33,8 +33,8 @@
  *   <table data-gridbar="FormName:GridName">                 explicit (GridName defaults to the table id)
  *   <div data-gridbar-form="FormName" [data-gridbar-grid="GridName"]>  host whose inner <table> is (re)rendered
  *   optional attributes on the table / host:
- *     data-gridbar-mount="#selector"      put the gear inside this element (a desktop panel strip) instead of
- *                                         floating it over the grid's top-right corner
+ *     data-gridbar-placement="toolbar"    opt in to placing the gear in a separate toolbar (default: grid header)
+ *     data-gridbar-mount="#selector"      toolbar destination when placement="toolbar"
  *     data-gridbar-title="text"           txtGridTitle (print page header)
  *     data-gridbar-disable="chooser,save,print,export,collapse,expand,autosize,remove"   Enabled = false
  *     data-gridbar-hide="chooser,save,remove,..."                                           Visible = false
@@ -46,7 +46,7 @@
  *           canAutoAdjust, canRemoveLayout (Enabled; default true)
  *           showChooseFields, showSaveLayout, showRemoveLayout, showPrint, showExport, showGroupCollapse,
  *           showGroupExpand, showAutoAdjust (Visible; default true)
- *           title, mount (element or selector), reorder (bool), fileName, nullGrid (bool)
+ *           title, placement ("header" by default, or "toolbar"), mount (element or selector), reorder (bool), fileName, nullGrid (bool)
  *   GridBar.refresh(tableOrHost)      re-apply the layout now (normally automatic via MutationObserver)
  *   GridBar.setRights(tableOrHost, opts)   same keys as attach opts, after the page's rights call returns
  *   GridBar.scan(root)                attach every marked table / host under root (runs on DOMContentLoaded)
@@ -279,7 +279,7 @@
             if (o[vi] !== undefined) self.opts[vi] = !!o[vi];
             else if (self.opts[vi] === undefined) self.opts[vi] = !hid[it[0]];
         });
-        ['title', 'mount', 'reorder', 'fileName', 'nullGrid'].forEach(function (k) { if (o[k] !== undefined) self.opts[k] = o[k]; });
+        ['title', 'placement', 'mount', 'reorder', 'fileName', 'nullGrid'].forEach(function (k) { if (o[k] !== undefined) self.opts[k] = o[k]; });
         if (this.menu) this.paintMenu();
     };
 
@@ -357,9 +357,12 @@
         this.menu.querySelector('.gb-title-row').classList.toggle('gb-title-empty', !tt);
     };
 
-    /** Mount the gear: a desktop panel strip (data-gridbar-mount / opts.mount), else float it over the grid. */
+    /** Keep the gear beside column names by default; toolbar placement must be explicitly requested. */
     Bar.prototype.placeGear = function () {
-        var mount = resolveEl(this.opts.mount) || resolveEl(this.scope.getAttribute('data-gridbar-mount'));
+        var placement = this.opts.placement || this.scope.getAttribute('data-gridbar-placement') || 'header';
+        var mount = placement === 'toolbar'
+            ? (resolveEl(this.opts.mount) || resolveEl(this.scope.getAttribute('data-gridbar-mount')))
+            : null;
         if (mount) {
             if (this.gear.parentNode !== mount) mount.appendChild(this.gear);
             this.gear.classList.add('gb-gear-inline');
@@ -375,7 +378,9 @@
             }
             return;
         }
-        var anchor = this.scope;
+        if (this.mmo) { this.mmo.disconnect(); this.mmo = null; this.mountEl = null; }
+        this.gear.classList.remove('gb-gear-inline');
+        var anchor = this.table() || this.scope;
         var p = anchor.parentNode;
         /* a table alone in its scroll box: float above the box so the gear does not scroll away */
         if (anchor.tagName === 'TABLE' && p && p !== doc.body) {
@@ -386,8 +391,8 @@
         if (!this.barEl) {
             this.barEl = doc.createElement('div');
             this.barEl.className = 'gb-bar';
-            this.barEl.appendChild(this.gear);
         }
+        if (this.gear.parentNode !== this.barEl) this.barEl.appendChild(this.gear);
         if (this.barEl.nextSibling !== anchor || !this.barEl.parentNode) {
             if (anchor.parentNode) anchor.parentNode.insertBefore(this.barEl, anchor);
         }

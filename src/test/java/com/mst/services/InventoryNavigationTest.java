@@ -76,29 +76,30 @@ class InventoryNavigationTest {
                 new InventoryTransactionsController(mock(InventoryTransactionsService.class))).build();
     }
 
-    @Test void sidebarEntryForwardsToTheExistingDashboardIncludingModuleRequests() throws Exception {
-        for (String path : List.of("/app/Inventory", "/app/inventory", "/app/Inventory?module=19")) {
-            mvc.perform(get(path)).andExpect(status().isOk()).andExpect(forwardedUrl("/inventory/dashboard"));
-        }
-        for (String path : List.of("/inventory", "/inventory/", "/inventory/dashboard")) {
-            mvc.perform(get(path)).andExpect(status().isOk()).andExpect(view().name("inventory/inventory_dashboard"))
+    @Test void sidebarAndInventoryAliasesUseTheRightsDrivenApplicationDashboard() throws Exception {
+        for (String path : List.of("/app/Inventory", "/app/inventory")) {
+            mvc.perform(get(path)).andExpect(status().isOk()).andExpect(view().name("dashboard"))
                     .andExpect(model().attribute("appName", "Inventory"));
+        }
+        mvc.perform(get("/app/Inventory").param("module", "19"))
+                .andExpect(status().isOk()).andExpect(view().name("dashboard"))
+                .andExpect(model().attribute("selectedModuleId", 19));
+        for (String path : List.of("/inventory", "/inventory/", "/inventory/dashboard")) {
+            mvc.perform(get(path)).andExpect(status().isOk()).andExpect(view().name("forward:/app/Inventory"));
         }
     }
 
-    @Test void allExistingDashboardLinksStillOpenTheSamePages() throws Exception {
-        String source = Files.readString(Path.of("src/main/resources/templates/inventory/inventory_dashboard.html"));
-        var links = Pattern.compile("<a href=\"([^\"]+)\" class=\"module-tile\"").matcher(source);
-        var paths = new HashSet<String>();
-        while (links.find()) {
-            String path = links.group(1);
-            assertTrue(paths.add(path));
-            var result = mvc.perform(get(path)).andExpect(status().isOk()).andReturn();
-            String view = Objects.requireNonNull(result.getModelAndView()).getViewName();
-            assertNotNull(view);
-            assertTrue(Files.exists(Path.of("src/main/resources/templates/" + view + ".html")), path);
+    @Test void seededInventoryModulesShowTheirRightsDrivenScreenLists() throws Exception {
+        var modules = menus.getModuleCards(5);
+        assertEquals(3, modules.size());
+        for (var module : modules) {
+            int moduleId = ((Number) module.get("moduleId")).intValue();
+            var result = mvc.perform(get("/app/Inventory").param("module", Integer.toString(moduleId)))
+                    .andExpect(status().isOk()).andExpect(view().name("dashboard"))
+                    .andExpect(model().attribute("selectedModuleId", moduleId)).andReturn();
+            var screens = (List<?>) Objects.requireNonNull(result.getModelAndView()).getModel().get("screens");
+            assertEquals(((Number) module.get("count")).intValue(), screens.size());
         }
-        assertEquals(20, paths.size());
     }
 
     @Test void seededMappingsOpenTheirActualPagesAndUseTheirOwnParents() throws Exception {
@@ -119,7 +120,11 @@ class InventoryNavigationTest {
         var definitions = menus.getModuleCards(5).stream().filter(c -> c.get("moduleId").equals(4)).findFirst().orElseThrow();
         assertEquals(11, definitions.get("built"));
         assertEquals(11, definitions.get("count"));
-        for (int id : List.of(171, 292, 293, 297, 299)) assertNull(menus.webRouteFor(id, "", ""));
+        assertEquals("/inventory/reports/item-list", menus.webRouteFor(171, "", ""));
+        assertEquals("/stocks/stock-evaluation-vehicle-wise", menus.webRouteFor(292, "", ""));
+        assertEquals("/inventory/stock-transactions-with-value", menus.webRouteFor(293, "", ""));
+        assertNull(menus.webRouteFor(297, "", ""));
+        assertEquals("/inventory/stock-report-with-values", menus.webRouteFor(299, "", ""));
         // 580 exists, but is not part of this user's seeded menu. A route must not allocate it.
         assertEquals(20, menus.getAppCards().get(0).get("count"));
         assertTrue(((List<?>) menus.getScreenCards(5, 93).get("screens")).isEmpty());
@@ -127,15 +132,17 @@ class InventoryNavigationTest {
 
     @Test void backLinksReopenEachInventoryCategoryWithoutAnApplicationLoop() throws Exception {
         var navigation = new ErpNavigationService(menus);
-        for (var category : Map.of(4, "def", 8, "invrpt", 93, "invrpt", 19, "stockrpt").entrySet()) {
-            mvc.perform(get("/inventory/dashboard").param("module", category.getKey().toString()))
-                    .andExpect(model().attribute("inventoryCategory", category.getValue()))
-                    .andExpect(model().attribute("selectedModuleId", category.getKey()));
+        for (int moduleId : List.of(4, 8, 19)) {
+            mvc.perform(get("/app/Inventory").param("module", Integer.toString(moduleId)))
+                    .andExpect(status().isOk()).andExpect(view().name("dashboard"))
+                    .andExpect(model().attribute("selectedModuleId", moduleId));
+            mvc.perform(get("/inventory/dashboard").param("module", Integer.toString(moduleId)))
+                    .andExpect(status().isOk()).andExpect(view().name("forward:/app/Inventory"));
         }
         assertEquals("/apps", navigation.build(rights, "/inventory/dashboard", Map.of(), "Inventory", null).get("parentRoute"));
         assertEquals("/app/Inventory", navigation.build(rights, "/inventory/dashboard",
                 Map.of("module", new String[]{"19"}), "Inventory", 19).get("parentRoute"));
-        mvc.perform(get("/inventory/dashboard?module=999")).andExpect(model().attributeDoesNotExist("selectedModuleId"));
+        mvc.perform(get("/app/Inventory")).andExpect(model().attributeDoesNotExist("selectedModuleId"));
     }
 
     @Test void legacyStockLinksReturnToTheAllowedInventoryParent() {
@@ -150,16 +157,22 @@ class InventoryNavigationTest {
         assertEquals("/app/Inventory", navigation.build(definitionsOnly, "/stocks/stock_register", Map.of(), null, null).get("parentRoute"));
     }
 
-    @Test void actualTemplateKeepsAllTwentyLinksAndInitializesTheSelectedCategory() throws Exception {
-        var result = mvc.perform(get("/inventory/dashboard?module=19")).andReturn().getModelAndView();
+    @Test void actualTemplateRendersSeededModulesAndSelectedScreenCards() throws Exception {
+        var result = mvc.perform(get("/app/Inventory").param("module", "19")).andReturn().getModelAndView();
         assertNotNull(result);
         var servlet = new MockServletContext();
-        var request = new MockHttpServletRequest(servlet, "GET", "/inventory/dashboard");
+        var request = new MockHttpServletRequest(servlet, "GET", "/app/Inventory");
         request.setParameter("module", "19");
         request.setUserPrincipal(() -> "Navigation preview");
         try (var application = new StaticWebApplicationContext()) {
             application.setServletContext(servlet);
             application.getBeanFactory().registerSingleton("erpNavigationService", new ErpNavigationService(menus));
+            var userRights = mock(DesktopUserRightsService.class);
+            when(userRights.canManage()).thenReturn(false);
+            application.getBeanFactory().registerSingleton("desktopUserRightsService", userRights);
+            var gearMenu = mock(GearMenuController.class);
+            when(gearMenu.adminItemsForView()).thenReturn(List.of());
+            application.getBeanFactory().registerSingleton("gearMenuController", gearMenu);
             application.refresh();
             var context = new WebContext(request, new MockHttpServletResponse(), servlet);
             context.setVariables(result.getModel());
@@ -169,9 +182,9 @@ class InventoryNavigationTest {
             resolver.setPrefix("templates/"); resolver.setSuffix(".html"); resolver.setTemplateMode("HTML");
             var engine = new SpringTemplateEngine(); engine.setTemplateResolver(resolver);
             String html = engine.process(result.getViewName(), context);
-            assertEquals(20, Pattern.compile("class=\"module-tile\"").matcher(html).results().count());
-            assertTrue(html.contains("var inventoryCategory = \"stockrpt\";"));
-            assertTrue(html.contains("data-parent-url=\"/app/Inventory\""));
+            assertEquals(3, Pattern.compile("class=\"dbm-card").matcher(html).results().count());
+            assertEquals(8, Pattern.compile("class=\"dbs-card").matcher(html).results().count());
+            assertTrue(html.contains("/inventory/stock-transactions-with-value"));
             Files.writeString(Path.of("target/inventory-navigation-preview.html"), html);
         }
     }

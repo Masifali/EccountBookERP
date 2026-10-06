@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @EnabledIfSystemProperty(named="inventory.live",matches="true")
 class InventoryOpeningLiveTest {
-    static JdbcTemplate jdbc() throws Exception {Properties p=new Properties();try(var in=Files.newInputStream(Path.of("src/main/resources/application.properties"))){p.load(in);}JdbcTemplate jdbc=new JdbcTemplate(new DriverManagerDataSource(p.getProperty("spring.datasource.url"),p.getProperty("spring.datasource.username"),p.getProperty("spring.datasource.password")));jdbc.setQueryTimeout(45);return jdbc;}
+    static JdbcTemplate jdbc() throws Exception {Properties p=new Properties();try(var in=Files.newInputStream(Path.of("src/main/resources/application-local.properties"))){p.load(in);}JdbcTemplate jdbc=new JdbcTemplate(new DriverManagerDataSource(p.getProperty("spring.datasource.url"),p.getProperty("spring.datasource.username"),p.getProperty("spring.datasource.password")));jdbc.setQueryTimeout(45);return jdbc;}
     static UserAccount user(JdbcTemplate jdbc){var a=jdbc.queryForMap("SELECT ID,OrganizationId,CompanyId,BranchesId,AppId FROM dbo.UserAccount WHERE UserName=?","numan");UserAccount u=new UserAccount();u.setId(((Number)a.get("ID")).intValue());u.setOrganizationId(((Number)a.get("OrganizationId")).intValue());u.setCompanyId(((Number)a.get("CompanyId")).intValue());u.setBranchesId(((Number)a.get("BranchesId")).intValue());u.setAppId(((Number)a.get("AppId")).intValue());return u;}
     @Test void lookupsHistoryAndLoadMatchDesktopProcedures() throws Exception {
         var jdbc=jdbc();var u=user(jdbc);var repo=new InventoryOpeningRepository(jdbc);var lookups=repo.lookups(u);var years=repo.years(u);assertFalse(years.isEmpty());int year=((Number)years.get(0).get("Id")).intValue();

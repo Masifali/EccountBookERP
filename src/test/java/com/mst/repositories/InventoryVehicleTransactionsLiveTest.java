@@ -18,7 +18,7 @@ class InventoryVehicleTransactionsLiveTest {
     private static Map<String,Object> normalize(Map<String,Object> row){Map<String,Object> out=new TreeMap<>();row.forEach((k,v)->out.put(k,v instanceof byte[]?Base64.getEncoder().encodeToString((byte[])v):v instanceof BigDecimal?((BigDecimal)v).toPlainString():v));return out;}
     private static Map<Map<String,Object>,Integer> multiset(List<Map<String,Object>> rows){Map<Map<String,Object>,Integer> result=new HashMap<>();rows.forEach(row->result.merge(normalize(row),1,Integer::sum));return result;}
     @Test void desktopProceduresAndJavaReturnIdenticalLookupsAndTransactions() throws Exception {
-        Properties props=new Properties();try(var in=Files.newInputStream(Path.of("src/main/resources/application.properties"))){props.load(in);}
+        Properties props=new Properties();try(var in=Files.newInputStream(Path.of("src/main/resources/application-local.properties"))){props.load(in);}
         var jdbc=new JdbcTemplate(new DriverManagerDataSource(props.getProperty("spring.datasource.url"),props.getProperty("spring.datasource.username"),props.getProperty("spring.datasource.password")));jdbc.setQueryTimeout(60);
         var account=jdbc.queryForMap("SELECT ID,OrganizationId,CompanyId FROM dbo.UserAccount WHERE UserName=?","numan");var u=new UserAccount();u.setId(((Number)account.get("ID")).intValue());u.setOrganizationId(((Number)account.get("OrganizationId")).intValue());u.setCompanyId(((Number)account.get("CompanyId")).intValue());
         var repository=new InventoryVehicleTransactionsRepository(jdbc);var lookup=repository.lookups(u);

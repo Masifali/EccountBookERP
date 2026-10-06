@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @EnabledIfSystemProperty(named="inventory.live",matches="true")
 class InventoryItemLedgerLiveTest {
     @Test void compareDesktopLookupAndLedgerWithJavaProjection() throws Exception {
-        Properties props=new Properties();try(var in=Files.newInputStream(Path.of("src/main/resources/application.properties"))){props.load(in);}
+        Properties props=new Properties();try(var in=Files.newInputStream(Path.of("src/main/resources/application-local.properties"))){props.load(in);}
         JdbcTemplate jdbc=new JdbcTemplate(new DriverManagerDataSource(props.getProperty("spring.datasource.url"),props.getProperty("spring.datasource.username"),props.getProperty("spring.datasource.password")));
         jdbc.setQueryTimeout(60);
         Map<String,Object> account=jdbc.queryForMap("SELECT ID,OrganizationId,CompanyId,BranchesId FROM dbo.UserAccount WHERE UserName=?","numan");

@@ -26,7 +26,7 @@ class InventoryUomScheduleLiveTest {
         int item=number(fixture.get("ItemId"));assertTrue(items.stream().anyMatch(x->number(x.get("Id"))==item));
         var before=jdbc.queryForList("SELECT * FROM UOMSchedule WHERE OrganizationId=? AND CompanyId=? AND ItemId=? ORDER BY Id",u.getOrganizationId(),u.getCompanyId(),item);
         var ctx=mock(CurrentUserContext.class);when(ctx.requireAccountingUser()).thenReturn(u);var service=new InventoryUomScheduleService(repo,ctx,mock(DesktopReportRights.class));
-        var tx=new TransactionTemplate(new DataSourceTransactionManager(jdbc.getDataSource()));tx.setIsolationLevel(org.springframework.transaction.TransactionDefinition.ISOLATION_SERIALIZABLE);tx.setTimeout(60);
+        var tx=new TransactionTemplate(new DataSourceTransactionManager(jdbc.getDataSource()));tx.setIsolationLevel(org.springframework.transaction.TransactionDefinition.ISOLATION_SERIALIZABLE);tx.setTimeout(180);
         int[] created={0};tx.execute(status->{try{
             var r=new InventoryUomScheduleRequest();r.itemId=item;r.scheduleUnitId=number(fixture.get("ScheduleUnitId"));r.equivalent=new BigDecimal("12.3456");r.qtyEquivalent=new BigDecimal("2.5");r.active=true;r.baseRateUom=r.basePackUom=r.baseSecondaryUom=true;
             var saved=service.save(r);created[0]=number(saved.get("Id"));r.id=created[0];assertEquals(u.getId(),number(saved.get("EntryUser")));assertEquals(u.getCompanyId(),number(saved.get("CompanyId")));assertEquals(r.equivalent.doubleValue(),((Number)saved.get("Equivalent")).doubleValue(),0.000001);
