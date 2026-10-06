@@ -97,9 +97,8 @@ public class AppMenuController {
     public String app(@PathVariable("appName") String appName,
                       @RequestParam(value = "module", required = false) Integer moduleId,
                       Model model) {
-        // Keep the sidebar's Inventory entry on the existing dashboard and its page links.
-        // A forward preserves the module query used by child-page Back buttons.
-        if ("Inventory".equalsIgnoreCase(appName)) return "forward:/inventory/dashboard";
+        /* Inventory is drawn like every other application (frmMenue from the user's rights rows).
+           /inventory/dashboard forwards here, so child-page Back links (?module=19) keep working. */
         return renderApp(appName, moduleId, model);
     }
 

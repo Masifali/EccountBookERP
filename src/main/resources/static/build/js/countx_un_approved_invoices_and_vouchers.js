@@ -196,6 +196,18 @@ window.uaCardClick = function (group, i) {
           + 'switch either, so it opens nothing there.', false);
         return;
     }
+    /* :166-176 - the voucher range opens PendingApprovalVouchersHistory (ported) with flagAproved = true:
+       Id = TypeID, RequestedFromDate only when From Date is ticked, RequestedToDate always. */
+    if (t[0] === 'PendingApprovalVouchersHistory.cs' && typeof window.PavhOpen === 'function') {
+        clearMsg();
+        window.PavhOpen({
+            id: id,
+            fromDate: (el('chkFrom') && el('chkFrom').checked) ? val('fromDate') : '',
+            toDate: val('toDate'),
+            unApprove: true
+        });
+        return;
+    }
     msg('"' + txt(c.title) + '" opens the desktop screen ' + t[0]
       + (t[1] !== null ? ' with DocumentTypeId ' + t[1] : '')
       + ', which has not been ported yet. Nothing was un-approved.', false);

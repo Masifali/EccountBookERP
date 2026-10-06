@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Transaction Report With Value</title>
+<meta name="_csrf" th:content="${_csrf?.token}"><meta name="_csrf_header" th:content="${_csrf?.headerName}">
+<link rel="stylesheet" href="/vendors/select2/dist/css/select2.min.css">
+<link rel="stylesheet" href="/css/report-loading.css">
+<link rel="stylesheet" href="/css/inventory-ui.css">
+<link rel="stylesheet" href="/build/css/countx_desktop_combo.css?v=20260930s"><link rel="stylesheet" href="/build/css/countx_prod_combo.css?v=20261002gv">
+<link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261005a}"/>
+<style>
+/* Desktop InventoryEvaluationItemLedger (screen 293): ClientSize 1184 x 461, Segoe UI Semibold 9 bold. */
+*{box-sizing:border-box}
+body{margin:0;min-width:1184px;background:#f0f0f0;font:bold 12px "Segoe UI Semibold","Segoe UI",Tahoma,sans-serif;color:#000}
+/* panel2 / toolStrip3: white, Verdana 9.75 - New, Refresh, 412-Print, 411-Print, ShortCut Keys */
+nav.tools{height:31px;display:flex;align-items:center;gap:2px;background:#fff;border-bottom:1px solid #ccc;padding-left:2px}
+nav.tools button{height:24px;font:13px Verdana,sans-serif;background:transparent;border:1px solid transparent;cursor:pointer;padding:0 8px}
+nav.tools button:hover{border-color:#008080;background:#e5f3f3}
+/* panel3: teal 26px - label23 + CGS Value / Sale Value radios */
+.title-bar{position:relative;height:26px;background:#008080;color:#fff}
+.title-bar h1{position:absolute;left:6px;top:3px;margin:0;font:bold 16px Tahoma,sans-serif;line-height:19px}
+.title-bar label{position:absolute;top:3px;display:flex;align-items:center;gap:3px;font-weight:bold;cursor:pointer}
+.title-bar .cgs{left:1008px}.title-bar .sale{left:1098px}
+/* panel5: white 159px holding groupBox1 "Filters" (3,0 853x158) and groupBox3 "Totals" (855,0 325x126) */
+.panel5{position:relative;height:159px;background:#fff;width:1184px}
+.group{position:absolute;top:0;border:1px solid #c8c8c8;border-radius:3px;margin:0;padding:0;font:bold 13px Tahoma,sans-serif}
+.group>.caption{position:absolute;left:7px;top:-1px;background:#fff;padding:0 2px;font:bold 13px Tahoma,sans-serif;line-height:14px}
+#filters{left:3px;width:853px;height:158px;top:0}
+#totals-box{left:855px;width:325px;height:126px}
+.lbl{position:absolute;font:bold 12px "Segoe UI Semibold","Segoe UI",sans-serif;white-space:nowrap}
+.ctl{position:absolute;height:26px}
+.w1{width:175px}.w2{width:185px}.w3{width:213px}
+.ctl select{width:100%;height:26px}
+.date-input{display:flex;position:absolute;height:23px;width:175px}
+.date-input input:first-child{width:152px;height:23px;font:13px Verdana,sans-serif;border:1px solid #888;border-right:0;border-radius:0;padding:0 3px}
+.date-input input[type=date]{width:23px;height:23px;padding:0;border:1px solid #888;border-left:0;font-size:0;color:transparent}
+.date-input input[type=date]::-webkit-calendar-picker-indicator{margin:0;padding:3px;font-size:13px;width:16px}
+#show{position:absolute;left:789px;top:125px;width:61px;height:27px;background:#008080;color:#fff;border:1px solid #006666;font:bold 13px Tahoma,sans-serif;cursor:pointer}
+.select2-container .select2-selection--single{height:26px;border-radius:0}
+.select2-container .select2-selection--single .select2-selection__rendered{line-height:24px;font:13px Verdana,sans-serif;line-height:24px}
+.ctl>.select2{width:100%!important}
+.ctl .dtcombo-wrap.pcx-checked{height:26px;width:100%}
+.ctl .pcx-checked .dtcombo-input.pcx-field{width:100%;height:26px;font:13px Verdana,sans-serif}
+select.dtcombo-native[multiple][data-dtcombo-checked]{display:none!important}
+/* groupBox3 Totals: Qty / Weight / Amount headers (silver), In / Out / Bal rows */
+.tot-head{position:absolute;top:20px;height:21px;background:#c0c0c0;font:bold 15px "Segoe UI Semibold","Segoe UI",sans-serif;display:flex;align-items:center;justify-content:center}
+.tot-row{position:absolute;left:4px;font:bold 13px "Segoe UI Semibold","Segoe UI",sans-serif}
+.tot{position:absolute;height:22px;font:12px Verdana,sans-serif;border:1px solid #888;padding:0 3px;text-align:right;background:#fff}
+/* panel7: teal 27px "History" + ctrlGrdBar1 */
+.history{position:relative;height:27px;background:#008080;color:#fff}
+.history h2{position:absolute;left:6px;top:3px;margin:0;font:bold 16px Tahoma,sans-serif;line-height:19px}
+#historyBar{position:absolute;right:4px;top:-2px;height:28px;display:flex;align-items:center}
+.grid{overflow:auto;height:calc(100vh - 270px);min-height:220px;border:1px solid #aaa;background:#fff}
+.grid table{border-collapse:collapse;width:max-content;min-width:100%;font:11px Verdana,sans-serif}
+.grid th,.grid td{border:1px solid #c6c6c6;padding:2px 4px;height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.grid thead tr.heads th{position:sticky;top:0;background:#eee;color:#000;text-align:center;white-space:normal;height:32px;z-index:2}
+.grid thead tr.column-filters th{position:sticky;top:32px;background:#fafafa;z-index:2}
+.grid .column-filters input{width:100%;min-width:30px;height:20px;border:1px solid #aaa;font:11px Verdana}
+.grid tbody tr:nth-child(even){background:#f4f4f4}
+.grid tr.selected,.grid tbody tr.selected{background:#cce8ff}
+.grid td.number{text-align:right}
+.grid tfoot td{position:sticky;bottom:0;background:#e1efed;font-weight:bold}
+#status{margin:2px 8px;min-height:16px;font-weight:normal}#status.error{color:#a40000}
+dialog{border:1px solid teal;max-width:80vw}dialog::backdrop{background:#0004}
+dialog table{border-collapse:collapse;font:12px Verdana}dialog td,dialog th{border:1px solid #ccc;padding:3px 8px;text-align:left}
+</style>
+<script src="/js/report-loading.js"></script><script src="/js/inventory-ui.js"></script>
+</head>
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<nav class="tools">
+<button id="new" type="button">New</button><button id="refresh" type="button">Refresh</button>
+<button id="print412" type="button" data-rpt="412-StockRptInventoryTransactionsNew.rpt" data-rpt-own>412-Print</button>
+<button id="print411" type="button" data-rpt="411-InvStockRptInventoryTransactionsNew.rpt" data-rpt-own>411-Print</button>
+<button id="shortcuts" type="button">ShortCut Keys</button>
+</nav>
+<div class="title-bar"><h1>Stock Transaction Report With Value</h1>
+<label class="cgs"><input type="radio" name="valueKind" id="cgsValue" checked>CGS Value</label>
+<label class="sale"><input type="radio" name="valueKind" id="saleValue">Sale Value</label></div>
+<div class="panel5">
+<form id="filters" class="group" autocomplete="off"><span class="caption">Filters</span>
+<label class="lbl" for="branchIds" style="left:5px;top:19px">Branch Name</label>
+<div class="ctl w1" style="left:98px;top:13px"><select id="branchIds" multiple data-native-select data-dtcombo="single" data-dtcombo-checked data-dtcombo-caption="Branch Name"></select></div>
+<label class="lbl" for="dateType" style="left:5px;top:47px">Date Type</label>
+<div class="ctl w1" style="left:98px;top:41px"><select id="dateType"><option value=""></option><option value="1">This Day</option><option value="2">This Week</option><option value="3">This Month</option><option value="4">This Year</option><option value="5">Financial Year</option></select></div>
+<label class="lbl" for="fromDate" style="left:5px;top:75px">From Date</label>
+<span class="date-input" style="left:98px;top:71px"><input id="fromDate" type="text" placeholder="dd-MMM-yy" required><input id="fromDate-calendar" type="date" aria-label="Choose From Date"></span>
+<label class="lbl" for="toDate" style="left:5px;top:103px">To Date</label>
+<span class="date-input" style="left:98px;top:99px"><input id="toDate" type="text" placeholder="dd-MMM-yy" required><input id="toDate-calendar" type="date" aria-label="Choose To Date"></span>
+<label class="lbl" for="parentIds" style="left:5px;top:131px">Parent Category</label>
+<div class="ctl w1" style="left:98px;top:125px"><select id="parentIds" multiple data-native-select data-dtcombo="single" data-dtcombo-checked data-dtcombo-caption="Parent Categories"></select></div>
+
+<label class="lbl" for="itemClassGroupId" style="left:278px;top:19px">Class Group</label>
+<div class="ctl w2" style="left:360px;top:13px"><select id="itemClassGroupId" data-activity="ItemClassGroup"></select></div>
+<label class="lbl" for="itemCategoryId" style="left:278px;top:47px">Item Category</label>
+<div class="ctl w2" style="left:360px;top:41px"><select id="itemCategoryId" data-activity="ItemCategories"></select></div>
+<label class="lbl" for="itemTypeId" style="left:278px;top:75px">Item Type</label>
+<div class="ctl w2" style="left:360px;top:69px"><select id="itemTypeId" data-activity="ItemTypes"></select></div>
+<label class="lbl" for="itemId" style="left:278px;top:103px">Item Name</label>
+<div class="ctl w2" style="left:360px;top:97px"><select id="itemId" data-activity="Items"></select></div>
+<label class="lbl" for="warehouseId" style="left:278px;top:131px">WareHouse</label>
+<div class="ctl w2" style="left:360px;top:125px"><select id="warehouseId" data-activity="Warehouse"></select></div>
+
+<label class="lbl" for="jobLotId" style="left:549px;top:19px">JobLot</label>
+<div class="ctl w3" style="left:637px;top:13px"><select id="jobLotId" data-activity="JobLot"></select></div>
+<label class="lbl" for="cropYear" style="left:549px;top:47px">Crop Year</label>
+<div class="ctl w3" style="left:637px;top:41px"><select id="cropYear" data-activity="CropYear"></select></div>
+<label class="lbl" for="itemStockAc" style="left:549px;top:75px">Item Stock Ac</label>
+<div class="ctl w3" style="left:637px;top:69px"><select id="itemStockAc" data-activity="Stock_Account"></select></div>
+<label class="lbl" for="documentTypeId" style="left:549px;top:103px">Document Type</label>
+<div class="ctl w3" style="left:637px;top:97px"><select id="documentTypeId" data-activity="DocumentType"></select></div>
+<button id="show" type="submit">Show</button>
+</form>
+<div id="totals-box" class="group"><span class="caption">Totals</span>
+<span class="tot-head" style="left:33px;width:84px">Qty</span><span class="tot-head" style="left:118px;width:94px">Weight</span><span class="tot-head" style="left:213px;width:112px">Amount</span>
+<span class="tot-row" style="top:48px">In</span><span class="tot-row" style="top:74px">Out</span><span class="tot-row" style="top:100px">Bal</span>
+<input class="tot" id="txtQtyInTotal" readonly aria-label="Qty In total" style="left:33px;top:46px;width:84px">
+<input class="tot" id="txtWeightInTotal" readonly aria-label="Weight In total" style="left:118px;top:46px;width:94px">
+<input class="tot" id="txtAmountInTotal" readonly aria-label="Amount In total" style="left:213px;top:46px;width:112px">
+<input class="tot" id="txtQtyOutTotal" readonly aria-label="Qty Out total" style="left:33px;top:72px;width:84px">
+<input class="tot" id="txtWeightOutTotal" readonly aria-label="Weight Out total" style="left:118px;top:72px;width:94px">
+<input class="tot" id="txtAmountOutTotal" readonly aria-label="Amount Out total" style="left:213px;top:72px;width:112px">
+<input class="tot" id="txtQtyBalTotal" readonly aria-label="Qty Bal total" style="left:33px;top:98px;width:84px">
+<input class="tot" id="txtWeightBalTotal" readonly aria-label="Weight Bal total" style="left:118px;top:98px;width:94px">
+<input class="tot" id="txtAmountBalTotal" readonly aria-label="Amount Bal total" style="left:213px;top:98px;width:112px">
+</div>
+</div>
+<p id="status" role="status"></p>
+<div class="history"><h2>History</h2><span id="historyBar"></span></div>
+<div class="grid" tabindex="0" aria-label="Transactions with value, scroll horizontally for more columns"><table id="grd" data-gridbar="InventoryEvaluationItemLedger:grd" data-gridbar-mount="#historyBar" data-gridbar-title="Stock Transaction Report With Value"><thead id="head"></thead><tbody id="rows"></tbody><tfoot id="totals"></tfoot></table></div>
+<dialog id="keys"><h2>ShortCut Keys</h2><table><thead><tr><th>KeyCombination</th><th>Description</th></tr></thead><tbody>
+<tr><td>Ctrl+S</td><td>For Show</td></tr><tr><td>Ctrl+E</td><td>For Close</td></tr><tr><td>Ctrl+R</td><td>For Refresh</td></tr><tr><td>Ctrl+N</td><td>For New</td></tr>
+<tr><td>Alt+1</td><td>For print 411</td></tr><tr><td>Alt+2</td><td>For print 412</td></tr><tr><td>Ctrl+F5</td><td>For Focus On DateType </td></tr>
+<tr><td>Ctrl+alt</td><td>To Show ShortCut Keys Form</td></tr><tr><td>Ctrl+ArrowDown</td><td>For Focus On Grid</td></tr><tr><td>Ctrl+ArrowUp</td><td>For Focus On DateType in Filter</td></tr>
+</tbody></table><p><button id="close-keys" type="button">Close</button></p></dialog>
+<script src="/vendors/jquery/dist/jquery.min.js"></script><script src="/build/js/countx_prod_combo.js?v=20261002gv"></script><script src="/vendors/select2/dist/js/select2.min.js"></script>
+<script src="/js/report-decimal.js"></script><script src="/js/inventory-request.js"></script><script src="/js/inventory-transactions-with-value.js?v=20261005a"></script>
+<script src="/js/print-rpt.js?v=20261003erp"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20261005a}"></script>
+</body></html>

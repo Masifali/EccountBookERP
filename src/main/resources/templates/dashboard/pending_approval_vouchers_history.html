@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Approvals</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}" href="/vendors/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261005a}" href="/build/css/countx_grid_bar.css">
+<!--
+  Architecture.WinApp.ApprovalDashboard.PendingApprovalVouchersHistory (1,777 lines), Text "Approvals",
+  base.Name "PendingApprovalVouchersHistory", ClientSize 1075x804, WindowState Maximized, KeyPreview.
+  1:1 port of InitializeComponent:
+    panel1 Dock Fill > tabControl2 (Alignment Bottom): "Grid View" | "Cards View" | "Pending For Review"
+      tabPage2 > panel8 Dock Fill
+        panel3  Dock Top 96, White
+          panel7  Dock Top 35, rgb(10,110,110): label23 (8,6) Microsoft Sans Serif 14.25 white
+                  "Vouchers For Approval" / "Vouchers For UnApproval"; ctrlGrdBar2 (MyGrid grd) at the right
+          label27 "From Date" (8,45)      fromdate (74,42) 108x21 dd-MMM-yy
+          label33 "To Date" (8,72)        todate (74,69) 108x21 dd-MMM-yy
+          label4 "Doc No From" (192,45)   txtdocnofrom (275,41) 80x23
+          label3 "Doc No To" (192,72)     txtdocnoto (275,68) 80x23
+          ChkPrint "Print Preview" (361,42)
+          btnShow "Show" (359,66) 48x26 | btnApproved "Approve"/"UnApprove" (411,66) 63x26 |
+          btnPendingForView "PendingForView" (478,66) 113x26 - flat rgb(10,110,110), Segoe UI 9 bold white
+        panel9  Dock Top 338: grd (Verdana 8.25, filter row, total row, record navigator)
+        panel2  Dock Fill > tabControl1: "Detail" (panel4 Teal 32: label1 "Detail" + ctrlGrdBar3 / grdDetail)
+                                         "PendingVoucherForView" (panel6 Teal 29: ctrlGrdBar4 / grdPendingViewVoucher)
+      tabPage3 "Cards View" / tabPage4 "Pending For Review" host ModernHistories.VoucherModernHistory (not ported).
+-->
+<style>
+    :root { --teal: #008080; --hdr: rgb(10,110,110); --jb: #9eb6ce; }
+    html, body { margin: 0; padding: 0; height: 100%; background: #fff; overflow: hidden; }
+    body { font-family: "Segoe UI", Tahoma, sans-serif; font-size: 12px; color: #000; }
+    #frm { position: absolute; inset: 0; overflow-x: auto; overflow-y: hidden; background: #fff; }
+    body.pavh-popup #frm { top: 26px; }
+    #pvTitle { position: absolute; left: 0; right: 0; top: 0; height: 26px; display: flex; align-items: center;
+               justify-content: space-between; padding: 0 0 0 8px; background: #fff; border-bottom: 1px solid #c8c8c8;
+               font: 12px "Segoe UI", sans-serif; }
+    #pvTitle button { height: 26px; width: 44px; border: 0; background: transparent; font: 16px "Segoe UI", sans-serif; cursor: pointer; }
+    #pvTitle button:hover { background: #e81123; color: #fff; }
+    #panel1 { display: flex; flex-direction: column; height: 100%; min-width: 1060px; }
+
+    /* tabControl2 - tabs at the bottom */
+    #tabControl2 { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
+    .t2Page { flex: 1 1 auto; display: none; min-height: 0; padding: 3px; box-sizing: border-box; }
+    .t2Page.on { display: flex; flex-direction: column; }
+    #t2Strip { flex: 0 0 22px; display: flex; align-items: flex-start; padding-left: 2px; background: #fff; border-top: 1px solid #898c95;
+               font: 11px Tahoma, sans-serif; }
+    #t2Strip a, #t1Strip a { display: inline-block; height: 18px; line-height: 18px; padding: 0 8px; margin-right: -1px; cursor: pointer; user-select: none;
+               color: #000; background: linear-gradient(#f3f3f3, #e3e3e3); border: 1px solid #898c95; text-decoration: none; }
+    #t2Strip a { border-top: 0; }
+    #t2Strip a.on { height: 21px; line-height: 21px; background: #fff; position: relative; top: -1px; }
+    .notPorted { margin: 12px; padding: 8px 10px; border: 1px dashed #b0bec5; color: #555; font: 12px "Segoe UI", sans-serif; }
+
+    /* panel3 */
+    #panel3 { flex: 0 0 96px; height: 96px; position: relative; background: #fff; }
+    #panel7 { position: absolute; left: 0; right: 0; top: 0; height: 35px; background: var(--hdr); }
+    #label23 { position: absolute; left: 8px; top: 6px; font: 19px "Microsoft Sans Serif", "Segoe UI", sans-serif; color: #fff; line-height: 24px; white-space: nowrap; }
+    #gbGrd { position: absolute; right: 6px; top: 3px; height: 27px; min-width: 38px; display: flex; align-items: center; justify-content: flex-end; }
+    .lbl { position: absolute; font: 600 12px "Segoe UI Semibold", "Segoe UI", sans-serif; line-height: 15px; color: #000; white-space: nowrap; }
+    .dtp { position: absolute; box-sizing: border-box; height: 21px; width: 108px; font: 12px "Microsoft Sans Serif", "Segoe UI", sans-serif;
+           border: 1px solid #7a7a7a; padding: 0 2px; background: #fff; }
+    .txt { position: absolute; box-sizing: border-box; height: 23px; width: 80px; font: 14px "Microsoft Sans Serif", "Segoe UI", sans-serif;
+           border: 1px solid #7a7a7a; padding: 0 2px; }
+    #chkPrintWrap { position: absolute; left: 361px; top: 42px; height: 19px; display: flex; align-items: center; gap: 3px;
+                    font: 600 12px "Segoe UI Semibold", "Segoe UI", sans-serif; cursor: pointer; white-space: nowrap; }
+    #chkPrintWrap input { margin: 0; }
+    .fbtn { position: absolute; top: 66px; height: 26px; box-sizing: border-box; padding: 0; border: 0; background: var(--hdr);
+            color: #fff; font: bold 12px "Segoe UI", sans-serif; cursor: pointer; }
+    .fbtn:disabled { opacity: .7; cursor: progress; }
+    #btnShow { left: 359px; width: 48px; }
+    #btnApproved { left: 411px; width: 63px; }
+    #btnPendingForView { left: 478px; width: 113px; }
+
+    /* panel9 / panel2 */
+    #panel9 { flex: 0 0 338px; height: 338px; display: flex; flex-direction: column; min-height: 0; }
+    #panel2 { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 120px; }
+    #t1Strip { flex: 0 0 22px; display: flex; align-items: flex-end; padding-left: 2px; background: #fff; border-bottom: 1px solid #898c95;
+               font: 11px Tahoma, sans-serif; }
+    #t1Strip a { border-bottom: 0; }
+    #t1Strip a.on { height: 21px; line-height: 21px; background: #fff; position: relative; top: 1px; }
+    .t1Page { flex: 1 1 auto; display: none; min-height: 0; padding: 3px; box-sizing: border-box; flex-direction: column; }
+    .t1Page.on { display: flex; }
+    .bar { position: relative; background: var(--teal); }
+    #panel4 { flex: 0 0 32px; height: 32px; }
+    #panel6 { flex: 0 0 29px; height: 29px; }
+    #label1 { position: absolute; left: 3px; top: 3px; font: bold 19px "Segoe UI Semibold", "Segoe UI", sans-serif; color: #fff; line-height: 25px; }
+    .bar .gb { position: absolute; right: 4px; top: 2px; height: 27px; min-width: 38px; display: flex; align-items: center; justify-content: flex-end; }
+
+    /* Janus GridEX, VisualStyle Office2007, Verdana 8.25, HeaderLines 2 */
+    .jg { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; border: 1px solid var(--jb); }
+    .jg-wrap { flex: 1 1 auto; overflow: auto; min-height: 0; background: #fff; }
+    .jg table { border-collapse: separate; border-spacing: 0; table-layout: fixed; font: 11px Verdana, sans-serif; }
+    .jg thead th { position: sticky; top: 0; z-index: 3; height: 30px; padding: 0 3px; text-align: center; font-weight: normal; overflow: hidden;
+             white-space: normal; line-height: 13px; background: linear-gradient(#f9fcfd, #d3e2f0); border-right: 1px solid var(--jb); border-bottom: 1px solid var(--jb); }
+    .jg thead tr.flt td { position: sticky; top: 31px; z-index: 2; background: #fff; padding: 1px; height: 20px; border-bottom: 1px solid var(--jb); border-right: 1px solid #e3e9ef; }
+    .jg tr.flt input { width: 100%; height: 17px; box-sizing: border-box; border: 1px solid #c5d3e2; font: 11px Verdana, sans-serif; padding: 0 2px; }
+    .jg td { height: 19px; padding: 0 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-sizing: border-box;
+             border-right: 1px solid #e3e9ef; border-bottom: 1px solid #e3e9ef; }
+    .jg td.r { text-align: right; } .jg td.c { text-align: center; }
+    .jg td.fz, .jg th.fz { position: sticky; z-index: 1; background: #fff; }
+    .jg thead th.fz { z-index: 4; background: linear-gradient(#f9fcfd, #d3e2f0); }
+    .jg thead tr.flt td.fz { z-index: 4; }
+    .jg tfoot td.fz { z-index: 3; background: #e7eef6; }
+    .jg tbody tr.cur td { background: #ffe8a6; }
+    .jg tbody tr.chk td { background: #dde9f7; }
+    .jg tbody tr.cur.chk td { background: #ffe0a0; }
+    .jg tbody td.cc { outline: 1px dotted #000; outline-offset: -2px; }
+    .jg tfoot td { position: sticky; bottom: 0; z-index: 2; background: #e7eef6; border-top: 1px solid var(--jb); font-weight: bold; height: 20px; }
+    .jg a.lnk { color: #0000ff; text-decoration: underline; cursor: pointer; }
+    .jg button.cb { height: 17px; padding: 0 4px; font: 11px Verdana, sans-serif; border: 1px solid #8ea3b9; border-radius: 2px;
+                    background: linear-gradient(#fff, #e3ebf4); cursor: pointer; width: 100%; }
+    .jg button.cb:hover { background: linear-gradient(#fff6d6, #ffd977); }
+    .jg .empty td { color: #777; text-align: center; border-right: 0; }
+    .jg-nav { flex: 0 0 22px; height: 22px; display: flex; align-items: center; gap: 2px; padding: 0 4px;
+              background: linear-gradient(#f4f8fb, #dbe6f1); border-top: 1px solid var(--jb); font: 11px Verdana, sans-serif; }
+    .jg-nav button { width: 20px; height: 18px; padding: 0; border: 1px solid transparent; background: transparent; cursor: pointer; font: 10px Verdana; }
+    .jg-nav button:hover:not(:disabled) { border-color: var(--jb); background: #fff; }
+    .jg-nav button:disabled { color: #aaa; cursor: default; }
+    .jg-nav span { padding: 0 6px; white-space: nowrap; }
+
+    /* AttachmentView */
+    #attModal { position: fixed; inset: 0; background: rgba(0,0,0,.25); display: none; align-items: center; justify-content: center; z-index: 60; }
+    #attModal .box { background: #fff; border: 1px solid #555; min-width: 520px; max-width: 90vw; font: 12px "Segoe UI", sans-serif; }
+    #attModal .hd { background: var(--teal); color: #fff; font: bold 13px Tahoma, sans-serif; padding: 4px 8px; display: flex; justify-content: space-between; align-items: center; }
+    #attModal .hd button { border: 0; background: transparent; color: #fff; font-size: 15px; cursor: pointer; }
+    #attModal table { border-collapse: collapse; width: 100%; font: 11px Verdana, sans-serif; }
+    #attModal th, #attModal td { border: 1px solid #c5d3e2; padding: 3px 5px; text-align: left; }
+    #attModal th { background: linear-gradient(#f9fcfd, #d3e2f0); font-weight: normal; }
+</style>
+</head>
+<body th:class="${popup} ? 'pavh-popup' : 'erp-viewport-page'">
+<th:block th:if="${!popup}"><div th:replace="~{fragments/erp_navigation :: navigation}"></div></th:block>
+<div id="pvTitle" th:if="${popup}"><span>Approvals</span><button type="button" id="btnClose" title="Close (Esc)">&#x2715;</button></div>
+
+<div id="frm">
+<div id="panel1">
+    <div id="tabControl2">
+        <!-- tabPage2 "Grid View" -->
+        <div class="t2Page on" id="tabPage2">
+            <div id="panel3">
+                <div id="panel7">
+                    <span id="label23">Vouchers</span>
+                    <div id="gbGrd"></div>
+                </div>
+                <span class="lbl" id="label27" style="left:8px;top:45px">From Date</span>
+                <input type="date" class="dtp" id="fromdate" style="left:74px;top:42px">
+                <span class="lbl" id="label33" style="left:8px;top:72px">To Date</span>
+                <input type="date" class="dtp" id="todate" style="left:74px;top:69px">
+                <span class="lbl" id="label4" style="left:192px;top:45px">Doc No From</span>
+                <input type="text" class="txt" id="txtdocnofrom" style="left:275px;top:41px" autocomplete="off">
+                <span class="lbl" id="label3" style="left:192px;top:72px">Doc No To</span>
+                <input type="text" class="txt" id="txtdocnoto" style="left:275px;top:68px" autocomplete="off">
+                <label id="chkPrintWrap"><input type="checkbox" id="ChkPrint"> Print Preview</label>
+                <button type="button" class="fbtn" id="btnShow">Show</button>
+                <button type="button" class="fbtn" id="btnApproved">Approve</button>
+                <button type="button" class="fbtn" id="btnPendingForView">PendingForView</button>
+            </div>
+            <div id="panel9">
+                <div class="jg" id="jgGrd">
+                    <div class="jg-wrap" data-gridbar-form="PendingApprovalVouchersHistory" data-gridbar-grid="grd" data-gridbar-mount="#gbGrd"
+                         data-gridbar-reorder="false" data-gridbar-title="Vouchers"><table id="grd" tabindex="0"></table></div>
+                    <div class="jg-nav" data-for="grd"></div>
+                </div>
+            </div>
+            <div id="panel2">
+                <div id="t1Strip"><a data-tab="tabPage1" class="on">Detail</a><a data-tab="tabPendingVouchersForView" id="tabPendingLink">PendingVoucherForView</a></div>
+                <div class="t1Page on" id="tabPage1">
+                    <div class="bar" id="panel4"><span id="label1">Detail</span><div class="gb" id="gbDetail"></div></div>
+                    <div class="jg" id="jgDetail">
+                        <div class="jg-wrap" data-gridbar-form="PendingApprovalVouchersHistory" data-gridbar-grid="grdDetail" data-gridbar-mount="#gbDetail"
+                             data-gridbar-reorder="false" data-gridbar-title="Detail"><table id="grdDetail" tabindex="0"></table></div>
+                        <div class="jg-nav" data-for="grdDetail"></div>
+                    </div>
+                </div>
+                <div class="t1Page" id="tabPendingVouchersForView">
+                    <div class="bar" id="panel6"><div class="gb" id="gbPending"></div></div>
+                    <div class="jg" id="jgPending">
+                        <div class="jg-wrap" data-gridbar-form="PendingApprovalVouchersHistory" data-gridbar-grid="grdPendingViewVoucher" data-gridbar-mount="#gbPending"
+                             data-gridbar-reorder="false" data-gridbar-title="PendingVoucherForView"><table id="grdPendingViewVoucher" tabindex="0"></table></div>
+                        <div class="jg-nav" data-for="grdPendingViewVoucher"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- tabPage3 / tabPage4 host VoucherModernHistory (RequestFromScreen "ApproveOrUnApprove Voucher" / "Pending For Review") -->
+        <div class="t2Page" id="tabPage3">
+            <div class="notPorted">Cards View shows the desktop form Architecture.WinApp.ModernHistories.VoucherModernHistory
+                (RequestFromScreen "ApproveOrUnApprove Voucher"), which has not been ported yet.</div>
+        </div>
+        <div class="t2Page" id="tabPage4">
+            <div class="notPorted">Pending For Review shows the desktop form Architecture.WinApp.ModernHistories.VoucherModernHistory
+                (RequestFromScreen "Pending For Review"), which has not been ported yet.</div>
+        </div>
+    </div>
+    <div id="t2Strip"><a data-tab="tabPage2" class="on">Grid View</a><a data-tab="tabPage3">Cards View</a><a data-tab="tabPage4">Pending For Review</a></div>
+</div>
+</div>
+
+<div id="attModal"><div class="box">
+    <div class="hd"><span>Attachments</span><button type="button" id="attClose">&#x2715;</button></div>
+    <div style="max-height:60vh;overflow:auto;"><table><thead><tr><th>AttachmentName</th><th>CustomName</th><th>EntryDate</th></tr></thead><tbody id="attBody"></tbody></table></div>
+</div></div>
+
+<script th:src="@{/build/js/countx_doc_link.js?v=20261001pr}" src="/build/js/countx_doc_link.js"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20261005a}" src="/build/js/countx_grid_bar.js"></script>
+<script th:src="@{/build/js/countx_pending_approval_vouchers_history.js?v=20261005a}" src="/build/js/countx_pending_approval_vouchers_history.js"></script>
+</body>
+</html>

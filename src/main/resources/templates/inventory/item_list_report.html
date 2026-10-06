@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Item List</title>
+<meta name="_csrf" th:content="${_csrf?.token}"><meta name="_csrf_header" th:content="${_csrf?.headerName}">
+<link rel="stylesheet" href="/vendors/select2/dist/css/select2.min.css">
+<link rel="stylesheet" href="/css/report-loading.css">
+<link rel="stylesheet" href="/css/inventory-ui.css">
+<link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261005a}"/>
+<style>
+/* Desktop frmRptItemList (screen 171): ClientSize 785 x 524, maximized. */
+*{box-sizing:border-box}
+body{margin:0;min-width:785px;background:#f0f0f0;font:12px "Segoe UI",Tahoma,sans-serif;color:#000}
+/* panel2 (Dock Top, 30px): toolStrip1 New / 200-Print + ctrlGrdBar1 (MyGrid = grdItemlist) at the right */
+nav.tools{position:relative;height:30px;display:flex;align-items:center;gap:2px;background:#fff;border-bottom:1px solid #ccc;padding-left:2px}
+nav.tools button{height:24px;font:12px "Segoe UI",sans-serif;background:transparent;border:1px solid transparent;cursor:pointer;padding:0 8px}
+nav.tools button:hover{border-color:#008080;background:#e5f3f3}
+nav.tools .sep{width:1px;height:20px;background:#ccc;margin:0 3px}
+#gridBar{position:absolute;right:0;top:1px;height:28px;display:flex;align-items:center}
+/* panel3 (white, 147px) with panel6 (rgb 10,110,110, 41px) "Item List" Microsoft Sans Serif 14.25 white */
+.panel3{position:relative;height:147px;background:#fff}
+.panel6{position:relative;height:41px;background:rgb(10,110,110)}
+.panel6 h1{position:absolute;left:16px;top:8px;margin:0;font:19px "Microsoft Sans Serif",Arial,sans-serif;color:#fff;line-height:24px}
+.lbl{position:absolute;font:11px Calibri,"Segoe UI",sans-serif;white-space:nowrap}
+.ctl{position:absolute;width:168px;height:22px}
+.ctl select{width:100%;height:22px}
+.ctl>.select2{width:100%!important}
+.select2-container .select2-selection--single{height:22px;border-radius:0}
+.select2-container .select2-selection--single .select2-selection__rendered{line-height:20px;font:12px "Segoe UI",sans-serif;line-height:20px}
+.select2-container .select2-selection--single .select2-selection__arrow{height:20px}
+#statusBox{position:absolute;left:525px;top:69px;display:flex;align-items:center;gap:3px;font:12px "Segoe UI",sans-serif;cursor:pointer}
+#show{position:absolute;left:519px;top:109px;width:75px;height:22px;background:#c0c0c0;color:#000;border:1px solid #888;font:bold 13px Calibri,"Segoe UI",sans-serif;cursor:pointer}
+/* panel4 > panel5 > grdItemlist (Dock Fill, Verdana 8.25, FilterMode Automatic, TotalRow, RecordNavigator) */
+.grid{overflow:auto;height:calc(100vh - 205px);min-height:220px;border:1px solid #aaa;background:#fff}
+.grid table{border-collapse:collapse;width:max-content;min-width:100%;font:11px Verdana,sans-serif;table-layout:fixed}
+.grid th,.grid td{border:1px solid #c6c6c6;padding:2px 4px;height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.grid thead tr.heads th{position:sticky;top:0;background:#eee;color:#000;text-align:center;height:22px;z-index:2}
+.grid thead tr.column-filters th{position:sticky;top:26px;background:#fafafa;z-index:2}
+.grid .column-filters input{width:100%;min-width:20px;height:20px;border:1px solid #aaa;font:11px Verdana}
+.grid tbody tr:nth-child(even){background:#f4f4f4}
+.grid tbody tr.selected{background:#cce8ff}
+.grid td.check{text-align:center}
+.grid tfoot td{position:sticky;bottom:0;background:#e1efed;font-weight:bold}
+.navigator{height:22px;display:flex;align-items:center;gap:4px;padding:0 6px;background:#f0f0f0;border:1px solid #aaa;border-top:0;font:11px Verdana,sans-serif}
+.navigator button{height:18px;font:11px Verdana;padding:0 5px;cursor:pointer}
+#status{margin:2px 8px;min-height:16px}#status.error{color:#a40000}
+</style>
+<script src="/js/report-loading.js"></script><script src="/js/inventory-ui.js"></script>
+</head>
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<nav class="tools">
+<button id="new" type="button" title="Ctrl+N"><u>N</u>ew</button>
+<button id="print" type="button" title="Ctrl+P" data-rpt="200-InvRptItemsList.rpt" data-rpt-own>200-Print</button><span class="sep"></span>
+<span id="gridBar"></span>
+</nav>
+<form id="filters" class="panel3" autocomplete="off">
+<div class="panel6"><h1>Item List</h1></div>
+<label class="lbl" for="itemCategoryId" style="left:8px;top:48px">Item Category</label>
+<div class="ctl" style="left:8px;top:65px"><select id="itemCategoryId" data-caption="Item Category"></select></div>
+<label class="lbl" for="itemTypeId" style="left:179px;top:48px">Item Types</label>
+<div class="ctl" style="left:179px;top:65px"><select id="itemTypeId" data-caption="Item Types"></select></div>
+<label class="lbl" for="itemClassId" style="left:350px;top:48px">Item Class</label>
+<div class="ctl" style="left:350px;top:65px"><select id="itemClassId" data-caption="Item Class"></select></div>
+<label id="statusBox"><input type="checkbox" id="itemStatus">Is Active</label>
+<label class="lbl" for="purchaseGLAC" style="left:8px;top:92px">Purchase GL Account</label>
+<div class="ctl" style="left:8px;top:109px"><select id="purchaseGLAC" data-caption="PurchaseGLAccount"></select></div>
+<label class="lbl" for="saleGLAC" style="left:179px;top:92px">Sale GL Account</label>
+<div class="ctl" style="left:179px;top:109px"><select id="saleGLAC" data-caption="SaleGLAccount"></select></div>
+<label class="lbl" for="cogsGLAC" style="left:350px;top:92px">CGS GL Account</label>
+<div class="ctl" style="left:350px;top:109px"><select id="cogsGLAC" data-caption="CGSGLAccount"></select></div>
+<button id="show" type="submit">Show</button>
+</form>
+<p id="status" role="status"></p>
+<div class="grid" tabindex="0" aria-label="Item list, scroll horizontally for more columns"><table id="grdItemlist" data-gridbar="frmRptItemList:grdItemlist" data-gridbar-mount="#gridBar" data-gridbar-title="Item List"><colgroup id="cols"></colgroup><thead id="head"></thead><tbody id="rows"></tbody><tfoot id="totals"></tfoot></table></div>
+<div class="navigator"><button id="navFirst" type="button" aria-label="First record">|&lt;</button><button id="navPrev" type="button" aria-label="Previous record">&lt;</button><span id="navText">Record 0 of 0</span><button id="navNext" type="button" aria-label="Next record">&gt;</button><button id="navLast" type="button" aria-label="Last record">&gt;|</button></div>
+<script src="/vendors/jquery/dist/jquery.min.js"></script><script src="/vendors/select2/dist/js/select2.min.js"></script>
+<script src="/js/inventory-request.js"></script><script src="/js/inventory-item-list.js?v=20261005a"></script>
+<script src="/js/print-rpt.js?v=20261003erp"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20261005a}"></script>
+</body></html>

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Stock Report With Values - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_store.css?v=20260928b}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261005a}" href="/build/css/countx_grid_bar.css">
+    <style>
+        /* frmStockReportWithValues designer geometry (InitializeComponent :1745-3721), 1:1 px. panel1 1168 wide:
+           panel2 toolStrip1 (27) | panel3 filters (179, panel5 31 docked on its top) | panel4 teal (23) | grdfrm (Fill). */
+        :root { --swv-teal: #008080; --swv-dark: #0a6e6e; }
+        body { background: #fff; margin: 0; padding-bottom: 12px; }
+        .fx-scroll { overflow-x: auto; }
+        .fx-root { position: relative; font-family: "Microsoft Sans Serif", Tahoma, sans-serif; font-size: 11px; background: #fff; }
+        .fx-abs { position: absolute; box-sizing: border-box; margin: 0; }
+        .fx-rel { position: relative; }
+        .fx-lbl { font-family: "Segoe UI Semibold", "Segoe UI", Tahoma, sans-serif; font-weight: bold; font-size: 12px; white-space: nowrap; line-height: 15px; color: #000; }
+        .fx-cmb { font-family: Verdana, sans-serif; font-size: 13px; height: 26px; border: 1px solid #7a7a7a; background: #fff; padding: 0 2px; }
+        .fx-dt { font-family: Verdana, sans-serif; font-size: 12px; height: 23px; border: 1px solid #7a7a7a; background: #fff; padding: 0 2px; }
+        .fx-chk { display: inline-flex; align-items: center; gap: 3px; font-family: "Segoe UI Semibold", "Segoe UI", Tahoma, sans-serif; font-weight: bold; font-size: 12px; white-space: nowrap; color: #000; }
+        .fx-chk input { margin: 0; }
+        .fx-rd-w { color: #fff; font-family: "Microsoft Sans Serif", Tahoma, sans-serif; font-weight: normal; font-size: 11px; }
+        .fx-rd-big { color: #fff; font-family: "Segoe UI", Tahoma, sans-serif; font-weight: bold; font-size: 13px; }
+        .fx-grp { border: 1px solid #d0d0d0; border-radius: 2px; padding: 0; }
+        .fx-grp legend { font-family: "Microsoft Sans Serif", Tahoma, sans-serif; font-size: 11px; padding: 0 2px; margin-left: 6px; color: #000; }
+        .fx-strip { height: 27px; display: flex; align-items: center; background: linear-gradient(to bottom, #fcfcfc 0%, #e0e0e0 100%); border-bottom: 1px solid #b5b5b5; box-sizing: border-box; }
+        .fx-tool { font-family: Verdana, sans-serif; font-size: 13px; height: 24px; background: transparent; border: 1px solid transparent; display: inline-flex; align-items: center; gap: 4px; padding: 0 6px; cursor: pointer; white-space: nowrap; color: #000; }
+        .fx-tool.small { font-family: "Segoe UI", Tahoma, sans-serif; font-size: 12px; }
+        .fx-tool:hover:not(:disabled) { background: #ffe4a0; border-color: #e59d00; }
+        .fx-btn { background: var(--swv-dark); color: #fff; border: 1px solid #054d4d; font-family: Verdana, sans-serif; font-size: 13px; font-weight: bold; padding: 0; cursor: pointer; }
+        .fx-btn:hover:not(:disabled) { background: #054d4d; }
+        .fx-multi { position: relative; }
+        .fx-multi-btn { width: 100%; height: 26px; background: #fff; border: 1px solid #7a7a7a; text-align: left; padding: 0 4px; font-family: Verdana, sans-serif; font-size: 13px; display: flex; justify-content: space-between; align-items: center; overflow: hidden; white-space: nowrap; cursor: pointer; }
+        .fx-multi-btn span { overflow: hidden; text-overflow: ellipsis; }
+        .fx-multi-list { position: absolute; z-index: 50; top: 26px; left: 0; min-width: 100%; max-height: 260px; overflow: auto; background: #fff; border: 1px solid #7a7a7a; padding: 3px 6px; box-shadow: 0 2px 6px rgba(0,0,0,.2); display: none; }
+        .fx-multi-list label { display: block; white-space: nowrap; font: 12px Verdana, sans-serif; }
+        .fx-multi-list label.all { border-bottom: 1px solid #ddd; margin-bottom: 2px; font-weight: bold; }
+        .fx-grid-host { overflow: auto; background: #fff; height: calc(100vh - 300px); min-height: 332px; position: relative; }
+        .fx-grid-host .win-grid { width: auto; min-width: 100%; font-family: Verdana, sans-serif; font-size: 11px; border-collapse: collapse; }
+        .fx-grid-host .win-grid th { background: linear-gradient(to bottom, #e6f7f7 0%, #bfe6e6 100%); border: 1px solid #8fbcbc; font-weight: normal; white-space: nowrap; padding: 2px 4px; text-align: center; position: sticky; z-index: 2; }
+        .fx-grid-host .win-grid thead tr:nth-child(1) th { top: 0; }
+        .fx-grid-host .win-grid thead tr:nth-child(2) th { top: 20px; }
+        .fx-grid-host .win-grid thead tr.flt td { position: sticky; top: 40px; z-index: 2; background: #f4fbfb; border: 1px solid #c8dede; padding: 0; }
+        .fx-grid-host .win-grid thead tr.flt input { width: 100%; box-sizing: border-box; border: 0; height: 18px; font: 11px Verdana, sans-serif; background: transparent; }
+        .fx-grid-host .win-grid td { border: 1px solid #d5e6e6; white-space: nowrap; padding: 1px 4px; overflow: hidden; text-overflow: ellipsis; }
+        .fx-grid-host .win-grid td.n { text-align: right; }
+        .fx-grid-host .win-grid td a { color: #0000ee; text-decoration: underline; cursor: pointer; }
+        .fx-grid-host .win-grid td.ed { padding: 0; background: #fffde8; }
+        .fx-grid-host .win-grid td.ed input { width: 100%; box-sizing: border-box; border: 0; height: 18px; text-align: right; font: 11px Verdana, sans-serif; background: transparent; }
+        .fx-grid-host .win-grid tr.grp td { background: #e3f1f1; font-weight: bold; }
+        .fx-grid-host .win-grid tr.gtot td { background: #f3f3f3; font-weight: bold; }
+        .fx-grid-host .win-grid tbody tr.sel td { background: #cde8ff; }
+        .fx-grid-host .win-grid tfoot td { background: #e6e6e6; font-weight: bold; text-align: right; position: sticky; bottom: 0; }
+        .fx-nav { font: 11px Verdana, sans-serif; padding: 2px 8px; border-top: 1px solid #c8dede; background: #f4f4f4; }
+        .is-hidden { display: none !important; }
+    </style>
+</head>
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="fx-scroll">
+<div class="fx-root" style="width:1168px;">
+    <!-- panel2 / toolStrip1: BtnReset, btnRefresh, btnPrint, btnPrintStockSummeryByWeight, btnPrintStockReport, BtnUpdate -->
+    <div class="fx-strip">
+        <button type="button" class="fx-tool" id="BtnReset" title="Ctrl+N"><i class="fa fa-plus-circle" style="color:#2e9b45"></i> <span><u>R</u>eset</span></button>
+        <button type="button" class="fx-tool" id="btnRefresh" title="Ctrl+R"><i class="fa fa-repeat"></i> <span><u>R</u>efresh</span></button>
+        <button type="button" class="fx-tool small" id="btnPrint" title="Ctrl+P"><i class="fa fa-print"></i> <span id="btnPrintText">Print</span></button>
+        <button type="button" class="fx-tool small is-hidden" id="btnPrintStockSummeryByWeight"><i class="fa fa-print"></i> Print-188_01</button>
+        <button type="button" class="fx-tool small is-hidden" id="btnPrintStockReport"><i class="fa fa-print"></i> Print-188_02</button>
+        <button type="button" class="fx-tool is-hidden" id="BtnUpdate"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+    </div>
+    <!-- panel3 (179) -->
+    <div class="fx-rel" style="height:179px;">
+        <!-- panel5 (31, docked top) -->
+        <div class="fx-abs" style="left:0;top:0;width:1168px;height:31px;background:#0a6e6e;">
+            <span class="fx-abs" style="left:5px;top:5px;font:bold 16px Tahoma, sans-serif;color:#fff;white-space:nowrap;line-height:19px;">Stock Report With Value</span>
+            <label class="fx-abs fx-lbl" style="left:222px;top:8px;color:#fff;" for="cmbStockGroupAccount">Stock Account (Group)</label>
+            <select id="cmbStockGroupAccount" class="fx-abs fx-cmb win-combo" style="left:355px;top:2px;width:295px;"></select>
+            <label class="fx-abs fx-chk fx-rd-w" style="left:997px;top:6px;"><input type="radio" name="rdValue" id="RdCGSAmount" checked> CGS Value</label>
+            <label class="fx-abs fx-chk fx-rd-w" style="left:1088px;top:7px;"><input type="radio" name="rdValue" id="RdSaleAmount"> Sale Value</label>
+        </div>
+
+        <label class="fx-abs fx-lbl" style="left:3px;top:41px;">Branch Name</label>
+        <div class="fx-abs fx-multi" id="cmbBranchName" style="left:93px;top:35px;width:236px;">
+            <button type="button" class="fx-multi-btn"><span id="cmbBranchNameText"></span><i class="fa fa-caret-down"></i></button>
+            <div class="fx-multi-list" id="cmbBranchNameList"></div>
+        </div>
+        <label class="fx-abs fx-lbl" style="left:3px;top:69px;">Date From,To</label>
+        <input type="date" id="txtDateFrom" class="fx-abs fx-dt" style="left:93px;top:65px;width:117px;">
+        <input type="date" id="txtDateTo" class="fx-abs fx-dt" style="left:212px;top:65px;width:117px;">
+        <label class="fx-abs fx-lbl" style="left:3px;top:97px;">Parent Category</label>
+        <div class="fx-abs fx-multi" id="cmbMainType" style="left:93px;top:91px;width:236px;">
+            <button type="button" class="fx-multi-btn"><span id="cmbMainTypeText"></span><i class="fa fa-caret-down"></i></button>
+            <div class="fx-multi-list" id="cmbMainTypeList"></div>
+        </div>
+        <label class="fx-abs fx-lbl" style="left:3px;top:125px;" for="CmbClassGroup">Class Group</label>
+        <select id="CmbClassGroup" class="fx-abs fx-cmb win-combo" style="left:93px;top:119px;width:236px;"></select>
+        <label class="fx-abs fx-lbl" style="left:3px;top:153px;" for="cmbCategory">Item Category</label>
+        <select id="cmbCategory" class="fx-abs fx-cmb win-combo" style="left:93px;top:147px;width:236px;"></select>
+
+        <label class="fx-abs fx-lbl" style="left:333px;top:41px;" for="cmbItemType">Item Type </label>
+        <select id="cmbItemType" class="fx-abs fx-cmb win-combo" style="left:411px;top:35px;width:157px;"></select>
+        <label class="fx-abs fx-lbl" style="left:333px;top:69px;" for="cmbPacktype">Packing Type</label>
+        <select id="cmbPacktype" class="fx-abs fx-cmb win-combo" style="left:411px;top:63px;width:157px;"></select>
+        <label class="fx-abs fx-lbl" style="left:333px;top:97px;" for="cmbPackUom">Pack Uom</label>
+        <select id="cmbPackUom" class="fx-abs fx-cmb win-combo" style="left:411px;top:91px;width:157px;"></select>
+        <label class="fx-abs fx-lbl" style="left:333px;top:125px;" for="cmbCropYear">CropYear</label>
+        <select id="cmbCropYear" class="fx-abs fx-cmb win-combo" style="left:411px;top:119px;width:157px;"></select>
+        <label class="fx-abs fx-lbl" style="left:333px;top:153px;" for="cmbJobLot">JobLot</label>
+        <select id="cmbJobLot" class="fx-abs fx-cmb win-combo" style="left:411px;top:147px;width:157px;"></select>
+
+        <label class="fx-abs fx-lbl" style="left:572px;top:41px;" for="cmbWareHouse">WareHouse</label>
+        <select id="cmbWareHouse" class="fx-abs fx-cmb win-combo" style="left:660px;top:35px;width:295px;"></select>
+        <label class="fx-abs fx-lbl" style="left:572px;top:69px;" for="cmbItem">Item Name</label>
+        <select id="cmbItem" class="fx-abs fx-cmb win-combo" style="left:660px;top:63px;width:295px;"></select>
+        <label class="fx-abs fx-lbl" style="left:572px;top:97px;" for="cmbStockAccounts">Stock Account</label>
+        <select id="cmbStockAccounts" class="fx-abs fx-cmb win-combo" style="left:660px;top:91px;width:295px;"></select>
+        <label class="fx-abs fx-lbl" style="left:572px;top:125px;" for="cmbReportType">Report Type</label>
+        <select id="cmbReportType" class="fx-abs fx-cmb win-combo" style="left:660px;top:119px;width:295px;"></select>
+        <button type="button" id="btnshow" class="fx-abs fx-btn" style="left:900px;top:147px;width:55px;height:26px;" title="Ctrl+S">Show</button>
+
+        <fieldset class="fx-abs fx-grp" style="left:960px;top:35px;width:113px;height:77px;">
+            <legend>Avg Rate Decimals</legend>
+            <label class="fx-abs fx-chk" style="left:5px;top:6px;"><input type="radio" name="rdDec" id="rdAvgRateTwoDecimals" value="2" checked> Two</label>
+            <label class="fx-abs fx-chk" style="left:5px;top:24px;"><input type="radio" name="rdDec" id="rdAvgRateThreeDecimals" value="3"> Three</label>
+            <label class="fx-abs fx-chk" style="left:5px;top:42px;"><input type="radio" name="rdDec" id="rdAvgRateFourDecimals" value="4"> Four</label>
+        </fieldset>
+        <label class="fx-abs fx-chk" style="left:961px;top:115px;"><input type="checkbox" id="chkSkipZero" checked> Skip Zero</label>
+        <label class="fx-abs fx-chk" style="left:961px;top:136px;"><input type="checkbox" id="ChkItemWiseStock" checked> Packing Type &amp; Pack Size Wise Stock</label>
+        <label class="fx-abs fx-chk" style="left:960px;top:156px;"><input type="checkbox" id="chkIncludeWipItem"> Include WIP Item</label>
+    </div>
+    <!-- panel4 (23, Teal): rdAvgRatePerKg, rdAvgRate40Kg, ctrlGrdBar1 (MyGrid = grdfrm) -->
+    <div class="fx-rel" style="height:23px;background:#008080;">
+        <label class="fx-abs fx-chk fx-rd-big" style="left:862px;top:2px;"><input type="radio" name="rdAvgUom" id="rdAvgRatePerKg"> Avg Rate / 1KG</label>
+        <label class="fx-abs fx-chk fx-rd-big" style="left:991px;top:2px;"><input type="radio" name="rdAvgUom" id="rdAvgRate40Kg" checked> Avg Rate / 40KG</label>
+        <div id="gbMount" class="fx-abs" style="left:1123px;top:1px;width:38px;height:21px;"></div>
+    </div>
+    <div id="grdWrap" class="fx-grid-host" data-gridbar-form="frmStockReportWithValues" data-gridbar-grid="grdfrm"
+         data-gridbar-mount="#gbMount" data-gridbar-reorder="false" data-gridbar-hide="chooser,save,remove,collapse,expand">
+        <table class="win-grid" id="grdfrm"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+    </div>
+    <div class="fx-nav" id="lblNavigator"></div>
+</div>
+</div>
+<script th:src="@{/build/js/countx_store_common.js?v=20260928b}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20261005a}" src="/build/js/countx_grid_bar.js"></script>
+<script th:src="@{/build/js/countx_inventory_stock_report_with_values.js?v=20261005a}"></script>
+<script src="/js/print-rpt.js?v=20261003erp"></script>
+</body>
+</html>

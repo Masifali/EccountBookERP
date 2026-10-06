@@ -282,6 +282,17 @@ window.adCardClick = function (group, i) {
           + 'switch either, so it opens nothing there.', false);
         return;
     }
+    /* :248-259 - the voucher range opens PendingApprovalVouchersHistory (ported): Id = TypeID,
+       RequestedFromDate only when From Date is ticked, RequestedToDate always; branch is not passed. */
+    if (t[0] === 'PendingApprovalVouchersHistory.cs' && typeof window.PavhOpen === 'function') {
+        clearMsg();
+        window.PavhOpen({
+            id: id,
+            fromDate: (el('chkFrom') && el('chkFrom').checked) ? val('fromDate') : '',
+            toDate: val('toDate')
+        });
+        return;
+    }
     msg('"' + txt(c.title) + '" opens the desktop screen ' + t[0]
       + (t[1] !== null ? ' with DocumentTypeId ' + t[1] : '')
       + ', which has not been ported yet. Nothing was approved.', false);

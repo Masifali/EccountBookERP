@@ -182,6 +182,10 @@ public class DashboardModuleService {
         WEB_ROUTES_BY_SCREEN_ID.put(288, "/stocks/store-stock-report");
         WEB_ROUTES_BY_SCREEN_ID.put(291, "/stocks/transaction-vehicle-wise");
         WEB_ROUTES_BY_SCREEN_ID.put(301, "/inventory/stock-report"); // InventoryStockReportController: frmStockReport
+        WEB_ROUTES_BY_SCREEN_ID.put(292, "/stocks/stock-evaluation-vehicle-wise");          // StockEvaluationReportVehicleWise
+        WEB_ROUTES_BY_SCREEN_ID.put(293, "/inventory/stock-transactions-with-value");       // InventoryEvaluationItemLedger - Transaction Report (With Value)
+        WEB_ROUTES_BY_SCREEN_ID.put(299, "/inventory/stock-report-with-values");            // frmStockReportWithValues
+        WEB_ROUTES_BY_SCREEN_ID.put(171, "/inventory/reports/item-list");   // frmRptItemList
         WEB_ROUTES_BY_SCREEN_ID.put(580, "/inventory/stock-transactions"); // separate screen from 171 Item List
 
         /* Contractor Wages: real ScreenDefinition ids from reconciliation-input.json,

@@ -34,23 +34,16 @@ public class InventoryModuleViewController {
     private ChartofAccountService chartofAccountService;
 
     // 1. DASHBOARD
+    /* The desktop opens the Inventory APPLICATION through frmMenue: module cards and the chosen module's
+       screen cards, both built from USP_GetUserRightsForViewbyUserId - so a user sees exactly the screens
+       allocated to them (Stock Reports: Stock Report Store, Transaction Report Vehicle Wise, Stock Evaluation
+       Report Vehicle Wise, Transaction Report With/Without Value, Stock Report With/Without Values, Item Ledger).
+       The hand-written inventory_dashboard.html tiles (fixed counts 11/1/8, invented screens such as
+       Warehouse Stock Summary / Lot Wise / Brand Wise) are no longer used; the generic renderer draws the
+       same page as every other application. The module query (?module=19) is carried by the forward. */
     @GetMapping({"", "/", "/dashboard"})
-    public String inventoryDashboard(Model model,
-            @RequestParam(value = "module", required = false) Integer moduleId) {
-        model.addAttribute("activeMenu", "inventory");
-        model.addAttribute("appName", "Inventory");
-        model.addAttribute("definitionCount", 11);
-        model.addAttribute("reportsCount", 1);
-        model.addAttribute("stockReportsCount", 8);
-        String category = moduleId == null ? null : switch (moduleId) {
-            case 4 -> "def";
-            case 8, 93 -> "invrpt";
-            case 19 -> "stockrpt";
-            default -> null;
-        };
-        model.addAttribute("inventoryCategory", category);
-        if (category != null) model.addAttribute("selectedModuleId", moduleId);
-        return "inventory/inventory_dashboard";
+    public String inventoryDashboard(@RequestParam(value = "module", required = false) Integer moduleId) {
+        return "forward:/app/Inventory";
     }
 
     // DefineItemGroup stores GroupId and ItemGroupName through its original procedures.
