@@ -145,6 +145,7 @@ class SaleNavigationTest {
             application.setServletContext(servlet);
             application.getBeanFactory().registerSingleton("erpNavigationService", new ErpNavigationService(menus));
             application.getBeanFactory().registerSingleton("gearMenuController", mock(GearMenuController.class));
+            application.getBeanFactory().registerSingleton("desktopUserRightsService", mock(DesktopUserRightsService.class));
             application.refresh();
             var resolver = new ClassLoaderTemplateResolver();
             resolver.setPrefix("templates/"); resolver.setSuffix(".html"); resolver.setTemplateMode("HTML");

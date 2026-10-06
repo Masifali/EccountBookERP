@@ -33,7 +33,10 @@ public class SaleOutwardReportRepository {
     }
     public List<Map<String, Object>> lookups(UserAccount u, String branches) {
         // Native form reverses the BLL positional company/org arguments. Bind the actual session tenant by SQL name.
-        var p = tenant(u); p.put("BranchesIds", branches);
+        // frmGPOutward loads its dropdowns before BranchesFill on initial load, so the original BLL omits
+        // @BranchesIds then. Refresh passes the currently selected branch text and filters the lookups.
+        var p = tenant(u);
+        if (branches != null && !branches.isBlank()) p.put("BranchesIds", branches);
         return DesktopProc.rows(jdbc, "USP_GetDataForDropDownFromOutWardGP", p);
     }
     public String yearStart(UserAccount u, int year) {

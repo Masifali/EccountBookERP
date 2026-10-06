@@ -3,23 +3,52 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="_csrf" th:if="${_csrf != null}" th:content="${_csrf.token}"><meta name="_csrf_header" th:if="${_csrf != null}" th:content="${_csrf.headerName}">
 <title>Outward Gate Pass Report</title>
-<link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}"><link rel="stylesheet" th:href="@{/build/css/sale/sale_order_report.css}"><link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260930s}"><link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20261002gv}"><style>/* 2026-10-02: Branch is the desktop checked UltraCombo cmbBranchName (countx_prod_combo.js checked mode) */.field .dtcombo-wrap.pcx-checked{width:100%;height:26px;min-width:0}.field .pcx-checked .dtcombo-input.pcx-field{height:26px;font:13px Verdana,Arial,sans-serif}select.dtcombo-native[multiple][data-dtcombo-checked]{display:none!important}</style>
-    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261005a}"/>
+<link rel="stylesheet" th:href="@{/vendors/select2/dist/css/select2.min.css}">
+<link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260930s}">
+<link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20261002gv}">
+<link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261005a}">
+<link rel="stylesheet" th:href="@{/build/css/sale/outward_gate_pass_report.css?v=20261006a}">
 </head><body>
 <div th:replace="~{fragments/erp_navigation :: navigation}"></div>
-<h1>Outward Gate Pass Report</h1><nav><button type="button" id="newButton">New</button><button type="button" id="refreshButton">Refresh</button><a href="/sale/reports">Sales Reports</a></nav>
-<form id="reportForm"><fieldset><legend>Filters</legend><div class="filters">
-<label class="field">Date Type<select id="dateType" class="searchable"><option value="1">This Day</option><option value="2" selected>This Week</option><option value="3">This Month</option><option value="4">This Year</option><option value="5">Financial Year</option></select></label>
-<label class="field">From Date<input id="fromDate" type="date"></label><label class="field">To Date<input id="toDate" type="date"></label>
-<label class="field wide">Branch<select id="branchIds" multiple data-dtcombo="single" data-dtcombo-checked data-dtcombo-caption="Branch Name"></select></label>
-<label class="field">GP From<input id="fromNo" type="number" step="1"></label><label class="field">GP To<input id="toNo" type="number" step="1"></label>
-<label class="field">Customer<select id="customerId" class="searchable"></select></label><label class="field">Gate Pass Type<select id="gatePassType" class="searchable"></select></label>
-<label class="field">Status<select id="status" class="searchable"><option value=""></option><option>Open</option><option>Accepted</option><option>Rejected</option></select></label>
-</div><button type="submit" id="showButton" class="show">Show</button></fieldset></form>
-<div id="message" role="status" aria-live="polite"></div><h2>Gate Pass Outward - <span id="recordCount">0 records</span></h2>
-<div class="grid"><table data-gridbar="OutwardGatePassReport:reportTable" id="reportTable"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
-<div id="loader" role="status" aria-live="polite" hidden><span class="spinner"></span> Loading...</div>
-<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script><script th:src="@{/build/js/countx_prod_combo.js?v=20261002gv}"></script><script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
-<script th:src="@{/build/js/countx_doc_link.js?v=20261001pr}"></script><script th:src="@{/build/js/sale/outward_report.js?v=20261002ck}"></script>
+<main id="outwardGatePassReport">
+  <nav class="report-toolbar" aria-label="Report actions">
+    <button type="button" id="newButton"><span aria-hidden="true">⊕</span> New</button>
+    <button type="button" id="refreshButton"><span aria-hidden="true">⟳</span> Refresh</button>
+    <button type="button" id="printButton"><span aria-hidden="true">▣</span> 291 - Register</button>
+    <button type="button" id="shortcutsButton"><span aria-hidden="true">◉</span> ShortCut Keys</button>
+  </nav>
+  <h1>GatePass Outward</h1>
+  <form id="reportForm">
+    <fieldset>
+      <legend>Filters</legend>
+      <div class="filters">
+        <label class="field branch-field">Branch Name<select id="branchIds" multiple data-dtcombo="single" data-dtcombo-checked data-dtcombo-caption="Branch Name"></select></label>
+        <label class="field gp-from-field">GP No From<input id="fromNo" type="number" step="1" inputmode="numeric"></label>
+        <label class="field customer-field">Customer<select id="customerId" class="searchable"></select></label>
+        <label class="field date-type-field">Date Type<select id="dateType" class="searchable"><option value="1">This Day</option><option value="2" selected>This Week</option><option value="3">This Month</option><option value="4">This Year</option><option value="5">Financial Year</option></select></label>
+        <label class="field gp-to-field">GP No To<input id="toNo" type="number" step="1" inputmode="numeric"></label>
+        <label class="field status-field">Status<select id="status" class="searchable"><option value=""></option><option>Open</option><option>Accepted</option><option>Rejected</option></select></label>
+        <div class="field date-range-field"><span>From Date &amp; To</span><div class="date-pair"><label><span class="visually-hidden">From Date</span><input id="fromDate" type="date"></label><label><span class="visually-hidden">To Date</span><input id="toDate" type="date"></label></div></div>
+        <label class="field gate-type-field">GP Type<select id="gatePassType" class="searchable"></select></label>
+        <div class="show-field"><button type="submit" id="showButton" class="show">Show</button></div>
+      </div>
+    </fieldset>
+  </form>
+  <div id="message" role="status" aria-live="polite"></div>
+  <h2 class="history-title"><span>History</span><span id="recordCount" class="visually-hidden">0 records</span><span id="gridTools"></span></h2>
+  <div class="group-strip" id="groupStrip" data-group-table="reportTable">Drag a column header here to group by that column.<button type="button" id="clearGrouping" hidden>Clear grouping</button></div>
+  <div class="grid" id="reportGrid" tabindex="0" aria-label="Outward gate pass history">
+    <table data-gridbar="OutwardGatePassReport:reportTable" data-gridbar-mount="#gridTools" data-gridbar-title="Outward Gate Pass Register" data-gridbar-reorder="false" id="reportTable"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+  </div>
+  <dialog id="shortcutsDialog"><h2>ShortCut Keys</h2><table><tbody>
+    <tr><th>Ctrl+S</th><td>Show</td></tr><tr><th>Ctrl+R</th><td>Refresh</td></tr><tr><th>Ctrl+N</th><td>New</td></tr><tr><th>Ctrl+P</th><td>Print register</td></tr><tr><th>Ctrl+E</th><td>Return to Sales Reports</td></tr><tr><th>Ctrl+Alt</th><td>Show shortcut keys</td></tr><tr><th>Ctrl+Arrow Down</th><td>Focus the history grid</td></tr><tr><th>Ctrl+Arrow Up</th><td>Focus Date Type</td></tr>
+  </tbody></table><form method="dialog"><button>Close</button></form></dialog>
+  <div id="loader" role="status" aria-live="polite" hidden><span class="spinner"></span> Loading...</div>
+</main>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20261002gv}"></script>
+<script th:src="@{/vendors/select2/dist/js/select2.full.min.js}"></script>
+<script th:src="@{/build/js/countx_doc_link.js?v=20261001pr}"></script>
+<script th:src="@{/build/js/sale/outward_report.js?v=20261006a}"></script>
 <script th:src="@{/build/js/countx_grid_bar.js?v=20261005a}"></script>
 </body></html>

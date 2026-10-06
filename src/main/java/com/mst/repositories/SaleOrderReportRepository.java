@@ -3,6 +3,7 @@ package com.mst.repositories;
 import com.mst.models.SaleOrderReportFilter;
 import com.mst.models.UserAccount;
 import com.mst.repositories.support.DesktopProc;
+import com.mst.repositories.support.SaleOrderSummaryQuery;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.util.*;
@@ -70,7 +71,7 @@ public class SaleOrderReportRepository {
         number(p, "JobLotId", f.jobLotId()); number(p, "PackingTypeId", f.packingTypeId());
         number(p, "DistrictId", f.districtId()); text(p, "OrderStatus", f.status());
         p.put("ActivityName", f.activity()); if (f.skipZero()) p.put("SkipZero", 1);
-        return DesktopProc.rows(jdbc, "USP_SaleOrderSummaryRegister", p);
+        return SaleOrderSummaryQuery.rows(jdbc, p);
     }
 
     /** Explicit desktop grants; missing definitions or allocations never enable a write action. */

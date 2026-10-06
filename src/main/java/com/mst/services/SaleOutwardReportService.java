@@ -24,7 +24,12 @@ public class SaleOutwardReportService {
         return Map.of("branches",branches,"branchId",current?u.getBranchesId():0,
                 "yearStart",repo.yearStart(u,context.currentFinancialYearId()),"columns",SaleOutwardReportColumns.names());
     }
-    public List<Map<String,Object>> lookups(List<Integer> ids) { var u=user(); return repo.lookups(u,branchFilter(u,ids)); }
+    public List<Map<String,Object>> lookups(List<Integer> ids) {
+        var u=user();
+        // The desktop initially loads customer/type options before it binds branches; only Refresh
+        // supplies the currently selected branches to the native lookup procedure.
+        return repo.lookups(u, ids==null||ids.isEmpty()?null:branchFilter(u,ids));
+    }
     public List<Map<String,Object>> rows(SaleOutwardReportFilter f) {
         var u=user();
         if(f==null||f.fromDate()==null||f.toDate()==null)throw new IllegalArgumentException("From Date and To Date are required");
