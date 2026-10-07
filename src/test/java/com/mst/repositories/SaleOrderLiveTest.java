@@ -22,7 +22,7 @@ import static org.mockito.Mockito.*;
 
 @EnabledIfSystemProperty(named="sale.live",matches="true")
 class SaleOrderLiveTest {
-    private JdbcTemplate jdbc() throws Exception {var p=new Properties();try(var in=Files.newInputStream(Path.of("src/main/resources/application.properties"))){p.load(in);}var j=new JdbcTemplate(new DriverManagerDataSource(p.getProperty("spring.datasource.url"),p.getProperty("spring.datasource.username"),p.getProperty("spring.datasource.password")));j.setQueryTimeout(90);return j;}
+    private JdbcTemplate jdbc() throws Exception {var p=new Properties();try(var in=Files.newInputStream(Path.of("src/main/resources/application-local.properties"))){p.load(in);}var j=new JdbcTemplate(new DriverManagerDataSource(p.getProperty("spring.datasource.url"),p.getProperty("spring.datasource.username"),p.getProperty("spring.datasource.password")));j.setQueryTimeout(90);return j;}
     private static int n(Object value){return ((Number)value).intValue();}
     private static BigDecimal d(Object value){return new BigDecimal(String.valueOf(value));}
 

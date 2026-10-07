@@ -33,9 +33,10 @@ public class TradeBillAgainstGdnCmagtRestController {
      * committed.
      */
     @PostMapping("/save")
-    public ResponseEntity<Map<String, Object>> save(@RequestBody TradeBillAgainstGdnCmagtDto dto) {
+    public ResponseEntity<Map<String, Object>> save(@RequestBody TradeBillAgainstGdnCmagtDto dto,
+                                                    @RequestParam(defaultValue = "1056") int documentTypeId) {
         try {
-            return ResponseEntity.ok(service.save(dto));
+            return ResponseEntity.ok(service.save(dto,documentTypeId));
         } catch (org.springframework.dao.DataAccessException e) {
             Throwable root = e.getMostSpecificCause();
             return ResponseEntity.ok(err(root != null ? root.getMessage() : e.getMessage()));
@@ -118,8 +119,8 @@ public class TradeBillAgainstGdnCmagtRestController {
 
     /** SetRightsValueInRightsObject for this screen - the page enables Save/Update/Delete from it. */
     @GetMapping("/rights")
-    public ResponseEntity<Map<String, Boolean>> rights() {
-        return ResponseEntity.ok(service.formRights());
+    public ResponseEntity<Map<String, Boolean>> rights(@RequestParam(defaultValue = "1056") int documentTypeId) {
+        return ResponseEntity.ok(service.formRights(documentTypeId));
     }
 
     @GetMapping("/lookups/year-start")
@@ -137,22 +138,24 @@ public class TradeBillAgainstGdnCmagtRestController {
             @RequestParam(required = false) Integer docNoTo,
             @RequestParam(required = false) Integer tradingAccountId,
             @RequestParam(required = false) Integer supplierId,
-            @RequestParam(required = false) Integer customerId) {
+            @RequestParam(required = false) Integer customerId,
+            @RequestParam(defaultValue = "1056") int documentTypeId) {
         return ResponseEntity.ok(service.getHistory(dateKind, fromDate, toDate, docNoFrom, docNoTo,
-                tradingAccountId, supplierId, customerId));
+                tradingAccountId, supplierId, customerId,documentTypeId));
     }
 
     /** DocumentNoDbCall / BranchSrNoDbCall - the next Doc No and Branch Sr No. */
     @GetMapping("/generate-no")
-    public ResponseEntity<Map<String, Object>> generateNo() {
-        return ResponseEntity.ok(service.generateCodes());
+    public ResponseEntity<Map<String, Object>> generateNo(@RequestParam(defaultValue = "1056") int documentTypeId) {
+        return ResponseEntity.ok(service.generateCodes(documentTypeId));
     }
 
     /** BtnDelete_Click -> BLL DeleteByID(UserAccount.ID, RecId). */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> delete(@PathVariable Integer id) {
+    public ResponseEntity<Map<String, Object>> delete(@PathVariable Integer id,
+                                                       @RequestParam(defaultValue = "1056") int documentTypeId) {
         try {
-            return ResponseEntity.ok(service.deleteById(id));
+            return ResponseEntity.ok(service.deleteById(id,documentTypeId));
         } catch (org.springframework.dao.DataAccessException e) {
             /* e.g. the procedure's RAISERROR 'Record cannot be deleted because record has
                approved' - shown to the operator as the desktop's MessageBox shows ex.Message. */
@@ -165,7 +168,8 @@ public class TradeBillAgainstGdnCmagtRestController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> getById(@PathVariable Integer id) {
-        return ResponseEntity.ok(service.getById(id));
+    public ResponseEntity<Map<String, Object>> getById(@PathVariable Integer id,
+                                                        @RequestParam(defaultValue = "1056") int documentTypeId) {
+        return ResponseEntity.ok(service.getById(id,documentTypeId));
     }
 }

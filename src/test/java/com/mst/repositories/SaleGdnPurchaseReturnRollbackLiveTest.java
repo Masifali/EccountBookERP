@@ -15,7 +15,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 @EnabledIfSystemProperty(named="sale.live",matches="true")
 class SaleGdnPurchaseReturnRollbackLiveTest {
  @Test void insertLoadUpdateDeleteAndRollback() throws Exception {
-  var p=new Properties();try(var in=Files.newInputStream(Path.of("src/main/resources/application.properties"))){p.load(in);}
+  var p=new Properties();try(var in=Files.newInputStream(Path.of("src/main/resources/application-local.properties"))){p.load(in);}
   var ds=new DriverManagerDataSource(p.getProperty("spring.datasource.url"),p.getProperty("spring.datasource.username"),p.getProperty("spring.datasource.password"));var j=new JdbcTemplate(ds);j.setQueryTimeout(120);
   var a=j.queryForMap("SELECT ID,OrganizationId,CompanyId,BranchesId,AppId FROM UserAccount WHERE UserName='numan'");var u=new UserAccount();u.setId(n(a.get("ID")));u.setOrganizationId(n(a.get("OrganizationId")));u.setCompanyId(n(a.get("CompanyId")));u.setBranchesId(n(a.get("BranchesId")));u.setAppId(n(a.get("AppId")));
   var repo=new SaleGdnPurchaseReturnRepository(j);var initial=repo.initial(u,58);int doc=n(initial.get("nextNo"));int before=j.queryForObject("SELECT COUNT(*) FROM InvGdn WHERE OrganizationId=78 AND CompanyId=78 AND DocumentTypeId=703",Integer.class);int cropId=((List<Map<String,Object>>)initial.get("crops")).stream().filter(x->"2025-26".equals(String.valueOf(x.get("CropYear")))).map(x->n(x.get("Id"))).findFirst().orElseThrow();

@@ -6,6 +6,7 @@
 (() => {
     'use strict';
     const $id = id => document.getElementById(id), endpoint = '/inventory/api/reports/stock-transactions-with-value';
+    const launchParams = new URLSearchParams(window.location.search);
     const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     const singles = ['itemClassGroupId','itemCategoryId','itemTypeId','itemId','warehouseId','jobLotId','cropYear','itemStockAc','documentTypeId'];
     /* GridSettings(): visible columns of the desktop DataTable in order, Constants.InventoryConstants widths.
@@ -63,6 +64,7 @@
 
     /* ---- dropdowns ---- */
     const selectedIds = id => Array.from($id(id).selectedOptions, o => Number(o.value)).filter(Boolean);
+    const queryIds = key => launchParams.getAll(key).flatMap(v => v.split(',')).map(Number).filter(v => Number.isInteger(v) && v > 0);
     function setValue(id, v) { $($id(id)).val(v).trigger('change.select2'); }
     function fill(id, rows, idKey = 'Id', nameKey = 'name') {
         const select = $id(id), seen = new Set();
@@ -108,9 +110,33 @@
         fill('branchIds', branches, 'BranchId', 'BranchName');
         const own = branches.find(r => Number(value(r, 'BranchId')) === Number(lookupData.branchId));
         const first = own || branches[0];
-        setValue('branchIds', first ? [String(value(first, 'BranchId'))] : []);
+        const requestedBranches = queryIds('branchIds').map(String).filter(id => Array.from($id('branchIds').options).some(o => o.value === id));
+        setValue('branchIds', requestedBranches.length ? requestedBranches : first ? [String(value(first, 'BranchId'))] : []);
         await loadChoices();
+        const requestedParents = queryIds('parentIds').map(String);
+        if (launchParams.has('parentIds') && requestedParents.length) {
+            setValue('parentIds', requestedParents.filter(id => Array.from($id('parentIds').options).some(o => o.value === id)));
+            otherCombos();
+        }
         filtersReady = true; ['show', 'print411', 'print412'].forEach(id => ReportLoading.setDisabled($id(id), false));
+    }
+    async function applyLaunchContext() {
+        const from = launchParams.get('fromDate'), to = launchParams.get('toDate');
+        if (/^\d{4}-\d{2}-\d{2}$/.test(from || '')) setDate('fromDate', from);
+        if (/^\d{4}-\d{2}-\d{2}$/.test(to || '')) setDate('toDate', to);
+        if (launchParams.has('saleValue')) $id('saleValue').checked = ['1', 'true'].includes(String(launchParams.get('saleValue') || '').toLowerCase());
+        if (launchParams.has('fromDate') || launchParams.has('toDate')) { setValue('dateType', ''); $('#dateType').trigger('change.select2'); }
+        for (const id of ['itemClassGroupId', 'itemCategoryId', 'itemTypeId', 'itemId', 'warehouseId', 'jobLotId', 'itemStockAc', 'documentTypeId']) {
+            const raw = launchParams.get(id), parsed = Number(raw);
+            if (raw && Number.isInteger(parsed) && parsed > 0) setValue(id, String(parsed));
+        }
+        const cropYear = launchParams.get('cropYear');
+        if (cropYear) {
+            const option = Array.from($id('cropYear').options).find(o => o.text === cropYear);
+            if (option) setValue('cropYear', option.value);
+        }
+        status('');
+        if (Number(launchParams.get('itemId')) > 0) await load();
     }
     /* btnNew_Click -> reset(): clears the filter texts (no re-fill) and puts the AsOnDate back in From Date */
     function reset() {
@@ -249,5 +275,5 @@
     $id('dateType').value = '2'; dateType(); $('#dateType').trigger('change.select2');
     totalsBox();
     ['show', 'print411', 'print412'].forEach(id => ReportLoading.setDisabled($id(id), true));
-    run(null, 'Loading report filters…', async () => { await refresh(); if (lookupData.fromDate) setDate('fromDate', lookupData.fromDate); });
+    run(null, 'Loading report filters…', async () => { await refresh(); if (lookupData.fromDate) setDate('fromDate', lookupData.fromDate); await applyLaunchContext(); });
 })();

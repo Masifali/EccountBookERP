@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @EnabledIfSystemProperty(named="sale.live",matches="true")
 class SaleDriverBioLiveTest {
-    static JdbcTemplate jdbc() throws Exception {Properties p=new Properties();try(var in=Files.newInputStream(Path.of("src/main/resources/application.properties"))){p.load(in);}var ds=new DriverManagerDataSource(p.getProperty("spring.datasource.url"),p.getProperty("spring.datasource.username"),p.getProperty("spring.datasource.password"));JdbcTemplate j=new JdbcTemplate(ds);j.setQueryTimeout(60);return j;}
+    static JdbcTemplate jdbc() throws Exception {Properties p=new Properties();try(var in=Files.newInputStream(Path.of("src/main/resources/application-local.properties"))){p.load(in);}var ds=new DriverManagerDataSource(p.getProperty("spring.datasource.url"),p.getProperty("spring.datasource.username"),p.getProperty("spring.datasource.password"));JdbcTemplate j=new JdbcTemplate(ds);j.setQueryTimeout(60);return j;}
     static UserAccount user(JdbcTemplate j){var a=j.queryForMap("SELECT ID,OrganizationId,CompanyId,BranchesId FROM dbo.UserAccount WHERE UserName=?","numan");var u=new UserAccount();u.setId(((Number)a.get("ID")).intValue());u.setOrganizationId(((Number)a.get("OrganizationId")).intValue());u.setCompanyId(((Number)a.get("CompanyId")).intValue());u.setBranchesId(((Number)a.get("BranchesId")).intValue());return u;}
     @Test void desktopProceduresInsertLoadUpdateAndRollback() throws Exception {
         JdbcTemplate j=jdbc();UserAccount u=user(j);var repo=new SaleDriverBioRepository(j);var pending=repo.pending(u,58);assertFalse(pending.isEmpty());int gp=((Number)pending.get(0).get("Id")).intValue();String cnic="99998-9999999-8";

@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @EnabledIfSystemProperty(named="sale.live",matches="true")
 class SaleGdnReportLiveTest {
     @Test void everyReturnedReportCellMatchesTheDesktopHistoryProcedure() throws Exception {
-        var config=new Properties();try(var input=Files.newInputStream(Path.of("src/main/resources/application.properties"))){config.load(input);}
+        var config=new Properties();try(var input=Files.newInputStream(Path.of("src/main/resources/application-local.properties"))){config.load(input);}
         var jdbc=new JdbcTemplate(new DriverManagerDataSource(config.getProperty("spring.datasource.url"),config.getProperty("spring.datasource.username"),config.getProperty("spring.datasource.password")));jdbc.setQueryTimeout(120);
         var account=jdbc.queryForMap("SELECT ID,OrganizationId,CompanyId,BranchesId FROM UserAccount WHERE UserName='numan'");
         var u=new UserAccount();u.setId(n(account.get("ID")));u.setOrganizationId(n(account.get("OrganizationId")));u.setCompanyId(n(account.get("CompanyId")));u.setBranchesId(n(account.get("BranchesId")));

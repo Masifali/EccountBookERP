@@ -1496,14 +1496,15 @@
 
     function renderGrid(hostId, rows, cols, opts) {
         opts = opts || {};
+        rows = Array.isArray(rows) ? rows : [];
         var host = $id(hostId);
-        if (!rows.length) { host.innerHTML = ''; return; }
         var visible = cols.filter(function (c) { return !c.hidden; });
         var buttons = opts.buttons || [];
         var h = '<table class="win-grid"><thead><tr>';
         buttons.forEach(function (b) { h += '<th>' + esc(b.cap || b.text) + '</th>'; });
         visible.forEach(function (c) { h += '<th>' + esc(c.cap || c.k) + '</th>'; });
         h += '</tr></thead><tbody>';
+        if (!rows.length) h += '<tr class="grid-empty"><td colspan="' + (buttons.length + visible.length) + '" style="padding:6px;color:#666;">No records.</td></tr>';
         var sums = {};
         rows.forEach(function (r, i) {
             h += '<tr data-i="' + i + '">';

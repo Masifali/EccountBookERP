@@ -252,7 +252,7 @@
             html += '<tr data-i="' + i + '"' + (i === st.sel ? ' class="sel"' : '') + '>' + cols.map(function (c) {
                 if (c === 'M_Rate' && st.lay.editRate) return '<td class="ed"><input type="text" data-rate="' + i + '" value="' + esc(fmtNum(r.M_Rate, 'rate')) + '"></td>';
                 if (c === 'AccountTitle') return '<td title="ItemEvaluationLedgerNew"><a data-link="AccountTitle" data-i="' + i + '">' + val(r, c) + '</a></td>';
-                if (c === 'ItemName') return '<td title="InventoryEvaluationItemLedger (item ledger with value) is not ported on the web"><a data-link="ItemName" data-i="' + i + '">' + val(r, c) + '</a></td>';
+                if (c === 'ItemName') return '<td title="Open Item Ledger with Value"><a data-link="ItemName" data-i="' + i + '">' + val(r, c) + '</a></td>';
                 return FMT[c] ? '<td class="n">' + esc(cellText(r, c)) + '</td>' : '<td>' + esc(cellText(r, c)) + '</td>';
             }).join('') + '</tr>';
             cols.forEach(function (c) { if (SUM[c]) { var v = Number(r[c]) || 0; total[c] = (total[c] || 0) + v; gt.forEach(function (o) { o[c] = (o[c] || 0) + v; }); } });
@@ -277,7 +277,18 @@
         if (a.getAttribute('data-link') === 'AccountTitle') {   // ItemEvaluationLedgerNew: fromdate, todate, CmbItem = ItemId
             window.open('/stocks/item-ledger' + SC.qs({ itemId: num(r.ItemId), fromDate: $id('txtDateFrom').value, toDate: $id('txtDateTo').value }), '_blank');
         } else {
-            alert('InventoryEvaluationItemLedger (Item Ledger with Value) is not ported on the web yet.');
+            var q = new URLSearchParams({ itemId: String(num(r.ItemId)), fromDate: $id('txtDateFrom').value, toDate: $id('txtDateTo').value,
+                branchIds: checked('cmbBranchNameList').map(function (c) { return c.id; }).join(','),
+                saleValue: $id('RdSaleAmount').checked ? '1' : '0' });
+            var parents = checked('cmbMainTypeList').map(function (c) { return c.id; }).join(',');
+            if (parents) q.set('parentIds', parents);
+            [['itemClassGroupId', 'CmbClassGroup'], ['itemCategoryId', 'cmbCategory'], ['itemTypeId', 'cmbItemType'],
+                ['warehouseId', 'cmbWareHouse'], ['jobLotId', 'cmbJobLot'], ['itemStockAc', 'cmbStockAccounts']].forEach(function (pair) {
+                var value = $id(pair[1]).value;
+                if (value) q.set(pair[0], value);
+            });
+            var cropYear = selText('cmbCropYear'); if (cropYear) q.set('cropYear', cropYear);
+            window.open('/inventory/stock-transactions-with-value?' + q.toString(), '_blank');
         }
     }
 

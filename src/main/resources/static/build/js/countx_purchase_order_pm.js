@@ -16,7 +16,7 @@
 (function () {
     'use strict';
 
-    var api = '/api/packing-material/purchase-order';
+    var api = window.PurchaseOrderPmApiBase || '/api/packing-material/purchase-order';
     var L = null, cfg = {}, feat = {}, perms = {};
     var table = [];                 // the grid's DataTable
     var updateDetailIndex = -1;

@@ -3,7 +3,10 @@ package com.mst.controllers.cmagt;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 /**
  * Commission Trading module menu screens, served at the route the application menu
@@ -101,6 +104,16 @@ public class CmagtModuleViewController {
     public String tradeBillAgainstGdn(Model model) {
         model.addAttribute("activeMenu", "commission");
         model.addAttribute("moduleTitle", "Commission Agent Bill Against Gdn");
+        model.addAttribute("documentTypeId", 1056);
+        return "cmagt/trade_bill_against_gdn";
+    }
+
+    @GetMapping("/agent-trade/bill/{documentTypeId}")
+    public String agentTradeBillVariant(@PathVariable int documentTypeId,Model model) {
+        if(documentTypeId!=160&&documentTypeId!=162)throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        model.addAttribute("activeMenu","commission");
+        model.addAttribute("moduleTitle","Commission Agent Trade Bill");
+        model.addAttribute("documentTypeId",documentTypeId);
         return "cmagt/trade_bill_against_gdn";
     }
 

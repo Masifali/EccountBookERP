@@ -267,6 +267,48 @@
         if (this.scope.tagName === 'TABLE') return this.scope;
         return this.scope.querySelector('table');
     };
+
+    function gridHeaderScore(el) {
+        if (!el || el.querySelector('table')) return 0;
+        var r = el.getBoundingClientRect();
+        if (r.height > 80) return 0;
+        var tag = String(el.tagName || '').toLowerCase();
+        var key = ((el.id || '') + ' ' + (typeof el.className === 'string' ? el.className : '')).toLowerCase();
+        if (/group|filter|navigation|sidebar|menu/.test(key) || /^(nav|form|fieldset)$/.test(tag)) return 0;
+
+        var label = /caption|title|header|toolbar|(?:^|[\s_-])bar(?:$|[\s_-])|(?:^|[\s_-])head(?:$|[\s_-])/.test(key);
+        if (!label) return 0;
+        if (/win-header-panel|grid-caption|grid-title|history-title/.test(key)) return 110;
+        if (/(grid|table|history|filtered|records?|results?|report).*(caption|title|header|toolbar|bar|head)|(caption|title|header|toolbar|bar|head).*(grid|table|history|filtered|records?|results?|report)/.test(key)) return 100;
+        if (/panel\d+/.test(key)) return 65;
+        if (/(?:^|[\s_-])toolbar(?:$|[\s_-])/.test(key)) return 70;
+        return 50;
+    }
+
+    function isGridPanelBoundary(el) {
+        var classes = typeof el.className === 'string' ? el.className.toLowerCase() : '';
+        return /(?:^|\s)(?:gb(?:-[\w-]+)?|win-groupbox|groupbox|card|panel)(?:\s|$)/.test(classes);
+    }
+
+    /* Find the nearest short caption/tool strip that belongs to this grid. The desktop places
+       CtrlGrdBar in the containing panel header; many web forms already name an explicit mount,
+       while the remaining forms can be aligned from their adjacent header markup. */
+    Bar.prototype.findGridHeader = function (anchor) {
+        var node = anchor;
+        for (var depth = 0; node && node.parentElement && depth < 8; depth++, node = node.parentElement) {
+            var sibling = node.previousElementSibling;
+            while (sibling) {
+                /* Do not borrow a heading across an earlier grid or table. */
+                if (sibling.tagName === 'TABLE' || (sibling.querySelector && sibling.querySelector('table'))) break;
+                var score = gridHeaderScore(sibling);
+                if (score) return sibling;
+                sibling = sibling.previousElementSibling;
+            }
+            /* A grid nested in a panel belongs to that panel; don't adopt an outer page header. */
+            if (isGridPanelBoundary(node)) break;
+        }
+        return null;
+    };
     Bar.prototype.layoutKey = function (user) { return this.form + '_' + this.grid + '_' + user; };
 
     Bar.prototype.setRights = function (o) {
@@ -357,37 +399,64 @@
         this.menu.querySelector('.gb-title-row').classList.toggle('gb-title-empty', !tt);
     };
 
-    /** Honor each screen's configured toolbar mount; grids without one use the column header. */
+    /** Honor explicit mounts, otherwise use the nearest grid caption/header before falling back
+        to the top edge of the grid. */
     Bar.prototype.placeGear = function () {
         var mountSelector = this.opts.mount || this.scope.getAttribute('data-gridbar-mount');
-        var placement = this.opts.placement || this.scope.getAttribute('data-gridbar-placement')
-            || (mountSelector ? 'toolbar' : 'header');
+        var placement = this.opts.placement || this.scope.getAttribute('data-gridbar-placement') || 'toolbar';
         var mount = placement === 'toolbar' ? resolveEl(mountSelector) : null;
+        var anchor = this.table() || this.scope;
+        var p = anchor.parentNode;
+        /* A table alone in a scroll box uses the box as the positioning anchor. */
+        if (anchor.tagName === 'TABLE' && p && p !== doc.body) {
+            var cs = global.getComputedStyle(p);
+            var only = toArr(p.children).filter(function (c) { return c !== anchor && !c.classList.contains('gb-bar'); }).length === 0;
+            if (only && /(auto|scroll)/.test(cs.overflow + cs.overflowX + cs.overflowY)) anchor = p;
+        }
+        var inferred = !mount && placement === 'toolbar' ? this.findGridHeader(anchor) : null;
+        mount = mount || inferred;
         if (mount) {
-            if (this.gear.parentNode !== mount) mount.appendChild(this.gear);
-            this.gear.classList.add('gb-gear-inline');
-            /* a page script that rewrites the strip (innerHTML) would drop the gear: put it back */
+            var mountStyle = global.getComputedStyle(mount);
+            var flexMount = /flex|grid/.test(mountStyle.display);
+            if (inferred && !flexMount) {
+                if (!this.autoSlot) {
+                    this.autoSlot = doc.createElement('span');
+                    this.autoSlot.className = 'gb-auto-slot';
+                    this.autoSlot.setAttribute('aria-label', T.gridControl);
+                    this.autoSlot.style.cssText = 'position:absolute;top:1px;right:4px;display:inline-flex;align-items:center;z-index:20;';
+                }
+                if (mountStyle.position === 'static') mount.style.position = 'relative';
+                if (this.autoSlot.parentNode !== mount) mount.appendChild(this.autoSlot);
+                if (this.gear.parentNode !== this.autoSlot) this.autoSlot.appendChild(this.gear);
+                this.gear.classList.remove('gb-gear-inline');
+                this.mountNode = this.autoSlot;
+            } else {
+                if (this.autoSlot && this.autoSlot.parentNode) this.autoSlot.remove();
+                if (this.gear.parentNode !== mount) mount.appendChild(this.gear);
+                this.gear.classList.add('gb-gear-inline');
+                this.gear.style.marginLeft = 'auto';
+                this.gear.style.flex = '0 0 auto';
+                this.mountNode = mount;
+            }
+            /* A page script that rewrites the strip (innerHTML) would drop the gear: put it back. */
             if (this.mountEl !== mount && global.MutationObserver) {
                 var self = this;
                 if (this.mmo) this.mmo.disconnect();
                 this.mountEl = mount;
                 this.mmo = new MutationObserver(function () {
-                    if (!self.gear.isConnected || self.gear.parentNode !== self.mountEl) self.placeGear();
+                    if (!self.gear.isConnected || self.mountNode.parentNode !== self.mountEl || self.gear.parentNode !== self.mountNode) self.placeGear();
                 });
                 this.mmo.observe(mount, { childList: true });
             }
             return;
         }
         if (this.mmo) { this.mmo.disconnect(); this.mmo = null; this.mountEl = null; }
+        if (this.autoSlot && this.autoSlot.parentNode) this.autoSlot.remove();
+        this.mountNode = null;
         this.gear.classList.remove('gb-gear-inline');
-        var anchor = this.table() || this.scope;
-        var p = anchor.parentNode;
-        /* a table alone in its scroll box: float above the box so the gear does not scroll away */
-        if (anchor.tagName === 'TABLE' && p && p !== doc.body) {
-            var cs = global.getComputedStyle(p);
-            var only = toArr(p.children).filter(function (c) { return c !== anchor && !c.classList.contains('gb-bar'); }).length === 0;
-            if (only && /(auto|scroll)/.test(cs.overflow + cs.overflowX + cs.overflowY)) anchor = p;
-        }
+        this.gear.style.marginLeft = '';
+        this.gear.style.flex = '';
+        /* No caption/header exists: float above the grid so the gear does not scroll away. */
         if (!this.barEl) {
             this.barEl = doc.createElement('div');
             this.barEl.className = 'gb-bar';

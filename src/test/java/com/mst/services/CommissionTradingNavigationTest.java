@@ -129,6 +129,9 @@ class CommissionTradingNavigationTest {
             when(gear.adminItemsForView()).thenReturn(List.of());
             when(gear.utilityItemsForView()).thenReturn(List.of());
             application.getBeanFactory().registerSingleton("gearMenuController", gear);
+            var desktopUserRights = mock(DesktopUserRightsService.class);
+            when(desktopUserRights.canManage()).thenReturn(false);
+            application.getBeanFactory().registerSingleton("desktopUserRightsService", desktopUserRights);
             application.refresh();
             var context = new WebContext(request, new MockHttpServletResponse(), servlet);
             context.setVariables(model);

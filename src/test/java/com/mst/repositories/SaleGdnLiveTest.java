@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @EnabledIfSystemProperty(named="sale.live",matches="true")
 class SaleGdnLiveTest {
-    private JdbcTemplate jdbc()throws Exception{var p=new Properties();try(var in=Files.newInputStream(Path.of("src/main/resources/application.properties"))){p.load(in);}var j=new JdbcTemplate(new DriverManagerDataSource(p.getProperty("spring.datasource.url"),p.getProperty("spring.datasource.username"),p.getProperty("spring.datasource.password")));j.setQueryTimeout(90);return j;}
+    private JdbcTemplate jdbc()throws Exception{var p=new Properties();try(var in=Files.newInputStream(Path.of("src/main/resources/application-local.properties"))){p.load(in);}var j=new JdbcTemplate(new DriverManagerDataSource(p.getProperty("spring.datasource.url"),p.getProperty("spring.datasource.username"),p.getProperty("spring.datasource.password")));j.setQueryTimeout(90);return j;}
     private int n(Object o){return o instanceof Number?((Number)o).intValue():0;}
     @Test void desktopLookupsHistoryAndDeliveryPathsMatchGoldenAce()throws Exception{
         var j=jdbc();var a=j.queryForMap("SELECT ID,OrganizationId,CompanyId,BranchesId,AppId FROM UserAccount WHERE UserName='numan'");var u=new UserAccount();u.setId(n(a.get("ID")));u.setOrganizationId(n(a.get("OrganizationId")));u.setCompanyId(n(a.get("CompanyId")));u.setBranchesId(n(a.get("BranchesId")));u.setAppId(n(a.get("AppId")));

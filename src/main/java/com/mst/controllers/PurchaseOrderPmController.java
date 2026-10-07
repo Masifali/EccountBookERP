@@ -15,6 +15,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * Screen 498 "1002 Purchsae Order" - Packing Material module 54.
@@ -24,6 +25,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class PurchaseOrderPmController {
 
     private static final String API = "/api/packing-material/purchase-order";
+    private static final String API1001 = "/api/packing-material/purchase-order-1001";
 
     private final PurchaseOrderPmService service;
 
@@ -31,21 +33,24 @@ public class PurchaseOrderPmController {
         this.service = service;
     }
 
-    @GetMapping({"/packing-material/purchase-order", "/packing-material/po", "/packing/purchase-order"})
-    public String page(Model model) {
+    @GetMapping({"/packing-material/purchase-order", "/packing-material/po", "/packing/purchase-order", "/packing-material/purchase-order-1001"})
+    public String page(Model model, HttpServletRequest request) {
         model.addAttribute("activeMenu", "packing-material");
+        boolean legacy1001 = request.getRequestURI().endsWith("purchase-order-1001");
+        model.addAttribute("screenCaption", legacy1001 ? "1001 Purchase Order" : "1002 Purchsae Order");
+        model.addAttribute("purchaseOrderApiBase", legacy1001 ? API1001 : API);
         return "packing_material/purchase_order_pm";
     }
 
-    @GetMapping(API + "/lookups")
+    @GetMapping({API + "/lookups", API1001 + "/lookups"})
     @ResponseBody
     public ResponseEntity<?> lookups() { return run(service::lookups, "Could not load the screen."); }
 
-    @GetMapping(API + "/numbers")
+    @GetMapping({API + "/numbers", API1001 + "/numbers"})
     @ResponseBody
     public ResponseEntity<?> numbers() { return run(service::numbers, "Could not generate the document number."); }
 
-    @GetMapping(API + "/item-defaults")
+    @GetMapping({API + "/item-defaults", API1001 + "/item-defaults"})
     @ResponseBody
     public ResponseEntity<?> itemDefaults(@RequestParam(defaultValue = "0") int itemId,
                                           @RequestParam(defaultValue = "0") int supplierId,
@@ -53,20 +58,20 @@ public class PurchaseOrderPmController {
         return run(() -> service.itemDefaults(itemId, supplierId, docDate), "Record Not Found");
     }
 
-    @GetMapping(API + "/ref-docs")
+    @GetMapping({API + "/ref-docs", API1001 + "/ref-docs"})
     @ResponseBody
     public ResponseEntity<?> refDocs(@RequestParam(defaultValue = "0") int refDocumentTypeId,
                                      @RequestParam(defaultValue = "0") int recId) {
         return run(() -> service.refDocs(refDocumentTypeId, recId), "Could not load reference documents.");
     }
 
-    @GetMapping(API + "/exchange-rate")
+    @GetMapping({API + "/exchange-rate", API1001 + "/exchange-rate"})
     @ResponseBody
     public ResponseEntity<?> exchangeRate(@RequestParam(defaultValue = "0") int currencyId) {
         return run(() -> service.exchangeRate(currencyId), "Could not read the exchange rate.");
     }
 
-    @GetMapping(API + "/history")
+    @GetMapping({API + "/history", API1001 + "/history"})
     @ResponseBody
     public ResponseEntity<?> history(@RequestParam(defaultValue = "doc") String dateMode,
                                      @RequestParam(required = false) String fromDate,
@@ -78,15 +83,15 @@ public class PurchaseOrderPmController {
         return run(() -> service.history(dateMode, fromDate, toDate, fromDocNo, toDocNo, supplierId, branchIds), "History failed.");
     }
 
-    @GetMapping(API + "/{id}")
+    @GetMapping({API + "/{id}", API1001 + "/{id}"})
     @ResponseBody
     public ResponseEntity<?> record(@PathVariable int id) { return run(() -> service.record(id), "Could not open that order."); }
 
-    @PostMapping(API + "/save")
+    @PostMapping({API + "/save", API1001 + "/save"})
     @ResponseBody
     public ResponseEntity<?> save(@RequestBody PurchaseOrderPmRequest request) { return run(() -> service.save(request), "Save failed."); }
 
-    @GetMapping(API + "/{id}/attachments/{attachmentId}")
+    @GetMapping({API + "/{id}/attachments/{attachmentId}", API1001 + "/{id}/attachments/{attachmentId}"})
     public ResponseEntity<byte[]> attachment(@PathVariable int id, @PathVariable int attachmentId) {
         DesktopInventoryItemFileService.Download d = service.attachment(id, attachmentId);
         HttpHeaders h = new HttpHeaders();

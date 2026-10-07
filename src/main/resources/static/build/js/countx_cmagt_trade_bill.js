@@ -13,6 +13,7 @@
 
     var API = '/api/commission/trade-bill-against-gdn';
     var DD = '/api/commission/dropdowns';
+    var DOCUMENT_TYPE_ID = parseInt(document.body.getAttribute('data-document-type-id') || '1056',10) || 1056;
 
     /* ------------------------------------------------------------------ state */
     var S = {
@@ -112,7 +113,12 @@
     function sum(rows, k) { var t = 0; (rows || []).forEach(function (r) { t += num(r[k]); }); return t; }
     function sumWhere(rows, k, wk, wv) { var t = 0; (rows || []).forEach(function (r) { if (int(r[wk]) === int(wv)) t += num(r[k]); }); return t; }
     function glOf(partyId) { var p = S.L.partyById[int(partyId)]; return p ? int(p.GlAccountId) : 0; }
+    function withDocumentType(url) {
+        if (url.indexOf(API) !== 0 || /[?&]documentTypeId=/.test(url)) return url;
+        return url + (url.indexOf('?') >= 0 ? '&' : '?') + 'documentTypeId=' + DOCUMENT_TYPE_ID;
+    }
     function fetchJson(url, opt) {
+        url = withDocumentType(url);
         return fetch(url, Object.assign({ credentials: 'same-origin', headers: { 'Accept': 'application/json' } }, opt || {}))
             .then(function (r) {
                 if (!r.ok) return r.text().then(function (t) { throw new Error('Server error ' + r.status + (t ? ': ' + t.substring(0, 300) : '')); });

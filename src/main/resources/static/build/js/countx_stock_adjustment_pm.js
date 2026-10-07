@@ -15,7 +15,7 @@
 
     var api = '/api/packing-material/stock-adjustment';
     var L = null, R = {};
-    var table = [], RecId = 0, VoucherHeadId = 0, updateDetailIndex = -1, historyRows = [], currentTab = 0;
+    var table = [], RecId = 0, VoucherHeadId = 0, updateDetailIndex = -1, historyRows = [], currentTab = 0, actionPending = 0;
 
     function $id(id) { return document.getElementById(id); }
     function val(id) { var e = $id(id); return e ? e.value : ''; }
@@ -53,6 +53,7 @@
     function busy(btn, fn) {
         var b = (typeof btn === 'string') ? $id(btn) : btn;
         var origHtml = '';
+        var settled = false;
         if (b) {
             if (b.disabled || b.classList.contains('is-busy')) return Promise.resolve();
             b.disabled = true;
@@ -62,9 +63,14 @@
                 b.innerHTML = '<i class="fa fa-spinner fa-spin"></i> ' + origHtml;
             }
         }
+        actionPending++;
+        applyRights();
         var indicator = $id('lblFormStatus');
         if (indicator) { indicator.classList.add('is-busy'); indicator.setAttribute('aria-busy', 'true'); }
         var done = function () {
+            if (settled) return;
+            settled = true;
+            actionPending = Math.max(0, actionPending - 1);
             if (b) {
                 b.disabled = false;
                 b.classList.remove('is-busy');
@@ -135,8 +141,8 @@
     function applyRights() {
         var upd = RecId > 0;
         show('btnsave', !upd); show('btnupdate', upd);
-        $id('btnsave').disabled = actionPending || !R.save; $id('btnupdate').disabled = actionPending || !R.update;
-        $id('btnprint').disabled = actionPending || !R.print; $id('ChkPrint').disabled = !R.print;
+        $id('btnsave').disabled = actionPending > 0 || !R.save; $id('btnupdate').disabled = actionPending > 0 || !R.update;
+        $id('btnprint').disabled = actionPending > 0 || !R.print; $id('ChkPrint').disabled = actionPending > 0 || !R.print;
     }
 
     // ------------------------------------------------------------------ entry bar

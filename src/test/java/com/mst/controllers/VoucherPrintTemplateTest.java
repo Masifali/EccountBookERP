@@ -1,6 +1,8 @@
 package com.mst.controllers;
 
 import com.mst.services.ErpNavigationService;
+import com.mst.services.DesktopUserRightsService;
+import com.mst.controllers.GearMenuController;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -45,8 +47,16 @@ class VoucherPrintTemplateTest {
             var navigation = mock(ErpNavigationService.class);
             when(navigation.forRequest(any(), nullable(String.class), nullable(Integer.class))).thenReturn(Map.of(
                     "parentRoute", "/app/Accounts?module=2", "parentTitle", "Accounts Transaction",
-                    "currentTitle", voucher, "username", "Voucher test", "apps", List.of(), "unavailable", false));
+                    "currentTitle", voucher, "username", "Voucher test", "apps", List.of(),
+                    "favoriteScreens", List.of(), "recentScreens", List.of(), "unavailable", false));
             application.getBeanFactory().registerSingleton("erpNavigationService", navigation);
+            var rights = mock(DesktopUserRightsService.class);
+            when(rights.canManage()).thenReturn(false);
+            application.getBeanFactory().registerSingleton("desktopUserRightsService", rights);
+            var gear = mock(GearMenuController.class);
+            when(gear.adminItemsForView()).thenReturn(List.of());
+            when(gear.utilityItemsForView()).thenReturn(List.of());
+            application.getBeanFactory().registerSingleton("gearMenuController", gear);
             application.refresh();
             var context = new WebContext(request, new MockHttpServletResponse(), servlet);
             context.setVariables(result.getModel());

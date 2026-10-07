@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class SaleOrderLookupLiveTest {
     private JdbcTemplate jdbc() throws Exception {
         Properties p = new Properties();
-        try (var in = Files.newInputStream(Path.of("src/main/resources/application.properties"))) { p.load(in); }
+        try (var in = Files.newInputStream(Path.of("src/main/resources/application-local.properties"))) { p.load(in); }
         JdbcTemplate jdbc = new JdbcTemplate(new DriverManagerDataSource(
                 p.getProperty("spring.datasource.url"), p.getProperty("spring.datasource.username"),
                 p.getProperty("spring.datasource.password")));

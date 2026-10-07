@@ -29,20 +29,26 @@ public class TradeBillAgainstGdnCmagtService {
     /** RecId > 0 -> update (btnUpdate_Click 5827), else insert (btnsave_Click 4865). */
     @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     public Map<String, Object> save(TradeBillAgainstGdnCmagtDto form) {
+        return save(form, DOCUMENT_TYPE_ID);
+    }
+
+    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
+    public Map<String, Object> save(TradeBillAgainstGdnCmagtDto form, int documentTypeId) {
+        BillVariant variant = variant(documentTypeId);
         Map<String, Object> result = new LinkedHashMap<>();
         Map<String, Object> h = form.header == null ? new LinkedHashMap<>() : form.header;
         int recId = toInt(h.get("RecId"));
-        if (!hasRight(recId > 0 ? RIGHT_UPDATE : RIGHT_SAVE)) {
+        if (!hasRight(recId > 0 ? RIGHT_UPDATE : RIGHT_SAVE, variant.screenName())) {
             return error(recId > 0 ? "You do not have Update rights on this screen."
                                    : "You do not have Save rights on this screen.");
         }
         if (recId > 0) {
             Map<String, Object> existing = repository.readById(recId);
-            if (existing == null || !belongsToSession(existing)) return error("RecId not Found");
+            if (existing == null || !belongsToSession(existing, variant)) return error("RecId not Found");
         }
         TradeBillAgainstGdnCmagtDto.Bill obj;
         try {
-            obj = buildBill(form, recId);
+            obj = buildBill(form, recId, variant);
         } catch (FormRefusal e) {
             return error(e.getMessage());
         }
@@ -77,7 +83,7 @@ public class TradeBillAgainstGdnCmagtService {
      * CommissionAgentAccoutValidation (1785) is not here: it catches its own exceptions and only
      * shows them, so it never stops a save (the page shows those warnings).
      */
-    TradeBillAgainstGdnCmagtDto.Bill buildBill(TradeBillAgainstGdnCmagtDto form, int recId) {
+    TradeBillAgainstGdnCmagtDto.Bill buildBill(TradeBillAgainstGdnCmagtDto form, int recId, BillVariant variant) {
         Map<String, Object> h = form.header;
         List<Map<String, Object>> rows = nz(form.rows);
         if (rows.isEmpty()) throw new FormRefusal("Grid Record Not Found");
@@ -94,7 +100,7 @@ public class TradeBillAgainstGdnCmagtService {
         obj.BranchesId = currentUserContext.currentBranchId();
         obj.ProjectsId = currentUserContext.currentBranchId();       // desktop: ProjectsId = BranchesId
         obj.FinancialYearId = currentUserContext.currentFinancialYearId();
-        obj.DocumentTypeId = DOCUMENT_TYPE_ID;
+        obj.DocumentTypeId = variant.documentTypeId();
         obj.Id = recId;
         Timestamp now = new Timestamp(System.currentTimeMillis());
         obj.EnteryDate = now;
@@ -137,7 +143,7 @@ public class TradeBillAgainstGdnCmagtService {
         obj.BuyerSecondWeight = dec(h.get("txtBuyerSecondWeight"));
         obj.BuyerNetWeight = dec(h.get("txtBuyerWeight"));
         obj.PLAmount = dbl(h.get("txtProfitLoss"));
-        obj.ScreenName = DESKTOP_SCREEN_NAME;
+        obj.ScreenName = variant.screenName();
 
         boolean isPurchaseDelivered = isPonch(obj.DeliveryTermPurchaseId, obj.DeliveryTerm);
         boolean isSaleDelivered = isPonch(obj.DeliveryTermSaleId, obj.DeliveryTermSale);
@@ -906,7 +912,7 @@ public class TradeBillAgainstGdnCmagtService {
                                                 Integer docNoFrom, Integer docNoTo,
                                                 Integer tradingAccountId, Integer supplierId,
                                                 Integer customerId) {
-        return getHistory("doc", fromDate, toDate, docNoFrom, docNoTo, tradingAccountId, supplierId, customerId);
+        return getHistory("doc", fromDate, toDate, docNoFrom, docNoTo, tradingAccountId, supplierId, customerId, DOCUMENT_TYPE_ID);
     }
 
     /** dateKind: doc | entry | modify - the drdocdate / rdentrydate / rdmodifydate radios. */
@@ -914,13 +920,21 @@ public class TradeBillAgainstGdnCmagtService {
                                                 Integer docNoFrom, Integer docNoTo,
                                                 Integer tradingAccountId, Integer supplierId,
                                                 Integer customerId) {
-        boolean all = hasRight(RIGHT_CAN_VIEW_ALL_RECORDS);
+        return getHistory(dateKind,fromDate,toDate,docNoFrom,docNoTo,tradingAccountId,supplierId,customerId,DOCUMENT_TYPE_ID);
+    }
+
+    public List<Map<String, Object>> getHistory(String dateKind, String fromDate, String toDate,
+                                                Integer docNoFrom, Integer docNoTo,
+                                                Integer tradingAccountId, Integer supplierId,
+                                                Integer customerId, int documentTypeId) {
+        BillVariant variant=variant(documentTypeId);
+        boolean all = hasRight(RIGHT_CAN_VIEW_ALL_RECORDS,variant.screenName());
         return repository.formHistory(
                 currentUserContext.currentOrganizationId(),
                 currentUserContext.currentCompanyId(),
                 currentUserContext.currentBranchId(),
                 currentUserContext.currentFinancialYearId(),
-                DOCUMENT_TYPE_ID, all,
+                variant.documentTypeId(), all,
                 all ? null : currentUserContext.currentUserId(),
                 dateKind, fromDate, toDate, docNoFrom, docNoTo, tradingAccountId, supplierId, customerId);
     }
@@ -948,14 +962,19 @@ public class TradeBillAgainstGdnCmagtService {
      * shows them).
      */
     public Map<String, Object> getById(Integer id) {
+        return getById(id,DOCUMENT_TYPE_ID);
+    }
+
+    public Map<String, Object> getById(Integer id,int documentTypeId) {
+        BillVariant variant=variant(documentTypeId);
         Map<String, Object> result = new LinkedHashMap<>();
         Map<String, Object> header = id == null ? null : repository.readById(id);
-        if (header == null || !belongsToSession(header)) {
+        if (header == null || !belongsToSession(header,variant)) {
             result.put("status", "ERROR");
             result.put("message", "Record not found");
             return result;
         }
-        if (!hasRight(RIGHT_CAN_VIEW_ALL_RECORDS)
+        if (!hasRight(RIGHT_CAN_VIEW_ALL_RECORDS,variant.screenName())
                 && toInt(header.get("EnteryUserId")) != currentUserContext.currentUserId()) {
             result.put("status", "ERROR");
             result.put("message", "You do not have permission to open Trade Bills entered by another user.");
@@ -968,13 +987,18 @@ public class TradeBillAgainstGdnCmagtService {
 
     /** DocumentNoDbCall (1149) and BranchSrNoDbCall (1175). */
     public Map<String, Object> generateCodes() {
+        return generateCodes(DOCUMENT_TYPE_ID);
+    }
+
+    public Map<String, Object> generateCodes(int documentTypeId) {
+        BillVariant variant=variant(documentTypeId);
         int org = currentUserContext.currentOrganizationId();
         int co = currentUserContext.currentCompanyId();
         int yr = currentUserContext.currentFinancialYearId();
         int br = currentUserContext.currentBranchId();
         Map<String, Object> r = new LinkedHashMap<>();
-        r.put("docNo", repository.generateCode("GenerateCode", org, co, DOCUMENT_TYPE_ID, yr, br));
-        r.put("branchSrNo", repository.generateCode("GenerateBranchSrCode", org, co, DOCUMENT_TYPE_ID, yr, br));
+        r.put("docNo", repository.generateCode("GenerateCode", org, co, variant.documentTypeId(), yr, br));
+        r.put("branchSrNo", repository.generateCode("GenerateBranchSrCode", org, co, variant.documentTypeId(), yr, br));
         return r;
     }
 
@@ -984,19 +1008,25 @@ public class TradeBillAgainstGdnCmagtService {
      */
     @org.springframework.transaction.annotation.Transactional
     public Map<String, Object> deleteById(Integer id) {
+        return deleteById(id,DOCUMENT_TYPE_ID);
+    }
+
+    @org.springframework.transaction.annotation.Transactional
+    public Map<String, Object> deleteById(Integer id,int documentTypeId) {
+        BillVariant variant=variant(documentTypeId);
         Map<String, Object> result = new LinkedHashMap<>();
         if (id == null || id == 0) {
             result.put("status", "ERROR");
             result.put("message", "Record Id Not Found");
             return result;
         }
-        if (!hasRight(RIGHT_DELETE)) {
+        if (!hasRight(RIGHT_DELETE,variant.screenName())) {
             result.put("status", "ERROR");
             result.put("message", "You do not have Delete rights on this screen.");
             return result;
         }
         Map<String, Object> header = repository.readById(id);
-        if (header == null || !belongsToSession(header)) {
+        if (header == null || !belongsToSession(header,variant)) {
             result.put("status", "ERROR");
             result.put("message", "Record not found");
             return result;
@@ -1006,10 +1036,12 @@ public class TradeBillAgainstGdnCmagtService {
         return result;
     }
 
-    private boolean belongsToSession(Map<String, Object> h) {
+    private boolean belongsToSession(Map<String, Object> h) { return belongsToSession(h,variant(DOCUMENT_TYPE_ID)); }
+
+    private boolean belongsToSession(Map<String, Object> h,BillVariant variant) {
         return toInt(h.get("OrganizationId")) == currentUserContext.currentOrganizationId()
                 && toInt(h.get("CompanyId")) == currentUserContext.currentCompanyId()
-                && toInt(h.get("DocumentTypeId")) == DOCUMENT_TYPE_ID;
+                && toInt(h.get("DocumentTypeId")) == variant.documentTypeId();
     }
 
     /**
@@ -1019,22 +1051,31 @@ public class TradeBillAgainstGdnCmagtService {
      */
     /** formright flags the form applies at :951-954 (btnsave/btnUpdate/BtnDelete/btnPrint .Enabled). */
     public Map<String, Boolean> formRights() {
+        return formRights(DOCUMENT_TYPE_ID);
+    }
+
+    public Map<String, Boolean> formRights(int documentTypeId) {
+        BillVariant variant=variant(documentTypeId);
         Map<String, Boolean> r = new LinkedHashMap<>();
-        r.put("save", hasRight(RIGHT_SAVE));
-        r.put("update", hasRight(RIGHT_UPDATE));
-        r.put("delete", hasRight(RIGHT_DELETE));
-        r.put("print", hasRight("Print"));
-        r.put("canViewAllRecords", hasRight(RIGHT_CAN_VIEW_ALL_RECORDS));
+        r.put("save", hasRight(RIGHT_SAVE,variant.screenName()));
+        r.put("update", hasRight(RIGHT_UPDATE,variant.screenName()));
+        r.put("delete", hasRight(RIGHT_DELETE,variant.screenName()));
+        r.put("print", hasRight("Print",variant.screenName()));
+        r.put("canViewAllRecords", hasRight(RIGHT_CAN_VIEW_ALL_RECORDS,variant.screenName()));
         return r;
     }
 
     private boolean hasRight(String rightName) {
+        return hasRight(rightName,DESKTOP_SCREEN_NAME);
+    }
+
+    private boolean hasRight(String rightName,String screenName) {
         String role = currentUserContext.currentRoleName();
         boolean admin = "Admin".equalsIgnoreCase(role) || "Administrator".equalsIgnoreCase(role);
         boolean value = admin;
         try {
             for (Map<String, Object> r : rightsRepo.userRightsForScreen(
-                    currentUserContext.currentUserId(), DESKTOP_SCREEN_NAME, role,
+                    currentUserContext.currentUserId(), screenName, role,
                     currentUserContext.currentCompanyId())) {
                 Object name = pick(r, "RightName");
                 if (name != null && rightName.equalsIgnoreCase(name.toString().trim())) {
@@ -1050,6 +1091,16 @@ public class TradeBillAgainstGdnCmagtService {
         }
         return value;
     }
+
+    private static BillVariant variant(int documentTypeId) {
+        return switch(documentTypeId) {
+            case 1056 -> new BillVariant(1056,DESKTOP_SCREEN_NAME);
+            case 160 -> new BillVariant(160,"frmCommissionAgentTradeBill");
+            case 162 -> new BillVariant(162,"CommissionAgentTradeBill_162");
+            default -> throw new IllegalArgumentException("Unsupported commission agent trade bill document type.");
+        };
+    }
+    private record BillVariant(int documentTypeId,String screenName) {}
 
     private static Object pick(Map<String, Object> row, String key) {
         if (row.containsKey(key)) return row.get(key);

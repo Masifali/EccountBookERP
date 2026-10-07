@@ -111,11 +111,13 @@
     function renderGrid(hostId, rows, cols, opts) {
         opts = opts || {};
         var host = $id(hostId);
-        if (!rows || !rows.length) { host.innerHTML = opts.empty === false ? '' : '<div style="padding:6px;color:#666;">No records.</div>'; return; }
+        var hasRows = rows && rows.length;
+        if (!hasRows && opts.empty !== false) { host.innerHTML = '<div style="padding:6px;color:#666;">No records.</div>'; return; }
         var h = '<table class="win-grid"><thead><tr>';
         cols.forEach(function (c) { h += '<th>' + esc(c.caption || c.key) + '</th>'; });
         h += '</tr></thead><tbody>';
-        rows.forEach(function (r, i) {
+        if (!hasRows) h += '<tr class="grid-empty"><td colspan="' + cols.length + '" style="padding:6px;color:#666;">No records.</td></tr>';
+        (rows || []).forEach(function (r, i) {
             h += '<tr data-i="' + i + '">';
             cols.forEach(function (c) {
                 if (c.button) { h += '<td class="int"><button type="button" class="grid-btn" data-btn="' + esc(c.key) + '">' + esc(c.button) + '</button></td>'; return; }

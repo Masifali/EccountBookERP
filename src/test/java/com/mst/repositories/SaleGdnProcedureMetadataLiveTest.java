@@ -11,7 +11,7 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
 @EnabledIfSystemProperty(named="sale.live",matches="true")
 class SaleGdnProcedureMetadataLiveTest {
     @Test void captureDesktopProcedureContracts() throws Exception {
-        var p=new Properties();try(var in=Files.newInputStream(Path.of("src/main/resources/application.properties"))){p.load(in);}
+        var p=new Properties();try(var in=Files.newInputStream(Path.of("src/main/resources/application-local.properties"))){p.load(in);}
         var j=new JdbcTemplate(new DriverManagerDataSource(p.getProperty("spring.datasource.url"),p.getProperty("spring.datasource.username"),p.getProperty("spring.datasource.password")));
         var names=List.of("Sp_InvGdn_Insert","Sp_InvGdn_Update","Sp_InvGdnDetail_Insert","Sp_InvGdnExpense_Insert","Sp_InventoryTransactions_GetALLMethod","USP_InventoryValidation","usp_StockInTransitUpdate_VoucherInsertFromGdnOrForwarding","Sp_InventoryStockEvalautionDetail_Update");
         var out=new StringBuilder("GoldenAcedb procedure contracts used by desktop InvGdn.SetData\n");

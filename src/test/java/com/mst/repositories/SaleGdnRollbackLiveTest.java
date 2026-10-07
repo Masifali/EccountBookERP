@@ -16,7 +16,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 @EnabledIfSystemProperty(named="sale.live",matches="true")
 class SaleGdnRollbackLiveTest {
  @Test void generatedStockMatchesOriginalProceduresForLoadedGdn() throws Exception {
-  var p=new Properties();try(var in=Files.newInputStream(Path.of("src/main/resources/application.properties"))){p.load(in);}
+  var p=new Properties();try(var in=Files.newInputStream(Path.of("src/main/resources/application-local.properties"))){p.load(in);}
   var ds=new DriverManagerDataSource(p.getProperty("spring.datasource.url"),p.getProperty("spring.datasource.username"),p.getProperty("spring.datasource.password"));
   var jdbc=new JdbcTemplate(ds);jdbc.setQueryTimeout(120);
   var account=jdbc.queryForMap("SELECT ID,OrganizationId,CompanyId,BranchesId FROM UserAccount WHERE UserName='numan'");
@@ -33,7 +33,7 @@ class SaleGdnRollbackLiveTest {
   }
  }
  @Test void invoicedRecordUpdateIsRejectedWithoutChangingOriginal() throws Exception {
-  var p=new Properties();try(var in=Files.newInputStream(Path.of("src/main/resources/application.properties"))){p.load(in);}
+  var p=new Properties();try(var in=Files.newInputStream(Path.of("src/main/resources/application-local.properties"))){p.load(in);}
   var ds=new DriverManagerDataSource(p.getProperty("spring.datasource.url"),p.getProperty("spring.datasource.username"),p.getProperty("spring.datasource.password"));
   var jdbc=new JdbcTemplate(ds);jdbc.setQueryTimeout(120);
   var account=jdbc.queryForMap("SELECT ID,OrganizationId,CompanyId,BranchesId FROM UserAccount WHERE UserName='numan'");
@@ -55,7 +55,7 @@ class SaleGdnRollbackLiveTest {
   var restored=repo.record(u,388);assertEquals(original,restored,"rollback restored the complete original header, details and expenses");
  }
  @Test void insertLoadUpdateDeleteAndRollback() throws Exception {
-  var p=new Properties();try(var in=Files.newInputStream(Path.of("src/main/resources/application.properties"))){p.load(in);}var ds=new DriverManagerDataSource(p.getProperty("spring.datasource.url"),p.getProperty("spring.datasource.username"),p.getProperty("spring.datasource.password"));var j=new JdbcTemplate(ds);j.setQueryTimeout(120);
+  var p=new Properties();try(var in=Files.newInputStream(Path.of("src/main/resources/application-local.properties"))){p.load(in);}var ds=new DriverManagerDataSource(p.getProperty("spring.datasource.url"),p.getProperty("spring.datasource.username"),p.getProperty("spring.datasource.password"));var j=new JdbcTemplate(ds);j.setQueryTimeout(120);
   var a=j.queryForMap("SELECT ID,OrganizationId,CompanyId,BranchesId,AppId FROM UserAccount WHERE UserName='numan'");var u=new UserAccount();u.setId(n(a.get("ID")));u.setOrganizationId(n(a.get("OrganizationId")));u.setCompanyId(n(a.get("CompanyId")));u.setBranchesId(n(a.get("BranchesId")));u.setAppId(n(a.get("AppId")));
   var repo=new SaleGdnRepository(j);var initial=repo.initial(u,58);int doc=n(initial.get("nextNo")),before=j.queryForObject("SELECT COUNT(*) FROM InvGdn WHERE OrganizationId=78 AND CompanyId=78 AND DocumentTypeId=86",Integer.class),city=((List<Map<String,Object>>)initial.get("cities")).stream().map(x->n(x.get("Id"))).filter(x->x>0).findFirst().orElseThrow();Map<Integer,String> cropNames=new HashMap<>();for(var x:(List<Map<String,Object>>)initial.get("crops"))cropNames.put(n(x.get("Id")),String.valueOf(x.get("CropYear")));
   var candidates=j.queryForList("SELECT TOP 300 d.* FROM InvDeliveryOrderDetail d JOIN InvDeliveryOrder h ON h.Id=d.InvDeliveryOrderId WHERE h.OrganizationId=78 AND h.CompanyId=78 AND d.SaleOrderDetailId>0 AND d.WarehouseId>0 AND d.PackUomId>0 AND d.CropYearId>0 AND d.JobLotId>0 AND d.InvPackingTypeId>0 ORDER BY d.Id DESC");Map<String,Object> order=null;double available=0;for(var x:candidates){String crop=cropNames.get(n(x.get("CropYearId")));if(crop==null)continue;var stock=j.queryForList("EXEC dbo.USP_GetStockByFifoMethod @OrganizationId=78,@CompanyId=78,@ItemId=?,@DocDate=?,@PackUomId=?,@WarehouseId=?,@CropYearId=?,@JobLotId=?,@PackingTypeId=?,@CropYear=?",n(x.get("ItemId")),LocalDate.now().toString(),n(x.get("PackUomId")),n(x.get("WarehouseId")),n(x.get("CropYearId")),n(x.get("JobLotId")),n(x.get("InvPackingTypeId")),crop);available=stock.stream().mapToDouble(z->d(z.get("NetBalWeight"))).sum();if(available>.01){order=x;break;}}assertNotNull(order,"No delivery-order detail with matching FIFO stock was found");int customer=n(order.get("SupplierCustomerId")),cropId=n(order.get("CropYearId"));String crop=cropNames.get(cropId);double weight=Math.min(.01,available/10d),qty=.001;

@@ -21,6 +21,8 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import static com.mst.repositories.PurchaseOrderPmRepository.*;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 /**
  * Screen 498 "1002 Purchsae Order" - Packing Material module 54. Desktop form
@@ -59,12 +61,21 @@ public class PurchaseOrderPmService {
 
     private UserAccount user(String action) {
         UserAccount u = context.requireAccountingUser();
-        rights.require(u, SCREEN_ID, action);
+        rights.require(u, activeScreenId(), action);
         return u;
     }
 
     private boolean allowed(UserAccount u, String action) {
-        try { rights.require(u, SCREEN_ID, action); return true; } catch (AccessDeniedException e) { return false; }
+        try { rights.require(u, activeScreenId(), action); return true; } catch (AccessDeniedException e) { return false; }
+    }
+
+    private int activeScreenId() {
+        var attributes = RequestContextHolder.getRequestAttributes();
+        if (attributes instanceof ServletRequestAttributes servlet) {
+            String uri = servlet.getRequest().getRequestURI();
+            if (uri != null && uri.contains("/purchase-order-1001")) return 499;
+        }
+        return SCREEN_ID;
     }
 
     private int financialYear(UserAccount u) {

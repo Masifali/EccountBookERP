@@ -94,7 +94,20 @@ public class DashboardModuleService {
      */
     private static final Map<String, String> WEB_ROUTES = new LinkedHashMap<>();
     static {
-        /* Deliberately empty.
+        /* Commission Trading and Packing Material screens that are served through the
+           desktop-matching routes below. These keys come from ScreenDefinition.TargetUrl;
+           they are not inferred from the screen captions. */
+        WEB_ROUTES.put("CommisisionDeleiveryLoadingRegister", "/commission/trading/loading-delivery-register");
+        WEB_ROUTES.put("CommissionTransactionRegister", "/commission/trading/transaction-register");
+        WEB_ROUTES.put("CommissionBrokerySchedule", "/commission/trading/broker-schedule");
+        WEB_ROUTES.put("CommTradeLoadingDeliveryDirect", "/commission/trading/loading-delivery-direct");
+        WEB_ROUTES.put("CommisionBillAgainstLoadingDelivery", "/commission/trading/commission-bill");
+        WEB_ROUTES.put("frmCommissionAgentOrder", "/commission/agent-trade/order");
+        WEB_ROUTES.put("frmCommissionAgentTradeBill", "/commission/agent-trade/bill/160");
+        WEB_ROUTES.put("CommissionAgentTradeBill_162", "/commission/agent-trade/bill/162");
+        WEB_ROUTES.put("PurchsaeOrderPackingMaterial", "/packing-material/purchase-order-1001");
+
+        /*
          *
          * Four entries used to live here and all four were wrong:
          *
@@ -215,6 +228,19 @@ public class DashboardModuleService {
         WEB_ROUTES_BY_SCREEN_ID.put(983, "/commission/reports/grn-supplier-loading");
         WEB_ROUTES_BY_SCREEN_ID.put(984, "/commission/reports/purchase-order");
         WEB_ROUTES_BY_SCREEN_ID.put(985, "/commission/reports/sale-order");
+
+        /* CMTr register screens and Packing Material's earlier Purchase Order form, verified
+           from the live ScreenDefinition.TargetUrl records. */
+        WEB_ROUTES_BY_SCREEN_ID.put(499, "/packing-material/purchase-order-1001");
+        WEB_ROUTES_BY_SCREEN_ID.put(470, "/commission/agent-trade/order");
+        WEB_ROUTES_BY_SCREEN_ID.put(471, "/commission/agent-trade/bill/160");
+        WEB_ROUTES_BY_SCREEN_ID.put(472, "/commission/agent-trade/bill/162");
+        WEB_ROUTES_BY_SCREEN_ID.put(516, "/commission/trading/broker-schedule?screenId=516");
+        WEB_ROUTES_BY_SCREEN_ID.put(520, "/commission/trading/loading-delivery-register");
+        WEB_ROUTES_BY_SCREEN_ID.put(521, "/commission/trading/broker-schedule?screenId=521");
+        WEB_ROUTES_BY_SCREEN_ID.put(524, "/commission/trading/transaction-register");
+        WEB_ROUTES_BY_SCREEN_ID.put(518, "/commission/trading/loading-delivery-direct");
+        WEB_ROUTES_BY_SCREEN_ID.put(519, "/commission/trading/commission-bill");
 
         /* Sale, App 6: the same existing pages linked by /sale/customer and /sale/reports.
            Screen ids/names come from reconciliation-input.json; TargetUrls were checked against
@@ -419,6 +445,15 @@ public class DashboardModuleService {
         WEB_ROUTES_BY_SCREEN_ID.put(11,  "/accounts/supplier");                        // supfrmDefineSupplier
         WEB_ROUTES_BY_SCREEN_ID.put(14,  "/accounts/user-coa-management");             // UserChartOfAccountManagement
         WEB_ROUTES_BY_SCREEN_ID.put(42,  "/accounts/cheque_book");                     // AcfrmChequebookRegistration
+        WEB_ROUTES_BY_SCREEN_ID.put(3, "/accounts/account-budget"); // AccountBudget (added 2026-10-06, Account Definition missing pages)
+        WEB_ROUTES_BY_SCREEN_ID.put(4, "/accounts/vouchers/advance-adjustment-desktop"); // frmAdvanceAdjustment (added 2026-10-06, Account Definition missing pages)
+        WEB_ROUTES_BY_SCREEN_ID.put(6, "/accounts/reconciliation/update-coa-allocation"); // COAAllocation (added 2026-10-06, Account Definition missing pages)
+        WEB_ROUTES_BY_SCREEN_ID.put(7, "/accounts/incentive-policy"); // frmIncentivePolicy (added 2026-10-06, Account Definition missing pages)
+        WEB_ROUTES_BY_SCREEN_ID.put(8, "/accounts/inland-freight-agreement"); // InLandFreightAgreement (added 2026-10-06, Account Definition missing pages)
+        WEB_ROUTES_BY_SCREEN_ID.put(12, "/accounts/hold_debit_credit"); // AccountsHoldForDebitOrCredit (added 2026-10-06, Account Definition missing pages)
+        WEB_ROUTES_BY_SCREEN_ID.put(13, "/accounts/reports/capital-owner-equity"); // CapitalOwnerEquityReport (added 2026-10-06, Account Definition missing pages)
+        WEB_ROUTES_BY_SCREEN_ID.put(738, "/accounts/reports/party-limits-balances"); // SupfrmSupplierLimits (added 2026-10-06, Account Definition missing pages)
+        WEB_ROUTES_BY_SCREEN_ID.put(786, "/accounts/party-custom-group"); // frmPartyCustomGroup (added 2026-10-06, Account Definition missing pages)
         WEB_ROUTES_BY_SCREEN_ID.put(884, "/accounts/bank-reconciliation-upload-excel"); // frmBankReconciliationUploadExcelSheet
 
         WEB_ROUTES_BY_SCREEN_ID.put(15,  "/accounts/vouchers/day-book");               // DayBook

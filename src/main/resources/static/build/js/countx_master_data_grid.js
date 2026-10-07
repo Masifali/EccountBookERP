@@ -10,6 +10,7 @@
         filterRow.className = 'md-filter-row rk-filter';
         var box = table.closest('.pd-grid-box'), bar = document.createElement('div');
         bar.className = 'md-grid-groupbar';
+        bar.id = 'md-grid-groupbar-' + table.id;
         var prompt = document.createElement('span');
         prompt.className = 'md-group-prompt';
         prompt.textContent = 'Drag a column header here to group by that column.';
