@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Payables Receivables Payments</title>
+<link rel="stylesheet" href="/build/css/countx_desktop_combo.css?v=20261007r2">
+<link rel="stylesheet" href="/build/css/countx_prod_combo.css?v=20261007r2">
+<link rel="stylesheet" href="/build/css/countx_acrpt2.css?v=20261007r2">
+<!--
+  Screen 870 "Payables And Receivables With Payment And Receipts" = Architecture.WinApp.Account_Reports.frmPayablesAndReceivablesWithPaymentAndReceipts
+  (route /accounts/reports/payables-receivables-with-payment-receipts). R2 2026-10-07, built 1:1 on InitializeComponent()
+  (ClientSize 962 wide, AutoScroll, AutoScrollMinSize 1120x750):
+    panel1 Teal Top 52  = toolStrip3 27 (&New | &Refresh | 134-Print | ShortCutKeys, Verdana 9.75) + label23 @3,29 Tahoma 12 bold white
+    panel5 White Top 62 : label27 "Date From & To" 5,11 | txtFromDate 93,7 108x22 | txtToDate 202,7 108x22 (dd-MMM-yy, Verdana 9) |
+        label1 "Custom Group" 5,38 | CmbCustomGroup 93,32 217x26 | label2 "Parent Account" 314,11 | CmbParentAccount 403,5 232x26 (Account Title | AccountCode) |
+        label3 "City Name" 314,38 | CmbCityName 403,32 232x26 | label30 "Branch" 637,11 | CmbBranches 691,5 190x26 (checked list with features 17+18; hidden without 17) |
+        rdPurchase 639,36 | rdSale 719,36 (checked) | rdPurchaseandSale "Both" 773,36 (Segoe UI Semibold 9 bold) | btnshow 828,32 54x26 rgb(10,110,110)
+    panel6 Teal Top 23 (ctrlGrdBar1 @921,1) | grd Fill (grouped by ParentAccount, GroupTotals Always)
+  Page logic: /build/js/countx_acrpt2_pr.js. API: /api/accounts/acrpt2/pr/*
+-->
+<style>
+    .frm { min-width: 1120px; min-height: 750px; }
+    .p1 { flex: 0 0 52px; height: 52px; background: var(--teal); position: relative; }
+    .p1 .cap { position: absolute; left: 3px; top: 29px; font: bold 16px Tahoma, Verdana, sans-serif; line-height: 19px; color: #fff; white-space: nowrap; }
+    .p5 { flex: 0 0 62px; height: 62px; position: relative; background: #fff; }
+    .p6 { flex: 0 0 23px; height: 23px; background: var(--teal); position: relative; }
+    #barMount { position: absolute; left: 921px; top: 1px; height: 21px; }
+    .rb.sb { font: bold 12px "Segoe UI Semibold", "Segoe UI", Calibri, Arial, sans-serif; }
+    .cw { position: absolute; }
+    .cw[hidden] { display: none !important; }
+</style>
+<link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261005a}"/>
+</head>
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="frm-scroll">
+<div class="frm" id="frmPayablesAndReceivablesWithPaymentAndReceipts">
+
+    <!-- panel1 (Teal Top 52): toolStrip3 + label23 -->
+    <div class="p1">
+        <div class="ts">
+            <button type="button" id="new" title="Ctrl+N"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#2e9b45"/><path d="M8 4v8M4 8h8" stroke="#fff" stroke-width="2"/></svg><span><u>N</u>ew</span></button>
+            <button type="button" id="refresh" title="Ctrl+R"><svg viewBox="0 0 16 16"><path d="M13 8a5 5 0 1 1-1.5-3.6" fill="none" stroke="#1f6fc5" stroke-width="2"/><path d="M13.5 1.5v4h-4z" fill="#1f6fc5"/></svg><span><u>R</u>efresh</span></button>
+            <button type="button" id="print" title="Ctrl+P"><svg viewBox="0 0 16 16"><rect x="4" y="1.5" width="8" height="4" fill="#fff" stroke="#555"/><rect x="1.5" y="5.5" width="13" height="6" rx="1" fill="#6b7785"/><rect x="4" y="9.5" width="8" height="5" fill="#fff" stroke="#555"/></svg><span>134-Print</span></button>
+            <button type="button" id="shortcuts" title="Ctrl+Alt"><svg viewBox="0 0 16 16"><rect x="1" y="4" width="14" height="8.5" rx="1.5" fill="#4a4f57"/><path d="M3 6.5h1.5M6 6.5h1.5M9 6.5h1.5M12 6.5h1M4 10h8" stroke="#fff" stroke-width="1.2"/></svg><span>ShortCutKeys</span></button>
+        </div>
+        <span class="cap">Payables And Receivables With Payment And Receipt</span>
+    </div>
+
+    <!-- panel5 (White Top 62): filters -->
+    <div class="p5">
+        <span class="lbl" style="left:5px;top:11px;">Date From &amp; To</span>
+        <input type="date" id="fromDate" class="tb" style="left:93px;top:7px;width:108px;height:22px;">
+        <input type="date" id="toDate" class="tb" style="left:202px;top:7px;width:108px;height:22px;">
+        <span class="lbl" style="left:5px;top:38px;">Custom Group</span>
+        <select id="grp" data-dtcombo="single" data-dtcombo-caption="Custom Group" style="position:absolute;left:93px;top:32px;width:217px;height:26px;"></select>
+
+        <span class="lbl" style="left:314px;top:11px;">Parent Account</span>
+        <select id="parent" data-dtcombo="acrpt2Parent" data-dtcombo-caption="Account Title" style="position:absolute;left:403px;top:5px;width:232px;height:26px;"></select>
+        <span class="lbl" style="left:314px;top:38px;">City Name</span>
+        <select id="city" data-dtcombo="single" data-dtcombo-caption="City Name" style="position:absolute;left:403px;top:32px;width:232px;height:26px;"></select>
+
+        <span class="lbl" id="lblBranch" style="left:637px;top:11px;">Branch</span>
+        <span class="cw" id="wrapBranchMulti" style="left:691px;top:5px;width:190px;height:26px;" hidden>
+            <select id="branchMulti" multiple data-dtcombo="single" data-dtcombo-checked data-dtcombo-caption="Branch Name" style="position:absolute;left:0;top:0;width:190px;height:26px;"></select>
+        </span>
+        <span class="cw" id="wrapBranchOne" style="left:691px;top:5px;width:190px;height:26px;" hidden>
+            <select id="branchOne" data-dtcombo="single" data-dtcombo-caption="Branch Name" style="position:absolute;left:0;top:0;width:190px;height:26px;"></select>
+        </span>
+
+        <label class="rb sb" style="left:639px;top:36px;width:73px;height:19px;"><input type="radio" name="cls" id="rdPurchase"><span>Purchase</span></label>
+        <label class="rb sb" style="left:719px;top:36px;width:47px;height:19px;"><input type="radio" name="cls" id="rdSale" checked><span>Sale</span></label>
+        <label class="rb sb" style="left:773px;top:36px;width:50px;height:19px;"><input type="radio" name="cls" id="rdBoth"><span>Both</span></label>
+        <button type="button" id="show" class="teal-btn dk t" style="left:828px;top:32px;width:54px;height:26px;" title="Ctrl+S">Show</button>
+    </div>
+
+    <!-- panel6 (Teal Top 23) with ctrlGrdBar1 -->
+    <div class="p6"><span id="barMount"></span></div>
+
+    <div class="gridbox">
+        <div class="grid" id="grid" tabindex="0"><table data-gridbar="frmPayablesAndReceivablesWithPaymentAndReceipts:grd" data-gridbar-mount="#barMount" class="g" id="grd"><colgroup></colgroup><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        <div class="nav" id="nav" hidden>
+            <button type="button" data-nav="first" title="First">|&lt;</button><button type="button" data-nav="prev" title="Previous">&lt;</button>
+            <span id="navText"></span>
+            <button type="button" data-nav="next" title="Next">&gt;</button><button type="button" data-nav="last" title="Last">&gt;|</button>
+        </div>
+    </div>
+</div>
+</div>
+
+<!-- ShortCutKeyPopUp (MakeShortCutKeys) -->
+<dialog class="sck" id="shortcutDialog">
+    <div class="hd">ShortCut Keys</div>
+    <table><thead><tr><th>KeyCombination</th><th>Description</th></tr></thead><tbody id="shortcutRows"></tbody></table>
+    <div class="ft"><button type="button" id="closeShortcuts">Close</button></div>
+</dialog>
+
+<script src="/build/js/countx_prod_combo.js?v=20261007r2"></script>
+<script>
+    /* CmbParentAccount: BindAndRetainSelection(... "Account Title", AllColumns:true) -> Account Title | AccountCode */
+    if (window.DesktopCombo) window.DesktopCombo.define('acrpt2Parent', [{ caption: 'Account Title', flex: 3 }, { caption: 'AccountCode', flex: 1, key: 'code' }]);
+</script>
+<script src="/build/js/countx_acrpt2.js?v=20261007r2"></script>
+<script src="/build/js/countx_acrpt2_pr.js?v=20261007r2"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20261006-grid-control-placement}"></script>
+</body>
+</html>

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>With Holding Tax Deposit Challan - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_tax_define.css?v=20260930a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261005a}"/>
+</head>
+<!-- frmWhtTaxChallanDeposit.cs (Architecture.WinApp.Account_Definition), screen 37 (Accounts; the same class is the Taxation tile 174) - ClientSize 1179 x 616.
+     tabControl1: "Form" | "History".
+     Form: panel3 (28): toolStrip1 "Wht Tax Challan Deposit" | New | Save | Update(empty on the desktop) | Print(empty) | Attachment.
+       groupBox1 (5,6) 1156x117: Company comCompany (10,36) 213; Branch combranches (227,36) 215; Project comproject (447,36) 215;
+         Doc No txtDocNo (671,36) 79; Doc Date txtDocDate (756,36) 170 short; Supplier Customer GL A/c cmbSupplierCustomerGlAcc (932,34) 213;
+         GL Debit A/c cmbDebitGLAc (10,87) 215 (filled on the party combo's Leave); GL Credit A/c cmbGLCreditAcc (227,87) 215; Remarks txtRemarks (448,87) 697.
+       panel5 (Fill): grdDetail - Select | hId, InvoiceNoRefId, DocumentTypeId hidden | Code | VoucherDate | VoucherCode | AccountId hidden |
+         AccountTitle (350) | TaxTypeId hidden | TaxDescription (200) | CreditAmount (120, "0,0", sum).
+     History: panel6 DataGridHistory (Id hidden, VoucherCode, DocumentTypeCode, VoucherDate, AccountTitle, Remarks, UserName, Attachment, View, Print);
+       panel7 grd (AccountTitle 250, Remarks 460, DebitAmount, CreditAmount, sums) filled by the View button. -->
+<body class="pd-body" data-tax-page="wht-challan">
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="pd-form" style="max-width:1179px;">
+    <div class="tx-tabs">
+        <button type="button" id="tabFormBtn" class="tx-tab is-active">Form</button>
+        <button type="button" id="tabHistoryBtn" class="tx-tab">History</button>
+    </div>
+    <div id="tabForm">
+        <div class="win-tool-strip">
+            <span class="win-tool-title">Wht Tax Challan Deposit</span>
+            <button type="button" id="btnnew" class="win-btn-tool" accesskey="n" onclick="TaxPage.btnnew()"><i class="fa fa-plus"></i> <span><u>N</u>ew</span></button>
+            <button type="button" id="btnsave" class="win-btn-tool" accesskey="s" onclick="TaxPage.btnsave(this)"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+            <button type="button" id="btnUpdate" class="win-btn-tool" disabled title="btnUpdate_Click is an empty method in the desktop source"><i class="fa fa-pencil"></i> <span>Update</span></button>
+            <button type="button" id="Print" class="win-btn-tool" disabled title="Print_Click is an empty method in the desktop source"><i class="fa fa-print"></i></button>
+            <button type="button" id="btnAttachment" class="win-btn-tool" accesskey="a" onclick="TaxPage.attachment()"><i class="fa fa-paperclip"></i> <span><u>A</u>ttachment</span></button>
+        </div>
+        <fieldset class="tx-group">
+            <div class="tx-entry tx-entry-plain">
+                <div class="tx-field tx-w213"><label for="comCompany">Company</label>
+                    <select id="comCompany" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Company Name"></select></div>
+                <div class="tx-field tx-w215"><label for="combranches">Branch</label>
+                    <select id="combranches" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Branch Name"></select></div>
+                <div class="tx-field tx-w215"><label for="comproject">Project</label>
+                    <select id="comproject" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Project Name"></select></div>
+                <div class="tx-field tx-w79"><label for="txtDocNo">Doc No</label><input type="text" id="txtDocNo" class="win-textbox" data-guard="integer" autocomplete="off"/></div>
+                <div class="tx-field tx-w170"><label for="txtDocDate">Doc Date</label><input type="date" id="txtDocDate" class="win-date"/></div>
+                <div class="tx-field tx-w213"><label for="cmbSupplierCustomerGlAcc">Supplier Customer GL A/c</label>
+                    <select id="cmbSupplierCustomerGlAcc" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Account Name"></select></div>
+            </div>
+            <div class="tx-entry tx-entry-plain">
+                <div class="tx-field tx-w215"><label for="cmbDebitGLAc">GL Debit A/c</label>
+                    <select id="cmbDebitGLAc" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Debit Account"></select></div>
+                <div class="tx-field tx-w215"><label for="cmbGLCreditAcc">GL Credit A/c</label>
+                    <select id="cmbGLCreditAcc" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Account Name"></select></div>
+                <div class="tx-field tx-grow"><label for="txtRemarks">Remarks</label><input type="text" id="txtRemarks" class="win-textbox" autocomplete="off"/></div>
+            </div>
+        </fieldset>
+        <div class="pd-grid-box">
+            <div class="win-grid-scroll">
+                <table class="win-grid" id="grdDetail">
+                    <thead><tr>
+                        <th class="sel"><input type="checkbox" id="detailAll" aria-label="Select all"></th>
+                        <th style="display:none;">hId</th><th style="display:none;">InvoiceNoRefId</th><th style="display:none;">DocumentTypeId</th>
+                        <th>Code</th><th>VoucherDate</th><th>VoucherCode</th><th style="display:none;">AccountId</th><th style="min-width:350px;">AccountTitle</th>
+                        <th style="display:none;">TaxTypeId</th><th style="min-width:200px;">TaxDescription</th><th class="num" style="min-width:120px;">CreditAmount</th>
+                    </tr></thead>
+                    <tbody id="detailBody"></tbody>
+                    <tfoot><tr id="detailFoot" class="pd-total-row"></tr></tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div id="tabHistory" class="is-hidden">
+        <div class="tx-grid-panel">
+            <div class="win-grid-scroll tx-grid-scroll">
+                <table class="win-grid" id="DataGridHistory">
+                    <thead><tr><th style="display:none;">Id</th><th>VoucherCode</th><th>DocumentTypeCode</th><th>VoucherDate</th><th>AccountTitle</th><th>Remarks</th><th>UserName</th><th class="num">Attachment</th><th>View</th><th>Print</th></tr></thead>
+                    <tbody id="historyBody"></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="tx-grid-panel">
+            <div class="win-grid-scroll tx-grid-scroll">
+                <table class="win-grid" id="grd">
+                    <thead><tr><th style="min-width:250px;">AccountTitle</th><th style="min-width:460px;">Remarks</th><th class="num">DebitAmount</th><th class="num">CreditAmount</th></tr></thead>
+                    <tbody id="viewBody"></tbody>
+                    <tfoot><tr id="viewFoot" class="pd-total-row"></tr></tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_wht_challan_37.js?v=20261007a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20261006-grid-control-placement}"></script>
+</body>
+</html>

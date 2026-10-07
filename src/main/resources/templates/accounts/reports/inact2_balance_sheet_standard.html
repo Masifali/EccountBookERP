@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Account Balance Sheet</title>
+<link rel="stylesheet" href="/build/css/countx_desktop_combo.css?v=20261007r1">
+<link rel="stylesheet" href="/build/css/countx_prod_combo.css?v=20261007r1">
+<link rel="stylesheet" href="/build/css/countx_acrpt1.css?v=20261007r1">
+<link rel="stylesheet" href="/build/css/countx_inact2.css?v=20261007k1">
+<!--
+  Screen 55 "Balance Sheet Report" = Architecture.WinApp.Account_Reports.AccountsBalanceSheetStandardRpt ("Account Balance Sheet"),
+  route /accounts/reports/balance-sheet-standard. Group K (Inact2) 2026-10-07, built 1:1 on InitializeComponent(): ClientSize 1049x655 (maximized), KeyPreview.
+    panel1 Fill = panel2 (Top 25: toolStrip1 27 - btnReset "&Reset" | separator | btnBalanceSheetPrint "151-Balance Sheet Print" | btnBalanceSheetFormat2 "153-BalanceSheet-II"
+                                                 | btnProfitLoosePrint "152-Profit Loss-I" | btnProfitlossFormat2 "154-Profit Loss-II", Verdana 9.75)
+                | panel3 (Top 129, White) = panel7 (Top 29 Teal: label1 4,4 Tahoma 12 bold white "Account Balance Sheet") + groupBox1 "Filters" 12,35 372x80 (Verdana 9.75 bold)
+                | panel4 Fill = panel5 (Left 698: DataGridHistory Fill) + panel6 (Fill: DataGridHistory1 Fill)
+  groupBox1 children (relative to the group box): label27 "From Date" 26,23 | txtfromdate 26,44 115x23 dd-MMM-yy (2) | label33 "To Date" 146,23 | txtToDate 146,44 115x23 (3)
+    btnshow "Show" 267,44 58x23 (6, Teal flat Verdana 9.75 bold white)
+  Grids (both): FilterMode Automatic, GroupByBoxVisible false, RecordNavigator, TotalRow bottom, Verdana 8.25; no ctrlGrdBar on this form.
+  Lists: GET /api/accounts/inact2/balance-sheet/lookups. Reports: GET /api/accounts/inact2/balance-sheet (Sp_Accounts_BalanceSheetStandard_Rpt), /profit-loss (Sp_Accounts_ProfitLoassStandard_Rpt).
+  Prints: /accounts/reports/inact2/print/{balance-sheet-151, balance-sheet-153, profit-loss-152, profit-loss-154}. Page logic: /build/js/countx_inact2_55.js.
+-->
+</head>
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="frm-scroll">
+<div class="frm wide" id="frmBalanceSheetStandard" style="min-width:1049px;">
+
+    <!-- panel2 / toolStrip1 -->
+    <div class="p2"><div class="ts">
+        <button type="button" id="btnReset" title="Ctrl+N"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5" fill="#3fa34d" stroke="#2a7a35"/><path d="M8 4.5v7M4.5 8h7" stroke="#fff" stroke-width="1.6"/></svg><span><u>R</u>eset</span></button>
+        <span class="sep"></span>
+        <button type="button" id="btnBalanceSheetPrint"><svg viewBox="0 0 16 16"><rect x="4" y="1.5" width="8" height="4" fill="#fff" stroke="#555"/><rect x="1.5" y="5.5" width="13" height="6" rx="1" fill="#6b7785"/><rect x="4" y="9.5" width="8" height="5" fill="#fff" stroke="#555"/></svg><span>151-Balance Sheet Print</span></button>
+        <button type="button" id="btnBalanceSheetFormat2"><svg viewBox="0 0 16 16"><rect x="4" y="1.5" width="8" height="4" fill="#fff" stroke="#555"/><rect x="1.5" y="5.5" width="13" height="6" rx="1" fill="#6b7785"/><rect x="4" y="9.5" width="8" height="5" fill="#fff" stroke="#555"/></svg><span>153-BalanceSheet-II</span></button>
+        <button type="button" id="btnProfitLoosePrint"><svg viewBox="0 0 16 16"><rect x="4" y="1.5" width="8" height="4" fill="#fff" stroke="#555"/><rect x="1.5" y="5.5" width="13" height="6" rx="1" fill="#6b7785"/><rect x="4" y="9.5" width="8" height="5" fill="#fff" stroke="#555"/></svg><span>152-Profit Loss-I</span></button>
+        <button type="button" id="btnProfitlossFormat2"><svg viewBox="0 0 16 16"><rect x="4" y="1.5" width="8" height="4" fill="#fff" stroke="#555"/><rect x="1.5" y="5.5" width="13" height="6" rx="1" fill="#6b7785"/><rect x="4" y="9.5" width="8" height="5" fill="#fff" stroke="#555"/></svg><span>154-Profit Loss-II</span></button>
+    </div></div>
+
+    <!-- panel3 (Top 129, White): panel7 (Teal 29) + groupBox1 "Filters" -->
+    <div class="teal" style="height:29px;"><span class="cap vd" style="left:4px;top:4px;">Account Balance Sheet</span></div>
+    <div class="pf white" style="height:100px;min-width:1049px;">
+        <div class="gb vdb" style="left:12px;top:6px;width:372px;height:80px;">
+            <div class="gb-frame"></div><span class="gb-cap">Filters</span>
+            <span class="lbl b975" style="left:26px;top:23px;">From Date</span>
+            <input type="date" id="txtfromdate" class="tb cal975" tabindex="2" style="left:26px;top:44px;width:115px;height:23px;">
+            <span class="lbl b975" style="left:146px;top:23px;">To Date</span>
+            <input type="date" id="txtToDate" class="tb cal975" tabindex="3" style="left:146px;top:44px;width:115px;height:23px;">
+            <button type="button" id="btnshow" class="teal-btn vd975" tabindex="6" style="left:267px;top:44px;width:58px;height:23px;" title="Show">Show</button>
+        </div>
+    </div>
+
+    <!-- panel4 Fill: panel5 (Left 698) DataGridHistory | panel6 (Fill) DataGridHistory1 -->
+    <div class="twin">
+        <div class="gridbox left">
+            <div class="grid" id="grid" tabindex="0"><table class="g noalt" id="results"><colgroup></colgroup><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+            <div class="nav" id="nav" hidden>
+                <button type="button" data-nav="first" title="First">|&lt;</button><button type="button" data-nav="prev" title="Previous">&lt;</button>
+                <span id="navText"></span>
+                <button type="button" data-nav="next" title="Next">&gt;</button><button type="button" data-nav="last" title="Last">&gt;|</button>
+            </div>
+        </div>
+        <div class="gridbox fill">
+            <div class="grid" id="grid1" tabindex="0"><table class="g noalt" id="results1"><colgroup></colgroup><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+            <div class="nav" id="nav1" hidden>
+                <button type="button" data-nav="first" title="First">|&lt;</button><button type="button" data-nav="prev" title="Previous">&lt;</button>
+                <span id="navText1"></span>
+                <button type="button" data-nav="next" title="Next">&gt;</button><button type="button" data-nav="last" title="Last">&gt;|</button>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+<script src="/build/js/countx_acrpt1_core.js?v=20261007r1"></script>
+<script src="/build/js/countx_inact2_core.js?v=20261007k1"></script>
+<script src="/build/js/countx_inact2_55.js?v=20261007k1"></script>
+</body>
+</html>

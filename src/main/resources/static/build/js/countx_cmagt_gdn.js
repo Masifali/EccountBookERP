@@ -159,6 +159,12 @@
         getJSON(API + '/late-vehicle-config').then(function (c) { lateCfg = c || lateCfg; }).catch(function () {});
     }
 
+    /* btnAllocatePmItems_Click opens the desktop's shared allocation form as a separate MDI child. */
+    var allocatePmButton = $id('BtnAllocatePmItems');
+    if (allocatePmButton) allocatePmButton.addEventListener('click', function () {
+        window.open('/packing-material/allocate-items-to-flow', '_blank', 'noopener');
+    });
+
     /* CmbDeliveryToParty_Leave :1068 -> BindShipToAddressAgainstBuyer (party 0 = every address;
        a single row is activated). */
     var shipToSync = false;

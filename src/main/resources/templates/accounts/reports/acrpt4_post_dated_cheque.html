@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Post Dated Cheque Reports</title>
+<link rel="stylesheet" href="/build/css/countx_desktop_combo.css?v=20261007r2">
+<link rel="stylesheet" href="/build/css/countx_prod_combo.css?v=20261007r2">
+<link rel="stylesheet" href="/build/css/countx_acrpt4.css?v=20261007r4">
+<!--
+  Screen 87 "Post Dated Cheque Reports" = Architecture.WinApp.Account_Reports.frmPostDatedChequeReports
+  (route /accounts/reports/post-dated-cheque-reports). R4 2026-10-07, built 1:1 on InitializeComponent() (ClientSize 945x659, AutoScroll):
+    ParentPanel Fill (White, AutoScroll) = FormPanel Top 185 + DataGridHistory Fill
+    FormPanel Top 185 = toolStrip3 27 (&Refresh | 177-Print) + panel1 Teal Top 30 (label1 "Post Dated Cheque Report" @0,2 Segoe UI 14.25 bold white,
+                        ctrlGrdBar1 @896,4) + groupBox1 "Criteria's" (Dock Left, 681x128, Tahoma 9.75 bold):
+        label27 "Cheque From Date" 11,19 | ChequeFromDate 135,15 153x23 (dd-MMM-yyyy, no check box)                  tab 0
+        label33 "Cheque To Date" 11,46   | ChequeToDate 135,42 153x23 (ShowCheckBox, unchecked)                     tab 1
+        label35 "Cheque No From" 11,73   | txtChequeNoFrom 135,69 153x23 (digits only)                               tab 2
+        label36 "Cheque No To" 12,101    | txtChequeNoTo 135,97 153x23 (digits only)                                 tab 3
+        label2 "Bank GL Account" 289,19  | CmbBankGlAccount 394,13 281x26                                            tab 4
+        label3 "Cheque Account" 289,46   | CmbChequeAccount 394,40 281x26                                            tab 5
+        label4 "Cheque Type" 289,73 + CmbChequeType 394,67 (both Visible = false, never filled)                     tab 6
+        RBUnclear 395,99 (checked) | RBClear 466,99 | RBCancel 523,99 (Visible = false)                              tab 7 / 8 / 9
+        btnshow "Show" 613,95 62x26 rgb(10,110,110) Segoe UI Semibold 11.25 bold, flat                              tab 9
+    DataGridHistory Fill (Verdana 8.25, GroupByBox hidden, filter row, TotalRow bottom, alternating colours, record navigator)
+  Page logic: /build/js/countx_acrpt4_pcheque.js (+ shared /build/js/countx_acrpt4.js). API: /api/accounts/acrpt4/pchq/*
+-->
+<style>
+    .frm { min-width: 945px; min-height: 659px; }
+    .fp { flex: 0 0 185px; height: 185px; position: relative; background: #f0f0f0; }
+    .fp .ts { position: absolute; left: 0; right: 0; top: 0; }
+    .fp .bar { position: absolute; left: 0; right: 0; top: 27px; height: 30px; background: teal; }
+    .fp .bar .cap { position: absolute; left: 0; top: 2px; font: bold 19px "Segoe UI", Calibri, Carlito, Arial, sans-serif; line-height: 25px; color: #fff; white-space: nowrap; }
+    .fp .gb { left: 0; top: 57px; width: 681px; height: 128px; background: #f0f0f0; }
+    .fp .gb .gb-cap { background: #f0f0f0; }
+    .fp .gb .gb-frame { top: 7px; }
+    .fp .lbl { font: 600 12px "Segoe UI Semibold", "Segoe UI", Calibri, Carlito, Arial, sans-serif; font-weight: bold; }
+    .fp input.tb, .fp .dtp { height: 23px; font: 13px Verdana, Tahoma, sans-serif; }
+    .fp .dtp input[type=date] { font: 13px Verdana, Tahoma, sans-serif; }
+    .fp .rb { font: bold 12px "Segoe UI Semibold", "Segoe UI", Calibri, Carlito, Arial, sans-serif; }
+    #show { font: bold 15px "Segoe UI Semibold", "Segoe UI", Calibri, Carlito, Arial, sans-serif; }
+</style>
+<link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261005a}"/>
+</head>
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="frm-scroll">
+<div class="frm" id="frmPostDatedChequeReports">
+
+    <!-- FormPanel (Top 185) -->
+    <div class="fp">
+        <div class="ts">
+            <button type="button" id="refresh" title="Refresh"><svg viewBox="0 0 16 16"><path d="M2 14l1-4 8-8 3 3-8 8z" fill="#f0c040" stroke="#7a5b00"/><path d="M2 14l1-4 3 3z" fill="#444"/></svg><span><u>R</u>efresh</span></button>
+            <button type="button" id="print177"><svg viewBox="0 0 16 16"><rect x="4" y="1.5" width="8" height="4" fill="#fff" stroke="#555"/><rect x="1.5" y="5.5" width="13" height="6" rx="1" fill="#6b7785"/><rect x="4" y="9.5" width="8" height="5" fill="#fff" stroke="#555"/></svg><span>177-Print</span></button>
+        </div>
+        <div class="bar"><span class="cap">Post Dated Cheque Report</span></div>
+
+        <div class="gb">
+            <div class="gb-frame"></div><span class="gb-cap">Criteria's</span>
+            <span class="lbl" style="left:11px;top:19px;">Cheque From Date</span>
+            <input type="date" id="chqFrom" class="tb" style="left:135px;top:15px;width:153px;height:23px;" autocomplete="off">
+            <span class="lbl" style="left:11px;top:46px;">Cheque To Date</span>
+            <span class="dtp off" id="toWrap" style="left:135px;top:42px;width:153px;height:23px;"><input type="checkbox" id="toChk" title="Cheque to date"><input type="date" id="chqTo"></span>
+            <span class="lbl" style="left:11px;top:73px;">Cheque No From</span>
+            <input id="noFrom" class="tb" inputmode="numeric" style="left:135px;top:69px;width:153px;height:23px;" autocomplete="off">
+            <span class="lbl" style="left:12px;top:101px;">Cheque No To</span>
+            <input id="noTo" class="tb" inputmode="numeric" style="left:135px;top:97px;width:153px;height:23px;" autocomplete="off">
+
+            <span class="lbl" style="left:289px;top:19px;">Bank GL Account</span>
+            <select id="bank" data-dtcombo="single" data-dtcombo-caption="Bank Gl Account Name" style="position:absolute;left:394px;top:13px;width:281px;height:26px;"></select>
+            <span class="lbl" style="left:289px;top:46px;">Cheque Account</span>
+            <select id="acct" data-dtcombo="single" data-dtcombo-caption="Account Name" style="position:absolute;left:394px;top:40px;width:281px;height:26px;"></select>
+
+            <label class="rb" style="left:395px;top:99px;"><input type="radio" name="st" id="rbUnclear" checked>Unclear</label>
+            <label class="rb" style="left:466px;top:99px;"><input type="radio" name="st" id="rbClear">Clear</label>
+            <button type="button" id="show" class="teal-btn dk" style="left:613px;top:95px;width:62px;height:26px;" title="Show">Show</button>
+        </div>
+    </div>
+
+    <!-- DataGridHistory Fill -->
+    <div class="gridbox">
+        <div class="grid" id="gridWrap" tabindex="0"><table data-gridbar="frmPostDatedChequeReports:DataGridHistory" class="g" id="grd"><colgroup></colgroup><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        <div class="nav" id="nav" hidden>
+            <button type="button" data-nav="first" title="First">|&lt;</button><button type="button" data-nav="prev" title="Previous">&lt;</button>
+            <span id="navText"></span>
+            <button type="button" data-nav="next" title="Next">&gt;</button><button type="button" data-nav="last" title="Last">&gt;|</button>
+        </div>
+    </div>
+</div>
+</div>
+
+<script src="/build/js/countx_prod_combo.js?v=20261007r2"></script>
+<script src="/build/js/countx_acrpt4.js?v=20261007r4"></script>
+<script src="/build/js/countx_acrpt4_pcheque.js?v=20261007r4"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20261006-grid-control-placement}"></script>
+</body>
+</html>

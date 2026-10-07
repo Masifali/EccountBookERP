@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pdc Inventory Report</title>
+<link rel="stylesheet" href="/build/css/countx_desktop_combo.css?v=20261007r2">
+<link rel="stylesheet" href="/build/css/countx_prod_combo.css?v=20261007r2">
+<link rel="stylesheet" href="/build/css/countx_acrpt4.css?v=20261007r4">
+<!--
+  Screen 76 "Pdc Inventory Report" = Architecture.WinApp.Account_Reports.PdcInventoryReport
+  (route /accounts/reports/pdc-inventory-report). R4 2026-10-07, built 1:1 on InitializeComponent() (ClientSize 1102x627):
+    panel2 Top 27 = toolStrip3 (White: &Refresh [btnNew] | 125-Print) + ctrlGrdBar1 @1057,0
+    panel5 Top 99 White:
+        label30 "FromDate" 10,13 | ChkFromdate 125,17 | datFromDate 146,8 246x25 (dd-MMM-yyyy)     tab 0 / 1
+        label1 "ToDate" 401,13 | ChkTodate 493,19 | datToDate 514,8 208x25                          tab 2 / 3
+        label3 "Cheque FromDate" 9,41 | ChkCheqFromdate 124,47 | datCheqFromDate 146,36 246x25       tab 4 / 5
+        label2 "Cheque ToDate" 401,41 | ChkCheqToDate 495,45 | datCheqToDate 514,36 208x25           tab 6 / 7
+        label34 "AccountTitle" 12,71 | CmbAccountTitle 146,65 246x26 (UltraCombo, MS Sans Serif 10.2)  tab 8
+        label4 "CheqStatus" 401,71 | CmbCheqStatus 514,67 208x26                                      tab 9
+        btnshow "Show" 727,67 63x26 rgb(10,110,110) Segoe UI Semibold 11.25 bold white, flat                tab 10
+    grd Fill (Verdana 8.25, GroupByBox hidden, filter row, TotalRow bottom, record navigator)
+  Page logic: /build/js/countx_acrpt4_pdc.js (+ shared /build/js/countx_acrpt4.js). API: /api/accounts/acrpt4/pdc/*
+-->
+<style>
+    .frm { min-width: 1102px; min-height: 627px; }
+    .p5 { flex: 0 0 99px; height: 99px; position: relative; background: #fff; }
+    .p5 .dtp { height: 25px; }
+    .p5 .dtp input[type=date] { font: 13px "Segoe UI", Calibri, Carlito, Arial, sans-serif; }
+    .ts.wh { background: #fff; }
+    .p5 .lbl { font: 12px "MS Sans Serif", "Microsoft Sans Serif", Tahoma, Verdana, sans-serif; font-weight: normal; }
+    .p5 input.tb.seg { font: 13px "Segoe UI", Calibri, Carlito, Arial, sans-serif; }
+    .p5 input[type=checkbox] { position: absolute; margin: 0; }
+    #show { font: bold 15px "Segoe UI Semibold", "Segoe UI", Calibri, Carlito, Arial, sans-serif; }
+</style>
+<link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261005a}"/>
+</head>
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="frm-scroll">
+<div class="frm" id="PdcInventoryReport">
+
+    <!-- panel2: toolStrip3 -->
+    <div class="pn" style="flex:0 0 27px;height:27px;">
+        <div class="ts wh">
+            <button type="button" id="refresh" title="Ctrl+N"><svg viewBox="0 0 16 16"><path d="M2 14l1-4 8-8 3 3-8 8z" fill="#f0c040" stroke="#7a5b00"/><path d="M2 14l1-4 3 3z" fill="#444"/></svg><span><u>R</u>efresh</span></button>
+            <button type="button" id="print125" title="Ctrl+P"><svg viewBox="0 0 16 16"><rect x="4" y="1.5" width="8" height="4" fill="#fff" stroke="#555"/><rect x="1.5" y="5.5" width="13" height="6" rx="1" fill="#6b7785"/><rect x="4" y="9.5" width="8" height="5" fill="#fff" stroke="#555"/></svg><span>125-Print</span></button>
+        </div>
+    </div>
+
+    <!-- panel5: filters -->
+    <div class="p5">
+        <span class="lbl" style="left:10px;top:13px;">FromDate</span>
+        <input type="checkbox" id="chkFrom" style="left:125px;top:17px;" title="From date">
+        <input type="date" id="datFrom" class="tb seg" style="left:146px;top:8px;width:246px;height:25px;" autocomplete="off">
+
+        <span class="lbl" style="left:401px;top:13px;">ToDate</span>
+        <input type="checkbox" id="chkTo" style="left:493px;top:19px;" title="To date">
+        <input type="date" id="datTo" class="tb seg" style="left:514px;top:8px;width:208px;height:25px;" autocomplete="off">
+
+        <span class="lbl" style="left:9px;top:41px;">Cheque FromDate</span>
+        <input type="checkbox" id="chkCheqFrom" style="left:124px;top:47px;" title="Cheque from date">
+        <input type="date" id="datCheqFrom" class="tb seg" style="left:146px;top:36px;width:246px;height:25px;" autocomplete="off">
+
+        <span class="lbl" style="left:401px;top:41px;">Cheque ToDate</span>
+        <input type="checkbox" id="chkCheqTo" style="left:495px;top:45px;" title="Cheque to date">
+        <input type="date" id="datCheqTo" class="tb seg" style="left:514px;top:36px;width:208px;height:25px;" autocomplete="off">
+
+        <span class="lbl" style="left:12px;top:71px;">AccountTitle</span>
+        <select id="acct" data-dtcombo="single" data-dtcombo-caption="AccountTitle" style="position:absolute;left:146px;top:65px;width:246px;height:26px;"></select>
+
+        <span class="lbl" style="left:401px;top:71px;">CheqStatus</span>
+        <select id="status" data-dtcombo="single" data-dtcombo-caption="Cheque Status" style="position:absolute;left:514px;top:67px;width:208px;height:26px;"></select>
+
+        <button type="button" id="show" class="teal-btn dk" style="left:727px;top:67px;width:63px;height:26px;" title="Show">Show</button>
+    </div>
+
+    <!-- grd Fill -->
+    <div class="gridbox">
+        <div class="grid" id="gridWrap" tabindex="0"><table data-gridbar="PdcInventoryReport:grd" class="g" id="grd"><colgroup></colgroup><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        <div class="nav" id="nav" hidden>
+            <button type="button" data-nav="first" title="First">|&lt;</button><button type="button" data-nav="prev" title="Previous">&lt;</button>
+            <span id="navText"></span>
+            <button type="button" data-nav="next" title="Next">&gt;</button><button type="button" data-nav="last" title="Last">&gt;|</button>
+        </div>
+    </div>
+</div>
+</div>
+
+<script src="/build/js/countx_prod_combo.js?v=20261007r2"></script>
+<script src="/build/js/countx_acrpt4.js?v=20261007r4"></script>
+<script src="/build/js/countx_acrpt4_pdc.js?v=20261007r4"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20261006-grid-control-placement}"></script>
+</body>
+</html>

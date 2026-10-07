@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Export Voucher (Upload) - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}">
+    <link rel="stylesheet" th:href="@{/build/css/purchase/purchase_reports.css?v=20260930r3}">
+    <style>
+        /* panel1 / panel2 / panel3 of the Designer (1037 wide): teal toolstrip + caption, white filter panel 65 high, teal grid bar. */
+        .pfu-caption { background: #008080; color: #fff; font: bold 16px Tahoma, sans-serif; height: 26px; line-height: 26px; padding: 0 6px; }
+        .pfu-filters { position: relative; height: 65px; background: #fff; border-bottom: 1px solid #c8c8c8; min-width: 830px; font: 12px "Segoe UI", sans-serif; }
+        .pfu-filters label.pr-abs { font: 600 12px "Segoe UI Semibold", "Segoe UI", sans-serif; }
+        .pfu-filters input[type=text], .pfu-filters input[type=date], .pfu-filters select {
+            height: 23px; font: 12px Verdana, sans-serif; border: 1px solid #7a9cbf; background: #fff; padding: 1px 3px; width: 100%; box-sizing: border-box; }
+        .pfu-filters button.pfu-search { height: 25px; background: #008080; color: #fff; border: 1px solid #006666; font: bold 12px Tahoma, sans-serif; cursor: pointer; }
+        .pfu-filters button.pfu-search:disabled, .pr-toolstrip button[aria-busy="true"] { opacity: .6; cursor: progress; }
+        #pfuWrap { height: calc(100vh - 175px); }
+        /* grd.FrozenColumns = 1 - the Select column stays in view. */
+        #grd tbody td:nth-child(1), #grd thead th:nth-child(1), #grd tfoot td:nth-child(1) { position: sticky; left: 0; z-index: 1; background: #fff; }
+        #grd thead th:nth-child(1) { z-index: 3; background: #eef1f4; }
+        #grd tfoot td:nth-child(1) { z-index: 3; background: #e8edf2; }
+        .pfu-note { color: #7a4a00; background: #fff6df; border: 1px solid #e6c77a; padding: 3px 6px; margin: 3px; font: 12px "Segoe UI", sans-serif; }
+    </style>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261005a}"/>
+</head>
+<!-- 917 Architecture.WinApp.DataSyncing.frmPendingExportVoucherForUpload "Export Voucher (Upload)". Layout = InitializeComponent (panel2 filters at the designer coordinates). -->
+<body class="pr">
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div id="prLoading" hidden role="status">Please wait...</div>
+<nav class="pr-toolstrip" aria-label="Toolbar">
+    <button type="button" id="btnNew">New</button>
+    <button type="button" id="btnRefresh">Refresh</button>
+    <span class="pr-sep" aria-hidden="true"></span>
+    <button type="button" id="btnShortcutKeys">ShortCut Keys</button>
+    <span class="pr-sep" aria-hidden="true"></span>
+    <button type="button" id="BtnUploadInvoices" title="Ctrl+U">Upload Selected Vouchers</button>
+    <a class="pr-right" href="/accounts" title="Ctrl+E">Exit</a>
+</nav>
+<div class="pfu-caption">Pending Export Vouchers For Upload</div>
+<div id="prMessage" role="status" aria-live="polite"></div>
+<div class="pfu-note" id="pfuNote">Upload target: the desktop saves each uploaded voucher to the tax server database
+    (App.config connection string "TPSSDb_Server"). That connection is not configured in the web application, so
+    "Upload Selected Vouchers" runs the desktop's checks and stops before saving; nothing is written and the upload status is not changed.</div>
+<div class="pfu-filters">
+    <label class="pr-abs" style="left:9px;top:10px" for="FromDate">From &amp; To Date</label>
+    <div class="pr-abs" style="left:117px;top:6px;width:118px"><input type="date" id="FromDate" tabindex="1"></div>
+    <div class="pr-abs" style="left:237px;top:6px;width:118px"><input type="date" id="Todate" aria-label="To Date" tabindex="2"></div>
+
+    <label class="pr-abs" style="left:9px;top:37px" for="txtFromDocNo">From &amp; To Doc No</label>
+    <div class="pr-abs" style="left:117px;top:33px;width:118px"><input type="text" id="txtFromDocNo" inputmode="numeric" autocomplete="off" tabindex="3"></div>
+    <div class="pr-abs" style="left:237px;top:33px;width:118px"><input type="text" id="TxtToDocNo" inputmode="numeric" autocomplete="off" aria-label="To Doc No" tabindex="4"></div>
+
+    <label class="pr-abs" style="left:360px;top:10px" for="CmbBuyer">Buyer Name</label>
+    <div class="pr-abs" style="left:438px;top:4px;width:181px"><select id="CmbBuyer" data-dtcombo="single" data-dtcombo-caption="Buyer Name" tabindex="5"></select></div>
+    <label class="pr-abs" style="left:360px;top:37px" for="CmbContractNo">Contract #</label>
+    <div class="pr-abs" style="left:438px;top:31px;width:181px"><select id="CmbContractNo" data-dtcombo="single" data-dtcombo-caption="Contract #" tabindex="6"></select></div>
+    <label class="pr-abs" style="left:625px;top:10px" for="CmbCurrency">Currency</label>
+    <div class="pr-abs" style="left:684px;top:4px;width:125px"><select id="CmbCurrency" data-dtcombo="single" data-dtcombo-caption="Currency" tabindex="7"></select></div>
+
+    <button type="button" class="pfu-search pr-abs" id="BtnShow" style="left:745px;top:32px;width:64px" title="Ctrl+S" tabindex="8">Search</button>
+</div>
+<section id="gridSection">
+    <div class="pr-grid-bar"><span id="lblCount"></span>
+        <span class="pr-right"><button type="button" id="btnGridPrint">Grid Print</button><button type="button" id="btnGridExport">Export</button><button type="button" id="btnFullscreen">Fullscreen</button></span>
+    </div>
+    <div class="pr-wrap" tabindex="0" id="pfuWrap"><table data-gridbar="ExportVoucherForUpload:grd" class="pr-grid" id="grd"></table></div>
+</section>
+<script th:src="@{/build/js/purchase/reports/pr_common.js?v=20260930h}"></script>
+<script th:src="@{/js/countx_export_voucher_for_upload.js?v=20261007a}"></script>
+<script th:src="@{/build/js/countx_desktop_combo.js?v=20260927b}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20261006-grid-control-placement}"></script>
+</body>
+</html>

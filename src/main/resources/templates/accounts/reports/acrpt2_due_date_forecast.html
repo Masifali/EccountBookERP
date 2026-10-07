@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>1008 Payables &amp; Receivable Forecast</title>
+<link rel="stylesheet" href="/build/css/countx_acrpt2.css?v=20261007r2">
+<!--
+  Screen 75 "1008 Payables & Receivable Forecast" = Architecture.WinApp.Account_Reports.DueDateAnalysisPayablesAndReceivablesForcast
+  (route /accounts/reports/due-date-analysis-forecast). R2 2026-10-07, built 1:1 on InitializeComponent()
+  (ClientSize 1734x730, Maximized, AutoScroll, AutoScrollMinSize 1200x500 set in Load):
+    panel1 Fill (White) = panel3 (Teal Top 53: toolStrip2 27 &New | 840-Print | ShortCut Keys, Verdana 9.75 + lblComparison @3,31 Tahoma 12 bold)
+                        | panel5 (White Top 230: panel6 Top 55 = filters + the six summary boxes, grdDueWise Fill)
+                        | tabControl1 Fill (Tahoma 9.75 bold): "Tabular View" (panel4: label8 teal 22 "Filtered Records" + ctrlGrdBar1 + grd)
+                                                               "Card View"    (panel2: label7 teal 23 "Filtered Records" + ItemWiseflowlayout cards 266x221)
+  panel6 children: label27 "From Date" 7,6 | fromdate 7,25 119x23 (disabled) | label33 "To Date" 127,6 | todate 127,25 136x23 (ShowCheckBox) |
+    label1 "Interval" 264,6 | txtIntervalDays 264,25 56x23 | btnshow 321,24 55x26 rgb(10,110,110) |
+    panel10 Net Receivables 384,3 | panel11 Over Due 529,3 | panel7 Not Yet Due 674,3 | panel8 Net Payables 819,3 | panel13 Over Due 964,3 | panel12 Not Yet Due 1109,3 (each 143x50).
+  Page logic: /build/js/countx_acrpt2_forecast.js. API: /api/accounts/acrpt2/forecast/*
+-->
+<style>
+    .frm { min-width: 1200px; min-height: 500px; }
+    .p3 { flex: 0 0 53px; height: 53px; background: var(--teal); position: relative; }
+    .p3 .cap { position: absolute; left: 3px; top: 31px; font: bold 16px Tahoma, Verdana, sans-serif; line-height: 19px; color: #fff; white-space: nowrap; }
+    .p5 { flex: 0 0 230px; height: 230px; display: flex; flex-direction: column; background: #fff; }
+    .p6 { flex: 0 0 55px; height: 55px; position: relative; background: #fff; }
+    .p5 .gridbox { min-height: 0; }
+    .mp { position: absolute; top: 3px; width: 143px; height: 50px; box-sizing: border-box; border: 1px solid #646464; overflow: hidden; background: #fff; }
+    .mp .h { position: absolute; left: -1px; top: -1px; width: 143px; height: 23px; background: var(--teal); color: #fff; text-align: center; line-height: 23px; font: bold 13px "Segoe UI", Tahoma, sans-serif; }
+    .mp .v { position: absolute; left: -1px; top: 22px; width: 143px; height: 23px; text-align: right; line-height: 23px; font: bold 12px Verdana, Tahoma, sans-serif; white-space: nowrap; overflow: hidden; }
+    .mp .v.sg { font: bold 13px "Segoe UI", Tahoma, sans-serif; }
+    .tabs .th button { font: bold 13px Tahoma, Verdana, sans-serif; }
+    .p4 { flex: 0 0 22px; height: 22px; font: bold 15px Tahoma, Verdana, sans-serif; line-height: 22px; padding-left: 3px; color: #fff; background: var(--teal); position: relative; }
+    .p7 { flex: 0 0 23px; height: 23px; font: bold 16px Tahoma, Verdana, sans-serif; line-height: 23px; padding-left: 3px; color: #fff; background: var(--teal); }
+    .cards { flex: 1 1 auto; min-height: 0; overflow: auto; display: flex; flex-wrap: wrap; align-content: flex-start; background: #fff; }
+    .card { box-sizing: border-box; width: 266px; height: 221px; margin: 3px; border: 1px solid #646464; position: relative; background: #f0f0f0; flex: 0 0 auto; }
+    .card .dt { background: var(--teal); color: #fff; border-bottom: 1px solid #646464; height: 24px; line-height: 22px; text-align: center; font: bold 13px Tahoma, Verdana, sans-serif; }
+    .card .k { position: absolute; left: 3px; font: bold 12px "Segoe UI", Tahoma, sans-serif; line-height: 15px; white-space: normal; }
+    .card .n { position: absolute; left: 141px; width: 118px; height: 18px; text-align: right; font: bold 12px Verdana, Tahoma, sans-serif; line-height: 18px; white-space: nowrap; overflow: hidden; }
+    .card .n.red { color: #f00; }
+    #cardsTitle { flex: 0 0 auto; }
+</style>
+<link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261005a}"/>
+</head>
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="frm-scroll">
+<div class="frm" id="DueDateAnalysisPayablesAndReceivablesForcast">
+
+    <!-- panel3 (Teal Top 53): toolStrip2 + lblComparison -->
+    <div class="p3">
+        <div class="ts">
+            <button type="button" id="new" title="Ctrl+N"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#2e9b45"/><path d="M8 4v8M4 8h8" stroke="#fff" stroke-width="2"/></svg><span><u>N</u>ew</span></button>
+            <button type="button" id="print"><svg viewBox="0 0 16 16"><rect x="4" y="1.5" width="8" height="4" fill="#fff" stroke="#555"/><rect x="1.5" y="5.5" width="13" height="6" rx="1" fill="#6b7785"/><rect x="4" y="9.5" width="8" height="5" fill="#fff" stroke="#555"/></svg><span>840-Print</span></button>
+            <button type="button" id="shortcuts" title="Ctrl+Alt"><svg viewBox="0 0 16 16"><rect x="1" y="4" width="14" height="8.5" rx="1.5" fill="#4a4f57"/><path d="M3 6.5h1.5M6 6.5h1.5M9 6.5h1.5M12 6.5h1M4 10h8" stroke="#fff" stroke-width="1.2"/></svg><span>ShortCut Keys</span></button>
+        </div>
+        <span class="cap">Due Date Analysis Payables And Receivables Forecast</span>
+    </div>
+
+    <!-- panel5 (White Top 230): panel6 (55) + grdDueWise -->
+    <div class="p5">
+        <div class="p6">
+            <span class="lbl" style="left:7px;top:6px;">From Date</span>
+            <input type="date" id="fromDate" class="tb" disabled style="left:7px;top:25px;width:119px;height:23px;">
+            <span class="lbl" style="left:127px;top:6px;">To Date</span>
+            <span class="dtp" id="toWrap" style="left:127px;top:25px;width:136px;height:23px;"><input type="checkbox" id="toChk" title="To date"><input type="date" id="toDate"></span>
+            <span class="lbl" style="left:264px;top:6px;">Interval</span>
+            <input id="interval" class="tb r" inputmode="numeric" autocomplete="off" style="left:264px;top:25px;width:56px;height:23px;">
+            <button type="button" id="show" class="teal-btn dk" style="left:321px;top:24px;width:55px;height:26px;" title="Ctrl+S">Show</button>
+
+            <div class="mp" style="left:384px;"><div class="h">Net Receivables</div><div class="v" id="vNetRcv" style="left:2px;width:140px;">0</div></div>
+            <div class="mp" style="left:529px;"><div class="h">Over Due</div><div class="v" id="vOverRcv">0</div></div>
+            <div class="mp" style="left:674px;"><div class="h">Not Yet Due</div><div class="v" id="vNotRcv">0</div></div>
+            <div class="mp" style="left:819px;"><div class="h">Net Payables</div><div class="v sg" id="vNetPay">0</div></div>
+            <div class="mp" style="left:964px;"><div class="h">Over Due</div><div class="v sg" id="vOverPay">0</div></div>
+            <div class="mp" style="left:1109px;"><div class="h">Not Yet Due</div><div class="v sg" id="vNotPay">0</div></div>
+        </div>
+        <div class="gridbox">
+            <div class="grid" id="gridDue" tabindex="0"><table class="g" id="grdDueWise"><colgroup></colgroup><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+            <div class="nav" id="navDue" hidden>
+                <button type="button" data-nav="first" title="First">|&lt;</button><button type="button" data-nav="prev" title="Previous">&lt;</button>
+                <span id="navTextDue"></span>
+                <button type="button" data-nav="next" title="Next">&gt;</button><button type="button" data-nav="last" title="Last">&gt;|</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- tabControl1 Fill -->
+    <div class="tabs">
+        <div class="th"><button type="button" id="tabTab" class="on">Tabular View</button><button type="button" id="tabCard">Card View</button></div>
+        <div class="tp" id="pageTab">
+            <div class="p4">Filtered Records</div>
+            <div class="gridbox">
+                <div class="grid" id="gridMain" tabindex="0"><table data-gridbar="DueDateAnalysisPayablesAndReceivablesForcast:grd" data-gridbar-hide="chooser,save,remove" class="g" id="grd"><colgroup></colgroup><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+                <div class="nav" id="navMain" hidden>
+                    <button type="button" data-nav="first" title="First">|&lt;</button><button type="button" data-nav="prev" title="Previous">&lt;</button>
+                    <span id="navTextMain"></span>
+                    <button type="button" data-nav="next" title="Next">&gt;</button><button type="button" data-nav="last" title="Last">&gt;|</button>
+                </div>
+            </div>
+        </div>
+        <div class="tp" id="pageCard" hidden>
+            <div class="p7">Filtered Records</div>
+            <div class="cards" id="cards"></div>
+        </div>
+    </div>
+</div>
+</div>
+
+<!-- ShortCutKeyPopUp (MakeShortCutKeys) -->
+<dialog class="sck" id="shortcutDialog">
+    <div class="hd">ShortCut Keys</div>
+    <table><thead><tr><th>KeyCombination</th><th>Description</th></tr></thead><tbody id="shortcutRows"></tbody></table>
+    <div class="ft"><button type="button" id="closeShortcuts">Close</button></div>
+</dialog>
+
+<script src="/build/js/countx_acrpt2.js?v=20261007r2"></script>
+<script src="/build/js/countx_acrpt2_forecast.js?v=20261007r2"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20261006-grid-control-placement}"></script>
+</body>
+</html>

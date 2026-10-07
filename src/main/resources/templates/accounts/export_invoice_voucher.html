@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Export Voucher - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20261002k}" href="/build/css/countx_desktop_combo.css">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20261002k}" href="/build/css/countx_prod_combo.css">
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261005a}" href="/build/css/countx_grid_bar.css">
+    <link rel="stylesheet" th:href="@{/build/css/countx_button_busy.css?v=20261002gf}" href="/build/css/countx_button_busy.css">
+    <link rel="stylesheet" th:href="@{/css/countx_c_janus_grid.css?v=20261006d}" href="/css/countx_c_janus_grid.css">
+<!--
+  Account Definition -> "Export Voucher": Architecture.WinApp.Account_Definition.frmExportInvoiceVoucher (screen 40, ScreenName
+  "frmExportInvoiceVoucher", DocumentTypeId 27). Port of InitializeComponent: toolStrip2 (&New, Refresh, &Update, &Delete, &Save, &Attachment,
+  102-Print, ShortCut Keys), panel4 teal 22 "EXPORT INVOICE VOUCHER" + Print Slip + Records Update, panel2 (142) header controls at the designer
+  coordinates, tabControl2 (Detail / Payment Detail / Other Charges Detail / Commission Info), panel5 "Pending For Accounts GL Entry";
+  tabs Form / History (bottom). API: /accounts/export-invoice-voucher/api/* (ExportInvoiceVoucherController / ExportInvoiceVoucherService).
+-->
+<style>
+    html, body { margin: 0; padding: 0; background: #f0f0f0; }
+    body { display: flex; flex-direction: column; min-height: 100vh; font: 13px "Segoe UI", sans-serif; color: #000; }
+    body > .erp-navigation { flex: 0 0 auto; }
+    #frm { flex: 1 0 auto; display: flex; flex-direction: column; min-width: 1203px; background: #f0f0f0; }
+    #pages { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 640px; border: 1px solid #acacac; border-bottom: 0; margin: 2px 2px 0 2px; box-sizing: border-box; background: #fff; }
+    .page { flex: 1 1 auto; display: none; flex-direction: column; min-height: 0; background: #fff; box-sizing: border-box; }
+    .page.on { display: flex; }
+    #tabsBar { flex: 0 0 26px; display: flex; align-items: flex-start; padding-left: 2px; margin: 0 2px; border: 1px solid #acacac; border-top: 0; background: #f0f0f0; box-sizing: border-box; }
+    #tabsBar .tab { height: 24px; padding: 0 9px; margin-right: -1px; line-height: 22px; font: 13px Verdana, sans-serif; cursor: pointer; border: 1px solid #acacac; border-top: 0; background: #f0f0f0; box-sizing: border-box; }
+    #tabsBar .tab.on { background: #fff; height: 26px; margin-top: -1px; border-top: 1px solid #fff; }
+    /* toolStrip1 / toolStrip2 (Verdana 9.75, 25 high) */
+    .ts { display: flex; align-items: center; white-space: nowrap; height: 25px; flex: 0 0 25px; background: linear-gradient(#fbfcfe, #e9eef6); border-bottom: 1px solid #c5d3e2; font: 13px Verdana, sans-serif; box-sizing: border-box; padding-left: 2px; position: relative; }
+    .ts button { display: inline-flex; align-items: center; gap: 4px; height: 22px; padding: 0 5px; margin: 0 1px; font: inherit; color: #000; background: transparent; border: 1px solid transparent; cursor: pointer; white-space: nowrap; }
+    .ts button:hover:not(:disabled) { background: #cce8ff; border-color: #99d1ff; }
+    .ts button:disabled { color: #8a8a8a; cursor: default; }
+    .ts button[hidden] { display: none; }
+    .ts .sep { width: 1px; height: 20px; margin: 0 3px; background: #b8c3d1; }
+    .ts svg { width: 16px; height: 16px; flex: 0 0 16px; }
+    .band { position: relative; flex: 0 0 auto; background: teal; color: #fff; }
+    .band .cap { position: absolute; white-space: nowrap; color: #fff; }
+    .gbm { position: absolute; right: 4px; top: 0; display: flex; align-items: center; justify-content: flex-end; min-width: 40px; }
+    /* panel3 / groupBox2 Main (Tahoma 9.75 bold caption) */
+    #panel3 { flex: 0 0 97px; background: #fff; }
+    #panel11 { height: 28px; }
+    #groupBox2 { position: relative; height: 69px; background: #fff; box-sizing: border-box; }
+    #groupBox2 .gb-line { position: absolute; left: 0; top: 7px; right: 0; bottom: 0; border: 1px solid #dcdcdc; border-radius: 3px; }
+    #groupBox2 .gb-cap { position: absolute; left: 6px; top: 0; padding: 0 2px; background: #fff; font: bold 13px Tahoma, sans-serif; line-height: 14px; }
+    .lbl { position: absolute; font: 600 12px "Segoe UI Semibold", "Segoe UI", sans-serif; line-height: 15px; white-space: nowrap; }
+    .tx, .dt { position: absolute; box-sizing: border-box; height: 23px; font: 13px Verdana, sans-serif; border: 1px solid #7f9db9; padding: 0 3px; background: #fff; }
+    .tx:disabled, .dt:disabled { background: #f0f0f0; color: #444; }
+    .btn { position: absolute; box-sizing: border-box; padding: 0; cursor: pointer; border: 1px solid #006666; }
+    .btn[hidden] { display: none; }
+    .btn:disabled { opacity: .6; cursor: default; }
+    .btn.teal { background: teal; color: #fff; font: bold 12px Verdana, sans-serif; }
+    .btn.aqua { background: rgb(0,192,192); color: rgb(64,0,0); font: bold 12px Verdana, sans-serif; border-color: #007a7a; }
+    .dtcombo-wrap .dtcombo-input { font: 13px Verdana, sans-serif !important; }
+    #tabControl2 { flex: 0 0 340px; height: 340px; display: flex; flex-direction: column; box-sizing: border-box; border: 1px solid #acacac; background: #fff; }
+    #tc2Tab { flex: 0 0 25px; display: flex; align-items: flex-end; background: #f0f0f0; padding-left: 2px; }
+    #tc2Tab span { padding: 0 9px; height: 23px; line-height: 23px; border: 1px solid #acacac; border-bottom: 0; background: #fff; font: 13px Verdana, sans-serif; }
+    #tc2Page { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; padding: 3px; background: #fff; }
+    #panel16 { height: 21px; }
+    #gridDetail, #gridPending, #gridHistory { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+    #gridDetail .cjg, #gridPending .cjg, #gridHistory .cjg { flex: 1 1 auto; }
+    #gridPending { min-height: 110px; }
+    .cjg td.ed { padding: 0; }
+    /* history tab */
+    #pnl5 { flex: 0 0 73px; height: 73px; position: relative; background: #fff; }
+    #groupBox4 { position: absolute; left: 1px; top: 2px; width: 966px; height: 69px; box-sizing: border-box; }
+    #groupBox4 .gb-line { position: absolute; left: 0; top: 7px; right: 0; bottom: 0; border: 1px solid #dcdcdc; border-radius: 3px; }
+    #groupBox4 .gb-cap { position: absolute; left: 6px; top: 0; padding: 0 2px; background: #fff; font: bold 13px Tahoma, sans-serif; line-height: 14px; }
+    .rd { position: absolute; font: 600 12px "Segoe UI Semibold", "Segoe UI", sans-serif; display: flex; align-items: center; gap: 3px; }
+    .hdt { position: absolute; display: flex; align-items: center; gap: 2px; height: 22px; }
+    .hdt input[type=date] { box-sizing: border-box; height: 22px; width: 104px; font: 12px Verdana, sans-serif; border: 1px solid #7f9db9; }
+    .hdt input[type=date]:disabled { background: #f0f0f0; }
+    .ov { position: fixed; left: 0; top: 0; right: 0; bottom: 0; z-index: 9000; background: rgba(0,0,0,.35); display: none; align-items: center; justify-content: center; }
+    .ov.on { display: flex; }
+    .dlg { background: #f0f0f0; border: 1px solid #555; box-shadow: 0 4px 18px rgba(0,0,0,.4); display: flex; flex-direction: column; max-width: 96vw; max-height: 94vh; font: 12px Verdana, sans-serif; min-width: 380px; }
+    .dlg-t { height: 26px; line-height: 26px; padding: 0 8px; background: #fff; border-bottom: 1px solid #acacac; }
+    .dlg-b { padding: 8px; overflow: auto; background: #fff; }
+    .dlg-b table { border-collapse: collapse; }
+    .dlg-b th, .dlg-b td { border: 1px solid #c5d3e2; padding: 2px 8px; text-align: left; }
+    .dlg-f { padding: 6px 8px; text-align: right; }
+    .dlg-f button { height: 23px; padding: 0 14px; cursor: pointer; }
+    #panel4 { flex: 0 0 22px; height: 22px; }
+    #panel2 { position: relative; flex: 0 0 142px; height: 142px; background: #fff; }
+    #tabControl2 { flex: 0 0 259px; height: 259px; display: flex; flex-direction: column; box-sizing: border-box; border: 1px solid #acacac; background: #fff; }
+    #tc2Tab { flex: 0 0 25px; display: flex; align-items: flex-end; background: #f0f0f0; padding-left: 2px; }
+    #tc2Tab span { padding: 0 9px; height: 23px; line-height: 23px; border: 1px solid #acacac; border-bottom: 0; background: #f0f0f0; font: 13px Verdana, sans-serif; cursor: pointer; margin-right: -1px; }
+    #tc2Tab span.on { background: #fff; height: 25px; }
+    #tc2Tab span[hidden] { display: none; }
+    .tp { flex: 1 1 auto; display: none; flex-direction: column; min-height: 0; padding: 0; background: #fff; }
+    .tp.on { display: flex; }
+    .tp .gw { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+    .tp .gw .cjg { flex: 1 1 auto; }
+    #panel5 { flex: 1 1 173px; display: flex; flex-direction: column; min-height: 120px; }
+    #panel5 .cjg { flex: 1 1 auto; }
+    #commEdit { position: relative; flex: 0 0 52px; height: 52px; background: #fff; }
+    #pnlFilters { flex: 0 0 75px; height: 75px; position: relative; background: #fff; }
+    #groupBox1 { position: absolute; left: 1px; top: 1px; width: 836px; height: 71px; box-sizing: border-box; }
+    #groupBox1 .gb-line { position: absolute; left: 0; top: 7px; right: 0; bottom: 0; border: 1px solid #dcdcdc; border-radius: 3px; }
+    #groupBox1 .gb-cap { position: absolute; left: 6px; top: 0; padding: 0 2px; background: #fff; font: bold 13px Tahoma, sans-serif; line-height: 14px; }
+    #gridHist, #gridHistDet { flex: 1 1 auto; min-height: 60px; display: flex; flex-direction: column; }
+    #gridHist .cjg, #gridHistDet .cjg { flex: 1 1 auto; }
+    .ta { position: absolute; box-sizing: border-box; font: 13px Verdana, sans-serif; border: 1px solid #7f9db9; padding: 2px 3px; background: #fff; resize: none; }
+    .ta:disabled { background: #f0f0f0; }
+    .attrow { display: flex; gap: 6px; align-items: center; margin: 3px 0; }
+</style>
+</head>
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div id="frm">
+  <div id="pages">
+    <div class="page on" id="pageForm">
+      <div class="ts" id="toolStrip2" role="toolbar">
+        <button type="button" id="btnNew" title="Ctrl+N"><svg viewBox="0 0 16 16"><path d="M3 1.5h7l3 3v10H3z" fill="#fff" stroke="#555"/><path d="M10 1.5v3h3" fill="none" stroke="#555"/></svg><span><u>N</u>ew</span></button>
+        <button type="button" id="btnRefresh" title="Ctrl+R"><svg viewBox="0 0 16 16"><path d="M13 8a5 5 0 1 1-1.5-3.5" fill="none" stroke="#2f7d32" stroke-width="1.8"/><path d="M13.5 1.5v4h-4z" fill="#2f7d32"/></svg><span>Refresh</span></button>
+        <span class="sep"></span>
+        <button type="button" id="btnUpdate" title="Ctrl+U" hidden><svg viewBox="0 0 16 16"><path d="M2 14l1-4 8-8 3 3-8 8z" fill="#f2c94c" stroke="#7a5b00"/></svg><span><u>U</u>pdate</span></button>
+        <button type="button" id="btnDelete" hidden><svg viewBox="0 0 16 16"><path d="M3 4h10l-1 10H4z" fill="#d9d9d9" stroke="#555"/><path d="M2 4h12M6 4V2h4v2" fill="none" stroke="#555"/></svg><span>Delete</span></button>
+        <button type="button" id="btnSave" title="Ctrl+S"><svg viewBox="0 0 16 16"><path d="M1.5 1.5h10l3 3v10h-13z" fill="#2f6fb0" stroke="#1f4e80"/><rect x="4" y="1.5" width="6" height="4" fill="#fff"/><rect x="4" y="9" width="8" height="5.5" fill="#dfe8f2"/></svg><span><u>S</u>ave</span></button>
+        <span class="sep"></span>
+        <button type="button" id="btnAttachment" title="Ctrl+F10"><svg viewBox="0 0 16 16"><path d="M10.5 4.5l-5 5a2 2 0 0 0 2.8 2.8l5.2-5.2a3.4 3.4 0 0 0-4.8-4.8L3.4 7.6a4.8 4.8 0 0 0 6.8 6.8l3.3-3.3" fill="none" stroke="#555" stroke-width="1.3"/></svg><span><u>A</u>ttachment</span></button>
+        <span class="sep"></span>
+        <button type="button" id="btnSlip" title="Ctrl+P / Alt+1"><svg viewBox="0 0 16 16"><rect x="3" y="1.5" width="10" height="4" fill="#fff" stroke="#555"/><rect x="1.5" y="5.5" width="13" height="6" fill="#d9d9d9" stroke="#555"/><rect x="3.5" y="9.5" width="9" height="5" fill="#fff" stroke="#555"/></svg><span>102-Print</span></button>
+        <span class="sep"></span>
+        <button type="button" id="btnshortcutkeys"><svg viewBox="0 0 16 16"><rect x="1.5" y="4" width="13" height="8" rx="1" fill="#fff" stroke="#555"/><path d="M4 7h1M7 7h2M11 7h1M5 10h6" stroke="#555"/></svg><span>ShortCut Keys</span></button>
+      </div>
+      <div class="band" id="panel4">
+        <span class="cap" id="ExpenseVoucherLable" style="left:3px;top:2px;font:bold 16px Tahoma,sans-serif">EXPORT INVOICE VOUCHER</span>
+        <button type="button" class="btn teal" id="btnRecordsUpdate" style="left:245px;top:0;width:75px;height:22px;font-size:11px" hidden tabindex="-1">Records Update</button>
+        <label id="lblPrintSlip" style="position:absolute;right:2px;top:2px;display:flex;align-items:center;gap:3px;font:bold 13px 'Microsoft Sans Serif',Arial,sans-serif;color:#fff"><input type="checkbox" id="ChkBox" checked> Print Slip</label>
+      </div>
+      <div id="panel2">
+        <span class="lbl" style="left:7px;top:7px">Voucher No,Date</span>
+        <input type="text" class="tx" id="txtVoucherCode" readonly tabindex="-1" style="left:104px;top:3px;width:99px" autocomplete="off">
+        <input type="date" class="dt" id="datVoucherDate" tabindex="1" style="left:204px;top:3px;width:122px">
+        <span class="lbl" style="left:7px;top:34px">Buyer Name</span>
+        <select id="CmbRefAccountId" data-dtcombo="single" data-dtcombo-caption="Buyer Name" style="position:absolute;left:104px;top:28px;width:222px;height:26px" tabindex="-1"></select>
+        <span class="lbl" style="left:7px;top:62px">Account Title</span>
+        <select id="CmbCreditAccount" data-dtcombo="single" data-dtcombo-caption="Account Title" style="position:absolute;left:104px;top:56px;width:222px;height:26px" tabindex="2"></select>
+        <span class="lbl" style="left:7px;top:89px">Currency Code</span>
+        <select id="CmbCurrencyCode" data-dtcombo="single" data-dtcombo-caption="Fcy Code" style="position:absolute;left:104px;top:83px;width:222px;height:26px" tabindex="-1"></select>
+        <span class="lbl" id="label19" style="left:7px;top:108px">Commission<br>Expense Ac</span>
+        <select id="CmbCommissionExpenseAccount" data-dtcombo="single" data-dtcombo-caption="Account Title" style="position:absolute;left:104px;top:110px;width:222px;height:26px" tabindex="3"></select>
+        <span class="lbl" style="left:329px;top:7px">Fcy Amount</span>
+        <input type="text" class="tx" id="txtFcyAmountWithoutAddLess" readonly tabindex="-1" style="left:432px;top:3px;width:140px" autocomplete="off">
+        <span class="lbl" style="left:329px;top:34px">AddLess Amount</span>
+        <input type="text" class="tx" id="txtAddLessAmount" disabled tabindex="-1" style="left:432px;top:30px;width:140px" autocomplete="off">
+        <span class="lbl" style="left:329px;top:62px">Total Fcy Amount</span>
+        <input type="text" class="tx" id="txtFcyAmount" readonly disabled tabindex="-1" style="left:432px;top:58px;width:140px" autocomplete="off">
+        <span class="lbl" style="left:329px;top:89px">Exchange Rate</span>
+        <input type="text" class="tx" id="txtExchangeRate" tabindex="4" style="left:432px;top:85px;width:140px" autocomplete="off" inputmode="decimal">
+        <span class="lbl" style="left:576px;top:7px">Rs. Amount</span>
+        <input type="text" class="tx" id="txtRsAmount" readonly tabindex="-1" style="left:647px;top:3px;width:146px" autocomplete="off">
+        <span class="lbl" style="left:576px;top:34px">Due Days</span>
+        <input type="text" class="tx" id="txtDueDays" tabindex="5" style="left:647px;top:30px;width:146px" autocomplete="off" inputmode="numeric">
+        <span class="lbl" style="left:576px;top:62px">Due&nbsp; Date</span>
+        <input type="date" class="dt" id="txtDueDate" disabled tabindex="-1" style="left:647px;top:58px;width:146px">
+        <span class="lbl" style="left:576px;top:89px">Remarks</span>
+        <textarea class="ta" id="txtRemarks" tabindex="6" style="left:647px;top:84px;width:370px;height:53px"></textarea>
+        <span class="lbl" style="left:798px;top:7px">InvoiceNo</span>
+        <input type="text" class="tx" id="txtInvoiceNo" readonly tabindex="-1" style="left:876px;top:3px;width:141px" autocomplete="off">
+        <span class="lbl" style="left:798px;top:34px">Invoice Date</span>
+        <input type="date" class="dt" id="datInvoiceDate" disabled tabindex="-1" style="left:876px;top:30px;width:141px">
+        <span class="lbl" style="left:798px;top:62px">Total Weight</span>
+        <input type="text" class="tx" id="txtTotalWeight" readonly tabindex="-1" style="left:876px;top:58px;width:141px" autocomplete="off">
+      </div>
+      <div id="tabControl2">
+        <div id="tc2Tab"><span class="on" data-tp="tpDetail">Detail</span><span data-tp="tpPay">Payment Detail</span><span data-tp="tpChg">Other Charges Detail</span><span data-tp="tpComm" id="tabComm">Commission Info</span></div>
+        <div class="tp on" id="tpDetail">
+          <div class="band" style="height:24px;flex:0 0 24px"><span class="cap" style="left:5px;top:3px;font:bold 13px Tahoma,sans-serif">Detail</span><div class="gbm" id="gbMount1"></div></div>
+          <div class="gw"><div class="cjg"><div class="cjg-wrap" data-gridbar-form="frmExportInvoiceVoucher" data-gridbar-grid="grd" data-gridbar-mount="#gbMount1" data-gridbar-reorder="false"><table id="grd"></table></div><div class="cjg-nav" id="grdNav"></div></div></div>
+        </div>
+        <div class="tp" id="tpPay">
+          <div class="band" style="height:24px;flex:0 0 24px"><span class="cap" style="left:5px;top:3px;font:bold 13px Tahoma,sans-serif">Payment Detail</span><div class="gbm" id="gbMount4"></div></div>
+          <div class="gw"><div class="cjg"><div class="cjg-wrap" data-gridbar-form="frmExportInvoiceVoucher" data-gridbar-grid="grdPaymentTermDetail" data-gridbar-mount="#gbMount4" data-gridbar-reorder="false"><table id="grdPaymentTermDetail"></table></div><div class="cjg-nav" id="grdPayNav"></div></div></div>
+        </div>
+        <div class="tp" id="tpChg">
+          <div class="band" style="height:24px;flex:0 0 24px"><span class="cap" style="left:5px;top:3px;font:bold 13px Tahoma,sans-serif">Other Charges Detail</span><div class="gbm" id="gbMount5"></div></div>
+          <div class="gw"><div class="cjg"><div class="cjg-wrap" data-gridbar-form="frmExportInvoiceVoucher" data-gridbar-grid="grdOtherChargesDetail" data-gridbar-mount="#gbMount5" data-gridbar-reorder="false"><table id="grdOtherChargesDetail"></table></div><div class="cjg-nav" id="grdChgNav"></div></div></div>
+        </div>
+        <div class="tp" id="tpComm">
+          <div class="band" style="height:21px;flex:0 0 21px"><span class="cap" style="left:5px;top:2px;font:bold 13px Tahoma,sans-serif">Commission Agent / Sales Person Information</span><div class="gbm" id="gbMount6"></div></div>
+          <div id="commEdit">
+            <span class="lbl" style="left:3px;top:5px">Sales Person</span>
+            <select id="CmbSalePerson" data-dtcombo="single" data-dtcombo-caption="Sales Person" style="position:absolute;left:3px;top:23px;width:185px;height:26px" tabindex="7"></select>
+            <span class="lbl" style="left:189px;top:5px">Commission Type</span>
+            <select id="cmbCommissionType" data-dtcombo="single" data-dtcombo-caption="Commission Type" style="position:absolute;left:189px;top:23px;width:122px;height:26px" tabindex="8"></select>
+            <span class="lbl" style="left:313px;top:5px">Rate</span>
+            <input type="text" class="tx" id="txtCommRate" tabindex="9" style="left:312px;top:25px;width:77px" autocomplete="off" inputmode="decimal">
+            <span class="lbl" style="left:387px;top:5px">Rate UOM</span>
+            <input type="text" class="tx" id="txtCommRateUom" tabindex="10" style="left:390px;top:25px;width:87px" autocomplete="off" inputmode="decimal">
+            <span class="lbl" style="left:478px;top:5px">Fcy Amount</span>
+            <input type="text" class="tx" id="txtCommissionAmount" readonly tabindex="-1" style="left:478px;top:25px;width:101px" autocomplete="off">
+            <span class="lbl" style="left:580px;top:5px">Exchange Rate</span>
+            <input type="text" class="tx" id="txtCommissionExchangeRate" value="0" tabindex="11" style="left:580px;top:25px;width:103px" autocomplete="off" inputmode="decimal">
+            <span class="lbl" style="left:684px;top:5px">Lcy Amount</span>
+            <input type="text" class="tx" id="txtCommissionLcyAmount" readonly tabindex="-1" style="left:684px;top:25px;width:107px" autocomplete="off">
+            <span class="lbl" style="left:789px;top:5px">Remarks</span>
+            <input type="text" class="tx" id="txtCommissionRemarks" tabindex="12" style="left:792px;top:25px;width:250px" autocomplete="off">
+            <button type="button" class="btn teal" id="btnAddCommission" style="left:1045px;top:25px;width:31px;height:22px" tabindex="13">+</button>
+            <button type="button" class="btn teal" id="btnUpdateCommision" style="left:1043px;top:25px;width:60px;height:22px" hidden tabindex="14">Update</button>
+            <button type="button" class="btn teal" id="btnCancelCommission" style="left:1104px;top:25px;width:55px;height:22px" hidden tabindex="15">Cancel</button>
+          </div>
+          <div class="gw"><div class="cjg"><div class="cjg-wrap" data-gridbar-form="frmExportInvoiceVoucher" data-gridbar-grid="grdCommissionInfo" data-gridbar-mount="#gbMount6" data-gridbar-reorder="false"><table id="grdCommissionInfo"></table></div><div class="cjg-nav" id="grdCommNav"></div></div></div>
+        </div>
+      </div>
+      <div id="panel5">
+        <div class="band" style="height:24px;flex:0 0 24px"><span class="cap" style="left:5px;top:3px;font:bold 13px Tahoma,sans-serif">Pending For Accounts GL Entry</span><div class="gbm" id="gbMount3"></div></div>
+        <div class="cjg"><div class="cjg-wrap" data-gridbar-form="frmExportInvoiceVoucher" data-gridbar-grid="grdPending" data-gridbar-mount="#gbMount3" data-gridbar-reorder="false"><table id="grdPending"></table></div><div class="cjg-nav" id="grdPendNav"></div></div>
+      </div>
+    </div>
+    <div class="page" id="pageHistory">
+      <div class="ts" id="toolStrip4" role="toolbar">
+        <button type="button" id="btnNewCpvHistory"><svg viewBox="0 0 16 16"><path d="M3 1.5h7l3 3v10H3z" fill="#fff" stroke="#555"/><path d="M10 1.5v3h3" fill="none" stroke="#555"/></svg><span><u>R</u>eset</span></button>
+        <button type="button" id="btnRefreshCpvHistory"><svg viewBox="0 0 16 16"><path d="M13 8a5 5 0 1 1-1.5-3.5" fill="none" stroke="#2f7d32" stroke-width="1.8"/><path d="M13.5 1.5v4h-4z" fill="#2f7d32"/></svg><span>Refresh</span></button>
+      </div>
+      <div class="band" id="panel8" style="height:27px;flex:0 0 27px"><span class="cap" style="left:5px;top:3px;font:bold 16px Tahoma,sans-serif">Export Invoice Voucher History</span></div>
+      <div id="pnlFilters">
+        <div id="groupBox1">
+          <div class="gb-line"></div><span class="gb-cap">Filters</span>
+          <span class="lbl" style="left:5px;top:18px">From Date</span>
+          <div class="hdt" style="left:69px;top:14px"><input type="checkbox" id="chkFrom" checked title="From Date"><input type="date" id="FromDateCpvHistory"></div>
+          <span class="lbl" style="left:5px;top:46px">To Date</span>
+          <div class="hdt" style="left:69px;top:42px"><input type="checkbox" id="chkTo" checked title="To Date"><input type="date" id="ToDateCpvHistory"></div>
+          <span class="lbl" style="left:207px;top:18px">From Doc</span>
+          <input type="text" class="tx" id="txtFromDocNoCpv" style="left:266px;top:14px;width:77px" inputmode="numeric" autocomplete="off">
+          <span class="lbl" style="left:207px;top:46px">To Doc</span>
+          <input type="text" class="tx" id="txtToDocNoCpv" style="left:266px;top:42px;width:77px" inputmode="numeric" autocomplete="off">
+          <span class="lbl" style="left:348px;top:18px">Buyer Account</span>
+          <select id="cmbAccountTitleCpv" data-dtcombo="single" data-dtcombo-caption="Customer Name" style="position:absolute;left:445px;top:12px;width:193px;height:26px"></select>
+          <span class="lbl" style="left:348px;top:46px">Approved Status</span>
+          <select id="cmbApprovedStatusCpv" data-dtcombo="single" data-dtcombo-caption="Status" style="position:absolute;left:445px;top:40px;width:131px;height:26px"></select>
+          <button type="button" class="btn teal" id="btnShowCpv" style="left:578px;top:40px;width:60px;height:26px;background:rgb(10,110,110)">Show</button>
+          <label class="rd" style="left:647px;top:16px"><input type="radio" name="hdate" id="drdocdate" value="doc" checked> Doc Date</label>
+          <label class="rd" style="left:647px;top:44px"><input type="radio" name="hdate" id="rdentrydate" value="entry"> Entry Date</label>
+          <label class="rd" style="left:727px;top:16px"><input type="radio" name="hdate" id="rdmodifydate" value="modify"> Modify Date</label>
+          <label class="rd" style="left:727px;top:44px" hidden id="lblApprDate"><input type="radio" name="hdate" id="rdapproveddate" value="approved"> Approved Date</label>
+        </div>
+      </div>
+      <div class="band" id="panel16" style="height:26px;flex:0 0 26px"><span class="cap" style="left:5px;top:2px;font:bold 16px Tahoma,sans-serif">Filtered Records</span><div class="gbm" id="gbMount2" style="top:1px"></div></div>
+      <div id="gridHist"><div class="cjg"><div class="cjg-wrap" data-gridbar-form="frmExportInvoiceVoucher" data-gridbar-grid="DataGridHistory" data-gridbar-mount="#gbMount2" data-gridbar-reorder="false"><table id="DataGridHistory"></table></div><div class="cjg-nav" id="histNav"></div></div></div>
+      <div class="band" id="panel17" style="height:21px;flex:0 0 21px"><span class="cap" style="left:5px;top:2px;font:bold 13px Tahoma,sans-serif">Detail</span></div>
+      <div id="gridHistDet"><div class="cjg"><div class="cjg-wrap"><table id="grdDetail"></table></div><div class="cjg-nav" id="histDetNav"></div></div></div>
+    </div>
+  </div>
+  <div id="tabsBar"><div class="tab on" id="tabForm">Form</div><div class="tab" id="tabHistory">History</div></div>
+</div>
+<div class="ov" id="ovDlg"><div class="dlg"><div class="dlg-t" id="dlgTitle"></div><div class="dlg-b" id="dlgBody"></div><div class="dlg-f"><button type="button" id="dlgClose">Close</button></div></div></div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}" src="/vendors/jquery/dist/jquery.min.js"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20261002k}" src="/build/js/countx_prod_combo.js"></script>
+<script th:src="@{/build/js/countx_acc_rpt_f.js?v=20261002k}" src="/build/js/countx_acc_rpt_f.js"></script>
+<script th:src="@{/js/countx_c_janus_grid.js?v=20261006d}" src="/js/countx_c_janus_grid.js"></script>
+<script src="/js/print-rpt.js?v=20261003erp"></script>
+<script th:src="@{/js/countx_export_invoice_voucher.js?v=20261007a}" src="/js/countx_export_invoice_voucher.js"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20261006-grid-control-placement}" src="/build/js/countx_grid_bar.js"></script>
+</body>
+</html>

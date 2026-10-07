@@ -13,7 +13,7 @@ import java.util.Map;
 public class GrnLoadingChallanCmagtService {
 
     /** frmGrnLoadingChallanCmagt's own document type. */
-    private static final int DOCUMENT_TYPE_ID = 1054;
+    public static final int DOCUMENT_TYPE_ID = 1054;
 
     @Autowired
     private GrnLoadingChallanCmagtRepository repository;

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>5016 Export Shipment Weight Audit</title>
+<link rel="stylesheet" href="/build/css/countx_desktop_combo.css?v=20261007r2">
+<link rel="stylesheet" href="/build/css/countx_prod_combo.css?v=20261007r2">
+<link rel="stylesheet" href="/build/css/countx_acrpt4.css?v=20261007r4">
+<!--
+  Screen 932 "5016 Export Shipment Weight Audit" = Architecture.WinApp.Audit_Dashboard.frmAuditByWeightReport
+  (route /audit/reports/export-shipment-weight-audit). R4 2026-10-07, built 1:1 on InitializeComponent()
+  (ClientSize 969x648, AutoScrollMinSize 980x600, KeyPreview, Maximized):
+    panel2 White Top 27 = tsItemType (Verdana 9.75): &New | 618-Print | 618_01-Print | ShortCut Keys
+    panel3 White Top 122 = panel5 Teal(10,110,110) 30 (label3 "Export Shipment Weight Audit" @8,5 Tahoma 12 bold white) +
+        label11 "Date Type" 11,40 | cmbperemeter 89,34 123x26 (tab 0) | label51 "Date From" 11,68 + red * 75,67 | txtdatefrom 89,64 123x23 (tab 1, dd-MMM-yy) |
+        label5 "Date To" 11,96 + red * 75,95 | txtdateto 89,92 123x23 (tab 2) | label7 "Contract No" 218,40 | CmbContractNo 298,34 211x26 (tab 3) |
+        label8 "InvoiceNo" 218,70 | CmbInvoiceNo 298,64 211x26 (tab 4) | btnShow 444,90 65x26 Teal Tahoma 9.75 bold (tab 5) |
+        RdInProcess 519,39 | rdCompleted 519,66 | rdAll 519,92 (checked)
+    panel4 Teal Top 24 = label2 "Main Information" @8,2 Tahoma 12 bold white + ctrlGrdBar1 @928,1
+    panel6 Top 298     = grd (Verdana 8.25, GroupByBox visible, filter row, GroupTotals, TotalRow, record navigator)
+    panel8 Teal Top 24 = label6 "Detail Information Of Above Selected Row" + ctrlGrdBar2
+    panel7 Fill        = grdDetail (Verdana 8.25, GroupByBox hidden)
+  Page logic: /build/js/countx_acrpt4_weight.js (+ shared /build/js/countx_acrpt4.js). API: /api/accounts/acrpt4/weight/*
+-->
+<style>
+    .frm { min-width: 980px; min-height: 600px; }
+    .p3 { flex: 0 0 122px; height: 122px; position: relative; background: #fff; }
+    .p3 .t5 { position: absolute; left: 0; right: 0; top: 0; height: 30px; background: rgb(10,110,110); }
+    .p3 .t5 .cap { position: absolute; left: 8px; top: 5px; font: bold 16px Tahoma, Verdana, sans-serif; line-height: 19px; color: #fff; white-space: nowrap; }
+    .p3 .lbl { font: 600 12px "Segoe UI Semibold", "Segoe UI", Calibri, Carlito, Arial, sans-serif; font-weight: bold; }
+    .p3 .req { font: bold 13px "Segoe UI", Calibri, Carlito, Arial, sans-serif; color: #f00; }
+    .p3 input.tb { height: 23px; font: 13px Verdana, Tahoma, sans-serif; }
+    #show { font: bold 13px Tahoma, Verdana, sans-serif; }
+    .bar24 { flex: 0 0 24px; height: 24px; background: rgb(10,110,110); position: relative; }
+    .bar24 .cap { position: absolute; left: 8px; top: 2px; font: bold 16px Tahoma, Verdana, sans-serif; line-height: 19px; color: #fff; white-space: nowrap; }
+    .mainBox { flex: 0 0 298px; height: 298px; display: flex; flex-direction: column; min-height: 0; }
+    .detBox { flex: 1 1 auto; min-height: 80px; display: flex; flex-direction: column; }
+    .ts button { font: 13px Verdana, Tahoma, sans-serif; }
+</style>
+<link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261005a}"/>
+</head>
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="frm-scroll">
+<div class="frm" id="frmAuditByWeightReport">
+
+    <!-- panel2: tsItemType -->
+    <div class="pn" style="flex:0 0 27px;height:27px;background:#fff;">
+        <div class="ts wh" style="background:#fff;">
+            <button type="button" id="btnnew" title="Ctrl+N" style="font-family:'Segoe UI',Calibri,Carlito,Arial,sans-serif;"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#2e9b45"/><path d="M8 4v8M4 8h8" stroke="#fff" stroke-width="2"/></svg><span><u>N</u>ew</span></button>
+            <button type="button" id="btnPrint" title="Ctrl+P"><svg viewBox="0 0 16 16"><rect x="4" y="1.5" width="8" height="4" fill="#fff" stroke="#555"/><rect x="1.5" y="5.5" width="13" height="6" rx="1" fill="#6b7785"/><rect x="4" y="9.5" width="8" height="5" fill="#fff" stroke="#555"/></svg><span>618-Print</span></button>
+            <button type="button" id="btnPrint618_01"><svg viewBox="0 0 16 16"><rect x="4" y="1.5" width="8" height="4" fill="#fff" stroke="#555"/><rect x="1.5" y="5.5" width="13" height="6" rx="1" fill="#6b7785"/><rect x="4" y="9.5" width="8" height="5" fill="#fff" stroke="#555"/></svg><span>618_01-Print</span></button>
+            <button type="button" id="btnShortCutKey" title="Ctrl+Alt"><span>ShortCut Keys</span></button>
+        </div>
+    </div>
+
+    <!-- panel3 (White Top 122) -->
+    <div class="p3">
+        <div class="t5"><span class="cap">Export Shipment Weight Audit</span></div>
+
+        <span class="lbl" style="left:11px;top:40px;">Date Type</span>
+        <select id="cmbperemeter" data-dtcombo="single" data-dtcombo-caption="Parameters" style="position:absolute;left:89px;top:34px;width:123px;height:26px;"></select>
+
+        <span class="lbl" style="left:11px;top:68px;">Date From</span><span class="lbl req" style="left:75px;top:67px;">*</span>
+        <input type="date" id="txtdatefrom" class="tb" style="left:89px;top:64px;width:123px;height:23px;" autocomplete="off">
+
+        <span class="lbl" style="left:11px;top:96px;">Date To</span><span class="lbl req" style="left:75px;top:95px;">*</span>
+        <input type="date" id="txtdateto" class="tb" style="left:89px;top:92px;width:123px;height:23px;" autocomplete="off">
+
+        <span class="lbl" style="left:218px;top:40px;">Contract No</span>
+        <select id="CmbContractNo" data-dtcombo="single" data-dtcombo-caption="Contract No" style="position:absolute;left:298px;top:34px;width:211px;height:26px;"></select>
+        <span class="lbl" style="left:218px;top:70px;">InvoiceNo</span>
+        <select id="CmbInvoiceNo" data-dtcombo="single" data-dtcombo-caption="Invoice No" style="position:absolute;left:298px;top:64px;width:211px;height:26px;"></select>
+
+        <button type="button" id="show" class="teal-btn t" style="left:444px;top:90px;width:65px;height:26px;" title="Ctrl+S">Show</button>
+
+        <label class="rb" style="left:519px;top:39px;"><input type="radio" name="st" id="RdInProcess" value="In Process">In Process</label>
+        <label class="rb" style="left:519px;top:66px;"><input type="radio" name="st" id="rdCompleted" value="Completed">Completed</label>
+        <label class="rb" style="left:519px;top:92px;"><input type="radio" name="st" id="rdAll" value="" checked>All</label>
+    </div>
+
+    <!-- panel4: Main Information -->
+    <div class="bar24"><span class="cap">Main Information</span></div>
+    <!-- panel6: grd -->
+    <div class="gridbox mainBox">
+        <div class="gbox" id="gbox1"></div>
+        <div class="grid" id="gridWrap" tabindex="0"><table data-gridbar="frmAuditByWeightReport:grd" class="g" id="grd"><colgroup></colgroup><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        <div class="nav" id="nav" hidden>
+            <button type="button" data-nav="first" title="First">|&lt;</button><button type="button" data-nav="prev" title="Previous">&lt;</button>
+            <span id="navText"></span>
+            <button type="button" data-nav="next" title="Next">&gt;</button><button type="button" data-nav="last" title="Last">&gt;|</button>
+        </div>
+    </div>
+
+    <!-- panel8: Detail Information -->
+    <div class="bar24"><span class="cap">Detail Information Of Above Selected Row</span></div>
+    <!-- panel7: grdDetail -->
+    <div class="gridbox detBox">
+        <div class="grid" id="detWrap" tabindex="0"><table data-gridbar="frmAuditByWeightReport:grdDetail" class="g" id="grdDetail"><colgroup></colgroup><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        <div class="nav" id="detNav" hidden>
+            <button type="button" data-nav="first" title="First">|&lt;</button><button type="button" data-nav="prev" title="Previous">&lt;</button>
+            <span id="detNavText"></span>
+            <button type="button" data-nav="next" title="Next">&gt;</button><button type="button" data-nav="last" title="Last">&gt;|</button>
+        </div>
+    </div>
+</div>
+</div>
+
+<dialog class="sck" id="shortcutDialog"><div class="hd">ShortCut Keys</div>
+    <table><thead><tr><th>KeyCombination</th><th>Description</th></tr></thead><tbody id="shortcutRows"></tbody></table>
+    <div class="ft"><form method="dialog"><button>Close</button></form></div></dialog>
+
+<script src="/build/js/countx_prod_combo.js?v=20261007r2"></script>
+<script src="/js/print-rpt.js?v=20261003erp"></script>
+<script src="/build/js/countx_acrpt4.js?v=20261007r4"></script>
+<script src="/build/js/countx_acrpt4_weight.js?v=20261007r4"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20261006-grid-control-placement}"></script>
+</body>
+</html>

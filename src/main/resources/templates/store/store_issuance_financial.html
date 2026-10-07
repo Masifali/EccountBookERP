@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Store Issuance (Financials) - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_store.css?v=20260925c}">
+    <style>
+        /* StoreIssuanceFinancial designer geometry, 1:1 in px (ClientSize 929 x 463; tabs at the bottom: Form / History). */
+        body { background: #fff; padding-bottom: 6px; }
+        .fx-scroll { overflow-x: auto; }
+        .fx-root { position: relative; font-family: "Microsoft Sans Serif", Tahoma, sans-serif; font-size: 11px; background: #fff; }
+        .fx-abs { position: absolute; box-sizing: border-box; margin: 0; }
+        .fx-rel { position: relative; }
+        .fx-lbl { font-family: "Segoe UI Semibold", "Segoe UI", Tahoma, sans-serif; font-weight: bold; font-size: 12px; white-space: nowrap; line-height: 15px; color: #000; }
+        .fx-txt { font-family: Verdana, sans-serif; font-size: 13px; height: 23px; border: 1px solid #7a7a7a; padding: 1px 3px; background: #fff; }
+        .fx-cmb { font-family: Verdana, sans-serif; font-size: 13px; height: 26px; border: 1px solid #7a7a7a; background: #fff; padding: 0 2px; }
+        .fx-dtc { display: flex; align-items: center; gap: 2px; height: 23px; border: 1px solid #7a7a7a; background: #fff; padding: 0 2px; }
+        .fx-dtc input[type=date] { border: none; font-family: Verdana, sans-serif; font-size: 12px; height: 18px; width: 100%; min-width: 0; padding: 0; }
+        .fx-dtc input[type=date]:disabled { color: #8a8a8a; }
+        .fx-gb { position: absolute; box-sizing: border-box; }
+        .fx-gb::before { content: ""; position: absolute; left: 0; right: 0; top: 7px; bottom: 0; border: 1px solid #d5dfe5; border-radius: 3px; pointer-events: none; }
+        .fx-gb > .fx-cap { position: absolute; left: 6px; top: 0; padding: 0 2px; background: #fff; font-family: Tahoma, sans-serif; font-size: 13px; font-weight: bold; line-height: 14px; color: #000; }
+        .fx-teal { background: #008080; position: relative; }
+        .fx-teal-title { position: absolute; font-family: Tahoma, sans-serif; font-size: 16px; font-weight: bold; color: #fff; white-space: nowrap; line-height: 19px; }
+        .fx-strip { height: 25px; display: flex; align-items: center; background: linear-gradient(to bottom, #fcfcfc 0%, #e0e0e0 100%); border-bottom: 1px solid #b5b5b5; box-sizing: border-box; }
+        .fx-tool { font-family: Verdana, sans-serif; font-size: 13px; height: 22px; background: transparent; border: 1px solid transparent; display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 0 4px; cursor: pointer; white-space: nowrap; }
+        .fx-tool:hover:not(:disabled) { background: #ffe4a0; border-color: #e59d00; }
+        .fx-tool:disabled { color: #9a9a9a; cursor: default; }
+        .fx-sep { width: 6px; height: 20px; border-left: 1px solid #b5b5b5; margin-left: 3px; }
+        .fx-btn { background: #0a6e6e; color: #fff; border: 1px solid #005959; font-family: Verdana, sans-serif; font-size: 11px; font-weight: bold; padding: 0; cursor: pointer; border-radius: 0; }
+        .fx-btn:hover:not(:disabled) { background: #005959; }
+        .fx-rad { display: inline-flex; align-items: center; gap: 3px; font-family: "Segoe UI Semibold", "Segoe UI", Tahoma, sans-serif; font-weight: bold; font-size: 12px; white-space: nowrap; line-height: 15px; }
+        .fx-rad input { margin: 0; }
+        .fx-val { font-family: "Segoe UI", Tahoma, sans-serif; font-weight: bold; font-size: 13px; line-height: 17px; }
+        .fx-grid-host { overflow: auto; border-top: 1px solid #9eb6ce; background: #fff; box-sizing: border-box; }
+        .fx-grid-host.win-grid-scroll { max-height: none; min-height: 0; }
+        .fx-grid-host .win-grid { width: auto; min-width: 100%; font-family: Verdana, sans-serif; font-size: 11px; }
+        .fx-grid-host .win-grid th { background: linear-gradient(to bottom, #e3efff 0%, #c4dcf8 100%); border: 1px solid #9eb6ce; font-weight: normal; }
+        .fx-grid-host .win-grid td { border: 1px solid #d5e1f0; }
+        .fx-grid-host .win-grid tbody tr:hover { background: #fff0cf; }
+        .fx-grid-host .win-grid tbody tr.is-selected { background: #d6ecff; }
+        .fx-grid-host .win-grid td.num { text-align: right; }
+        .fx-grid-host .win-grid td.btn, .fx-grid-host .win-grid td.chk { text-align: center; padding: 1px 2px; }
+        .sif-note { color:#7a4a00;background:#fff6df;border:1px solid #e6c77a;padding:3px 6px;margin:3px 0;font:12px "Segoe UI",sans-serif; }
+        .sif-tabs { display:flex; background:#f0f0f0; border-top:1px solid #9a9a9a; height:24px; padding-left:4px; }
+        .sif-tab { font-family:"Microsoft Sans Serif",Tahoma,sans-serif; font-size:12px; padding:3px 12px; border:1px solid #9a9a9a; border-top:none; background:#e8e8e8; cursor:pointer; margin-right:2px; height:22px; box-sizing:border-box; }
+        .sif-tab.is-on { background:#fff; font-weight:normal; position:relative; top:-1px; height:24px; }
+        .sif-hidden { display:none !important; }
+        #grdDetail tfoot td { font-weight:bold; background:#f3f7fb; text-align:right; }
+        #grdDetail td input.sif-rem { width:100%; box-sizing:border-box; border:1px solid #9eb6ce; font:11px Verdana,sans-serif; }
+    </style>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261005a}"/>
+</head>
+<!-- 33 Architecture.WinApp.StoreManagement.StoreIssuanceFinancial "Store Issuance (Financials)" (module 24 Store Management). -->
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="fx-scroll">
+<div class="fx-root" style="width:929px;min-width:929px;">
+
+    <div id="rightsNote" class="cx-denied is-hidden" style="margin:0;"></div>
+
+    <!-- ============================ tabPage1 "Form" ============================ -->
+    <div id="paneForm" class="sif-hidden">
+        <!-- panel3 (0,0) 915 x 29: toolStrip1 -->
+        <div class="fx-strip" style="height:29px;position:relative;">
+            <button type="button" class="fx-tool" id="btnnew" style="width:59px" title="Ctrl+N"><i class="fa fa-plus-circle" style="color:#2e7d32"></i> <u>N</u>ew</button>
+            <button type="button" class="fx-tool sif-hidden" id="btnUpdate" style="width:78px" title="Ctrl+U"><i class="fa fa-pencil"></i> <u>U</u>pdate</button>
+            <button type="button" class="fx-tool" id="Print" style="width:115px" title="Ctrl+P"><i class="fa fa-print"></i> 118-Voucher</button>
+            <button type="button" class="fx-tool" id="btnRefresh" style="width:80px"><i class="fa fa-repeat"></i> Refresh</button>
+            <button type="button" class="fx-tool" id="btnStoreIssuance" style="width:131px"><i class="fa fa-plus-circle" style="color:#2e7d32"></i> Store Issuance</button>
+            <div id="gbMount" style="position:absolute;right:4px;top:3px;width:38px;height:23px;display:flex;align-items:center"></div>
+        </div>
+        <!-- panel4 (0,29) 915 x 27 teal (10,110,110) -->
+        <div class="fx-teal" style="height:27px;background:rgb(10,110,110);">
+            <span style="position:absolute;left:2px;top:3px;font-family:Tahoma,sans-serif;font-size:16px;font-weight:bold;color:#f2f2f2;line-height:19px;white-space:nowrap;">Store Issuance Financial Effects</span>
+            <label class="fx-abs" style="right:12px;top:4px;font-family:Verdana,sans-serif;font-size:13px;font-weight:bold;color:#fff;white-space:nowrap;display:inline-flex;align-items:center;gap:4px;">
+                <input type="checkbox" id="ChkPrintPreview" checked> Print Preview</label>
+        </div>
+        <!-- panel5 (0,56) 915 x 54 white -->
+        <div class="fx-rel" style="height:54px;background:#fff;">
+            <span class="fx-abs fx-lbl" style="left:9px;top:5px;">Doc No</span>
+            <input type="text" id="txtDocNo" class="fx-abs fx-txt" style="left:9px;top:25px;width:79px;" disabled>
+            <span class="fx-abs fx-lbl" style="left:89px;top:5px;">Doc Date</span>
+            <div class="fx-abs fx-dtc" style="left:89px;top:25px;width:131px;"><input type="date" id="txtDocdate"></div>
+            <span class="fx-abs fx-lbl" style="left:221px;top:5px;">Account Dr</span>
+            <select id="CmbAccountId" class="fx-abs fx-cmb win-combo" style="left:221px;top:24px;width:172px;"></select>
+            <span class="fx-abs fx-lbl" style="left:394px;top:5px;">Remarks</span>
+            <input type="text" id="txtRemarks" class="fx-abs fx-txt" style="left:394px;top:25px;width:347px;" autocomplete="off">
+        </div>
+        <!-- panel6 (0,110) 915 x 321: grdDetail -->
+        <div class="fx-grid-host win-grid-scroll" style="height:321px;">
+            <table class="win-grid" id="grdDetail"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+        </div>
+    </div>
+
+    <!-- ============================ tabPage2 "History" ============================ -->
+    <div id="paneHistory">
+        <div class="fx-grid-host win-grid-scroll" style="height:431px;">
+            <table data-gridbar="StoreIssuanceFinancial:DataGridHistory" data-gridbar-mount="#gbMount" data-gridbar-hide="chooser,save,remove" data-gridbar-reorder="false"
+                   data-gridbar-title="Store Issuance Financial Effects" class="win-grid" id="DataGridHistory"><thead></thead><tbody></tbody></table>
+        </div>
+    </div>
+
+    <!-- tabControlGsIssuance (Alignment Bottom) -->
+    <div class="sif-tabs" role="tablist">
+        <div class="sif-tab" id="tabForm" role="tab" tabindex="0">Form</div>
+        <div class="sif-tab is-on" id="tabHistory" role="tab" tabindex="0">History</div>
+    </div>
+</div>
+</div>
+
+<script th:src="@{/build/js/countx_store_common.js?v=20260925c}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js}"></script>
+<script th:src="@{/build/js/countx_store_issuance_financial.js?v=20261007a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20261006-grid-control-placement}"></script>
+</body>
+</html>

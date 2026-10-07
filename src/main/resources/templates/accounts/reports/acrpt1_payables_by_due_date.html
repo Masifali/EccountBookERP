@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Payables By Due Report</title>
+<link rel="stylesheet" href="/build/css/countx_desktop_combo.css?v=20261007r1">
+<link rel="stylesheet" href="/build/css/countx_prod_combo.css?v=20261007r1">
+<link rel="stylesheet" href="/build/css/countx_acrpt1.css?v=20261007r1">
+<link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261005a}"/>
+<!--
+  Screen 63 "Payables By Due Report" = Architecture.WinApp.Account_Reports.PayablesByDueDate ("Accounts Payables By Due Date"),
+  route /accounts/reports/payables-by-due-date. Group R1 2026-10-07, built 1:1 on InitializeComponent():
+    ClientSize 967x661, AutoScrollMinSize 983x700, KeyPreview, Maximized.
+    panel1 Fill = panel2 (Top 27: toolStrip3 - &Reset | &Refresh | 142 && 159-Print | ShortCut Keys, Verdana 9.75)
+                | panel3 (Top 27 Teal: label23 4,3 Tahoma 12 bold white; rdPayablesByDueDate / ...Between are Visible = false)
+                | panel4 Fill = panel5 (Top 140 White: groupBox1 "Filters" 4,4 960x127, Tahoma 9.75 bold)
+                               + panel6 Fill (panel7 Teal 27 "History" + ctrlGrdBar, grd Fill).
+  groupBox1 children (designer Location / Size / TabIndex, relative to the group box):
+    label9 "Date Type" 6,20 | cmbDateType 92,14 201x26 (0) | label29 "Party Group" 4,47 | CmbGroup 92,41 201x26 (1, checked, caption CustomerGroup)
+    label1 "Due Date From" 4,76 | datDueDateFrom 92,72 201x23 (2) | label27 "Due Date To" 4,104 | datDueDateTo 92,100 201x23 (3), dd-MMM-yy
+    label2 "Balance From" 297,20 | txtBalFrom 378,16 201x23 (4) | label3 "Balance To" 297,47 | txtBalTo 378,43 201x23 (5)
+    lbllang "Language" 297,76 + CmbLanguage 378,70 201x26 (6) - Visible = false (nothing in this form shows them)
+    label5 "Due Days To" 599,4 | txtGreen 597,24 44x23 "10" (7) + chkGreen 646,26 | txtBlue 597,50 "5" (9) + chkblue 647,52 | txtRed 597,76 "0" (11) + chkRed 647,78
+    btnshow "Show" 522,97 57x26 (15, Teal flat Verdana 9.75 bold)
+  Lists: /api/accounts/acrpt1/payables-due/lookups (Refresh: /refresh). Report: /api/accounts/acrpt1/payables-due (Sp_DueByDatePayablesAndReceivables).
+  Print 142: /accounts/reports/acrpt1/print/payables-due. Logic: /build/js/countx_acrpt1_63.js.
+-->
+</head>
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="frm-scroll">
+<div class="frm" id="frmPayablesByDueDate" style="min-width:983px;min-height:700px;">
+
+    <div class="p2"><div class="ts">
+        <button type="button" id="reset" title="Ctrl+N"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#2e9b45"/><path d="M8 4v8M4 8h8" stroke="#fff" stroke-width="2"/></svg><span><u>R</u>eset</span></button>
+        <button type="button" id="refresh" title="Ctrl+R"><svg viewBox="0 0 16 16"><path d="M13 8a5 5 0 1 1-1.5-3.6" fill="none" stroke="#1f6fc5" stroke-width="2"/><path d="M13.5 1.5v4h-4z" fill="#1f6fc5"/></svg><span><u>R</u>efresh</span></button>
+        <button type="button" id="print" title="Ctrl+P"><svg viewBox="0 0 16 16"><rect x="4" y="1.5" width="8" height="4" fill="#fff" stroke="#555"/><rect x="1.5" y="5.5" width="13" height="6" rx="1" fill="#6b7785"/><rect x="4" y="9.5" width="8" height="5" fill="#fff" stroke="#555"/></svg><span>142 &amp; 159-Print</span></button>
+        <button type="button" id="shortcuts" title="Ctrl+Alt"><span>ShortCut Keys</span></button>
+    </div></div>
+
+    <div class="teal" style="height:27px;"><span class="cap" style="left:4px;top:3px;">Accounts Payables By Due Date</span></div>
+
+    <div class="p4">
+    <div class="pf" style="height:140px;">
+        <div class="gb" style="left:4px;top:4px;width:960px;height:127px;">
+            <div class="gb-frame"></div><span class="gb-cap">Filters</span>
+            <span class="lbl" style="left:6px;top:20px;">Date Type</span>
+            <select id="cmbDateType" data-dtcombo="single" data-dtcombo-caption="Parameters" style="position:absolute;left:92px;top:14px;width:201px;height:26px;"></select>
+            <span class="lbl" style="left:4px;top:47px;">Party Group</span>
+            <select id="cmbGroup" multiple data-dtcombo="single" data-dtcombo-checked data-dtcombo-caption="CustomerGroup" style="position:absolute;left:92px;top:41px;width:201px;height:26px;"></select>
+            <span class="lbl" style="left:4px;top:76px;">Due Date From</span>
+            <input type="date" id="datDueDateFrom" class="tb" style="left:92px;top:72px;width:201px;height:23px;">
+            <span class="lbl" style="left:4px;top:104px;">Due Date To</span>
+            <input type="date" id="datDueDateTo" class="tb" style="left:92px;top:100px;width:201px;height:23px;">
+            <span class="lbl" style="left:297px;top:20px;">Balance From</span>
+            <input id="txtBalFrom" class="tb" inputmode="numeric" autocomplete="off" style="left:378px;top:16px;width:201px;height:23px;">
+            <span class="lbl" style="left:297px;top:47px;">Balance To</span>
+            <input id="txtBalTo" class="tb" inputmode="numeric" autocomplete="off" style="left:378px;top:43px;width:201px;height:23px;">
+            <span class="lbl" style="left:297px;top:76px;" hidden>Language</span>
+            <select id="cmbLanguage" data-dtcombo="single" data-dtcombo-caption="LanguageName" style="position:absolute;left:378px;top:70px;width:201px;height:26px;"></select>
+            <span class="lbl" style="left:599px;top:4px;">Due Days To</span>
+            <input id="txtGreen" class="tb" inputmode="numeric" autocomplete="off" value="10" style="left:597px;top:24px;width:44px;height:23px;">
+            <label class="cbx" style="left:646px;top:26px;"><input type="checkbox" id="chkGreen" checked>Green</label>
+            <input id="txtBlue" class="tb" inputmode="numeric" autocomplete="off" value="5" style="left:597px;top:50px;width:44px;height:23px;">
+            <label class="cbx" style="left:647px;top:52px;"><input type="checkbox" id="chkBlue" checked>Blue</label>
+            <input id="txtRed" class="tb" inputmode="numeric" autocomplete="off" value="0" style="left:597px;top:76px;width:44px;height:23px;">
+            <label class="cbx" style="left:647px;top:78px;"><input type="checkbox" id="chkRed" checked>Red</label>
+            <button type="button" id="show" class="teal-btn vd" style="left:522px;top:97px;width:57px;height:26px;" title="Ctrl+S">Show</button>
+        </div>
+    </div>
+
+    <div class="teal" style="height:27px;"><span class="cap" style="left:4px;top:3px;">History</span><span class="gbmount" id="gbMount"></span></div>
+    <div class="gridbox">
+        <div class="grid" id="grid" tabindex="0"><table data-gridbar="PayablesByDueDate:grd" data-gridbar-mount="#gbMount" data-gridbar-hide="chooser,save,remove" data-gridbar-title="Accounts Payables By Due Date" class="g" id="results"><colgroup></colgroup><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        <div class="nav" id="nav" hidden>
+            <button type="button" data-nav="first" title="First">|&lt;</button><button type="button" data-nav="prev" title="Previous">&lt;</button>
+            <span id="navText"></span>
+            <button type="button" data-nav="next" title="Next">&gt;</button><button type="button" data-nav="last" title="Last">&gt;|</button>
+        </div>
+    </div>
+    </div>
+</div>
+</div>
+
+<dialog class="sck" id="shortcutDialog">
+    <div class="hd">ShortCut Keys</div>
+    <table><thead><tr><th>KeyCombination</th><th>Description</th></tr></thead><tbody id="shortcutRows"></tbody></table>
+    <div class="ft"><button type="button" id="closeShortcuts">Close</button></div>
+</dialog>
+
+<script src="/build/js/countx_prod_combo.js?v=20261007r1"></script>
+<script src="/build/js/countx_acrpt1_core.js?v=20261007r1"></script>
+<script src="/build/js/countx_acrpt1_63.js?v=20261007r1"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20261006-grid-control-placement}"></script>
+</body>
+</html>

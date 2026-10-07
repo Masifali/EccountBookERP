@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Accounts Reconciliation</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20261002gv}">
+    <style>
+        /* COAAllocation.InitializeComponent - ClientSize 734x451, BackColor White, tabControl1 Alignment Bottom (Form | History), tabPage Padding 2:
+           panel2 (Top 27) toolStrip2 = New, Print + ctrlGrdBar1;  panel3 (Top 38, rgb 10,110,110) label23 "COA Allocation" (9,8) 14.25pt;
+           panel4 (Top 106, white): groupBox1 (10,5 702x49) Account Title combo (98,13 236x26), Page No label (350,19), txtPageNo (413,15 113x23),
+           Is Active (537,19), Update (623,15 64x26);  groupBox2 (10,54 702x46) Parent Account combo (98,12 236x26), Search (364,12 64x26), Update (446,12 64x26);
+           panel6 (Fill) grddetail Janus Verdana 8.25 with filter row, record navigator, total row. */
+        :root { --teal: rgb(10,110,110); --grid-line: #c5d3dc; --grid-head: #e9eef3; --alt: #f3f7fa; --sel: #cfe3f5; }
+        html, body { margin: 0; padding: 0; height: 100%; background: #fff; overflow-x: hidden; }
+        body { font-family: Tahoma, "Microsoft Sans Serif", sans-serif; font-size: 12px; color: #000; display: flex; flex-direction: column; }
+        [hidden] { display: none !important; }
+        .nav-bar { flex: 0 0 auto; display: flex; justify-content: space-between; align-items: center; background: #f0f0f0; border-bottom: 1px solid #c9c9c9; padding: 2px 8px; font: 11px "Segoe UI", sans-serif; color: #333; }
+        .nav-bar a { color: #0b5c86; text-decoration: none; }
+        .form-scroll { flex: 1 1 auto; min-height: 0; overflow-x: auto; overflow-y: hidden; display: flex; flex-direction: column; }
+        .form { min-width: 734px; flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; background: #fff; position: relative; }
+        .page { flex: 1 1 auto; min-height: 0; display: none; flex-direction: column; padding: 2px; }
+        .page.on { display: flex; }
+        .panel2 { position: relative; height: 27px; flex: 0 0 auto; background: linear-gradient(#fbfcfd, #e3e8ee); border-bottom: 1px solid #b9c4cf; display: flex; align-items: center; padding-left: 2px; font: 13px Verdana, sans-serif; }
+        .ts-btn { height: 24px; display: inline-flex; align-items: center; gap: 4px; padding: 0 6px; border: 1px solid transparent; background: transparent; font: 13px Verdana, sans-serif; color: #000; cursor: pointer; }
+        .ts-btn:hover:not(:disabled) { border-color: #7fb5d6; background: #dcecf8; }
+        .ts-btn:disabled { color: #8a8a8a; cursor: default; }
+        .ts-btn .ico-add { color: #2e9d3a; font-size: 15px; } .ts-btn .ico-print { color: #44576a; }
+        .ts-btn u { text-decoration: underline; }
+        .panel3 { position: relative; height: 38px; flex: 0 0 auto; background: var(--teal); }
+        .panel3 span { position: absolute; left: 9px; top: 8px; font: 19px "Microsoft Sans Serif", Tahoma, sans-serif; color: #fff; white-space: nowrap; }
+        .panel4 { position: relative; height: 106px; flex: 0 0 auto; background: #fff; }
+        fieldset.gb { position: absolute; left: 10px; margin: 0; padding: 0; border: 1px solid #b6b6b6; border-radius: 2px; width: 702px; box-sizing: border-box; }
+        fieldset.gb legend { display: none; }
+        .gb .lbl { position: absolute; white-space: nowrap; font: 12px Tahoma, sans-serif; }
+        .gb select, .gb .dtcombo-wrap { position: absolute; box-sizing: border-box; }
+        .gb select { font: 13.6px "Microsoft Sans Serif", sans-serif; }
+        #txtPageNo { position: absolute; box-sizing: border-box; left: 413px; top: 10px; width: 113px; height: 23px; border: 1px solid #7a7a7a; font: 13.6px "Microsoft Sans Serif", sans-serif; padding: 0 3px; background: #fff; }
+        .gb button { position: absolute; width: 64px; height: 26px; box-sizing: border-box; border: 1px solid #adadad; background: #fff; font: 12px "Segoe UI", sans-serif; cursor: pointer; padding: 0; }
+        .gb button:hover:not(:disabled) { border-color: #0078d7; background: #e5f1fb; }
+        .gb button:disabled { color: #888; cursor: progress; }
+        .gb .chk { position: absolute; left: 527px; top: 12px; display: flex; align-items: center; gap: 3px; margin: 0; font: 12px Tahoma, sans-serif; cursor: pointer; white-space: nowrap; }
+        .gb .chk input { margin: 0; }
+        .panel6 { flex: 1 1 auto; min-height: 120px; position: relative; display: flex; flex-direction: column; border: 1px solid #7f9db9; margin-top: 0; }
+        .grid-scroll { flex: 1 1 auto; min-height: 0; overflow: auto; outline: none; }
+        table.jg { border-collapse: separate; border-spacing: 0; table-layout: fixed; width: 100%; font: 11px Verdana, sans-serif; }
+        table.jg th { position: sticky; top: 0; z-index: 2; background: linear-gradient(#f7f9fb, var(--grid-head)); border-right: 1px solid var(--grid-line); border-bottom: 1px solid #9fb3c4; padding: 3px 4px; font-weight: normal; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        table.jg tr.flt td { position: sticky; top: 22px; z-index: 2; background: #fff; border-right: 1px solid var(--grid-line); border-bottom: 1px solid #9fb3c4; padding: 0; height: 18px; }
+        table.jg tr.flt input { width: 100%; box-sizing: border-box; border: 0; font: 11px Verdana, sans-serif; padding: 1px 3px; background: #fffff0; }
+        table.jg td { border-right: 1px solid var(--grid-line); border-bottom: 1px solid var(--grid-line); padding: 2px 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; height: 16px; background: #fff; }
+        table.jg tbody tr:nth-child(even) td { background: var(--alt); }
+        table.jg tbody tr:hover td { background: var(--sel); }
+        table.jg tbody tr.cur td { background: var(--sel); }
+        table.jg td.ed { padding: 0; }
+        table.jg td.ed input { width: 100%; box-sizing: border-box; border: 0; background: transparent; font: 11px Verdana, sans-serif; padding: 2px 4px; height: 20px; }
+        table.jg td.ed input:focus { background: #fff; outline: 1px solid #0078d7; }
+        table.jg tfoot td { position: sticky; bottom: 0; z-index: 2; background: #e3e9ef; border-top: 1px solid #9fb3c4; font-weight: bold; height: 14px; }
+        .navr { flex: 0 0 auto; height: 22px; display: flex; align-items: center; padding: 0 6px; background: #eef2f6; border-top: 1px solid #b8c6d3; font: 11px Verdana, sans-serif; color: #333; }
+        .tabs { flex: 0 0 auto; display: flex; gap: 0; padding: 0 4px 0 4px; background: #f0f0f0; border-top: 1px solid #a0a0a0; }
+        .tabs button { border: 1px solid #a0a0a0; border-top: 0; background: #ece9d8; padding: 3px 12px 4px; font: 12px Tahoma, sans-serif; cursor: pointer; margin-right: -1px; }
+        .tabs button.on { background: #fff; font-weight: normal; position: relative; top: -1px; padding-bottom: 5px; }
+        .wait { position: fixed; inset: 0; background: rgba(255,255,255,.55); display: flex; align-items: center; justify-content: center; z-index: 50; }
+        .wait .box { background: #fff; border: 1px solid var(--teal); box-shadow: 0 2px 8px rgba(0,0,0,.25); padding: 12px 18px; font: 12px Verdana, sans-serif; color: #035; }
+        .wait .box i { color: var(--teal); margin-right: 6px; }
+    
+        /* AccountsReconciliation.InitializeComponent - ClientSize 1206x609 */
+        .form { min-width: 1206px; }
+        .panel4 { height: 130px; }
+        fieldset.gb { width: 1178px; }
+        .gb input[type=text], .gb input[type=date] { position: absolute; box-sizing: border-box; border: 1px solid #7a7a7a; background: #fff; font: 13px "Microsoft Sans Serif", sans-serif; padding: 0 3px; }
+        .gb input.dt { font-size: 13px; }
+        .gb .lbl { font: 12px "Microsoft Sans Serif", sans-serif; }
+        .gb select, .gb .dtcombo-wrap { position: absolute; }
+        .gb input.cmbtype { border-radius: 0; }
+        #btnUpdate[hidden], #Save[hidden] { display: none !important; }
+        table.jg td.num { text-align: right; }
+        table.jg tfoot td.num { text-align: right; }
+    
+    </style>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261005a}"/>
+</head>
+<!--
+  Screen 32 "Accounts Reconcilation" - Architecture.WinApp.Reconciliation.AccountsReconciliation (Text "Eccount Book").
+  AccountsReconciliation.cs map: FormValidation :95, ParentAccountTitleFill :118, Reset :140, GenerateCode :158, DayBookVoucher_Load :176,
+  DetailGridFill :198, DetialGridSettings :232, KeyDown :328, DocDate_ValueChanged/btnSearch_Click :384/:389, txtDocNo_Leave :394,
+  ReadById_Update :412, Insert :431, Save_Click :500, btnUpdate_Click :512, designer :537-.
+-->
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="nav-bar"><span>Eccount Book</span><a href="/accounts/dashboard"><i class="fa fa-arrow-left"></i> Back to Dashboard</a></div>
+<div class="form-scroll">
+<div class="form">
+    <!-- tabPage1 "Form" -->
+    <div class="page on" id="tabPage1">
+        <div class="panel2" id="toolStrip2">
+            <button type="button" class="ts-btn" id="New" accesskey="n" title="New (Alt+N, Ctrl+N)"><i class="fa fa-plus-circle ico-add"></i><span><u>N</u>ew</span></button>
+            <button type="button" class="ts-btn" id="btnUpdate" accesskey="u" title="Update (Alt+U)" hidden><i class="fa fa-pencil ico-print"></i><span><u>U</u>pdate</span></button>
+            <button type="button" class="ts-btn" id="Save" accesskey="s" title="Save (Alt+S)"><i class="fa fa-floppy-o ico-print"></i><span><u>S</u>ave</span></button>
+            <button type="button" class="ts-btn" id="Print" accesskey="p" title="Print (Alt+P) - the desktop button has no Click handler"><i class="fa fa-print ico-print"></i><span><u>P</u>rint</span></button>
+        </div>
+        <div class="panel3"><span id="label23">Accounts Reconciliation</span></div>
+        <div class="panel4">
+            <fieldset class="gb" id="groupBox1" style="top:5px; height:69px;"><legend></legend>
+                <span class="lbl" style="left:19px; top:14px;">DocDate</span>
+                <input type="date" id="DocDate" class="dt" style="left:22px; top:38px; width:173px; height:22px;" tabindex="1">
+                <span class="lbl" style="left:200px; top:14px;">Doc No</span>
+                <input type="text" id="txtDocNo" style="left:203px; top:38px; width:113px; height:23px;" tabindex="2" autocomplete="off">
+                <span class="lbl" style="left:319px; top:14px;">ReconicilationType</span>
+                <input type="text" id="CmbReconcilationType" class="cmbtype" list="lstReconType" style="left:322px; top:37px; width:121px; height:24px;" tabindex="3" autocomplete="off">
+                <datalist id="lstReconType"><option value="General"><option value="Bank"><option value="Payables"><option value="Receivables"></datalist>
+                <span class="lbl" style="left:444px; top:14px;">Up to Date</span>
+                <input type="date" id="UptoDate" class="dt" style="left:447px; top:38px; width:166px; height:22px;" tabindex="4">
+                <span class="lbl" style="left:616px; top:14px;">Remarks</span>
+                <input type="text" id="txtRemarks" style="left:619px; top:38px; width:536px; height:23px;" tabindex="5" autocomplete="off">
+            </fieldset>
+            <fieldset class="gb" id="groupBox2" style="top:77px; height:46px;"><legend></legend>
+                <span class="lbl" style="left:8px; top:18px;">Parent Account</span>
+                <select id="CmbParentAccount" data-dtcombo="single" data-dtcombo-caption="Account Title" style="left:98px; top:12px; width:236px; height:26px;" tabindex="6"></select>
+                <button type="button" id="btnSearch" style="left:364px; top:12px;" tabindex="7">Search</button>
+            </fieldset>
+        </div>
+        <div class="panel6">
+            <div class="grid-scroll" id="grdScroll" tabindex="8">
+                <table data-gridbar="AccountsReconciliation:grd" class="jg" id="grd">
+                    <colgroup><col style="width:90px"><col style="width:120px"><col><col style="width:90px"><col style="width:130px"><col style="width:130px"><col style="width:130px"><col style="width:130px"></colgroup>
+                    <thead><tr><th>AccountId</th><th>AccountCode</th><th>AccountTitle</th><th>PageNo</th><th>SystemDebit</th><th>SystemCredit</th><th>ManualBalance</th><th>Difference</th></tr>
+                        <tr class="flt"><td><input data-f="AccountId"></td><td><input data-f="AccountCode"></td><td><input data-f="AccountTitle"></td><td><input data-f="PageNo"></td><td><input data-f="SystemDebit"></td><td><input data-f="SystemCredit"></td><td><input data-f="ManualBalance"></td><td><input data-f="Difference"></td></tr></thead>
+                    <tbody id="grdBody"></tbody>
+                    <tfoot><tr id="grdFoot"></tr></tfoot>
+                </table>
+            </div>
+            <div class="navr"><span id="navText">Record 0 of 0</span></div>
+        </div>
+    </div>
+    <!-- tabPage2 "History": DataGridHistory is never bound on the desktop; toolStripButton16 (Print) has no handler -->
+    <div class="page" id="tabPage2">
+        <div class="panel2" id="toolStrip3">
+            <button type="button" class="ts-btn" id="toolStripButton16" accesskey="p" title="Print (no handler on the desktop)"><i class="fa fa-print ico-print"></i><span><u>P</u>rint</span></button>
+        </div>
+        <div class="panel6">
+            <div class="grid-scroll" tabindex="0">
+                <table data-gridbar="AccountsReconciliation:DataGridHistory" class="jg" id="DataGridHistory"><thead><tr></tr></thead><tbody></tbody></table>
+            </div>
+            <div class="navr"><span>Record 0 of 0</span></div>
+        </div>
+    </div>
+    <div class="tabs"><button type="button" class="on" data-tab="tabPage1">Form</button><button type="button" data-tab="tabPage2">History</button></div>
+</div>
+</div>
+<div class="wait" id="waitForm" hidden><div class="box"><i class="fa fa-spinner fa-spin"></i>Please wait...</div></div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20261002gv}"></script>
+<script th:src="@{/build/js/countx_acc_rpt_f.js?v=20261002gv}"></script>
+<script>
+(function () {
+    'use strict';
+    var API = '/api/accounts/accounts-reconciliation';
+    var Id = 0;                                   /* module field Id */
+    var COLS = ['AccountId', 'AccountCode', 'AccountTitle', 'PageNo', 'SystemDebit', 'SystemCredit', 'ManualBalance', 'Difference'];
+    var NUM = { SystemDebit: 1, SystemCredit: 1, ManualBalance: 1, Difference: 1 };
+    var gridRows = [], filters = {}, curRow = -1, shown = [], saving = false;
+
+    function esc(s) { return AccF.esc(s == null ? '' : s); }
+    function busy(on) { $('#waitForm').prop('hidden', !on); $('#btnSearch,#New,#Save,#btnUpdate').prop('disabled', on); }
+    function call(method, path, body) {
+        return new Promise(function (resolve, reject) {
+            $.ajax({ url: API + path, type: method, contentType: 'application/json', dataType: 'json', headers: (function () { var t = $('meta[name="_csrf"]').attr('content'), h = $('meta[name="_csrf_header"]').attr('content'), o = {}; if (t && h) o[h] = t; return o; })(), data: body ? JSON.stringify(body) : undefined })
+                .done(function (r) { if (r && r.success === false) reject(new Error(r.message)); else resolve(r.data); })
+                .fail(function (x) { reject(new Error((x.responseJSON && x.responseJSON.message) || ('HTTP ' + x.status))); });
+        });
+    }
+    function today() { var d = new Date(), m = d.getMonth() + 1, k = d.getDate(); return d.getFullYear() + '-' + (m < 10 ? '0' : '') + m + '-' + (k < 10 ? '0' : '') + k; }
+    function fmt(v) { return v == null ? '' : String(v); }
+
+    /* grd: Janus grid, filter row, total row (Sum of SystemDebit / SystemCredit / ManualBalance / Difference), record navigator.
+       AccountId / AccountCode / AccountTitle / PageNo / SystemDebit / SystemCredit / Difference are NoEdit; ManualBalance is editable. */
+    function render() {
+        shown = gridRows.filter(function (r) {
+            return COLS.every(function (k) {
+                var t = (filters[k] || '').toLowerCase(); return !t || String(r[k] == null ? '' : r[k]).toLowerCase().indexOf(t) >= 0;
+            });
+        });
+        var h = [];
+        shown.forEach(function (r, i) {
+            h.push('<tr data-i="' + i + '"' + (i === curRow ? ' class="cur"' : '') + '><td>' + esc(r.AccountId) + '</td><td>' + esc(r.AccountCode) + '</td><td>' + esc(r.AccountTitle)
+                + '</td><td>' + esc(r.PageNo) + '</td><td class="num">' + esc(r.SystemDebit) + '</td><td class="num">' + esc(r.SystemCredit)
+                + '</td><td class="ed"><input data-edit="' + i + '" style="text-align:right" value="' + esc(r.ManualBalance) + '"></td><td class="num">' + esc(r.Difference) + '</td></tr>');
+        });
+        $('#grdBody').html(h.join(''));
+        foot();
+        $('#navText').text('Record ' + (shown.length ? Math.max(curRow, 0) + 1 : 0) + ' of ' + shown.length);
+    }
+    function sum(k) { var t = 0; shown.forEach(function (r) { var n = parseFloat(r[k]); if (!isNaN(n)) t += n; }); return t; }
+    function foot() {
+        if (!gridRows.length) { $('#grdFoot').html(''); return; }
+        $('#grdFoot').html('<td></td><td></td><td></td><td></td><td class="num">' + sum('SystemDebit') + '</td><td class="num">' + sum('SystemCredit')
+            + '</td><td class="num">' + sum('ManualBalance') + '</td><td class="num">' + sum('Difference') + '</td>');
+    }
+    $('#grdBody').on('input', 'input[data-edit]', function () { shown[$(this).data('edit')].ManualBalance = this.value; foot(); });
+    $('#grdBody').on('focus click', 'tr', function () {
+        curRow = $(this).data('i'); $('#grdBody tr').removeClass('cur'); $(this).addClass('cur');
+        $('#navText').text('Record ' + (curRow + 1) + ' of ' + shown.length);
+    });
+    $('#grdScroll thead').on('input', 'input', function () { filters[$(this).data('f')] = this.value; curRow = -1; render(); });
+    function clearGrid() { gridRows = []; shown = []; curRow = -1; filters = {}; $('#grdScroll thead input').val(''); render(); }
+
+    function showSave(on) { $('#Save').prop('hidden', !on); $('#btnUpdate').prop('hidden', on); }
+
+    /* GenerateCode: failure shows its message */
+    function generateCode() {
+        return call('GET', '/generate-code').then(function (n) { $('#txtDocNo').val(n); }).catch(function (e) { alert(e.message); });
+    }
+
+    /* Reset */
+    function reset() {
+        Id = 0;
+        $('#txtRemarks').val('');
+        $('#CmbParentAccount').val('').trigger('change');
+        clearGrid();
+        showSave(true);
+        return generateCode();
+    }
+
+    /* DayBookVoucher_Load */
+    function load() {
+        $('#DocDate,#UptoDate').val(today());
+        busy(true);
+        return call('GET', '/load').then(function (d) {
+            AccF.fillSelect('#CmbParentAccount', d.parentAccounts || [], 'Id', 'AccountTitle', null);
+            $('#CmbParentAccount').val('').trigger('change');
+            if (d.docNo > 0) $('#txtDocNo').val(d.docNo); else alert('Max Number not Found');
+            $('#CmbReconcilationType').val('General');
+            showSave(true);
+        }).catch(function (e) { alert(e.message); }).then(function () { busy(false); AccF.focus('#DocDate'); });
+    }
+
+    /* DetailGridFill: an empty result leaves the grid as it was */
+    function detailGridFill() {
+        busy(true);
+        var q = '?docDate=' + encodeURIComponent($('#DocDate').val() || '') + '&groupAccountId=' + encodeURIComponent($('#CmbParentAccount').val() || 0) + '&id=' + Id;
+        return call('GET', '/balances' + q).then(function (rows) {
+            if (rows && rows.length) { gridRows = rows; filters = {}; $('#grdScroll thead input').val(''); curRow = -1; render(); }
+        }).catch(function (e) { alert(e.message); }).then(function () { busy(false); });
+    }
+    $('#DocDate').on('change', detailGridFill);
+    $('#btnSearch').on('click', detailGridFill);
+
+    /* txtDocNo_Leave -> GetIdByDocNo; > 0 -> Id = it, ReadById_Update(Id) */
+    $('#txtDocNo').on('blur', function () {
+        call('GET', '/by-doc-no?docNo=' + encodeURIComponent($('#txtDocNo').val().trim())).then(function (id) {
+            if (id > 0) { Id = id; return readByIdUpdate(id); }
+        }).catch(function (e) { alert(e.message); });
+    });
+    function readByIdUpdate(id) {
+        return call('GET', '/by-id?id=' + id).then(function (h) {
+            $('#DocDate').val(String(h.DocDate || '').substring(0, 10));
+            $('#txtDocNo').val(h.DocNo);
+            $('#UptoDate').val(String(h.BalanceDate || '').substring(0, 10));
+            $('#txtRemarks').val(h.RemarksHeader || '');
+            $('#CmbReconcilationType').val(h.ReconciliationType || '');
+            $('#CmbParentAccount').val(h.AccountId == null ? '' : String(h.AccountId)).trigger('change');
+            showSave(false);
+        }).catch(function (e) { alert(e.message); });
+    }
+
+    /* Insert (Save_Click / btnUpdate_Click) */
+    function insert() {
+        if (saving) return;
+        var docNo = $('#txtDocNo').val().trim();
+        if (docNo === '' || docNo === '0') { alert('Doc No Field is Required'); $('#txtDocNo').focus(); return; }
+        if (!$('#CmbParentAccount').val()) { alert('Account Title Field is Required'); AccF.focus('#CmbParentAccount'); return; }
+        var rt = $('#CmbReconcilationType').val().trim();
+        if (rt === '' || rt === '0') { alert('Reconciliation Type Field is Required'); $('#CmbReconcilationType').focus(); return; }
+        if (!window.confirm(Id > 0 ? 'Are you sure to Update?' : 'Are you sure to Save?')) return;
+        var rows = gridRows.map(function (r) { return { accountId: r.AccountId, manualBalance: r.ManualBalance, difference: r.Difference }; });
+        saving = true; busy(true);
+        call('POST', '/save', { id: Id, docNo: docNo, docDate: $('#DocDate').val(), uptoDate: $('#UptoDate').val(), remarks: $('#txtRemarks').val().trim(),
+            reconciliationType: rt, accountId: $('#CmbParentAccount').val() || 0, rows: rows })
+            .then(function (m) { if (m) { alert(m); return reset(); } })
+            .catch(function (e) { alert(e.message); })
+            .then(function () { saving = false; busy(false); });
+    }
+    $('#Save').on('click', insert);
+    $('#btnUpdate').on('click', insert);
+    $('#New').on('click', reset);
+
+    /* tabControl1 (Alignment Bottom) */
+    $('.tabs').on('click', 'button', function () {
+        $('.tabs button').removeClass('on'); $(this).addClass('on');
+        $('.page').removeClass('on'); $('#' + $(this).data('tab')).addClass('on');
+    });
+
+    /* DayBookVoucher_KeyDown: Enter -> Tab, Ctrl+N New (Form tab), Ctrl+E / Esc close */
+    function focusables() {
+        return $('.page.on').find('input:not([type=hidden]):not(:disabled):visible, button:not(:disabled):visible, .dtcombo-input:visible')
+            .filter(function () { return !$(this).closest('#grdScroll').length && !$(this).hasClass('ts-btn'); })
+            .toArray().sort(function (a, b) { return (parseInt(a.tabIndex, 10) || 999) - (parseInt(b.tabIndex, 10) || 999); });
+    }
+    $(document).on('keydown', function (e) {
+        if (e.key === 'Enter' && !$(e.target).is('button, textarea, a') && !$(e.target).closest('#grdScroll').length && !e.defaultPrevented) {
+            var list = focusables(), i = list.indexOf(e.target);
+            if (i < 0) { var $w = $(e.target).closest('.dtcombo-wrap'); if ($w.length) i = list.indexOf($w.find('.dtcombo-input')[0]); }
+            if (i >= 0) { e.preventDefault(); list[(i + 1) % list.length].focus(); }
+        }
+        if (e.ctrlKey && (e.key === 'n' || e.key === 'N') && $('#tabPage1').hasClass('on')) { e.preventDefault(); reset(); }
+        if ((e.ctrlKey && (e.key === 'e' || e.key === 'E')) || e.key === 'Escape') { e.preventDefault(); window.location.href = '/accounts/dashboard'; }
+    });
+
+    $(function () { render(); load(); });
+})();
+</script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20261006-grid-control-placement}"></script>
+</body>
+</html>

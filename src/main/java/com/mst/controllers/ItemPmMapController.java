@@ -4,6 +4,7 @@ import com.mst.models.dto.ItemPmMapDto;
 import com.mst.services.ItemPmMapService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -25,41 +26,42 @@ public class ItemPmMapController {
         return "packing_material/item_pm_map";
     }
 
-    @GetMapping(API + "/lookups")
+    @GetMapping(value = API + "/lookups", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public ResponseEntity<?> lookups() {
         return run(service::lookups, "Could not load lookups.");
     }
 
-    @GetMapping(API + "/uoms")
+    @GetMapping(value = API + "/uoms", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public ResponseEntity<?> uomsForItem(@RequestParam(defaultValue = "0") int itemId) {
+    public ResponseEntity<?> uomsForItem(@RequestParam(name = "itemId", defaultValue = "0") int itemId) {
         return run(() -> service.uomsForItem(itemId), "Could not load UOMs.");
     }
 
-    @GetMapping(API + "/history")
+    @GetMapping(value = API + "/history", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public ResponseEntity<?> history(@RequestParam(required = false) String fromDate,
-                                     @RequestParam(required = false) String toDate,
-                                     @RequestParam(required = false) Integer itemId) {
+    public ResponseEntity<?> history(@RequestParam(name = "fromDate", required = false) String fromDate,
+                                     @RequestParam(name = "toDate", required = false) String toDate,
+                                     @RequestParam(name = "itemId", required = false) Integer itemId) {
         return run(() -> service.history(fromDate, toDate, itemId), "Could not load history.");
     }
 
-    @GetMapping(API + "/{id}")
+    @GetMapping(value = API + "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public ResponseEntity<?> getById(@PathVariable int id) {
+    public ResponseEntity<?> getById(@PathVariable("id") int id) {
         return run(() -> service.getById(id), "Could not load record.");
     }
 
-    @PostMapping(API + "/save")
+    @PostMapping(value = API + "/save", consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public ResponseEntity<?> save(@RequestBody ItemPmMapDto dto) {
         return write(() -> service.save(dto), "Save failed.");
     }
 
-    @DeleteMapping(API + "/{id}")
+    @DeleteMapping(value = API + "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public ResponseEntity<?> delete(@PathVariable int id) {
+    public ResponseEntity<?> delete(@PathVariable("id") int id) {
         return run(() -> service.delete(id), "Delete failed.");
     }
 

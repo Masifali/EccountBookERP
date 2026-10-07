@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Payables and Receivables Aging Report</title>
+<link rel="stylesheet" href="/build/css/countx_desktop_combo.css?v=20261007r2">
+<link rel="stylesheet" href="/build/css/countx_prod_combo.css?v=20261007r2">
+<link rel="stylesheet" href="/build/css/countx_acrpt2.css?v=20261007r2">
+<!--
+  Screen 77 "Payables and Receivables Aging Report" = Architecture.WinApp.Account_Reports.PayablesandReceivablesAging
+  (route /accounts/reports/payables-receivables-aging-report). R2 2026-10-07, built 1:1 on InitializeComponent()
+  (ClientSize 1136x578, Maximized, FixedSingle, KeyPreview but no KeyDown handler exists):
+    panel2 Fill = panel3 (Top 29: toolStrip3 27 = "Payables and Receivables Aging " (Calibri 12 bold) | &New | 154-&Print | Refresh, ctrlGrdBar1 @1087,4)
+                | panel7 Fill (White) = panel4 (Top 148) + panel5 Fill (grd, Janus Verdana 8.25, TotalRow, GroupTotals Always, no group box)
+    panel4 children (Calibri 9.75): panel1 15,10 151x49 {RBAccountClassification 3,6 | RBBalanceClassification 3,29} |
+        RBAccountsPayables 172,16 | RBAccountsReceievables 172,39 | label8 "Receivable Account" 327,10 | cmbAccount 327,32 290x26 (checked list) |
+        label1 "CustomeGroups" 623,11 | CmbCustomeGroups 623,33 290x26 (checked list) |
+        label4 "Interval Days" 21,70 | txtIntervalDays 21,88 128x23 | label27 "From Date" 153,70 | txtFromDate 153,88 135x23 (disabled) |
+        label33 "To Date" 291,70 | txtToDate 291,88 135x23 | label5 "Not Equal To" 426,70 | txtNotEqualTo 429,88 103x23 |
+        btnshow " Show" 536,88 57x23 | btnFilter "3rd Level Filter" 595,88 112x23 | ReportParameters (Blue) 21,125
+  Page logic: /build/js/countx_acrpt2_aging.js. API: /api/accounts/acrpt2/aging/*
+-->
+<style>
+    .frm { min-width: 1136px; min-height: 420px; }
+    .p3 { flex: 0 0 29px; height: 29px; position: relative; background: #f0f0f0; }
+    .p3 .ts { height: 27px; }
+    #barMount { position: absolute; right: 4px; top: 3px; height: 22px; }
+    .p4 { flex: 0 0 148px; height: 148px; position: relative; background: #fff; }
+    .p4 .pnl1 { position: absolute; left: 15px; top: 10px; width: 151px; height: 49px; }
+    #lblCrit { position: absolute; left: 21px; top: 125px; color: #00f; font: 11px Tahoma, Verdana, sans-serif; white-space: nowrap; }
+    .gridbox { flex: 1 1 auto; }
+</style>
+<link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261005a}"/>
+</head>
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="frm-scroll">
+<div class="frm" id="PayablesandReceivablesAging">
+
+    <!-- panel3 (Top 29): toolStrip3 + ctrlGrdBar1 -->
+    <div class="p3">
+        <div class="ts">
+            <button type="button" id="title" tabindex="-1" style="cursor:default;"><span class="ttl">Payables and Receivables Aging </span></button>
+            <button type="button" id="new"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#2e9b45"/><path d="M8 4v8M4 8h8" stroke="#fff" stroke-width="2"/></svg><span><u>N</u>ew</span></button>
+            <button type="button" id="print"><svg viewBox="0 0 16 16"><rect x="4" y="1.5" width="8" height="4" fill="#fff" stroke="#555"/><rect x="1.5" y="5.5" width="13" height="6" rx="1" fill="#6b7785"/><rect x="4" y="9.5" width="8" height="5" fill="#fff" stroke="#555"/></svg><span>154-<u>P</u>rint</span></button>
+            <button type="button" id="refresh"><svg viewBox="0 0 16 16"><path d="M13 8a5 5 0 1 1-1.5-3.6" fill="none" stroke="#1f6fc5" stroke-width="2"/><path d="M13.5 1.5v4h-4z" fill="#1f6fc5"/></svg><span>Refresh</span></button>
+        </div>
+        <span id="barMount"></span>
+    </div>
+
+    <!-- panel7 Fill (White): panel4 (Top 148) + panel5 (Fill) -->
+    <div class="p4">
+        <div class="pnl1">
+            <label class="rb" style="left:3px;top:6px;width:147px;height:19px;"><input type="radio" name="cls" id="rbClassAcc"><span>Account Classification</span></label>
+            <label class="rb" style="left:3px;top:29px;width:147px;height:19px;"><input type="radio" name="cls" id="rbClassBal"><span>Balance Classification</span></label>
+        </div>
+        <label class="rb" style="left:172px;top:16px;width:128px;height:19px;"><input type="radio" name="typ" id="rbPay"><span>Accounts Payables</span></label>
+        <label class="rb" style="left:172px;top:39px;width:149px;height:19px;"><input type="radio" name="typ" id="rbRcv"><span>Accounts Receievables</span></label>
+
+        <span class="lbl cal" style="left:327px;top:10px;">Receivable Account</span>
+        <select id="acc" multiple data-dtcombo="single" data-dtcombo-checked data-dtcombo-caption="Account Title" style="position:absolute;left:327px;top:32px;width:290px;height:26px;"></select>
+        <span class="lbl cal" style="left:623px;top:11px;">CustomeGroups</span>
+        <select id="grp" multiple data-dtcombo="single" data-dtcombo-checked data-dtcombo-caption="Account Title" style="position:absolute;left:623px;top:33px;width:290px;height:26px;"></select>
+
+        <span class="lbl cal" style="left:21px;top:70px;">Interval Days</span>
+        <input id="interval" class="tb cal" autocomplete="off" style="left:21px;top:88px;width:128px;height:23px;">
+        <span class="lbl cal" style="left:153px;top:70px;">From Date</span>
+        <input type="date" id="fromDate" class="tb cal" disabled style="left:153px;top:88px;width:135px;height:23px;">
+        <span class="lbl cal" style="left:291px;top:70px;">To Date</span>
+        <input type="date" id="toDate" class="tb cal" style="left:291px;top:88px;width:135px;height:23px;">
+        <span class="lbl cal" style="left:426px;top:70px;">Not Equal To</span>
+        <input id="notEq" class="tb cal" autocomplete="off" style="left:429px;top:88px;width:103px;height:23px;">
+        <button type="button" id="show" class="sys" style="left:536px;top:88px;width:57px;height:23px;"> Show</button>
+        <button type="button" id="filter" class="sys" style="left:595px;top:88px;width:112px;height:23px;">3rd Level Filter</button>
+        <span id="lblCrit"></span>
+    </div>
+    <div class="gridbox">
+        <div class="grid" id="grid" tabindex="0"><table data-gridbar="PayablesandReceivablesAging:grd" data-gridbar-mount="#barMount" class="g" id="grd"><colgroup></colgroup><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        <div class="nav" id="nav" hidden>
+            <button type="button" data-nav="first" title="First">|&lt;</button><button type="button" data-nav="prev" title="Previous">&lt;</button>
+            <span id="navText"></span>
+            <button type="button" data-nav="next" title="Next">&gt;</button><button type="button" data-nav="last" title="Last">&gt;|</button>
+        </div>
+    </div>
+</div>
+</div>
+
+<script src="/build/js/countx_prod_combo.js?v=20261007r2"></script>
+<script src="/build/js/countx_acrpt2.js?v=20261007r2"></script>
+<script src="/build/js/countx_acrpt2_aging.js?v=20261007r2"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20261006-grid-control-placement}"></script>
+</body>
+</html>

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${registerTitle}">Commission Trading Register</title>
+    <link rel="stylesheet" th:href="@{/build/css/cmagt_theme.css?v=20260930T}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261005a}">
+    <style>
+        html,body{margin:0;background:#eef2f4;color:#111;font:12px "Segoe UI",Tahoma,Arial,sans-serif;overflow-x:hidden}
+        .reg-toolbar{height:29px;display:flex;align-items:center;gap:3px;padding:0 5px;background:#f2f2f2;border-bottom:1px solid #bbb}
+        .reg-toolbar button{height:24px;padding:1px 9px;font:12px "Segoe UI",sans-serif;color:#123;background:#fafafa;border:1px solid #9ca7b1;cursor:pointer}
+        .reg-toolbar button:hover{background:#e6f2f7}.reg-toolbar button:disabled{opacity:.6;cursor:wait}
+        .reg-title{height:30px;display:flex;align-items:center;padding:0 7px;background:#087e7a;color:white;font:bold 16px Tahoma,sans-serif}
+        .reg-filters{margin:5px 7px 4px;padding:4px 6px 7px;border:1px solid #b4b4b4;background:#fff}
+        .reg-filters legend{padding:0 3px;font:bold 13px Tahoma,sans-serif;color:#111}
+        .reg-grid{display:grid;grid-template-columns:repeat(6,minmax(145px,1fr));gap:4px 8px;max-width:1180px;align-items:end}
+        .reg-field{display:flex;flex-direction:column;gap:2px;min-width:0}.reg-field label{font-weight:600;white-space:nowrap}
+        .reg-field select,.reg-field input{height:24px;box-sizing:border-box;width:100%;font:12px "Segoe UI",sans-serif;border:1px solid #999;padding:1px 4px;background:#fff}
+        .reg-actions{display:flex;align-items:end;gap:6px}.reg-show{height:25px;min-width:78px;border:1px solid #006b64;background:#008f88;color:#fff;font-weight:bold;cursor:pointer}
+        .reg-message{min-height:16px;color:#a11;padding:0 7px}.reg-band{height:26px;background:#087e7a;color:#fff;display:flex;align-items:center;gap:8px;padding:0 7px;font:bold 16px Tahoma,sans-serif}
+        .reg-count{margin-left:auto;font:600 12px "Segoe UI",sans-serif}.reg-scroll{height:calc(100vh - 212px);min-height:200px;overflow:auto;background:#fff;border:1px solid #9daec2;margin:0 7px 8px;}
+        table.reg-table{border-collapse:collapse;width:max-content;min-width:100%;font:12px "Segoe UI",sans-serif;white-space:nowrap;background:white}
+        .reg-table th{position:sticky;top:0;z-index:4;background:linear-gradient(#dfe8f5,#c8d7ec);border:1px solid #aab9cc;padding:4px 7px;text-align:left}
+        .reg-table td{border:1px solid #d4dce5;padding:3px 7px;height:19px}.reg-table td.num{text-align:right}
+        .reg-table tbody tr:nth-child(even){background:#f7f9fb}.reg-table tbody tr:hover{background:#e4f1f2}
+        .reg-table td.doc-id{color:#0645ad;text-decoration:underline;cursor:pointer}
+        .reg-empty{padding:7px;color:#333}.reg-loading{padding:8px;color:#075c61;font-weight:600}
+        @media(max-width:900px){.reg-grid{grid-template-columns:repeat(3,minmax(130px,1fr))}.reg-scroll{height:calc(100vh - 290px)}}
+        @media(max-width:580px){.reg-grid{grid-template-columns:repeat(2,minmax(120px,1fr))}}
+        @media print{.reg-toolbar,.reg-filters,.reg-message,.gb-bar{display:none!important}.reg-title,.reg-band{print-color-adjust:exact;-webkit-print-color-adjust:exact}.reg-scroll{height:auto;overflow:visible;border:0}.reg-table th{position:static}}
+    </style>
+</head>
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="cmagt-appbar">
+    <a class="cmagt-back" th:href="@{/app/Commission%20Trading?module=61}">Back to Commission Trading</a>
+    <span class="cmagt-title" th:text="${registerTitle}">Commission Trading Register</span>
+</div>
+<div class="reg-toolbar">
+    <button id="btnNew" type="button">↻ Reset</button>
+    <button id="btnRefresh" type="button">⟳ Refresh</button>
+    <button id="btnPrint" type="button">▣ Register Print</button>
+    <button id="btnShortcut" type="button">◉ ShortCut Keys</button>
+</div>
+<div class="reg-title" th:text="${registerTitle}">Commission Trading Register</div>
+<fieldset class="reg-filters">
+    <legend>Filters</legend>
+    <div class="reg-grid">
+        <div class="reg-field"><label for="fromDate">From Date</label><input id="fromDate" type="date"></div>
+        <div class="reg-field"><label for="toDate">To Date</label><input id="toDate" type="date"></div>
+        <div class="reg-field"><label for="fromDocNo">Doc No From</label><input id="fromDocNo" inputmode="numeric"></div>
+        <div class="reg-field"><label for="toDocNo">Doc No To</label><input id="toDocNo" inputmode="numeric"></div>
+        <div class="reg-field"><label for="supplierId">Supplier</label><select id="supplierId"><option value="">...Select Any Value...</option></select></div>
+        <div class="reg-field"><label for="customerId">Customer</label><select id="customerId"><option value="">...Select Any Value...</option></select></div>
+        <div class="reg-field"><label for="brokerId">Broker / Commission Agent</label><select id="brokerId"><option value="">...Select Any Value...</option></select></div>
+        <div class="reg-field" th:if="${registerType == 'transaction'}"><label for="subBrokerId">Sub Broker</label><select id="subBrokerId"><option value="">...Select Any Value...</option></select></div>
+        <div class="reg-field"><label for="itemId">Item</label><select id="itemId"><option value="">...Select Any Value...</option></select></div>
+        <div class="reg-field"><label for="itemTypeId">Item Type</label><select id="itemTypeId"><option value="">...Select Any Value...</option></select></div>
+        <div class="reg-field"><label for="itemCategoryId">Item Category</label><select id="itemCategoryId"><option value="">...Select Any Value...</option></select></div>
+        <div class="reg-field"><label for="parentCategoryId">Parent Category</label><select id="parentCategoryId"><option value="">...Select Any Value...</option></select></div>
+        <div class="reg-actions"><button class="reg-show" id="btnShow" type="button">Show</button></div>
+    </div>
+</fieldset>
+<div id="msg" class="reg-message" role="status" aria-live="polite"></div>
+<div class="reg-band"><span>History</span><span id="rowCount" class="reg-count"></span></div>
+<div id="gridMount" class="gb-bar" aria-hidden="true"></div>
+<div id="gridHost" class="reg-scroll">
+    <table id="resultGrid" class="reg-table" data-gridbar-title="Commission Trading Register" data-gridbar-placement="toolbar" data-gridbar-mount="#gridMount"
+           th:attr="data-gridbar=${registerType == 'transaction' ? 'CommissionTransactionRegister:DataGridHistory' : 'CommisisionDeleiveryLoadingRegister:DataGridHistory'}">
+        <thead><tr><th class="reg-empty">Run Show to load records</th></tr></thead>
+        <tbody><tr><td class="reg-empty">No records loaded.</td></tr></tbody>
+    </table>
+</div>
+<script th:inline="javascript">
+(() => {
+    'use strict';
+    const type = /*[[${registerType}]]*/ 'loading-delivery';
+    const title = /*[[${registerTitle}]]*/ 'Commission Trading Register';
+    const initUrl = '/commission/trading/api/register/init?type=' + encodeURIComponent(type);
+    const showUrl = '/commission/trading/api/register/show';
+    const $ = id => document.getElementById(id);
+    const ids = ['fromDate','toDate','fromDocNo','toDocNo','supplierId','customerId','brokerId','subBrokerId','itemId','itemTypeId','itemCategoryId','parentCategoryId'];
+    let meta = {branchId:0, permissions:{}};
+    let lastFilters = {};
+    let lastRows = [];
+    const key = (o,n) => { if (!o) return null; const x=Object.keys(o).find(k=>k.toLowerCase()===n.toLowerCase()); return x?o[x]:null; };
+    const labelOf = r => { for (const n of ['ReferenceName','Name','SupplierName','CustomerName','BrokerName','CommissionAgentName','ItemName','ItemType','ItemCategory','ParentCategory','SubBrokerName','Description']) { const v=key(r,n); if(v!=null && String(v).trim()) return String(v).trim(); } return ''; };
+    const activityOf = r => String(key(r,'Activity') || key(r,'LookupType') || key(r,'Type') || '').toLowerCase().replace(/[^a-z]/g,'');
+    const idOf = r => key(r,'Id') ?? key(r,'ID') ?? key(r,'ReferenceId') ?? '';
+    function addOptions(id, rows, terms) {
+        const select=$(id); if(!select)return;
+        const seen=new Set();
+        rows.forEach(r=>{
+            const act=activityOf(r), label=labelOf(r), value=idOf(r);
+            if(!label || value==='' || (terms.length && !terms.some(t=>act.includes(t))))return;
+            const sig=String(value)+'|'+label; if(seen.has(sig))return; seen.add(sig);
+            const o=document.createElement('option'); o.value=value; o.textContent=label; select.appendChild(o);
+        });
+    }
+    function setDates() { const d=new Date(); const iso=new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10); $('fromDate').value=iso; $('toDate').value=iso; }
+    function readFilters(){const q={type}; ids.forEach(id=>{const e=$(id); if(e&&e.value)q[id]=e.value;}); return q;}
+    function queryString(q){const p=new URLSearchParams();Object.keys(q).forEach(k=>p.set(k,q[k]));return p.toString();}
+    async function loadLookups(){
+        const b=$('btnRefresh'); b.disabled=true; $('msg').textContent='Loading filters…';
+        try{
+            const r=await fetch(initUrl,{credentials:'same-origin'}); const data=await r.json(); if(!r.ok)throw new Error(data.message||'Unable to load filter values.');
+            meta=data; const rows=Array.isArray(data.lookups)?data.lookups:[];
+            addOptions('supplierId',rows,['supplier']); addOptions('customerId',rows,['customer']);
+            addOptions('brokerId',rows,['broker','commissionagent']); addOptions('subBrokerId',rows,['subbroker']);
+            addOptions('itemId',rows,['item']); addOptions('itemTypeId',rows,['itemtype']);
+            addOptions('itemCategoryId',rows,['itemcategory']); addOptions('parentCategoryId',rows,['parentcategory','inventoryparent']);
+            $('msg').textContent='';
+        }catch(e){$('msg').textContent=e.message||'Unable to load filter values.';}finally{b.disabled=false;}
+    }
+    function render(rows){
+        lastRows=Array.isArray(rows)?rows:[]; const table=$('resultGrid'), thead=table.tHead, body=table.tBodies[0];
+        thead.innerHTML=''; body.innerHTML=''; $('rowCount').textContent=lastRows.length+' records';
+        if(!lastRows.length){const tr=document.createElement('tr'),td=document.createElement('td');td.className='reg-empty';td.textContent='No records found.';tr.appendChild(td);body.appendChild(tr);thead.innerHTML='<tr><th>History</th></tr>';return;}
+        const keys=Object.keys(lastRows[0]);const hr=document.createElement('tr');
+        keys.forEach(k=>{const th=document.createElement('th');th.dataset.col=k;th.textContent=k.replace(/([a-z])([A-Z])/g,'$1 $2');hr.appendChild(th);});
+        const slip=document.createElement('th');slip.textContent='Print';hr.appendChild(slip);thead.appendChild(hr);
+        lastRows.forEach(row=>{const tr=document.createElement('tr');const rowId=key(row,'Id')??key(row,'ID');keys.forEach(k=>{const td=document.createElement('td');const v=row[k];td.textContent=v==null?'':String(v);if(typeof v==='number')td.classList.add('num');if(rowId!=null && /^(id|docno)$/i.test(k)){td.classList.add('doc-id');td.title='Open desktop print';td.addEventListener('click',()=>printSlip(rowId));}tr.appendChild(td);});const td=document.createElement('td'),btn=document.createElement('button');btn.type='button';btn.textContent='Print';btn.disabled=!meta.permissions?.print;btn.addEventListener('click',()=>printSlip(rowId));td.appendChild(btn);tr.appendChild(td);body.appendChild(tr);});
+        if(window.GridBar&&window.GridBar.refresh)window.GridBar.refresh(table);
+    }
+    async function show(){
+        const b=$('btnShow'); const filters=readFilters(); lastFilters=filters; b.disabled=true; $('msg').textContent=''; $('rowCount').textContent='';
+        $('resultGrid').tBodies[0].innerHTML='<tr><td class="reg-loading">Loading…</td></tr>';
+        try{const r=await fetch(showUrl+'?'+queryString(filters),{credentials:'same-origin'});const data=await r.json();if(!r.ok)throw new Error(data.message||'Unable to load records.');render(data);}
+        catch(e){render([]);$('msg').textContent=e.message||'Unable to load records.';}
+        finally{b.disabled=false;}
+    }
+    function printUrl(kind, filters, id){
+        const path=type==='loading-delivery'?'/reports/print/1702-commission-trade-loading-delivery-'+kind:'/reports/print/1704-commission-transaction-'+kind;
+        const p=new URLSearchParams();p.set('branchesId',String(meta.branchId||0));
+        for(const [k,v] of Object.entries(filters||{}))if(k!=='type'&&v!=='')p.set(k,v);
+        if(id!=null)p.set('id',String(id));return path+'?'+p.toString();
+    }
+    function printSlip(id){if(id==null||id===''){ $('msg').textContent='This row has no record id to print.';return;}window.open(printUrl('slip',lastFilters,id),'_blank','noopener');}
+    $('btnShow').addEventListener('click',show);
+    $('btnRefresh').addEventListener('click',loadLookups);
+    $('btnPrint').addEventListener('click',()=>{const kind=type==='loading-delivery'?'register':'register';window.open(printUrl(kind,readFilters()),'_blank','noopener');});
+    $('btnNew').addEventListener('click',()=>{ids.forEach(id=>{if($(id))$(id).value='';});setDates();render([]);$('rowCount').textContent='';$('msg').textContent='';$('fromDocNo').focus();});
+    $('btnShortcut').addEventListener('click',()=>alert('Ctrl+S : Show\nCtrl+R : Refresh'));
+    document.addEventListener('keydown',e=>{if(e.ctrlKey&&e.key.toLowerCase()==='s'){e.preventDefault();show();}if(e.ctrlKey&&e.key.toLowerCase()==='r'){e.preventDefault();loadLookups();}});
+    setDates(); loadLookups();
+})();
+</script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20261006-grid-control-placement}"></script>
+</body>
+</html>

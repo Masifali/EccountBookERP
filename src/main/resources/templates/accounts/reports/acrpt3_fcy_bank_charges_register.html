@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fcy Bank Charges Register</title>
+<link rel="stylesheet" href="/build/css/countx_desktop_combo.css?v=20261007r3">
+<link rel="stylesheet" href="/build/css/countx_prod_combo.css?v=20261007r3">
+<link rel="stylesheet" href="/build/css/countx_acrpt3.css?v=20261007r3">
+<!--
+  Screen 85 "Fcy Bank Charges Register" = Architecture.WinApp.Account_Reports.FcyBankCharges_Register (route /accounts/reports/fcy-bank-charges-register).
+  R3 2026-10-07, built 1:1 on InitializeComponent() (ClientSize 879x550, Maximized, KeyPreview set in Load; form Text "Fcy Receipts Summary Register"):
+    tsItemType Top 27 (Verdana 9.75) = &New | Refresh | Print-283 | ShortCut Keys
+    panel5 Top 30 teal rgb(10,110,110) = label3 "Fcy Bank Charges Register" @3,5 Tahoma 12 bold white + ctrlGrdBar1 @838,4 (38x21, anchored top right)
+    panel3 Top 75 white = groupBox1 "Filters" @3,3 652x68:
+        label9 "Bank Account" 5,19 | CmbBankAccount 5,37 204x26 | label10 "Charges Account" 210,19 | CmbChargesAccount 210,37 204x26 |
+        label1 "FDBC No" 415,18 | CmbFDBCNo 415,37 171x26 | btnShow 586,37 60x26 (Color.Teal, flat, Tahoma 9.75 bold white)
+        (UltraCombo Verdana 9.75, LimitToList; Segoe UI Semibold 9 bold labels)
+    grd Fill (Verdana 8.25) = FilterMode Automatic, GroupTotals Always, TotalRow, RecordNavigator (no AlternatingColors)
+  Tab order: CmbBankAccount 3, CmbChargesAccount 4, btnShow 5, CmbFDBCNo 585.
+  Page logic: /build/js/countx_acrpt3_bankcharges.js (+ shared /build/js/countx_acrpt3.js). API: /api/accounts/acrpt3/bankcharges/*
+-->
+<style>
+    .frm { min-width: 879px; min-height: 480px; }
+    .p5 { flex: 0 0 30px; height: 30px; background: rgb(10,110,110); position: relative; }
+    .p5 .cap { left: 3px; top: 5px; }
+    .p3 { flex: 0 0 75px; height: 75px; position: relative; background: #fff; }
+    #barMount { right: 3px; top: 4px; }
+</style>
+<link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261005a}"/>
+</head>
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="frm-scroll">
+<div class="frm" id="FcyBankCharges_Register">
+
+    <!-- tsItemType -->
+    <div class="ts">
+        <button type="button" id="new" title="Ctrl+N"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#2e9b45"/><path d="M8 4v8M4 8h8" stroke="#fff" stroke-width="2"/></svg><span><u>N</u>ew</span></button>
+        <button type="button" id="refresh" title="Ctrl+R"><svg viewBox="0 0 16 16"><path d="M13 8a5 5 0 1 1-1.5-3.6" fill="none" stroke="#1f6fc5" stroke-width="2"/><path d="M13.5 1.5v4h-4z" fill="#1f6fc5"/></svg><span>Refresh</span></button>
+        <button type="button" id="print" title="Ctrl+P"><svg viewBox="0 0 16 16"><rect x="4" y="1.5" width="8" height="4" fill="#fff" stroke="#555"/><rect x="1.5" y="5.5" width="13" height="6" rx="1" fill="#6b7785"/><rect x="4" y="9.5" width="8" height="5" fill="#fff" stroke="#555"/></svg><span>Print-283</span></button>
+        <button type="button" id="shortcuts" title="Ctrl+Alt"><svg viewBox="0 0 16 16"><rect x="1" y="4" width="14" height="8.5" rx="1.5" fill="#4a4f57"/><path d="M3 6.5h1.5M6 6.5h1.5M9 6.5h1.5M12 6.5h1M4 10h8" stroke="#fff" stroke-width="1.2"/></svg><span>ShortCut Keys</span></button>
+    </div>
+
+    <!-- panel5: teal header -->
+    <div class="p5 teal">
+        <span class="cap">Fcy Bank Charges Register</span>
+        <span class="bar-mount" id="barMount"></span>
+    </div>
+
+    <!-- panel3: groupBox1 "Filters" -->
+    <div class="p3">
+        <div class="gb" style="left:3px;top:3px;width:652px;height:68px;">
+            <div class="gb-frame"></div><span class="gb-cap">Filters</span>
+            <span class="lbl" style="left:5px;top:19px;">Bank Account</span>
+            <select id="bank" data-dtcombo="single" data-dtcombo-caption="Receiver Account" tabindex="1" style="position:absolute;left:5px;top:37px;width:204px;height:26px;"></select>
+            <span class="lbl" style="left:210px;top:19px;">Charges Account</span>
+            <select id="charges" data-dtcombo="single" data-dtcombo-caption="Charges Account" tabindex="2" style="position:absolute;left:210px;top:37px;width:204px;height:26px;"></select>
+            <span class="lbl" style="left:415px;top:18px;">FDBC No</span>
+            <select id="fdbc" data-dtcombo="single" data-dtcombo-caption="FDBC No" tabindex="4" style="position:absolute;left:415px;top:37px;width:171px;height:26px;"></select>
+            <button type="button" id="show" class="teal-btn t" tabindex="3" style="left:586px;top:37px;width:60px;height:26px;background:#008080;" title="Ctrl+S">Show</button>
+        </div>
+    </div>
+
+    <!-- grd Fill -->
+    <div class="gridbox">
+        <div class="grid" id="grid" tabindex="0"><table data-gridbar="FcyBankCharges_Register:grd" data-gridbar-mount="#barMount" class="g" id="grd"><colgroup></colgroup><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        <div class="nav" id="nav" hidden>
+            <button type="button" data-nav="first" title="First">|&lt;</button><button type="button" data-nav="prev" title="Previous">&lt;</button>
+            <span id="navText"></span>
+            <button type="button" data-nav="next" title="Next">&gt;</button><button type="button" data-nav="last" title="Last">&gt;|</button>
+        </div>
+    </div>
+</div>
+</div>
+
+<!-- ShortCutKeyPopUp (MakeShortCutKeys) -->
+<dialog class="sck" id="shortcutDialog">
+    <div class="hd">ShortCut Keys</div>
+    <table><thead><tr><th>KeyCombination</th><th>Description</th></tr></thead><tbody id="shortcutRows"></tbody></table>
+    <div class="ft"><button type="button" id="closeShortcuts">Close</button></div>
+</dialog>
+
+<script src="/build/js/countx_prod_combo.js?v=20261007r3"></script>
+<script src="/build/js/countx_acrpt3.js?v=20261007r3"></script>
+<script src="/build/js/countx_acrpt3_bankcharges.js?v=20261007r3"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20261006-grid-control-placement}"></script>
+</body>
+</html>

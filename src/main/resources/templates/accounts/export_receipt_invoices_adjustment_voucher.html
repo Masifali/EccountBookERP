@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Fcy Receipt Adjustment Voucher - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20261002k}" href="/build/css/countx_desktop_combo.css">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20261002k}" href="/build/css/countx_prod_combo.css">
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261005a}" href="/build/css/countx_grid_bar.css">
+    <link rel="stylesheet" th:href="@{/build/css/countx_button_busy.css?v=20261002gf}" href="/build/css/countx_button_busy.css">
+    <link rel="stylesheet" th:href="@{/css/countx_c_janus_grid.css?v=20261006d}" href="/css/countx_c_janus_grid.css">
+<!--
+  Account Definition -> AdjustmentVouchers -> "Fcy Receipt Adjustment Voucher": Architecture.WinApp.Account_Definition.AdjustmentVouchers.
+  frmExportReceiptInvoicesAdjustmentVoucher (screen 916, ScreenName "frmExportReceiptInvoicesAdjustmentVoucher", TransactionTypeId 3).
+  Port of InitializeComponent (ClientSize 1203x611, tabControl1 Alignment Bottom: tab "Form" / tab "History").
+  Form tab (panel1, Dock Fill, white):
+    toolStrip1 (25): &New | Refresh | | &Save | &Update (hidden) | Delete (hidden) | | &Attachment (hidden) | | 901_02-Print | ShortCut Keys
+    panel3 (99, Dock Top): panel11 Teal 28: label17 "Fcy Receipt Adjustment Voucher" (4,4) Tahoma 12 bold white, ChkPrintslip right (1099,4),
+        BtnAutoUtilizedAllRowsOfPendingGrid (852,1) 242x26 Visible=false;  groupBox2 "Main" 69 (Tahoma 9.75 bold):
+        Voucher No,Date (5,19) CmbVoucher (104,13) 116x26 txtVoucherDate (221,15) 108x22 disabled | Voucher Amount (5,46) txtVoucherAmountRegular (104,42) 225x23 disabled |
+        Payment Type (333,19) CmbPaymentType (416,13) 259x26 | Party Name (333,46) CmbSupplier (416,40) 259x26 |
+        Party City / Cell (681,14) txtPartyCity (760,15) 111x23 disabled, txtPartyCellNo (873,15) 146x23 disabled | Party Name (681,46) CmbAccountFilter (760,40) 259x26, Show (1020,41) 57x25
+    tabControl2 (340, Dock Top): tab "Detail": panel16 Teal 21 (label23 "Detail" Tahoma 10 bold, BtnAutoUtilize (1019,-1) 113x22 (0,192,192), grid bar), grd (Fill)
+    panel6 Teal 20: label58 "Pending Vouchers For Adjustment" Tahoma 9.75 bold + grid bar;  grdPendingVouchers (Dock Fill)
+  History tab: panel2 (27) toolStrip2 [New | Refresh] | panel9 Teal 27 "Adjustment Vouchers History " | panel5 (73) groupBox4 "Filters" (1,2) 966x69 |
+    panel7 Teal 27 "Filtered Records" + grid bar | grdHistory (Fill)
+  API: /accounts/export-receipt-invoices-adjustment-voucher/api/* (ExportReceiptInvoicesAdjustmentVoucherController / ...Service).
+-->
+<style>
+    html, body { margin: 0; padding: 0; background: #f0f0f0; }
+    body { display: flex; flex-direction: column; min-height: 100vh; font: 13px "Segoe UI", sans-serif; color: #000; }
+    body > .erp-navigation { flex: 0 0 auto; }
+    #frm { flex: 1 0 auto; display: flex; flex-direction: column; min-width: 1203px; background: #f0f0f0; }
+    #pages { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 640px; border: 1px solid #acacac; border-bottom: 0; margin: 2px 2px 0 2px; box-sizing: border-box; background: #fff; }
+    .page { flex: 1 1 auto; display: none; flex-direction: column; min-height: 0; background: #fff; box-sizing: border-box; }
+    .page.on { display: flex; }
+    #tabsBar { flex: 0 0 26px; display: flex; align-items: flex-start; padding-left: 2px; margin: 0 2px; border: 1px solid #acacac; border-top: 0; background: #f0f0f0; box-sizing: border-box; }
+    #tabsBar .tab { height: 24px; padding: 0 9px; margin-right: -1px; line-height: 22px; font: 13px Verdana, sans-serif; cursor: pointer; border: 1px solid #acacac; border-top: 0; background: #f0f0f0; box-sizing: border-box; }
+    #tabsBar .tab.on { background: #fff; height: 26px; margin-top: -1px; border-top: 1px solid #fff; }
+    /* toolStrip1 / toolStrip2 (Verdana 9.75, 25 high) */
+    .ts { display: flex; align-items: center; white-space: nowrap; height: 25px; flex: 0 0 25px; background: linear-gradient(#fbfcfe, #e9eef6); border-bottom: 1px solid #c5d3e2; font: 13px Verdana, sans-serif; box-sizing: border-box; padding-left: 2px; position: relative; }
+    .ts button { display: inline-flex; align-items: center; gap: 4px; height: 22px; padding: 0 5px; margin: 0 1px; font: inherit; color: #000; background: transparent; border: 1px solid transparent; cursor: pointer; white-space: nowrap; }
+    .ts button:hover:not(:disabled) { background: #cce8ff; border-color: #99d1ff; }
+    .ts button:disabled { color: #8a8a8a; cursor: default; }
+    .ts button[hidden] { display: none; }
+    .ts .sep { width: 1px; height: 20px; margin: 0 3px; background: #b8c3d1; }
+    .ts svg { width: 16px; height: 16px; flex: 0 0 16px; }
+    .band { position: relative; flex: 0 0 auto; background: teal; color: #fff; }
+    .band .cap { position: absolute; white-space: nowrap; color: #fff; }
+    .gbm { position: absolute; right: 4px; top: 0; display: flex; align-items: center; justify-content: flex-end; min-width: 40px; }
+    /* panel3 / groupBox2 Main (Tahoma 9.75 bold caption) */
+    #panel3 { flex: 0 0 97px; background: #fff; }
+    #panel11 { height: 28px; }
+    #groupBox2 { position: relative; height: 69px; background: #fff; box-sizing: border-box; }
+    #groupBox2 .gb-line { position: absolute; left: 0; top: 7px; right: 0; bottom: 0; border: 1px solid #dcdcdc; border-radius: 3px; }
+    #groupBox2 .gb-cap { position: absolute; left: 6px; top: 0; padding: 0 2px; background: #fff; font: bold 13px Tahoma, sans-serif; line-height: 14px; }
+    .lbl { position: absolute; font: 600 12px "Segoe UI Semibold", "Segoe UI", sans-serif; line-height: 15px; white-space: nowrap; }
+    .tx, .dt { position: absolute; box-sizing: border-box; height: 23px; font: 13px Verdana, sans-serif; border: 1px solid #7f9db9; padding: 0 3px; background: #fff; }
+    .tx:disabled, .dt:disabled { background: #f0f0f0; color: #444; }
+    .btn { position: absolute; box-sizing: border-box; padding: 0; cursor: pointer; border: 1px solid #006666; }
+    .btn[hidden] { display: none; }
+    .btn:disabled { opacity: .6; cursor: default; }
+    .btn.teal { background: teal; color: #fff; font: bold 12px Verdana, sans-serif; }
+    .btn.aqua { background: rgb(0,192,192); color: rgb(64,0,0); font: bold 12px Verdana, sans-serif; border-color: #007a7a; }
+    .dtcombo-wrap .dtcombo-input { font: 13px Verdana, sans-serif !important; }
+    #tabControl2 { flex: 0 0 340px; height: 340px; display: flex; flex-direction: column; box-sizing: border-box; border: 1px solid #acacac; background: #fff; }
+    #tc2Tab { flex: 0 0 25px; display: flex; align-items: flex-end; background: #f0f0f0; padding-left: 2px; }
+    #tc2Tab span { padding: 0 9px; height: 23px; line-height: 23px; border: 1px solid #acacac; border-bottom: 0; background: #fff; font: 13px Verdana, sans-serif; }
+    #tc2Page { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; padding: 3px; background: #fff; }
+    #panel16 { height: 21px; }
+    #gridDetail, #gridPending, #gridHistory { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+    #gridDetail .cjg, #gridPending .cjg, #gridHistory .cjg { flex: 1 1 auto; }
+    #gridPending { min-height: 110px; }
+    .cjg td.ed { padding: 0; }
+    /* history tab */
+    #pnl5 { flex: 0 0 73px; height: 73px; position: relative; background: #fff; }
+    #groupBox4 { position: absolute; left: 1px; top: 2px; width: 966px; height: 69px; box-sizing: border-box; }
+    #groupBox4 .gb-line { position: absolute; left: 0; top: 7px; right: 0; bottom: 0; border: 1px solid #dcdcdc; border-radius: 3px; }
+    #groupBox4 .gb-cap { position: absolute; left: 6px; top: 0; padding: 0 2px; background: #fff; font: bold 13px Tahoma, sans-serif; line-height: 14px; }
+    .rd { position: absolute; font: 600 12px "Segoe UI Semibold", "Segoe UI", sans-serif; display: flex; align-items: center; gap: 3px; }
+    .hdt { position: absolute; display: flex; align-items: center; gap: 2px; height: 22px; }
+    .hdt input[type=date] { box-sizing: border-box; height: 22px; width: 104px; font: 12px Verdana, sans-serif; border: 1px solid #7f9db9; }
+    .hdt input[type=date]:disabled { background: #f0f0f0; }
+    .ov { position: fixed; left: 0; top: 0; right: 0; bottom: 0; z-index: 9000; background: rgba(0,0,0,.35); display: none; align-items: center; justify-content: center; }
+    .ov.on { display: flex; }
+    .dlg { background: #f0f0f0; border: 1px solid #555; box-shadow: 0 4px 18px rgba(0,0,0,.4); display: flex; flex-direction: column; max-width: 96vw; max-height: 94vh; font: 12px Verdana, sans-serif; min-width: 380px; }
+    .dlg-t { height: 26px; line-height: 26px; padding: 0 8px; background: #fff; border-bottom: 1px solid #acacac; }
+    .dlg-b { padding: 8px; overflow: auto; background: #fff; }
+    .dlg-b table { border-collapse: collapse; }
+    .dlg-b th, .dlg-b td { border: 1px solid #c5d3e2; padding: 2px 8px; text-align: left; }
+    .dlg-f { padding: 6px 8px; text-align: right; }
+    .dlg-f button { height: 23px; padding: 0 14px; cursor: pointer; }
+</style>
+</head>
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div id="frm">
+  <div id="pages">
+    <!-- tabPage1 "Form" -->
+    <div class="page on" id="pageForm">
+      <div class="ts" id="toolStrip1" role="toolbar">
+        <button type="button" id="btnNew" title="Ctrl+N"><svg viewBox="0 0 16 16"><path d="M3 1.5h7l3 3v10H3z" fill="#fff" stroke="#555"/><path d="M10 1.5v3h3" fill="none" stroke="#555"/></svg><span><u>N</u>ew</span></button>
+        <button type="button" id="btnRefresh" title="Ctrl+R"><svg viewBox="0 0 16 16"><path d="M13 8a5 5 0 1 1-1.5-3.5" fill="none" stroke="#2f7d32" stroke-width="1.8"/><path d="M13.5 1.5v4h-4z" fill="#2f7d32"/></svg><span>Refresh</span></button>
+        <span class="sep"></span>
+        <button type="button" id="btnSave" title="Ctrl+S"><svg viewBox="0 0 16 16"><path d="M1.5 1.5h10l3 3v10h-13z" fill="#2f6fb0" stroke="#1f4e80"/><rect x="4" y="1.5" width="6" height="4" fill="#fff"/><rect x="4" y="9" width="8" height="5.5" fill="#dfe8f2"/></svg><span><u>S</u>ave</span></button>
+        <button type="button" id="btnUpdate" title="Ctrl+U" hidden><svg viewBox="0 0 16 16"><path d="M2 14l1-4 8-8 3 3-8 8z" fill="#f2c94c" stroke="#7a5b00"/></svg><span><u>U</u>pdate</span></button>
+        <button type="button" id="btnDelete" hidden><svg viewBox="0 0 16 16"><path d="M3 4h10l-1 10H4z" fill="#d9d9d9" stroke="#555"/><path d="M2 4h12M6 4V2h4v2" fill="none" stroke="#555"/></svg><span>Delete</span></button>
+        <span class="sep"></span>
+        <button type="button" id="btnAttachment" title="Ctrl+F10" hidden><svg viewBox="0 0 16 16"><path d="M10.5 4.5l-5 5a2 2 0 0 0 2.8 2.8l5.2-5.2a3.4 3.4 0 0 0-4.8-4.8L3.4 7.6a4.8 4.8 0 0 0 6.8 6.8l3.3-3.3" fill="none" stroke="#555" stroke-width="1.3"/></svg><span><u>A</u>ttachment</span></button>
+        <span class="sep"></span>
+        <button type="button" id="btnSlip" title="Ctrl+P / Alt+1"><svg viewBox="0 0 16 16"><rect x="3" y="1.5" width="10" height="4" fill="#fff" stroke="#555"/><rect x="1.5" y="5.5" width="13" height="6" fill="#d9d9d9" stroke="#555"/><rect x="3.5" y="9.5" width="9" height="5" fill="#fff" stroke="#555"/></svg><span>901_02-Print</span></button>
+        <button type="button" id="btnshortcutkeys"><svg viewBox="0 0 16 16"><rect x="1.5" y="4" width="13" height="8" rx="1" fill="#fff" stroke="#555"/><path d="M4 7h1M7 7h2M11 7h1M5 10h6" stroke="#555"/></svg><span>ShortCut Keys</span></button>
+        <span class="sep"></span>
+      </div>
+      <div id="panel3">
+        <div class="band" id="panel11">
+          <span class="cap" id="label17" style="left:4px;top:4px;font:bold 16px Tahoma,sans-serif">Fcy Receipt Adjustment Voucher</span>
+          <button type="button" class="btn aqua" id="BtnAutoUtilizedAllRowsOfPendingGrid" style="left:852px;top:1px;width:242px;height:26px" hidden>Auto Utilize All Pending Vouchers</button>
+          <label id="lblPrintSlip" style="position:absolute;right:2px;top:4px;display:flex;align-items:center;gap:3px;font:bold 13px 'Microsoft Sans Serif',Arial,sans-serif;color:#fff"><input type="checkbox" id="ChkPrintslip"> Print Slip</label>
+        </div>
+        <div id="groupBox2">
+          <div class="gb-line"></div><span class="gb-cap">Main</span>
+          <span class="lbl" style="left:5px;top:19px">Voucher No,Date</span>
+          <select id="CmbVoucher" data-dtcombo="single" data-dtcombo-caption="VoucherNo" style="position:absolute;left:104px;top:13px;width:116px;height:26px" tabindex="1"></select>
+          <input type="date" class="dt" id="txtVoucherDate" disabled tabindex="-1" style="left:221px;top:15px;width:108px;height:22px">
+          <span class="lbl" style="left:5px;top:46px">Voucher Amount</span>
+          <input type="text" class="tx" id="txtVoucherAmountRegular" disabled tabindex="-1" style="left:104px;top:42px;width:225px" autocomplete="off">
+          <span class="lbl" style="left:333px;top:19px">Payment Type</span>
+          <select id="CmbPaymentType" data-dtcombo="single" data-dtcombo-caption="PaymentType" style="position:absolute;left:416px;top:13px;width:259px;height:26px" tabindex="2"></select>
+          <span class="lbl" style="left:333px;top:46px">Party Name</span>
+          <select id="CmbSupplier" data-dtcombo="single" data-dtcombo-caption="Party Name" style="position:absolute;left:416px;top:40px;width:259px;height:26px" tabindex="3"></select>
+          <span class="lbl" style="left:681px;top:14px">Party City /<br>Cell</span>
+          <input type="text" class="tx" id="txtPartyCity" disabled tabindex="-1" style="left:760px;top:15px;width:111px" autocomplete="off">
+          <input type="text" class="tx" id="txtPartyCellNo" disabled tabindex="-1" style="left:873px;top:15px;width:146px" autocomplete="off">
+          <span class="lbl" style="left:681px;top:46px">Party Name</span>
+          <select id="CmbAccountFilter" data-dtcombo="single" data-dtcombo-caption="Party Name" style="position:absolute;left:760px;top:40px;width:259px;height:26px" tabindex="4"></select>
+          <button type="button" class="btn teal" id="btnShowRecords" style="left:1020px;top:41px;width:57px;height:25px" tabindex="5">Show</button>
+        </div>
+      </div>
+      <div id="tabControl2">
+        <div id="tc2Tab"><span>Detail</span></div>
+        <div id="tc2Page">
+          <div class="band" id="panel16">
+            <span class="cap" style="left:5px;top:2px;font:bold 13px Tahoma,sans-serif">Detail</span>
+            <button type="button" class="btn aqua" id="BtnAutoUtilize" style="right:50px;top:-1px;width:113px;height:22px;font-size:12px" tabindex="6">Auto Utilize</button>
+            <div class="gbm" id="gbMount1"></div>
+          </div>
+          <div id="gridDetail"><div class="cjg"><div class="cjg-wrap" data-gridbar-form="frmExportReceiptInvoicesAdjustmentVoucher" data-gridbar-grid="grd" data-gridbar-mount="#gbMount1" data-gridbar-reorder="false"><table id="grd"></table></div><div class="cjg-nav" id="grdNav"></div></div></div>
+        </div>
+      </div>
+      <div class="band" id="panel6" style="height:20px;flex:0 0 20px">
+        <span class="cap" style="left:4px;top:2px;font:bold 13px Tahoma,sans-serif">Pending Vouchers For Adjustment</span>
+        <div class="gbm" id="gbMount3" style="top:0"></div>
+      </div>
+      <div id="gridPending"><div class="cjg"><div class="cjg-wrap" data-gridbar-form="frmExportReceiptInvoicesAdjustmentVoucher" data-gridbar-grid="grdPendingVouchers" data-gridbar-mount="#gbMount3" data-gridbar-reorder="false"><table id="grdPendingVouchers"></table></div><div class="cjg-nav" id="grdPendingNav"></div></div></div>
+    </div>
+    <!-- tabPage2 "History" -->
+    <div class="page" id="pageHistory">
+      <div class="ts" id="toolStrip2" role="toolbar">
+        <button type="button" id="BtnNewHistory"><svg viewBox="0 0 16 16"><path d="M3 1.5h7l3 3v10H3z" fill="#fff" stroke="#555"/><path d="M10 1.5v3h3" fill="none" stroke="#555"/></svg><span>New</span></button>
+        <button type="button" id="BtnRefreshHistory"><svg viewBox="0 0 16 16"><path d="M13 8a5 5 0 1 1-1.5-3.5" fill="none" stroke="#2f7d32" stroke-width="1.8"/><path d="M13.5 1.5v4h-4z" fill="#2f7d32"/></svg><span>Refresh</span></button>
+      </div>
+      <div class="band" id="panel9" style="height:27px;flex:0 0 27px"><span class="cap" style="left:5px;top:3px;font:bold 16px Tahoma,sans-serif">Adjustment Vouchers History </span></div>
+      <div id="pnl5">
+        <div id="groupBox4">
+          <div class="gb-line"></div><span class="gb-cap">Filters</span>
+          <span class="lbl" style="left:6px;top:18px">Date Type</span>
+          <select id="cmbDateTypeHistory" data-dtcombo="single" data-dtcombo-caption="Parameters" style="position:absolute;left:6px;top:39px;width:140px;height:26px" tabindex="1"></select>
+          <span class="lbl" style="left:150px;top:18px">Date From</span>
+          <div class="hdt" style="left:214px;top:14px"><input type="checkbox" id="chkFromHistory" checked tabindex="2" title="Date From"><input type="date" id="txtFromdateHistory" tabindex="2"></div>
+          <span class="lbl" style="left:150px;top:45px">Date To</span>
+          <div class="hdt" style="left:214px;top:41px"><input type="checkbox" id="chkToHistory" checked tabindex="2" title="Date To"><input type="date" id="txtToDateHistory" tabindex="2"></div>
+          <span class="lbl" style="left:344px;top:18px">Voucher From</span>
+          <input type="text" class="tx" id="txtFromNoHistory" style="left:428px;top:14px;width:74px" tabindex="3" inputmode="numeric" autocomplete="off">
+          <span class="lbl" style="left:344px;top:45px">Voucher To</span>
+          <input type="text" class="tx" id="txtToDocNoHistory" style="left:428px;top:41px;width:74px" tabindex="4" inputmode="numeric" autocomplete="off">
+          <span class="lbl" style="left:503px;top:18px">Party</span>
+          <select id="CmbCustomerHistory" data-dtcombo="single" data-dtcombo-caption="Party Name" style="position:absolute;left:541px;top:12px;width:220px;height:26px" tabindex="5"></select>
+          <button type="button" class="btn teal" id="btnshow" style="left:705px;top:40px;width:56px;height:25px" tabindex="6">Show</button>
+          <label class="rd" style="left:767px;top:16px"><input type="radio" name="hdate" id="drdocdate" value="doc" checked tabindex="7"> Voucher Date</label>
+          <label class="rd" style="left:767px;top:43px"><input type="radio" name="hdate" id="rdentrydate" value="entry" tabindex="8"> Voucher Entry Date</label>
+          <label class="rd" style="left:873px;top:5px;width:91px;line-height:15px"><input type="radio" name="hdate" id="rdmodifydate" value="modify" tabindex="9"> Voucher Modify Date</label>
+        </div>
+      </div>
+      <div class="band" id="panel7" style="height:27px;flex:0 0 27px">
+        <span class="cap" style="left:5px;top:3px;font:bold 16px Tahoma,sans-serif">Filtered Records</span>
+        <div class="gbm" id="gbMount2" style="top:1px"></div>
+      </div>
+      <div id="gridHistory"><div class="cjg"><div class="cjg-wrap" data-gridbar-form="frmExportReceiptInvoicesAdjustmentVoucher" data-gridbar-grid="grdHistory" data-gridbar-mount="#gbMount2" data-gridbar-reorder="false"><table id="grdHistory"></table></div><div class="cjg-nav" id="grdHistoryNav"></div></div></div>
+    </div>
+  </div>
+  <div id="tabsBar"><div class="tab on" id="tabForm">Form</div><div class="tab" id="tabHistory">History</div></div>
+</div>
+<div class="ov" id="ovDlg"><div class="dlg"><div class="dlg-t" id="dlgTitle"></div><div class="dlg-b" id="dlgBody"></div><div class="dlg-f"><button type="button" id="dlgClose">Close</button></div></div></div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}" src="/vendors/jquery/dist/jquery.min.js"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20261002k}" src="/build/js/countx_prod_combo.js"></script>
+<script th:src="@{/build/js/countx_acc_rpt_f.js?v=20261002k}" src="/build/js/countx_acc_rpt_f.js"></script>
+<script th:src="@{/js/countx_c_janus_grid.js?v=20261006d}" src="/js/countx_c_janus_grid.js"></script>
+<script src="/js/print-rpt.js?v=20261003erp"></script>
+<script th:src="@{/js/countx_export_receipt_invoices_adjustment_voucher.js?v=20261007a}" src="/js/countx_export_receipt_invoices_adjustment_voucher.js"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20261006-grid-control-placement}" src="/build/js/countx_grid_bar.js"></script>
+</body>
+</html>

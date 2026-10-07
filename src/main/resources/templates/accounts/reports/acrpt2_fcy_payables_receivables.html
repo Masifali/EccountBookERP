@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FCY Payables And Receivables</title>
+<link rel="stylesheet" href="/build/css/countx_desktop_combo.css?v=20261007r2">
+<link rel="stylesheet" href="/build/css/countx_prod_combo.css?v=20261007r2">
+<link rel="stylesheet" href="/build/css/countx_acrpt2.css?v=20261007r2">
+<!--
+  Screen 72 "Export Payables & Receivables (Accounts)" = Architecture.WinApp.Account_Reports.FCYPayablesAndReceivablesRpt
+  (route /accounts/reports/fcy-payables-receivables). R2 2026-10-07, built 1:1 on InitializeComponent()
+  (ClientSize 1285x661, Maximized, KeyPreview, AutoScrollMinSize 1310x700 set in Load):
+    panel2 Teal Top 54  = toolStrip3 27 (&New | 153-Receivables | 153-Payables, Verdana 9.75) + label23 "FCY Payables And Receivables" @3,31 Tahoma 12 bold
+    panel3 White Top 48 = groupBox1 "Filters" @3,1 1132x46 Tahoma 9.75 bold:
+        label27 "Date From & To" 5,20 | fromdate 96,16 151x23 (ShowCheckBox, dd-MMM-yy) | todate 249,16 153x23 |
+        label2 "Currency Selection" 404,20 | CmbCurrencySelection 512,14 222x26 (UltraCombo, LimitToList) |
+        label3 "Base Currency Exhchange Rate" 738,19 209x16 (white, Tahoma 9.75 bold, centred) | txtexchangerate 952,16 111x23 (disabled, right) |
+        btnshow 1068,14 61x26 (Teal, flat, Verdana 9.75 bold, white)
+    tabControl1 Fill (Verdana 9.75) : tabPage1 "Receivables" (panel4 teal 26 + ctrlGrdBar2 + RcvAbleFlowLayout hidden + grdRcvAble Fill)
+                                      tabPage2 "Payables"    (panel7 teal 26 + ctrlGrdBar1 + CurrencyFlowLayout hidden + grdPayable Fill)
+  Page logic: /build/js/countx_acrpt2_fcy.js (+ shared /build/js/countx_acrpt2.js). API: /api/accounts/acrpt2/fcy/*
+-->
+<style>
+    .frm { min-width: 1310px; min-height: 700px; }
+    .p2 { flex: 0 0 54px; height: 54px; background: var(--teal); position: relative; }
+    .p2 .cap { position: absolute; left: 3px; top: 31px; font: bold 16px Tahoma, Verdana, sans-serif; line-height: 19px; color: #fff; white-space: nowrap; }
+    .p3 { flex: 0 0 48px; height: 48px; position: relative; background: #fff; }
+    .p4 { flex: 0 0 26px; height: 26px; }
+    #lblBase { background: #fff; color: #000; font: bold 13px Tahoma, Verdana, sans-serif; text-align: center; line-height: 16px; }
+</style>
+<link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261005a}"/>
+</head>
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="frm-scroll">
+<div class="frm" id="FCYPayablesAndReceivablesRpt">
+
+    <!-- panel2 (Teal Top 54): toolStrip3 + label23 -->
+    <div class="p2">
+        <div class="ts">
+            <button type="button" id="new" title="Ctrl+N"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#2e9b45"/><path d="M8 4v8M4 8h8" stroke="#fff" stroke-width="2"/></svg><span><u>N</u>ew</span></button>
+            <button type="button" id="printRcv" title="Ctrl+P"><svg viewBox="0 0 16 16"><rect x="4" y="1.5" width="8" height="4" fill="#fff" stroke="#555"/><rect x="1.5" y="5.5" width="13" height="6" rx="1" fill="#6b7785"/><rect x="4" y="9.5" width="8" height="5" fill="#fff" stroke="#555"/></svg><span>153-Receivables</span></button>
+            <button type="button" id="printPay"><svg viewBox="0 0 16 16"><rect x="4" y="1.5" width="8" height="4" fill="#fff" stroke="#555"/><rect x="1.5" y="5.5" width="13" height="6" rx="1" fill="#6b7785"/><rect x="4" y="9.5" width="8" height="5" fill="#fff" stroke="#555"/></svg><span>153-Payables</span></button>
+        </div>
+        <span class="cap">FCY Payables And Receivables</span>
+    </div>
+
+    <!-- panel3 (White Top 48): groupBox1 "Filters" @3,1 1132x46 -->
+    <div class="p3">
+        <div class="gb" style="left:3px;top:1px;width:1132px;height:46px;">
+            <div class="gb-frame"></div><span class="gb-cap">Filters</span>
+            <span class="lbl" style="left:5px;top:20px;">Date From &amp; To</span>
+            <span class="dtp" id="fromWrap" style="left:96px;top:16px;width:151px;height:23px;"><input type="checkbox" id="fromChk" checked title="From date"><input type="date" id="fromDate"></span>
+            <input type="date" id="toDate" class="tb" style="left:249px;top:16px;width:153px;height:23px;">
+            <span class="lbl" style="left:404px;top:20px;">Currency Selection</span>
+            <select id="cur" data-dtcombo="single" data-dtcombo-caption="Currency Name" style="position:absolute;left:512px;top:14px;width:222px;height:26px;"></select>
+            <span class="lbl" id="lblBase" style="left:738px;top:19px;width:209px;height:16px;">Base Currency Exhchange Rate</span>
+            <input id="rate" class="tb r" disabled autocomplete="off" style="left:952px;top:16px;width:111px;height:23px;">
+            <button type="button" id="show" class="teal-btn" style="left:1068px;top:14px;width:61px;height:26px;" title="Show">Show</button>
+        </div>
+    </div>
+
+    <!-- tabControl1 Fill -->
+    <div class="tabs">
+        <div class="th"><button type="button" id="tabRcv" class="on">Receivables</button><button type="button" id="tabPay">Payables</button></div>
+        <div class="tp" id="pageRcv">
+            <div class="p4 teal"><span class="cap" style="top:2px;">Receivables</span></div>
+            <div class="gridbox">
+                <div class="grid" id="gridRcv" tabindex="0"><table data-gridbar="FCYPayablesAndReceivablesRpt:grdRcvAble" class="g" id="grdRcvAble"><colgroup></colgroup><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+                <div class="nav" id="navRcv" hidden>
+                    <button type="button" data-nav="first" title="First">|&lt;</button><button type="button" data-nav="prev" title="Previous">&lt;</button>
+                    <span id="navTextRcv"></span>
+                    <button type="button" data-nav="next" title="Next">&gt;</button><button type="button" data-nav="last" title="Last">&gt;|</button>
+                </div>
+            </div>
+        </div>
+        <div class="tp" id="pagePay" hidden>
+            <div class="p4 teal"><span class="cap" style="top:2px;">Payables</span></div>
+            <div class="gridbox">
+                <div class="grid" id="gridPay" tabindex="0"><table data-gridbar="FCYPayablesAndReceivablesRpt:grdPayable" class="g" id="grdPayable"><colgroup></colgroup><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+                <div class="nav" id="navPay" hidden>
+                    <button type="button" data-nav="first" title="First">|&lt;</button><button type="button" data-nav="prev" title="Previous">&lt;</button>
+                    <span id="navTextPay"></span>
+                    <button type="button" data-nav="next" title="Next">&gt;</button><button type="button" data-nav="last" title="Last">&gt;|</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+<script src="/build/js/countx_prod_combo.js?v=20261007r2"></script>
+<script src="/build/js/countx_acrpt2.js?v=20261007r2"></script>
+<script src="/build/js/countx_acrpt2_fcy.js?v=20261007r2"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20261006-grid-control-placement}"></script>
+</body>
+</html>

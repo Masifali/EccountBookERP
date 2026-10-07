@@ -27,6 +27,7 @@
         .table-container { overflow-x: auto; max-width: 100%; border: 1px solid #7a9a9e; }
         .spinner-inline { display: inline-block; width: 12px; height: 12px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: spinner-border .75s linear infinite; }
         .footer-bar { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding-top: 10px; border-top: 1px solid #dee2e6; }
+        .lookup-error { color: #ae2012; margin-bottom: 8px; }
     </style>
     <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261005a}"/>
 </head>
@@ -39,6 +40,7 @@
             <span class="badge bg-light text-dark" id="lblDocStatus">NEW</span>
         </div>
         <div class="win-body">
+            <div id="mapLookupStatus" class="lookup-error" role="status" style="display:none"></div>
             <form id="frmMap">
                 <input type="hidden" id="mapId" value="0">
                 
@@ -184,13 +186,14 @@
     </div>
 </div>
 
-<script th:src="@{/build/js/jquery.min.js}"></script>
-<script th:src="@{/build/js/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
 <script th:src="@{/build/js/countx_desktop_combo.js}"></script>
 <script>
     const API = '/api/packing-material/item-pm-map';
     let detailsList = [];
     let editingIndex = -1;
+    let screenPermissions = {};
+    let currentMapActive = true;
 
     $(document).ready(function() {
         loadLookups();
@@ -222,23 +225,35 @@
     });
 
     function loadLookups() {
-        $.get(API + '/lookups', function(res) {
+        $.getJSON(API + '/lookups').done(function(res) {
+            screenPermissions = res.permissions || {};
             if (res.mainItems) {
                 let html = '<option value="">-- Select Master Item --</option>';
                 res.mainItems.forEach(i => { html += `<option value="${i.Id}">${i.ItemCode} - ${i.ItemName}</option>`; });
                 $('#cmbMainItem').html(html);
-                $('#histFilterItem').html(html);
             }
             if (res.pmItems) {
                 let html = '<option value="">-- Select PM Item --</option>';
                 res.pmItems.forEach(i => { html += `<option value="${i.Id}">${i.ItemCode} - ${i.ItemName}</option>`; });
                 $('#cmbPmItem').html(html);
             }
+            const history = $('#histFilterItem').empty().append($('<option>', { value: '', text: '-- All Items --' }));
+            (res.historyItems || []).forEach(i => {
+                history.append($('<option>', { value: i.Id, text: i.ReferenceName || i.ItemName || i.Name || '' }));
+            });
+            $('#btnSave').prop('disabled', !screenPermissions.Save);
+            $('#btnDelete').toggleClass('d-none', !screenPermissions.Delete);
+            $('#mapLookupStatus').hide().text('');
+        }).fail(function(xhr) {
+            const message = xhr.responseJSON && xhr.responseJSON.message
+                ? xhr.responseJSON.message
+                : 'Could not load item and UOM lookups. Please refresh and try again.';
+            $('#mapLookupStatus').text(message).show();
         });
     }
 
     function loadMainUoms(itemId) {
-        $.get(API + '/uoms?itemId=' + itemId, function(list) {
+        $.getJSON(API + '/uoms?itemId=' + itemId, function(list) {
             let html = '<option value="">-- Select Base UOM --</option>';
             list.forEach(u => { html += `<option value="${u.Id}">${u.UOMCode}</option>`; });
             $('#cmbMainUom').html(html);
@@ -246,7 +261,7 @@
     }
 
     function loadPmUoms(itemId) {
-        $.get(API + '/uoms?itemId=' + itemId, function(list) {
+        $.getJSON(API + '/uoms?itemId=' + itemId, function(list) {
             let html = '<option value="">-- Select UOM --</option>';
             list.forEach(u => { html += `<option value="${u.Id}">${u.UOMCode}</option>`; });
             $('#cmbPmUom').html(html);
@@ -260,14 +275,13 @@
         const baseUomText = $('#cmbPmUom option:selected').text();
         const pmQty = parseFloat($('#txtPmQty').val()) || 0;
         const weightCapacity = parseFloat($('#txtWeightCapacity').val()) || 0;
-        const remarks = $('#txtRemarks').val() || '';
-
         if (!pmItemId) { alert('PM Item field is required'); return; }
         if (!baseUomId) { alert('Base UOM field is required'); return; }
         if (pmQty <= 0) { alert('PM Qty field is required'); return; }
         if (weightCapacity <= 0) { alert('Weight Capacity field is required'); return; }
 
         const detail = {
+            id: editingIndex >= 0 ? (detailsList[editingIndex].id || 0) : 0,
             pmItemId: parseInt(pmItemId),
             pmItemCode: pmItemText.split(' - ')[0] || '',
             pmItemName: pmItemText.split(' - ')[1] || pmItemText,
@@ -275,7 +289,7 @@
             baseUom: baseUomText,
             pmQty: pmQty,
             weightCapacity: weightCapacity,
-            remarks: remarks
+            remarks: ''
         };
 
         if (editingIndex >= 0) {
@@ -357,6 +371,7 @@
             id: parseInt($('#mapId').val()) || 0,
             itemId: parseInt(itemId),
             baseUomId: parseInt(baseUomId),
+            active: currentMapActive,
             remarks: $('#txtRemarks').val(),
             details: detailsList
         };
@@ -368,6 +383,7 @@
             url: API + '/save',
             type: 'POST',
             contentType: 'application/json',
+            dataType: 'json',
             data: JSON.stringify(payload),
             success: function(res) {
                 setBtnLoading(btn, false);
@@ -392,6 +408,7 @@
         $.ajax({
             url: API + '/' + id,
             type: 'DELETE',
+            dataType: 'json',
             success: function(res) {
                 setBtnLoading(btn, false);
                 alert(res.message || 'Deleted successfully');
@@ -410,6 +427,8 @@
         $('#cmbMainUom').html('<option value="">-- Select Base UOM --</option>');
         $('#txtRemarks').val('');
         $('#lblDocStatus').text('NEW').removeClass('bg-info').addClass('bg-light text-dark');
+        currentMapActive = true;
+        $('#btnSave').prop('disabled', !screenPermissions.Save);
         $('#btnDelete').addClass('d-none');
         detailsList = [];
         renderDetails();
@@ -420,39 +439,58 @@
         const fromDate = $('#histFromDate').val();
         const toDate = $('#histToDate').val();
         const itemId = $('#histFilterItem').val();
+        const btn = $('#btnSearchHistory');
+        const tbody = $('#tblHistory tbody');
 
-        $.get(API + `/history?fromDate=${fromDate}&toDate=${toDate}&itemId=${itemId || ''}`, function(list) {
-            const tbody = $('#tblHistory tbody');
+        btn.prop('disabled', true).html('<span class="spinner-inline me-1"></span> Searching...');
+        tbody.html('<tr><td colspan="7" class="text-center py-2">Loading history...</td></tr>');
+
+        $.getJSON(API + `/history?fromDate=${encodeURIComponent(fromDate || '')}&toDate=${encodeURIComponent(toDate || '')}&itemId=${encodeURIComponent(itemId || '')}`)
+          .done(function(list) {
             if (!list || list.length === 0) {
                 tbody.html('<tr><td colspan="7" class="text-center py-2 text-muted">No history records found.</td></tr>');
                 return;
             }
             let html = '';
             list.forEach(r => {
-                const id = r.Id || r.id;
+                const id = r.ItemAndPMItemMapId || r.Id || r.id;
                 html += `<tr style="cursor:pointer;" onclick="loadRecord(${id})">
                     <td>${id}</td>
-                    <td>${r.ItemCode || ''}</td>
+                    <td>${r.ItemCode || r.MainItemCode || ''}</td>
                     <td><strong>${r.ItemName || ''}</strong></td>
-                    <td>${r.BaseUom || ''}</td>
-                    <td>${r.Remarks || ''}</td>
+                    <td>${r.BaseUomCode || r.BaseUom || ''}</td>
+                    <td>${r.RemarksHeader || r.Remarks || ''}</td>
                     <td>${r.IsActive ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-danger">No</span>'}</td>
                     <td>${r.EntryDate ? new Date(r.EntryDate).toLocaleDateString() : ''}</td>
                 </tr>`;
             });
             tbody.html(html);
-        });
+          })
+          .fail(function(xhr) {
+            const message = xhr.responseJSON && xhr.responseJSON.message
+                ? xhr.responseJSON.message
+                : 'Could not load history. Please refresh and try again.';
+            const cell = $('<td>', { colspan: 7, class: 'text-center py-2 text-danger' }).text(message);
+            tbody.empty().append($('<tr>').append(cell));
+          })
+          .always(function() {
+            btn.prop('disabled', false).html('<i class="fa fa-search me-1"></i>Search');
+          });
     }
 
     function loadRecord(id) {
-        $.get(API + '/' + id, function(res) {
+        $.getJSON(API + '/' + id, function(res) {
             if (!res) return;
             $('#mapId').val(res.Id || res.id);
             $('#cmbMainItem').val(res.ItemId || res.itemId).trigger('change');
             setTimeout(() => $('#cmbMainUom').val(res.BaseUomId || res.baseUomId), 150);
             $('#txtRemarks').val(res.Remarks || res.remarks || '');
+            const activeValue = res.IsActive !== undefined ? res.IsActive : res.isActive;
+            currentMapActive = activeValue !== false && activeValue !== 0
+                && String(activeValue).toLowerCase() !== 'false';
+            $('#btnSave').prop('disabled', !screenPermissions.Update);
+            $('#btnDelete').toggleClass('d-none', !screenPermissions.Delete);
             $('#lblDocStatus').text('EDIT (ID: ' + id + ')').removeClass('bg-light text-dark').addClass('bg-info text-white');
-            $('#btnDelete').removeClass('d-none');
 
             detailsList = (res.details || []).map(d => ({
                 id: d.Id || d.id,

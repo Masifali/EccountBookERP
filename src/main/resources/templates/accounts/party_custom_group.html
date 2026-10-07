@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Party Custom Group - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20261002k}" href="/build/css/countx_desktop_combo.css">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20261002k}" href="/build/css/countx_prod_combo.css">
+    <link rel="stylesheet" th:href="@{/build/css/countx_button_busy.css?v=20261002gf}" href="/build/css/countx_button_busy.css">
+    <link rel="stylesheet" th:href="@{/css/countx_c_janus_grid.css?v=20261006c}" href="/css/countx_c_janus_grid.css">
+<!--
+  Account Definition -> "Party Custom Group": Architecture.WinApp.Account_Definition.frmPartyCustomGroup (screen 786).
+  Port of InitializeComponent (frmPartyCustomGroup.cs:~790-1380), ClientSize 1184x632, Maximized, KeyPreview, AutoScrollMinSize 1200x600:
+    panel10 Dock Top 27 Teal: label4 "Party Custom Group" (3,5) Tahoma 9.75 bold white
+    panel1  Dock Left 386x605 White:
+       panel4 Dock Top 75: toolStrip1 (27): &Reset | &Save | ShortCut Keys; label1 "Group Name" (7,50) Segoe UI Semibold 9 bold;
+              txtGroupName (82,46) 177x23 Verdana 9.75 TabIndex 0; btnAdd "Add" (262,46) 65x23 Teal flat Verdana 9 bold TabIndex 1;
+              btnClear "Reset" (328,46) 52x23 TabIndex 2
+       grdLookUp Janus GridEX Fill (Verdana 8.25, filter row, record navigator, total row, no group-by box)  col Description 300
+    panel2  Dock Left 795x605 (at x=386) White:
+       panel6 Dock Top 75: toolStrip2 (27): &Reset | &Refresh | &Allocate | &Un-Allocate | Allocation to Document Type (text only);
+              label3 "Group Name" (2,50); cmbGroupName UltraCombo (79,44) 186x26 TabIndex 0; label2 "Party Group" (271,50);
+              cmbAccountTypes (347,44) 189x26 TabIndex 1; BtnShow "Show" (540,45) 55x24; btnAcClear "Reset" (598,45) 55x24
+       panel7 Dock Left 408 : panel5 Teal 27 (btnAddAc 28x24 at 377,2, Forward2 icon) + grdAllocated (left grid)
+       panel9 Dock Fill 387 : panel11 Teal 27 (btnDelete 33x30 white, bin icon at 352,-3) + grdUnAllocated (right grid)
+  Both lower grids: columns Select(selector, header selector, frozen, 30) | PartyCode 100 | PartyName 270 (Id, SupplierCustomerId hidden).
+  API: /accounts/party-custom-group/* (PartyCustomGroupController / PartyCustomGroupDesktopService).
+-->
+<style>
+    :root { --teal: #008080; --ctl: #f0f0f0; }
+    html, body { margin: 0; padding: 0; background: var(--ctl); }
+    body { display: flex; flex-direction: column; min-height: 100vh; font-family: Verdana, sans-serif; font-size: 13px; color: #000; }
+    body > .erp-navigation { flex: 0 0 auto; }
+    #frm { flex: 1 0 auto; min-width: 1200px; display: flex; flex-direction: column; background: var(--ctl); }
+    #panel10 { flex: 0 0 27px; height: 27px; position: relative; background: var(--teal); }
+    #label4 { position: absolute; left: 3px; top: 5px; font: bold 13px Tahoma, sans-serif; color: #fff; line-height: 16px; white-space: nowrap; }
+    #body { flex: 1 1 auto; display: flex; min-height: 605px; }
+    #panel1 { flex: 0 0 386px; width: 386px; display: flex; flex-direction: column; background: #fff; min-height: 0; }
+    #panel2 { flex: 0 0 795px; width: 795px; display: flex; flex-direction: column; background: #fff; min-height: 0; }
+    .ts { display: flex; align-items: center; height: 27px; flex: 0 0 27px; padding-left: 2px; white-space: nowrap; overflow: hidden;
+          background: linear-gradient(#fbfcfe, #e9eef6); border-bottom: 1px solid #c5d3e2; font: 13px Verdana, sans-serif; }
+    .ts button { display: inline-flex; align-items: center; gap: 4px; height: 24px; padding: 0 5px; margin: 0 1px; font: inherit; color: #000;
+                 background: transparent; border: 1px solid transparent; cursor: pointer; white-space: nowrap; }
+    .ts button:hover:not(:disabled) { background: #cce8ff; border-color: #99d1ff; }
+    .ts svg { width: 20px; height: 20px; flex: 0 0 20px; }
+    .ts svg.p16 { width: 16px; height: 16px; flex: 0 0 16px; margin: 0 2px; }
+    .pn75 { position: relative; flex: 0 0 75px; height: 75px; background: #fff; }
+    .lbl { position: absolute; font: 600 12px "Segoe UI Semibold", "Segoe UI", sans-serif; line-height: 15px; color: #000; white-space: nowrap; }
+    .txt { position: absolute; box-sizing: border-box; font: 13px Verdana, sans-serif; border: 1px solid #7a7a7a; padding: 0 3px; background: #fff; }
+    .tbtn { position: absolute; box-sizing: border-box; padding: 0; background: var(--teal); color: #fff; border: 0; font: bold 12px Verdana, sans-serif; cursor: pointer; }
+    .tbtn:disabled { opacity: .7; cursor: progress; }
+    .tbar { flex: 0 0 27px; height: 27px; position: relative; background: var(--teal); }
+    .tbar button { position: absolute; box-sizing: border-box; padding: 0; border: 0; cursor: pointer; background: var(--teal); }
+    .tbar button svg { width: 18px; height: 18px; }
+    #btnDelete { background: #fff; left: 352px; top: -3px; width: 33px; height: 30px; z-index: 2; }
+    #btnAddAc { left: 377px; top: 2px; width: 28px; height: 24px; }
+    #lowerWrap { flex: 1 1 auto; display: flex; min-height: 0; }
+    #panel7 { flex: 0 0 408px; width: 408px; display: flex; flex-direction: column; min-height: 0; }
+    #panel9 { flex: 1 1 auto; width: 387px; display: flex; flex-direction: column; min-height: 0; }
+    .gridBox { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+    .gridBox .cjg { flex: 1 1 auto; }
+    #lookWrap { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+    #lookWrap .cjg { flex: 1 1 auto; }
+    #scModal { position: fixed; inset: 0; background: rgba(0,0,0,.25); display: none; align-items: center; justify-content: center; z-index: 50; }
+    #scModal .box { background: #fff; border: 1px solid #555; min-width: 520px; font: 12px "Segoe UI", sans-serif; }
+    #scModal .hd { background: var(--teal); color: #fff; font: bold 13px Tahoma; padding: 4px 8px; display: flex; justify-content: space-between; }
+    #scModal table { border-collapse: collapse; width: 100%; }
+    #scModal td, #scModal th { border: 1px solid #ccc; padding: 2px 6px; text-align: left; }
+    .dtcombo-wrap .dtcombo-input { font: 13px Verdana, sans-serif !important; }
+</style>
+</head>
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div id="frm">
+    <div id="panel10"><span id="label4">Party Custom Group</span></div>
+    <div id="body">
+        <!-- panel1 -->
+        <div id="panel1">
+            <div class="pn75" id="panel4" style="height:75px">
+                <div class="ts" id="toolStrip1" style="position:absolute;left:0;top:0;right:0">
+                    <button type="button" id="BtnResetGroup" title="Alt+R"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="8.5" fill="#2e9b45"/><path d="M10 5.5v9M5.5 10h9" stroke="#fff" stroke-width="2.2"/></svg><span><u>R</u>eset</span></button>
+                    <button type="button" id="BtnSaveGroup" title="Alt+S"><svg class="p16" viewBox="0 0 16 16"><path d="M1.5 1.5h10l3 3v10h-13z" fill="#2f6fb0" stroke="#1f4e80"/><rect x="4" y="1.5" width="6" height="4" fill="#fff"/><rect x="4" y="9" width="8" height="5.5" fill="#dfe8f2"/></svg><span><u>S</u>ave</span></button>
+                    <button type="button" id="btnShortCutKeys"><svg class="p16" viewBox="0 0 16 16"><path d="M8 1.5v9M4.5 7.5L8 11l3.5-3.5M2 14.5h12" fill="none" stroke="#2f6fb0" stroke-width="2"/></svg><span>ShortCut Keys</span></button>
+                </div>
+                <span class="lbl" style="left:7px;top:50px">Group Name</span>
+                <input type="text" class="txt" id="txtGroupName" style="left:82px;top:46px;width:177px;height:23px" autocomplete="off">
+                <button type="button" class="tbtn" id="btnAdd" style="left:262px;top:46px;width:65px;height:23px">Add</button>
+                <button type="button" class="tbtn" id="btnClear" style="left:328px;top:46px;width:52px;height:23px">Reset</button>
+            </div>
+            <div id="lookWrap">
+                <div class="cjg">
+                    <div class="cjg-wrap" id="wrapLookUp"><table id="grdLookUp"></table></div>
+                    <div class="cjg-nav" id="navLookUp"></div>
+                </div>
+            </div>
+        </div>
+        <!-- panel2 -->
+        <div id="panel2">
+            <div class="pn75" id="panel6">
+                <div class="ts" id="toolStrip2" style="position:absolute;left:0;top:0;right:0">
+                    <button type="button" id="BtnResetAllocatedUnAllocated"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="8.5" fill="#2e9b45"/><path d="M10 5.5v9M5.5 10h9" stroke="#fff" stroke-width="2.2"/></svg><span><u>R</u>eset</span></button>
+                    <button type="button" id="BtnRefresh"><svg viewBox="0 0 20 20"><path d="M15.5 6.5A6.5 6.5 0 1 0 16.5 11" fill="none" stroke="#1f7a3a" stroke-width="2.2"/><path d="M16.8 2.8v5h-5z" fill="#1f7a3a"/></svg><span>Re<u>f</u>resh</span></button>
+                    <button type="button" id="BtnAllocate"><svg viewBox="0 0 20 20"><path d="M3 10h10M9 5l5 5-5 5" fill="none" stroke="#2e9b45" stroke-width="2.4"/></svg><span><u>A</u>llocate</span></button>
+                    <button type="button" id="BtnDeAllocate"><svg viewBox="0 0 20 20"><path d="M4.5 6h11M8 6V4h4v2M6 6l.7 10h6.6L14 6" fill="none" stroke="#c0392b" stroke-width="1.8"/></svg><span><u>U</u>n-Allocate</span></button>
+                    <button type="button" id="btnCustomGroupallocationToDocumentType"><span>Allocation to Document Type</span></button>
+                </div>
+                <span class="lbl" style="left:2px;top:50px">Group Name</span>
+                <select id="cmbGroupName" data-dtcombo="single" data-dtcombo-caption="Account Group" style="position:absolute;left:79px;top:44px;width:186px;height:26px"></select>
+                <span class="lbl" style="left:271px;top:50px">Party Group</span>
+                <select id="cmbAccountTypes" data-dtcombo="single" data-dtcombo-caption="Party Group" style="position:absolute;left:347px;top:44px;width:189px;height:26px"></select>
+                <button type="button" class="tbtn" id="BtnShow" style="left:540px;top:45px;width:55px;height:24px">Show</button>
+                <button type="button" class="tbtn" id="btnAcClear" style="left:598px;top:45px;width:55px;height:24px">Reset</button>
+            </div>
+            <div id="lowerWrap">
+                <div id="panel7">
+                    <div class="tbar" id="panel5"><button type="button" id="btnAddAc" title="Allocate"><svg viewBox="0 0 20 20"><path d="M3 10h11M10 5l5 5-5 5" fill="none" stroke="#fff" stroke-width="2.4"/></svg></button></div>
+                    <div class="gridBox"><div class="cjg"><div class="cjg-wrap"><table id="grdAllocated"></table></div><div class="cjg-nav" id="navAllocated"></div></div></div>
+                </div>
+                <div id="panel9">
+                    <div class="tbar" id="panel11"><button type="button" id="btnDelete" title="Un-Allocate"><svg viewBox="0 0 20 20"><path d="M4.5 6h11M8 6V4h4v2M6 6l.7 10h6.6L14 6" fill="none" stroke="#c0392b" stroke-width="1.8"/></svg></button></div>
+                    <div class="gridBox"><div class="cjg"><div class="cjg-wrap"><table id="grdUnAllocated"></table></div><div class="cjg-nav" id="navUnAllocated"></div></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="scModal"><div class="box"><div class="hd"><span>ShortCut Keys</span><a href="#" id="scClose" style="color:#fff">X</a></div>
+    <table><thead><tr><th>KeyCombination</th><th>Description</th></tr></thead><tbody id="scBody"></tbody></table></div></div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}" src="/vendors/jquery/dist/jquery.min.js"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20261002k}" src="/build/js/countx_prod_combo.js"></script>
+<script th:src="@{/build/js/countx_acc_rpt_f.js?v=20261002k}" src="/build/js/countx_acc_rpt_f.js"></script>
+<script th:src="@{/js/countx_c_janus_grid.js?v=20261006c}" src="/js/countx_c_janus_grid.js"></script>
+<script th:src="@{/js/countx_party_custom_group.js?v=20261006c}" src="/js/countx_party_custom_group.js"></script>
+</body>
+</html>

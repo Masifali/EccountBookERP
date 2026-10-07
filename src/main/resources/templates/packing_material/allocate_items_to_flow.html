@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${moduleTitle}">Packing Material Items Allocate To Transaction Flow</title>
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260923pm1}">
+    <style>
+        html,body{margin:0;min-height:100%;overflow-x:hidden;background:#d8e0e8;color:#111;font:11px Tahoma,"Segoe UI",Arial,sans-serif}
+        .af-window{max-width:1180px;margin:0 auto;background:#d8e0e8;border:1px solid #8b9aa8;box-shadow:0 1px 5px #9ba8b2}
+        .af-toolbar{height:27px;display:flex;align-items:center;gap:4px;padding:0 5px;background:linear-gradient(#fff,#dbe3ea);border-bottom:1px solid #9baab6}
+        .af-toolbar button,.af-actions button{height:22px;padding:1px 9px;border:1px solid #9aa9b5;background:#f7f9fa;color:#111;font:11px Tahoma;cursor:pointer}
+        .af-toolbar button:hover:not(:disabled),.af-actions button:hover:not(:disabled){background:#fff0c7}
+        .af-toolbar button:disabled,.af-actions button:disabled{opacity:.55;cursor:wait}
+        .af-title{height:26px;display:flex;align-items:center;padding:0 8px;background:#00796b;color:#fff;font:bold 13px Tahoma}
+        .af-filters{margin:5px;padding:4px 7px 7px;background:#fff;border:1px solid #a3adb5}
+        .af-filters legend{width:auto;padding:0 4px;margin:0;font:bold 12px Tahoma;color:#111}
+        .af-filter-row{display:flex;align-items:end;gap:12px;flex-wrap:wrap}
+        .af-field{display:flex;flex-direction:column;gap:2px;width:220px}
+        .af-field label{font-weight:bold;white-space:nowrap}
+        .af-field select{height:23px;width:100%;box-sizing:border-box;border:1px solid #9da9b2;background:#fff;padding:1px 4px;font:11px Tahoma}
+        .af-show{height:24px;min-width:58px;border:1px solid #00645b;background:#008577;color:#fff;font:bold 12px Tahoma;cursor:pointer}
+        .af-actions{display:flex;justify-content:center;align-items:center;gap:5px;min-height:29px;padding:2px 5px;background:#e8edf2;border-block:1px solid #a8b3bd}
+        .af-actions button.primary{background:#00796b;border-color:#00665c;color:#fff;font-weight:bold}
+        .af-columns{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:5px}
+        .af-panel{min-width:0;border:1px solid #99a9b6;background:#fff}
+        .af-panel-title{height:25px;display:flex;align-items:center;justify-content:space-between;padding:0 7px;background:#00796b;color:#fff;font:bold 12px Tahoma}
+        .af-count{font-weight:normal}
+        .af-grid-wrap{height:calc(100vh - 195px);min-height:210px;overflow:auto;background:#fff}
+        table.af-grid{border-collapse:collapse;width:100%;white-space:nowrap;font:11px Tahoma}
+        .af-grid th{position:sticky;top:0;z-index:2;height:24px;padding:2px 5px;background:linear-gradient(#e5edf7,#cbd8e9);border:1px solid #a9b8c8;text-align:center;font-weight:normal}
+        .af-grid td{height:23px;padding:2px 5px;border:1px solid #d0d8df}
+        .af-grid tbody tr:nth-child(even){background:#f7f9fb}
+        .af-grid tbody tr:hover{background:#eef6f6}
+        .af-grid td:first-child,.af-grid th:first-child{width:48px;text-align:center}
+        .af-grid input[type=checkbox]{margin:0;vertical-align:middle}
+        .af-status{min-height:18px;padding:1px 7px;color:#842029;background:#f8f9fa}
+        @media(max-width:760px){.af-columns{grid-template-columns:1fr}.af-grid-wrap{height:35vh}.af-field{width:min(100%,280px)}}
+    </style>
+</head>
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="af-window">
+    <div class="af-toolbar">
+        <button type="button" id="refreshButton">↻ Refresh</button>
+        <button type="button" id="shortcutButton">◉ ShortCut Keys</button>
+    </div>
+    <div class="af-title">Packing Material Items Allocate To Transaction Flow</div>
+    <fieldset class="af-filters">
+        <legend>Filters</legend>
+        <div class="af-filter-row">
+            <div class="af-field"><label for="transactionFlow">Transaction Flow</label>
+                <select id="transactionFlow" data-dtcombo="single" data-dtcombo-caption="Transaction Flow"><option value="0"></option></select></div>
+            <div class="af-field"><label for="itemCategory">Item Category</label>
+                <select id="itemCategory" data-dtcombo="single" data-dtcombo-caption="Item Category"><option value="0"></option></select></div>
+            <div class="af-field"><label for="itemType">Item Type</label>
+                <select id="itemType" data-dtcombo="single" data-dtcombo-caption="Item Type"><option value="0"></option></select></div>
+            <button type="button" class="af-show" id="showButton">Show</button>
+        </div>
+    </fieldset>
+    <div class="af-actions">
+        <button type="button" class="primary" id="allocateButton">Allocate &gt;</button>
+        <button type="button" id="deallocateButton">&lt; De-Allocate</button>
+    </div>
+    <div class="af-columns">
+        <section class="af-panel">
+            <div class="af-panel-title"><span>Pending Items For Allocation</span><span class="af-count" id="pendingCount">0 records</span></div>
+            <div class="af-grid-wrap"><table class="af-grid" id="pendingGrid"><thead><tr><th><input type="checkbox" aria-label="Select all pending items"></th><th>Item Name</th></tr></thead><tbody></tbody></table></div>
+        </section>
+        <section class="af-panel">
+            <div class="af-panel-title"><span>Allocated Items</span><span class="af-count" id="allocatedCount">0 records</span></div>
+            <div class="af-grid-wrap"><table class="af-grid" id="allocatedGrid"><thead><tr><th><input type="checkbox" aria-label="Select all allocated items"></th><th>Item Name</th></tr></thead><tbody></tbody></table></div>
+        </section>
+    </div>
+    <div class="af-status" id="status" role="status" aria-live="polite"></div>
+</div>
+<script th:src="@{/build/js/countx_desktop_combo.js?v=20260927b}"></script>
+<script th:src="@{/build/js/countx_packing_material_flow_allocation.js?v=20261007a}"></script>
+</body>
+</html>

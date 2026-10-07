@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Profit and Loss 02</title>
+<link rel="stylesheet" href="/build/css/countx_desktop_combo.css?v=20261007r3">
+<link rel="stylesheet" href="/build/css/countx_prod_combo.css?v=20261007r3">
+<link rel="stylesheet" href="/build/css/countx_acrpt3.css?v=20261007r3">
+<!--
+  Screen 86 "Profit & Loss 02" (screen name frmProfitAndLoss) = Architecture.WinApp.Account_Reports.ProfitLoss (route /accounts/reports/profit-and-loss-02).
+  It is a different class from screen 64 (frmProfitLossHararical, /accounts/reports/profit-and-loss), so it is its own page.
+  R3 2026-10-07, built 1:1 on InitializeComponent() (ClientSize 746x804, Maximized, KeyPreview, AutoScroll with AutoScrollMinSize 980x700 set in Load):
+    panel2 Top 27   = toolStrip3 (Verdana 9.75): &Refresh | 166-Print
+    panel3 Top 25   = teal rgb(10,110,110): label23 "Profit Loss" @4,3 Tahoma 12 bold white
+    panel5 Top 54   = white: label27 "From Date" 7,5 | fromdate 7,26 117x23 | label33 "To Date" 125,5 | todate 125,26 117x23 | lblBranch 246,5 |
+                      cmbbranch 243,24 219x26 (UltraCombo, LimitToList; checked list with ERP features 17 + 18) | btnshow 463,24 52x26 rgb(10,110,110) Tahoma 9.75 bold
+                      (no feature 17: lblBranch / cmbbranch hidden and btnshow moves to 243,24)
+    panel6 Fill     = AutoScroll, ControlLightLight: groupBox1 (39,5 694x88) Sales Net / Cost Of Sale / Gross Profit, groupBox2 (39,93) Non Operating Income,
+                      lblToProfit / lblTotalProfit (376,200 / 563,200), groupBox3 (39,227) Operating Expense, lblTotOperatProfit (376,389), groupBox4 (39,421) Financial Expense,
+                      lblBeforTaxProfit (376,534), groupBox14 (39,562) Taxation, label17 / lblProfitAfterTax (376,616 / 563,616), Total Income / Total Expense / Net Profit (42,620-661)
+                      Every label is placed from its designer Location / Size / Font / colours (generated from the designer by gen_pl.py).
+                      groupBox10 / groupBox9 inside groupBox1 sit at y 215 / 103 below its 88 px height, so the desktop never shows them (not drawn).
+  Tab order: fromdate 0, todate 1, btnshow 6, cmbbranch 152.
+  Page logic: /build/js/countx_acrpt3_pl.js (+ shared /build/js/countx_acrpt3.js). API: /api/accounts/acrpt3/pl/*
+-->
+<style>
+    .frm { min-width: 980px; min-height: 700px; }
+    .p3 { flex: 0 0 25px; height: 25px; background: rgb(10,110,110); position: relative; }
+    .p3 .cap { left: 4px; top: 3px; }
+    .p5 { flex: 0 0 54px; height: 54px; position: relative; background: #fff; }
+    .p6 { flex: 1 1 auto; min-height: 0; overflow: auto; background: #fff; position: relative; }
+    .canvas { position: relative; width: 746px; height: 698px; }
+    .lb { position: absolute; box-sizing: border-box; white-space: pre; overflow: hidden; margin: 0; padding: 0; }
+    .lb.sep { border: 1px solid; border-color: #a0a0a0 #fff #fff #a0a0a0; background: transparent; }
+    .gbx { position: absolute; box-sizing: border-box; }
+    .gbx-frame { position: absolute; left: 0; right: 0; bottom: 0; border: 1px solid #d0d0d0; border-radius: 3px; }
+    .gbx-cap { position: absolute; left: 8px; top: 0; padding: 0 2px; background: #fff; white-space: nowrap; }
+    #btnshow.nobranch { left: 243px; }
+</style>
+<link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261005a}"/>
+</head>
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="frm-scroll">
+<div class="frm" id="ProfitLoss">
+
+    <!-- panel2: toolStrip3 -->
+    <div class="ts">
+        <button type="button" id="new" title="Ctrl+N"><svg viewBox="0 0 16 16"><path d="M2 13.5l1-3.6 7.8-7.8 2.6 2.6-7.8 7.8z" fill="#e8b02a" stroke="#7a5a10" stroke-width="1"/><path d="M2 13.5l1-3.6 2.6 2.6z" fill="#444"/></svg><span><u>R</u>efresh</span></button>
+        <button type="button" id="print" title="Ctrl+P"><svg viewBox="0 0 16 16"><rect x="4" y="1.5" width="8" height="4" fill="#fff" stroke="#555"/><rect x="1.5" y="5.5" width="13" height="6" rx="1" fill="#6b7785"/><rect x="4" y="9.5" width="8" height="5" fill="#fff" stroke="#555"/></svg><span>166-Print</span></button>
+    </div>
+
+    <!-- panel3: teal header -->
+    <div class="p3 teal"><span class="cap">Profit Loss</span></div>
+
+    <!-- panel5: filters -->
+    <div class="p5">
+        <span class="lbl" style="left:7px;top:5px;">From Date</span>
+        <input type="date" id="fromDate" class="tb" tabindex="1" style="left:7px;top:26px;width:117px;height:23px;">
+        <span class="lbl" style="left:125px;top:5px;">To Date</span>
+        <input type="date" id="toDate" class="tb" tabindex="2" style="left:125px;top:26px;width:117px;height:23px;">
+        <span class="lbl" id="lblBranch" style="left:246px;top:5px;" hidden>Branch</span>
+        <span class="cw" id="wrapBranchMulti" style="left:243px;top:24px;width:219px;height:26px;" hidden>
+            <select id="branchMulti" multiple data-dtcombo="single" data-dtcombo-checked data-dtcombo-caption="Branch Name" tabindex="4" style="position:absolute;left:0;top:0;width:219px;height:26px;"></select>
+        </span>
+        <span class="cw" id="wrapBranchOne" style="left:243px;top:24px;width:219px;height:26px;" hidden>
+            <select id="branchOne" data-dtcombo="single" data-dtcombo-caption="Branch Name" tabindex="4" style="position:absolute;left:0;top:0;width:219px;height:26px;"></select>
+        </span>
+        <button type="button" id="btnshow" class="teal-btn dk t" tabindex="3" style="left:463px;top:24px;width:52px;height:26px;" title="Show">Show</button>
+    </div>
+
+    <!-- panel6: the statement (AutoScroll) -->
+    <div class="p6" id="p6">
+        <div class="canvas">
+            <span class="lb" id="lblNetProfitFoterAmt" style="left:176px;top:661px;width:126px;height:18px;font:bold 16.0px Calibri, Carlito, Arial, sans-serif;line-height:19px;color:#ffffff;background:#008080;border:1px solid #646464;text-align:right">0</span>
+            <span class="lb" id="label14" style="left:42px;top:661px;width:133px;height:18px;font:bold 16.0px Calibri, Carlito, Arial, sans-serif;line-height:19px;color:#000000;background:#add8e6;border:1px solid #646464">Net Profit</span>
+            <span class="lb" id="lblTotalExpFoterAmt" style="left:176px;top:641px;width:126px;height:18px;font:bold 16.0px Calibri, Carlito, Arial, sans-serif;line-height:19px;color:#ffffff;background:#008080;border:1px solid #646464;text-align:right">0</span>
+            <span class="lb" id="label12" style="left:42px;top:641px;width:133px;height:18px;font:bold 16.0px Calibri, Carlito, Arial, sans-serif;line-height:19px;color:#000000;background:#add8e6;border:1px solid #646464">Total Expense</span>
+            <span class="lb" id="lblTotalIncomeFoterAmt" style="left:176px;top:620px;width:126px;height:18px;font:bold 16.0px Calibri, Carlito, Arial, sans-serif;line-height:19px;color:#ffffff;background:#008080;border:1px solid #646464;text-align:right">0</span>
+            <span class="lb" id="lblToOperatingProfit" style="left:563px;top:389px;width:167px;height:23px;font:bold 16.0px Calibri, Carlito, Arial, sans-serif;line-height:19px;color:#ffffff;background:#008080;border:1px solid #646464;text-align:right">0</span>
+            <span class="lb" id="label3" style="left:42px;top:620px;width:133px;height:18px;font:bold 16.0px Calibri, Carlito, Arial, sans-serif;line-height:19px;color:#000000;background:#add8e6;border:1px solid #646464">Total Income</span>
+            <span class="lb" id="lblTotOperatProfit" style="left:376px;top:389px;width:186px;height:23px;font:bold 16.0px Calibri, Carlito, Arial, sans-serif;line-height:19px;color:#000000;background:#87ceeb;border:1px solid #646464">Total Operating Profit</span>
+            <span class="lb" id="lblTotalProfit" style="left:563px;top:200px;width:167px;height:23px;font:bold 16.0px Calibri, Carlito, Arial, sans-serif;line-height:19px;color:#ffffff;background:#008080;border:1px solid #646464;text-align:right">0</span>
+            <span class="lb" id="lblBeforTaxProfit" style="left:376px;top:534px;width:186px;height:23px;font:bold 16.0px Calibri, Carlito, Arial, sans-serif;line-height:19px;color:#000000;background:#87ceeb;border:1px solid #646464">Profit Before Taxation</span>
+            <span class="lb" id="lblToProfit" style="left:376px;top:200px;width:186px;height:23px;font:bold 16.0px Calibri, Carlito, Arial, sans-serif;line-height:19px;color:#000000;background:#87ceeb;border:1px solid #646464">Total Profit</span>
+            <span class="lb" id="label17" style="left:376px;top:616px;width:186px;height:23px;font:bold 16.0px Calibri, Carlito, Arial, sans-serif;line-height:19px;color:#000000;background:#87ceeb;border:1px solid #646464">Profit After Taxation</span>
+            <span class="lb" id="lblProfitAfterTax" style="left:563px;top:616px;width:170px;height:23px;font:bold 16.0px Calibri, Carlito, Arial, sans-serif;line-height:19px;color:#ffffff;background:#008080;border:1px solid #646464;text-align:right">0</span>
+            <span class="lb" id="lblProfitBeforeTax" style="left:563px;top:534px;width:167px;height:23px;font:bold 16.0px Calibri, Carlito, Arial, sans-serif;line-height:19px;color:#ffffff;background:#008080;border:1px solid #646464;text-align:right">0</span>
+            <div class="gbx" id="groupBox14" style="left:39px;top:562px;width:694px;height:51px;font:bold 19.0px Calibri, Carlito, Arial, sans-serif;line-height:22px;color:#0000cd">
+                <div class="gbx-frame" style="top:11px"></div>
+                <span class="gbx-cap" style="height:23px;line-height:23px">Taxation</span>
+                <span class="lb" id="lblTaxexpense" style="left:4px;top:26px;width:263px;height:19px;font:bold 16.0px Calibri, Carlito, Arial, sans-serif;line-height:19px;color:#ffffff;background:#008080">Tax Expenses</span>
+                <span class="lb" id="lbltaxexpenseamt" style="left:529px;top:26px;width:159px;height:21px;font:bold 16.0px Calibri, Carlito, Arial, sans-serif;line-height:19px;color:#000000;text-align:right">0</span>
+            </div>
+            <div class="gbx" id="groupBox4" style="left:39px;top:421px;width:694px;height:105px;font:bold 21.0px Calibri, Carlito, Arial, sans-serif;line-height:25px;color:#0000cd">
+                <div class="gbx-frame" style="top:13px"></div>
+                <span class="gbx-cap" style="height:26px;line-height:26px">Financial Expense</span>
+                <span class="lb sep" id="label29" style="left:4px;top:73px;width:688px;height:3px"></span>
+                <span class="lb" id="lblTotalFinancialExpense" style="left:524px;top:76px;width:167px;height:23px;font:bold 16.0px Calibri, Carlito, Arial, sans-serif;line-height:19px;color:#ffffff;background:#008080;border:1px solid #646464;text-align:right">0</span>
+                <span class="lb" id="lblTotFinanExp" style="left:337px;top:76px;width:186px;height:23px;font:bold 16.0px Calibri, Carlito, Arial, sans-serif;line-height:19px;color:#000000;background:#add8e6;border:1px solid #646464">Total Financial Expense</span>
+                <span class="lb" id="lblFinanExp" style="left:4px;top:30px;width:263px;height:19px;font:bold 16.0px Calibri, Carlito, Arial, sans-serif;line-height:19px;color:#ffffff;background:#008080">Financial Expenses</span>
+                <span class="lb" id="lblfinancialexpamt" style="left:529px;top:30px;width:159px;height:21px;font:bold 15.0px Calibri, Carlito, Arial, sans-serif;line-height:18px;color:#000000;text-align:right">0</span>
+                <span class="lb" id="lblmarkuploadAmount" style="left:529px;top:57px;width:159px;height:21px;font:bold 15.0px Calibri, Carlito, Arial, sans-serif;line-height:18px;color:#000000;text-align:right">0</span>
+                <span class="lb" id="lblMarkupLoan" style="left:4px;top:53px;width:263px;height:19px;font:bold 16.0px Calibri, Carlito, Arial, sans-serif;line-height:19px;color:#ffffff;background:#008080">Mark Up On Loans </span>
+            </div>
+            <div class="gbx" id="groupBox3" style="left:39px;top:227px;width:694px;height:159px;font:bold 21.0px Calibri, Carlito, Arial, sans-serif;line-height:25px;color:#0000cd">
+                <div class="gbx-frame" style="top:13px"></div>
+                <span class="gbx-cap" style="height:26px;line-height:26px">Operating Expense</span>
+                <span class="lb sep" id="label26" style="left:4px;top:129px;width:687px;height:3px"></span>
+                <span class="lb" id="lblToOperatingExpense" style="left:524px;top:132px;width:167px;height:23px;font:bold 16.0px Calibri, Carlito, Arial, sans-serif;line-height:19px;color:#ffffff;background:#008080;border:1px solid #646464;text-align:right">0</span>
+                <span class="lb" id="lblTotOperExp" style="left:337px;top:132px;width:186px;height:23px;font:bold 16.0px Calibri, Carlito, Arial, sans-serif;line-height:19px;color:#000000;background:#add8e6;border:1px solid #646464">Total Operating Expense</span>
+                <span class="lb" id="lblotherexpense" style="left:4px;top:33px;width:263px;height:19px;font:bold 16.0px Calibri, Carlito, Arial, sans-serif;line-height:19px;color:#ffffff;background:#008080">Other Expenses</span>
+                <span class="lb" id="lblSellingExp" style="left:4px;top:54px;width:263px;height:19px;font:bold 16.0px Calibri, Carlito, Arial, sans-serif;line-height:19px;color:#ffffff;background:#008080">Selling Expenses</span>
+                <span class="lb" id="lblAdmiExp" style="left:4px;top:85px;width:263px;height:19px;font:bold 16.0px Calibri, Carlito, Arial, sans-serif;line-height:19px;color:#ffffff;background:#008080">Administration Expnses</span>
+                <span class="lb" id="lblOperExp" style="left:4px;top:108px;width:263px;height:19px;font:bold 16.0px Calibri, Carlito, Arial, sans-serif;line-height:19px;color:#ffffff;background:#008080">Operating Expense</span>
+                <span class="lb" id="lblotherexpenseamt" style="left:529px;top:33px;width:159px;height:21px;font:bold 15.0px Calibri, Carlito, Arial, sans-serif;line-height:18px;color:#000000;text-align:right">0</span>
+                <span class="lb" id="lblsellingexpamt" style="left:529px;top:58px;width:159px;height:21px;font:bold 15.0px Calibri, Carlito, Arial, sans-serif;line-height:18px;color:#000000;text-align:right">0</span>
+                <span class="lb" id="lbladministratorexpamt" style="left:529px;top:85px;width:159px;height:21px;font:bold 15.0px Calibri, Carlito, Arial, sans-serif;line-height:18px;color:#000000;text-align:right">0</span>
+                <span class="lb" id="lbloperatingexpenseamt" style="left:529px;top:108px;width:159px;height:21px;font:bold 15.0px Calibri, Carlito, Arial, sans-serif;line-height:18px;color:#000000;text-align:right">0</span>
+            </div>
+            <div class="gbx" id="groupBox2" style="left:39px;top:93px;width:694px;height:102px;font:bold 21.0px Calibri, Carlito, Arial, sans-serif;line-height:25px;color:#0000cd">
+                <div class="gbx-frame" style="top:13px"></div>
+                <span class="gbx-cap" style="height:26px;line-height:26px">Non Operating Income</span>
+                <span class="lb sep" id="label21" style="left:4px;top:72px;width:689px;height:3px"></span>
+                <span class="lb" id="lblToNonOperatingIncome" style="left:524px;top:75px;width:167px;height:23px;font:bold 16.0px Calibri, Carlito, Arial, sans-serif;line-height:19px;color:#ffffff;background:#008080;border:1px solid #646464;text-align:right">0</span>
+                <span class="lb" id="lblNoOperIncomeTotal" style="left:337px;top:75px;width:186px;height:23px;font:bold 16.0px Calibri, Carlito, Arial, sans-serif;line-height:19px;color:#000000;background:#add8e6;border:1px solid #646464">T. Non Operating Income</span>
+                <span class="lb" id="label2" style="left:4px;top:29px;width:263px;height:19px;font:bold 16.0px Calibri, Carlito, Arial, sans-serif;line-height:19px;color:#ffffff;background:#008080">Discount Allowed</span>
+                <span class="lb" id="lblotherincomeamt" style="left:529px;top:52px;width:159px;height:19px;font:bold 15.0px Calibri, Carlito, Arial, sans-serif;line-height:18px;color:#000000;text-align:right">0</span>
+                <span class="lb" id="lblDiscountAllowedAmount" style="left:529px;top:29px;width:159px;height:23px;font:bold 15.0px Calibri, Carlito, Arial, sans-serif;line-height:18px;color:#000000;text-align:right">0</span>
+                <span class="lb" id="lblotherincome" style="left:4px;top:51px;width:263px;height:19px;font:bold 16.0px Calibri, Carlito, Arial, sans-serif;line-height:19px;color:#ffffff;background:#008080">Other Income</span>
+            </div>
+            <div class="gbx" id="groupBox1" style="left:39px;top:5px;width:694px;height:88px;color:rgb(0,64,64)">
+                <div class="gbx-frame" style="top:7px"></div>
+                <span class="lb sep" id="label7" style="left:3px;top:58px;width:689px;height:3px"></span>
+                <span class="lb" id="lblGrossprofit" style="left:524px;top:60px;width:167px;height:23px;font:bold 16.0px Calibri, Carlito, Arial, sans-serif;line-height:19px;color:#ffffff;background:#008080;border:1px solid #646464;text-align:right">0</span>
+                <span class="lb" id="lblGrosProf" style="left:337px;top:60px;width:186px;height:23px;font:bold 16.0px Calibri, Carlito, Arial, sans-serif;line-height:19px;color:#000000;background:#add8e6;border:1px solid #646464">Gross Profit</span>
+                <span class="lb" id="lblSalesnet" style="left:4px;top:14px;width:263px;height:21px;font:bold 16.0px Calibri, Carlito, Arial, sans-serif;line-height:19px;color:#ffffff;background:#008080">Sales Net</span>
+                <span class="lb" id="lblcostofsale" style="left:4px;top:38px;width:263px;height:19px;font:bold 16.0px Calibri, Carlito, Arial, sans-serif;line-height:19px;color:#ffffff;background:#008080">Cost Of Sale</span>
+                <span class="lb" id="lblsalesnetamt" style="left:529px;top:14px;width:159px;height:21px;font:bold 15.0px Calibri, Carlito, Arial, sans-serif;line-height:18px;color:#000000;text-align:right">0</span>
+                <span class="lb" id="lblcostofsaleamt" style="left:529px;top:38px;width:159px;height:19px;font:bold 15.0px Calibri, Carlito, Arial, sans-serif;line-height:18px;color:#000000;text-align:right">0</span>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+<script src="/build/js/countx_prod_combo.js?v=20261007r3"></script>
+<script src="/build/js/countx_acrpt3.js?v=20261007r3"></script>
+<script src="/build/js/countx_acrpt3_pl.js?v=20261007r3"></script>
+</body>
+</html>

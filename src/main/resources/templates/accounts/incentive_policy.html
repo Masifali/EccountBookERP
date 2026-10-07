@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Incentive Policy - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20261002k}" href="/build/css/countx_desktop_combo.css">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20261002k}" href="/build/css/countx_prod_combo.css">
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261005a}" href="/build/css/countx_grid_bar.css">
+    <link rel="stylesheet" th:href="@{/build/css/countx_button_busy.css?v=20261002gf}" href="/build/css/countx_button_busy.css">
+    <link rel="stylesheet" th:href="@{/css/countx_c_janus_grid.css?v=20261006c}" href="/css/countx_c_janus_grid.css">
+<!--
+  WholeSale -> "Incentive Policy": Architecture.WinApp.WholeSale.frmIncentivePolicy (screen 7, form Name "frmIncentivePolicy"),
+  port of InitializeComponent (frmIncentivePolicy.cs ~ line 1240+), ClientSize 1328x664, Maximized, KeyPreview, BackColor White,
+  Calibri 9.75 on every control. TabControl1 (Alignment Bottom): tab "Form" / tab "History".
+  Form tab (panel2 1314x632):
+    panel3 Dock Top 30: toolstrip (27) Segoe UI 9: &New | &Save | Update (hidden until a record is loaded) | Refresh (no handler on the desktop)
+    panel4 Dock Top 263:
+       panel6 Teal(10,110,110) 36: label18 "Incentive Policy" (25,5) Microsoft Sans Serif 18
+       label3 "Policy From " (6,48)  txtPolicyFrom  (127,44) 165x23 dd-MMM-yyyy  TabIndex 0
+       label4 "Policy To" (296,46)    txtPolicyTo    (356,42) 165x23            TabIndex 1
+       label27 "Policy Description" (525,46) txtPolicyDescription (634,42) 267x23 TabIndex 2
+       label9 "Cr Advoice Duration" (6,75)  cmbAdvoiceDuration (127,69) 165x26   TabIndex 3
+       label5 "Remarks" (296,75)      txtRemarks (356,71) 545x23                 TabIndex 4
+       groupBox1 "Detail" (5,109) 1097x136:
+          label1 Target Base On (6,23) cmbTargetBaseOn (9,40) 190x26 | label10 Item Name (202,22) cmbItemName (202,40) 314x26
+          label16 Range From (519,22) txtRangeFrom (519,40) 121x23 "0" right | label6 Range To (642,22) txtRangeTo (642,40) 121x23 "0" right
+          label2 Incentive Type (763,23) cmbIncentiveType (766,40) 130x26
+          label33 Incentive Rate (8,84) txtIncentiveRate (11,100) 128x23 "0" right | label7 Incentive Calc On (139,83) cmbIncentiveCalcOn (142,100) 130x26
+          label34 Remarks (272,82) txtDetailRemarks (275,100) 621x23 | btnplus "+" (900,100) 30x23 | btnUpdateDetail "Update" (931,100) 67x23 (hidden)
+          btnCancelUpdateDetial "Cancel" (999,100) 67x23 (hidden)
+    grdDetails Janus Dock Fill (Verdana 8.25, ColumnAutoResize, filter row, navigator, total row): hidden TargetBaseTypeId / ItemId / IncentiveTypeId, + "X" delete button column (20)
+  History tab (panel13): panel17 (27) with ctrlGrdBar1 at the right (MyGrid null) | panel18 376: panel5 Teal 33 label51 "Incentive Policy History" (5,2) MS Sans Serif 18 +
+    DataGridHistory (Edit / Detail buttons 50) | panel7 Fill: grdHistoryDetail.
+  API: /accounts/incentive-policy/* (IncentivePolicyController / IncentivePolicyDesktopService).
+-->
+<style>
+    :root { --ban: #0a6e6e; }
+    html, body { margin: 0; padding: 0; background: #fff; }
+    body { display: flex; flex-direction: column; min-height: 100vh; font: 13px Calibri, Carlito, "Segoe UI", sans-serif; color: #000; }
+    body > .erp-navigation { flex: 0 0 auto; }
+    #frm { flex: 1 0 auto; display: flex; flex-direction: column; min-width: 1328px; background: #fff; }
+    #pages { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 640px; border: 1px solid #acacac; border-bottom: 0; margin: 2px 2px 0 2px; box-sizing: border-box; }
+    .page { flex: 1 1 auto; display: none; flex-direction: column; min-height: 0; background: #fff; }
+    .page.on { display: flex; }
+    #tabsBar { flex: 0 0 24px; display: flex; align-items: flex-start; padding-left: 2px; margin: 0 2px; border: 1px solid #acacac; border-top: 0; background: #f0f0f0; box-sizing: border-box; }
+    #tabsBar .tab { height: 22px; padding: 0 9px; margin-right: -1px; line-height: 20px; font: 12px "Microsoft Sans Serif", Tahoma, sans-serif; cursor: pointer; border: 1px solid #acacac; border-top: 0; background: #f0f0f0; box-sizing: border-box; }
+    #tabsBar .tab.on { background: #fff; height: 24px; margin-top: -1px; border-top: 1px solid #fff; }
+    /* panel3 / toolstrip */
+    #panel3 { flex: 0 0 30px; height: 30px; background: #fff; }
+    #toolstrip { display: flex; align-items: center; height: 27px; padding-left: 2px; white-space: nowrap; background: linear-gradient(#fbfcfe, #e9eef6); border-bottom: 1px solid #c5d3e2; font: 12px "Segoe UI", sans-serif; }
+    #toolstrip button { display: inline-flex; align-items: center; gap: 4px; height: 24px; padding: 0 5px; margin: 0 1px; font: inherit; color: #000; background: transparent; border: 1px solid transparent; cursor: pointer; white-space: nowrap; }
+    #toolstrip button:hover:not(:disabled) { background: #cce8ff; border-color: #99d1ff; }
+    #toolstrip button[hidden] { display: none; }
+    #toolstrip svg { width: 16px; height: 16px; flex: 0 0 16px; }
+    /* panel4 */
+    #panel4 { flex: 0 0 263px; height: 263px; position: relative; background: #fff; }
+    #panel6, #panel5 { position: absolute; left: 0; right: 0; top: 0; height: 36px; background: var(--ban); color: #fff; }
+    #panel5 { position: relative; height: 33px; flex: 0 0 33px; }
+    .ban { position: absolute; font: 24px "Microsoft Sans Serif", Arimo, Tahoma, sans-serif; color: #fff; line-height: 29px; white-space: nowrap; }
+    .lbl { position: absolute; font: 13px Calibri, Carlito, "Segoe UI", sans-serif; line-height: 15px; color: #000; white-space: nowrap; }
+    .tx, .dt { position: absolute; box-sizing: border-box; height: 23px; font: 13px Calibri, Carlito, "Segoe UI", sans-serif; border: 1px solid #7a7a7a; padding: 0 3px; background: #fff; }
+    .tx.r { text-align: right; }
+    .flat { position: absolute; box-sizing: border-box; height: 23px; padding: 0; background: #fff; border: 0; font: 13px Calibri, Carlito, sans-serif; color: #000; cursor: pointer; }
+    .flat:hover { background: #e5f1fb; }
+    .flat[hidden] { display: none; }
+    #groupBox1 { position: absolute; left: 5px; top: 109px; width: 1097px; height: 136px; box-sizing: border-box; }
+    #groupBox1 .gb-line { position: absolute; left: 0; top: 7px; right: 0; bottom: 0; border: 1px solid #dcdcdc; border-radius: 3px; }
+    #groupBox1 .gb-cap { position: absolute; left: 6px; top: 0; padding: 0 2px; background: #fff; font: 11px "Microsoft Sans Serif", Arimo, Tahoma, sans-serif; line-height: 14px; }
+    .dtcombo-wrap .dtcombo-input { font: 13px Calibri, Carlito, "Segoe UI", sans-serif !important; }
+    #gridDetailsWrap { flex: 1 1 auto; min-height: 250px; display: flex; flex-direction: column; }
+    #gridDetailsWrap .cjg { flex: 1 1 auto; }
+    /* history */
+    #panel17 { flex: 0 0 27px; height: 27px; position: relative; background: #f0f0f0; }
+    #gbMount { position: absolute; right: 0; top: 2px; height: 21px; min-width: 45px; display: flex; align-items: center; justify-content: flex-end; }
+    #panel18 { flex: 0 0 376px; height: 376px; display: flex; flex-direction: column; }
+    #panel18 .cjg { flex: 1 1 auto; }
+    #panel7 { flex: 1 1 auto; min-height: 150px; display: flex; flex-direction: column; }
+    #panel7 .cjg { flex: 1 1 auto; }
+</style>
+</head>
+<body th:attr="data-r-save=${rights != null and rights['save']},data-r-update=${rights != null and rights['update']},data-r-print=${rights != null and rights['print']},data-r-viewall=${rights != null and rights['viewAll']}">
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div id="frm">
+  <div id="pages">
+    <!-- tabPage1 "Form" -->
+    <div class="page on" id="pageForm">
+        <div id="panel3">
+            <div id="toolstrip" role="toolbar">
+                <button type="button" id="btnnew" title="Ctrl+N"><svg viewBox="0 0 16 16"><path d="M3 1.5h7l3 3v10H3z" fill="#fff" stroke="#555"/><path d="M10 1.5v3h3" fill="none" stroke="#555"/></svg><span><u>N</u>ew</span></button>
+                <button type="button" id="btnsave" title="Ctrl+S"><svg viewBox="0 0 16 16"><path d="M1.5 1.5h10l3 3v10h-13z" fill="#2f6fb0" stroke="#1f4e80"/><rect x="4" y="1.5" width="6" height="4" fill="#fff"/><rect x="4" y="9" width="8" height="5.5" fill="#dfe8f2"/></svg><span><u>S</u>ave</span></button>
+                <button type="button" id="btnUpdate" title="Ctrl+U" hidden><svg viewBox="0 0 16 16"><path d="M2 14l1-4 8-8 3 3-8 8z" fill="#f2c94c" stroke="#7a5b00"/></svg><span>Update</span></button>
+                <button type="button" id="toolStripButton1"><span>Refresh</span></button>
+            </div>
+        </div>
+        <div id="panel4">
+            <div id="panel6"><span class="ban" id="label18" style="left:25px;top:3px">Incentive Policy</span></div>
+            <span class="lbl" style="left:6px;top:48px">Policy From </span>
+            <input type="date" class="dt" id="txtPolicyFrom" style="left:127px;top:44px;width:165px">
+            <span class="lbl" style="left:296px;top:46px">Policy To</span>
+            <input type="date" class="dt" id="txtPolicyTo" style="left:356px;top:42px;width:165px">
+            <span class="lbl" style="left:525px;top:46px">Policy Description</span>
+            <input type="text" class="tx" id="txtPolicyDescription" style="left:634px;top:42px;width:267px" autocomplete="off">
+            <span class="lbl" style="left:6px;top:75px">Cr Advoice Duration</span>
+            <select id="cmbAdvoiceDuration" data-dtcombo="single" data-dtcombo-caption="Advoice Duration" style="position:absolute;left:127px;top:69px;width:165px;height:26px"></select>
+            <span class="lbl" style="left:296px;top:75px">Remarks</span>
+            <input type="text" class="tx" id="txtRemarks" style="left:356px;top:71px;width:545px" autocomplete="off">
+            <div id="groupBox1">
+                <div class="gb-line"></div><span class="gb-cap">Detail</span>
+                <span class="lbl" style="left:6px;top:23px">Target Base On</span>
+                <select id="cmbTargetBaseOn" data-dtcombo="single" data-dtcombo-caption="Target Base On" style="position:absolute;left:9px;top:40px;width:190px;height:26px"></select>
+                <span class="lbl" style="left:202px;top:22px">Item Name</span>
+                <select id="cmbItemName" data-dtcombo="single" data-dtcombo-caption="Item Name" style="position:absolute;left:202px;top:40px;width:314px;height:26px"></select>
+                <span class="lbl" style="left:519px;top:22px">Range From</span>
+                <input type="text" class="tx r" id="txtRangeFrom" value="0" style="left:519px;top:40px;width:121px" autocomplete="off">
+                <span class="lbl" style="left:642px;top:22px">Range To</span>
+                <input type="text" class="tx r" id="txtRangeTo" value="0" style="left:642px;top:40px;width:121px" autocomplete="off">
+                <span class="lbl" style="left:763px;top:23px">Incentive Type</span>
+                <select id="cmbIncentiveType" data-dtcombo="single" data-dtcombo-caption="Incentive Type" style="position:absolute;left:766px;top:40px;width:130px;height:26px"></select>
+                <span class="lbl" style="left:8px;top:84px">Incentive Rate</span>
+                <input type="text" class="tx r" id="txtIncentiveRate" value="0" style="left:11px;top:100px;width:128px;background:#fcfcfc" autocomplete="off">
+                <span class="lbl" style="left:139px;top:83px">Incentive Calc On</span>
+                <select id="cmbIncentiveCalcOn" data-dtcombo="single" data-dtcombo-caption="Incentive Calc On" style="position:absolute;left:142px;top:100px;width:130px;height:26px"></select>
+                <span class="lbl" style="left:272px;top:82px">Remarks</span>
+                <input type="text" class="tx" id="txtDetailRemarks" style="left:275px;top:100px;width:621px" autocomplete="off">
+                <button type="button" class="flat" id="btnplus" style="left:900px;top:100px;width:30px">+</button>
+                <button type="button" class="flat" id="btnUpdateDetail" style="left:931px;top:100px;width:67px" hidden>Update</button>
+                <button type="button" class="flat" id="btnCancelUpdateDetial" style="left:999px;top:100px;width:67px" hidden>Cancel</button>
+            </div>
+        </div>
+        <div id="gridDetailsWrap"><div class="cjg"><div class="cjg-wrap"><table id="grdDetails"></table></div><div class="cjg-nav" id="navDetails"></div></div></div>
+    </div>
+    <!-- tabPage2 "History" -->
+    <div class="page" id="pageHistory">
+        <div id="panel17"><div id="gbMount"></div></div>
+        <div id="panel18">
+            <div id="panel5"><span class="ban" id="label51" style="left:5px;top:2px">Incentive Policy History</span></div>
+            <div class="cjg"><div class="cjg-wrap" data-gridbar-form="frmIncentivePolicy" data-gridbar-grid="DataGridHistory" data-gridbar-mount="#gbMount" data-gridbar-nullgrid="true" data-gridbar-reorder="false" data-gridbar-title="Incentive Policy History"><table id="DataGridHistory"></table></div><div class="cjg-nav" id="navHistory"></div></div>
+        </div>
+        <div id="panel7"><div class="cjg"><div class="cjg-wrap"><table id="grdHistoryDetail"></table></div><div class="cjg-nav" id="navHistoryDetail"></div></div></div>
+    </div>
+  </div>
+  <div id="tabsBar"><div class="tab on" id="tabF" data-i="0">Form</div><div class="tab" id="tabH" data-i="1">History</div></div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}" src="/vendors/jquery/dist/jquery.min.js"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20261002k}" src="/build/js/countx_prod_combo.js"></script>
+<script th:src="@{/build/js/countx_acc_rpt_f.js?v=20261002k}" src="/build/js/countx_acc_rpt_f.js"></script>
+<script th:src="@{/js/countx_c_janus_grid.js?v=20261006c}" src="/js/countx_c_janus_grid.js"></script>
+<script th:src="@{/js/countx_incentive_policy.js?v=20261006c}" src="/js/countx_incentive_policy.js"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20261006-grid-control-placement}" src="/build/js/countx_grid_bar.js"></script>
+</body>
+</html>

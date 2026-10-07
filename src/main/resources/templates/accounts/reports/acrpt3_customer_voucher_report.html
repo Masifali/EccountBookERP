@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Customer Voucher Report</title>
+<link rel="stylesheet" href="/build/css/countx_desktop_combo.css?v=20261007r3">
+<link rel="stylesheet" href="/build/css/countx_prod_combo.css?v=20261007r3">
+<link rel="stylesheet" href="/build/css/countx_acrpt3.css?v=20261007r3">
+<!--
+  Screen 67 "Customer Voucher Report" = Architecture.WinApp.Account_Reports.CostomerWiseVoucherSlip (route /accounts/reports/customer-voucher-report).
+  R3 2026-10-07, built 1:1 on InitializeComponent() (ClientSize 1028x627, Maximized, KeyPreview, form Text "EccountBook"):
+    panel2 Top 27   = toolStrip3 (White): &Refresh | 100-Slip Print   + ctrlGrdBar1 @983,0 (41x24, anchored top right)
+    panel3 Top 38   = teal rgb(10,110,110): label23 "Payment And Receipt Slip" @10,8 (Microsoft Sans Serif 14.25 regular, white)
+    panel5 Top 110  = white (Microsoft Sans Serif 9): label33 "Date" 12,8 | datToDate 14,28 101x21 | label2 "Party  Name" 121,5 | CmbPartyName 118,27 256x26 (UltraCombo 10.2) |
+                      chkCash 384,13 | chkBank 384,38 | radioPayment "Payments" 384,61 | radioReceipt "Receipts" 466,61 | label34 "Bank & Cash A/c" 12,54 |
+                      cmbBankAc 15,75 291x26 (checked list) | btnshow 311,75 63x26 rgb(10,110,110) Segoe UI Semibold 11.25 bold white
+    panel6 Fill     = grd (Verdana 8.25, FilterMode Automatic, TotalRow, RecordNavigator, no group-by box)
+  Tab order: datToDate 0, CmbPartyName 1, chkCash 2, chkBank 3, radioPayment 4, radioReceipt 5, cmbBankAc 6, btnshow 7.
+  Page logic: /build/js/countx_acrpt3_cv.js (+ shared /build/js/countx_acrpt3.js). API: /api/accounts/acrpt3/cv/*
+-->
+<style>
+    .frm { min-width: 1028px; min-height: 480px; }
+    .p2 { flex: 0 0 27px; height: 27px; position: relative; background: #fff; }
+    .p2 .ts { background: #fff; border-bottom: 0; height: 27px; }
+    .p2 .ts button { font: 12px "Segoe UI", Tahoma, Arial, sans-serif; }
+    .p3 { flex: 0 0 38px; height: 38px; background: rgb(10,110,110); position: relative; }
+    .p3 .cap { left: 10px; top: 8px; font: 19px "Microsoft Sans Serif", Tahoma, Arial, sans-serif; line-height: 24px; }
+    .p5 { flex: 0 0 110px; height: 110px; position: relative; background: #fff; font: 12px "Microsoft Sans Serif", Tahoma, Arial, sans-serif; }
+    .p5 .ml { position: absolute; white-space: nowrap; font: 12px "Microsoft Sans Serif", Tahoma, Arial, sans-serif; color: #000; line-height: 15px; }
+    .p5 .pcx-wrap .dtcombo-input.pcx-field { font: 13.6px "Microsoft Sans Serif", Tahoma, Arial, sans-serif; }
+    .p5 input.tb { font: 12px "Microsoft Sans Serif", Tahoma, Arial, sans-serif; }
+    #barMount { right: 4px; top: 0; height: 24px; }
+</style>
+<link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261005a}"/>
+</head>
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="frm-scroll">
+<div class="frm" id="CostomerWiseVoucherSlip">
+
+    <!-- panel2: ctrlGrdBar1 + toolStrip3 -->
+    <div class="p2">
+        <div class="ts">
+            <button type="button" id="new" title="Ctrl+N"><svg viewBox="0 0 16 16"><path d="M13 8a5 5 0 1 1-1.5-3.6" fill="none" stroke="#1f6fc5" stroke-width="2"/><path d="M13.5 1.5v4h-4z" fill="#1f6fc5"/></svg><span><u>R</u>efresh</span></button>
+            <button type="button" id="print" title="Ctrl+P"><svg viewBox="0 0 16 16"><rect x="4" y="1.5" width="8" height="4" fill="#fff" stroke="#555"/><rect x="1.5" y="5.5" width="13" height="6" rx="1" fill="#6b7785"/><rect x="4" y="9.5" width="8" height="5" fill="#fff" stroke="#555"/></svg><span>100-Slip Print</span></button>
+        </div>
+        <span class="bar-mount" id="barMount"></span>
+    </div>
+
+    <!-- panel3: teal header -->
+    <div class="p3 teal"><span class="cap">Payment And Receipt Slip</span></div>
+
+    <!-- panel5: filters -->
+    <div class="p5">
+        <span class="ml" style="left:12px;top:8px;">Date</span>
+        <input type="date" id="datToDate" class="tb" tabindex="1" style="left:14px;top:28px;width:101px;height:21px;">
+        <span class="ml" style="left:121px;top:5px;">Party&nbsp; Name</span>
+        <select id="party" data-dtcombo="single" data-dtcombo-caption="Account Title" tabindex="2" style="position:absolute;left:118px;top:27px;width:256px;height:26px;"></select>
+        <label class="ck" style="left:384px;top:13px;"><input type="checkbox" id="chkCash" tabindex="3"><span>Cash</span></label>
+        <label class="ck" style="left:384px;top:38px;"><input type="checkbox" id="chkBank" tabindex="4"><span>Bank</span></label>
+        <label class="ck" style="left:384px;top:61px;"><input type="radio" name="kind" id="radioPayment" tabindex="5"><span>Payments</span></label>
+        <label class="ck" style="left:466px;top:61px;"><input type="radio" name="kind" id="radioReceipt" tabindex="6"><span>Receipts</span></label>
+        <span class="ml" style="left:12px;top:54px;">Bank &amp; Cash A/c</span>
+        <select id="bank" multiple data-dtcombo="single" data-dtcombo-checked data-dtcombo-caption="Account Title" tabindex="7" style="position:absolute;left:15px;top:75px;width:291px;height:26px;"></select>
+        <button type="button" id="show" class="teal-btn dk" tabindex="8" style="left:311px;top:75px;width:63px;height:26px;font:bold 15px 'Segoe UI Semibold','Segoe UI',Arial,sans-serif;" title="Show">Show</button>
+    </div>
+
+    <!-- panel6: grd -->
+    <div class="gridbox">
+        <div class="grid" id="grid" tabindex="0"><table data-gridbar="CostomerWiseVoucherSlip:grd" data-gridbar-mount="#barMount" class="g" id="grd"><colgroup></colgroup><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        <div class="nav" id="nav" hidden>
+            <button type="button" data-nav="first" title="First">|&lt;</button><button type="button" data-nav="prev" title="Previous">&lt;</button>
+            <span id="navText"></span>
+            <button type="button" data-nav="next" title="Next">&gt;</button><button type="button" data-nav="last" title="Last">&gt;|</button>
+        </div>
+    </div>
+</div>
+</div>
+
+<script src="/build/js/countx_prod_combo.js?v=20261007r3"></script>
+<script src="/build/js/countx_acrpt3.js?v=20261007r3"></script>
+<script src="/build/js/countx_acrpt3_cv.js?v=20261007r3"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20261006-grid-control-placement}"></script>
+</body>
+</html>

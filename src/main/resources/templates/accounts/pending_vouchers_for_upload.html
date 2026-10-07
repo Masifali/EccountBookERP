@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Vouchers (Upload) - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_store.css?v=20260925c}">
+    <style>
+        /* frmPendingVouchersForUpload designer geometry, 1:1 in px (ClientSize 927 x 676, AutoScrollMinSize 980 x 500).
+           panel1 teal 51 (toolStrip1 25 + label23 + ctrlGrdBar1), panel12 white 107, panel3 teal 25, DataGridHistory 247,
+           panel4 teal 19, grdDetail 227. */
+        body { background: #fff; padding-bottom: 6px; }
+        .fx-scroll { overflow-x: auto; }
+        .fx-root { position: relative; font-family: "Microsoft Sans Serif", Tahoma, sans-serif; font-size: 11px; background: #fff; }
+        .fx-abs { position: absolute; box-sizing: border-box; margin: 0; }
+        .fx-rel { position: relative; }
+        .fx-lbl { font-family: "Segoe UI Semibold", "Segoe UI", Tahoma, sans-serif; font-weight: bold; font-size: 12px; white-space: nowrap; line-height: 15px; color: #000; }
+        .fx-txt { font-family: Verdana, sans-serif; font-size: 13px; height: 23px; border: 1px solid #7a7a7a; padding: 1px 3px; background: #fff; }
+        .fx-cmb { font-family: Verdana, sans-serif; font-size: 13px; height: 26px; border: 1px solid #7a7a7a; background: #fff; padding: 0 2px; }
+        .fx-dtc { display: flex; align-items: center; gap: 2px; height: 23px; border: 1px solid #7a7a7a; background: #fff; padding: 0 2px; }
+        .fx-dtc input[type=date] { border: none; font-family: Verdana, sans-serif; font-size: 12px; height: 18px; width: 100%; min-width: 0; padding: 0; }
+        .fx-dtc input[type=date]:disabled { color: #8a8a8a; }
+        .fx-gb { position: absolute; box-sizing: border-box; }
+        .fx-gb::before { content: ""; position: absolute; left: 0; right: 0; top: 7px; bottom: 0; border: 1px solid #d5dfe5; border-radius: 3px; pointer-events: none; }
+        .fx-gb > .fx-cap { position: absolute; left: 6px; top: 0; padding: 0 2px; background: #fff; font-family: Tahoma, sans-serif; font-size: 13px; font-weight: bold; line-height: 14px; color: #000; }
+        .fx-teal { background: #008080; position: relative; }
+        .fx-teal-title { position: absolute; font-family: Tahoma, sans-serif; font-size: 16px; font-weight: bold; color: #fff; white-space: nowrap; line-height: 19px; }
+        .fx-strip { height: 25px; display: flex; align-items: center; background: linear-gradient(to bottom, #fcfcfc 0%, #e0e0e0 100%); border-bottom: 1px solid #b5b5b5; box-sizing: border-box; }
+        .fx-tool { font-family: Verdana, sans-serif; font-size: 13px; height: 22px; background: transparent; border: 1px solid transparent; display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 0 4px; cursor: pointer; white-space: nowrap; }
+        .fx-tool:hover:not(:disabled) { background: #ffe4a0; border-color: #e59d00; }
+        .fx-tool:disabled { color: #9a9a9a; cursor: default; }
+        .fx-sep { width: 6px; height: 20px; border-left: 1px solid #b5b5b5; margin-left: 3px; }
+        .fx-btn { background: #0a6e6e; color: #fff; border: 1px solid #005959; font-family: Verdana, sans-serif; font-size: 11px; font-weight: bold; padding: 0; cursor: pointer; border-radius: 0; }
+        .fx-btn:hover:not(:disabled) { background: #005959; }
+        .fx-rad { display: inline-flex; align-items: center; gap: 3px; font-family: "Segoe UI Semibold", "Segoe UI", Tahoma, sans-serif; font-weight: bold; font-size: 12px; white-space: nowrap; line-height: 15px; }
+        .fx-rad input { margin: 0; }
+        .fx-val { font-family: "Segoe UI", Tahoma, sans-serif; font-weight: bold; font-size: 13px; line-height: 17px; }
+        .fx-grid-host { overflow: auto; border-top: 1px solid #9eb6ce; background: #fff; box-sizing: border-box; }
+        .fx-grid-host.win-grid-scroll { max-height: none; min-height: 0; }
+        .fx-grid-host .win-grid { width: auto; min-width: 100%; font-family: Verdana, sans-serif; font-size: 11px; }
+        .fx-grid-host .win-grid th { background: linear-gradient(to bottom, #e3efff 0%, #c4dcf8 100%); border: 1px solid #9eb6ce; font-weight: normal; }
+        .fx-grid-host .win-grid td { border: 1px solid #d5e1f0; }
+        .fx-grid-host .win-grid tbody tr:hover { background: #fff0cf; }
+        .fx-grid-host .win-grid tbody tr.is-selected { background: #d6ecff; }
+        .fx-grid-host .win-grid td.num { text-align: right; }
+        .fx-grid-host .win-grid td.btn, .fx-grid-host .win-grid td.chk { text-align: center; padding: 1px 2px; }
+        /* DataGridHistory.FrozenColumns = 4: Select, Print, Print_102, V.Type stay in view */
+        #DataGridHistory th.fz, #DataGridHistory td.fz { position: sticky; z-index: 2; background: #fff; }
+        #DataGridHistory th.fz { z-index: 7; background: #d7e6fa; }
+        .pvu-link { background: none; border: none; padding: 0; color: #0000ee; text-decoration: underline; cursor: pointer; font: inherit; }
+        .pvu-note { color: #7a4a00; background: #fff6df; border: 1px solid #e6c77a; padding: 3px 6px; margin: 3px 0; font: 12px "Segoe UI", sans-serif; }
+    </style>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261005a}"/>
+</head>
+<!-- 957 Architecture.WinApp.DataSyncing.frmPendingVouchersForUpload "Vouchers (Upload)" (module 2 Accounts). -->
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="fx-scroll">
+<div class="fx-root" style="width:927px;min-width:927px;">
+
+    <div id="rightsNote" class="cx-denied is-hidden" style="margin:0;"></div>
+    <div class="pvu-note" id="pvuNote">Upload target: the desktop saves each uploaded voucher to the tax server database
+        (App.config connection string "TPSSDb_Server"). That connection is not configured in the web application, so
+        "Upload Selected Vouchers" runs the desktop's checks and stops before saving; nothing is written.</div>
+
+    <!-- panel1 (0,0) 927 x 51, teal: toolStrip1 927 x 25 + label23 (1,28) + ctrlGrdBar1 (885,1) 38 x 23 -->
+    <div class="fx-teal" style="height:51px;">
+        <div class="fx-strip">
+            <button type="button" class="fx-tool" id="btnNew" style="width:55px" title="Ctrl+N"><i class="fa fa-plus-circle" style="color:#2e7d32"></i> New</button>
+            <button type="button" class="fx-tool" id="btnRefresh" style="width:76px"><i class="fa fa-repeat"></i> Refresh</button>
+            <span class="fx-sep"></span>
+            <button type="button" class="fx-tool" id="btnShortcutKeys" style="width:122px" title="Ctrl+Alt"><i class="fa fa-keyboard-o"></i> ShortCut Keys</button>
+            <span class="fx-sep"></span>
+            <button type="button" class="fx-tool" id="BtnUploadVouchers" style="width:199px" title="Ctrl+U"><i class="fa fa-cloud-upload"></i> Upload Selected Vouchers</button>
+        </div>
+        <span class="fx-teal-title" style="left:1px;top:28px;">Pending Vouchers For Upload</span>
+        <div id="gbMount" style="position:absolute;left:885px;top:1px;width:38px;height:23px;display:flex;align-items:center"></div>
+    </div>
+
+    <!-- panel12 (0,51) 927 x 107, white -->
+    <div class="fx-rel" style="height:107px;">
+        <!-- groupBox1 (5,1) 627 x 102 "Filters" -->
+        <div class="fx-gb" style="left:5px;top:1px;width:627px;height:102px;">
+            <span class="fx-cap">Filters</span>
+            <label class="fx-abs fx-lbl" style="left:6px;top:24px;">From Date</label>
+            <div class="fx-abs fx-dtc" style="left:85px;top:20px;width:140px;"><input type="checkbox" id="chkFromDate" checked aria-label="From Date"><input type="date" id="txtFromDate"></div>
+            <label class="fx-abs fx-lbl" style="left:6px;top:51px;">To Date</label>
+            <div class="fx-abs fx-dtc" style="left:85px;top:47px;width:140px;"><input type="checkbox" id="chkToDate" checked aria-label="To Date"><input type="date" id="txtToDate"></div>
+            <label class="fx-abs fx-lbl" for="txtFromDocNoCpv" style="left:6px;top:78px;">From,To Doc</label>
+            <input type="text" id="txtFromDocNoCpv" class="fx-abs fx-txt" style="left:84px;top:74px;width:70px;" inputmode="numeric" autocomplete="off">
+            <input type="text" id="txtToDocNoCpv" class="fx-abs fx-txt" style="left:155px;top:74px;width:70px;" inputmode="numeric" autocomplete="off" aria-label="To Doc">
+            <label class="fx-abs fx-lbl" for="CmbDocumentType" style="left:229px;top:24px;">Doc Type</label>
+            <select id="CmbDocumentType" class="fx-abs fx-cmb win-combo" style="left:323px;top:18px;width:190px;"></select>
+            <label class="fx-abs fx-lbl" for="cmbAccountTitleCpv" style="left:229px;top:51px;">Account Title</label>
+            <select id="cmbAccountTitleCpv" class="fx-abs fx-cmb win-combo" style="left:323px;top:45px;width:190px;"></select>
+            <label class="fx-abs fx-lbl" for="cmbApprovedStatusCpv" style="left:229px;top:78px;">Approved Status</label>
+            <select id="cmbApprovedStatusCpv" class="fx-abs fx-cmb win-combo" style="left:323px;top:72px;width:139px;"></select>
+            <button type="button" id="btnShow" class="fx-abs fx-btn" style="left:463px;top:72px;width:50px;height:26px;" title="Ctrl+S">Show</button>
+            <label class="fx-abs fx-rad" style="left:518px;top:14px;"><input type="radio" name="dtype" id="drdocdate" value="doc" checked> Doc Date</label>
+            <label class="fx-abs fx-rad" style="left:518px;top:35px;"><input type="radio" name="dtype" id="rdentrydate" value="entry"> Entry Date</label>
+            <label class="fx-abs fx-rad" style="left:518px;top:56px;"><input type="radio" name="dtype" id="rdmodifydate" value="modify"> Modify Date</label>
+            <label class="fx-abs fx-rad" style="left:518px;top:77px;"><input type="radio" name="dtype" id="rdapproveddate" value="approved"> Approved Date</label>
+        </div>
+        <!-- VouchersInfoBoxCash (634,3) 218 x 100 - counts + the account radio group -->
+        <div class="fx-gb" id="VouchersInfoBoxCash" style="left:634px;top:3px;width:218px;height:100px;">
+            <label class="fx-abs fx-lbl" style="left:6px;top:10px;font-size:13px;">Total Vouchers</label>
+            <span class="fx-abs fx-val" id="lblTotalVouchers" style="left:155px;top:10px;width:59px;">0</span>
+            <label class="fx-abs fx-lbl" style="left:6px;top:27px;font-size:13px;">Approved Vouchers</label>
+            <span class="fx-abs fx-val" id="lblApprovedVouchers" style="left:155px;top:27px;width:59px;">0</span>
+            <label class="fx-abs fx-lbl" style="left:6px;top:46px;font-size:13px;">UnApproved Vouchers</label>
+            <span class="fx-abs fx-val" id="lblUnApprovedVouchers" style="left:155px;top:46px;width:59px;">0</span>
+            <label class="fx-abs fx-rad" style="left:9px;top:72px;"><input type="radio" name="acct" id="radAll" value="0" checked> All</label>
+            <label class="fx-abs fx-rad" style="left:53px;top:64px;width:75px;height:34px;white-space:normal;"><input type="radio" name="acct" id="RadCustomAccounts" value="2"> Custom<br>Accounts</label>
+            <label class="fx-abs fx-rad" style="left:124px;top:64px;width:89px;height:34px;white-space:normal;"><input type="radio" name="acct" id="RadNotCustomAccounts" value="1"> Not Custom<br>Accounts</label>
+        </div>
+    </div>
+
+    <!-- panel3 (0,158) 927 x 25, teal -->
+    <div class="fx-teal" style="height:25px;"></div>
+
+    <!-- DataGridHistory (0,183) 927 x 247 -->
+    <div class="fx-grid-host win-grid-scroll" id="hostHistory" style="height:247px;">
+        <table data-gridbar="frmPendingVouchersForUpload:DataGridHistory" data-gridbar-mount="#gbMount" data-gridbar-hide="chooser,save,remove" data-gridbar-reorder="false"
+               data-gridbar-title="Pending Vouchers For Upload" class="win-grid" id="DataGridHistory"><thead></thead><tbody></tbody></table>
+    </div>
+
+    <!-- panel4 (0,430) 927 x 19, teal -->
+    <div class="fx-teal" style="height:19px;"><span style="position:absolute;left:1px;top:2px;font-family:Tahoma,sans-serif;font-size:12px;font-weight:bold;color:#fff;line-height:14px;">Detail Of Selected Record</span></div>
+
+    <!-- grdDetail (0,449) 927 x 227 -->
+    <div class="fx-grid-host win-grid-scroll" style="height:227px;">
+        <table class="win-grid" id="grdDetail"><thead></thead><tbody></tbody></table>
+    </div>
+</div>
+</div>
+
+<!-- Ctrl+Alt / ShortCut Keys (MakeShortCutKeys :373 -> ShortCutKeyPopUp) -->
+<div class="cx-modal" id="dlgKeys">
+    <div class="cx-modal-box small">
+        <div class="cx-modal-head"><span>ShortCut Keys</span><button type="button" onclick="StoreCommon.closeModal('dlgKeys')">&times;</button></div>
+        <div class="cx-modal-body"><div class="win-grid-scroll"><table class="win-grid" id="tblKeys"><thead><tr><th>KeyCombination</th><th>Description</th></tr></thead><tbody></tbody></table></div></div>
+    </div>
+</div>
+<!-- NoOfAttachments link (CommonServices.GetNoofAttachmentsByRefDocumentTypeID) -->
+<div class="cx-modal" id="dlgAtt">
+    <div class="cx-modal-box small">
+        <div class="cx-modal-head"><span>Attachments</span><button type="button" onclick="StoreCommon.closeModal('dlgAtt')">&times;</button></div>
+        <div class="cx-modal-body"><div class="win-grid-scroll"><table class="win-grid" id="tblAtt"><thead><tr><th>Attachment</th><th>Entry Date</th></tr></thead><tbody></tbody></table></div></div>
+    </div>
+</div>
+
+<script th:src="@{/build/js/countx_store_common.js?v=20260925c}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js}"></script>
+<script th:src="@{/build/js/countx_pending_vouchers_for_upload.js?v=20261007a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20261006-grid-control-placement}"></script>
+</body>
+</html>

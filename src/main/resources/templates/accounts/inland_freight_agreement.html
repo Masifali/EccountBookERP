@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>In Land Freight Agreement - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20261002k}" href="/build/css/countx_desktop_combo.css">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20261002k}" href="/build/css/countx_prod_combo.css">
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261005a}" href="/build/css/countx_grid_bar.css">
+    <link rel="stylesheet" th:href="@{/build/css/countx_button_busy.css?v=20261002gf}" href="/build/css/countx_button_busy.css">
+    <link rel="stylesheet" th:href="@{/css/countx_c_janus_grid.css?v=20261006d}" href="/css/countx_c_janus_grid.css">
+<!--
+  Account Definition -> "InLand Freight Agreement": Architecture.WinApp.Account_Definition.InLandFreightAgreement (screen 8, form Name
+  "InLandFreightAgreement"), port of InitializeComponent (InLandFreightAgreement.cs, designer part), ClientSize 1157x583, Maximized.
+  TabControl1 (Alignment Bottom): tab "Form" / tab "History".
+  Form tab (panel1, Dock Fill):
+    panel2 Dock Top 36: toolstrip (Dock Fill, items 33 high, Segoe UI 9): &New | &Save | Update (hidden until a record is loaded) | Refresh | &Attachment | 242-Print;
+        ctrlGrdBar1 (MyGrid grdDetail) anchored right at (1094,2)
+    panel3 Teal(10,110,110) Dock Top 42: label18 "In Land Freight Agreement" (6,6) Microsoft Sans Serif 18 white
+    groupBox1 "Main" Dock Top 48: Doc Date (3,17) txtDocDate (62,13) 111x23 | Doc No (181,17) TxtDocNo (233,13) 70x23 read-only, no tab stop |
+        Agreement Code (311,17) txtAgreementCode (414,13) 111x23 | Customer/Party (533,17) CmbParty (632,11) 178x26 |
+        Transport/Suppliers (819,17) CmbTransporter (938,11) 178x26
+    groupBox2 "Detail" Dock Top 105: row 1 (y 14-16) Source District (8,20) cmbDistrict (98,14) 148x26 | Loading Location (252,20) cmbLoadingLocation (357,14) 122x26 |
+        UnLoading Location (485,20) cmbUnloadingLocation (605,14) 122x26 | Effective Date (733,20) txtEffectiveDate (825,16) 111x23 | Freight Type (952,20) CmbFreightType (1041,14) 111x26
+        row 2 (y 42-43) Pack Size To (8,46) txtPackSize (98,43) 148x23 | Freight Uom (252,46) txtFreightUom (356,42) 123x23 | Freight Rate (527,46) txtFreightRate (605,42) 122x23 |
+        Freight Amount (733,46) txtFreightAmount (825,42) 111x23 no tab stop | Min Amount (952,46) txtMinAmount (1041,42) 111x23
+        row 3 Remarks (8,70) txtDetailRemarks (98,70) 838x23 | Add (943,71) 39x23 | Update (984,71) 58x23 hidden | Cancel (1044,71) 57x23 hidden
+    panel4 Fill: grdDetail (Janus, Verdana 8.25, filter row, navigator, total row), "X" delete button column (20)
+  History tab: panel6 (30) toolStrip2 [LoadAll (no handler) | Register] + ctrlGrdBar2 right | panel7: GrdHistory (Dock Top 219, ColumnAutoResize) + GrdDetailHistory (Fill, ColumnAutoResize)
+  API: /accounts/inland-freight-agreement/* (InLandFreightAgreementController / InLandFreightAgreementDesktopService, print: InLandFreightAgreementPrintController).
+-->
+<style>
+    html, body { margin: 0; padding: 0; background: #f0f0f0; }
+    body { display: flex; flex-direction: column; min-height: 100vh; font: 13px Calibri, Carlito, "Segoe UI", sans-serif; color: #000; }
+    body > .erp-navigation { flex: 0 0 auto; }
+    #frm { flex: 1 0 auto; display: flex; flex-direction: column; min-width: 1157px; background: #f0f0f0; }
+    #pages { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 640px; border: 1px solid #acacac; border-bottom: 0; margin: 2px 2px 0 2px; box-sizing: border-box; background: #fff; }
+    .page { flex: 1 1 auto; display: none; flex-direction: column; min-height: 0; background: #f0f0f0; padding: 3px; box-sizing: border-box; }
+    .page.on { display: flex; }
+    #tabsBar { flex: 0 0 24px; display: flex; align-items: flex-start; padding-left: 2px; margin: 0 2px; border: 1px solid #acacac; border-top: 0; background: #f0f0f0; box-sizing: border-box; }
+    #tabsBar .tab { height: 22px; padding: 0 9px; margin-right: -1px; line-height: 20px; font: 12px "Microsoft Sans Serif", Tahoma, sans-serif; cursor: pointer; border: 1px solid #acacac; border-top: 0; background: #f0f0f0; box-sizing: border-box; }
+    #tabsBar .tab.on { background: #fff; height: 24px; margin-top: -1px; border-top: 1px solid #fff; }
+    /* panel2 / toolstrip */
+    #panel2 { flex: 0 0 36px; height: 36px; position: relative; background: #f0f0f0; }
+    #toolstrip, #toolStrip2 { display: flex; align-items: center; white-space: nowrap; background: linear-gradient(#fbfcfe, #e9eef6); border-bottom: 1px solid #c5d3e2; font: 12px "Segoe UI", sans-serif; box-sizing: border-box; }
+    #toolstrip { height: 36px; padding-left: 2px; }
+    #toolStrip2 { height: 27px; padding-left: 2px; }
+    #toolstrip button, #toolStrip2 button { display: inline-flex; align-items: center; gap: 4px; height: 33px; padding: 0 5px; margin: 0 1px; font: inherit; color: #000; background: transparent; border: 1px solid transparent; cursor: pointer; white-space: nowrap; }
+    #toolStrip2 button { height: 24px; }
+    #toolstrip button:hover:not(:disabled), #toolStrip2 button:hover:not(:disabled) { background: #cce8ff; border-color: #99d1ff; }
+    #toolstrip button[hidden] { display: none; }
+    #toolstrip svg, #toolStrip2 svg { width: 16px; height: 16px; flex: 0 0 16px; }
+    #gbMount1 { position: absolute; right: 4px; top: 2px; height: 29px; min-width: 45px; display: flex; align-items: center; justify-content: flex-end; }
+    #gbMount2 { position: absolute; right: 4px; top: 0; height: 27px; min-width: 45px; display: flex; align-items: center; justify-content: flex-end; }
+    /* panel3 */
+    #panel3 { flex: 0 0 42px; height: 42px; position: relative; background: rgb(10,110,110); }
+    .ban { position: absolute; font: 24px "Microsoft Sans Serif", Arimo, Tahoma, sans-serif; color: #fff; line-height: 29px; white-space: nowrap; }
+    /* group boxes */
+    .gb { position: relative; flex: 0 0 auto; box-sizing: border-box; background: #f0f0f0; }
+    .gb .gb-line { position: absolute; left: 0; top: 7px; right: 0; bottom: 0; border: 1px solid #dcdcdc; border-radius: 3px; }
+    .gb .gb-cap { position: absolute; left: 6px; top: 0; padding: 0 2px; background: #f0f0f0; font: 11px "Microsoft Sans Serif", Arimo, Tahoma, sans-serif; line-height: 14px; }
+    #groupBox1 { height: 48px; } #groupBox2 { height: 105px; }
+    .lbl { position: absolute; font: 13px Calibri, Carlito, "Segoe UI", sans-serif; line-height: 15px; color: #000; white-space: nowrap; }
+    .tx, .dt { position: absolute; box-sizing: border-box; height: 23px; font: 13px Calibri, Carlito, "Segoe UI", sans-serif; border: 1px solid #7a7a7a; padding: 0 3px; background: #fff; }
+    .tx[readonly] { background: #f0f0f0; }
+    .btn { position: absolute; box-sizing: border-box; height: 23px; padding: 0; font: 12px "Microsoft Sans Serif", Arimo, Tahoma, sans-serif; color: #000; cursor: pointer;
+           background: linear-gradient(#f2f2f2, #e1e1e1); border: 1px solid #adadad; }
+    .btn:hover { background: linear-gradient(#eaf6fd, #d9f0fc); border-color: #3c7fb1; }
+    .btn[hidden] { display: none; }
+    .dtcombo-wrap .dtcombo-input { font: 13px Calibri, Carlito, "Segoe UI", sans-serif !important; }
+    #panel4 { flex: 1 1 auto; min-height: 250px; display: flex; flex-direction: column; background: #f0f0f0; }
+    #panel4 .cjg { flex: 1 1 auto; }
+    /* history */
+    #panel6 { flex: 0 0 30px; height: 30px; position: relative; background: #f0f0f0; }
+    #panel7 { flex: 1 1 auto; min-height: 150px; display: flex; flex-direction: column; background: #f0f0f0; }
+    #hGrid { flex: 0 0 219px; height: 219px; display: flex; flex-direction: column; }
+    #hGrid .cjg, #hDetail .cjg { flex: 1 1 auto; }
+    #hDetail { flex: 1 1 auto; min-height: 120px; display: flex; flex-direction: column; }
+    /* Attachment / AttachmentView forms */
+    .ov { position: fixed; left: 0; top: 0; right: 0; bottom: 0; z-index: 9000; background: rgba(0,0,0,.35); display: none; align-items: center; justify-content: center; }
+    .ov.on { display: flex; }
+    .dlg { background: #f0f0f0; border: 1px solid #555; box-shadow: 0 4px 18px rgba(0,0,0,.4); display: flex; flex-direction: column; max-width: 96vw; max-height: 94vh; font: 12px "Microsoft Sans Serif", Tahoma, sans-serif; }
+    .dlg-t { height: 26px; line-height: 26px; padding: 0 8px; background: #fff; border-bottom: 1px solid #acacac; font: 12px "Segoe UI", sans-serif; }
+    #dlgAtt { width: 824px; height: 646px; }
+    #dlgView { width: 405px; height: 700px; }
+    .dlg-bar { flex: 0 0 36px; position: relative; }
+    .dlg-bar .btn { top: 6px; }
+    .cards { flex: 1 1 auto; overflow: auto; background: #fff; display: flex; flex-wrap: wrap; align-content: flex-start; padding: 4px; gap: 6px; }
+    .card { width: 188px; border: 1px solid #acacac; background: #fafafa; padding: 4px; box-sizing: border-box; cursor: pointer; display: flex; flex-direction: column; gap: 3px; }
+    .card:hover { background: #e5f1fb; }
+    .card .pv { height: 90px; display: flex; align-items: center; justify-content: center; background: #fff; border: 1px solid #e0e0e0; font: 700 18px Arial; color: #777; overflow: hidden; }
+    .card .pv img { max-width: 100%; max-height: 100%; }
+    .card .nm { font: 11px Verdana, sans-serif; word-break: break-all; }
+    .card .mt { font: 10px Verdana, sans-serif; color: #555; }
+    .card .del { align-self: flex-end; height: 21px; padding: 0 8px; font: 11px "Microsoft Sans Serif", Tahoma, sans-serif; cursor: pointer; background: linear-gradient(#f2f2f2, #e1e1e1); border: 1px solid #adadad; }
+    .vsum { display: flex; gap: 14px; padding: 4px 8px; background: #fff; border-bottom: 1px solid #acacac; font: 12px "Microsoft Sans Serif", Tahoma, sans-serif; }
+</style>
+</head>
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div id="frm">
+  <div id="pages">
+    <!-- tabPage1 "Form" -->
+    <div class="page on" id="pageForm">
+        <div id="panel2">
+            <div id="toolstrip" role="toolbar">
+                <button type="button" id="btnnew" title="Alt+N"><svg viewBox="0 0 16 16"><path d="M3 1.5h7l3 3v10H3z" fill="#fff" stroke="#555"/><path d="M10 1.5v3h3" fill="none" stroke="#555"/></svg><span><u>N</u>ew</span></button>
+                <button type="button" id="btnsave" title="Alt+S"><svg viewBox="0 0 16 16"><path d="M1.5 1.5h10l3 3v10h-13z" fill="#2f6fb0" stroke="#1f4e80"/><rect x="4" y="1.5" width="6" height="4" fill="#fff"/><rect x="4" y="9" width="8" height="5.5" fill="#dfe8f2"/></svg><span><u>S</u>ave</span></button>
+                <button type="button" id="btnUpdate" hidden><svg viewBox="0 0 16 16"><path d="M2 14l1-4 8-8 3 3-8 8z" fill="#f2c94c" stroke="#7a5b00"/></svg><span>Update</span></button>
+                <button type="button" id="btnRefresh"><span>Refresh</span></button>
+                <button type="button" id="btnAttachment" title="Alt+A"><svg viewBox="0 0 16 16"><path d="M10.5 4.5l-5 5a2 2 0 0 0 2.8 2.8l5.2-5.2a3.4 3.4 0 0 0-4.8-4.8L3.4 7.6a4.8 4.8 0 0 0 6.8 6.8l3.3-3.3" fill="none" stroke="#555" stroke-width="1.3"/></svg><span><u>A</u>ttachment</span></button>
+                <button type="button" id="toolStripButton1"><svg viewBox="0 0 16 16"><rect x="3" y="1.5" width="10" height="4" fill="#fff" stroke="#555"/><rect x="1.5" y="5.5" width="13" height="6" fill="#d9d9d9" stroke="#555"/><rect x="3.5" y="9.5" width="9" height="5" fill="#fff" stroke="#555"/></svg><span>242-Print</span></button>
+            </div>
+            <div id="gbMount1"></div>
+        </div>
+        <div id="panel3"><span class="ban" id="label18" style="left:6px;top:6px">In Land Freight Agreement</span></div>
+        <div class="gb" id="groupBox1">
+            <div class="gb-line"></div><span class="gb-cap">Main</span>
+            <span class="lbl" style="left:3px;top:17px">Doc Date</span>
+            <input type="date" class="dt" id="txtDocDate" style="left:62px;top:13px;width:111px">
+            <span class="lbl" style="left:181px;top:17px">Doc No</span>
+            <input type="text" class="tx" id="TxtDocNo" readonly tabindex="-1" style="left:233px;top:13px;width:70px" autocomplete="off">
+            <span class="lbl" style="left:311px;top:17px">Agreement Code</span>
+            <input type="text" class="tx" id="txtAgreementCode" style="left:414px;top:13px;width:111px" autocomplete="off">
+            <span class="lbl" style="left:533px;top:17px">Customer/Party</span>
+            <select id="CmbParty" data-dtcombo="single" data-dtcombo-caption="Customer" style="position:absolute;left:632px;top:11px;width:178px;height:26px"></select>
+            <span class="lbl" style="left:819px;top:17px">Transport/Suppliers</span>
+            <select id="CmbTransporter" data-dtcombo="single" data-dtcombo-caption="Transporter A/c" style="position:absolute;left:938px;top:11px;width:178px;height:26px"></select>
+        </div>
+        <div class="gb" id="groupBox2">
+            <div class="gb-line"></div><span class="gb-cap">Detail</span>
+            <span class="lbl" style="left:8px;top:20px">Source District</span>
+            <select id="cmbDistrict" data-dtcombo="single" data-dtcombo-caption="District" style="position:absolute;left:98px;top:14px;width:148px;height:26px"></select>
+            <span class="lbl" style="left:252px;top:20px">Loading Location</span>
+            <select id="cmbLoadingLocation" data-dtcombo="single" data-dtcombo-caption="Loading Location" style="position:absolute;left:357px;top:14px;width:122px;height:26px"></select>
+            <span class="lbl" style="left:485px;top:20px">UnLoading Location</span>
+            <select id="cmbUnloadingLocation" data-dtcombo="single" data-dtcombo-caption="UnLoading Location" style="position:absolute;left:605px;top:14px;width:122px;height:26px"></select>
+            <span class="lbl" style="left:733px;top:20px">Effective Date</span>
+            <input type="date" class="dt" id="txtEffectiveDate" style="left:825px;top:16px;width:111px">
+            <span class="lbl" style="left:952px;top:20px">Freight Type</span>
+            <select id="CmbFreightType" data-dtcombo="single" data-dtcombo-caption="Freight Type" style="position:absolute;left:1041px;top:14px;width:111px;height:26px"></select>
+            <span class="lbl" style="left:8px;top:46px">Pack Size To</span>
+            <input type="text" class="tx" id="txtPackSize" style="left:98px;top:43px;width:148px" autocomplete="off">
+            <span class="lbl" id="lblUom" style="left:252px;top:46px">Freight Uom</span>
+            <input type="text" class="tx" id="txtFreightUom" style="left:356px;top:42px;width:123px" autocomplete="off">
+            <span class="lbl" style="left:527px;top:46px">Freight Rate</span>
+            <input type="text" class="tx" id="txtFreightRate" style="left:605px;top:42px;width:122px" autocomplete="off">
+            <span class="lbl" style="left:733px;top:46px">Freight Amount</span>
+            <input type="text" class="tx" id="txtFreightAmount" tabindex="-1" style="left:825px;top:42px;width:111px" autocomplete="off">
+            <span class="lbl" style="left:952px;top:46px">Min Amount</span>
+            <input type="text" class="tx" id="txtMinAmount" style="left:1041px;top:42px;width:111px" autocomplete="off">
+            <span class="lbl" style="left:8px;top:70px">Remarks</span>
+            <input type="text" class="tx" id="txtDetailRemarks" style="left:98px;top:70px;width:838px" autocomplete="off">
+            <button type="button" class="btn" id="btnAddDetail" style="left:943px;top:71px;width:39px">Add</button>
+            <button type="button" class="btn" id="btnUpdateDetail" style="left:984px;top:71px;width:58px" hidden>Update </button>
+            <button type="button" class="btn" id="btnCancelDetail" style="left:1044px;top:71px;width:57px" hidden>Cancel</button>
+        </div>
+        <div id="panel4"><div class="cjg"><div class="cjg-wrap" data-gridbar-form="InLandFreightAgreement" data-gridbar-grid="grdDetail" data-gridbar-mount="#gbMount1" data-gridbar-reorder="false"><table id="grdDetail"></table></div><div class="cjg-nav" id="navDetail"></div></div></div>
+    </div>
+    <!-- tabPage2 "History" -->
+    <div class="page" id="pageHistory">
+        <div id="panel6">
+            <div id="toolStrip2" role="toolbar">
+                <button type="button" id="btnLoadAll" title="Ctrl_L"><svg viewBox="0 0 16 16"><path d="M8 2v12M2 8h12" stroke="#2e7d32" stroke-width="2.4"/></svg><span><u>L</u>oadAll</span></button>
+                <button type="button" id="btnGrnFormHistory" title="Crtl_H"><svg viewBox="0 0 16 16"><rect x="3" y="1.5" width="10" height="4" fill="#fff" stroke="#555"/><rect x="1.5" y="5.5" width="13" height="6" fill="#d9d9d9" stroke="#555"/><rect x="3.5" y="9.5" width="9" height="5" fill="#fff" stroke="#555"/></svg><span>Register</span></button>
+            </div>
+            <div id="gbMount2"></div>
+        </div>
+        <div id="panel7">
+            <div id="hGrid"><div class="cjg"><div class="cjg-wrap" data-gridbar-form="InLandFreightAgreement" data-gridbar-grid="GrdHistory" data-gridbar-mount="#gbMount2" data-gridbar-reorder="false"><table id="GrdHistory"></table></div><div class="cjg-nav" id="navHistory"></div></div></div>
+            <div id="hDetail"><div class="cjg"><div class="cjg-wrap"><table id="GrdDetailHistory"></table></div><div class="cjg-nav" id="navHistoryDetail"></div></div></div>
+        </div>
+    </div>
+  </div>
+  <div id="tabsBar"><div class="tab on" id="tabF" data-i="0">Form</div><div class="tab" id="tabH" data-i="1">History</div></div>
+</div>
+
+<!-- Attachment form (AT.Show()) -->
+<div class="ov" id="ovAtt"><div class="dlg" id="dlgAtt">
+    <div class="dlg-t">Attachment</div>
+    <div class="dlg-bar"><button type="button" class="btn" id="attChoose" style="left:11px;width:56px;height:26px">Browse</button><span class="lbl" id="attNote" style="left:80px;top:12px"></span><button type="button" class="btn" id="attClose" style="right:2px;width:56px;height:27px">Close</button></div>
+    <input type="file" id="attFile" multiple style="display:none">
+    <div class="cards" id="attCards"></div>
+</div></div>
+<!-- AttachmentView form (GrdHistory_LinkClicked) -->
+<div class="ov" id="ovView"><div class="dlg" id="dlgView">
+    <div class="dlg-t">EccountBook</div>
+    <div class="dlg-bar"><span class="lbl" style="left:8px;top:10px;font:12px 'Microsoft Sans Serif',Tahoma,sans-serif">Attachments</span><button type="button" class="btn" id="viewClose" style="right:2px;width:56px;height:27px">Close</button></div>
+    <div class="vsum"><span>Total Files <b id="vFiles">0</b></span><span>Total Size (Mbs) <b id="vSize">0</b></span></div>
+    <div class="cards" id="viewCards"></div>
+</div></div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}" src="/vendors/jquery/dist/jquery.min.js"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20261002k}" src="/build/js/countx_prod_combo.js"></script>
+<script th:src="@{/build/js/countx_acc_rpt_f.js?v=20261002k}" src="/build/js/countx_acc_rpt_f.js"></script>
+<script th:src="@{/js/countx_c_janus_grid.js?v=20261006d}" src="/js/countx_c_janus_grid.js"></script>
+<script th:src="@{/js/countx_inland_freight_agreement.js?v=20261006d}" src="/js/countx_inland_freight_agreement.js"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20261006-grid-control-placement}" src="/build/js/countx_grid_bar.js"></script>
+</body>
+</html>

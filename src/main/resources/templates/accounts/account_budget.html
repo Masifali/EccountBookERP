@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Account Budget - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20261002gf}" href="/build/css/countx_desktop_combo.css">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20261002gv}" href="/build/css/countx_prod_combo.css">
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261005a}" href="/build/css/countx_grid_bar.css">
+    <link rel="stylesheet" th:href="@{/build/css/countx_button_busy.css?v=20261002gf}" href="/build/css/countx_button_busy.css">
+    <link rel="stylesheet" th:href="@{/build/css/countx_account_budget.css?v=20261006a}" href="/build/css/countx_account_budget.css">
+<!--
+  Screen 3 "Account Budget" - Architecture.WinApp.Account_Definition.AccountBudget (InitializeComponent geometry).
+  tabControl1 (bottom tabs "Form" / "History", Verdana 9.75).
+  Form tab : panel3 Teal 53 (toolStrip2 27: New | Refresh | Save | Update(hidden) | 11-Print | Attachment | ShortCut Keys;
+             label2 "Accounts Budget" (5,30) Tahoma 12 bold white; ChkPrint "Preview" checked (862,30))
+             panel4 67: Cost Center combo (77,6) 197x26 | Doc No (77,37) 71x23 | DocDate (150,37) 124x23 (TabStop false)
+             From Month (351,6) 230x26 | To Month (351,35) 230x26 | Exp Account (663,6) 278x26 | Amount (663,37) 181x23 | Generate (846,35) 95x26 Teal
+             (combbrnch / combcompany / Company / Branch are Visible = false on the desktop and are not drawn)
+             panel5 Teal 25 "Detail" (ctrlGrdBar1 sits at x=1209 of a 950 wide panel, i.e. outside the visible area) | grdDetail Fill
+  History tab : panel7 Teal 56 (toolStrip1: New, Refresh hidden; label8 "Accounts Budget History" (5,34))
+             panel8 49: groupBox11 "Filters" (1,2) 946x44 | panel9 Teal 23 "Main" + ctrlGrdBar2 (903,0) | DataGridHistory Fill
+             panel10 Teal 24 "Detail of the above Selected row" | DataGridHistoryDetail Bottom 186
+-->
+</head>
+<body class="ab erp-viewport-page">
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div id="abFrm">
+  <div id="abPages">
+
+    <!-- ============================================================ Form tab -->
+    <div class="ab-pg on" id="pgForm">
+      <div class="ab-teal" id="panel3" style="height:53px">
+        <div class="ab-ts" id="toolStrip2" role="toolbar">
+          <span class="sep"></span>
+          <button type="button" id="BtnNew" title="Alt+N / Ctrl+N"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="8.5" fill="#2e9b45"/><path d="M10 5.5v9M5.5 10h9" stroke="#fff" stroke-width="2.2"/></svg><span><u>N</u>ew</span></button>
+          <button type="button" id="btnRefresh" title="Ctrl+R"><svg viewBox="0 0 20 20"><path d="M16 10a6 6 0 1 1-2-4.5" fill="none" stroke="#2e7d32" stroke-width="2"/><path d="M16 2.5v4h-4" fill="#2e7d32" stroke="#2e7d32" stroke-width="1.5"/></svg><span>Refresh</span></button>
+          <span class="sep"></span>
+          <button type="button" id="BtnSave" title="Alt+S / Ctrl+S"><svg viewBox="0 0 20 20"><rect x="2.5" y="2.5" width="15" height="15" rx="1" fill="#3b78c2"/><rect x="5.5" y="3" width="9" height="5.5" fill="#fff"/><rect x="5.5" y="11" width="9" height="6" fill="#dfe9f5"/></svg><span><u>S</u>ave</span></button>
+          <button type="button" id="btnUpdate" class="ab-hidden" title="Alt+U / Ctrl+U"><svg viewBox="0 0 20 20"><path d="M3 17l1-4 9-9 3 3-9 9z" fill="#e0a526" stroke="#7a5a10" stroke-width="1"/></svg><span><u>U</u>pdate</span></button>
+          <span class="sep"></span>
+          <button type="button" id="BtnPrint" title="Alt+P / Ctrl+P"><svg viewBox="0 0 20 20"><rect x="5" y="2.5" width="10" height="5" fill="#fff" stroke="#555"/><rect x="2.5" y="7.5" width="15" height="7" rx="1" fill="#6b7280"/><rect x="5" y="12" width="10" height="5.5" fill="#fff" stroke="#555"/></svg><span>11-<u>P</u>rint</span></button>
+          <button type="button" id="btnattachment" title="Alt+A / Ctrl+F10"><svg viewBox="0 0 20 20"><path d="M14 6.5l-6 6a2 2 0 0 0 2.8 2.8l6.2-6.2a3.7 3.7 0 0 0-5.2-5.2L5.4 10.4a5.2 5.2 0 0 0 7.4 7.4" fill="none" stroke="#555" stroke-width="1.5"/></svg><span><u>A</u>ttachment</span></button>
+          <span class="sep"></span>
+          <button type="button" id="btnshortcutkeys"><svg viewBox="0 0 20 20"><rect x="2" y="5" width="16" height="10" rx="1.5" fill="#fff" stroke="#555"/><path d="M5 8h2M9 8h2M13 8h2M5 11h10" stroke="#555" stroke-width="1.3"/></svg><span>ShortCut Keys</span></button>
+        </div>
+        <span class="ab-title12" style="top:30px">Accounts Budget</span>
+        <label id="chkPrintWrap"><input type="checkbox" id="ChkPrint" checked><span>Preview</span></label>
+      </div>
+
+      <div class="ab-pnl" id="panel4" style="height:67px">
+        <span class="ab-l" style="left:8px;top:12px">Cost Center</span>
+        <div class="ab-cb" style="left:77px;top:6px;width:197px"><select id="combproject" data-dtcombo="single" data-dtcombo-caption="Project Name"><option value=""></option></select></div>
+        <label class="ab-l" style="left:8px;top:41px" for="txtdocno">Doc No</label>
+        <input class="ab-x" id="txtdocno" style="left:77px;top:37px;width:71px" autocomplete="off">
+        <input class="ab-x" type="date" id="DocDate" style="left:150px;top:37px;width:124px" tabindex="-1">
+        <span class="ab-l" style="left:277px;top:12px">From Month</span>
+        <div class="ab-cb" style="left:351px;top:6px;width:230px"><select id="cmbMonthFrom" data-dtcombo="single" data-dtcombo-caption="Month"><option value=""></option></select></div>
+        <span class="ab-l" style="left:277px;top:41px">To Month</span>
+        <div class="ab-cb" style="left:351px;top:35px;width:230px"><select id="CmbMonthTo" data-dtcombo="single" data-dtcombo-caption="Month"><option value=""></option></select></div>
+        <span class="ab-l" style="left:587px;top:12px">Exp Account</span>
+        <div class="ab-cb" style="left:663px;top:6px;width:278px"><select id="cmbExpenseAcc" data-dtcombo="single" data-dtcombo-caption="Account Title "><option value=""></option></select></div>
+        <label class="ab-l" style="left:587px;top:41px" for="txtAmount">Amount</label>
+        <input class="ab-x" id="txtAmount" style="left:663px;top:37px;width:181px" autocomplete="off">
+        <button type="button" class="ab-b" id="btnGenerate" style="left:846px;top:35px;width:95px;height:26px">Generate</button>
+      </div>
+
+      <div class="ab-teal" id="panel5" style="height:25px"><span class="ab-title10" style="left:5px;top:2px">Detail</span></div>
+      <div class="ab-gridwrap" id="wrapDetail">
+        <div class="ab-grid" id="gridDetail"></div>
+        <div class="ab-total" id="totDetail"></div>
+        <div class="ab-nav" id="navDetail"></div>
+      </div>
+    </div>
+
+    <!-- ============================================================ History tab -->
+    <div class="ab-pg" id="pgHistory">
+      <div class="ab-teal" id="panel7" style="height:56px">
+        <div class="ab-ts" id="toolStrip1" role="toolbar">
+          <button type="button" id="btnNewHistory" title="Alt+N"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="8.5" fill="#2e9b45"/><path d="M10 5.5v9M5.5 10h9" stroke="#fff" stroke-width="2.2"/></svg><span><u>N</u>ew</span></button>
+          <button type="button" id="BtnRefreshHistory" class="ab-hidden"><svg viewBox="0 0 20 20"><path d="M16 10a6 6 0 1 1-2-4.5" fill="none" stroke="#2e7d32" stroke-width="2"/></svg><span>Refresh</span></button>
+        </div>
+        <span class="ab-title10" style="left:5px;top:34px">Accounts Budget History</span>
+      </div>
+      <div class="ab-pnl" id="panel8" style="height:49px">
+        <div class="ab-gb" style="left:1px;top:2px;width:946px;height:44px"><span class="cap">Filters</span>
+          <span class="ab-l" style="left:2px;top:20px">Date From</span>
+          <input class="ab-x" type="date" id="txtFromdateHistory" style="left:66px;top:16px;width:126px">
+          <span class="ab-l" style="left:196px;top:20px">Date To</span>
+          <input class="ab-x" type="date" id="txtToDateHistory" style="left:244px;top:16px;width:126px">
+          <span class="ab-l" style="left:374px;top:20px">Doc From</span>
+          <input class="ab-x" id="txtFromNoHistory" style="left:435px;top:16px;width:72px" autocomplete="off">
+          <span class="ab-l" style="left:509px;top:20px">Doc To</span>
+          <input class="ab-x" id="txtToDocNoHistory" style="left:554px;top:16px;width:72px" autocomplete="off">
+          <span class="ab-l" style="left:629px;top:20px">Exp Account</span>
+          <div class="ab-cb" style="left:703px;top:14px;width:178px"><select id="CmbExpenseAccountHistory" data-dtcombo="single" data-dtcombo-caption="Account Title "><option value=""></option></select></div>
+          <button type="button" class="ab-b" id="BtnShowInputHistory" style="left:883px;top:15px;width:62px;height:25px;font-size:13px">Show</button>
+        </div>
+      </div>
+      <div class="ab-teal" id="panel9" style="height:23px"><span class="ab-title10" style="left:3px;top:4px">Main</span><div id="gbMount" style="position:absolute;right:4px;top:0;height:23px;display:flex;align-items:center"></div></div>
+      <div class="ab-gridwrap" id="wrapHistory" data-gridbar-form="AccountBudget" data-gridbar-grid="DataGridHistory" data-gridbar-mount="#gbMount"
+           data-gridbar-reorder="false" data-gridbar-nullgrid="true" data-gridbar-title="Accounts Budget History">
+        <div class="ab-grid" id="gridHistory"></div>
+        <div class="ab-total" id="totHistory"></div>
+        <div class="ab-nav" id="navHistory"></div>
+      </div>
+      <div class="ab-teal" id="panel10" style="height:24px"><span class="ab-title10" style="left:5px;top:4px">Detail of the above Selected row</span></div>
+      <div class="ab-gridwrap" id="wrapHistDetail" style="flex:0 0 186px;height:186px">
+        <div class="ab-grid" id="gridHistDetail"></div>
+        <div class="ab-total" id="totHistDetail"></div>
+        <div class="ab-nav" id="navHistDetail"></div>
+      </div>
+    </div>
+  </div>
+  <div id="abTabs"><button type="button" id="tabForm" class="on">Form</button><button type="button" id="tabHistory">History</button></div>
+</div>
+
+<!-- Attachment form (AT.Show()) -->
+<div class="ab-modal" id="dlgAttach"><div class="ab-dlg" style="width:640px">
+  <div class="hd"><span>Attachments</span><button type="button" id="atX">&times;</button></div>
+  <div class="bd"><div class="ab-cards" id="atCards"></div><div id="atEmpty" style="color:#666">No attachments.</div></div>
+  <div class="ft"><input type="file" id="atFile" multiple style="display:none"><button type="button" id="atChoose">Choose</button><button type="button" id="atClose">Close</button></div>
+</div></div>
+<!-- AttachmentView (History NoOfAttachments link) -->
+<div class="ab-modal" id="dlgView"><div class="ab-dlg" style="width:640px">
+  <div class="hd"><span>Attachments</span><button type="button" id="vwX">&times;</button></div>
+  <div class="bd"><table class="kv" id="vwTbl"><thead><tr><th>AttachmentName</th><th>CustomName</th><th>EntryDate</th></tr></thead><tbody></tbody></table><div id="vwTot" style="margin-top:6px;font-weight:bold"></div></div>
+  <div class="ft"><button type="button" id="vwClose">Close</button></div>
+</div></div>
+<!-- ShortCutKeyPopUp -->
+<div class="ab-modal" id="dlgKeys"><div class="ab-dlg" style="width:560px">
+  <div class="hd"><span>ShortCut Keys</span><button type="button" id="kyX">&times;</button></div>
+  <div class="bd"><table class="kv" id="kyTbl"><thead><tr><th>KeyCombination</th><th>Description</th></tr></thead><tbody></tbody></table></div>
+  <div class="ft"><button type="button" id="kyClose">Close</button></div>
+</div></div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}" src="/vendors/jquery/dist/jquery.min.js"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20261002gv}" src="/build/js/countx_prod_combo.js"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20261006-grid-control-placement}" src="/build/js/countx_grid_bar.js"></script>
+<script th:src="@{/build/js/countx_account_budget.js?v=20261006a}" src="/build/js/countx_account_budget.js"></script>
+</body>
+</html>

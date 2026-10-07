@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${moduleTitle}">Payment By Invoice</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20261002gv}">
+    <style>
+        /* PaymentByInvoiceAccount / ReceiptByInvoiceAccount.InitializeComponent - ClientSize 1341x679, tabControl1 Alignment Bottom (tabPage1 | History), tabPage Padding 3:
+           toolStrip3 (Top 27): label "Payment By Bills / Invoices" Calibri 11.25 bold + New, Save, Update, Print, Refresh, Delete, Attachments;
+           panel3 (Top, 214, White, Calibri 9 bold) controls at the designer coordinates + panel5 (561,6 761x170) grdDetail;
+           panel4 (Fill) grd (Janus Verdana 8.25, filter row, total row, record navigator) + ctrlGrdBar3; panel2 (Bottom 70, White): Grand Total / Difference. */
+        :root { --grid-line: #c5d3dc; --grid-head: #e9eef3; --alt: #f3f7fa; --sel: #cfe3f5; }
+        html, body { margin: 0; padding: 0; height: 100%; background: #fff; overflow-x: hidden; }
+        body { font-family: Tahoma, "Microsoft Sans Serif", sans-serif; font-size: 12px; color: #000; display: flex; flex-direction: column; }
+        [hidden] { display: none !important; }
+        .nav-bar { flex: 0 0 auto; display: flex; justify-content: space-between; align-items: center; background: #f0f0f0; border-bottom: 1px solid #c9c9c9; padding: 2px 8px; font: 11px "Segoe UI", sans-serif; color: #333; }
+        .nav-bar a { color: #0b5c86; text-decoration: none; }
+        .form-scroll { flex: 1 1 auto; min-height: 0; overflow-x: auto; overflow-y: hidden; display: flex; flex-direction: column; }
+        .form { min-width: 1341px; flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; background: #fff; position: relative; }
+        .page { flex: 1 1 auto; min-height: 0; display: none; flex-direction: column; padding: 3px; }
+        .page.on { display: flex; }
+        .panel2 { position: relative; height: 27px; flex: 0 0 auto; background: linear-gradient(#fbfcfd, #e3e8ee); border-bottom: 1px solid #b9c4cf; display: flex; align-items: center; padding-left: 2px; font: 13px Verdana, sans-serif; }
+        .ts-lab { font: bold 15px Calibri, "Segoe UI", sans-serif; white-space: pre; padding: 0 3px; }
+        .ts-btn { height: 24px; display: inline-flex; align-items: center; gap: 4px; padding: 0 6px; border: 1px solid transparent; background: transparent; font: 13px Verdana, sans-serif; color: #000; cursor: pointer; }
+        .ts-btn:hover:not(:disabled) { border-color: #7fb5d6; background: #dcecf8; }
+        .ts-btn:disabled { color: #8a8a8a; cursor: default; }
+        .ts-btn .ico-add { color: #2e9d3a; font-size: 15px; } .ts-btn .ico-print { color: #44576a; }
+        .ts-btn u { text-decoration: underline; }
+        .p3 { position: relative; height: 214px; flex: 0 0 auto; background: #fff; font: bold 12px Calibri, "Segoe UI", sans-serif; }
+        .p3 .lbl { position: absolute; white-space: nowrap; }
+        .p3 input[type=text], .p3 input[type=date] { position: absolute; box-sizing: border-box; height: 22px; border: 1px solid #7a7a7a; background: #fff; font: bold 12px Calibri, "Segoe UI", sans-serif; padding: 0 3px; }
+        .p3 input[readonly] { background: #f0f0f0; }
+        .p3 .dtcombo-wrap, .p3 select { position: absolute; box-sizing: border-box; }
+        .p3 select { font: 12px Calibri, "Segoe UI", sans-serif; }
+        .p3 button#btnAdd { position: absolute; left: 509px; top: 156px; width: 46px; height: 23px; box-sizing: border-box; border: 1px solid #adadad; background: #e1e1e1; font: bold 12px Calibri, sans-serif; cursor: pointer; padding: 0; }
+        .p3 button#btnAdd:hover:not(:disabled) { border-color: #0078d7; background: #e5f1fb; }
+        .p5 { position: absolute; left: 561px; top: 6px; width: 761px; height: 170px; display: flex; flex-direction: column; border: 1px solid #7f9db9; }
+        .p4 { flex: 1 1 auto; min-height: 120px; position: relative; display: flex; flex-direction: column; border: 1px solid #7f9db9; }
+        .grid-scroll { flex: 1 1 auto; min-height: 0; overflow: auto; outline: none; }
+        table.jg { border-collapse: separate; border-spacing: 0; table-layout: fixed; width: 100%; font: 11px Verdana, sans-serif; }
+        table.jg th { position: sticky; top: 0; z-index: 2; background: linear-gradient(#f7f9fb, var(--grid-head)); border-right: 1px solid var(--grid-line); border-bottom: 1px solid #9fb3c4; padding: 3px 4px; font-weight: normal; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        table.jg tr.flt td { position: sticky; top: 22px; z-index: 2; background: #fff; border-right: 1px solid var(--grid-line); border-bottom: 1px solid #9fb3c4; padding: 0; height: 18px; }
+        table.jg tr.flt input { width: 100%; box-sizing: border-box; border: 0; font: 11px Verdana, sans-serif; padding: 1px 3px; background: #fffff0; }
+        table.jg td { border-right: 1px solid var(--grid-line); border-bottom: 1px solid var(--grid-line); padding: 2px 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; height: 16px; background: #fff; }
+        table.jg tbody tr:nth-child(even) td { background: var(--alt); }
+        table.jg tbody tr:hover td { background: var(--sel); }
+        table.jg tbody tr.cur td { background: var(--sel); }
+        table.jg td.ed { padding: 0; }
+        table.jg td.ed input { width: 100%; box-sizing: border-box; border: 0; background: transparent; font: 11px Verdana, sans-serif; padding: 2px 4px; height: 20px; text-align: right; }
+        table.jg td.ed input:focus { background: #fff; outline: 1px solid #0078d7; }
+        table.jg td.chk, table.jg th.chk { text-align: center; padding: 0; width: 38px; }
+        table.jg td.num, table.jg tfoot td.num { text-align: right; }
+        table.jg tfoot td { position: sticky; bottom: 0; z-index: 2; background: #e3e9ef; border-top: 1px solid #9fb3c4; font-weight: bold; height: 14px; }
+        .navr { flex: 0 0 auto; height: 22px; display: flex; align-items: center; padding: 0 6px; background: #eef2f6; border-top: 1px solid #b8c6d3; font: 11px Verdana, sans-serif; color: #333; }
+        .bar3 { position: absolute; right: 3px; top: 3px; width: 45px; height: 26px; z-index: 5; }
+        .p2b { position: relative; height: 70px; flex: 0 0 auto; background: #fff; font: 13px "Segoe UI", sans-serif; }
+        .p2b .lbl { position: absolute; white-space: nowrap; }
+        .p2b input { position: absolute; box-sizing: border-box; height: 25px; width: 146px; border: 1px solid #7a7a7a; font: 13px "Segoe UI", sans-serif; padding: 0 3px; text-align: right; background: #f0f0f0; }
+        .tabs { flex: 0 0 auto; display: flex; gap: 0; padding: 0 4px 0 4px; background: #f0f0f0; border-top: 1px solid #a0a0a0; }
+        .tabs button { border: 1px solid #a0a0a0; border-top: 0; background: #ece9d8; padding: 3px 12px 4px; font: 12px Tahoma, sans-serif; cursor: pointer; margin-right: -1px; }
+        .tabs button.on { background: #fff; position: relative; top: -1px; padding-bottom: 5px; }
+        .p6 { position: relative; height: 78px; flex: 0 0 auto; background: #fff; font: 13px "Segoe UI", sans-serif; }
+        .p6 .lbl { position: absolute; white-space: nowrap; }
+        .p6 input[type=text], .p6 input[type=date] { position: absolute; box-sizing: border-box; height: 25px; width: 196px; border: 1px solid #7a7a7a; font: 13px "Segoe UI", sans-serif; padding: 0 3px; background: #fff; }
+        .p6 .dtcombo-wrap, .p6 select { position: absolute; box-sizing: border-box; }
+        .p6 select { font: 13px "Segoe UI", sans-serif; }
+        .p6 button { position: absolute; left: 1226px; top: 42px; width: 61px; height: 24px; box-sizing: border-box; border: 1px solid #adadad; background: #e1e1e1; font: 12px "Segoe UI", sans-serif; cursor: pointer; padding: 0; }
+        .p6 button:hover:not(:disabled) { border-color: #0078d7; background: #e5f1fb; }
+        .p6 .bar1 { position: absolute; left: 1279px; top: 0; width: 45px; height: 28px; }
+        .p8 { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; background: #fff; }
+        .wait { position: fixed; inset: 0; background: rgba(255,255,255,.55); display: flex; align-items: center; justify-content: center; z-index: 50; }
+        .wait .box { background: #fff; border: 1px solid #0a6e6e; box-shadow: 0 2px 8px rgba(0,0,0,.25); padding: 12px 18px; font: 12px Verdana, sans-serif; color: #035; }
+        .wait .box i { color: #0a6e6e; margin-right: 6px; }
+    </style>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261005a}"/>
+</head>
+<!--
+  Screens 36 / 35 - Architecture.WinApp.Account_Definition.PaymentByInvoiceAccount (DocumentTypeId 14) / ReceiptByInvoiceAccount (13); one template for both (body data-kind).
+  PaymentByInvoiceAccount.cs map: Formvalidation :261, FormValidationDetail :278, Load :307, AccountCurrentBalance :410, CustomerCurrentBalance :444, VoucherNofill :472,
+  SupplierCustomer :495, DebitAccount :536, TransTypeFill :549, BindTaxTypes :591, cmbsupcust_Leave :613, GridSettings :654, GridDetailSettings :716, Reset :729,
+  ResetDetail :751, CmbTranType_Leave :766, HistoryGridFill :872, Insert :945, ReadById :1107, btnNew :1157, KeyDown :1163, print_Click :1198, GrandTotal :1227,
+  grd_CellEdited :1298, cmbcashbankac_Leave :1316, txtdocno_Leave :1404, tabControl1_SelectedIndexChanged :1437, btnsearchhistory :1465, btnAdd_Click :1491,
+  btnRefresh :1666, CmbCheqNo_Leave :1634, grdDetail_DoubleClick :1669, btnDelete (empty) :1703, btnAttachment :1706, CmbTaxType_Leave :1739, designer :1813-.
+-->
+<body th:attr="data-kind=${invoiceKind}">
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="nav-bar"><span>EccountBookERP</span><a href="/accounts/dashboard"><i class="fa fa-arrow-left"></i> Back to Dashboard</a></div>
+<div class="form-scroll">
+<div class="form">
+    <!-- tabPage1 -->
+    <div class="page on" id="tabPage1">
+        <div class="panel2" id="toolStrip3">
+            <span class="ts-lab" id="toolStripLabel1">Payment By Bills / Invoices          </span>
+            <button type="button" class="ts-btn" id="btnNew" accesskey="n" title="New (Alt+N, Ctrl+N)"><i class="fa fa-plus-circle ico-add"></i><span><u>N</u>ew</span></button>
+            <button type="button" class="ts-btn" id="btnsave" accesskey="s" title="Save (Alt+S, Ctrl+S)"><i class="fa fa-floppy-o ico-print"></i><span><u>S</u>ave</span></button>
+            <button type="button" class="ts-btn" id="btnUpdate" accesskey="u" title="Update (Alt+U, Ctrl+U)" hidden><i class="fa fa-floppy-o ico-print"></i><span><u>U</u>pdate</span></button>
+            <button type="button" class="ts-btn" id="print" accesskey="p" title="Print (Alt+P)"><i class="fa fa-print ico-print"></i><span><u>P</u>rint</span></button>
+            <button type="button" class="ts-btn" id="btnRefresh" accesskey="r" title="Refresh (Alt+R)"><span><u>R</u>efresh</span></button>
+            <button type="button" class="ts-btn" id="btnDelete" title="Delete (the desktop handler is empty)"><i class="fa fa-scissors ico-print"></i><span>Delete</span></button>
+            <button type="button" class="ts-btn" id="btnAttachment" title="Attachments"><i class="fa fa-paperclip ico-print"></i><span>Attachments</span></button>
+        </div>
+        <div class="p3" id="panel3">
+            <span class="lbl" style="left:9px; top:10px;">Payment Date</span>
+            <input type="date" id="datPaymentDate" style="left:93px; top:6px; width:135px;" tabindex="1">
+            <span class="lbl" style="left:345px; top:9px;">Doc No</span>
+            <input type="text" id="txtdocno" style="left:448px; top:8px; width:107px;" tabindex="2" autocomplete="off">
+            <span class="lbl" id="label7" style="left:9px; top:34px;">Supplier</span>
+            <select id="cmbSupplier" data-dtcombo="single" data-dtcombo-caption="Supplier Name" style="left:93px; top:29px; width:309px; height:25px;" tabindex="3"></select>
+            <span class="lbl" id="lblCustomer" style="left:406px; top:36px; font-weight:normal; font-family:'Microsoft Sans Serif',sans-serif;" hidden>label9</span>
+            <input type="text" id="txtCustomerBalance" readonly style="left:448px; top:31px; width:107px;" tabindex="-1">
+            <span class="lbl" style="left:9px; top:59px;">Tran Type</span>
+            <select id="cmbTranType" data-dtcombo="single" data-dtcombo-caption="TransType" style="left:93px; top:55px; width:146px; height:25px;" tabindex="4"></select>
+            <span class="lbl" style="left:245px; top:59px;">Account (Cr)</span>
+            <select id="cmbCreditAc" data-dtcombo="single" data-dtcombo-caption="AccountTitle" style="left:326px; top:55px; width:229px; height:25px;" tabindex="5"></select>
+            <span class="lbl" style="left:9px; top:85px;">Remarks GL</span>
+            <input type="text" id="txtRemarks" style="left:93px; top:82px; width:462px;" tabindex="6" autocomplete="off">
+            <span class="lbl" style="left:9px; top:109px;">Amount</span>
+            <input type="text" id="txtAmount" style="left:93px; top:105px; width:146px;" tabindex="7" autocomplete="off">
+            <span class="lbl" id="lblAmount" style="left:380px; top:109px; font-weight:normal; font-family:'Microsoft Sans Serif',sans-serif;" hidden>label9</span>
+            <input type="text" id="txtbalance" readonly style="left:423px; top:105px; width:132px;" tabindex="-1">
+            <span class="lbl" style="left:9px; top:132px;">Cheq Ref No</span>
+            <select id="cmbCheqNo" data-dtcombo="single" data-dtcombo-caption="Cheq No" style="left:93px; top:129px; width:146px; height:25px;" tabindex="8"></select>
+            <span class="lbl" style="left:245px; top:112px; font-weight:normal; font-family:'Microsoft Sans Serif',sans-serif;">PdcCheqAmount</span>
+            <input type="text" id="txtpdcCheqAmount" style="left:245px; top:130px; width:107px;" tabindex="-1" autocomplete="off">
+            <span class="lbl" style="left:358px; top:132px;">Cheq Date</span>
+            <input type="date" id="datcheqdate" style="left:423px; top:129px; width:132px;" tabindex="9">
+            <span class="lbl" style="left:9px; top:158px;">Pay Title</span>
+            <input type="text" id="txtpaytitle" style="left:93px; top:156px; width:414px;" tabindex="10" autocomplete="off">
+            <button type="button" id="btnAdd" tabindex="11">+</button>
+            <span class="lbl" style="left:9px; top:185px; font-weight:normal; font-family:'Microsoft Sans Serif',sans-serif;">TaxType</span>
+            <select id="cmbTaxType" data-dtcombo="single" data-dtcombo-caption="TaxName" style="left:93px; top:182px; width:146px; height:24px;" tabindex="12"></select>
+            <span class="lbl" id="lblTaxPercent" style="left:248px; top:189px; font-weight:normal; font-family:'Microsoft Sans Serif',sans-serif;"></span>
+            <span class="lbl" id="lblWhtAmount" style="left:308px; top:189px; font-weight:normal; font-family:'Microsoft Sans Serif',sans-serif;"></span>
+            <div class="p5">
+                <div class="grid-scroll" id="detScroll" tabindex="0">
+                    <table class="jg" id="grdDetail">
+                        <thead><tr id="dHead"></tr></thead>
+                        <tbody id="dBody"></tbody>
+                        <tfoot><tr id="dFoot"></tr></tfoot>
+                    </table>
+                </div>
+                <div class="navr"><span id="dNav">Record 0 of 0</span></div>
+            </div>
+        </div>
+        <div class="p4" id="panel4">
+            <div class="grid-scroll" id="grdScroll" tabindex="0">
+                <table class="jg" id="grd">
+                    <thead><tr id="gHead"></tr><tr class="flt" id="gFilt"></tr></thead>
+                    <tbody id="gBody"></tbody>
+                    <tfoot><tr id="gFoot"></tr></tfoot>
+                </table>
+            </div>
+            <div class="navr"><span id="gNav">Record 0 of 0</span></div>
+        </div>
+        <div class="p2b" id="panel2">
+            <span class="lbl" style="left:1061px; top:11px;">Grand Total</span>
+            <input type="text" id="txtgrandtotal" readonly style="left:1168px; top:8px;" tabindex="-1">
+            <span class="lbl" style="left:1062px; top:42px;">Difference</span>
+            <input type="text" id="txtdifference" readonly style="left:1169px; top:39px;" tabindex="-1">
+        </div>
+    </div>
+    <!-- tabPage2 History -->
+    <div class="page" id="tabPage2">
+        <div class="p6" id="panel6">
+            <span class="lbl" style="left:10px; top:17px;">Bill Date From</span>
+            <input type="date" id="BillDateFrom" style="left:107px; top:13px;" tabindex="1">
+            <span class="lbl" style="left:317px; top:17px;">Bill Date To</span>
+            <input type="date" id="BillDateTo" style="left:409px; top:13px;" tabindex="2">
+            <span class="lbl" style="left:611px; top:17px;">Invoice No From</span>
+            <input type="text" id="txtInvoiceNoFrom" style="left:724px; top:13px;" tabindex="3" autocomplete="off">
+            <span class="lbl" style="left:928px; top:17px;">Invoice No To</span>
+            <input type="text" id="txtInvoiceNoTo" style="left:1024px; top:13px;" tabindex="4" autocomplete="off">
+            <span class="lbl" id="label17" style="left:10px; top:46px;">Customer</span>
+            <select id="CmbSupplierCustomer" data-dtcombo="single" data-dtcombo-caption="Supplier Name" style="left:107px; top:42px; width:196px; height:24px;" tabindex="5"></select>
+            <span class="lbl" style="left:309px; top:46px;">Due Date From</span>
+            <input type="date" id="DueDateFrom" style="left:409px; top:42px;" tabindex="6">
+            <span class="lbl" style="left:621px; top:46px;">Due Date To</span>
+            <input type="date" id="DueDateTo" style="left:724px; top:42px;" tabindex="7">
+            <span class="lbl" style="left:928px; top:46px;">Status</span>
+            <select id="CmbStatus" style="left:1024px; top:42px; width:196px; height:25px;" tabindex="8" data-dtcombo-skip>
+                <option value="Pending">Pending</option><option value="Received">Received</option><option value="All">All</option>
+            </select>
+            <button type="button" id="btnsearchhistory" tabindex="9">Search</button>
+        </div>
+        <div class="p8">
+            <div class="p4" style="margin-top:0">
+                <div class="grid-scroll" id="histScroll" tabindex="0">
+                    <table class="jg" id="Gridhistory">
+                        <thead><tr id="hHead"></tr><tr class="flt" id="hFilt"></tr></thead>
+                        <tbody id="hBody"></tbody><tfoot><tr id="hFoot"></tr></tfoot>
+                    </table>
+                </div>
+                <div class="navr"><span id="hNav">Record 0 of 0</span></div>
+            </div>
+        </div>
+    </div>
+    <div class="tabs"><button type="button" class="on" data-tab="tabPage1">Payment By Invoice</button><button type="button" data-tab="tabPage2">History</button></div>
+</div>
+</div>
+<div class="wait" id="waitForm" hidden><div class="box"><i class="fa fa-spinner fa-spin"></i>Please wait...</div></div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20261002gv}"></script>
+<script th:src="@{/build/js/countx_acc_rpt_f.js?v=20261002gv}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20261003erp}"></script>
+<script>
+(function () {
+    'use strict';
+    var KIND = $('body').attr('data-kind') === 'receipt' ? 'receipt' : 'payment';
+    var SCREEN = KIND === 'receipt' ? 'ReceiptByInvoiceAccount' : 'PaymentByInvoiceAccount';
+    var API = '/api/accounts/invoice-account/' + KIND;
+    var S = { recId: 0, lastReadId: 0, customerGlId: 0, updateIndex: -1, saving: false, quiet: 0, rights: {}, suppliers: [], coa: [], taxTypes: [], saveMode: true };
+    var TRANS = [{ Id: 1, Name: 'PartyName' }, { Id: 2, Name: 'Cash' }, { Id: 3, Name: 'Bank' }, { Id: 4, Name: 'WhtHolding' }, { Id: 5, Name: 'Advance' }, { Id: 6, Name: 'PdcCheq' }];
+
+    /* form text of the two forms */
+    if (KIND === 'receipt') {
+        $('#toolStripLabel1').text('Receipt By Bills / Invoices          ');
+        $('#label7').text('Customer');
+        document.title = 'Receipt By Invoice';
+    }
+    $('#grd').attr('data-gridbar', SCREEN + ':grd');
+    $('#Gridhistory').attr('data-gridbar', SCREEN + ':Gridhistory');
+
+    // ------------------------------------------------------------------------------ helpers
+    function esc(s) { return AccF.esc(s == null ? '' : s); }
+    function msgBox(t) { window.alert(t); }
+    function csrf() {
+        var t = $('meta[name="_csrf"]').attr('content'), h = $('meta[name="_csrf_header"]').attr('content');
+        var o = {}; if (t && h) o[h] = t; return o;
+    }
+    function call(method, path, body) {
+        return new Promise(function (resolve, reject) {
+            $.ajax({ url: API + path, type: method, contentType: 'application/json', dataType: 'json', headers: csrf(), data: body ? JSON.stringify(body) : undefined })
+                .done(function (r) { if (r && r.success === false) reject(new Error(r.message)); else resolve(r.data); })
+                .fail(function (x) { reject(new Error((x.responseJSON && x.responseJSON.message) || ('HTTP ' + x.status))); });
+        });
+    }
+    function busy(on) { $('#waitForm').prop('hidden', !on); }
+    function today() { var d = new Date(), m = d.getMonth() + 1, k = d.getDate(); return d.getFullYear() + '-' + (m < 10 ? '0' : '') + m + '-' + (k < 10 ? '0' : '') + k; }
+    function daysAgo(n) { var d = new Date(); d.setDate(d.getDate() - n); var m = d.getMonth() + 1, k = d.getDate(); return d.getFullYear() + '-' + (m < 10 ? '0' : '') + m + '-' + (k < 10 ? '0' : '') + k; }
+    function num(v) { var x = parseFloat(String(v == null ? '' : v).replace(/,/g, '')); return isNaN(x) ? 0 : x; }          /* Conversion.ToDouble */
+    function int(v) { var x = parseInt(v, 10); return isNaN(x) ? 0 : x; }
+    function net(x) { return isFinite(x) ? String(Number(x.toPrecision(15))) : String(x); }                                  /* double.ToString() */
+    function rint(x) { var f = Math.floor(x), d = x - f; if (d < 0.5) return f; if (d > 0.5) return f + 1; return (f % 2 === 0) ? f : f + 1; }
+    function round2(x) { return rint(x * 100) / 100; }                                                                       /* Math.Round(x, 2) */
+    function fmtHash(v) { var x = parseFloat(v); if (isNaN(x)) return ''; var n = Math.round(Math.abs(x)); if (n === 0) return ''; return (x < 0 ? '-' : '') + n.toLocaleString('en-US'); }   /* "#,#" */
+    function balText(v) { return net(num(v)); }
+    function selText(sel) { var $o = $(sel).find('option:selected'); return $o.length && $o.val() !== '' ? $o.text() : ''; }
+    function selVal(sel) { var v = $(sel).val(); return v == null ? '' : v; }
+    function ddl(sel, rows, vk, tk) {
+        S.quiet++; AccF.fillSelect(sel, rows || [], vk, tk, ''); $(sel).val('').trigger('change'); S.quiet--;
+    }
+    function put(sel, v) { S.quiet++; $(sel).val(v == null ? '' : String(v)).trigger('change'); S.quiet--; }
+    function showSave(on) { S.saveMode = on; $('#btnsave').prop('hidden', !on); $('#btnUpdate').prop('hidden', on); }
+    function canSave() { return !$('#btnsave').prop('hidden') && !$('#btnsave').prop('disabled'); }
+    function drCr(v, $lab) { var x = num(v); $lab.text(x > 0 ? 'Dr' : 'Cr'); if (x === 0) $lab.text('Nill'); $lab.prop('hidden', false); }
+
+    // ------------------------------------------------------------------------------ generic Janus-like grid
+    /* columns [{k, cap, hidden, num, hash (format "#,#"), total, edit, w}], opts {filter, check, onEdit, onCheck, onDbl} */
+    function Grid(ids, cols, opts) {
+        var self = this; self.ids = ids; self.opts = opts || {}; self.rows = []; self.shown = []; self.filters = {}; self.cur = -1;
+        $(ids.body).on('click focus', 'tr', function () {
+            self.cur = $(this).data('i'); $(ids.body).find('tr').removeClass('cur'); $(this).addClass('cur');
+            $(ids.nav).text('Record ' + (self.cur + 1) + ' of ' + self.shown.length);
+        });
+        if (self.opts.filter) $(ids.filt).on('input', 'input', function () { self.filters[$(this).data('f')] = this.value; self.cur = -1; self.render(); });
+        $(ids.body).on('input', 'input[data-edit]', function () { var r = self.shown[$(this).data('edit')]; r[$(this).data('col')] = this.value; if (self.opts.onTyping) self.opts.onTyping(r); });
+        $(ids.body).on('change', 'input[data-edit]', function () { var r = self.shown[$(this).data('edit')]; r[$(this).data('col')] = this.value; if (self.opts.onEdit) self.opts.onEdit(r, $(this).data('col'), this); });
+        $(ids.body).on('change', 'input[data-chk]', function () { var r = self.shown[$(this).data('chk')]; r.__chk = this.checked; if (self.opts.onCheck) self.opts.onCheck(r); });
+        $(ids.head).on('change', 'input[data-all]', function () { var on = this.checked; self.shown.forEach(function (r) { r.__chk = on; }); self.render(); if (self.opts.onCheck) self.opts.onCheck(null); });
+        if (self.opts.onDbl) $(ids.body).on('dblclick', 'tr', function () { self.opts.onDbl(self.shown[$(this).data('i')], $(this).data('i')); });
+        self.setCols(cols);
+    }
+    Grid.prototype.setCols = function (cols) {
+        var self = this, ids = this.ids; self.cols = cols; self.vis = cols.filter(function (c) { return !c.hidden; });
+        var h = self.vis.map(function (c) { return '<th' + (c.w ? ' style="width:' + c.w + 'px"' : '') + '>' + esc(c.cap || c.k) + '</th>'; });
+        if (self.opts.check) h.push('<th class="chk"><input type="checkbox" data-all="1" title="Select all"></th>');
+        $(ids.head).html(h.join(''));
+        if (self.opts.filter) $(ids.filt).html(self.vis.map(function (c) { return '<td><input data-f="' + c.k + '"></td>'; }).join('') + (self.opts.check ? '<td></td>' : ''));
+        self.filters = {};
+    };
+    Grid.prototype.set = function (rows) { this.rows = rows || []; this.filters = {}; if (this.opts.filter) $(this.ids.filt).find('input').val(''); this.cur = -1; this.render(); };
+    Grid.prototype.cell = function (c, r) {
+        var v = r[c.k];
+        if (c.hash) v = fmtHash(v);
+        else if (c.num && v != null && v !== '') v = net(num(v));
+        return v == null ? '' : v;
+    };
+    Grid.prototype.render = function () {
+        var self = this;
+        self.shown = self.rows.filter(function (r) {
+            return self.vis.every(function (c) { var t = (self.filters[c.k] || '').toLowerCase(); return !t || String(self.cell(c, r)).toLowerCase().indexOf(t) >= 0; });
+        });
+        var h = [];
+        self.shown.forEach(function (r, i) {
+            h.push('<tr data-i="' + i + '"' + (i === self.cur ? ' class="cur"' : '') + '>' + self.vis.map(function (c) {
+                if (c.edit && self.opts.canEdit !== false) return '<td class="ed"><input data-edit="' + i + '" data-col="' + c.k + '" value="' + esc(r[c.k] == null ? '' : (c.hash ? (num(r[c.k]) === 0 ? '' : r[c.k]) : r[c.k])) + '"></td>';
+                return '<td' + (c.num ? ' class="num"' : '') + '>' + esc(self.cell(c, r)) + '</td>';
+            }).join('') + (self.opts.check ? '<td class="chk"><input type="checkbox" data-chk="' + i + '"' + (r.__chk ? ' checked' : '') + '></td>' : '') + '</tr>');
+        });
+        $(self.ids.body).html(h.join(''));
+        var allOn = self.shown.length > 0 && self.shown.every(function (r) { return r.__chk; });
+        $(self.ids.head).find('input[data-all]').prop('checked', allOn);
+        if (!self.rows.length || !self.vis.some(function (c) { return c.total; })) $(self.ids.foot).html('');
+        else $(self.ids.foot).html(self.vis.map(function (c, i) {
+            if (!c.total) return '<td>' + (i === 0 ? self.shown.length + ' records' : '') + '</td>';
+            var t = 0; self.shown.forEach(function (r) { t += num(r[c.k]); });
+            return '<td class="num">' + (c.hash ? fmtHash(t) : net(Math.round(t * 100) / 100)) + '</td>';
+        }).join('') + (self.opts.check ? '<td></td>' : ''));
+        $(self.ids.nav).text('Record ' + (self.shown.length ? Math.max(self.cur, 0) + 1 : 0) + ' of ' + self.shown.length);
+    };
+    Grid.prototype.total = function (k) { var t = 0; this.rows.forEach(function (r) { t += num(r[k]); }); return t; };
+
+    /* grd: dt columns (GridSettings): Id / InvoiceNo / DocumentTypeId / Adjustment hidden, only Payment editable, "#,#" formats and totals, the Select column last */
+    var grd = new Grid({ head: '#gHead', filt: '#gFilt', body: '#gBody', foot: '#gFoot', nav: '#gNav' }, [
+        { k: 'Id', hidden: 1 }, { k: 'DocNo', w: 80 }, { k: 'DocDate', cap: 'DocDate', w: 90 }, { k: 'InvoiceNo', hidden: 1 }, { k: 'DocumentType', w: 110 }, { k: 'DocumentTypeId', hidden: 1 },
+        { k: 'DueDate', w: 90 }, { k: 'ManualBillNo', w: 110 },
+        { k: 'AdvanceAmount', num: 1, hash: 1, total: 1, w: 100 }, { k: 'BillAmount', num: 1, hash: 1, total: 1, w: 110 }, { k: 'TotalPaid', num: 1, hash: 1, total: 1, w: 110 },
+        { k: 'Balance', num: 1, hash: 1, total: 1, w: 110 }, { k: 'Payment', num: 1, hash: 1, total: 1, edit: 1, w: 110 }, { k: 'Wht', num: 1, hash: 1, total: 1, w: 100 },
+        { k: 'Adjustment', hidden: 1 }
+    ], { filter: true, check: true, onTyping: function () { grandTotal(); },
+         onEdit: function (r) { grdCellEdited(r); }, onCheck: function () { grandTotal(); } });
+    var det = new Grid({ head: '#dHead', body: '#dBody', foot: '#dFoot', nav: '#dNav' }, [
+        { k: 'TransType', w: 90 }, { k: 'GLAccountId', hidden: 1 }, { k: 'AccountTitle', w: 120 }, { k: 'Remarks', w: 140 }, { k: 'Amount', num: 1, total: 1, w: 80 },
+        { k: 'CheqId', hidden: 1 }, { k: 'CheqNo', w: 90 }, { k: 'CheqDate', w: 90 }, { k: 'Paytitle', w: 120 }
+    ], { onDbl: function (r, i) { detDoubleClick(r, i); } });
+    var hist = new Grid({ head: '#hHead', filt: '#hFilt', body: '#hBody', foot: '#hFoot', nav: '#hNav' }, [], { filter: true });
+    var DT_COLS = ['Id', 'DocNo', 'DocDate', 'InvoiceNo', 'DocumentType', 'DocumentTypeId', 'DueDate', 'ManualBillNo', 'AdvanceAmount', 'BillAmount', 'TotalPaid', 'Balance', 'Payment', 'Wht', 'Adjustment'];
+    grd.render(); det.render();
+
+    // ------------------------------------------------------------------------------ GrandTotal
+    function grandTotal() {
+        var tp = 0, tw = 0, ta = 0, grand = 0;
+        if (grd.rows.length) {
+            grd.rows.forEach(function (r) { if (r.__chk) { tp += num(r.Payment); tw += num(r.Wht); ta += num(r.Adjustment); } });
+            grand = tp + tw + ta;
+            $('#txtgrandtotal').val(net(grand));
+        }
+        var detailAmount = det.rows.length ? det.total('Amount') : 0;
+        $('#txtdifference').val(net(grand - detailAmount));
+    }
+    function grdCellEdited(r) {
+        if (r.Payment != null && r.Balance != null) {
+            if (num(r.Payment) > num(r.Balance)) { r.Payment = 0; grd.render(); msgBox('Payment Amount Is Larger Than Balance Amount'); return; }
+        }
+        grandTotal(); grd.render();
+    }
+
+    // ------------------------------------------------------------------------------ Load / Reset
+    function applyRights() {
+        var r = S.rights || {};
+        $('#btnsave').prop('disabled', !r.save); $('#print').prop('disabled', !r.print); $('#btnUpdate').prop('disabled', !r.update); $('#btnDelete').prop('disabled', !r.delete);
+    }
+    function fillLists(d) {
+        if (d.suppliers) {
+            S.suppliers = d.suppliers;
+            if (S.suppliers.length) { ddl('#cmbSupplier', S.suppliers, 'Id', 'CompanyName'); ddl('#CmbSupplierCustomer', S.suppliers, 'Id', 'CompanyName'); }
+        }
+        if (d.coa) S.coa = d.coa;
+        if (d.taxTypes) { S.taxTypes = d.taxTypes; if (S.taxTypes.length) ddl('#cmbTaxType', S.taxTypes, 'Id', 'TaxName'); }
+        (d.errors || []).forEach(function (m) { msgBox(m); });
+    }
+    function load() {
+        $('#datPaymentDate,#datcheqdate').val(today());
+        busy(true);
+        return call('GET', '/load').then(function (d) {
+            S.rights = d.rights || {}; applyRights();
+            fillLists(d);
+            if (d.docNo > 0) $('#txtdocno').val(d.docNo);
+            ddl('#cmbTranType', TRANS, 'Id', 'Name'); put('#cmbTranType', 1);
+            $('#lblCustomer,#lblAmount').prop('hidden', true);
+            showSave(true);
+        }).catch(function (e) { msgBox(e.message); }).then(function () { busy(false); $('#datPaymentDate').focus(); });
+    }
+    function voucherNoFill() {
+        return call('GET', '/generate-code').then(function (n) { if (n > 0) $('#txtdocno').val(n); }).catch(function (e) { msgBox(e.message); });
+    }
+    function reset() {
+        S.recId = 0;
+        $('#txtpaytitle,#txtdocno,#txtAmount,#txtbalance,#txtCustomerBalance').val('');
+        $('#datPaymentDate').val(today());
+        put('#cmbCheqNo', ''); put('#cmbCreditAc', ''); put('#cmbSupplier', '');
+        $('#lblCustomer,#lblAmount').prop('hidden', true);
+        showSave(true);
+        if (KIND === 'receipt') {
+            $('#datcheqdate').val(today());
+            put('#cmbTranType', ''); $('#txtRemarks,#txtpdcCheqAmount').val(''); put('#cmbTaxType', '');
+            $('#datPaymentDate').focus();
+        }
+        grd.set([]); det.set([]); grandTotalClear();
+        return voucherNoFill();
+    }
+    function grandTotalClear() { /* the text boxes keep what the form last wrote; GrandTotal rewrites them on the next event */ }
+    function resetDetail() {
+        $('#txtpaytitle,#txtAmount,#txtpdcCheqAmount,#txtbalance,#txtCustomerBalance').val('');
+        $('#lblTaxPercent,#lblWhtAmount').text('');
+        put('#cmbCheqNo', ''); put('#cmbCreditAc', '');
+        $('#lblCustomer,#lblAmount').prop('hidden', true);
+        if (KIND === 'payment') AccF.focus('#cmbTranType');
+    }
+
+    // ------------------------------------------------------------------------------ balances
+    function accountCurrentBalance() {
+        return call('GET', '/balance?accountId=' + int(selVal('#cmbCreditAc'))).then(function (b) {
+            if (b !== null && b !== undefined) { $('#txtbalance').val(balText(b)); drCr(b, $('#lblAmount')); }
+        }).catch(function (e) { msgBox(e.message); });
+    }
+    function customerCurrentBalance() {
+        return call('GET', '/balance?accountId=' + int(S.customerGlId)).then(function (b) {
+            if (b !== null && b !== undefined) { $('#txtCustomerBalance').val(balText(b)); drCr(b, $('#lblCustomer')); }
+        }).catch(function (e) { msgBox(e.message); });
+    }
+    function supplierRow() { var id = int(selVal('#cmbSupplier')); return S.suppliers.filter(function (s) { return int(s.Id) === id; })[0] || null; }
+
+    // ------------------------------------------------------------------------------ cmbsupcust_Leave
+    function supplierLeave() {
+        if (S.quiet) return;
+        if (int(selVal('#cmbSupplier')) === 0 || selText('#cmbSupplier').trim() === '') { grd.set([]); msgBox('Please select Supplier Name first'); return; }
+        customerCurrentBalance().then(function () {
+            if (!canSave()) return;
+            return call('GET', '/invoices?supplierId=' + int(selVal('#cmbSupplier'))).then(function (rows) {
+                if (rows && rows.length) grd.set(rows.map(function (r) { r.__chk = false; return r; }));
+                else if (KIND === 'payment') grd.set([]);
+            });
+        }).catch(function (e) { msgBox(e.message); });
+    }
+
+    // ------------------------------------------------------------------------------ CmbTranType_Leave
+    function accountsOfType(t) { return S.coa.filter(function (a) { return int(a.AccountTypeId) === t; }); }
+    function bindCredit(rows, vk, tk) { ddl('#cmbCreditAc', rows, vk, tk); }
+    function whtCompute() {
+        var pct = num($('#lblTaxPercent').text()), tot = 0, any = false;
+        grd.rows.forEach(function (r) { if (r.__chk) { any = true; tot += num(r.BillAmount); r.Wht = round2(num(r.BillAmount) * pct / 100); } });
+        if (!any) throw new Error('select rows first');
+        var amt = round2(tot * pct / 100);
+        $('#txtAmount').val(net(amt)); $('#lblWhtAmount').text(net(amt)); grd.render();
+    }
+    function tranTypeLeave() {
+        if (S.quiet) return Promise.resolve();
+        put('#cmbCreditAc', '');
+        var t = selText('#cmbTranType'), has = S.coa.length > 0, p = Promise.resolve();
+        if ((t === 'PartyName' || t === 'PdcCheq') && has) bindCredit(accountsOfType(3), 'Id', 'AccountTitle');
+        if (t === 'WhtHolding' && has) {
+            bindCredit(accountsOfType(3), 'Id', 'AccountTitle');
+            p = call('GET', '/tax-schedule?taxTypeId=' + int(selVal('#cmbTaxType')) + '&date=' + encodeURIComponent($('#datPaymentDate').val())).then(function (s) {
+                if (!s.found) { put('#cmbCreditAc', ''); $('#lblTaxPercent').text('0'); return; }
+                $('#lblTaxPercent').text(String(s.TaxPercent == null ? '' : s.TaxPercent));
+                var id = String(s.TaxGLAccountId);
+                if (!$('#cmbCreditAc option').filter(function () { return this.value === id; }).length) { S.quiet++; AccF.fillSelect('#cmbCreditAc', accountsOfType(3).concat([{ Id: s.TaxGLAccountId, AccountTitle: s.AccountTitle }]), 'Id', 'AccountTitle', ''); S.quiet--; }
+                put('#cmbCreditAc', id);
+                whtCompute();
+            });
+        }
+        if (t === 'Cash' && has) bindCredit(accountsOfType(2), 'Id', 'AccountTitle');
+        if (t === 'Bank' && has) bindCredit(accountsOfType(15), 'Id', 'AccountTitle');
+        if (t === 'Advance' && S.suppliers.length) {
+            var s = supplierRow();
+            if (s) {
+                if (KIND === 'receipt') { msgBox("Column 'AdvanceGlAcId' does not belong to table ."); return p; }
+                if (s.AdvanceGlAcId != null || s.AccountTitleAdvance != null) bindCredit([{ AdvanceGlAcId: s.AdvanceGlAcId, AccountTitleAdvance: s.AccountTitleAdvance }], 'AdvanceGlAcId', 'AccountTitleAdvance');
+                else bindCredit([{ AdvanceGlAcId: '', AccountTitleAdvance: '' }], 'AdvanceGlAcId', 'AccountTitleAdvance');
+            }
+        }
+        return p.catch(function (e) { msgBox(e.message); });
+    }
+    function taxTypeLeave() {
+        if (S.quiet) return;
+        if (selText('#cmbTranType') !== 'WhtHolding' || !S.coa.length) return;
+        tranTypeWhtOnly();
+    }
+    function tranTypeWhtOnly() {
+        /* CmbTaxType_Leave: the same tax schedule + wht step; it throws "select rows first" only after the schedule was applied */
+        bindCredit(accountsOfType(3), 'Id', 'AccountTitle');
+        call('GET', '/tax-schedule?taxTypeId=' + int(selVal('#cmbTaxType')) + '&date=' + encodeURIComponent($('#datPaymentDate').val())).then(function (s) {
+            if (!s.found) { put('#cmbCreditAc', ''); $('#lblTaxPercent').text('0'); return; }
+            $('#lblTaxPercent').text(String(s.TaxPercent == null ? '' : s.TaxPercent));
+            var id = String(s.TaxGLAccountId);
+            if (!$('#cmbCreditAc option').filter(function () { return this.value === id; }).length) { S.quiet++; AccF.fillSelect('#cmbCreditAc', accountsOfType(3).concat([{ Id: s.TaxGLAccountId, AccountTitle: s.AccountTitle }]), 'Id', 'AccountTitle', ''); S.quiet--; }
+            put('#cmbCreditAc', id);
+            whtCompute();
+        }).catch(function (e) { msgBox(e.message); });
+    }
+
+    // ------------------------------------------------------------------------------ cmbcashbankac_Leave / CmbCheqNo_Leave
+    function creditLeave() {
+        if (S.quiet) return;
+        put('#cmbCheqNo', ''); $('#txtpdcCheqAmount').val(''); $('#datcheqdate').val(today());
+        var t = selText('#cmbTranType'), acc = int(selVal('#cmbCreditAc'));
+        accountCurrentBalance().then(function () {
+            if (t === 'Bank') {
+                return call('GET', '/cheques?bankId=' + acc).then(function (r) {
+                    if (r.message) { msgBox(r.message); return; }
+                    if (r.rows && r.rows.length) ddl('#cmbCheqNo', r.rows, 'Id', 'CheqNo'); else put('#cmbCheqNo', '');
+                });
+            }
+            if (t === 'PdcCheq') {
+                return call('GET', '/pdc?accountId=' + acc).then(function (rows) { if (rows && rows.length) ddl('#cmbCheqNo', rows, 'Id', 'CheqNo'); else put('#cmbCheqNo', ''); });
+            }
+            if (t === 'Advance') {
+                return call('GET', '/advance-balance?accountId=' + acc).then(function (b) { $('#txtAmount').val(b > 0 ? String(b) : '0'); });
+            }
+        }).catch(function (e) { msgBox(e.message); });
+    }
+    function cheqLeave() {
+        if (S.quiet) return;
+        if (selText('#cmbTranType') !== 'PdcCheq') return;
+        call('GET', '/pdc?accountId=' + int(selVal('#cmbCreditAc')) + '&cheqId=' + int(selVal('#cmbCheqNo'))).then(function (rows) {
+            if (rows && rows.length) {
+                var d = rows[0].CheqDate; $('#datcheqdate').val(dmyToIso(d));
+                $('#txtAmount').val(String(rows[0].CheqAmount == null ? '' : rows[0].CheqAmount)); $('#txtpdcCheqAmount').val(String(rows[0].CheqAmount == null ? '' : rows[0].CheqAmount));
+            } else { $('#txtAmount').val('0'); $('#txtpdcCheqAmount').val('0'); $('#datcheqdate').val(today()); }
+        }).catch(function (e) { msgBox(e.message); });
+    }
+    var MON = { Jan: '01', Feb: '02', Mar: '03', Apr: '04', May: '05', Jun: '06', Jul: '07', Aug: '08', Sep: '09', Oct: '10', Nov: '11', Dec: '12' };
+    function dmyToIso(s) { var m = /^(\d{2})-([A-Za-z]{3})-(\d{4})$/.exec(String(s || '')); return m ? m[3] + '-' + MON[m[2]] + '-' + m[1] : (s ? String(s).slice(0, 10) : today()); }
+    function isoToDmy(s) { var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(s || '')); if (!m) return ''; var n = Object.keys(MON).filter(function (k) { return MON[k] === m[2]; })[0]; return m[3] + '-' + n + '-' + m[1]; }
+
+    // ------------------------------------------------------------------------------ btnAdd / detail grid
+    function formValidationDetail() {
+        var t = selText('#cmbTranType');
+        if (KIND === 'payment') {
+            if (selVal('#cmbTranType') === '') { msgBox('TransType field required'); AccF.focus('#cmbTranType'); return false; }
+            if (t === 'PdcCheq' && selVal('#cmbCheqNo') === '') { msgBox('ChequeNo field required'); AccF.focus('#cmbCheqNo'); return false; }
+            if (selVal('#cmbCreditAc') === '') { msgBox('Credit Account field required'); AccF.focus('#cmbCreditAc'); return false; }
+            if ($('#txtAmount').val() === '' || num($('#txtAmount').val().trim()) === 0) { msgBox('Amount field required'); $('#txtAmount').focus(); return false; }
+        } else {
+            if (t === '' || int(selVal('#cmbTranType')) === 0) { msgBox('TransType field required'); AccF.focus('#cmbTranType'); return false; }
+            if (t === 'PdcCheq' && (selText('#cmbCheqNo') === '' || int(selVal('#cmbCheqNo')) === 0)) { msgBox('ChequeNo field required'); AccF.focus('#cmbCheqNo'); return false; }
+            if (selText('#cmbCreditAc') === '' || int(selVal('#cmbTranType')) === 0) { msgBox('Credit Account field required'); AccF.focus('#cmbCreditAc'); return false; }
+            var a = $('#txtAmount').val();
+            if (a === '') { msgBox('Amount field required'); $('#txtAmount').focus(); return false; }
+            if (!/^[+-]?\d+$/.test(a.trim())) throw new Error('Input string was not in a correct format.');       /* Convert.ToInt32(text) */
+            if (int(a) === 0) { msgBox('Amount field required'); $('#txtAmount').focus(); return false; }
+        }
+        return true;
+    }
+    function strict(text) { if (!/^\s*[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?\s*$/.test(text)) throw new Error('Input string was not in a correct format.'); return parseFloat(text); }   /* Convert.ToDouble(text) */
+    function btnAdd() {
+        try {
+            if (!formValidationDetail()) return;
+            var t = selText('#cmbTranType');
+            if (t === 'PdcCheq') {
+                var a = strict($('#txtAmount').val()), p = strict($('#txtpdcCheqAmount').val());
+                if (a !== p) { $('#txtAmount').focus(); msgBox('Amount & pdcChequeAmount not equal'); return; }
+            }
+            for (var i = 0; i < det.rows.length; i++) {
+                var o = det.rows[i], type = String(o.TransType);
+                if (t === 'Advance' && type === 'Advance') { AccF.focus('#cmbTranType'); throw new Error('Advance Amount not add again'); }
+                if (t === 'WhtHolding' && type === 'WhtHolding') { AccF.focus('#cmbTranType'); throw new Error('WhtHolding Amount not add again'); }
+                var cid = int(o.CheqId);
+                if ((t === 'PdcCheq' || t === 'Bank') && cid === int(selVal('#cmbCheqNo'))) { AccF.focus('#cmbCheqNo'); throw new Error('CheqNo already exist in grid'); }
+            }
+            if (grd.rows.length > 0 && t === 'WhtHolding') {
+                var w = grd.total('Wht'), amount = strict($('#txtAmount').val());
+                if (w !== amount) { AccF.focus('#cmbTranType'); throw new Error('Wht Holding & Amount not equal'); }
+            }
+            var row = { TransType: t, GLAccountId: selVal('#cmbCreditAc'), AccountTitle: selText('#cmbCreditAc'), Remarks: $('#txtRemarks').val().trim(),
+                Amount: num($('#txtAmount').val()), CheqId: selVal('#cmbCheqNo'), CheqNo: selText('#cmbCheqNo'), CheqDate: isoToDmy($('#datcheqdate').val()), Paytitle: $('#txtpaytitle').val().trim() };
+            if ($('#btnAdd').text() === 'Update') {
+                var r = det.rows[S.updateIndex]; if (r) { row.Remarks = $('#txtRemarks').val(); Object.keys(row).forEach(function (k) { r[k] = row[k]; }); }
+                $('#btnAdd').text('+'); det.render(); resetDetail(); grandTotal();
+            } else { det.rows.push(row); det.render(); resetDetail(); grandTotal(); }
+        } catch (e) { msgBox(e.message); }
+    }
+    function detDoubleClick(r, i) {
+        if (!r) return;
+        try {
+            S.updateIndex = det.rows.indexOf(r);
+            if (r.TransType === 'WhtHolding') throw new Error('WhtHolding entry not Update please delete first');
+            var tid = TRANS.filter(function (x) { return x.Name === r.TransType; })[0];
+            put('#cmbTranType', tid ? tid.Id : '');
+            tranTypeLeave().then(function () {
+                if (!$('#cmbCreditAc option').filter(function () { return this.value === String(r.GLAccountId); }).length) { S.quiet++; AccF.fillSelect('#cmbCreditAc', [{ Id: r.GLAccountId, AccountTitle: r.AccountTitle }], 'Id', 'AccountTitle', ''); S.quiet--; }
+                put('#cmbCreditAc', r.GLAccountId);
+                $('#txtRemarks').val(r.Remarks); $('#txtAmount').val(String(r.Amount));
+                if (r.CheqId !== '' && r.CheqId != null && int(r.CheqId) !== 0) { S.quiet++; AccF.fillSelect('#cmbCheqNo', [{ Id: r.CheqId, CheqNo: r.CheqNo }], 'Id', 'CheqNo', ''); S.quiet--; put('#cmbCheqNo', r.CheqId); }
+                $('#datcheqdate').val(dmyToIso(r.CheqDate)); $('#txtpaytitle').val(r.Paytitle);
+                $('#btnAdd').text('Update');
+            });
+        } catch (e) { msgBox(e.message); }
+    }
+
+    // ------------------------------------------------------------------------------ Insert
+    function formValidation() {
+        var bad = KIND === 'payment' ? selVal('#cmbSupplier') === '' : (selText('#cmbSupplier') === '' || int(selVal('#cmbSupplier')) === 0);
+        if (bad) { msgBox('Please Select Supplier'); AccF.focus('#cmbSupplier'); return false; }
+        var d = $('#txtdocno').val();
+        if (d === '' || d === '0') { msgBox('DocNo field required'); $('#txtdocno').focus(); return false; }
+        return true;
+    }
+    function insert() {
+        if (S.saving) return;
+        if (!formValidation()) return;
+        grandTotal();
+        var difference = num($('#txtdifference').val());
+        if (difference > 0 || difference < 0) { msgBox('Please Clear The Difference Amount'); return; }
+        if (num(net(det.total('Amount'))) !== num($('#txtgrandtotal').val().trim())) { msgBox('Please Check Your Payment & Total Amount Is Not Equal'); return; }
+        var adv = 0, wht = 0;
+        det.rows.forEach(function (r) { if (r.TransType === 'Advance') adv += num(r.Amount); if (r.TransType === 'WhtHolding') wht += num(r.Amount); });
+        var advTotal = num(net(grd.total('AdvanceAmount'))), whtTotal = num(net(grd.total('Wht')));
+        if (adv !== advTotal) { msgBox('Please Check Your Advance Amount Is Not Equal'); return; }
+        if (whtTotal !== wht) { msgBox('Please Check Your WhtHolding Amount Is Not Equal'); return; }
+        if (!window.confirm(S.recId > 0 ? 'Are you sure to Update?' : 'Are you sure to Save?')) return;
+        if (!grd.rows.length) return;
+        if (!grd.rows.some(function (r) { return r.__chk; })) { msgBox('Please Checked Record For Save'); return; }
+        var body = { id: S.recId, docDate: $('#datPaymentDate').val(), docNo: $('#txtdocno').val().trim(), supplierId: int(selVal('#cmbSupplier')),
+            grid: grd.rows.map(function (r) { return { InvoiceNo: r.InvoiceNo, DocumentTypeId: r.DocumentTypeId, checked: !!r.__chk, Payment: num(r.Payment), Wht: num(r.Wht) }; }),
+            details: det.rows.map(function (r) { return { TransType: r.TransType, GLAccountId: r.GLAccountId, Remarks: r.Remarks, Amount: num(r.Amount), CheqId: r.CheqId, CheqNo: r.CheqNo, CheqDate: r.CheqDate, Paytitle: r.Paytitle }; }) };
+        S.saving = true; busy(true);
+        call('POST', '/save', body).then(function (res) {
+            if (res.message) msgBox(res.message);
+            if (res.saved) {
+                /* SupplierGLIdGet(): the form's CustomerGlId is set only here */
+                var s = supplierRow(); if (s) S.customerGlId = int(s.GlAccountId);
+                return reset();
+            }
+        }).catch(function (e) { msgBox(e.message); }).then(function () { S.saving = false; busy(false); });
+    }
+    function btnSaveClick() { S.recId = 0; insert(); }
+
+    // ------------------------------------------------------------------------------ ReadById / txtdocno_Leave
+    function readInto(d) {
+        S.recId = d.id; S.lastReadId = d.id;
+        showSave(false);
+        $('#datPaymentDate').val(d.docDate); put('#cmbSupplier', d.supplierId); $('#txtdocno').val(String(d.docNo));
+        grd.set((d.grid || []).map(function (r) { r.__chk = false; return r; }));
+        det.set(d.details || []);
+        grandTotal();
+    }
+    function docNoLeave() {
+        var n = int($('#txtdocno').val().trim());
+        call('GET', '/by-doc-no?docNo=' + n).then(function (d) {
+            if (d) readInto(d); else { return reset().then(function () { resetDetail(); }); }
+        }).catch(function (e) { msgBox(e.message); });
+    }
+
+    // ------------------------------------------------------------------------------ history
+    function histFill() {
+        call('POST', '/history', { supplierId: int(selVal('#CmbSupplierCustomer')), billFrom: $('#BillDateFrom').val(), billTo: $('#BillDateTo').val(),
+            dueFrom: $('#DueDateFrom').val(), dueTo: $('#DueDateTo').val(), invFrom: int($('#txtInvoiceNoFrom').val().trim()), invTo: int($('#txtInvoiceNoTo').val().trim()) })
+            .then(function (rows) {
+                if (rows && rows.length) {
+                    var keys = Object.keys(rows[0]);
+                    hist.setCols(keys.map(function (k) {
+                        var isNum = typeof rows[0][k] === 'number';
+                        return { k: k, hidden: (k === 'Id' || k === 'DocumentTypeId'), num: isNum && k !== 'Id' && k !== 'DocumentTypeId', total: (k === 'BillAmount' || k === 'AdvanceAmount') };
+                    }));
+                    hist.set(rows);
+                } else if (KIND === 'payment') { hist.setCols(DT_COLS.map(function (k) { return { k: k, hidden: k === 'Id' || k === 'DocumentTypeId' || k === 'InvoiceNo' || k === 'Adjustment' }; })); hist.set([]); }
+                else { hist.setCols([]); hist.set([]); }
+            }).catch(function (e) { msgBox(e.message); });
+    }
+    function selectTab(id) {
+        $('.tabs button').removeClass('on'); $('.tabs button[data-tab=' + id + ']').addClass('on');
+        $('.page').removeClass('on'); $('#' + id).addClass('on');
+        if (id === 'tabPage2') { $('#BillDateFrom,#DueDateFrom').val(daysAgo(30)); $('#BillDateTo,#DueDateTo').val(today()); histFill(); }
+    }
+    $('.tabs').on('click', 'button', function () { selectTab($(this).data('tab')); });
+    $('#btnsearchhistory').on('click', histFill);
+
+    // ------------------------------------------------------------------------------ print / toolbar
+    function printClick() {
+        if ($('#print').prop('disabled')) return;
+        call('GET', '/print-target?id=' + S.lastReadId).then(function (t) {
+            if (!(int(t.voucherHeadId) > 0)) { msgBox('Not Record Found For Display'); return; }
+            if (!window.CrystalPrint) { msgBox('Print is not available.'); return; }
+            window.CrystalPrint.open('acc-102', { id: int(t.voucherHeadId), documentTypeId: int(t.documentTypeId) }, $('#print')[0], null);
+        }).catch(function (e) { msgBox(e.message); });
+    }
+    $('#btnNew').on('click', reset);
+    $('#btnsave').on('click', btnSaveClick);
+    $('#btnUpdate').on('click', insert);
+    $('#print').on('click', printClick);
+    $('#btnRefresh').on('click', function () { call('GET', '/refresh').then(function (d) { fillLists(d); }).catch(function (e) { msgBox(e.message); }); });
+    $('#btnAttachment').on('click', function () { msgBox('Attachments are not stored by this form (the desktop never saves its attachment list).'); });
+    $('#btnAdd').on('click', btnAdd);
+    $('#txtdocno').on('blur', docNoLeave);
+    $('#txtAmount').on('keypress', function (e) { if (e.which && e.which > 31 && (e.which < 48 || e.which > 57)) e.preventDefault(); });   /* txtAmount_KeyPress: digits only */
+    $('#cmbSupplier').on('change', supplierLeave);
+    $('#cmbTranType').on('change', tranTypeLeave);
+    $('#cmbCreditAc').on('change', creditLeave);
+    $('#cmbCheqNo').on('change', cheqLeave);
+    $('#cmbTaxType').on('change', taxTypeLeave);
+
+    // ------------------------------------------------------------------------------ KeyDown (Enter = Tab, Ctrl+S / N / T / E / U, Esc)
+    function focusables() {
+        return $('.page.on').find('input:not([type=hidden]):not(:disabled):not([readonly]):visible, button:not(:disabled):visible, .dtcombo-input:visible')
+            .filter(function () { return !$(this).closest('.grid-scroll').length && !$(this).hasClass('ts-btn') && $(this).attr('tabindex') !== '-1'; })
+            .toArray().sort(function (a, b) { return (parseInt(a.tabIndex, 10) || 999) - (parseInt(b.tabIndex, 10) || 999); });
+    }
+    $(document).on('keydown', function (e) {
+        if (e.key === 'Enter' && !$(e.target).is('button, textarea, a') && !$(e.target).closest('.grid-scroll').length && !e.defaultPrevented) {
+            var list = focusables(), i = list.indexOf(e.target);
+            if (i < 0) { var $w = $(e.target).closest('.dtcombo-wrap'); if ($w.length) i = list.indexOf($w.find('.dtcombo-input')[0]); }
+            if (i >= 0) { e.preventDefault(); list[(i + 1) % list.length].focus(); }
+        }
+        if (e.ctrlKey && (e.key === 's' || e.key === 'S') && canSave() && $('#tabPage1').hasClass('on')) { e.preventDefault(); btnSaveClick(); }
+        if (e.ctrlKey && (e.key === 'n' || e.key === 'N')) { e.preventDefault(); reset(); }
+        if (e.ctrlKey && (e.key === 't' || e.key === 'T')) { e.preventDefault(); selectTab($('#tabPage2').hasClass('on') ? 'tabPage1' : 'tabPage2'); }
+        if ((e.ctrlKey && (e.key === 'e' || e.key === 'E')) || e.key === 'Escape') { e.preventDefault(); window.location.href = '/accounts/dashboard'; }
+        if (e.ctrlKey && (e.key === 'u' || e.key === 'U') && !$('#btnUpdate').prop('hidden') && !$('#btnUpdate').prop('disabled')) { e.preventDefault(); insert(); }
+    });
+
+    $(function () { load(); });
+})();
+</script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20261006-grid-control-placement}"></script>
+</body>
+</html>

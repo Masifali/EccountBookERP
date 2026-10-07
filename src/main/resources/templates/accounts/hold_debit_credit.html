@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Debit Credit Hold - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20261002gf}" href="/build/css/countx_desktop_combo.css">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20261002gv}" href="/build/css/countx_prod_combo.css">
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261005a}" href="/build/css/countx_grid_bar.css">
+    <link rel="stylesheet" th:href="@{/build/css/countx_button_busy.css?v=20261002gf}" href="/build/css/countx_button_busy.css">
+<!--
+  Screen 12 "Debit Credit Hold" - desktop Architecture.WinApp.Account_Definition.AccountsHoldForDebitOrCredit
+  (ClientSize 436x593, WindowState Maximized, BackColor White). 1:1 port of InitializeComponent:
+    toolStrip1 (0,0) 25   New | Save | Update (Verdana 9.75; Update hidden until a row is loaded)
+    panel1     Dock Top 261
+       panel3 Dock Top 28 Teal, label4 "Accounts Hold For Debit / Credit" (4,3) Tahoma 12 bold white
+       label2 "Account Title" (12,39) 233x17 Gainsboro, Segoe UI Semibold 9.75 bold, centred
+       CmbAccountTitle (12,58) 233x26 Tahoma 9.75 (UltraCombo, LimitToList, caption "Account Title", TabIndex 4)
+       checkBoxDebit "Debit Hold" (269,39) TabIndex 5; checkBoxCredit "Credit Hold" (269,66) TabIndex 6 (Segoe UI Semibold 9.75 bold)
+       label1 "Debit Remarks" (12,94) 412x17; txtDebitRemarks (12,114) 412x42 multiline Verdana 9.75
+       label3 "Credit Remarks" (12,159) 412x17; txtCreditRemarks (12,179) 412x42 multiline
+       btnCancel (269,227) TabIndex 618, btnSavef (349,227) 617, btnUpdatef (348,227) 619 (hidden): 75x28 Teal, flat, Tahoma 9.75 bold white
+       tab order: combo 4, debit 5, credit 6, Save 617, Cancel 618, Update 619, txtCredit/txtDebit 621
+    panel2     Dock Top 28 Teal: label6 "History" (4,3) Tahoma 12 bold white; ctrlGrdBar (right, 43x28; FormName=null, MyGrid=null)
+    grdHistory Janus GridEX Dock Fill, Verdana 8.25, Office2007, filter row, RecordNavigator, double-click loads the row.
+  API: /accounts/hold_debit_credit/{init,history,{id},save} (AccountsHoldDebitCreditController).
+-->
+<style>
+    :root { --teal: #008080; }
+    html, body { margin: 0; padding: 0; height: 100%; background: #fff; overflow: hidden; }
+    body { font-family: "Segoe UI", Tahoma, sans-serif; font-size: 12px; color: #000; }
+    #frm { display: flex; flex-direction: column; height: 100vh; min-width: 0; }
+
+    #toolStrip1 { flex: 0 0 25px; display: flex; align-items: center; height: 25px; padding-left: 2px; background: #fff; border-bottom: 1px solid #e3e3e3;
+                  font-family: Verdana, sans-serif; font-size: 13px; }
+    #toolStrip1 button { display: inline-flex; align-items: center; gap: 4px; height: 23px; padding: 0 6px; margin: 0 1px; font: inherit; color: #000;
+                  background: transparent; border: 1px solid transparent; cursor: pointer; }
+    #toolStrip1 button:hover:not(:disabled) { background: #cce8ff; border-color: #99d1ff; }
+    #toolStrip1 button:disabled { color: #a0a0a0; cursor: default; }
+    #toolStrip1 button:disabled svg { opacity: .45; }
+    #toolStrip1 svg { width: 20px; height: 20px; flex: 0 0 20px; }
+    .hidden { display: none !important; }
+
+    #panel1 { flex: 0 0 261px; height: 261px; position: relative; background: #fff; overflow: hidden; }
+    #panel3 { position: absolute; left: 0; top: 0; right: 0; height: 28px; background: var(--teal); }
+    #label4 { position: absolute; left: 4px; top: 3px; font: bold 16px Tahoma, sans-serif; color: #fff; white-space: nowrap; line-height: 19px; }
+    .lbl { position: absolute; height: 17px; box-sizing: border-box; background: #dcdcdc; color: #000; text-align: center;
+           font: 700 13px/17px "Segoe UI Semibold", "Segoe UI", sans-serif; white-space: nowrap; }
+    #label2 { left: 12px; top: 39px; width: 233px; }
+    #label1 { left: 12px; top: 94px; width: 412px; }
+    #label3 { left: 12px; top: 159px; width: 412px; }
+    #cmbWrap { position: absolute; left: 12px; top: 58px; width: 233px; height: 26px; }
+    #CmbAccountTitle { width: 233px; height: 26px; font: 13px Tahoma, sans-serif; }
+    #cmbWrap .dtcombo-wrap { width: 233px !important; height: 26px !important; }
+    #cmbWrap .dtcombo-input { height: 26px !important; font: 13px Tahoma, sans-serif !important; }
+    .chk { position: absolute; display: flex; align-items: center; gap: 4px; font: 700 13px "Segoe UI Semibold", "Segoe UI", sans-serif; height: 21px; white-space: nowrap; }
+    .chk input { margin: 0; width: 13px; height: 13px; }
+    #chkDebitWrap { left: 269px; top: 39px; }
+    #chkCreditWrap { left: 269px; top: 66px; }
+    .rem { position: absolute; left: 12px; width: 412px; height: 42px; box-sizing: border-box; font: 13px Verdana, sans-serif; resize: none;
+           border: 1px solid #7a7a7a; padding: 1px 2px; background: #fff; }
+    .rem:disabled { background: #f0f0f0; color: #6d6d6d; }
+    #txtDebitRemarks { top: 114px; }
+    #txtCreditRemarks { top: 179px; }
+    .fbtn { position: absolute; top: 227px; width: 75px; height: 28px; box-sizing: border-box; padding: 0; background: var(--teal); color: #fff;
+            border: 1px solid #006060; font: bold 13px Tahoma, sans-serif; cursor: pointer; }
+    .fbtn:disabled { opacity: .7; cursor: progress; }
+    #btnCancel { left: 269px; } #btnSavef { left: 349px; } #btnUpdatef { left: 348px; }
+
+    #panel2 { flex: 0 0 28px; height: 28px; position: relative; background: var(--teal); }
+    #label6 { position: absolute; left: 4px; top: 3px; font: bold 16px Tahoma, sans-serif; color: #fff; line-height: 19px; }
+    #gbMount { position: absolute; right: 0; top: 0; height: 28px; min-width: 43px; display: flex; align-items: center; justify-content: flex-end; }
+
+    #panel9 { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; border: 1px solid #9eb6ce; }
+    #grdWrap { flex: 1 1 auto; overflow: auto; min-height: 0; background: #fff; }
+    #grdHistory { border-collapse: separate; border-spacing: 0; table-layout: fixed; width: 100%; min-width: 900px; font: 11px Verdana, sans-serif; }
+    #grdHistory th { position: sticky; top: 0; z-index: 2; height: 20px; padding: 0 4px; text-align: left; font-weight: normal; white-space: nowrap;
+                     overflow: hidden; text-overflow: ellipsis; cursor: pointer;
+                     background: linear-gradient(#f9fcfd, #d3e2f0); border-right: 1px solid #9eb6ce; border-bottom: 1px solid #9eb6ce; }
+    #grdHistory tr.flt td { position: sticky; top: 20px; z-index: 2; background: #eef3f8; padding: 0; height: 20px; border-right: 1px solid #c8d6e4; border-bottom: 1px solid #9eb6ce; }
+    #grdHistory tr.flt input { width: 100%; height: 18px; box-sizing: border-box; border: 0; background: transparent; font: 11px Verdana, sans-serif; padding: 0 3px; }
+    #grdHistory td { height: 20px; padding: 0 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+                     border-right: 1px solid #e3e9ef; border-bottom: 1px solid #e3e9ef; box-sizing: border-box; }
+    #grdHistory tbody tr.cur td { background: #ffe8a6; }
+    #grdHistory td.empty { color: #666; text-align: center; }
+    #recNav { flex: 0 0 22px; height: 22px; display: flex; align-items: center; gap: 2px; padding: 0 4px;
+              background: linear-gradient(#f4f8fb, #dbe6f1); border-top: 1px solid #9eb6ce; font: 11px Verdana, sans-serif; }
+    #recNav button { width: 20px; height: 18px; padding: 0; border: 1px solid transparent; background: transparent; cursor: pointer; font: 10px Verdana; }
+    #recNav button:hover:not(:disabled) { border-color: #9eb6ce; background: #fff; }
+    #recNav button:disabled { color: #aaa; cursor: default; }
+    #recNav span { padding: 0 6px; white-space: nowrap; }
+</style>
+</head>
+<body class="erp-viewport-page">
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div id="frm">
+    <div id="toolStrip1" role="toolbar">
+        <button type="button" id="btnNew" title="Alt+N"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="8.5" fill="#2e9b45"/><path d="M10 5.5v9M5.5 10h9" stroke="#fff" stroke-width="2.2"/></svg><span><u>N</u>ew</span></button>
+        <button type="button" id="btnSave" title="Ctrl+S"><svg viewBox="0 0 20 20"><rect x="2.5" y="2.5" width="15" height="15" rx="1" fill="#3b78c2"/><rect x="5.5" y="3" width="9" height="5.5" fill="#fff"/><rect x="5.5" y="11" width="9" height="6" fill="#dfe9f5"/></svg><span>Save</span></button>
+        <button type="button" id="btnUpdate" class="hidden" title="Ctrl+U"><svg viewBox="0 0 20 20"><path d="M3 17l1-4 9-9 3 3-9 9z" fill="#e0a526" stroke="#7a5a10" stroke-width="1"/></svg><span>Update</span></button>
+    </div>
+
+    <div id="panel1">
+        <div id="panel3"><span id="label4">Accounts Hold For Debit / Credit</span></div>
+        <label class="lbl" id="label2" for="CmbAccountTitle">Account Title</label>
+        <div id="cmbWrap"><select id="CmbAccountTitle" data-dtcombo="single" data-dtcombo-caption="Account Title" tabindex="4"><option value="0"></option></select></div>
+        <div class="chk" id="chkDebitWrap"><input type="checkbox" id="checkBoxDebit" tabindex="5"><label for="checkBoxDebit" style="margin:0">Debit Hold</label></div>
+        <div class="chk" id="chkCreditWrap"><input type="checkbox" id="checkBoxCredit" tabindex="6"><label for="checkBoxCredit" style="margin:0">Credit Hold</label></div>
+        <label class="lbl" id="label1" for="txtDebitRemarks">Debit Remarks</label>
+        <textarea class="rem" id="txtDebitRemarks" tabindex="621" disabled></textarea>
+        <label class="lbl" id="label3" for="txtCreditRemarks">Credit Remarks</label>
+        <textarea class="rem" id="txtCreditRemarks" tabindex="621" disabled></textarea>
+        <button type="button" class="fbtn" id="btnCancel" tabindex="618">Cancel</button>
+        <button type="button" class="fbtn" id="btnSavef" tabindex="617">Save</button>
+        <button type="button" class="fbtn hidden" id="btnUpdatef" tabindex="619">Update</button>
+    </div>
+
+    <div id="panel2"><span id="label6">History</span><div id="gbMount"></div></div>
+    <div id="panel9">
+        <div id="grdWrap" data-gridbar-form="AccountsHoldForDebitOrCredit" data-gridbar-grid="grdHistory" data-gridbar-mount="#gbMount"
+             data-gridbar-reorder="false" data-gridbar-nullgrid="true" data-gridbar-title="History">
+            <table id="grdHistory">
+                <colgroup>
+                    <col style="width:260px"><col style="width:90px"><col style="width:200px"><col style="width:90px"><col style="width:200px">
+                    <col style="width:110px"><col style="width:80px"><col style="width:110px"><col style="width:80px">
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th data-col="AccountTitle">AccountTitle</th>
+                        <th data-col="CreditHoldStatus">CreditHoldStatus</th>
+                        <th data-col="CreditHoldReason">CreditHoldReason</th>
+                        <th data-col="DebitHoldStatus">DebitHoldStatus</th>
+                        <th data-col="DebitHoldReason">DebitHoldReason</th>
+                        <th data-col="EntryUser">EntryUser</th>
+                        <th data-col="EntryDate">EntryDate</th>
+                        <th data-col="ModifyUser">ModifyUser</th>
+                        <th data-col="ModifyDate">ModifyDate</th>
+                    </tr>
+                    <tr class="flt">
+                        <td><input data-f="AccountTitle"></td><td><input data-f="CreditHoldStatus"></td><td><input data-f="CreditHoldReason"></td>
+                        <td><input data-f="DebitHoldStatus"></td><td><input data-f="DebitHoldReason"></td><td><input data-f="EntryUser"></td>
+                        <td><input data-f="EntryDate"></td><td><input data-f="ModifyUser"></td><td><input data-f="ModifyDate"></td>
+                    </tr>
+                </thead>
+                <tbody id="grdBody"></tbody>
+            </table>
+        </div>
+        <div id="recNav">
+            <button type="button" data-nav="first" title="First">|&#9664;</button>
+            <button type="button" data-nav="prev" title="Previous">&#9664;</button>
+            <span id="recNavText">Record 0 of 0</span>
+            <button type="button" data-nav="next" title="Next">&#9654;</button>
+            <button type="button" data-nav="last" title="Last">&#9654;|</button>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}" src="/vendors/jquery/dist/jquery.min.js"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20261002gv}" src="/build/js/countx_prod_combo.js"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20261006-grid-control-placement}" src="/build/js/countx_grid_bar.js"></script>
+<script>
+(function ($) {
+    'use strict';
+    var API = '/accounts/hold_debit_credit';
+    var COLS = ['AccountTitle', 'CreditHoldStatus', 'CreditHoldReason', 'DebitHoldStatus', 'DebitHoldReason', 'EntryUser', 'EntryDate', 'ModifyUser', 'ModifyDate'];
+    var rights = { save: false, update: false };
+    var recId = 0;                     // public int RecId
+    var rows = [], view = [], cur = -1, sortCol = null, sortDir = 1;
+    var busyNow = false;
+
+    function esc(v) { return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    function getJson(url) { return $.ajax({ url: url, type: 'GET', dataType: 'json', cache: false }); }
+    function failText(x) {
+        try { var j = x.responseJSON || JSON.parse(x.responseText); if (j && j.message) return j.message; } catch (e) { /* ignore */ }
+        return x && x.status ? 'HTTP ' + x.status : 'Request failed';
+    }
+    function focusCombo() { var $i = $('#cmbWrap .dtcombo-input'); if ($i.length) $i.focus(); else $('#CmbAccountTitle').focus(); }
+
+    /* Save / Update visibility - btnSave+btnSavef vs btnUpdate+btnUpdatef; rights gate the enabled state */
+    function showSave(isSave) {
+        $('#btnSave, #btnSavef').toggleClass('hidden', !isSave);
+        $('#btnUpdate, #btnUpdatef').toggleClass('hidden', isSave);
+        applyRights();
+    }
+    function applyRights() {
+        $('#btnSave, #btnSavef').prop('disabled', !rights.save || busyNow);
+        $('#btnUpdate, #btnUpdatef').prop('disabled', !rights.update || busyNow);
+    }
+    function busy(on) {
+        busyNow = on;
+        $('#frm').toggleClass('is-busy', on);
+        $('#btnSave, #btnSavef, #btnUpdate, #btnUpdatef').toggleClass('btn-busy', on);
+        applyRights();
+    }
+
+    /* checkBoxDebit_CheckedChanged / checkBoxCredit_CheckedChanged */
+    function debitChanged() {
+        if ($('#checkBoxDebit').prop('checked')) $('#txtDebitRemarks').prop('disabled', false);
+        else $('#txtDebitRemarks').prop('disabled', true).val('');
+    }
+    function creditChanged() {
+        if ($('#checkBoxCredit').prop('checked')) $('#txtCreditRemarks').prop('disabled', false);
+        else $('#txtCreditRemarks').prop('disabled', true).val('');
+    }
+
+    /* Reset() */
+    function reset() {
+        $('#CmbAccountTitle').val('0').trigger('change');
+        if (window.DesktopCombo && window.DesktopCombo.refresh) window.DesktopCombo.refresh();
+        $('#txtCreditRemarks, #txtDebitRemarks').val('');
+        showSave(true);
+        $('#txtDebitRemarks, #txtCreditRemarks').prop('disabled', true);
+        $('#checkBoxDebit, #checkBoxCredit').prop('checked', false);
+        gridHistoryFill();
+        focusCombo();
+    }
+
+    /* ---------------------------------------------------------------- GridHistoryfill */
+    function gridHistoryFill() {
+        return getJson(API + '/history').done(function (r) {
+            if (!r || r.success === false) { alert((r && r.message) || 'Error'); return; }
+            /* if (lst.Rows.Count > 0) { grdHistory.DataSource = dt ... } - an empty result leaves the grid as it was */
+            if ((r.rows || []).length > 0) { rows = r.rows; applyView(); }
+        }).fail(function (x) { alert(failText(x)); });
+    }
+    function applyView() {
+        var f = {};
+        $('#grdHistory tr.flt input').each(function () { var v = $.trim($(this).val()).toLowerCase(); if (v) f[$(this).data('f')] = v; });
+        view = rows.filter(function (r) {
+            for (var k in f) if (String(r[k] == null ? '' : r[k]).toLowerCase().indexOf(f[k]) < 0) return false;
+            return true;
+        });
+        if (sortCol) view.sort(function (a, b) {
+            var x = String(a[sortCol] == null ? '' : a[sortCol]), y = String(b[sortCol] == null ? '' : b[sortCol]);
+            return x.localeCompare(y, undefined, { numeric: true, sensitivity: 'base' }) * sortDir;
+        });
+        cur = view.length ? Math.min(Math.max(cur, 0), view.length - 1) : -1;
+        render();
+    }
+    function render() {
+        var $b = $('#grdBody').empty();
+        if (!view.length) $b.append('<tr><td class="empty" colspan="' + COLS.length + '">No records</td></tr>');
+        view.forEach(function (r, i) {
+            var tr = '<tr data-i="' + i + '"' + (i === cur ? ' class="cur"' : '') + '>';
+            COLS.forEach(function (c) { tr += '<td title="' + esc(r[c]) + '">' + esc(r[c]) + '</td>'; });
+            $b.append(tr + '</tr>');
+        });
+        nav();
+    }
+    function setCur(i) {
+        if (!view.length) { cur = -1; nav(); return; }
+        cur = Math.max(0, Math.min(view.length - 1, i));
+        var $tr = $('#grdBody tr').removeClass('cur').filter('[data-i="' + cur + '"]').addClass('cur');
+        if ($tr.length) $tr[0].scrollIntoView({ block: 'nearest' });
+        nav();
+    }
+    function nav() {
+        var n = view.length;
+        $('#recNavText').text('Record ' + (cur >= 0 ? cur + 1 : 0) + ' of ' + n);
+        $('#recNav [data-nav=first], #recNav [data-nav=prev]').prop('disabled', cur <= 0);
+        $('#recNav [data-nav=next], #recNav [data-nav=last]').prop('disabled', cur < 0 || cur >= n - 1);
+    }
+
+    /* ---------------------------------------------------------------- ReadById (grdHistory_DoubleClick) */
+    function readById(id) {
+        recId = id;
+        getJson(API + '/' + id).done(function (r) {
+            if (!r || r.success === false) { alert((r && r.message) || 'Error'); return; }
+            var o = r.row;
+            $('#CmbAccountTitle').val(String(o.CoaAccountId)).trigger('change');
+            if (window.DesktopCombo && window.DesktopCombo.refresh) window.DesktopCombo.refresh();
+            $('#checkBoxCredit').prop('checked', !!o.CreditHoldStatus); creditChanged();
+            $('#checkBoxDebit').prop('checked', !!o.DebitHoldStatus); debitChanged();
+            $('#txtCreditRemarks').val(o.CreditHoldReason || '');
+            $('#txtDebitRemarks').val(o.DebitHoldReason || '');
+            showSave(false);
+        }).fail(function (x) { alert(failText(x)); });
+    }
+
+    /* ---------------------------------------------------------------- Insert() */
+    function formValidation() {
+        if (!($('#CmbAccountTitle').val() && $('#CmbAccountTitle').val() !== '0')) {
+            alert("Please enter a value for 'Account Title'."); focusCombo(); return false;
+        }
+        if ($('#txtDebitRemarks').val() === '' && $('#checkBoxDebit').prop('checked')) {
+            alert('Remarks / Reason Required For Holding Debit Entry.'); $('#txtDebitRemarks').focus(); return false;
+        }
+        if ($('#txtCreditRemarks').val() === '' && $('#checkBoxCredit').prop('checked')) {
+            alert('Remarks / Reason Required For Holding Credit Entry.'); $('#txtCreditRemarks').focus(); return false;
+        }
+        return true;
+    }
+    function insert() {
+        if (busyNow) return;
+        if (!formValidation()) return;
+        if (recId > 0) { if (!confirm('Are you sure to Update Record?')) return; }
+        else if (!confirm('Are you sure to Save Record?')) return;
+        busy(true);
+        $.ajax({ url: API + '/save', type: 'POST', contentType: 'application/json', dataType: 'json',
+                 data: JSON.stringify({ id: recId, coaAccountId: parseInt($('#CmbAccountTitle').val(), 10) || 0,
+                     debitHold: $('#checkBoxDebit').prop('checked'), creditHold: $('#checkBoxCredit').prop('checked'),
+                     debitReason: $('#txtDebitRemarks').val(), creditReason: $('#txtCreditRemarks').val() }) })
+            .done(function (r) {
+                if (!r || r.success === false) { alert((r && r.message) || 'Error'); return; }
+                alert(r.message);
+                reset();
+            })
+            .fail(function (x) { alert(failText(x)); })
+            .always(function () { busy(false); });
+    }
+    function doSave() { recId = 0; insert(); }      /* btnSave_Click / btnSavef_Click: RecId = 0; Insert() */
+    function doUpdate() { insert(); }               /* btnUpdate_Click / btnUpdatef_Click */
+
+    /* ---------------------------------------------------------------- wiring */
+    /* Tab order by TabIndex: combo 4, Debit 5, Credit 6, Save 617, Cancel 618, Update 619, remarks 621 (the combo's native select is hidden) */
+    var ORDER = ['CmbAccountTitle', 'checkBoxDebit', 'checkBoxCredit', 'btnSavef', 'btnCancel', 'btnUpdatef', 'txtDebitRemarks', 'txtCreditRemarks'];
+    function tabOrder() {
+        return ORDER.map(function (id) { return document.getElementById(id); })
+            .filter(function (el) { return el && !el.disabled && !$(el).hasClass('hidden') && !$(el).closest('.hidden').length; });
+    }
+    $(function () {
+        $('#btnNew').on('click', function () { reset(); });
+        $('#btnSave, #btnSavef').on('click', doSave);
+        $('#btnUpdate, #btnUpdatef').on('click', doUpdate);
+        $('#btnCancel').on('click', function () { window.location.href = '/accounts/dashboard'; });       /* Close() */
+        $('#checkBoxDebit').on('change', debitChanged);
+        $('#checkBoxCredit').on('change', creditChanged);
+
+        $(document).on('keydown', function (e) {
+            if (e.altKey && !e.ctrlKey && (e.key === 'n' || e.key === 'N')) { e.preventDefault(); $('#btnNew').click(); return; }
+            if (e.ctrlKey && (e.key === 's' || e.key === 'S')) { e.preventDefault(); if (!$('#btnSave').hasClass('hidden') && !$('#btnSave').prop('disabled')) doSave(); return; }
+            if (e.ctrlKey && (e.key === 'u' || e.key === 'U')) { e.preventDefault(); if (!$('#btnUpdatef').hasClass('hidden') && !$('#btnUpdatef').prop('disabled')) doUpdate(); return; }
+            if (e.ctrlKey && (e.key === 'n' || e.key === 'N')) {
+                /* btnn() throws NotImplementedException -> catch -> MessageBox.Show(ex.Message) */
+                e.preventDefault(); alert('The method or operation is not implemented.'); return;
+            }
+            /* Return -> SendKeys "{TAB}" (KeyPreview: also inside the remarks boxes, which do not AcceptsReturn; not on a button) */
+            if (e.key === 'Enter' && !e.ctrlKey && !e.altKey && !e.shiftKey) {
+                var t = e.target, tag = (t.tagName || '').toLowerCase();
+                if (tag === 'button' || $(t).closest('#recNav, tr.flt').length) return;
+                var list = tabOrder(), cmb = $('#CmbAccountTitle')[0];
+                var cur = $(t).hasClass('dtcombo-input') || $(t).closest('#cmbWrap').length ? cmb : t;
+                var i = list.indexOf(cur);
+                if (i >= 0) {
+                    e.preventDefault();
+                    setTimeout(function () { var n = list[(i + 1) % list.length]; if (n === cmb) focusCombo(); else n.focus(); }, 0);
+                }
+            }
+        });
+
+        $('#grdHistory thead th').on('click', function () {
+            var c = $(this).data('col'); if (sortCol === c) sortDir = -sortDir; else { sortCol = c; sortDir = 1; }
+            applyView();
+        });
+        $('#grdHistory tr.flt input').on('input', function () { cur = 0; applyView(); });
+        $('#grdBody').on('click', 'tr[data-i]', function () { setCur(+$(this).data('i')); })
+            .on('dblclick', 'tr[data-i]', function () {
+                var r = view[+$(this).data('i')]; if (r) readById(r.Id);
+            });
+        $('#recNav').on('click', 'button', function () {
+            var a = $(this).data('nav');
+            setCur(a === 'first' ? 0 : a === 'last' ? view.length - 1 : a === 'prev' ? cur - 1 : cur + 1);
+        });
+
+        /* AccountsHoldForDebitOrCredit_Load */
+        showSave(true);
+        getJson(API + '/init').done(function (r) {
+            if (!r || r.success === false) { alert((r && r.message) || 'Error'); return; }
+            rights = r.rights || rights; applyRights();
+            var h = '<option value="0"></option>';
+            (r.accounts || []).forEach(function (a) { h += '<option value="' + esc(a.Id) + '">' + esc(a.AccountTitle) + '</option>'; });
+            $('#CmbAccountTitle').html(h).val('0');
+            if (window.DesktopCombo && window.DesktopCombo.refresh) window.DesktopCombo.refresh();
+            focusCombo();
+        }).fail(function (x) { alert(failText(x)); });
+        gridHistoryFill();
+    });
+})(window.jQuery);
+</script>
+</body>
+</html>

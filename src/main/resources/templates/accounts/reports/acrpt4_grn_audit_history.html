@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Goods Receipts Audit</title>
+<link rel="stylesheet" href="/build/css/countx_desktop_combo.css?v=20261007r2">
+<link rel="stylesheet" href="/build/css/countx_prod_combo.css?v=20261007r2">
+<link rel="stylesheet" href="/build/css/countx_acrpt4.css?v=20261007r4">
+<!--
+  Screen 933 "Goods Receipts Audit" = Architecture.WinApp.Inventory_Reports.frmGrnAudit_History
+  (route /inventory/reports/grn-audit-history). R4 2026-10-07, built 1:1 on InitializeComponent()
+  (ClientSize 1064x561, font Verdana 9.75, KeyPreview, Maximized, AutoScrollMinSize 1070x600):
+    panel2 Top 28 = toolStrip3 (Verdana 9.75): &New | &Refresh | 334_01-Register | ShortCutKeys
+    panel3 Teal Top 29 = label23 "Goods Receipt Audit Report -" @5,4 Tahoma 12 bold white + label2 "Supplier & Factory weight, Empty Bags deductions,
+                         Freight By City and Freight Audit Report" @253,5 Tahoma 10 bold white
+    panel4 White Top 110 = groupBox1 "Filters" @4,3 1056x104 (Tahoma 9.75 bold):
+        label12 "Date Type" 6,21 | cmbperemeter 72,15 160x26 (tab 1) | label27 "From Date" 6,49 | GRNfromdate 72,45 160x23 (tab 2, dd-MMM-yy) |
+        label13 "To Date" 6,77 | GRNToDate 72,73 160x23 (tab 3) | label7 "Purchase Type" 235,21 | CmbPurchaseType 343,15 170x26 (592) |
+        label5 "Parent Category" 235,49 | cmbParentCategory 343,43 170x26 (592) | label3 "Purchase Order No" 235,77 | CmbPoNo 343,71 170x26 (592) |
+        label1 "Supplier Name" 517,21 | CmbSupplier 603,15 220x26 (tab 11) | label6 "CityName" 517,49 | CmbCityName 603,43 220x26 (593) |
+        btnshow "Show" 763,72 60x24 Teal Verdana 9.75 bold (tab 15) |
+        chkOnlyDiscountedRows 827,18 228x19 | chkFreightAuditbyCity 827,46 139x19 (596, Segoe UI 9 bold)
+    panel5 Fill = panel6 Teal Top 29 (label4 "Audit History" @3,4 Tahoma 12 bold white + ctrlGrdBar1 @1017,2) + DataGridHistory Fill
+                  (Verdana 8.25, GroupByBox visible, grouped by Variety, GroupTotals Always, TotalRow, filter row = Contains, record navigator)
+  Page logic: /build/js/countx_acrpt4_grn.js (+ shared /build/js/countx_acrpt4.js). API: /api/accounts/acrpt4/grn/*
+-->
+<style>
+    .frm { min-width: 1070px; min-height: 600px; }
+    .t29 { flex: 0 0 29px; height: 29px; background: teal; position: relative; }
+    .t29 .c1 { position: absolute; left: 5px; top: 4px; font: bold 16px Tahoma, Verdana, sans-serif; line-height: 19px; color: #fff; white-space: nowrap; }
+    .t29 .c2 { position: absolute; left: 253px; top: 5px; font: bold 13px Tahoma, Verdana, sans-serif; line-height: 16px; color: #fff; white-space: nowrap; }
+    .t29 .c3 { position: absolute; left: 3px; top: 4px; font: bold 16px Tahoma, Verdana, sans-serif; line-height: 19px; color: #fff; white-space: nowrap; }
+    .p4 { flex: 0 0 110px; height: 110px; position: relative; background: #fff; }
+    .p4 .gb { left: 4px; top: 3px; width: 1056px; height: 104px; }
+    .p4 .lbl { font: 600 12px "Segoe UI Semibold", "Segoe UI", Calibri, Carlito, Arial, sans-serif; font-weight: bold; }
+    .p4 input.tb { height: 23px; font: 13px Verdana, Tahoma, sans-serif; }
+    .p4 .chk { font: bold 12px "Segoe UI", Calibri, Carlito, Arial, sans-serif; height: 19px; }
+    #show { font: bold 13px Verdana, Tahoma, sans-serif; }
+    .ts button { font: 13px Verdana, Tahoma, sans-serif; }
+    .ts.wh { background: #fff; }
+</style>
+<link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261005a}"/>
+</head>
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="frm-scroll">
+<div class="frm" id="frmGrnAudit_History">
+
+    <!-- panel2: toolStrip3 -->
+    <div class="pn" style="flex:0 0 28px;height:28px;background:#fff;">
+        <div class="ts wh">
+            <button type="button" id="btnNew" title="Ctrl+N"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#2e9b45"/><path d="M8 4v8M4 8h8" stroke="#fff" stroke-width="2"/></svg><span><u>N</u>ew</span></button>
+            <button type="button" id="btnRefresh" title="Ctrl+R"><svg viewBox="0 0 16 16"><path d="M2 14l1-4 8-8 3 3-8 8z" fill="#f0c040" stroke="#7a5b00"/><path d="M2 14l1-4 3 3z" fill="#444"/></svg><span><u>R</u>efresh</span></button>
+            <button type="button" id="btn334" title="Alt+1"><svg viewBox="0 0 16 16"><rect x="4" y="1.5" width="8" height="4" fill="#fff" stroke="#555"/><rect x="1.5" y="5.5" width="13" height="6" rx="1" fill="#6b7785"/><rect x="4" y="9.5" width="8" height="5" fill="#fff" stroke="#555"/></svg><span>334_01-Register</span></button>
+            <button type="button" id="btnShortCutKeys" title="Ctrl+Alt"><span>ShortCutKeys</span></button>
+        </div>
+    </div>
+
+    <!-- panel3: title -->
+    <div class="t29"><span class="c1">Goods Receipt Audit Report -</span><span class="c2">Supplier &amp; Factory weight, Empty Bags deductions, Freight By City and Freight Audit Report</span></div>
+
+    <!-- panel4: groupBox1 "Filters" -->
+    <div class="p4">
+        <div class="gb">
+            <div class="gb-frame"></div><span class="gb-cap">Filters</span>
+            <span class="lbl" style="left:6px;top:21px;">Date Type</span>
+            <select id="cmbperemeter" data-dtcombo="single" data-dtcombo-caption="Parameters" style="position:absolute;left:72px;top:15px;width:160px;height:26px;"></select>
+            <span class="lbl" style="left:6px;top:49px;">From Date</span>
+            <input type="date" id="GRNfromdate" class="tb" style="left:72px;top:45px;width:160px;height:23px;" autocomplete="off">
+            <span class="lbl" style="left:6px;top:77px;">To Date</span>
+            <input type="date" id="GRNToDate" class="tb" style="left:72px;top:73px;width:160px;height:23px;" autocomplete="off">
+
+            <span class="lbl" style="left:235px;top:21px;">Purchase Type</span>
+            <select id="CmbPurchaseType" data-dtcombo="single" data-dtcombo-caption="Purchase Type" style="position:absolute;left:343px;top:15px;width:170px;height:26px;"></select>
+            <span class="lbl" style="left:235px;top:49px;">Parent Category</span>
+            <select id="cmbParentCategory" data-dtcombo="single" data-dtcombo-caption="Parent Category" style="position:absolute;left:343px;top:43px;width:170px;height:26px;"></select>
+            <span class="lbl" style="left:235px;top:77px;">Purchase Order No</span>
+            <select id="CmbPoNo" data-dtcombo="single" data-dtcombo-caption="Po No" style="position:absolute;left:343px;top:71px;width:170px;height:26px;"></select>
+
+            <span class="lbl" style="left:517px;top:21px;">Supplier Name</span>
+            <select id="CmbSupplier" data-dtcombo="single" data-dtcombo-caption="Supplier Name" style="position:absolute;left:603px;top:15px;width:220px;height:26px;"></select>
+            <span class="lbl" style="left:517px;top:49px;">CityName</span>
+            <select id="CmbCityName" data-dtcombo="single" data-dtcombo-caption="CityName" style="position:absolute;left:603px;top:43px;width:220px;height:26px;"></select>
+
+            <button type="button" id="show" class="teal-btn" style="left:763px;top:72px;width:60px;height:24px;" title="Ctrl+S">Show</button>
+
+            <label class="chk" style="left:827px;top:18px;width:228px;"><input type="checkbox" id="chkOnlyDiscountedRows">Show Only Freight-Discounted Rows</label>
+            <label class="chk" style="left:827px;top:46px;width:139px;"><input type="checkbox" id="chkFreightAuditbyCity">Freight Audit by City</label>
+        </div>
+    </div>
+
+    <!-- panel5 Fill: panel6 + DataGridHistory -->
+    <div class="t29"><span class="c3">Audit History</span></div>
+    <div class="gridbox">
+        <div class="gbox" id="gbox1"></div>
+        <div class="grid" id="gridWrap" tabindex="0"><table data-gridbar="frmGrnAudit_History:DataGridHistory" class="g" id="grd"><colgroup></colgroup><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        <div class="nav" id="nav" hidden>
+            <button type="button" data-nav="first" title="First">|&lt;</button><button type="button" data-nav="prev" title="Previous">&lt;</button>
+            <span id="navText"></span>
+            <button type="button" data-nav="next" title="Next">&gt;</button><button type="button" data-nav="last" title="Last">&gt;|</button>
+        </div>
+    </div>
+</div>
+</div>
+
+<dialog class="sck" id="shortcutDialog"><div class="hd">ShortCut Keys</div>
+    <table><thead><tr><th>KeyCombination</th><th>Description</th></tr></thead><tbody id="shortcutRows"></tbody></table>
+    <div class="ft"><form method="dialog"><button>Close</button></form></div></dialog>
+
+<script src="/build/js/countx_prod_combo.js?v=20261007r2"></script>
+<script src="/js/print-rpt.js?v=20261003erp"></script>
+<script src="/build/js/countx_acrpt4.js?v=20261007r4"></script>
+<script src="/build/js/countx_acrpt4_grn.js?v=20261007r4"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20261006-grid-control-placement}"></script>
+</body>
+</html>

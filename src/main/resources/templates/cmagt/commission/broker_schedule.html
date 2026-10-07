@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${formTitle}">Broker Schedule</title>
+    <link rel="stylesheet" th:href="@{/build/css/cmagt_theme.css?v=20260930T}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261006a}">
+    <style>
+        html,body{margin:0;min-height:100%;background:#d8e0e8;color:#111;font:11px Tahoma,"Segoe UI",Arial,sans-serif;overflow-x:hidden}
+        .bs-toolbar{min-height:27px;display:flex;align-items:center;gap:3px;padding:2px 6px;background:linear-gradient(#fff,#d9e1e9);border-bottom:1px solid #9baab9;flex-wrap:wrap}
+        .bs-toolbar button{height:21px;padding:1px 8px;background:linear-gradient(#fff,#e3e8ed);border:1px solid #8d9eab;color:#111;font:600 11px Tahoma;cursor:pointer}.bs-toolbar button:disabled{opacity:.55;cursor:wait}
+        .bs-title{height:25px;display:flex;align-items:center;background:#00796b;color:#fff;padding:0 7px;font:bold 13px Tahoma}
+        .bs-panel{margin:5px;padding:7px 6px 6px;background:#fff;border:1px solid #9daab5}
+        .bs-head{display:grid;grid-template-columns:minmax(250px,340px) minmax(130px,220px) minmax(180px,1fr);gap:7px;align-items:end;max-width:1100px}
+        .bs-field{display:flex;flex-direction:column;gap:2px;min-width:0}.bs-field label{font-weight:bold}.bs-field input,.bs-field select{height:23px;min-width:0;border:1px solid #99a6b0;background:#fff;padding:2px 4px;font:11px Tahoma}
+        .bs-detail-title{height:23px;display:flex;align-items:center;background:#00796b;color:#fff;padding:0 7px;font:bold 12px Tahoma}
+        .bs-grid-scroll{height:220px;min-height:130px;overflow:auto;background:white;border:1px solid #9caebe;margin:0 5px 5px}
+        table.bs-grid{border-collapse:collapse;width:max-content;min-width:100%;white-space:nowrap;font:11px Tahoma;background:#fff}
+        .bs-grid th{position:sticky;top:0;z-index:2;background:linear-gradient(#e3ebf5,#cbd9eb);border:1px solid #a8b8cc;padding:4px;text-align:center}
+        .bs-grid td{border:1px solid #ccd5df;padding:2px 3px;height:25px}.bs-grid tr:nth-child(even){background:#f5f8fa}
+        .bs-grid input,.bs-grid select{width:100%;min-width:78px;height:21px;padding:1px 3px;border:1px solid #a6b1bb;font:11px Tahoma}.bs-grid input[type=number]{text-align:right;min-width:58px;width:70px}
+        .bs-grid .date{min-width:118px}.bs-grid .remove{width:26px;min-width:26px;color:#9b111e;cursor:pointer}
+        .bs-status{min-height:16px;padding:0 7px;color:#a11}.bs-history-title{height:23px;display:flex;align-items:center;background:#00796b;color:#fff;padding:0 7px;font:bold 12px Tahoma}.bs-history-scroll{height:calc(100vh - 480px);min-height:110px;overflow:auto;background:white;border:1px solid #9caebe;margin:0 5px 6px}
+        table.bs-history{border-collapse:collapse;width:max-content;min-width:100%;white-space:nowrap;font:11px Tahoma} .bs-history th{position:sticky;top:0;background:linear-gradient(#e3ebf5,#cbd9eb);border:1px solid #a8b8cc;padding:4px}.bs-history td{border:1px solid #ccd5df;padding:3px 5px}.bs-history tr:hover{background:#e9f4f4;cursor:pointer}
+        .bs-selected{background:#fff7d5!important}.bs-gridbar{display:flex;justify-content:flex-end;align-items:center;min-height:25px;padding:0 5px}
+        @media(max-width:750px){.bs-head{grid-template-columns:1fr 1fr}.bs-head .wide{grid-column:1/-1}.bs-grid-scroll{height:180px}.bs-history-scroll{height:220px}}
+        @media print{.bs-toolbar,.bs-panel,.bs-status,.bs-gridbar,.cmagt-appbar{display:none!important}.bs-grid-scroll,.bs-history-scroll{height:auto;overflow:visible}.bs-grid th,.bs-history th{position:static}}
+    </style>
+</head>
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="cmagt-appbar"><a class="cmagt-back" th:href="@{/app/Commission%20Trading?module=61}">Back to Commission Trading</a><span class="cmagt-title" th:text="${formTitle}">Broker Schedule</span></div>
+<div class="bs-toolbar">
+    <button id="newBtn" type="button">✚ New</button><button id="refreshBtn" type="button">⟳ Refresh</button>
+    <button id="saveBtn" type="button">▣ Save</button><button id="updateBtn" type="button" hidden>▣ Update</button>
+    <button id="deleteBtn" type="button" hidden>⌫ Delete</button><button id="historyBtn" type="button">History</button>
+    <button id="printBtn" type="button">▣ Print</button><button id="shortcutBtn" type="button">ShortCut Keys</button>
+</div>
+<div class="bs-title" th:text="${formTitle}">Broker Schedule</div>
+<section class="bs-panel">
+    <div class="bs-head">
+        <div class="bs-field"><label for="partyId">Customer / Supplier</label><select id="partyId"><option value="">...Select Any Value...</option></select></div>
+        <div class="bs-field"><label for="policyCode">Policy Code</label><input id="policyCode" maxlength="100" required></div>
+        <div class="bs-field wide"><label for="remarksHeader">Remarks</label><input id="remarksHeader" maxlength="500"></div>
+    </div>
+</section>
+<div class="bs-detail-title"><span>Schedule Detail</span><span style="margin-left:auto"><button id="addRowBtn" type="button">Add Row</button></span></div>
+<div class="bs-gridbar" id="detailBar"></div>
+<div class="bs-grid-scroll" id="detailWrap" data-gridbar-form="CommissionBrokerySchedule" data-gridbar-grid="DataGridDetail" data-gridbar-mount="#detailBar" data-gridbar-placement="toolbar">
+    <table id="detailTable" class="bs-grid"><thead><tr><th>Revenue / Expense</th><th>Effective Date</th><th>Transaction Type</th><th>Charges / Incentive Account</th><th>Payment Term</th><th>Days From</th><th>Days To</th><th>Calculation Parameter</th><th>Rate</th><th>Rate UOM</th><th>Sort No</th><th></th></tr></thead><tbody></tbody></table>
+</div>
+<div id="status" class="bs-status" role="status" aria-live="polite"></div>
+<div class="bs-history-title"><span>History</span><span id="historyCount" style="margin-left:auto;font-weight:normal"></span></div>
+<div class="bs-gridbar" id="historyBar"></div>
+<div class="bs-history-scroll" data-gridbar-form="CommissionBrokerySchedule" data-gridbar-grid="DataGridHistory" data-gridbar-mount="#historyBar" data-gridbar-placement="toolbar">
+    <table id="historyTable" class="bs-history"><thead></thead><tbody><tr><td>No history loaded.</td></tr></tbody></table>
+</div>
+<script th:inline="javascript">
+(() => {
+  'use strict';
+  const screenId = /*[[${screenId}]]*/ 516;
+  const qs='?screenId='+encodeURIComponent(screenId), api='/commission/trading/api/broker-schedule/';
+  const $=id=>document.getElementById(id), key=(o,...names)=>{if(!o)return null;for(const n of names){const k=Object.keys(o).find(x=>x.toLowerCase()===n.toLowerCase());if(k)return o[k]}return null};
+  let permissions={}, currentId=0, lookups=[], removedDetailIds=[];
+  async function request(url, options={}){const r=await fetch(url,{credentials:'same-origin',...options,headers:{'Content-Type':'application/json',...(options.headers||{})}});let d;try{d=await r.json()}catch{d={}}if(!r.ok)throw new Error(d.message||'Request failed ('+r.status+').');return d}
+  function fillSelect(el,rows,valueNames,labelNames,first){el.innerHTML='';const o=document.createElement('option');o.value='';o.textContent=first||'...Select Any Value...';el.append(o);for(const row of rows||[]){const value=key(row,...valueNames),label=key(row,...labelNames);if(value==null||label==null||!String(label).trim())continue;const op=document.createElement('option');op.value=String(value);op.textContent=String(label);el.append(op)}}
+  function makeSelect(names,labels,selected=''){const s=document.createElement('select');fillSelect(s,names,labels,selected);return s}
+  function list(rowIndex){return Array.isArray(lookups[rowIndex])?lookups[rowIndex]:[]}
+  function selectFrom(index,selected){const rows=list(index);const select=document.createElement('select');fillSelect(select,rows,['Id','ID','LookupId'],['LookupName','Name','Description','Title','TypeName'], '...Select Any Value...');if(selected!=null)select.value=String(selected);return select}
+  function addRow(data={}){
+    const tr=document.createElement('tr');if(data.Id||data.id)tr.dataset.id=String(data.Id||data.id);
+    const rev=selectFrom(1,key(data,'IsRevenueExpense','IsRevenueExpenseId'));
+    const effective=document.createElement('input');effective.type='date';effective.className='date';effective.value=String(key(data,'EffectiveDate')||'').slice(0,10);
+    const fields=[rev,effective,selectFrom(2,key(data,'TransactionTypeId')),selectFrom(3,key(data,'ChargesIncentiveAccountId','ChargesIncentiveId')),selectFrom(5,key(data,'PaymentTermId'))];
+    for(const x of fields){const td=document.createElement('td');td.append(x);tr.append(td)}
+    const dayFields=Array.of(['DaysFrom','number'],['DaysTo','number']);
+    for(const [prop,kind] of dayFields){const td=document.createElement('td'),i=document.createElement('input');i.type=kind;i.min='0';i.value=key(data,prop)??'';td.append(i);tr.append(td)}
+    const calTd=document.createElement('td');calTd.append(selectFrom(4,key(data,'CalculationParameterId')));tr.append(calTd);
+    for(const prop of ['Rate','RateUom','SortNo']){const td=document.createElement('td'),i=document.createElement('input');i.type='number';i.step='0.0001';i.value=key(data,prop)??(prop==='SortNo'?String($('detailTable').tBodies[0].rows.length+1):'');i.dataset.field=prop;td.append(i);tr.append(td)}
+    const del=document.createElement('td'),button=document.createElement('button');button.className='remove';button.type='button';button.textContent='×';button.title='Remove row';button.onclick=()=>{if(tr.dataset.id)removedDetailIds.push(Number(tr.dataset.id));tr.remove()};del.append(button);tr.append(del);
+    $('detailTable').tBodies[0].append(tr);
+  }
+  function detailValue(tr){const c=tr.cells;return {id:Number(tr.dataset.id||0),isRevenueExpense:c[0].querySelector('select').value,effectiveDate:c[1].querySelector('input').value,transactionTypeId:c[2].querySelector('select').value,paymentTermId:c[4].querySelector('select').value,daysFrom:c[5].querySelector('input').value,daysTo:c[6].querySelector('input').value,calculationParameterId:c[7].querySelector('select').value,chargesIncentiveId:c[3].querySelector('select').value,rate:c[8].querySelector('input').value,rateUom:c[9].querySelector('input').value,sortNo:c[10].querySelector('input').value,actionTypeId:Number(tr.dataset.id||0)?2:1}}
+  async function initialize(){ $('status').textContent='Loading form data…';$('refreshBtn').disabled=true;try{const d=await request(api+'init'+qs);permissions=d.permissions||{};lookups=d.lookups||[];fillSelect($('partyId'),d.parties||[],['Id','ID'],['CompanyName','Name','SupplierName','CustomerName']);$('saveBtn').hidden=!permissions.save;$('printBtn').disabled=!permissions.print;await loadHistory();$('status').textContent='';if(!$('detailTable').tBodies[0].rows.length)addRow()}catch(e){$('status').textContent=e.message}finally{$('refreshBtn').disabled=false}}
+  function reset(){currentId=0;removedDetailIds=[];$('partyId').value='';$('policyCode').value='';$('remarksHeader').value='';$('detailTable').tBodies[0].innerHTML='';$('saveBtn').hidden=!permissions.save;$('updateBtn').hidden=true;$('deleteBtn').hidden=true;addRow();$('status').textContent=''}
+  async function loadHistory(){ $('historyCount').textContent='Loading…';try{const rows=await request(api+'history'+qs);const table=$('historyTable');table.tHead.innerHTML='';table.tBodies[0].innerHTML='';$('historyCount').textContent=rows.length+' records';if(!rows.length){table.tBodies[0].innerHTML='<tr><td>No records found.</td></tr>';return}const keys=Object.keys(rows[0]);const hr=document.createElement('tr');keys.forEach(k=>{const th=document.createElement('th');th.textContent=k.replace(/([a-z])([A-Z])/g,'$1 $2');hr.append(th)});table.tHead.append(hr);rows.forEach(row=>{const tr=document.createElement('tr');keys.forEach(k=>{const td=document.createElement('td');td.textContent=row[k]==null?'':String(row[k]);tr.append(td)});tr.addEventListener('dblclick',()=>loadRecord(key(row,'Id','ID')));table.tBodies[0].append(tr)});if(window.GridBar?.refresh)window.GridBar.refresh(table)}catch(e){$('historyCount').textContent='';$('status').textContent=e.message}}
+  async function loadRecord(id){if(!id)return;$('status').textContent='Loading schedule…';try{const d=await request(api+'record'+qs+'&id='+encodeURIComponent(id));const h=d.header||{};currentId=Number(key(h,'Id','ID')||id);removedDetailIds=[];$('partyId').value=String(key(h,'SupplierCustomerId')||'');$('policyCode').value=key(h,'PolicyCode')||'';$('remarksHeader').value=key(h,'RemarksHeader')||'';$('detailTable').tBodies[0].innerHTML='';(d.details||[]).forEach(addRow);if(!$('detailTable').tBodies[0].rows.length)addRow();$('saveBtn').hidden=true;$('updateBtn').hidden=!permissions.update;$('deleteBtn').hidden=!permissions.delete;$('status').textContent='Schedule '+currentId+' loaded.'}catch(e){$('status').textContent=e.message}}
+  function validate(){if(!$('partyId').value)throw new Error('Customer/Supplier Field is Required');if(!$('policyCode').value.trim()||$('policyCode').value.trim()==='0')throw new Error('Policy Code Field is Required');const rows=[...$('detailTable').tBodies[0].rows];if(!rows.length)throw new Error('Grid Record Not Found');for(let i=0;i<rows.length;i++){const d=detailValue(rows[i]);if(!d.isRevenueExpense||!d.effectiveDate||!d.transactionTypeId||!d.paymentTermId||!d.chargesIncentiveId||!d.calculationParameterId||d.daysFrom===''||d.daysTo===''||d.rate===''||d.rateUom==='')throw new Error('Complete the required fields in detail row '+(i+1)+'.');if(Number(d.daysFrom)>Number(d.daysTo))throw new Error('DaysFrom Can not be Greater than DaysTo...')}return rows.map(detailValue)}
+  async function save(){const isUpdate=currentId>0;const btn=isUpdate?$('updateBtn'):$('saveBtn');btn.disabled=true;$('status').textContent='Saving…';try{const details=validate();const body={id:currentId,supplierCustomerId:Number($('partyId').value),policyCode:$('policyCode').value,remarksHeader:$('remarksHeader').value,details,removedDetailIds};const d=await request(api+'save'+qs,{method:'POST',body:JSON.stringify(body)});currentId=Number(d.id||currentId);$('status').textContent=d.message||'Saved.';await loadHistory();await loadRecord(currentId)}catch(e){$('status').textContent=e.message}finally{btn.disabled=false}}
+  async function removeRecord(){if(!currentId)return;$('deleteBtn').disabled=true;$('status').textContent='Deleting…';try{const d=await request(api+'delete'+qs,{method:'POST',body:JSON.stringify({id:currentId})});$('status').textContent=d.message||'Deleted.';reset();await loadHistory()}catch(e){$('status').textContent=e.message}finally{$('deleteBtn').disabled=false}}
+  $('newBtn').onclick=reset;$('refreshBtn').onclick=initialize;$('addRowBtn').onclick=()=>addRow();$('historyBtn').onclick=loadHistory;$('saveBtn').onclick=save;$('updateBtn').onclick=save;$('deleteBtn').onclick=removeRecord;$('printBtn').onclick=()=>window.print();$('shortcutBtn').onclick=()=>alert('Ctrl+S : Save / Update\nCtrl+N : New\nCtrl+R : Refresh');document.addEventListener('keydown',e=>{if(e.ctrlKey&&e.key.toLowerCase()==='s'){e.preventDefault();save()}if(e.ctrlKey&&e.key.toLowerCase()==='n'){e.preventDefault();reset()}if(e.ctrlKey&&e.key.toLowerCase()==='r'){e.preventDefault();initialize()}});
+  initialize();
+})();
+</script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20261006-grid-control-placement}"></script>
+</body>
+</html>

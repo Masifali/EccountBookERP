@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Capital Owner Equity Report</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260930s}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20261002gv}">
+    <style>
+        /* CapitalOwnerEquityReport.InitializeComponent - ClientSize 1105x609, Maximized:
+           panel2 (Top 27) = tsSelectedTrialBalance (Refresh, Print-120A) + ctrlGrdBar1;
+           panel3 (Top 27, rgb 10,110,110) = label23 "Capital Owner Equity Report" (8,3) Tahoma 12 bold white;
+           panel5 (Top 84, white) = datToDateST (109,3 249x23), cmbAccountTitle (109,28 249x26), txtProfit (109,57 192x23),
+                                    Show (302,56 56x24), Skip Zero (367,7); labels at x=24;
+           panel6 (Fill) = grdSelected, Janus, Verdana 8.25, alternating colours, filter row, record navigator, total row at the bottom. */
+        :root { --teal: rgb(10,110,110); --grid-line: #c5d3dc; --grid-head: #e9eef3; --alt: #f3f7fa; --sel: #cfe3f5; }
+        html, body { margin: 0; padding: 0; height: 100%; background: #fff; overflow-x: hidden; }
+        body { font-family: "Segoe UI", Tahoma, sans-serif; font-size: 12px; color: #000; display: flex; flex-direction: column; }
+        [hidden] { display: none !important; }
+        .nav-bar { flex: 0 0 auto; display: flex; justify-content: space-between; align-items: center; background: #f0f0f0; border-bottom: 1px solid #c9c9c9; padding: 2px 8px; font: 11px "Segoe UI", sans-serif; color: #333; }
+        .nav-bar a { color: #0b5c86; text-decoration: none; }
+        .form-scroll { flex: 1 1 auto; min-height: 0; overflow-x: auto; overflow-y: hidden; display: flex; flex-direction: column; }
+        .form { min-width: 700px; flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; position: relative; }
+        .panel2 { position: relative; height: 27px; flex: 0 0 auto; background: linear-gradient(#fbfcfd, #e3e8ee); border-bottom: 1px solid #b9c4cf; display: flex; align-items: center; padding-left: 2px; font: 13px Verdana, sans-serif; }
+        .ts-btn { height: 24px; display: inline-flex; align-items: center; gap: 4px; padding: 0 6px; border: 1px solid transparent; background: transparent; font: 13px Verdana, sans-serif; color: #000; cursor: pointer; }
+        .ts-btn:hover { border-color: #7fb5d6; background: #dcecf8; }
+        .ts-btn:disabled { color: #8a8a8a; cursor: default; }
+        .ts-btn .ico-ref { color: #2e9d3a; } .ts-btn .ico-print { color: #44576a; }
+        .ts-btn u { text-decoration: underline; }
+        .panel2 .gb-slot { position: absolute; right: 4px; top: 2px; }
+        .panel3 { position: relative; height: 27px; flex: 0 0 auto; background: var(--teal); }
+        .panel3 span { position: absolute; left: 8px; top: 3px; font: bold 16px Tahoma, sans-serif; color: #fff; white-space: nowrap; }
+        .panel5 { position: relative; height: 84px; flex: 0 0 auto; background: #fff; }
+        .panel5 .lbl { position: absolute; left: 24px; font: 600 12px "Segoe UI Semibold", "Segoe UI", sans-serif; white-space: nowrap; }
+        .panel5 input[type=date], .panel5 input[type=text] { position: absolute; box-sizing: border-box; font: 13px Verdana, sans-serif; border: 1px solid #7a7a7a; padding: 0 3px; }
+        .panel5 select { position: absolute; box-sizing: border-box; font: 13px Verdana, sans-serif; }
+        .panel5 .dtcombo-wrap { position: absolute; }
+        #txtProfit { text-align: right; }
+        #btnShowSelectedTrial { position: absolute; left: 302px; top: 56px; width: 56px; height: 24px; border: 0; background: var(--teal); color: #fff; font: bold 13px Calibri, Verdana, sans-serif; cursor: pointer; padding: 0; }
+        #btnShowSelectedTrial:disabled { opacity: .75; cursor: progress; }
+        .chk { position: absolute; left: 367px; top: 7px; display: flex; align-items: center; gap: 3px; font: 12px "Segoe UI", sans-serif; margin: 0; cursor: pointer; white-space: nowrap; }
+        .chk input { margin: 0; }
+        .panel6 { flex: 1 1 auto; min-height: 160px; position: relative; display: flex; flex-direction: column; border: 1px solid #7f9db9; }
+        .grid-scroll { flex: 1 1 auto; min-height: 0; overflow: auto; outline: none; }
+        table.jg { border-collapse: separate; border-spacing: 0; table-layout: fixed; font: 11px Verdana, sans-serif; }
+        table.jg th { position: sticky; top: 0; z-index: 2; background: linear-gradient(#f7f9fb, var(--grid-head)); border-right: 1px solid var(--grid-line); border-bottom: 1px solid #9fb3c4; padding: 3px 4px; font-weight: normal; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        table.jg tr.flt td { position: sticky; top: 22px; z-index: 2; background: #fff; border-right: 1px solid var(--grid-line); border-bottom: 1px solid #9fb3c4; padding: 0; height: 18px; }
+        table.jg tr.flt input { width: 100%; box-sizing: border-box; border: 0; font: 11px Verdana, sans-serif; padding: 1px 3px; background: #fffff0; }
+        table.jg td { border-right: 1px solid var(--grid-line); border-bottom: 1px solid var(--grid-line); padding: 2px 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; height: 16px; }
+        table.jg tbody tr:nth-child(even) td { background: var(--alt); }
+        table.jg tbody tr:hover td { background: var(--sel); }
+        table.jg tbody tr.cur td { background: var(--sel); }
+        table.jg td.n { text-align: right; }
+        table.jg tfoot td { position: sticky; bottom: 0; z-index: 2; background: #e3e9ef; border-top: 1px solid #9fb3c4; font-weight: bold; text-align: right; }
+        a.lnk { color: #0b45a8; text-decoration: underline; cursor: pointer; }
+        .navr { flex: 0 0 auto; height: 22px; display: flex; align-items: center; gap: 6px; padding: 0 6px; background: #eef2f6; border-top: 1px solid #b8c6d3; font: 11px Verdana, sans-serif; color: #333; }
+        .wait { position: fixed; inset: 0; background: rgba(255,255,255,.55); display: flex; align-items: center; justify-content: center; z-index: 50; }
+        .wait .box { background: #fff; border: 1px solid var(--teal); box-shadow: 0 2px 8px rgba(0,0,0,.25); padding: 12px 18px; font: 12px Verdana, sans-serif; color: #035; }
+        .wait .box i { color: var(--teal); margin-right: 6px; }
+    </style>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261005a}"/>
+</head>
+<!--
+  Screen 13 "Capital Owner Equity Report" - Architecture.WinApp.Account_Reports.CapitalOwnerEquityReport (Text "Trial Balance Selected").
+  Source map (CapitalOwnerEquityReport.cs): Load :107 -> AccountTitleFill :82 (ReadAllAccountgroup, AccountClass = 1 AND Account_Level = 3);
+  Show :135 (SelectedTrialBalanceNew, dtHeader Prct/Profit :195); GridSettingsSelected :210; link :252 / Ctrl+Space :266;
+  Refresh :309; txtProfit KeyPress :323 / Leave :334; Print-120A :345; KeyDown :65.
+-->
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="nav-bar"><span>Trial Balance Selected</span><a href="/accounts/dashboard"><i class="fa fa-arrow-left"></i> Back to Dashboard</a></div>
+<div class="form-scroll">
+<div class="form">
+    <div class="panel2" id="tsSelectedTrialBalance">
+        <button type="button" class="ts-btn" id="btnRefreshSelectedTrial" accesskey="r" title="Refresh (Alt+R, Ctrl+R)"><i class="fa fa-refresh ico-ref"></i><span><u>R</u>efresh</span></button>
+        <button type="button" class="ts-btn" id="btnPrint" title="Print-120A"><i class="fa fa-print ico-print"></i><span>Print-120A</span></button>
+    </div>
+    <div class="panel3"><span id="label23">Capital Owner Equity Report</span></div>
+    <div class="panel5">
+        <span class="lbl" style="top:7px;">To Date</span>
+        <input type="date" id="datToDateST" style="left:109px; top:3px; width:249px; height:23px;" tabindex="1">
+        <span class="lbl" style="top:34px;">Account Title</span>
+        <select id="cmbAccountTitle" data-dtcombo="single" data-dtcombo-caption="Account Title" style="left:109px; top:28px; width:249px; height:26px;" tabindex="2"></select>
+        <span class="lbl" style="top:61px;">Profit</span>
+        <input type="text" id="txtProfit" style="left:109px; top:57px; width:192px; height:23px;" tabindex="3" autocomplete="off">
+        <button type="button" id="btnShowSelectedTrial" tabindex="4">Show</button>
+        <label class="chk"><input type="checkbox" id="ChkZkipZeroSelected" tabindex="150"> Skip Zero</label>
+    </div>
+    <div class="panel6">
+        <div class="grid-scroll" id="grdScroll" tabindex="0">
+            <table data-gridbar="CapitalOwnerEquityReport:grdSelected" class="jg" id="grdSelected">
+                <thead><tr id="grdHead"></tr><tr class="flt" id="grdFlt"></tr></thead>
+                <tbody id="grdBody"></tbody>
+                <tfoot><tr id="grdFoot"></tr></tfoot>
+            </table>
+        </div>
+        <div class="navr"><span id="navText">Record 0 of 0</span></div>
+    </div>
+</div>
+</div>
+<div class="wait" id="waitForm" hidden><div class="box"><i class="fa fa-spinner fa-spin"></i>Please wait...</div></div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20261002gv}"></script>
+<script th:src="@{/build/js/countx_acc_rpt_f.js?v=20261002gv}"></script>
+<script>
+(function () {
+    'use strict';
+    /* GridSettingsSelected: AccountId hidden; AccountCode link 110; AccountTitle 250; Closing 120; Prct 90; Profit 120.
+       Closing / Prct / Profit: Sum total, right aligned. Closing, Profit = stringFormatboth; Prct = "#,##0.####;(#,0.####);#" */
+    var COLS = [
+        { k: 'AccountCode', w: 110, link: true },
+        { k: 'AccountTitle', w: 250 },
+        { k: 'Closing', w: 120, n: true, f: function (v) { return AccF.both(v); } },
+        { k: 'Prct', w: 90, n: true, f: prct },
+        { k: 'Profit', w: 120, n: true, f: function (v) { return AccF.both(v); } }
+    ];
+    var CTX = null, dtHeader = [], filters = {}, curRow = -1, curCol = 0, shown = [];
+
+    function num(v) { var n = parseFloat(v); return isNaN(n) ? 0 : n; }
+    /* "#,##0.####;(#,0.####);#" - zero shows empty */
+    function prct(v) {
+        var n = num(v);
+        if (!isFinite(n)) return n > 0 ? '∞' : (n < 0 ? '(∞)' : '');
+        if (n === 0) return '';
+        var s = Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 4 });
+        if (s === '0') return '';
+        return n < 0 ? '(' + s + ')' : s;
+    }
+    function esc(s) { return AccF.esc(s == null ? '' : s); }
+    function busy(on) { $('#waitForm').prop('hidden', !on); $('#btnShowSelectedTrial,#btnRefreshSelectedTrial,#btnPrint').prop('disabled', on); }
+
+    function buildHead() {
+        var h = '', f = '';
+        COLS.forEach(function (c) { h += '<th style="width:' + c.w + 'px;min-width:' + c.w + 'px">' + c.k + '</th>'; f += '<td><input data-f="' + c.k + '" value="' + esc(filters[c.k] || '') + '"></td>'; });
+        $('#grdHead').html(h); $('#grdFlt').html(f);
+        $('#grdSelected').css('width', COLS.reduce(function (a, c) { return a + c.w; }, 0) + 'px');
+    }
+    function cellText(r, c) { return c.f ? c.f(r[c.k]) : (r[c.k] == null ? '' : String(r[c.k])); }
+    /* DynamicFiltering: a row is kept when each filter text is contained in the displayed cell text */
+    function render() {
+        shown = dtHeader.filter(function (r) {
+            return COLS.every(function (c) { var t = (filters[c.k] || '').toLowerCase(); return !t || cellText(r, c).toLowerCase().indexOf(t) >= 0; });
+        });
+        var body = [], tot = { Closing: 0, Prct: 0, Profit: 0 };
+        shown.forEach(function (r, i) {
+            var tr = '<tr data-i="' + i + '"' + (i === curRow ? ' class="cur"' : '') + '>';
+            COLS.forEach(function (c, ci) {
+                var t = cellText(r, c);
+                tr += '<td data-c="' + ci + '"' + (c.n ? ' class="n"' : '') + '>' + (c.link ? '<a class="lnk">' + esc(t) + '</a>' : esc(t)) + '</td>';
+            });
+            body.push(tr + '</tr>');
+            tot.Closing += num(r.Closing); tot.Prct += num(r.Prct); tot.Profit += num(r.Profit);
+        });
+        $('#grdBody').html(body.join(''));
+        var foot = '';
+        COLS.forEach(function (c, i) { foot += '<td>' + (c.n ? COLS[i].f(tot[c.k]) : (i === 0 ? 'Total' : '')) + '</td>'; });
+        $('#grdFoot').html(dtHeader.length ? foot : '');
+        $('#navText').text('Record ' + (shown.length ? Math.max(curRow, 0) + 1 : 0) + ' of ' + shown.length);
+    }
+
+    /* AccountTitleFill */
+    function accountTitleFill(done) {
+        return AccF.post ? new Promise(function (resolve, reject) {
+            $.getJSON('/api/accounts/capital-owner-equity/load').done(function (r) {
+                if (r && r.success === false) { reject(new Error(r.message)); return; }
+                resolve(r.data);
+            }).fail(function (x) { reject(new Error((x.responseJSON && x.responseJSON.message) || ('HTTP ' + x.status))); });
+        }) : Promise.reject(new Error('Page helpers did not load'));
+    }
+    function bindTitles(data) {
+        AccF.fillSelect('#cmbAccountTitle', data.accountTitles, 'Id', 'AccountTitle', null);
+        $('#cmbAccountTitle').val('').trigger('change');           // AllowNull: nothing active until the user picks
+    }
+
+    /* VoucherValidation_Load */
+    function loadForm() {
+        busy(true);
+        return accountTitleFill().then(function (data) { bindTitles(data); })
+            .catch(function (e) { alert(e.message); })
+            .then(function () { busy(false); AccF.focus('#cmbAccountTitle'); });
+    }
+    /* btnRefreshSelectedTrial_Click -> AccountTitleFill */
+    function refresh() {
+        busy(true);
+        return accountTitleFill().then(function (data) { bindTitles(data); })
+            .catch(function (e) { alert(e.message); })
+            .then(function () { busy(false); });
+    }
+
+    /* btnShowSelectedTrial_Click */
+    function show() {
+        dtHeader = []; curRow = -1;
+        if (!$('#cmbAccountTitle').val()) {          // cmbAccountTitle.ActiveRow == null
+            render(); AccF.focus('#cmbAccountTitle'); alert('Account Title Required'); return;
+        }
+        busy(true);
+        $.ajax({ url: '/api/accounts/capital-owner-equity/show', type: 'POST', contentType: 'application/json', dataType: 'json',
+            data: JSON.stringify({ accountId: $('#cmbAccountTitle').val(), toDate: $('#datToDateST').val(),
+                                   skipZero: $('#ChkZkipZeroSelected').is(':checked'), profit: $('#txtProfit').val() }) })
+            .done(function (r) {
+                if (r && r.success === false) { alert(r.message); return; }
+                dtHeader = r.data || [];
+                filters = {}; buildHead(); render();
+            })
+            .fail(function (x) { alert((x.responseJSON && x.responseJSON.message) || ('HTTP ' + x.status)); })
+            .always(function () { busy(false); render(); });
+    }
+
+    /* grdSelected_LinkClicked / Ctrl+Space on AccountCode: GoToGeneralLedgerFromLinkedEvent(AccountId, ActiveYr.Start_Period, datToDateST) */
+    function openLedger(row) {
+        if (!row) return;
+        var from = CTX && CTX.activeYear && CTX.activeYear.startPeriod;
+        AccF.openLedger(row.AccountId, from, $('#datToDateST').val());
+    }
+    $('#grdBody').on('click', 'a.lnk', function () { openLedger(shown[$(this).closest('tr').data('i')]); });
+    $('#grdBody').on('click', 'td', function () {
+        curRow = $(this).closest('tr').data('i'); curCol = $(this).data('c');
+        $('#grdBody tr').removeClass('cur'); $(this).closest('tr').addClass('cur');
+        $('#navText').text('Record ' + (curRow + 1) + ' of ' + shown.length);
+    });
+    $('#grdScroll').on('keydown', function (e) {
+        if (e.ctrlKey && e.key === ' ') {             // grdSelected_KeyDown: only on the AccountCode column of a data row
+            e.preventDefault();
+            if (curRow >= 0 && curCol === 0) openLedger(shown[curRow]);
+        } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+            e.preventDefault();
+            if (!shown.length) return;
+            curRow = Math.min(shown.length - 1, Math.max(0, curRow + (e.key === 'ArrowDown' ? 1 : -1)));
+            $('#grdBody tr').removeClass('cur'); var $r = $('#grdBody tr').eq(curRow).addClass('cur');
+            if ($r[0]) $r[0].scrollIntoView({ block: 'nearest' });
+            $('#navText').text('Record ' + (curRow + 1) + ' of ' + shown.length);
+        }
+    });
+    $('#grdFlt').on('input', 'input', function () { filters[$(this).data('f')] = this.value; curRow = -1; render(); });
+
+    /* txtProfit_KeyPress (CommonServices.OnlytextdecimelFunction): digits and one decimal point */
+    $('#txtProfit').on('keypress', function (e) {
+        if (e.ctrlKey || e.metaKey || e.key.length > 1) return;
+        if (!/[0-9.]/.test(e.key) || (e.key === '.' && this.value.indexOf('.') >= 0)) e.preventDefault();
+    });
+    /* txtProfit_Leave: Conversion.ToDouble(text).ToString("#,##0.####") */
+    $('#txtProfit').on('blur', function () {
+        var n = num(this.value.replace(/,/g, ''));
+        this.value = n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 4 });
+    });
+
+    /* btnPrint_Click: dtHeader -> 120A-CapitalOwnerEquityReport.rpt (CompanyName / CompanyAddress added by the server) */
+    $('#btnPrint').on('click', function () {
+        if (!dtHeader.length) { alert('No Data Found'); return; }
+        var rows = dtHeader.map(function (r) { return { AccountId: r.AccountId, AccountCode: r.AccountCode, AccountTitle: r.AccountTitle, Closing: r.Closing, Prct: r.Prct, Profit: r.Profit }; });
+        var $b = $('#btnPrint').prop('disabled', true), win = window.open('about:blank', '_blank');
+        fetch('/reports/print/grid', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rpt: '120A-CapitalOwnerEquityReport.rpt', title: '120A-CapitalOwnerEquityReport', rows: rows }) })
+            .then(function (r) {
+                var type = r.headers.get('Content-Type') || '';
+                if (r.ok && type.indexOf('application/pdf') === 0) return r.blob().then(function (b) { if (win) win.location = URL.createObjectURL(b); });
+                return r.text().then(function (t) { try { win.close(); } catch (x) { } alert(t || ('Print failed (' + r.status + ')')); });
+            })
+            .catch(function (e) { try { win.close(); } catch (x) { } alert(e.message); })
+            .then(function () { $b.prop('disabled', false); });
+    });
+
+    $('#btnShowSelectedTrial').on('click', show);
+    $('#btnRefreshSelectedTrial').on('click', refresh);
+
+    /* VoucherValidation_KeyDown: Ctrl+E / Esc close, Ctrl+R refresh, Ctrl+F5 To Date, Ctrl+Down grid */
+    $(document).on('keydown', function (e) {
+        if ((e.ctrlKey && (e.key === 'e' || e.key === 'E')) || e.key === 'Escape') {
+            if ($('.dtcombo-list:visible').length) return;
+            e.preventDefault(); window.location.href = '/accounts/dashboard';
+        }
+        if (e.ctrlKey && (e.key === 'r' || e.key === 'R')) { e.preventDefault(); refresh(); }
+        if (e.ctrlKey && e.key === 'F5') { e.preventDefault(); $('#datToDateST').focus(); }
+        if (e.ctrlKey && e.key === 'ArrowDown') { e.preventDefault(); $('#grdScroll').focus(); }
+    });
+
+    $(function () { (async function () {
+        $('#datToDateST').val(AccF.today());
+        buildHead(); render();
+        try { CTX = await AccF.context(); } catch (e) { /* the ledger link then opens without a From date */ }
+        loadForm();
+    })(); });
+})();
+</script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20261006-grid-control-placement}"></script>
+</body>
+</html>

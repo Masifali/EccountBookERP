@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fcy General Ledger</title>
+<link rel="stylesheet" href="/build/css/countx_desktop_combo.css?v=20261007r3">
+<link rel="stylesheet" href="/build/css/countx_prod_combo.css?v=20261007r3">
+<link rel="stylesheet" href="/build/css/countx_acrpt3.css?v=20261007r3">
+<!--
+  Screen 60 "Fcy General Ledger" = Architecture.WinApp.Account_Reports.FcyGeneralLedgerRpt (route /accounts/reports/fcy-general-ledger,
+  optional ?accountId=&fromDate=&toDate= = the desktop's public AccountId / FromDate / ToDate). R3 2026-10-07, built 1:1 on
+  InitializeComponent() (ClientSize 962x607, Maximized, KeyPreview):
+    panel2 Top 27   = toolStrip3 (Verdana 9.75): &Reset | 156-Print | 105C-Print (hidden) | 105C-Print-II (hidden)
+    panel3 Top 26   = teal rgb(10,110,110): label23 "FCY Ledger" @6,3 Tahoma 12 bold white + ctrlGrdBar1 @920,3 (38x21, anchored top right)
+    panel5 Top 59   = white: label27 "From Date" 11,6 | fromdate 11,27 111x23 | label33 "To Date" 125,6 | todate 125,27 111x23 |
+                      label2 "Account Title" 238,6 | cmbAccountTitle 238,25 283x26 (UltraCombo, LimitToList) | btnshow 523,25 61x26 rgb(10,110,110) Tahoma 9.75 bold |
+                      rdFromExports 593,12 | rdFromAccounts 593,32 (checked)   (Segoe UI Semibold 9 bold)
+    panel6 Fill     = grd (Verdana 8.25, FilterMode Automatic, AlternatingColors, TotalRow, RecordNavigator, AutomaticSort off)
+  Tab order: fromdate 0, todate 1, cmbAccountTitle 5, btnshow 6, rdFromExports 108, rdFromAccounts 109.
+  Page logic: /build/js/countx_acrpt3_fcygl.js (+ shared /build/js/countx_acrpt3.js). API: /api/accounts/acrpt3/fcygl/*
+-->
+<style>
+    .frm { min-width: 962px; min-height: 480px; }
+    .p3 { flex: 0 0 26px; height: 26px; background: rgb(10,110,110); position: relative; }
+    .p3 .cap { left: 6px; top: 3px; }
+    .p5 { flex: 0 0 59px; height: 59px; position: relative; background: #fff; }
+    #barMountA, #barMountB { right: 4px; top: 3px; }
+</style>
+<link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261005a}"/>
+</head>
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="frm-scroll">
+<div class="frm" id="FcyGeneralLedgerRpt">
+
+    <!-- panel2: toolStrip3 -->
+    <div class="ts">
+        <button type="button" id="new" title="Ctrl+N"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#2e9b45"/><path d="M8 4v8M4 8h8" stroke="#fff" stroke-width="2"/></svg><span><u>R</u>eset</span></button>
+        <button type="button" id="print156" title="Ctrl+P"><svg viewBox="0 0 16 16"><rect x="4" y="1.5" width="8" height="4" fill="#fff" stroke="#555"/><rect x="1.5" y="5.5" width="13" height="6" rx="1" fill="#6b7785"/><rect x="4" y="9.5" width="8" height="5" fill="#fff" stroke="#555"/></svg><span>156-Print</span></button>
+        <button type="button" id="print105C" hidden><svg viewBox="0 0 16 16"><rect x="4" y="1.5" width="8" height="4" fill="#fff" stroke="#555"/><rect x="1.5" y="5.5" width="13" height="6" rx="1" fill="#6b7785"/><rect x="4" y="9.5" width="8" height="5" fill="#fff" stroke="#555"/></svg><span>105C-Print</span></button>
+        <button type="button" id="print105CII" hidden><svg viewBox="0 0 16 16"><rect x="4" y="1.5" width="8" height="4" fill="#fff" stroke="#555"/><rect x="1.5" y="5.5" width="13" height="6" rx="1" fill="#6b7785"/><rect x="4" y="9.5" width="8" height="5" fill="#fff" stroke="#555"/></svg><span>105C-Print-II</span></button>
+    </div>
+
+    <!-- panel3: teal header -->
+    <div class="p3 teal">
+        <span class="cap">FCY Ledger</span>
+        <span class="bar-mount" id="barMountA"></span><span class="bar-mount" id="barMountB" hidden></span>
+    </div>
+
+    <!-- panel5: filters -->
+    <div class="p5">
+        <span class="lbl" style="left:11px;top:6px;">From Date</span>
+        <input type="date" id="fromDate" class="tb" tabindex="1" style="left:11px;top:27px;width:111px;height:23px;">
+        <span class="lbl" style="left:125px;top:6px;">To Date</span>
+        <input type="date" id="toDate" class="tb" tabindex="2" style="left:125px;top:27px;width:111px;height:23px;">
+        <span class="lbl" style="left:238px;top:6px;">Account Title</span>
+        <select id="cmb" data-dtcombo="single" data-dtcombo-caption="Account Title" tabindex="3" style="position:absolute;left:238px;top:25px;width:283px;height:26px;"></select>
+        <button type="button" id="show" class="teal-btn dk t" tabindex="4" style="left:523px;top:25px;width:61px;height:26px;" title="Show">Show</button>
+        <label class="rb sb" style="left:593px;top:12px;"><input type="radio" name="src" id="rdExports" tabindex="5"><span>From Exports</span></label>
+        <label class="rb sb" style="left:593px;top:32px;"><input type="radio" name="src" id="rdAccounts" tabindex="6" checked><span>From Accounts</span></label>
+    </div>
+
+    <!-- panel6: grd (the desktop renames the one grid FcyLedgerFromAccounts / FcyLedgerFromExports at Show) -->
+    <div class="gridbox" id="boxA">
+        <div class="grid" id="gridA" tabindex="0"><table data-gridbar="FcyGeneralLedgerRpt:FcyLedgerFromAccounts" data-gridbar-mount="#barMountA" class="g" id="grdA"><colgroup></colgroup><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        <div class="nav" id="navA" hidden>
+            <button type="button" data-nav="first" title="First">|&lt;</button><button type="button" data-nav="prev" title="Previous">&lt;</button>
+            <span id="navTextA"></span>
+            <button type="button" data-nav="next" title="Next">&gt;</button><button type="button" data-nav="last" title="Last">&gt;|</button>
+        </div>
+    </div>
+    <div class="gridbox" id="boxB" hidden>
+        <div class="grid" id="gridB" tabindex="0"><table data-gridbar="FcyGeneralLedgerRpt:FcyLedgerFromExports" data-gridbar-mount="#barMountB" class="g" id="grdB"><colgroup></colgroup><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        <div class="nav" id="navB" hidden>
+            <button type="button" data-nav="first" title="First">|&lt;</button><button type="button" data-nav="prev" title="Previous">&lt;</button>
+            <span id="navTextB"></span>
+            <button type="button" data-nav="next" title="Next">&gt;</button><button type="button" data-nav="last" title="Last">&gt;|</button>
+        </div>
+    </div>
+</div>
+</div>
+
+<script src="/build/js/countx_prod_combo.js?v=20261007r3"></script>
+<script src="/build/js/countx_doc_link.js?v=20261001pr"></script>
+<script src="/js/print-rpt.js?v=20261003erp"></script>
+<script src="/build/js/countx_acrpt3.js?v=20261007r3"></script>
+<script src="/build/js/countx_acrpt3_fcygl.js?v=20261007r3"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20261006-grid-control-placement}"></script>
+</body>
+</html>
