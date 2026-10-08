@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title th:text="${pageTitle}">Commission Trading Transaction</title>
     <link rel="stylesheet" th:href="@{/build/css/cmagt_theme.css?v=20260930T}">
-    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261005a}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261007-gridbar-flow}">
     <style>
         html,body{margin:0;background:#eef2f4;color:#111;font:12px "Segoe UI",Tahoma,Arial,sans-serif;overflow-x:hidden}
         .tx-toolbar{min-height:29px;display:flex;align-items:center;gap:3px;padding:2px 6px;background:#f4f4f4;border-bottom:1px solid #aaa;flex-wrap:wrap}
@@ -19,7 +19,7 @@
         .tx-field input,.tx-field select,.tx-field textarea{box-sizing:border-box;width:100%;min-width:0;height:25px;padding:2px 5px;border:1px solid #999;background:#fff;font:12px "Segoe UI",sans-serif}
         .tx-field textarea{height:46px;resize:vertical}.tx-wide{grid-column:span 2}.tx-tabs{display:flex;gap:3px;margin:5px 8px 0;border-bottom:1px solid #9aa5ae}
         .tx-tab[aria-selected="true"]{color:#fff;background:#087e7a;border-color:#087e7a;font-weight:700}.tx-panel{display:none;margin:0 8px 8px;padding:6px 0;background:#fff;border:1px solid #b2b2b2;border-top:0}.tx-panel.active{display:block}
-        .tx-grid-title{height:25px;display:flex;align-items:center;gap:6px;padding:0 7px;background:#087e7a;color:white;font:bold 14px Tahoma,sans-serif}.tx-grid-title small{font:11px "Segoe UI",sans-serif;margin-left:auto}
+        .tx-grid-title{height:25px;display:flex;align-items:center;gap:6px;padding:0 7px;background:#087e7a;color:white;font:bold 14px Tahoma,sans-serif}.tx-grid-title small{font:11px "Segoe UI",sans-serif;margin-left:auto}.tx-grid-mount{display:inline-flex;align-items:center;min-width:38px;height:24px;flex:0 0 auto}
         .tx-grid-tools{display:flex;align-items:center;gap:6px;padding:4px 6px}.tx-grid-tools button{height:23px;border:1px solid #98a3ad;background:#f8f8f8;color:#123;cursor:pointer}
         .tx-grid-scroll{height:calc(100vh - 416px);min-height:180px;overflow:auto;border-top:1px solid #aab9cc;background:white}
         table.tx-grid{border-collapse:collapse;width:max-content;min-width:100%;font:12px "Segoe UI",sans-serif;white-space:nowrap}
@@ -86,48 +86,44 @@
     <button class="tx-tab" data-tab="history" aria-selected="false" type="button">History</button>
 </nav>
 <section class="tx-panel active" id="panel-details">
-    <div class="tx-grid-title"><span>Detail</span><small id="detailCount">0 rows</small></div>
+    <div class="tx-grid-title"><span>Detail</span><small id="detailCount">0 rows</small><span class="tx-grid-mount" id="detailGridMount"></span></div>
     <div class="tx-grid-tools"><button type="button" data-add-grid="detailGrid">＋ Add Detail Row</button><span>Grid control is above the grid, as in the desktop window.</span></div>
-    <div class="gb-bar" id="detailGridMount"></div><div class="tx-grid-scroll"><table class="tx-grid" id="detailGrid" data-gridbar-title="Commission Trading Detail" data-gridbar-placement="toolbar" data-gridbar-mount="#detailGridMount" th:attr="data-gridbar=${transactionType == 'commission-bill' ? 'CommisionBillAgainstLoadingDelivery:grdDetail' : 'CommTradeLoadingDeliveryDirect:grd'}"><thead></thead><tbody></tbody></table></div>
+    <div class="tx-grid-scroll"><table class="tx-grid" id="detailGrid" data-gridbar-title="Commission Trading Detail" data-gridbar-placement="toolbar" data-gridbar-mount="#detailGridMount" th:attr="data-gridbar=${transactionType == 'commission-bill' ? 'CommisionBillAgainstLoadingDelivery:grdDetail' : 'CommTradeLoadingDeliveryDirect:grd'}"><thead></thead><tbody></tbody></table></div>
 </section>
 <section class="tx-panel" id="panel-packing">
-    <div class="tx-grid-title"><span>Packing Material / PM Other</span><small id="packingCount">0 rows</small></div>
+    <div class="tx-grid-title"><span>Packing Material / PM Other</span><small id="packingCount">0 rows</small><span class="tx-grid-mount" id="packingGridMount"></span></div>
     <div class="tx-grid-tools"><button type="button" data-add-grid="packingGrid">＋ Add Row</button></div>
-    <div class="gb-bar" id="packingGridMount"></div><div class="tx-grid-scroll"><table class="tx-grid" id="packingGrid" data-gridbar-title="Commission Trading Packing Material" data-gridbar-placement="toolbar" data-gridbar-mount="#packingGridMount" th:attr="data-gridbar=${transactionType == 'commission-bill' ? 'CommisionBillAgainstLoadingDelivery:grdPackingMaterial' : 'CommTradeLoadingDeliveryDirect:grdPackingMaterial'}"><thead></thead><tbody></tbody></table></div>
+    <div class="tx-grid-scroll"><table class="tx-grid" id="packingGrid" data-gridbar-title="Commission Trading Packing Material" data-gridbar-placement="toolbar" data-gridbar-mount="#packingGridMount" th:attr="data-gridbar=${transactionType == 'commission-bill' ? 'CommisionBillAgainstLoadingDelivery:grdPackingMaterial' : 'CommTradeLoadingDeliveryDirect:grdPackingMaterial'}"><thead></thead><tbody></tbody></table></div>
 </section>
 <section class="tx-panel" id="panel-revenue">
-    <div class="tx-grid-title"><span>Revenue / Expense</span><small id="revenueCount">0 rows</small></div>
+    <div class="tx-grid-title"><span>Revenue / Expense</span><small id="revenueCount">0 rows</small><span th:if="${transactionType == 'commission-bill'}" class="tx-grid-mount" id="revenueGridMount"></span></div>
     <div class="tx-grid-tools"><button type="button" data-add-grid="revenueGrid">＋ Add Row</button><button type="button" data-add-grid="supplierExpenseGrid" th:if="${transactionType == 'loading-delivery-direct'}">＋ Add Supplier Expense</button><button type="button" data-add-grid="brokerGrid" th:if="${transactionType == 'commission-bill'}">＋ Add Brokery</button></div>
-    <div class="gb-bar" id="revenueGridMount"></div><div class="tx-grid-scroll"><table class="tx-grid" id="revenueGrid" data-gridbar-title="Commission Trading Revenue Expense" data-gridbar-placement="toolbar" data-gridbar-mount="#revenueGridMount" th:attr="data-gridbar=${transactionType == 'commission-bill' ? 'CommisionBillAgainstLoadingDelivery:grdrevenue' : 'CommTradeLoadingDeliveryDirect:grdrevenue'}"><thead></thead><tbody></tbody></table></div>
+    <div class="tx-grid-scroll"><table class="tx-grid" id="revenueGrid" data-gridbar-title="Commission Trading Revenue Expense" data-gridbar-placement="toolbar" data-gridbar-mount="#revenueGridMount" th:attr="data-gridbar=${transactionType == 'commission-bill' ? 'CommisionBillAgainstLoadingDelivery:grdrevenue' : null}"><thead></thead><tbody></tbody></table></div>
     <div th:if="${transactionType == 'loading-delivery-direct'}" class="tx-grid-title"><span>Supplier Expenses</span><small id="supplierExpenseCount">0 rows</small></div>
-    <div th:if="${transactionType == 'loading-delivery-direct'}" class="gb-bar" id="supplierExpenseGridMount"></div>
-    <div th:if="${transactionType == 'loading-delivery-direct'}" class="tx-grid-scroll"><table class="tx-grid" id="supplierExpenseGrid" data-gridbar-title="Commission Trading Supplier Expenses" data-gridbar-placement="toolbar" data-gridbar-mount="#supplierExpenseGridMount" data-gridbar="CommTradeLoadingDeliveryDirect:grdSupplierExpense"><thead></thead><tbody></tbody></table></div>
+    <div th:if="${transactionType == 'loading-delivery-direct'}" class="tx-grid-scroll"><table class="tx-grid" id="supplierExpenseGrid"><thead></thead><tbody></tbody></table></div>
     <div th:if="${transactionType == 'commission-bill'}" class="tx-grid-title"><span>Commission Brokery</span><small id="brokerCount">0 rows</small></div>
-    <div th:if="${transactionType == 'commission-bill'}" class="gb-bar" id="brokerGridMount"></div>
-    <div th:if="${transactionType == 'commission-bill'}" class="tx-grid-scroll"><table class="tx-grid" id="brokerGrid" data-gridbar-title="Commission Brokery" data-gridbar-placement="toolbar" data-gridbar-mount="#brokerGridMount" data-gridbar="CommisionBillAgainstLoadingDelivery:grdBrokery"><thead></thead><tbody></tbody></table></div>
+    <div th:if="${transactionType == 'commission-bill'}" class="tx-grid-scroll"><table class="tx-grid" id="brokerGrid"><thead></thead><tbody></tbody></table></div>
 </section>
 <section class="tx-panel" id="panel-payments">
-    <div class="tx-grid-title"><span>Payment Terms</span><small id="paymentCount">0 rows</small></div>
+    <div class="tx-grid-title"><span>Payment Terms</span><small id="paymentCount">0 rows</small><span th:if="${transactionType == 'loading-delivery-direct'}" class="tx-grid-mount" id="paymentGridMount"></span></div>
     <div class="tx-grid-tools"><button type="button" data-add-grid="paymentGrid">＋ Add Row</button></div>
-    <div class="gb-bar" id="paymentGridMount"></div><div class="tx-grid-scroll"><table class="tx-grid" id="paymentGrid" data-gridbar-title="Commission Trading Payment Terms" data-gridbar-placement="toolbar" data-gridbar-mount="#paymentGridMount" th:attr="data-gridbar=${transactionType == 'commission-bill' ? 'CommisionBillAgainstLoadingDelivery:grdPaymentTermCustomer' : 'CommTradeLoadingDeliveryDirect:grdPaymentTermSupplier'}"><thead></thead><tbody></tbody></table></div>
+    <div class="tx-grid-scroll"><table class="tx-grid" id="paymentGrid" data-gridbar-title="Commission Trading Payment Terms" data-gridbar-placement="toolbar" data-gridbar-mount="#paymentGridMount" th:attr="data-gridbar=${transactionType == 'loading-delivery-direct' ? 'CommTradeLoadingDeliveryDirect:grdPaymentTermSupplier' : null}"><thead></thead><tbody></tbody></table></div>
 </section>
 <section class="tx-panel" id="panel-other">
     <div th:if="${transactionType == 'commission-bill'}" class="tx-grid-title"><span>Supplier Summary</span><small id="summaryCount">0 rows</small></div>
     <div th:if="${transactionType == 'commission-bill'}" class="tx-grid-tools"><button type="button" data-add-grid="summaryGrid">＋ Add Row</button></div>
-    <div th:if="${transactionType == 'commission-bill'}" class="gb-bar" id="summaryGridMount"></div>
-    <div th:if="${transactionType == 'commission-bill'}" class="tx-grid-scroll"><table class="tx-grid" id="summaryGrid" data-gridbar-title="Commission Bill Supplier Summary" data-gridbar-placement="toolbar" data-gridbar-mount="#summaryGridMount" data-gridbar="CommisionBillAgainstLoadingDelivery:grdsummary"><thead></thead><tbody></tbody></table></div>
+    <div th:if="${transactionType == 'commission-bill'}" class="tx-grid-scroll"><table class="tx-grid" id="summaryGrid"><thead></thead><tbody></tbody></table></div>
     <div th:if="${transactionType == 'commission-bill'}" class="tx-grid-title"><span>Vehicle Freight</span><small id="vehicleCount">0 rows</small></div>
     <div th:if="${transactionType == 'commission-bill'}" class="tx-grid-tools"><button type="button" data-add-grid="vehicleGrid">＋ Add Row</button></div>
-    <div th:if="${transactionType == 'commission-bill'}" class="gb-bar" id="vehicleGridMount"></div>
-    <div th:if="${transactionType == 'commission-bill'}" class="tx-grid-scroll"><table class="tx-grid" id="vehicleGrid" data-gridbar-title="Commission Bill Vehicle Freight" data-gridbar-placement="toolbar" data-gridbar-mount="#vehicleGridMount" data-gridbar="CommisionBillAgainstLoadingDelivery:grdVehicleDetail"><thead></thead><tbody></tbody></table></div>
+    <div th:if="${transactionType == 'commission-bill'}" class="tx-grid-scroll"><table class="tx-grid" id="vehicleGrid"><thead></thead><tbody></tbody></table></div>
     <div th:if="${transactionType == 'commission-bill'}" class="tx-grid-title"><span>Supplier Payment Terms</span><small id="supplierPaymentCount">0 rows</small></div>
     <div th:if="${transactionType == 'commission-bill'}" class="tx-grid-tools"><button type="button" data-add-grid="supplierPaymentGrid">＋ Add Row</button></div>
-    <div th:if="${transactionType == 'commission-bill'}" class="gb-bar" id="supplierPaymentGridMount"></div>
-    <div th:if="${transactionType == 'commission-bill'}" class="tx-grid-scroll"><table class="tx-grid" id="supplierPaymentGrid" data-gridbar-title="Commission Bill Supplier Payment Terms" data-gridbar-placement="toolbar" data-gridbar-mount="#supplierPaymentGridMount" data-gridbar="CommisionBillAgainstLoadingDelivery:grdPaymentTermSupplier"><thead></thead><tbody></tbody></table></div>
+    <div th:if="${transactionType == 'commission-bill'}" class="tx-grid-scroll"><table class="tx-grid" id="supplierPaymentGrid"><thead></thead><tbody></tbody></table></div>
 </section>
 <section class="tx-panel" id="panel-history">
     <div class="tx-history-filters"><label>From Date<input id="historyFromDate" type="date"></label><label>To Date<input id="historyToDate" type="date"></label><label>Doc No From<input id="historyFromNo" inputmode="numeric"></label><label>Doc No To<input id="historyToNo" inputmode="numeric"></label><button class="tx-show" id="btnHistory" type="button">Show</button><span id="historyCount"></span></div>
-    <div class="gb-bar" id="historyGridMount"></div><div class="tx-grid-scroll"><table class="tx-grid" id="historyGrid" data-gridbar-title="Commission Trading History" data-gridbar-placement="toolbar" data-gridbar-mount="#historyGridMount" th:attr="data-gridbar=${transactionType == 'commission-bill' ? 'CommisionBillAgainstLoadingDelivery:grdHistory' : 'CommTradeLoadingDeliveryDirect:grdHistory'}"><thead></thead><tbody><tr><td class="tx-empty">No records loaded.</td></tr></tbody></table></div>
+    <div class="tx-grid-title"><span>History</span><span class="tx-grid-mount" id="historyGridMount"></span></div>
+    <div class="tx-grid-scroll"><table class="tx-grid" id="historyGrid" data-gridbar-title="Commission Trading History" data-gridbar-placement="toolbar" data-gridbar-mount="#historyGridMount" th:attr="data-gridbar=${transactionType == 'commission-bill' ? 'CommisionBillAgainstLoadingDelivery:grdHistory' : 'CommTradeLoadingDeliveryDirect:grdHistory'}"><thead></thead><tbody><tr><td class="tx-empty">No records loaded.</td></tr></tbody></table></div>
 </section>
 <div class="tx-modal" id="pendingModal" role="dialog" aria-modal="true" aria-label="Select pending loading deliveries"><div class="tx-modal-card"><div class="tx-modal-head">Pending Loading Deliveries<button id="pendingClose" type="button">Close</button></div><div class="tx-pending-scroll"><table id="pendingGrid"><thead></thead><tbody><tr><td>Loading…</td></tr></tbody></table></div><div class="tx-grid-tools"><button id="pendingLoad" type="button">Load Selected</button><span id="pendingStatus"></span></div></div></div>
 <script>
@@ -199,6 +195,6 @@
   initialize();
 })();
 </script>
-<script th:src="@{/build/js/countx_grid_bar.js?v=20261006-grid-control-placement}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20261007-gridbar-flow}"></script>
 </body>
 </html>

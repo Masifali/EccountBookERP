@@ -226,13 +226,14 @@ public class ItemPmMapService {
     }
 
     private void insertDetail(UserAccount user, int mapId, ItemPmMapDto.Detail detail, int sequence) {
+        Object[] args = {null, mapId, detail.getPmItemId(), detail.getBaseUomId(), detail.getWeightCapacity(),
+                detail.getPmQty(), sequence, detail.getRemarks(), null, user.getId(), null, user.getId(), 1, null};
         jdbcTemplate.queryForList(
                 "EXEC [MRP].[USP_ItemAndPMItemMapDetail_Insert] "
                         + "@ItemAndPMItemMapDetailId=?, @ItemAndPMItemMapId=?, @PmItemId=?, @BaseUomId=?, "
                         + "@WeightCapacity=?, @PmQty=?, @seqNo=?, @RemarksDetail=?, @EntryDate=?, @EntryUserId=?, "
                         + "@ModifyDate=?, @ModifyUserId=?, @ActionTypeId=?, @RevisionNo=?",
-                null, mapId, detail.getPmItemId(), detail.getBaseUomId(), detail.getWeightCapacity(),
-                detail.getPmQty(), sequence, detail.getRemarks(), null, user.getId(), null, user.getId(), 1, null);
+                args);
     }
 
     private void updateDetail(UserAccount user, int mapId, Map<String, Object> old, int actionId) {

@@ -278,7 +278,7 @@
 
         var label = /caption|title|header|toolbar|(?:^|[\s_-])bar(?:$|[\s_-])|(?:^|[\s_-])head(?:$|[\s_-])/.test(key);
         if (!label) return 0;
-        if (/win-header-panel|grid-caption|grid-title|history-title/.test(key)) return 110;
+        if (/grid-tools|win-header-panel|grid-caption|grid-title|history-title/.test(key)) return 110;
         if (/(grid|table|history|filtered|records?|results?|report).*(caption|title|header|toolbar|bar|head)|(caption|title|header|toolbar|bar|head).*(grid|table|history|filtered|records?|results?|report)/.test(key)) return 100;
         if (/panel\d+/.test(key)) return 65;
         if (/(?:^|[\s_-])toolbar(?:$|[\s_-])/.test(key)) return 70;
@@ -290,9 +290,8 @@
         return /(?:^|\s)(?:gb(?:-[\w-]+)?|win-groupbox|groupbox|card|panel)(?:\s|$)/.test(classes);
     }
 
-    /* Find the nearest short caption/tool strip that belongs to this grid. The desktop places
-       CtrlGrdBar in the containing panel header; many web forms already name an explicit mount,
-       while the remaining forms can be aligned from their adjacent header markup. */
+    /* Find the nearest short caption/tool strip that belongs to this grid. Never mount onto a
+       column header: desktop CtrlGrdBar sits in the strip above the grid. */
     Bar.prototype.findGridHeader = function (anchor) {
         var node = anchor;
         for (var depth = 0; node && node.parentElement && depth < 8; depth++, node = node.parentElement) {
@@ -399,8 +398,8 @@
         this.menu.querySelector('.gb-title-row').classList.toggle('gb-title-empty', !tt);
     };
 
-    /** Honor explicit mounts, otherwise use the nearest grid caption/header before falling back
-        to the top edge of the grid. */
+    /** Honor explicit mounts, otherwise use a nearby toolbar/caption strip. The fallback is a
+        normal-flow strip before the grid, so it cannot cover column captions. */
     Bar.prototype.placeGear = function () {
         var mountSelector = this.opts.mount || this.scope.getAttribute('data-gridbar-mount');
         var placement = this.opts.placement || this.scope.getAttribute('data-gridbar-placement') || 'toolbar';
@@ -417,27 +416,18 @@
         mount = mount || inferred;
         if (mount) {
             var mountStyle = global.getComputedStyle(mount);
-            var flexMount = /flex|grid/.test(mountStyle.display);
-            if (inferred && !flexMount) {
-                if (!this.autoSlot) {
-                    this.autoSlot = doc.createElement('span');
-                    this.autoSlot.className = 'gb-auto-slot';
-                    this.autoSlot.setAttribute('aria-label', T.gridControl);
-                    this.autoSlot.style.cssText = 'position:absolute;top:1px;right:4px;display:inline-flex;align-items:center;z-index:20;';
-                }
-                if (mountStyle.position === 'static') mount.style.position = 'relative';
-                if (this.autoSlot.parentNode !== mount) mount.appendChild(this.autoSlot);
-                if (this.gear.parentNode !== this.autoSlot) this.autoSlot.appendChild(this.gear);
-                this.gear.classList.remove('gb-gear-inline');
-                this.mountNode = this.autoSlot;
-            } else {
-                if (this.autoSlot && this.autoSlot.parentNode) this.autoSlot.remove();
-                if (this.gear.parentNode !== mount) mount.appendChild(this.gear);
-                this.gear.classList.add('gb-gear-inline');
-                this.gear.style.marginLeft = 'auto';
-                this.gear.style.flex = '0 0 auto';
-                this.mountNode = mount;
+            if (this.autoSlot && this.autoSlot.parentNode) this.autoSlot.remove();
+            /* Recognized caption strips can be made flex rows safely. This puts the control at
+               the right edge without absolutely positioning it over the last column. */
+            if (inferred && !/flex|grid/.test(mountStyle.display)) {
+                mount.style.display = 'flex';
+                mount.style.alignItems = 'center';
             }
+            if (this.gear.parentNode !== mount) mount.appendChild(this.gear);
+            this.gear.classList.add('gb-gear-inline');
+            this.gear.style.marginLeft = 'auto';
+            this.gear.style.flex = '0 0 auto';
+            this.mountNode = mount;
             /* A page script that rewrites the strip (innerHTML) would drop the gear: put it back. */
             if (this.mountEl !== mount && global.MutationObserver) {
                 var self = this;
@@ -456,7 +446,7 @@
         this.gear.classList.remove('gb-gear-inline');
         this.gear.style.marginLeft = '';
         this.gear.style.flex = '';
-        /* No caption/header exists: float above the grid so the gear does not scroll away. */
+        /* No caption/header exists: reserve a real toolbar row before the grid. */
         if (!this.barEl) {
             this.barEl = doc.createElement('div');
             this.barEl.className = 'gb-bar';

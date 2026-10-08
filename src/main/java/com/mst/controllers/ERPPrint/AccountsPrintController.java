@@ -1224,7 +1224,22 @@ public class AccountsPrintController extends ReportPrintSupport {
     @RequestMapping(value = "/reports/print/111a-trial-balances", method = RequestMethod.POST)
     public void print111ATrialBalances(HttpServletResponse response, @RequestBody(required = false) Rpt111ATrialBalancesRequest request) throws Exception {
         if (request == null) request = new Rpt111ATrialBalancesRequest();
-        printReport(response, "111A-AcRptTrialBalances.rpt", request.toArgs());
+        Map<String, Object> report = reportDataService.run("111a-acrpttrialbalances", request.toArgs());
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> rows = (List<Map<String, Object>>) report.getOrDefault("rows", List.of());
+
+        /* TrialBalance.btntrialMultisubPrint_Click reuses dtTrial and builds these two in-memory
+           tables itself; there are no separate stored-procedure calls for either subreport. */
+        List<Map<String, Object>> debitRows = new ArrayList<>();
+        List<Map<String, Object>> creditRows = new ArrayList<>();
+        for (Map<String, Object> row : rows) {
+            if (toDouble(row.get("ClosingDr")) > 0.0) debitRows.add(row);
+            if (toDouble(row.get("ClosingCr")) > 0.0) creditRows.add(row);
+        }
+        report.put("subReports", List.of(
+                Map.of("template", "TrialBalanceDebitSubReport.rpt", "rows", debitRows),
+                Map.of("template", "TrialBalanceCreditSubReport.rpt", "rows", creditRows)));
+        printReportData(response, "111A-AcRptTrialBalances.rpt", report);
     }
 
     @RequestMapping(value = "/reports/print/111a-trial-balances", method = RequestMethod.GET)

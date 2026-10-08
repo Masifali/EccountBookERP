@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sale Invoice History</title>
+<link rel="stylesheet" href="/build/css/countx_desktop_combo.css?v=20261007sr1">
+<link rel="stylesheet" href="/build/css/countx_prod_combo.css?v=20261007sr1">
+<link rel="stylesheet" href="/build/css/countx_acrpt1.css?v=20261007sr1">
+<link rel="stylesheet" href="/build/css/countx_sarpt1.css?v=20261007sr1">
+<!--
+Screen 485 frmSaleInvoiceHistory = Architecture.WinApp.Inventory_Reports.frmSaleInvoiceHistory ("Sale Invoice Report"),
+route /sale/reports/sale-invoice-history. Group R1 2026-10-07, built 1:1 on InitializeComponent():
+  panel1 Fill = panel2 (Top 28: toolStrip3 - &Reset | &Refresh | Print drop-down | ShortCut Keys, Verdana 9.75) | panel3 (Top 28 Teal: label23 6,4 Tahoma 12 bold)
+              | panel4 (Top 174 White: groupBox1 4,4 789x165 "Filters"; label7 / CmbIsApproved are Visible = false at x 1044) | panel5 Fill (panel6 Teal 28 + DataGridHistory).
+  groupBox1 children (relative to the group box): label3 "Branch Name" 9,21 | cmbBranchName 136,15 261x26 (checked) | label12 "Date Type" 9,50 | cmbDateType 136,44 261x26
+    | label27 "From Date && To" 9,79 | GRNfromdate 136,75 129x23 | GRNToDate 268,75 129x23 | label2 "Invoice No From && To" 9,108 | txtInvoiceNoFrom 136,104 | txtInvoiceNoto 268,104
+    | label9 "Sale Order From && To" 9,136 | txtsaleorderfrom 136,132 | txtsaleorderto 268,132 | label5 "Rate From && To" 403,21 | txtratefrom 499,17 104x23 | txtrateto 606,17 100x23
+    | label1 "Customer Name" 403,50 | CmbSupplier 499,44 207x26 | label6 "Item Name" 403,79 | cmbitem 499,73 | label10 "WareHouse" 403,108 | cmbWareHouse 499,102
+    | label11 "JobLot" 403,136 | CmbJobLot 499,130 | btnshow "Show" 710,130 67x27.
+Lists: /api/sale/sarpt1/sale-invoice-history/lookups and /combos. Report: .../rows (Sp_InvSaleInvoice_Rpt). Print drop-down: the "Sales" folder .rpt files
+(/api/sale/sarpt1/dynamic-reports), prints through /sale/reports/sarpt1/print/sale-invoice-history. Logic: /build/js/countx_sarpt1_485.js.
+-->
+</head>
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="frm-scroll">
+<div class="frm" id="frmSaleInvoiceHistory" style="min-width:1044px;min-height:600px;">
+
+    <div class="p2"><div class="ts">
+        <button type="button" id="reset" title="Ctrl+N"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#2e9b45"/><path d="M8 4v8M4 8h8" stroke="#fff" stroke-width="2"/></svg><span><u>R</u>eset</span></button><button type="button" id="refresh" title="Ctrl+R"><svg viewBox="0 0 16 16"><path d="M13 8a5 5 0 1 1-1.5-3.6" fill="none" stroke="#1f6fc5" stroke-width="2"/><path d="M13.5 1.5v4h-4z" fill="#1f6fc5"/></svg><span><u>R</u>efresh</span></button><span class="ddwrap"><button type="button" id="print" title="Ctrl+P"><svg viewBox="0 0 16 16"><rect x="4" y="1.5" width="8" height="4" fill="#fff" stroke="#555"/><rect x="1.5" y="5.5" width="13" height="6" rx="1" fill="#6b7785"/><rect x="4" y="9.5" width="8" height="5" fill="#fff" stroke="#555"/></svg><span>Print &#9662;</span></button><div class="ddm" id="printMenu" hidden></div></span><button type="button" id="shortcuts" title="Ctrl+Alt"><svg viewBox="0 0 16 16"><rect x="1.5" y="4" width="13" height="8" rx="1.5" fill="#fff" stroke="#555"/><path d="M4 7h1M7 7h1M10 7h1M4 10h8" stroke="#555"/></svg><span>ShortCut Keys</span></button>
+    </div></div>
+
+    <div class="teal" style="height:28px;"><span class="cap" style="left:6px;top:4px;">Sale Invoice History</span></div>
+    <div class="pfx" style="height:174px;">
+        <div class="gb" style="left:4px;top:4px;width:789px;height:165px;">
+            <div class="gb-frame"></div><span class="gb-cap">Filters</span>
+            <span class="lbl" style="left:9px;top:21px;">Branch Name</span>
+            <select id="cmbBranchName" multiple data-dtcombo="single" data-dtcombo-checked data-dtcombo-caption="Branch Name" style="position:absolute;left:136px;top:15px;width:261px;height:26px;"></select>
+            <span class="lbl" style="left:9px;top:50px;">Date Type</span>
+            <select id="cmbDateType" data-dtcombo="single" data-dtcombo-caption="Parameters" style="position:absolute;left:136px;top:44px;width:261px;height:26px;"></select>
+            <span class="lbl" style="left:9px;top:79px;">From Date &amp; To</span>
+            <input type="date" id="GRNfromdate" class="tb" style="left:136px;top:75px;width:129px;height:23px;">
+            <input type="date" id="GRNToDate" class="tb" style="left:268px;top:75px;width:129px;height:23px;">
+            <span class="lbl" style="left:9px;top:108px;">Invoice No From &amp; To</span>
+            <input id="txtInvoiceNoFrom" class="tb" autocomplete="off" style="left:136px;top:104px;width:129px;height:23px;">
+            <input id="txtInvoiceNoto" class="tb" autocomplete="off" style="left:268px;top:104px;width:129px;height:23px;">
+            <span class="lbl" style="left:9px;top:136px;">Sale Order From &amp; To</span>
+            <input id="txtsaleorderfrom" class="tb" autocomplete="off" style="left:136px;top:132px;width:129px;height:23px;">
+            <input id="txtsaleorderto" class="tb" autocomplete="off" style="left:268px;top:132px;width:129px;height:23px;">
+            <span class="lbl" style="left:403px;top:21px;">Rate From &amp; To</span>
+            <input id="txtratefrom" class="tb" autocomplete="off" style="left:499px;top:17px;width:104px;height:23px;text-align:right;">
+            <input id="txtrateto" class="tb" autocomplete="off" style="left:606px;top:17px;width:100px;height:23px;text-align:right;">
+            <span class="lbl" style="left:403px;top:50px;">Customer Name</span>
+            <select id="CmbSupplier" data-dtcombo="single" data-dtcombo-caption="Customer Name" style="position:absolute;left:499px;top:44px;width:207px;height:26px;"></select>
+            <span class="lbl" style="left:403px;top:79px;">Item Name</span>
+            <select id="cmbitem" data-dtcombo="single" data-dtcombo-caption="Item Name" style="position:absolute;left:499px;top:73px;width:207px;height:26px;"></select>
+            <span class="lbl" style="left:403px;top:108px;">WareHouse</span>
+            <select id="cmbWareHouse" data-dtcombo="single" data-dtcombo-caption="WareHouse" style="position:absolute;left:499px;top:102px;width:207px;height:26px;"></select>
+            <span class="lbl" style="left:403px;top:136px;">JobLot</span>
+            <select id="CmbJobLot" data-dtcombo="single" data-dtcombo-caption="Job Lot" style="position:absolute;left:499px;top:130px;width:207px;height:26px;"></select>
+            <button type="button" id="show" class="teal-btn vd" style="left:710px;top:130px;width:67px;height:27px;" title="Ctrl+S">Show</button>
+        </div>
+    </div>
+    <div class="p4">
+    <div class="teal" style="height:28px;"><span class="cap" style="left:6px;top:4px;">Sale Invoice History</span></div>
+    <div class="gridbox">
+        <div class="grid" id="grid" tabindex="0"><table class="g sg" id="results"><colgroup></colgroup><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        <div class="nav" id="nav" hidden>
+            <button type="button" data-nav="first" title="First">|&lt;</button><button type="button" data-nav="prev" title="Previous">&lt;</button>
+            <span id="navText"></span>
+            <button type="button" data-nav="next" title="Next">&gt;</button><button type="button" data-nav="last" title="Last">&gt;|</button>
+        </div>
+    </div>
+    </div>
+</div>
+</div>
+
+<dialog class="sck" id="shortcutDialog">
+    <div class="hd">ShortCut Keys</div>
+    <table><thead><tr><th>KeyCombination</th><th>Description</th></tr></thead><tbody id="shortcutRows"></tbody></table>
+    <div class="ft"><button type="button" id="closeShortcuts">Close</button></div>
+</dialog>
+
+<script src="/build/js/countx_prod_combo.js?v=20261007sr1"></script>
+<script src="/build/js/countx_acrpt1_core.js?v=20261007sr1"></script>
+<script src="/build/js/countx_sarpt1_core.js?v=20261007sr1"></script>
+<script src="/build/js/countx_doc_link.js?v=20261001pr"></script>
+<script src="/build/js/countx_sarpt1_485.js?v=20261007sr1"></script>
+</body>
+</html>
