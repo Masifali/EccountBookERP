@@ -843,6 +843,37 @@ public class DashboardModuleService {
         WEB_ROUTES_BY_SCREEN_ID.put(543, "/sale/steel/sale-invoice"); // SaleInvoice_St (sale/admin port 2026-10-08)
         WEB_ROUTES_BY_SCREEN_ID.put(544, "/sale/steel/sale-invoice-direct"); // SaleInvoiceDirect_St (sale/admin port 2026-10-08)
         WEB_ROUTES_BY_SCREEN_ID.put(585, "/sale/salt/sale-direct-invoice"); // frmSaleDirectInvoice (sale/admin port 2026-10-08)
+        WEB_ROUTES_BY_SCREEN_ID.put(327, "/store/sale-invoice-direct-without-tax"); // InvfrmInvSaleInvoiceDirectPackingMaterial (sale/admin port 2026-10-08)
+        WEB_ROUTES_BY_SCREEN_ID.put(343, "/store/gate-pass-general-outward"); // GatePassGeneralOutward (sale/admin port 2026-10-08)
+        WEB_ROUTES_BY_SCREEN_ID.put(348, "/store/goods-dispatch-notes-store"); // GoodsDispatchNotes_Store (sale/admin port 2026-10-08)
+        WEB_ROUTES_BY_SCREEN_ID.put(328, "/store/purchase-order-store"); // PurchsaeOrderTrade (sale/admin port 2026-10-08)
+        WEB_ROUTES_BY_SCREEN_ID.put(342, "/store/inward-gate-pass-general"); // GatePassGeneral (sale/admin port 2026-10-08)
+        WEB_ROUTES_BY_SCREEN_ID.put(399, "/admin/financial-year-close"); // frmFinancialYearClose (sale/admin port 2026-10-08)
+        WEB_ROUTES_BY_SCREEN_ID.put(402, "/admin/define-organization"); // DefineOrgnization (sale/admin port 2026-10-08)
+        WEB_ROUTES_BY_SCREEN_ID.put(464, "/purchase/gate-pass-inward-for-gate"); // frmGatePassInwardForGate (sale/admin port 2026-10-08)
+        WEB_ROUTES_BY_SCREEN_ID.put(465, "/purchase/grn-for-gate"); // frmGrnForGate (sale/admin port 2026-10-08)
+        WEB_ROUTES_BY_SCREEN_ID.put(466, "/purchase/purchase-invoice-for-gate"); // frmPurchaseInvoiceForGate (sale/admin port 2026-10-08)
+        WEB_ROUTES_BY_SCREEN_ID.put(892, "/purchase/purchase-invoice-for-gate"); // frmPurchaseInvoiceForGate (sale/admin port 2026-10-08)
+        WEB_ROUTES_BY_SCREEN_ID.put(467, "/purchase/purchase-invoice-for-ghalla-mandi"); // frmPurchaseInvoiceForGhallaMandi (sale/admin port 2026-10-08)
+        WEB_ROUTES_BY_SCREEN_ID.put(893, "/purchase/purchase-invoice-for-ghalla-mandi"); // frmPurchaseInvoiceForGhallaMandi (sale/admin port 2026-10-08)
+        WEB_ROUTES_BY_SCREEN_ID.put(468, "/purchase/gate-pass-inward-for-ghalla-mandi"); // frmGatePassInwardForGhallaMandi (sale/admin port 2026-10-08)
+        WEB_ROUTES_BY_SCREEN_ID.put(469, "/purchase/grn-for-ghalla-mandi"); // frmGrnForGhallaMandi (sale/admin port 2026-10-08)
+        WEB_ROUTES_BY_SCREEN_ID.put(476, "/purchase/reports/purchase-invoice-history"); // frmPurchaseInvoiceHistory (sale/admin port 2026-10-08)
+        WEB_ROUTES_BY_SCREEN_ID.put(921, "/inventory/reports/grn-audit-history"); // frmGrnAudit_History (sale/admin port 2026-10-08)
+        WEB_ROUTES_BY_SCREEN_ID.put(788, "/purchase/supplier-dispatch"); // frmSupplierDispatch (sale/admin port 2026-10-08)
+        WEB_ROUTES_BY_SCREEN_ID.put(789, "/purchase/stock-in-transit"); // frmSupplierDispatchPreBill (sale/admin port 2026-10-08)
+        WEB_ROUTES_BY_SCREEN_ID.put(790, "/purchase/reports/stock-in-transit"); // frmSupplierDispatchPreBillReport (sale/admin port 2026-10-08)
+        WEB_ROUTES_BY_SCREEN_ID.put(890, "/packing-material/purchase-invoice-direct"); // frmPurchaseInvoiceDirectPM (sale/admin port 2026-10-08)
+        WEB_ROUTES_BY_SCREEN_ID.put(891, "/packing-material/purchase-invoice"); // PurchaseInvoicePackingMaterial (sale/admin port 2026-10-08)
+        WEB_ROUTES_BY_SCREEN_ID.put(894, "/purchase/purchase-invoice-again-grn-direct"); // frmPurchaseInvoiceAgaintGrnDirect (sale/admin port 2026-10-08)
+        WEB_ROUTES_BY_SCREEN_ID.put(895, "/purchase/purchase-invoice-direct"); // InvfrmPurchasedirectInvoice (sale/admin port 2026-10-08)
+        WEB_ROUTES_BY_SCREEN_ID.put(896, "/purchase/purchase-invoice"); // InvfrmPurchaseInvoice (sale/admin port 2026-10-08)
+        WEB_ROUTES_BY_SCREEN_ID.put(897, "/purchase/purchase-invoice-against-grn-order"); // PurchaseInvoiceAgainstGrnOrder (sale/admin port 2026-10-08)
+        WEB_ROUTES_BY_SCREEN_ID.put(898, "/purchase/purchase-invoice-return"); // InvfrmInvPurchaseInvoiceReturn (sale/admin port 2026-10-08)
+        WEB_ROUTES_BY_SCREEN_ID.put(901, "/sale/sale-invoice-return"); // InvfrmSaleInvoiceReturn (sale/admin port 2026-10-08)
+        WEB_ROUTES_BY_SCREEN_ID.put(903, "/store/purchase-invoice-direct-store"); // frmPurchaseInvoiceDirectStore (sale/admin port 2026-10-08)
+        WEB_ROUTES_BY_SCREEN_ID.put(905, "/store/purchase-invoice-store-management"); // PurchaseInvoiceStoreManagement (sale/admin port 2026-10-08)
+        WEB_ROUTES_BY_SCREEN_ID.put(904, "/purchase/purchase-invoice-direct-store-with-variant"); // frmPurchaseInvoiceDirectStoreWithVariant (sale/admin port 2026-10-08)
     }
 
     /** The desktop forms behind the DashBoard menu, for the placeholder to name (DashboardNew.cs :5161-5196). */
@@ -1184,7 +1215,51 @@ public class DashboardModuleService {
     }
 
     /** The rights rows, from the procedure when it works and from the proven join when it does not. */
+    /* 2026-10-10: one page load calls rights() 8+ times (module cards, screen cards, app names,
+       sidebar ...) and each call ran USP_GetUserRightsForViewbyUserId, which is slow; Hikari then
+       reported "Apparent connection leak" for connections held past 60 s. The procedure result is
+       now shared per user/company/app for RIGHTS_TTL_MS, and concurrent callers wait for the one
+       running call instead of each starting their own. Failures are never cached. */
+    private static final long RIGHTS_TTL_MS = 30_000L;
+    private final Map<String, Object[]> rightsCache = new java.util.concurrent.ConcurrentHashMap<>();
+    private final Map<String, Object> rightsLocks = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /** Drops the shared rights rows so the next page load reads them again from the procedure. */
+    public void clearRightsCache() { rightsCache.clear(); }
+
+    @SuppressWarnings("unchecked")
     private List<Map<String, Object>> rights() {
+        String key;
+        try {
+            int appId = 0;
+            try { appId = currentUserContext.currentAppId(); } catch (Exception ignored) { }
+            key = currentUserContext.currentUserId() + "|" + currentUserContext.currentCompanyId() + "|" + appId;
+        } catch (Exception e) {
+            return rightsUncached();
+        }
+        Object[] hit = rightsCache.get(key);
+        if (hit != null && System.currentTimeMillis() - (Long) hit[0] < RIGHTS_TTL_MS) {
+            lastError = null;
+            rightsSource = "USP_GetUserRightsForViewbyUserId";
+            return new ArrayList<>((List<Map<String, Object>>) hit[1]);
+        }
+        Object lock = rightsLocks.computeIfAbsent(key, k -> new Object());
+        synchronized (lock) {
+            hit = rightsCache.get(key);
+            if (hit != null && System.currentTimeMillis() - (Long) hit[0] < RIGHTS_TTL_MS) {
+                lastError = null;
+                rightsSource = "USP_GetUserRightsForViewbyUserId";
+                return new ArrayList<>((List<Map<String, Object>>) hit[1]);
+            }
+            List<Map<String, Object>> rows = rightsUncached();
+            if (lastError == null) {
+                rightsCache.put(key, new Object[] { System.currentTimeMillis(), new ArrayList<>(rows) });
+            }
+            return rows;
+        }
+    }
+
+    private List<Map<String, Object>> rightsUncached() {
         lastError = null;
         rightsSource = "USP_GetUserRightsForViewbyUserId";
         /* DashboardNew.GetViewRightsByUserId (:1791-1812): when the procedure throws, the desktop

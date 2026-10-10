@@ -145,15 +145,7 @@
                     }
                     break;
                 case "date":
-                    // Deliberately NOT populated from configKey here - ditto a verified desktop
-                    // quirk: Configuration.cs's BindForm() load loop has an if/else-if chain for
-                    // CheckBox/TextBox/ComboBox/UltraCombo/RadioButton only - DateTimePicker
-                    // (txtAsOnDateForDoCompulasoryOnGDN, the only one on this whole screen) has
-                    // NO branch there at all, so its saved ConfigKey is written by FireDateTime()
-                    // on change but never read back on screen load. The control's WinForms
-                    // default (DateTime.Now at construction) is what's always shown - preserved
-                    // here by defaulting the <input type=date> to today's date every load,
-                    // never the saved value. See applyDateTimePickerDefaults() below.
+                    $el.val(dateForInput(configKey));
                     break;
             }
         });
@@ -191,14 +183,10 @@
         //     interaction path) does (b); initial page load only does (a).
         applyGdnFirstFlowCoupling();
 
-        // Commission Agent tab (verified Configuration.cs constructor calling
-        // CmbCustomGroupForWHTAccounts_Leave(null,null) TWICE on load and
-        // CmbCustomGroupForWHTAccountsSale_Leave() never at all - see
-        // IConfigurationService#getAccountsByCustomGroup's own javadoc for the full desktop-bug
-        // writeup) - only the Purchase-side WHT account combo is refreshed on initial load.
+        // Both dependent account lists must exist before their saved selections can be restored.
         applySupplierCustomerNameDisplayMode();
         applyWhtAccountsCoupling("CmbCustomGroupForWHTAccounts", "CmbDefaultWhtAccountPurchaseIdForCommissionAgentPortal", true);
-        applyWhtAccountsCoupling("CmbCustomGroupForWHTAccountsSale", "CmbDefaultWhtAccountSaleIdForCommissionAgentPortal", false);
+        applyWhtAccountsCoupling("CmbCustomGroupForWHTAccountsSale", "CmbDefaultWhtAccountSaleIdForCommissionAgentPortal", true);
     }
 
     // Ditto Configuration.cs's BindForm() load-time normalization: every one of these three
@@ -388,15 +376,28 @@
         });
     }
 
-    // Ditto WinForms DateTimePicker's own default Value (DateTime.Now at construction, never
-    // overwritten by BindForm() for this control type - see the "date" case in
-    // populateAllControls() above). Runs on every load, unconditionally.
+    function dateForInput(value) {
+        if (!value) return "";
+        var iso = String(value).match(/^(\d{4})-(\d{2})-(\d{2})(?:$|[T ])/);
+        var legacy = String(value).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:$| )/);
+        if (!iso && !legacy) return "";
+        var year = Number(iso ? iso[1] : legacy[3]);
+        var month = Number(iso ? iso[2] : legacy[1]);
+        var day = Number(iso ? iso[3] : legacy[2]);
+        var date = new Date(year, month - 1, day);
+        if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return "";
+        return String(year).padStart(4, "0") + "-" + String(month).padStart(2, "0") + "-" + String(day).padStart(2, "0");
+    }
+
+    // Default only an unset date; saved values survive reload in the browser's ISO format.
     function applyDateTimePickerDefaults() {
         var today = new Date();
         var iso = today.getFullYear() + "-" +
             String(today.getMonth() + 1).padStart(2, "0") + "-" +
             String(today.getDate()).padStart(2, "0");
-        $("input[data-config-type='date']").val(iso);
+        $("input[data-config-type='date']").each(function () {
+            if (!$(this).val()) $(this).val(iso);
+        });
     }
 
     // Formats an <input type=date> value ("YYYY-MM-DD") to match .NET's

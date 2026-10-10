@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Order's Status</title>
+<link rel="stylesheet" href="/build/css/countx_desktop_combo.css?v=20261008bk">
+<link rel="stylesheet" href="/build/css/countx_prod_combo.css?v=20261008bk">
+<link rel="stylesheet" href="/build/css/countx_acrpt1.css?v=20261008bk">
+<link rel="stylesheet" href="/build/css/countx_sarpt1.css?v=20261008bk">
+<!--
+Screen 762 OrderDashboard = Architecture.WinApp.PreBookingAndDelivery.MyOrdersStatus ("My Order's Status"), route /sale/reports/order-dashboard.
+Module 2042 Booking Office / Customer Portal Report, port 2026-10-08 (key B), built on InitializeComponent() (909x673, BackColor White, no tool strip, no KeyPreview shortcuts):
+  panel3 Dock Top 28 (10,110,110) = label23 4,4 Tahoma 12 bold white "My Order's Status"
+  panel1 Dock Top 64 = groupBox1 "Filters" 0,0 539x64 (Tahoma 9.75 bold): label33 "From Date" 8,15 / fromdate 8,33 135x23 | label3 "To Date" 146,15 / ToDate 146,33 135x23 (dd-MMM-yyyy, Verdana 9.75)
+    | lblCostCenter "Cost Center" 284,14 / CmbCostCenter 283,32 188x26 (visible only when AppId == 5, then first row and disabled) | btnShow "Show" 475,32 57x26 (10,110,110, Verdana 9.75 bold white)
+  panel2 Dock Top 150 = CardsFlowLayoutPanel Fill (FixedSingle): one MyOrderStatusCard (178x143, white, FixedSingle; lblCaption Teal 43 high Tahoma 9.75 bold white centred, hand cursor = the only clickable part;
+    picture 34x34 at 71,59; lblValue Tahoma 11.25 bold centred 42,106 88x22) per row of usp_PreBookingOrder_Dashboard
+  PanelForCaptionIncludingBooking Dock Fill (hidden until a Booking / Pending card is clicked): CardsPanel Top 101 = four 131x94 FixedSingle boxes at x 25 / 205 / 385 / 565
+    (label Teal 38 high Tahoma 9.75 bold white: Customer's / Qty / Weight / Amount; value label 3,56 Verdana 9.75 bold) + tabControl1 Dock Left 734 wide (Tahoma 9 bold):
+    Item / Customer / Item_Customer / Customer_Item / Item_Pack / Pack_Item, each tab a GridEX (Verdana 8.25, no group-by box)
+  panelTransitSale Dock Fill (hidden): grdSaleOrTransit GridEX (Verdana 8.25) for Delivery In Transit / Sales Bill.
+Data /api/sale/bk/order-status/init|cards|booking|pending|transit|bills|confirm; slips use the shared /reports/print/* endpoints. Logic: /build/js/sale_bk_order_status.js.
+-->
+<style>
+[hidden]{display:none !important;}
+.mos-cards{display:flex;flex-wrap:wrap;align-content:flex-start;box-sizing:border-box;border:1px solid #767676;overflow:auto;height:150px;background:#fff;}
+.mos-card{width:178px;height:143px;box-sizing:border-box;border:1px solid #767676;background:#fff;position:relative;margin:3px;flex:0 0 auto;}
+.mos-card .cap{display:block;height:43px;background:teal;color:#fff;font:bold 13px Tahoma,Verdana,sans-serif;text-align:center;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.mos-card .ico{position:absolute;left:70px;top:58px;width:34px;height:34px;}
+.mos-card .val{position:absolute;left:41px;top:105px;width:88px;height:22px;font:bold 15px Tahoma,Verdana,sans-serif;text-align:center;line-height:22px;}
+.mos-box{position:absolute;width:131px;height:94px;box-sizing:border-box;border:1px solid #767676;background:#fff;}
+.mos-box .cap{display:block;height:38px;background:teal;color:#fff;font:bold 13px Tahoma,Verdana,sans-serif;}
+.mos-box .val{position:absolute;left:2px;top:55px;width:123px;height:22px;font:bold 13px Verdana,Tahoma,sans-serif;}
+#tabsHost .tabs button{font:bold 12px Tahoma,Verdana,sans-serif;}
+#transitGrid td input.rem{width:100%;box-sizing:border-box;border:1px solid #7a7a7a;font:11px Verdana,Tahoma,sans-serif;height:19px;padding:0 3px;}
+</style>
+</head>
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="frm-scroll">
+<div class="frm" id="MyOrdersStatus" style="min-width:909px;min-height:560px;background:#fff;">
+    <div class="teal" style="height:28px;background:rgb(10,110,110);"><span class="cap" style="left:4px;top:4px;">My Order's Status</span></div>
+    <div style="position:relative;flex:0 0 64px;height:64px;">
+        <div class="gb" style="left:0;top:0;width:539px;height:64px;">
+            <div class="gb-frame"></div><span class="gb-cap">Filters</span>
+            <span class="lbl" style="left:8px;top:15px;">From Date</span>
+            <input type="date" id="fromdate" class="tb" style="left:8px;top:33px;width:135px;height:23px;">
+            <span class="lbl" style="left:146px;top:15px;">To Date</span>
+            <input type="date" id="ToDate" class="tb" style="left:146px;top:33px;width:135px;height:23px;">
+            <span class="lbl" id="lblCostCenter" style="left:284px;top:14px;" hidden>Cost Center</span>
+            <select id="CmbCostCenter" data-dtcombo="single" data-dtcombo-caption="Cost Center" style="position:absolute;left:283px;top:32px;width:188px;height:26px;"></select>
+            <button type="button" id="btnShow" class="teal-btn vd" style="left:475px;top:32px;width:57px;height:26px;background:rgb(10,110,110);">Show</button>
+        </div>
+    </div>
+    <div class="mos-cards" id="CardsFlowLayoutPanel"></div>
+    <div id="PanelForCaptionIncludingBooking" style="flex:1 1 auto;min-height:0;display:flex;flex-direction:column;" hidden>
+        <div id="CardsPanel" style="position:relative;flex:0 0 101px;height:101px;">
+            <div class="mos-box" style="left:25px;top:4px;"><span class="cap">Customer's</span><span class="val" id="lblCustomers">0</span></div>
+            <div class="mos-box" style="left:205px;top:5px;"><span class="cap">Qty</span><span class="val" id="lblQty">0</span></div>
+            <div class="mos-box" style="left:385px;top:3px;"><span class="cap">Weight</span><span class="val" id="lblWeight">0</span></div>
+            <div class="mos-box" style="left:565px;top:3px;"><span class="cap">Amount</span><span class="val" id="lblAmount">0</span></div>
+        </div>
+        <div id="tabsHost" style="flex:1 1 auto;min-height:0;display:flex;flex-direction:column;width:734px;">
+            <div class="tabs" id="tabStrip">
+                <button type="button" data-tab="0" class="on">Item</button><button type="button" data-tab="1">Customer</button><button type="button" data-tab="2">Item_Customer</button>
+                <button type="button" data-tab="3">Customer_Item</button><button type="button" data-tab="4">Item_Pack</button><button type="button" data-tab="5">Pack_Item</button>
+            </div>
+            <div class="tabpage" data-page="0">
+                <div class="gridbox">
+        <div class="grid" id="grdItem" tabindex="0"><table class="g sg" id="tblItem"><colgroup></colgroup><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        <div class="nav" id="navItem" hidden>
+            <button type="button" data-nav="first" title="First">|&lt;</button><button type="button" data-nav="prev" title="Previous">&lt;</button>
+            <span id="navTextItem"></span>
+            <button type="button" data-nav="next" title="Next">&gt;</button><button type="button" data-nav="last" title="Last">&gt;|</button>
+        </div>
+    </div>
+            </div>
+            <div class="tabpage" data-page="1" hidden>
+                <div class="gridbox">
+        <div class="grid" id="grdCustomer" tabindex="0"><table class="g sg" id="tblCustomer"><colgroup></colgroup><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        <div class="nav" id="navCustomer" hidden>
+            <button type="button" data-nav="first" title="First">|&lt;</button><button type="button" data-nav="prev" title="Previous">&lt;</button>
+            <span id="navTextCustomer"></span>
+            <button type="button" data-nav="next" title="Next">&gt;</button><button type="button" data-nav="last" title="Last">&gt;|</button>
+        </div>
+    </div>
+            </div>
+            <div class="tabpage" data-page="2" hidden>
+                <div class="gridbox">
+        <div class="grid" id="grdItemCustomer" tabindex="0"><table class="g sg" id="tblItemCustomer"><colgroup></colgroup><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        <div class="nav" id="navItemCustomer" hidden>
+            <button type="button" data-nav="first" title="First">|&lt;</button><button type="button" data-nav="prev" title="Previous">&lt;</button>
+            <span id="navTextItemCustomer"></span>
+            <button type="button" data-nav="next" title="Next">&gt;</button><button type="button" data-nav="last" title="Last">&gt;|</button>
+        </div>
+    </div>
+            </div>
+            <div class="tabpage" data-page="3" hidden>
+                <div class="gridbox">
+        <div class="grid" id="grdCustomerItem" tabindex="0"><table class="g sg" id="tblCustomerItem"><colgroup></colgroup><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        <div class="nav" id="navCustomerItem" hidden>
+            <button type="button" data-nav="first" title="First">|&lt;</button><button type="button" data-nav="prev" title="Previous">&lt;</button>
+            <span id="navTextCustomerItem"></span>
+            <button type="button" data-nav="next" title="Next">&gt;</button><button type="button" data-nav="last" title="Last">&gt;|</button>
+        </div>
+    </div>
+            </div>
+            <div class="tabpage" data-page="4" hidden>
+                <div class="gridbox">
+        <div class="grid" id="grdItemPack" tabindex="0"><table class="g sg" id="tblItemPack"><colgroup></colgroup><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        <div class="nav" id="navItemPack" hidden>
+            <button type="button" data-nav="first" title="First">|&lt;</button><button type="button" data-nav="prev" title="Previous">&lt;</button>
+            <span id="navTextItemPack"></span>
+            <button type="button" data-nav="next" title="Next">&gt;</button><button type="button" data-nav="last" title="Last">&gt;|</button>
+        </div>
+    </div>
+            </div>
+            <div class="tabpage" data-page="5" hidden>
+                <div class="gridbox">
+        <div class="grid" id="grdPackItem" tabindex="0"><table class="g sg" id="tblPackItem"><colgroup></colgroup><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        <div class="nav" id="navPackItem" hidden>
+            <button type="button" data-nav="first" title="First">|&lt;</button><button type="button" data-nav="prev" title="Previous">&lt;</button>
+            <span id="navTextPackItem"></span>
+            <button type="button" data-nav="next" title="Next">&gt;</button><button type="button" data-nav="last" title="Last">&gt;|</button>
+        </div>
+    </div>
+            </div>
+        </div>
+    </div>
+    <div id="panelTransitSale" style="flex:1 1 auto;min-height:0;display:flex;flex-direction:column;" hidden>
+        <div class="gridbox">
+        <div class="grid" id="transitGrid" tabindex="0"><table class="g sg" id="tblTransit"><colgroup></colgroup><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        <div class="nav" id="navTransit" hidden>
+            <button type="button" data-nav="first" title="First">|&lt;</button><button type="button" data-nav="prev" title="Previous">&lt;</button>
+            <span id="navTextTransit"></span>
+            <button type="button" data-nav="next" title="Next">&gt;</button><button type="button" data-nav="last" title="Last">&gt;|</button>
+        </div>
+    </div>
+    </div>
+</div>
+</div>
+
+<script src="/build/js/countx_prod_combo.js?v=20261008bk"></script>
+<script src="/build/js/countx_acrpt1_core.js?v=20261008bk"></script>
+<script src="/build/js/countx_sarpt1_core.js?v=20261008bk"></script>
+<script src="/build/js/sale_bk_order_status.js?v=20261008bk"></script>
+</body>
+</html>

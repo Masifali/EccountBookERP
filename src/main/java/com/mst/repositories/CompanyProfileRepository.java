@@ -2,6 +2,7 @@ package com.mst.repositories;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.SqlParameterValue;
+import com.mst.repositories.support.ProcExec;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -131,12 +132,7 @@ public class CompanyProfileRepository {
             sql.append('@').append(name).append("=?");
             args.add(typed(name, model.get(name)));
         }
-        List<Map<String, Object>> rows = jdbc.queryForList(sql.toString(), args.toArray());
-        if (rows.isEmpty()) return null;
-        for (Object v : rows.get(0).values()) {
-            if (v instanceof Number) return ((Number) v).intValue();
-        }
-        return null;
+        return ProcExec.call(jdbc, sql.toString(), args.toArray());
     }
 
     /**

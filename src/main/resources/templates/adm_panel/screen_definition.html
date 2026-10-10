@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Screen Definition - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_define.css?v=20260929a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_adm_panel.css?v=20261007a}"/>
+</head>
+<!--
+  Architecture.WinApp.frmScreenDefinetion (791), 1040 wide; tabs 'Screen Definition' | 'Document Types' | 'Define Methods' (the last two start hidden: Ctrl+Shift+F10 / F11).
+  Screen Definition: panel3 (51, teal) toolbar + 'Screens Definition'; panel2 (90, white) entry fields; grdScreenDefination 683 | Screen Rights + Applications 341.
+  Document Types: panel9 (54) 'DocumentType', panel10 (116), History (26). Define Methods: panel14 (54) 'Define Methods', panel13 (63), History (26).
+-->
+<body class="pd-body ap-body" data-screen="frmScreenDefinetion">
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="ap-form" style="max-width:1040px;">
+    <div class="ap-tabs">
+        <button type="button" id="tabScreen" class="ap-tab is-active" onclick="AP.tab('pgScreen')">Screen Definition</button>
+        <button type="button" id="tabDoc" class="ap-tab is-hidden" onclick="AP.tab('pgDoc')">Document Types</button>
+        <button type="button" id="tabMethods" class="ap-tab is-hidden" onclick="AP.tab('pgMethods')">Define Methods</button>
+    </div>
+    <div class="ap-fill">
+    <div class="ap-page is-active" id="pgScreen">
+    <div class="ap-teal" style="height:51px;">
+        <div class="ap-tool" style="position:absolute;left:0;top:0;right:0;height:27px;">
+            <button type="button" id="btnnew" class="ap-tool-btn" onclick="AP.newForm()"><i class="fa fa-file-o ap-ic-green"></i><span><u>N</u>ew</span></button>
+            <button type="button" id="BtnRefereshSD" class="ap-tool-btn" onclick="AP.refresh()"><i class="fa fa-refresh ap-ic-green"></i><span><u>R</u>efresh</span></button>
+            <button type="button" id="btnSave" class="ap-tool-btn" onclick="AP.save()"><i class="fa fa-floppy-o ap-ic-blue"></i><span><u>S</u>ave</span></button>
+            <button type="button" id="btnUpdate" class="ap-tool-btn is-hidden" onclick="AP.save()"><i class="fa fa-pencil ap-ic-blue"></i><span><u>U</u>pdate</span></button>
+            <button type="button" id="btnSorting" class="ap-tool-btn" onclick="AP.sorting()"><i class="fa fa-sort-numeric-asc ap-ic-teal"></i><span>Update_Sorting &amp; Screen Alias</span></button>
+            <button type="button" id="btnShortCutKeysSD" class="ap-tool-btn" onclick="AP.shortcuts()"><i class="fa fa-keyboard-o ap-ic-gray"></i><span>ShortCut Keys</span></button>
+            <button type="button" id="BtnfrmUserModuleAdmin" class="ap-tool-btn" onclick="AP.moduleAdmin()"><i class="fa fa-user ap-ic-blue"></i><span>Module Admin User</span></button>
+            <button type="button" id="btnDefineModule" class="ap-tool-btn" onclick="AP.defineModule()"><i class="fa fa-th-large ap-ic-teal"></i><span>Define Module</span></button>
+            <button type="button" id="btnAppMenu" class="ap-tool-btn" onclick="AP.defineAppMenu()"><i class="fa fa-bars ap-ic-teal"></i><span>Define AppMenu</span></button>
+        </div>
+        <span class="ap-title" style="left:3px;top:29px;font:bold 12pt Tahoma,sans-serif;">Screens Definition</span>
+        <label class="ap-chk is-hidden" id="lblNotValidate" style="position:absolute;left:847px;top:31px;color:#fff;font:9pt Verdana,sans-serif;"><input type="checkbox" id="chkNotValidateUrl"/> Not Validate TargetUrl</label>
+    </div>
+    <div class="ap-abs" style="height:90px;width:1024px;">
+            <label class="ap-lbl" style="left:6px;top:11px;">Module Name</label>
+            <select id="cmbModuleName" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Module Name" style="left:89px;top:5px;width:268px;"></select>
+            <label class="ap-lbl" style="left:358px;top:11px;">Screen Alias</label>
+            <input type="text" id="txtScreenAlias" class="ap-txt" style="left:432px;top:7px;width:287px;height:23px;"/>
+            <label class="ap-lbl" style="left:724px;top:11px;">Sort No</label>
+            <input type="text" id="txtSortNo" class="ap-txt" style="left:775px;top:7px;width:73px;height:23px;" inputmode="numeric"/>
+            <label class="ap-lbl" style="left:6px;top:38px;">Screen Name</label>
+            <input type="text" id="txtScreenName" class="ap-txt" style="left:89px;top:34px;width:268px;height:23px;"/>
+            <label class="ap-lbl" style="left:358px;top:38px;">Companies</label>
+            <select id="CmbCompany" multiple class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-checked data-dtcombo-caption="Companies" style="left:432px;top:32px;width:287px;"></select>
+            <label class="ap-lbl" style="left:724px;top:38px;">AppId</label>
+            <input type="text" id="txtAppId" class="ap-txt" style="left:775px;top:34px;width:73px;height:23px;" inputmode="numeric"/>
+            <label class="ap-lbl" style="left:6px;top:66px;">Target Url</label>
+            <input type="text" id="txtTargetUrl" class="ap-txt" style="left:89px;top:62px;width:759px;height:23px;"/>
+            <label class="ap-chk" style="left:854px;top:64px;"><input type="checkbox" id="ChkIsActive"/> Is Active</label>
+    </div>
+    <div class="ap-panes" style="flex:1;min-height:420px;">
+        <div class="ap-pane" style="width:683px;">
+            <div class="ap-phead ap-big" style="height:26px;"><span>Screens</span></div>
+            <div class="ap-scroll" tabindex="0"><table class="ap-grid" id="grdScreenDefination"><thead></thead><tbody></tbody></table></div>
+        </div>
+        <div class="ap-pane" style="width:341px;">
+            <div class="ap-phead" style="height:26px;"><span>Screen Rights</span></div>
+            <div class="ap-scroll" tabindex="0" style="flex:0 0 331px;"><table class="ap-grid" id="grdScreenRights"><thead></thead><tbody></tbody></table></div>
+            <div class="ap-phead" style="height:35px;"><span>Applications</span></div>
+            <div class="ap-scroll" tabindex="0"><table class="ap-grid" id="grdApplications"><thead></thead><tbody></tbody></table></div>
+        </div>
+    </div>
+    </div>
+    <div class="ap-page" id="pgDoc">
+    <div class="ap-teal" style="height:54px;">
+        <div class="ap-tool" style="position:absolute;left:0;top:0;right:0;height:27px;">
+            <button type="button" id="btnDocNew" class="ap-tool-btn" onclick="AP.docNew()"><i class="fa fa-file-o ap-ic-green"></i><span><u>N</u>ew</span></button>
+            <button type="button" id="btnDocSave" class="ap-tool-btn" onclick="AP.docSave()"><i class="fa fa-floppy-o ap-ic-blue"></i><span><u>S</u>ave</span></button>
+            <button type="button" id="btnDocUpdate" class="ap-tool-btn is-hidden" onclick="AP.docUpdate()"><i class="fa fa-pencil ap-ic-blue"></i><span><u>U</u>pdate</span></button>
+            <button type="button" id="btnDocShortCut" class="ap-tool-btn" onclick="AP.shortcuts()"><i class="fa fa-keyboard-o ap-ic-gray"></i><span>ShortCut Keys</span></button>
+        </div>
+        <span class="ap-title" style="left:4px;top:32px;font:bold 12pt Tahoma,sans-serif;">DocumentType</span>
+    </div>
+    <div class="ap-abs" style="height:116px;width:1024px;">
+            <label class="ap-lbl" style="left:8px;top:14px;">ID</label>
+            <input type="text" id="txtDocTypeId" class="ap-txt" style="left:67px;top:10px;width:199px;height:23px;" inputmode="numeric"/>
+            <label class="ap-lbl" style="left:8px;top:40px;">Code</label>
+            <input type="text" id="txtDocTypeCode" class="ap-txt" style="left:67px;top:36px;width:199px;height:23px;"/>
+            <label class="ap-lbl" style="left:8px;top:67px;">Target Url</label>
+            <input type="text" id="txtDocTypeTargetUrl" class="ap-txt" style="left:67px;top:63px;width:588px;height:23px;"/>
+            <label class="ap-lbl" style="left:8px;top:93px;">Remarks</label>
+            <input type="text" id="txtDocTypeRemarks" class="ap-txt" style="left:67px;top:89px;width:588px;height:23px;"/>
+            <label class="ap-lbl" style="left:272px;top:14px;">Description</label>
+            <input type="text" id="txtDocTypeDescription" class="ap-txt" style="left:367px;top:10px;width:288px;height:23px;"/>
+            <label class="ap-lbl" style="left:272px;top:40px;">Other Lang Desc</label>
+            <input type="text" id="txtDocTypeOtherLangDescription" class="ap-txt" style="left:367px;top:36px;width:288px;height:23px;"/>
+            <label class="ap-lbl" style="left:658px;top:14px;">Screen Name</label>
+            <input type="text" id="txtDocTypeScreenName" class="ap-txt" style="left:739px;top:10px;width:199px;height:23px;"/>
+    </div>
+    <div class="ap-teal" style="height:26px;"><span class="ap-title" style="left:3px;top:3px;font:bold 11.25pt Tahoma,sans-serif;">History</span></div>
+    <div class="ap-scroll" tabindex="0" style="min-height:240px;flex:1;"><table class="ap-grid ap-auto" id="grdDocTypes"><thead></thead><tbody></tbody></table></div>
+    </div>
+    <div class="ap-page" id="pgMethods">
+    <div class="ap-teal" style="height:54px;">
+        <div class="ap-tool" style="position:absolute;left:0;top:0;right:0;height:27px;">
+            <button type="button" id="btnMethNew" class="ap-tool-btn" onclick="AP.methNew()"><i class="fa fa-file-o ap-ic-green"></i><span><u>N</u>ew</span></button>
+            <button type="button" id="btnMethRefresh" class="ap-tool-btn" onclick="AP.methRefresh()"><i class="fa fa-refresh ap-ic-green"></i><span><u>R</u>efresh</span></button>
+            <button type="button" id="btnMethSave" class="ap-tool-btn" onclick="AP.methSave()"><i class="fa fa-floppy-o ap-ic-blue"></i><span><u>S</u>ave</span></button>
+            <button type="button" id="btnMethUpdate" class="ap-tool-btn is-hidden" onclick="AP.methUpdate()"><i class="fa fa-pencil ap-ic-blue"></i><span><u>U</u>pdate</span></button>
+            <button type="button" id="btnMethShortCut" class="ap-tool-btn" onclick="AP.shortcuts()"><i class="fa fa-keyboard-o ap-ic-gray"></i><span>ShortCut Keys</span></button>
+        </div>
+        <span class="ap-title" style="left:4px;top:32px;font:bold 12pt Tahoma,sans-serif;">Define Methods</span>
+    </div>
+    <div class="ap-abs" style="height:63px;width:1024px;">
+            <label class="ap-lbl" style="left:8px;top:12px;">Document Type</label>
+            <select id="CmbDocumentTypeMethodDefine" class="win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Document Type" style="left:101px;top:5px;width:199px;"></select>
+            <label class="ap-lbl" style="left:8px;top:39px;">Screen Name</label>
+            <input type="text" id="txtScreenNameMethodDefine" class="ap-txt" style="left:101px;top:35px;width:199px;height:23px;"/>
+            <label class="ap-lbl" style="left:304px;top:12px;">Report Method</label>
+            <input type="text" id="txtReportMethod" class="ap-txt" style="left:389px;top:8px;width:562px;height:23px;"/>
+            <label class="ap-lbl" style="left:304px;top:39px;">Remarks</label>
+            <input type="text" id="txtRemarksMethodDefine" class="ap-txt" style="left:389px;top:35px;width:562px;height:23px;"/>
+    </div>
+    <div class="ap-teal" style="height:26px;"><span class="ap-title" style="left:3px;top:3px;font:bold 11.25pt Tahoma,sans-serif;">History</span></div>
+    <div class="ap-scroll" tabindex="0" style="min-height:240px;flex:1;"><table class="ap-grid ap-auto" id="grdMethods"><thead></thead><tbody></tbody></table></div>
+    </div>
+    </div>
+</div>
+<div class="ap-toast" id="apToast" role="status" aria-live="polite"></div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_adm_panel.js?v=20261007a}"></script>
+</body>
+</html>

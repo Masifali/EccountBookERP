@@ -22,6 +22,7 @@ import java.util.Map;
 @Service
 public class ErpNavigationService {
     private static final Logger LOG = LoggerFactory.getLogger(ErpNavigationService.class);
+    private static final String VIEW_RIGHTS_SESSION_KEY = ErpNavigationService.class.getName() + ".viewRights";
     // Existing Inventory dashboard links without a corresponding seeded desktop screen.
     // These identify the navigation parent only; they never mark a desktop report as built.
     private static final Map<String, String> INVENTORY_DASHBOARD_STOCK_PAGES = Map.ofEntries(
@@ -49,7 +50,7 @@ public class ErpNavigationService {
         List<Map<String, Object>> rows;
         boolean unavailable = false;
         try {
-            rows = menus.viewRights();
+            rows = viewRightsForSession(request, user.getName());
         } catch (RuntimeException exception) {
             LOG.warn("Could not load the navigation menu", exception);
             rows = List.of();
@@ -60,6 +61,29 @@ public class ErpNavigationService {
         navigation.put("unavailable", unavailable);
         addQuickLinks(request, navigation, user.getName());
         return navigation;
+    }
+
+    /**
+     * DashboardNew keeps ScreenViewReights for the lifetime of the signed-in desktop session.
+     * Keep the exact stored-procedure result in the web session too, so every page render does not
+     * execute the same potentially slow rights query again. A completed LoginContext changes the
+     * cache key when the user switches company or application.
+     */
+    @SuppressWarnings("unchecked")
+    private List<Map<String, Object>> viewRightsForSession(HttpServletRequest request, String username) {
+        com.mst.security.LoginContext context = com.mst.security.LoginContext.of(request, username);
+        String scope = context != null && context.isComplete()
+                ? username + ":" + context.getCompanyId() + ":" + context.getAppId()
+                : username + ":default";
+        String key = VIEW_RIGHTS_SESSION_KEY + ":" + scope;
+        var session = request.getSession();
+        synchronized (session) {
+            Object cached = session.getAttribute(key);
+            if (cached instanceof List<?>) return (List<Map<String, Object>>) cached;
+            List<Map<String, Object>> rows = menus.viewRights();
+            session.setAttribute(key, rows);
+            return rows;
+        }
     }
 
     @SuppressWarnings("unchecked")

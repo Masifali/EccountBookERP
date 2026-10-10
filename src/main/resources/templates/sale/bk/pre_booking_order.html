@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pre Booking Order</title>
+<link rel="stylesheet" href="/build/css/countx_desktop_combo.css?v=20261008bk">
+<link rel="stylesheet" href="/build/css/countx_prod_combo.css?v=20261008bk">
+<link rel="stylesheet" href="/build/css/countx_acrpt1.css?v=20261008bk">
+<link rel="stylesheet" href="/build/css/countx_sarpt1.css?v=20261008bk">
+<!--
+Screen 761 PreBookingOrder = Architecture.WinApp.PreBookingAndDelivery.PreBookingOrder ("Pre Booking Order"), route /sale/booking/pre-booking-order.
+Module 132 Booking Office / Customer Portal, port 2026-10-08 (key B). Built on InitializeComponent() (form 1184x611, KeyPreview):
+  TabControl "Form" | "History".
+  Form: toolStrip1 27 (&New | Refresh | &Save | Save As* | &Update* | Delete* | &Attachment | 274-Print | ShortCut Keys)   (* hidden until used)
+    panel3 Teal 29: label23 "Pre Booking Order" 3,4 Tahoma 12 bold | lblCostCenter 193,8 + CmbCostCenter 270,2 167x26 (AppId 5 only) | ChkBox "Print Preview" right
+    panel5 153: groupBox1 "Main Information" 0,0 505x149 | groupBox4 "Regular Commission" 505,0 332x149 | groupBox5 "Other Commission" 837,0 332x149
+    panel1 69: groupBox2 "Detail Information" 3,3 1164x64 (Item 3,33 223 | Crop Year 227 102 | Pack Uom 331 77 | Qty 409 88 | Weight 498 88 | Rate 587 88 | Rate Uom 676 77 | Amount 754 102 | Remarks 857 236 | + 1095,35)
+    panel2: panel6 Teal 25 + grd (X | ItemName | CropYear | PackUom | ItemQty | Weight | ItemRate | RateUom | ItemAmount | Remarks)
+  History: toolStrip2 (&New | Refresh) | panel4 69 groupBox3 "Filters" | panel8 Teal 27 "PreBooking Order History" | DataGridHistory | panel10 Teal 21 "Detail Information of above Selected Row" | GridDetail 161.
+Data /api/sale/bk/pre-booking/init|doc-no|customers|refresh|history-customers|item|rate|history|get|save. Logic /build/js/sale_bk_pre_booking.js.
+-->
+</head>
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="frm-scroll">
+<div class="frm" id="frmPreBookingOrder" style="min-width:1184px;min-height:600px;">
+    <div class="tabs"><button type="button" id="tab1" class="on">Form</button><button type="button" id="tab2">History</button></div>
+    <div class="tabpage" id="page1">
+    <div class="p2"><div class="ts" style="font-family:'Segoe UI',Verdana,sans-serif;"><button type="button" id="btnnew" title="Ctrl+N"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#2e9b45"/><path d="M8 4v8M4 8h8" stroke="#fff" stroke-width="2"/></svg><span><u>N</u>ew</span></button><button type="button" id="btnRefresh" title="Ctrl+R"><svg viewBox="0 0 16 16"><path d="M13 8a5 5 0 1 1-1.5-3.6" fill="none" stroke="#1f6fc5" stroke-width="2"/><path d="M13.5 1.5v4h-4z" fill="#1f6fc5"/></svg><span>Refresh</span></button><button type="button" id="btnsave" title="Ctrl+S"><svg viewBox="0 0 16 16"><rect x="1.5" y="1.5" width="13" height="13" rx="1" fill="#2a6fb8"/><rect x="4" y="2" width="8" height="5" fill="#fff"/><rect x="4" y="9" width="8" height="5" fill="#dfe6ee"/></svg><span><u>S</u>ave</span></button><button type="button" id="btnSaveAs" title="Ctrl+F12" hidden><svg viewBox="0 0 16 16"><rect x="1.5" y="1.5" width="13" height="13" rx="1" fill="#2a6fb8"/><rect x="4" y="2" width="8" height="5" fill="#fff"/><rect x="4" y="9" width="8" height="5" fill="#dfe6ee"/></svg><span>Save As</span></button><button type="button" id="btnupdate" title="Ctrl+U" hidden><svg viewBox="0 0 16 16"><rect x="1.5" y="1.5" width="13" height="13" rx="1" fill="#2a6fb8"/><rect x="4" y="2" width="8" height="5" fill="#fff"/><rect x="4" y="9" width="8" height="5" fill="#dfe6ee"/></svg><span><u>U</u>pdate</span></button><button type="button" id="btnDelete" hidden><svg viewBox="0 0 16 16"><path d="M3 3l10 10M13 3L3 13" stroke="#c0392b" stroke-width="2.4"/></svg><span>Delete</span></button><button type="button" id="btnattachment" title="Ctrl+F10"><svg viewBox="0 0 16 16"><path d="M10.5 4.5l-5 5a1.6 1.6 0 0 0 2.3 2.3l5.4-5.4a3 3 0 0 0-4.2-4.2L3.4 8" fill="none" stroke="#555" stroke-width="1.5"/></svg><span><u>A</u>ttachment</span></button><button type="button" id="btnPrint" title="Ctrl+P"><svg viewBox="0 0 16 16"><rect x="4" y="1.5" width="8" height="4" fill="#fff" stroke="#555"/><rect x="1.5" y="5.5" width="13" height="6" rx="1" fill="#6b7785"/><rect x="4" y="9.5" width="8" height="5" fill="#fff" stroke="#555"/></svg><span>274-Print</span></button><button type="button" id="btnshortcutkeys" title="Ctrl+Alt"><svg viewBox="0 0 16 16"><rect x="1.5" y="4" width="13" height="8" rx="1.5" fill="#fff" stroke="#555"/><path d="M4 7h1M7 7h1M10 7h1M4 10h8" stroke="#555"/></svg><span>ShortCut Keys</span></button></div></div>
+    <div class="teal" style="height:29px;background:#008080;"><span class="cap" style="left:3px;top:4px;font-size:16px;">Pre Booking Order</span><span class="lbl" id="lblCostCenter" style="left:193px;top:8px;color:#fff;font:700 12px 'Segoe UI',sans-serif;" hidden>Cost Center</span><select id="CmbCostCenter" data-dtcombo="single" data-dtcombo-caption="Cost Center" style="position:absolute;left:270px;top:2px;width:167px;height:26px;"></select>
+<label id="lblChk" style="position:absolute;right:6px;top:5px;color:#fff;font:700 12px 'Segoe UI',sans-serif;"><input type="checkbox" id="ChkBox"> Print Preview</label></div>
+    <div class="pfx" style="height:153px;">
+<div class="gb" style="left:0px;top:0px;width:505px;height:149px;"><div class="gb-frame"></div><span class="gb-cap" style="font-size:Main Informationpx;font-weight:700;">13</span>
+<span class="lbl" style="left:6px;top:21px;font-size:12px;font-weight:600;">Order No &amp; Date</span>
+<input type="text" id="txtdocno" class="tb" autocomplete="off" disabled style="left:107px;top:17px;width:77px;height:23px;font-size:13px;background:#fff;color:#000;">
+<input type="date" id="DocDate" class="tb" style="left:185px;top:17px;width:110px;height:22px;font-size:12px;">
+<span class="lbl" style="left:297px;top:21px;font-size:12px;font-weight:600;">Delivery Term</span>
+<select id="CmbDeliveryTerm" data-dtcombo="single" data-dtcombo-caption="Delivery Term" style="position:absolute;left:389px;top:15px;width:110px;height:26px;"></select>
+<span class="lbl" style="left:6px;top:48px;font-size:12px;font-weight:600;">Customer Name</span>
+<select id="CmbCustomer" data-dtcombo="single" data-dtcombo-caption="Customer Name" style="position:absolute;left:106px;top:42px;width:189px;height:26px;"></select>
+<span class="lbl" style="left:297px;top:48px;font-size:12px;font-weight:600;">Delivery S.Date</span>
+<input type="date" id="deliveryStartDate" class="tb" style="left:389px;top:44px;width:110px;height:22px;font-size:12px;">
+<span class="lbl" style="left:6px;top:75px;font-size:12px;font-weight:600;">Payment Terms</span>
+<select id="CmbPaymentTerm" data-dtcombo="single" data-dtcombo-caption="Payment Term" style="position:absolute;left:106px;top:69px;width:189px;height:26px;"></select>
+<span class="lbl" style="left:297px;top:75px;font-size:12px;font-weight:600;">Delivery Days</span>
+<input type="text" id="txtDeliveryDays" class="tb" autocomplete="off" maxlength="5" style="left:389px;top:71px;width:110px;height:23px;font-size:13px;">
+<span class="lbl" style="left:6px;top:100px;font-size:12px;font-weight:600;">Due Days &amp; Date</span>
+<input type="text" id="txtDueDays" class="tb" autocomplete="off" maxlength="5" style="left:106px;top:96px;width:78px;height:23px;font-size:13px;">
+<input type="date" id="DueDate" class="tb" disabled style="left:185px;top:96px;width:110px;height:22px;font-size:12px;">
+<span class="lbl" style="left:297px;top:100px;font-size:12px;font-weight:600;">Expiry Date</span>
+<input type="date" id="datExpiryDate" class="tb" disabled style="left:389px;top:96px;width:110px;height:22px;font-size:12px;">
+<span class="lbl" style="left:6px;top:124px;font-size:12px;font-weight:600;">Remarks</span>
+<input type="text" id="txtRemarks" class="tb" autocomplete="off"  style="left:106px;top:120px;width:393px;height:23px;font-size:13px;">
+</div>
+<div class="gb" style="left:505px;top:0px;width:332px;height:149px;"><div class="gb-frame"></div><span class="gb-cap" style="font-size:Regular Commissionpx;font-weight:700;">11</span>
+<span class="lbl" style="left:6px;top:19px;font-size:12px;font-weight:600;">Sales Man/Agent</span>
+<select id="cmbCommissionAgent" data-dtcombo="single" data-dtcombo-caption="Commission Agent" style="position:absolute;left:103px;top:13px;width:226px;height:26px;"></select>
+<span class="lbl" style="left:6px;top:46px;font-size:12px;font-weight:600;">Comm Type</span>
+<select id="cmbCommType" data-dtcombo="single" data-dtcombo-caption="CommissionType" style="position:absolute;left:103px;top:40px;width:91px;height:26px;"></select>
+<span class="lbl" style="left:197px;top:46px;font-size:12px;font-weight:600;">Rate</span>
+<input type="text" id="txtCommRate" class="tb" autocomplete="off"  style="left:249px;top:42px;width:80px;height:23px;font-size:13px;text-align:right;">
+<span class="lbl" style="left:6px;top:73px;font-size:12px;font-weight:600;">Comm Uom</span>
+<select id="cmbCommRateUom" data-dtcombo="single" data-dtcombo-caption="UOM" style="position:absolute;left:103px;top:67px;width:91px;height:26px;"></select>
+<span class="lbl" style="left:197px;top:73px;font-size:12px;font-weight:600;">Amount</span>
+<input type="text" id="txtCommAmount" class="tb" autocomplete="off" disabled style="left:249px;top:69px;width:80px;height:23px;font-size:13px;background:#fff;color:#000;text-align:right;">
+<span class="lbl" style="left:6px;top:98px;font-size:12px;font-weight:600;">Comm Remarks</span>
+<textarea id="txtCommRemarks" class="tb" style="left:103px;top:94px;width:226px;height:49px;font-size:13px;resize:none;"></textarea>
+</div>
+<div class="gb" style="left:837px;top:0px;width:332px;height:149px;"><div class="gb-frame"></div><span class="gb-cap" style="font-size:Other Commissionpx;font-weight:700;">11</span>
+<span class="lbl" style="left:6px;top:19px;font-size:12px;font-weight:600;">Sales Man/Agent</span>
+<select id="CmbOtherCommissionAgent" data-dtcombo="single" data-dtcombo-caption="Other Commission Agent" style="position:absolute;left:101px;top:13px;width:226px;height:26px;"></select>
+<span class="lbl" style="left:6px;top:46px;font-size:12px;font-weight:600;">Comm Type</span>
+<select id="CmbOtherCommissionType" data-dtcombo="single" data-dtcombo-caption="CommissionType" style="position:absolute;left:101px;top:40px;width:91px;height:26px;"></select>
+<span class="lbl" style="left:195px;top:46px;font-size:12px;font-weight:600;">Rate</span>
+<input type="text" id="txtOtherCommissionRate" class="tb" autocomplete="off"  style="left:247px;top:42px;width:80px;height:23px;font-size:13px;text-align:right;">
+<span class="lbl" style="left:6px;top:73px;font-size:12px;font-weight:600;">Comm Uom</span>
+<select id="CmbOtherCommissionUom" data-dtcombo="single" data-dtcombo-caption="UOM" style="position:absolute;left:101px;top:67px;width:91px;height:26px;"></select>
+<span class="lbl" style="left:195px;top:73px;font-size:12px;font-weight:600;">Amount</span>
+<input type="text" id="txtOtherCommissionAmount" class="tb" autocomplete="off" disabled style="left:247px;top:69px;width:80px;height:23px;font-size:13px;background:#fff;color:#000;text-align:right;">
+<span class="lbl" style="left:6px;top:98px;font-size:12px;font-weight:600;">Comm Remarks</span>
+<textarea id="txtOtherCommissionRemarks" class="tb" style="left:101px;top:94px;width:226px;height:49px;font-size:13px;resize:none;"></textarea>
+</div>
+    </div>
+    <div class="pfx" style="height:69px;">
+<div class="gb" style="left:3px;top:3px;width:1164px;height:64px;"><div class="gb-frame"></div><span class="gb-cap" style="font-size:11px;font-weight:700;">Detail Information</span>
+<span class="lbl" style="left:3px;top:14px;font-size:12px;font-weight:600;">Item Name</span>
+<select id="CmbItem" data-dtcombo="single" data-dtcombo-caption="Item Name" style="position:absolute;left:3px;top:33px;width:223px;height:26px;"></select>
+<span class="lbl" style="left:231px;top:14px;font-size:12px;font-weight:600;">Crop Year</span>
+<select id="CmbCropyr" data-dtcombo="single" data-dtcombo-caption="Crop Year" style="position:absolute;left:227px;top:33px;width:102px;height:26px;"></select>
+<span class="lbl" style="left:333px;top:14px;font-size:12px;font-weight:600;">Pack Uom</span>
+<select id="cmbPackUom" data-dtcombo="single" data-dtcombo-caption="Pack Uom" style="position:absolute;left:331px;top:33px;width:77px;height:26px;"></select>
+<span class="lbl" style="left:412px;top:14px;font-size:12px;font-weight:600;">Item Qty</span>
+<input type="text" id="txtqty" class="tb" autocomplete="off"  style="left:409px;top:35px;width:88px;height:23px;font-size:13px;text-align:right;">
+<span class="lbl" style="left:502px;top:14px;font-size:12px;font-weight:600;">Weight</span>
+<input type="text" id="txtWeight" class="tb" autocomplete="off" disabled style="left:498px;top:35px;width:88px;height:23px;font-size:13px;text-align:right;">
+<span class="lbl" style="left:591px;top:14px;font-size:12px;font-weight:600;">Item Rate</span>
+<input type="text" id="txtItemRate" class="tb" autocomplete="off" disabled style="left:587px;top:35px;width:88px;height:23px;font-size:13px;text-align:right;">
+<span class="lbl" style="left:679px;top:14px;font-size:12px;font-weight:600;">Rate Uom</span>
+<select id="CmbRateUom" data-dtcombo="single" data-dtcombo-caption="Rate Uom" disabled style="position:absolute;left:676px;top:33px;width:77px;height:26px;"></select>
+<span class="lbl" style="left:754px;top:14px;font-size:12px;font-weight:600;">Item Amount</span>
+<input type="text" id="txtItemAmount" class="tb" autocomplete="off" disabled style="left:754px;top:35px;width:102px;height:23px;font-size:13px;text-align:right;">
+<span class="lbl" style="left:855px;top:14px;font-size:12px;font-weight:600;">Remarks</span>
+<input type="text" id="txtRemarksDetail" class="tb" autocomplete="off"  style="left:857px;top:35px;width:236px;height:23px;font-size:13px;">
+<button type="button" id="btnAddDetail" class="teal-btn" style="left:1095px;top:35px;width:28px;height:23px;font-size:16px;font-weight:700;padding:0;">+</button>
+<button type="button" id="btnCancelUpdateDetial" class="teal-btn" style="left:1096px;top:11px;width:62px;height:22px;font-size:12px;" hidden>Cancel</button>
+<button type="button" id="btnUpdateDetail" class="teal-btn" style="left:1095px;top:35px;width:64px;height:23px;font-size:12px;" hidden>Update</button>
+</div></div>
+    <div class="teal" style="height:25px;background:#008080;"></div>
+    <div class="p4">
+    <div class="gridbox">
+        <div class="grid" id="grd" tabindex="0"><table class="g sg" id="detail"><colgroup></colgroup><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        <div class="nav" id="navD" hidden>
+            <button type="button" data-nav="first" title="First">|&lt;</button><button type="button" data-nav="prev" title="Previous">&lt;</button>
+            <span id="navTextD"></span>
+            <button type="button" data-nav="next" title="Next">&gt;</button><button type="button" data-nav="last" title="Last">&gt;|</button>
+        </div>
+    </div>
+    </div>
+    </div>
+    <div class="tabpage" id="page2" hidden>
+    <div class="p2"><div class="ts" style="font-family:'Segoe UI',Verdana,sans-serif;"><button type="button" id="btnResetHistory" title="Ctrl+N"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#2e9b45"/><path d="M8 4v8M4 8h8" stroke="#fff" stroke-width="2"/></svg><span><u>N</u>ew</span></button><button type="button" id="btnRefreshHistory" title="Ctrl+R"><svg viewBox="0 0 16 16"><path d="M13 8a5 5 0 1 1-1.5-3.6" fill="none" stroke="#1f6fc5" stroke-width="2"/><path d="M13.5 1.5v4h-4z" fill="#1f6fc5"/></svg><span>Refresh</span></button></div></div>
+    <div class="pfx" style="height:69px;"><div class="gb" style="left:0px;top:2px;width:1165px;height:65px;"><div class="gb-frame"></div><span class="gb-cap" style="font-size:13px;font-weight:700;">Filters</span>
+<span class="lbl" style="left:7px;top:18px;font-size:12px;font-weight:600;">From Date</span>
+<input type="date" id="FromDateHistory" class="tb" style="left:7px;top:37px;width:138px;height:23px;font-size:12px;">
+<span class="lbl" style="left:147px;top:18px;font-size:12px;font-weight:600;">To Date</span>
+<input type="date" id="ToDateHistory" class="tb" style="left:147px;top:37px;width:141px;height:23px;font-size:12px;">
+<span class="lbl" style="left:289px;top:18px;font-size:12px;font-weight:600;">From Doc No</span>
+<input type="text" id="FromDocNoHistory" class="tb" autocomplete="off" maxlength="9" style="left:289px;top:37px;width:102px;height:23px;font-size:13px;">
+<span class="lbl" style="left:392px;top:18px;font-size:12px;font-weight:600;">To Doc No</span>
+<input type="text" id="ToDocNoHistory" class="tb" autocomplete="off" maxlength="9" style="left:392px;top:37px;width:102px;height:23px;font-size:13px;">
+<span class="lbl" style="left:496px;top:18px;font-size:12px;font-weight:600;">Customer</span>
+<select id="CmbCustomerHistory" data-dtcombo="single" data-dtcombo-caption="Customer Name" style="position:absolute;left:496px;top:35px;width:288px;height:26px;"></select>
+<button type="button" id="btnShowHistory" class="teal-btn" style="left:785px;top:35px;width:62px;height:26px;font-size:13px;">Show</button>
+<label style="position:absolute;left:853px;top:19px;font-size:12px;font-weight:600;"><input type="radio" name="dateBy" id="drdocdate" value="doc" checked> Doc Date</label>
+<label style="position:absolute;left:934px;top:19px;font-size:12px;font-weight:600;"><input type="radio" name="dateBy" id="rdmodifydate" value="modify"> Modify Date</label>
+<label style="position:absolute;left:853px;top:42px;font-size:12px;font-weight:600;"><input type="radio" name="dateBy" id="rdentrydate" value="entry"> Entry Date</label>
+<label style="position:absolute;left:934px;top:42px;font-size:12px;font-weight:600;"><input type="radio" name="dateBy" id="rdapproveddate" value="approved"> Approved Date</label>
+</div></div>
+    <div class="teal" style="height:27px;background:#008080;"><span class="cap" style="left:3px;top:3px;font-size:16px;">PreBooking Order History</span></div>
+    <div class="p4">
+    <div class="gridbox">
+        <div class="grid" id="gridH" tabindex="0"><table class="g sg" id="history"><colgroup></colgroup><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        <div class="nav" id="navH" hidden>
+            <button type="button" data-nav="first" title="First">|&lt;</button><button type="button" data-nav="prev" title="Previous">&lt;</button>
+            <span id="navTextH"></span>
+            <button type="button" data-nav="next" title="Next">&gt;</button><button type="button" data-nav="last" title="Last">&gt;|</button>
+        </div>
+    </div>
+    </div>
+    <div class="teal" style="height:21px;background:#008080;"><span class="cap" style="left:3px;top:2px;font-size:13px;">Detail Information of above Selected Row</span></div>
+    <div class="p4" style="height:161px;flex:none;">
+    <div class="gridbox">
+        <div class="grid" id="gridD2" tabindex="0"><table class="g sg" id="historyDetail"><colgroup></colgroup><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        <div class="nav" id="navD2" hidden>
+            <button type="button" data-nav="first" title="First">|&lt;</button><button type="button" data-nav="prev" title="Previous">&lt;</button>
+            <span id="navTextD2"></span>
+            <button type="button" data-nav="next" title="Next">&gt;</button><button type="button" data-nav="last" title="Last">&gt;|</button>
+        </div>
+    </div>
+    </div>
+    </div>
+</div>
+</div>
+
+<dialog class="sck" id="shortcutDialog">
+    <div class="hd">ShortCut Keys</div>
+    <table><thead><tr><th>KeyCombination</th><th>Description</th></tr></thead><tbody id="shortcutRows"></tbody></table>
+    <div class="ft"><button type="button" id="closeShortcuts">Close</button></div>
+</dialog>
+<script src="/build/js/countx_prod_combo.js?v=20261008bk"></script>
+<script src="/build/js/countx_acrpt1_core.js?v=20261008bk"></script>
+<script src="/build/js/countx_sarpt1_core.js?v=20261008bk"></script>
+<script src="/build/js/sale_bk_pre_booking.js?v=20261008bk"></script>
+</body>
+</html>

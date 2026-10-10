@@ -193,7 +193,13 @@ public final class DesktopProc {
 
     private static String sql(String proc, Map<String, Object> params, List<Object> args) {
         StringBuilder sb = new StringBuilder("EXEC ");
-        sb.append(proc.startsWith("[") ? proc : "dbo." + proc);
+        if (proc.startsWith("[")) {
+            sb.append(proc);
+        } else if (proc.regionMatches(true, 0, "hrm.", 0, 4)) {
+            sb.append("[hrm].[").append(proc.substring(4)).append(']');
+        } else {
+            sb.append("dbo.").append(proc);
+        }
         boolean first = true;
         if (params != null) {
             for (Map.Entry<String, Object> e : params.entrySet()) {

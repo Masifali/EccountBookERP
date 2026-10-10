@@ -13,7 +13,7 @@ import static org.mockito.Mockito.*;
 @EnabledIfSystemProperty(named="configuration.live", matches="true")
 class ConfigurationParityLiveTest {
  @Test void lookupsReadUpdateAndRollback() throws Exception {
-  var p=new Properties();try(var in=Files.newInputStream(Path.of("src/main/resources/application.properties"))){p.load(in);}
+  var p=new Properties();try(var in=Files.newInputStream(Path.of(System.getProperty("configuration.properties", "src/main/resources/application-local.properties")))){p.load(in);}
   var jdbc=new JdbcTemplate(new DriverManagerDataSource(p.getProperty("spring.datasource.url"),p.getProperty("spring.datasource.username"),p.getProperty("spring.datasource.password")));jdbc.setQueryTimeout(60);
   var u=jdbc.queryForMap("SELECT Id,OrganizationId,CompanyId,BranchesId FROM UserAccount WHERE UserName='numan'");
   int org=((Number)u.get("OrganizationId")).intValue(),comp=((Number)u.get("CompanyId")).intValue();

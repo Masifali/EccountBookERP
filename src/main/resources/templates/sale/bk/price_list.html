@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Price List</title>
+<link rel="stylesheet" href="/build/css/countx_desktop_combo.css?v=20261008bk">
+<link rel="stylesheet" href="/build/css/countx_prod_combo.css?v=20261008bk">
+<link rel="stylesheet" href="/build/css/countx_acrpt1.css?v=20261008bk">
+<link rel="stylesheet" href="/build/css/countx_sarpt1.css?v=20261008bk">
+<!--
+Screen 764 PriceList = Architecture.WinApp.WholeSale.frmItemPricingSchedule ("Item Pricing Schedule"), route /sale/reports/price-list.
+Module 2042 Booking Office / Customer Portal Report, port 2026-10-08 (key B), built on InitializeComponent() (1015x719):
+  TabControl (Dock Fill) tabs "Form" | "history".
+  Form: panel3 28 toolStrip (&New | &Save | &Update (hidden until Edit)) | panel4 Teal 31 label15 6,5 Tahoma 12 bold "Item Pricing Schedule" | panel5 149:
+    groupBox2 "By One by One Item" 12,6 540x138 (Tahoma 9.75 bold): Schedule Description 6,23 / txtDescription 144,20 390x23 | Effected Date 6,51 / txtEffectedDate 144,48 127x23 dd-MMM-yyyy
+      | Effected Time 303,51 / datEffectedTime 395,48 139x23 (time) | Item Name 6,79 / cmbItem 144,74 390x26 | Add 144,103 69x25 (Teal, white)
+    groupBox1 "By Filter Item's" 558,6 438x138: Item Category 6,23 / cmbItemCategory 116,18 271x26 | Item Type 6,51 / cmbItemType 116,46 271x26 | Search 116,75 69x25
+    then panel7 Fill = datagrid (ItemName 400, ItemPrice, NewPrice editable, Delete 35).
+  history: panel8 Teal 31 label2 4,5 "Item Pricing Schedule History" + DataGridHistory (Edit button column 50).
+Data /api/sale/bk/price-list/init|previous|history|edit|save. Logic: /build/js/sale_bk_price_list.js.
+-->
+</head>
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="frm-scroll">
+<div class="frm" id="frmItemPricingSchedule" style="min-width:1015px;min-height:560px;">
+    <div class="tabs"><button type="button" id="tab1" class="on">Form</button><button type="button" id="tab2">history</button></div>
+    <div class="tabpage" id="page1">
+    <div class="p2"><div class="ts" style="font-family:'Segoe UI',Verdana,sans-serif;"><button type="button" id="btnnew" title="Ctrl+N"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#2e9b45"/><path d="M8 4v8M4 8h8" stroke="#fff" stroke-width="2"/></svg><span><u>N</u>ew</span></button><button type="button" id="btnsave" title="Ctrl+S"><svg viewBox="0 0 16 16"><rect x="1.5" y="1.5" width="13" height="13" rx="1" fill="#2a6fb8"/><rect x="4" y="2" width="8" height="5" fill="#fff"/><rect x="4" y="9" width="8" height="5" fill="#dfe6ee"/></svg><span><u>S</u>ave</span></button><button type="button" id="btnUpdate" title="Ctrl+U" hidden><svg viewBox="0 0 16 16"><rect x="1.5" y="1.5" width="13" height="13" rx="1" fill="#2a6fb8"/><rect x="4" y="2" width="8" height="5" fill="#fff"/><rect x="4" y="9" width="8" height="5" fill="#dfe6ee"/></svg><span><u>U</u>pdate</span></button><span style="display:inline-block;width:1px;height:22px;background:#c3cbd6;margin:0 3px;"></span></div></div>
+    <div class="teal" style="height:31px;background:#008080;"><span class="cap" style="left:6px;top:5px;font-size:16px;">Item Pricing Schedule</span></div>
+    <div class="pfx" style="height:149px;">
+        <div class="gb" style="left:12px;top:6px;width:540px;height:138px;">
+            <div class="gb-frame"></div><span class="gb-cap">By One by One Item</span>
+            <span class="lbl" style="left:6px;top:23px;font-size:13px;font-weight:700;">Schedule Description</span>
+            <input type="text" id="txtDescription" class="tb" maxlength="50" autocomplete="off" style="left:144px;top:20px;width:390px;height:23px;">
+            <span class="lbl" style="left:6px;top:51px;font-size:13px;font-weight:700;">Effected Date</span>
+            <input type="date" id="txtEffectedDate" class="tb" style="left:144px;top:48px;width:127px;height:23px;">
+            <span class="lbl" style="left:303px;top:51px;font-size:13px;font-weight:700;">Effected Time</span>
+            <input type="time" step="1" id="datEffectedTime" class="tb" style="left:395px;top:48px;width:139px;height:23px;">
+            <span class="lbl" style="left:6px;top:79px;font-size:13px;font-weight:700;">Item Name</span>
+            <select id="cmbItem" data-dtcombo="single" data-dtcombo-caption="Item Name" style="position:absolute;left:144px;top:74px;width:390px;height:26px;"></select>
+            <button type="button" id="btnAdd" class="teal-btn vd" style="left:144px;top:103px;width:69px;height:25px;">Add</button>
+        </div>
+        <div class="gb" style="left:558px;top:6px;width:438px;height:138px;">
+            <div class="gb-frame"></div><span class="gb-cap">By Filter Item's</span>
+            <span class="lbl" style="left:6px;top:23px;font-size:13px;font-weight:700;">Item Category</span>
+            <select id="cmbItemCategory" data-dtcombo="single" data-dtcombo-caption="Item Category" style="position:absolute;left:116px;top:18px;width:271px;height:26px;"></select>
+            <span class="lbl" style="left:6px;top:51px;font-size:13px;font-weight:700;">Item Type</span>
+            <select id="cmbItemType" data-dtcombo="single" data-dtcombo-caption="Item Type" style="position:absolute;left:116px;top:46px;width:271px;height:26px;"></select>
+            <button type="button" id="btnSearch" class="teal-btn" style="left:116px;top:75px;width:69px;height:25px;">Search</button>
+        </div>
+    </div>
+    <div class="p4">
+    <div class="gridbox">
+        <div class="grid" id="gridD" tabindex="0"><table class="g sg" id="detail"><colgroup></colgroup><thead></thead><tbody></tbody></table></div>
+    </div>
+    </div>
+    </div>
+    <div class="tabpage" id="page2" hidden>
+    <div class="teal" style="height:31px;background:#008080;"><span class="cap" style="left:4px;top:5px;font-size:16px;">Item Pricing Schedule History</span></div>
+    <div class="p4">
+    <div class="gridbox">
+        <div class="grid" id="gridH" tabindex="0"><table class="g sg" id="history"><colgroup></colgroup><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        <div class="nav" id="navH" hidden>
+            <button type="button" data-nav="first" title="First">|&lt;</button><button type="button" data-nav="prev" title="Previous">&lt;</button>
+            <span id="navTextH"></span>
+            <button type="button" data-nav="next" title="Next">&gt;</button><button type="button" data-nav="last" title="Last">&gt;|</button>
+        </div>
+    </div>
+    </div>
+    </div>
+</div>
+</div>
+
+<script src="/build/js/countx_prod_combo.js?v=20261008bk"></script>
+<script src="/build/js/countx_acrpt1_core.js?v=20261008bk"></script>
+<script src="/build/js/countx_sarpt1_core.js?v=20261008bk"></script>
+<script src="/build/js/sale_bk_price_list.js?v=20261008bk"></script>
+</body>
+</html>

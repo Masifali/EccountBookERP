@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sale Invoice History</title>
+<link rel="stylesheet" href="/build/css/countx_desktop_combo.css?v=20261007ss1">
+<link rel="stylesheet" href="/build/css/countx_prod_combo.css?v=20261007ss1">
+<link rel="stylesheet" href="/build/css/countx_acrpt1.css?v=20261007ss1">
+<link rel="stylesheet" href="/build/css/countx_sarpt1.css?v=20261007ss1">
+<!--
+Screen 557 SaleInvoiceRegisterSteel = Architecture.WinApp.Steel.Reports.SalesReports.SaleInvoiceRegisterSteel ("Sale Invoice History"),
+route /sale/reports/steel/sale-invoice-register. Module 87 port 2026-10-07, built on InitializeComponent():
+  panel1 Fill = toolStrip3 (&Reset | &Refresh | Print For Flow | Print For Direct) | Teal (10,110,110) 30 "Sale Invoice History" | panel4 White 123 | TabControl (Dock Fill, Tahoma 9.75 bold)
+    tab "Flow Register": Teal 27 "Sale Invoice Register" + DataGridHistory | tab "Direct Register": Teal 28 "Sale Invoice Register Direct" + DataGridHistoryDirect.
+  panel4: From Date 13,13 / FromDate 108,9 116x23 | To Date 13,41 / ToDate 108,37 | InvoiceNo From 13,69 / txtInvoiceNoFrom 108,65 | InvoiceNo To 13,97 / txtInvoiceNoto 108,93
+    | Sale Order From 230,13 / txtsaleorderfrom 327,9 95x23 | Sale Order To 230,41 / txtsaleorderto 327,37 | Rate From 230,69 / txtratefrom 327,65 | Rate To 230,97 / txtrateto 327,93
+    | Customer Name 432,13 / CmbSupplier 538,7 208x26 | Item Name 432,41 / cmbitem 538,35 | WareHouse 432,69 / cmbWareHouse 538,63 | JobLot 432,97 / CmbJobLot 538,91 | btnshow 751,91 67x27.
+    (label7 "Status" / CmbIsApproved are Visible=false and are not built.)
+Data /api/sale/steel-reports/sale-invoice-register/lookups|rows (mode=flow|direct), print /sale/reports/steel/print/sale-invoice-register|sale-invoice-slip. Logic: /build/js/sale_steel_rpt_sale_invoice_register.js.
+-->
+</head>
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="frm-scroll">
+<div class="frm" id="SaleInvoiceRegisterSteel" style="min-width:1000px;min-height:600px;">
+
+    <div class="p2"><div class="ts">
+        <button type="button" id="reset" title="Ctrl+N"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#2e9b45"/><path d="M8 4v8M4 8h8" stroke="#fff" stroke-width="2"/></svg><span><u>R</u>eset</span></button><button type="button" id="refresh" title="Ctrl+R"><svg viewBox="0 0 16 16"><path d="M13 8a5 5 0 1 1-1.5-3.6" fill="none" stroke="#1f6fc5" stroke-width="2"/><path d="M13.5 1.5v4h-4z" fill="#1f6fc5"/></svg><span><u>R</u>efresh</span></button><span class="ddwrap"><button type="button" id="printFlow"><svg viewBox="0 0 16 16"><rect x="4" y="1.5" width="8" height="4" fill="#fff" stroke="#555"/><rect x="1.5" y="5.5" width="13" height="6" rx="1" fill="#6b7785"/><rect x="4" y="9.5" width="8" height="5" fill="#fff" stroke="#555"/></svg><span>Print For Flow &#9662;</span></button><div class="ddm" id="printFlowMenu" hidden></div></span><span class="ddwrap"><button type="button" id="printDirect"><svg viewBox="0 0 16 16"><rect x="4" y="1.5" width="8" height="4" fill="#fff" stroke="#555"/><rect x="1.5" y="5.5" width="13" height="6" rx="1" fill="#6b7785"/><rect x="4" y="9.5" width="8" height="5" fill="#fff" stroke="#555"/></svg><span>Print For Direct  &#9662;</span></button><div class="ddm" id="printDirectMenu" hidden></div></span>
+    </div></div>
+
+    <div class="teal" style="height:30px;background:#0a6e6e;"><span class="cap" style="left:7px;top:5px;">Sale Invoice History</span></div>
+    <div class="pfx" style="height:123px;">
+        <span class="lbl" style="left:13px;top:13px;">From Date</span>
+        <input type="date" id="FromDate" class="tb" style="left:108px;top:9px;width:116px;height:23px;">
+        <span class="lbl" style="left:13px;top:41px;">To Date</span>
+        <input type="date" id="ToDate" class="tb" style="left:108px;top:37px;width:116px;height:23px;">
+        <span class="lbl" style="left:13px;top:69px;">InvoiceNo From</span>
+        <input type="text" id="txtInvoiceNoFrom" class="tb" autocomplete="off" style="left:108px;top:65px;width:116px;height:23px;">
+        <span class="lbl" style="left:13px;top:97px;">InvoiceNo To</span>
+        <input type="text" id="txtInvoiceNoto" class="tb" autocomplete="off" style="left:108px;top:93px;width:116px;height:23px;">
+        <span class="lbl" style="left:230px;top:13px;">Sale Order From</span>
+        <input type="text" id="txtsaleorderfrom" class="tb" autocomplete="off" style="left:327px;top:9px;width:95px;height:23px;">
+        <span class="lbl" style="left:230px;top:41px;">Sale Order To</span>
+        <input type="text" id="txtsaleorderto" class="tb" autocomplete="off" style="left:327px;top:37px;width:95px;height:23px;">
+        <span class="lbl" style="left:230px;top:69px;">Rate From </span>
+        <input type="text" id="txtratefrom" class="tb" autocomplete="off" style="left:327px;top:65px;width:95px;height:23px;">
+        <span class="lbl" style="left:230px;top:97px;">Rate To</span>
+        <input type="text" id="txtrateto" class="tb" autocomplete="off" style="left:327px;top:93px;width:95px;height:23px;">
+        <span class="lbl" style="left:432px;top:13px;">Customer Name</span>
+        <select id="CmbSupplier" data-dtcombo="single" data-dtcombo-caption="Customer Name" style="position:absolute;left:538px;top:7px;width:208px;height:26px;"></select>
+        <span class="lbl" style="left:432px;top:41px;">Item Name</span>
+        <select id="cmbitem" data-dtcombo="single" data-dtcombo-caption="Item Name" style="position:absolute;left:538px;top:35px;width:208px;height:26px;"></select>
+        <span class="lbl" style="left:432px;top:69px;">WareHouse</span>
+        <select id="cmbWareHouse" data-dtcombo="single" data-dtcombo-caption="Warehouse" style="position:absolute;left:538px;top:63px;width:208px;height:26px;"></select>
+        <span class="lbl" style="left:432px;top:97px;">JobLot</span>
+        <select id="CmbJobLot" data-dtcombo="single" data-dtcombo-caption="Job Lot" style="position:absolute;left:538px;top:91px;width:208px;height:26px;"></select>
+        <button type="button" id="btnshow" class="teal-btn vd" style="left:751px;top:91px;width:67px;height:27px;background:#0a6e6e;" title="Ctrl+S">Show</button>
+    </div>
+    <div class="tabs" style="font-weight:bold;"><button type="button" id="tab1" class="on">Flow Register</button><button type="button" id="tab2">Direct Register</button></div>
+    <div class="tabpage" id="page1">
+        <div class="teal" style="height:27px;"><span class="cap" style="left:3px;top:3px;">Sale Invoice Register</span></div>
+        <div class="p4">
+        <div class="gridbox">
+        <div class="grid" id="grid1" tabindex="0"><table class="g sg" id="results1"><colgroup></colgroup><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        <div class="nav" id="nav1" hidden>
+            <button type="button" data-nav="first" title="First">|&lt;</button><button type="button" data-nav="prev" title="Previous">&lt;</button>
+            <span id="navText1"></span>
+            <button type="button" data-nav="next" title="Next">&gt;</button><button type="button" data-nav="last" title="Last">&gt;|</button>
+        </div>
+    </div>
+        </div>
+    </div>
+    <div class="tabpage" id="page2" hidden>
+        <div class="teal" style="height:28px;"><span class="cap" style="left:3px;top:3px;">Sale Invoice Register Direct</span></div>
+        <div class="p4">
+        <div class="gridbox">
+        <div class="grid" id="grid2" tabindex="0"><table class="g sg" id="results2"><colgroup></colgroup><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        <div class="nav" id="nav2" hidden>
+            <button type="button" data-nav="first" title="First">|&lt;</button><button type="button" data-nav="prev" title="Previous">&lt;</button>
+            <span id="navText2"></span>
+            <button type="button" data-nav="next" title="Next">&gt;</button><button type="button" data-nav="last" title="Last">&gt;|</button>
+        </div>
+    </div>
+        </div>
+    </div>
+</div>
+</div>
+
+<script src="/build/js/countx_prod_combo.js?v=20261007ss1"></script>
+<script src="/build/js/countx_acrpt1_core.js?v=20261007ss1"></script>
+<script src="/build/js/countx_sarpt1_core.js?v=20261007ss1"></script>
+<script src="/build/js/sale_steel_rpt_sale_invoice_register.js?v=20261007ss1"></script>
+</body>
+</html>

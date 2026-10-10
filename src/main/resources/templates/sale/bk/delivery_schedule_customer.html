@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Delivery Schedule</title>
+<link rel="stylesheet" href="/build/css/countx_desktop_combo.css?v=20261008bk">
+<link rel="stylesheet" href="/build/css/countx_prod_combo.css?v=20261008bk">
+<link rel="stylesheet" href="/build/css/countx_acrpt1.css?v=20261008bk">
+<link rel="stylesheet" href="/build/css/countx_sarpt1.css?v=20261008bk">
+<!--
+Screen 865 DeliveryScheduleCustomer = Architecture.WinApp.Sale.frmDeliveryScheduleCustomer ("Pending Delivery Schedule Of Customer"), route /sale/delivery-schedule-customer.
+Module 132 Booking Office / Customer Portal, port 2026-10-08 (key B), built on InitializeComponent() (973x461):
+  panel1 Teal 50 = toolStrip1 (|&New|Refresh|ShortCut Keys|) + label23 5,28 Tahoma 12 bold "Pending Delivery Schedule Of Customer"
+  panel2 White 55 at y 50: label3 From Date 6,8 / FromDate 6,26 125x23 | label2 To Date 133,8 / ToDate 133,26 | label4 Doc No From 260,8 / txtDocNoFrom 260,26 89x23 | label1 Doc No To 355,8 / txtDocNoTo 350,26
+    | label5 Customer Name 441,8 / CmbSupplier 441,24 194x26 | label6 Item Name 637,8 / CmbItem 637,24 199x26 | Search 838,24 65x26 | Load 902,24 64x26 (Tahoma 9.75 bold on Teal)
+  panel3 Teal 22 at y 105, then grd (Dock Fill, GroupByBox hidden, FrozenColumns 1, Select selector column at position 0 width 30).
+Data /api/sale/bk/delivery-schedule-customer/lookups|rows. Logic: /build/js/sale_bk_delivery_schedule.js.
+-->
+</head>
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="frm-scroll">
+<div class="frm" id="frmDeliveryScheduleCustomer" style="min-width:973px;min-height:461px;">
+    <div class="teal" style="height:50px;position:relative;background:#008080;"><div class="ts" style="position:absolute;left:0;top:0;right:0;"><span style="display:inline-block;width:1px;height:22px;background:#c3cbd6;margin:0 3px;"></span><button type="button" id="btnNew" title="Ctrl+N"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#2e9b45"/><path d="M8 4v8M4 8h8" stroke="#fff" stroke-width="2"/></svg><span><u>N</u>ew</span></button><button type="button" id="btnRefresh" title="Ctrl+R"><svg viewBox="0 0 16 16"><path d="M13 8a5 5 0 1 1-1.5-3.6" fill="none" stroke="#1f6fc5" stroke-width="2"/><path d="M13.5 1.5v4h-4z" fill="#1f6fc5"/></svg><span>Refresh</span></button><span style="display:inline-block;width:1px;height:22px;background:#c3cbd6;margin:0 3px;"></span><button type="button" id="btnShortcutKeys" title="Ctrl+Alt"><svg viewBox="0 0 16 16"><rect x="1.5" y="4" width="13" height="8" rx="1.5" fill="#fff" stroke="#555"/><path d="M4 7h1M7 7h1M10 7h1M4 10h8" stroke="#555"/></svg><span>ShortCut Keys</span></button><span style="display:inline-block;width:1px;height:22px;background:#c3cbd6;margin:0 3px;"></span></div><span class="cap" style="left:5px;top:28px;">Pending Delivery Schedule Of Customer</span></div>
+    <div class="pfx" style="height:55px;">
+        <span class="lbl" style="left:6px;top:8px;">From Date</span>
+        <input type="date" id="FromDate" class="tb" style="left:6px;top:26px;width:125px;height:23px;">
+        <span class="lbl" style="left:133px;top:8px;">To Date</span>
+        <input type="date" id="ToDate" class="tb" style="left:133px;top:26px;width:125px;height:23px;">
+        <span class="lbl" style="left:260px;top:8px;">Doc No From</span>
+        <input type="text" id="txtDocNoFrom" class="tb" autocomplete="off" style="left:260px;top:26px;width:89px;height:23px;">
+        <span class="lbl" style="left:355px;top:8px;">Doc No To</span>
+        <input type="text" id="txtDocNoTo" class="tb" autocomplete="off" style="left:350px;top:26px;width:89px;height:23px;">
+        <span class="lbl" style="left:441px;top:8px;">Customer Name</span>
+        <select id="CmbSupplier" data-dtcombo="single" data-dtcombo-caption="Party" style="position:absolute;left:441px;top:24px;width:194px;height:26px;"></select>
+        <span class="lbl" style="left:637px;top:8px;">Item Name</span>
+        <select id="CmbItem" data-dtcombo="single" data-dtcombo-caption="Item" style="position:absolute;left:637px;top:24px;width:199px;height:26px;"></select>
+        <button type="button" id="btngrnlod" class="teal-btn" style="left:838px;top:24px;width:65px;height:26px;" title="Ctrl+S">Search</button>
+        <button type="button" id="btnLoadOnInvoice" class="teal-btn" style="left:902px;top:24px;width:64px;height:26px;" title="Ctrl+L">Load</button>
+    </div>
+    <div class="teal" style="height:22px;background:#008080;"></div>
+    <div class="p4">
+    <div class="gridbox">
+        <div class="grid" id="grid" tabindex="0"><table class="g sg" id="results"><colgroup></colgroup><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        <div class="nav" id="nav" hidden>
+            <button type="button" data-nav="first" title="First">|&lt;</button><button type="button" data-nav="prev" title="Previous">&lt;</button>
+            <span id="navText"></span>
+            <button type="button" data-nav="next" title="Next">&gt;</button><button type="button" data-nav="last" title="Last">&gt;|</button>
+        </div>
+    </div>
+    </div>
+</div>
+</div>
+
+<dialog class="sck" id="shortcutDialog">
+    <div class="hd">ShortCut Keys</div>
+    <table><thead><tr><th>KeyCombination</th><th>Description</th></tr></thead><tbody id="shortcutRows"></tbody></table>
+    <div class="ft"><button type="button" id="closeShortcuts">Close</button></div>
+</dialog>
+
+<script src="/build/js/countx_prod_combo.js?v=20261008bk"></script>
+<script src="/build/js/countx_acrpt1_core.js?v=20261008bk"></script>
+<script src="/build/js/countx_sarpt1_core.js?v=20261008bk"></script>
+<script src="/build/js/sale_bk_delivery_schedule.js?v=20261008bk"></script>
+</body>
+</html>

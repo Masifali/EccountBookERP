@@ -2,6 +2,7 @@ package com.mst.repositories;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.SqlParameterValue;
+import com.mst.repositories.support.ProcExec;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,7 +27,7 @@ import java.util.Map;
  *                            -> Sp_ReportConfig_GetAllMethod @Activity='ReadAll'
  *                          only six of its columns are copied into the grid's own DataTable
  *   CompanyFill()          BLL 0062 Company.GetAllCompanies()
- *                            -> Sp_Company_GetAllMethod @Activity='GetAllCompaniesforCombo'
+ *                            -> Sp_Company_GetAllMethod @Activity='ReadAll'
  *   ReportHeaderFill()     BLL 0063 CompanyReport.GetAllReportHeader()
  *                            -> Sp_ReportHeader_GetAllMethod @Activity='ReadAll'
  *   History / RetrivedData BLL 0063 CompanyReport.GetAll / GetByID
@@ -94,7 +95,7 @@ public class CompanyReportRepository {
 
     /** CompanyFill(). BindDDLNew(dtCompany, cmbCompany, "Id", "CompName", ...). */
     public List<Map<String, Object>> companies() {
-        return jdbc.queryForList("EXEC dbo." + P_COMPANY + " @Activity=?", "GetAllCompaniesforCombo");
+        return jdbc.queryForList("EXEC dbo." + P_COMPANY + " @Activity=?", "ReadAll");
     }
 
     /** ReportHeaderFill(). BindDDLNew(dtHeader, cmbReportHeader, "ReportHeaderId", "HeaderPrefix", ...). */
@@ -132,12 +133,7 @@ public class CompanyReportRepository {
             sql.append('@').append(PARAMS[i]).append("=?");
             args.add(typed(model.get(PARAMS[i])));
         }
-        List<Map<String, Object>> rows = jdbc.queryForList(sql.toString(), args.toArray());
-        if (rows.isEmpty()) return null;
-        for (Object v : rows.get(0).values()) {
-            if (v instanceof Number) return ((Number) v).intValue();
-        }
-        return null;
+        return ProcExec.call(jdbc, sql.toString(), args.toArray());
     }
 
     /** All four columns are int, so a null goes down typed rather than as an untyped NULL. */
