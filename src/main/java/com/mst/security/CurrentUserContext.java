@@ -84,7 +84,14 @@ public class CurrentUserContext {
             if (cached instanceof Object[]) {
                 Object[] pair = (Object[]) cached;
                 if (auth.getName() != null && auth.getName().equals(pair[0])) {
-                    return (UserAccount) pair[1];
+                    UserAccount cachedUser = (UserAccount) pair[1];
+                    /* A user deactivated mid-request must keep being refused - the cache only
+                       saves the lookup, never the active check. */
+                    if (!Boolean.TRUE.equals(cachedUser.getIsActive())) {
+                        throw new org.springframework.security.access.AccessDeniedException(
+                                "The signed-in user has no accounting company context");
+                    }
+                    return cachedUser;
                 }
             }
         }

@@ -86,6 +86,25 @@ public class ErpNavigationService {
         }
     }
 
+    /**
+     * Drop the cached ScreenViewReights rows for this browser session so the next page render
+     * re-runs the rights procedure - what the desktop needs a sign-out for. Call it after a user's
+     * rights or company allocation change; a signed-in user otherwise keeps the old menu until
+     * the session ends.
+     */
+    public void clearCachedViewRights(javax.servlet.http.HttpSession session) {
+        if (session == null) return;
+        synchronized (session) {
+            var names = session.getAttributeNames();
+            List<String> stale = new ArrayList<>();
+            while (names.hasMoreElements()) {
+                String name = names.nextElement();
+                if (name.startsWith(VIEW_RIGHTS_SESSION_KEY)) stale.add(name);
+            }
+            for (String name : stale) session.removeAttribute(name);
+        }
+    }
+
     @SuppressWarnings("unchecked")
     private void addQuickLinks(HttpServletRequest request, Map<String, Object> navigation, String username) {
         Map<Integer, Map<String, Object>> screens = (Map<Integer, Map<String, Object>>) navigation.remove("screenLinks");

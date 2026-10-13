@@ -1224,7 +1224,10 @@ public class AccountsPrintController extends ReportPrintSupport {
     @RequestMapping(value = "/reports/print/111a-trial-balances", method = RequestMethod.POST)
     public void print111ATrialBalances(HttpServletResponse response, @RequestBody(required = false) Rpt111ATrialBalancesRequest request) throws Exception {
         if (request == null) request = new Rpt111ATrialBalancesRequest();
-        Map<String, Object> report = reportDataService.run("111a-acrpttrialbalances", request.toArgs());
+        /* Copy before adding subReports: the data service's result map is not guaranteed to be
+           mutable (an immutable Map.of(...) here threw UnsupportedOperationException). */
+        Map<String, Object> report = new java.util.LinkedHashMap<>(
+                reportDataService.run("111a-acrpttrialbalances", request.toArgs()));
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> rows = (List<Map<String, Object>>) report.getOrDefault("rows", List.of());
 
