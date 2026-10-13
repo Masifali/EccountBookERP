@@ -89,16 +89,15 @@ public class ApprovalDashboardService {
         return out;
     }
 
+    /** CommonServices.GetERPFeatureById: the feature is on when it is in the company's list (USP_GetERPFeaturesByCompanyId). */
     private boolean featureOn(int featureId) {
         try {
             List<Map<String, Object>> rows = jdbcTemplate.queryForList(
-                    "SELECT TOP 1 IsActive FROM ERPFeatures WHERE Id = ?", featureId);
-            if (!rows.isEmpty()) {
-                Object v = rows.get(0).values().iterator().next();
-                if (v instanceof Boolean) return (Boolean) v;
-                if (v instanceof Number) return ((Number) v).intValue() != 0;
-                String s = String.valueOf(v).trim();
-                return "1".equals(s) || "true".equalsIgnoreCase(s);
+                    "EXEC dbo.USP_GetERPFeaturesByCompanyId @OrganizationId=?, @CompanyId=?",
+                    currentUserContext.currentOrganizationId(), currentUserContext.currentCompanyId());
+            for (Map<String, Object> r : rows) {
+                Object v = r.get("Id");
+                if (v instanceof Number && ((Number) v).intValue() == featureId) return true;
             }
         } catch (Exception e) {
             LOG.error("ERP feature lookup failed for {}", featureId, e);

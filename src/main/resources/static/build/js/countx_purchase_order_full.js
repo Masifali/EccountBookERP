@@ -3363,13 +3363,29 @@ function onSchedDueDateChange(idx, val) {
     renderSchedGrid();
 }
 
+/* Sum of %Of Total over every payment row except `exceptIdx` (pass -1 for all rows). The
+   desktop only checks the grid total at save ("Payment Detail Total% not near to 100");
+   the web also guards it while editing so the footer can never show more than 100%. */
+function schedPercentSumExcept(exceptIdx) {
+    let sum = 0;
+    paymentTermsDetailItems.forEach((row, i) => { if (i !== exceptIdx) sum += Number(row.prcntOfTotal || 0); });
+    return Math.round(sum * 10000) / 10000;
+}
+
 function onSchedPercentChange(idx, val) {
     if (!lineItems.length) { paymentTermsDetailItems[idx].prcntOfTotal = parseFloat(val || '0') || 0; return; }   /* :2464 */
     paymentByPercent = true;
     let pct = parseFloat(val || '0') || 0;
+    if (pct < 0) pct = 0;
     if (pct > 100) {
         alert("%of Total Can't Greater than 100");
         pct = 100;
+    }
+    const others = schedPercentSumExcept(idx);
+    if (others + pct > 100 + 0.0001) {
+        const room = Math.max(0, Math.round((100 - others) * 10000) / 10000);
+        alert("Payment Detail Total% can't exceed 100. Only " + room + "% remaining.");
+        pct = room;
     }
     paymentTermsDetailItems[idx].prcntOfTotal = pct;
     const totalOrderAmt = calculateGrandTotalLineAmount();
@@ -3382,9 +3398,18 @@ function onSchedAmountChange(idx, val) {
     paymentByPercent = false;
     let amt = parseFloat(val || '0') || 0;
     const totalOrderAmt = calculateGrandTotalLineAmount();
+    if (amt < 0) amt = 0;
     if (totalOrderAmt < amt) {
         alert("Amount Cant be Greater than Order Amount:" + totalOrderAmt);
         amt = 0;
+    }
+    /* Grid total of Amount may not exceed the order amount (same rule as 100% of total). */
+    let othersAmt = 0;
+    paymentTermsDetailItems.forEach((row, i) => { if (i !== idx) othersAmt += Number(row.amount || 0); });
+    if (othersAmt + amt > totalOrderAmt + 0.00005) {
+        const room = Math.max(0, Math.round((totalOrderAmt - othersAmt) * 10000) / 10000);
+        alert("Payment Detail total Amount can't exceed Order Amount " + totalOrderAmt + ". Only " + room + " remaining.");
+        amt = room;
     }
     paymentTermsDetailItems[idx].amount = amt;
     paymentTermsDetailItems[idx].prcntOfTotal = totalOrderAmt > 0 ? Math.round((amt * 100.0 / totalOrderAmt) * 100000000) / 100000000 : 0;
@@ -3400,6 +3425,12 @@ function removeSchedRow(idx) {
 }
 
 function btnAddPaymentRow_Click() {
+    /* No new row once the grid already allocates 100% of the order - there is nothing left
+       for another row to carry (the "+" button and Ctrl+Space / Ctrl+D both come here). */
+    if (lineItems.length && schedPercentSumExcept(-1) >= 100 - 0.0001) {
+        alert("Payment Detail Total% is already 100. New row not allowed.");
+        return;
+    }
     addDefaultPaymentRow();
     renderSchedGrid();
 }

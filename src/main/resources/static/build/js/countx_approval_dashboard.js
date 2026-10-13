@@ -158,20 +158,39 @@ function render(wrapId, cards, group) {
     if (!cards.length) { wrap.innerHTML = ''; return; }
     wrap.innerHTML = cards.map(function (c, i) {
         var zero = num(c.count) <= 0;
-        return '<div class="ad-card' + (zero ? ' zero' : '') + '"'
-             + ' onclick="adCardClick(\'' + group + '\',' + i + ')"'
+        var url = orderApprovalUrl(num(c.id));
+        var tag = url ? 'a' : 'div';
+        return '<' + tag + ' class="ad-card' + (zero ? ' zero' : '') + '"'
+             + (url ? ' href="' + esc(url) + '"' : '')
+             + ' onclick="return adCardClick(\'' + group + '\',' + i + ',event)"'
              + ' title="TypeID ' + esc(c.id) + '">'
              + '<div class="t">' + esc(c.title) + '</div>'
              + '<div class="n">' + esc(c.count) + '</div>'
-             + '</div>';
+             + '</' + tag + '>';
     }).join('');
+}
+
+function orderApprovalUrl(id) {
+    var q = new URLSearchParams(), path;
+    if (id === 20 || id === 1100) {
+        path = '/dashboard/purchase-order-for-approval';
+        q.set('variant', id === 1100 ? 'fm' : 'po');
+    } else if (id === 28 || id === 54 || id === 90) {
+        path = '/dashboard/sale-order-for-approval';
+        q.set('documentTypeId', id === 28 ? '81' : id === 54 ? '127' : '90');
+    } else return null;
+    if (id !== 1100) {
+        q.set('branchId', String(num(val('branch')) || 0));
+        if (el('chkFrom') && el('chkFrom').checked && val('fromDate')) q.set('fromDate', val('fromDate'));
+        if (val('toDate')) q.set('toDate', val('toDate'));
+    }
+    return path + '?' + q.toString();
 }
 
 /* ---------------------------------------------------------------- the card click
  * UserControl_Click, :244-1330. The whole switch, read out of the form - 84 cases, several of
- * which also fix a DocumentTypeId before showing. None of these approval screens is ported, and
- * approving a document is not something to approximate, so a card names its target rather than
- * opening anything.
+ * which also fix a DocumentTypeId before showing. Ported screens open below; other cards name
+ * their desktop target without changing any documents.
  *
  * Note the first branch is a RANGE, not a case list: 0-9, plus 18, 34 and 35 (:248).
  */
@@ -270,12 +289,23 @@ function targetFor(id) {
     return TARGETS[id] || null;
 }
 
-window.adCardClick = function (group, i) {
+window.adCardClick = function (group, i, event) {
     var list = S[group] || [];
     var c = list[i];
     if (!c) return;
 
     var id = num(c.id);
+    var orderUrl = orderApprovalUrl(id);
+    if (orderUrl) {
+        clearMsg();
+        // A real link also works without the old popup helper and supports opening a new tab.
+        if (event && event.currentTarget && event.currentTarget.tagName === 'A') {
+            event.currentTarget.href = orderUrl;
+            return true;
+        }
+        window.location.assign(orderUrl);
+        return;
+    }
     var t = targetFor(id);
     if (!t) {
         msg('"' + txt(c.title) + '" (TypeID ' + id + ') has no branch in the desktop form\'s own '
@@ -298,12 +328,9 @@ window.adCardClick = function (group, i) {
       + ', which has not been ported yet. Nothing was approved.', false);
 };
 
-/* BtnSpecialApprovalDashBoard_Click, :1358-1368 - opens SpecialApprovalDashboard, a separate
-   desktop form that is not one of the DashBoard screens and has not been ported. */
+/* BtnSpecialApprovalDashBoard_Click: opens its own dashboard with its own branch setup. */
 window.adSpecial = function () {
-    msg('Special Approval DashBoard is the desktop form '
-      + 'Architecture.WinApp.SpecialApprovalDashboard.SpecialApprovalDashboard, which has not '
-      + 'been ported yet.', false);
+    window.location.assign('/dashboard/special-approval-dashboard');
 };
 
 /* ---------------------------------------------------------------- toolbar */
