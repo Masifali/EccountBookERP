@@ -1007,10 +1007,7 @@
     /** CommonServices.WbTransactionSlip280(PrintId):8861. */
     function printSlip(id) {
         if (!id) { box('No Record Found For Display'); return; }
-        get('/slip/' + id).then(function (rows) {
-            if (!rows || !rows.length) { box('No Record Found For Display'); return; }
-            openPrint('280 - Weigh Bridge Slip', [{ title: '', rows: rows }]);
-        }).catch(function (e) { box(e.message); });
+        return printDesktopReport('280-InvRptWeighBridgeSlip.rpt', id);
     }
     function print280() { if (rights.canPrint) printSlip(RECID); }
 
@@ -1024,38 +1021,12 @@
     }
     function slip257For(gpId) {
         if (!(gpId > 0)) { box('No Record Found For Display'); return; }
-        if (window.printRpt) return window.printRpt('257-InwardGatePassWithWbAndLabSlip.rpt', { id: gpId });   // Jasper, same .rpt
-        get('/gate-pass-slip/' + gpId, null, shared).then(function (d) {
-            openPrint('257 - Inward Gate Pass With Weigh Bridge And Lab Slip', [
-                { title: 'Gate Pass', rows: d.main || [] },
-                { title: 'Lab Analysis', rows: d.lab || [], table: true },
-                { title: 'Weigh Bridge', rows: d.weighBridge || [], table: true }
-            ]);
-        }).catch(function (e) { box(e.message); });
+        return printDesktopReport('257-InwardGatePassWithWbAndLabSlip.rpt', gpId);
     }
-    function openPrint(title, sections) {
-        var w = window.open('', '_blank');
-        if (!w) { box('The browser blocked the print window. Allow pop-ups for this site.'); return; }
-        var h = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + esc(title) + '</title><style>'
-              + 'body{font-family:Verdana,sans-serif;font-size:11px;margin:16px}h1{font-size:15px;margin:0 0 2px}h2{font-size:12px;margin:14px 0 4px;border-bottom:1px solid #000}'
-              + 'table{border-collapse:collapse;width:100%}td,th{border:1px solid #444;padding:3px 5px;text-align:left}th{background:#eee}'
-              + '.kv td:first-child{width:32%;font-weight:bold;background:#f6f6f6}@media print{button{display:none}}</style></head><body>'
-              + '<div style="font-weight:bold;font-size:13px">' + esc(L ? L.companyName : '') + '</div><h1>' + esc(title) + '</h1><button onclick="window.print()">Print</button>';
-        sections.forEach(function (s) {
-            if (s.title) h += '<h2>' + esc(s.title) + '</h2>';
-            if (!s.rows.length) { h += '<div>No rows.</div>'; return; }
-            if (s.table || s.rows.length > 1) {
-                var keys = Object.keys(s.rows[0]);
-                h += '<table><thead><tr>' + keys.map(function (k) { return '<th>' + esc(k) + '</th>'; }).join('') + '</tr></thead><tbody>';
-                s.rows.forEach(function (r) { h += '<tr>' + keys.map(function (k) { return '<td>' + esc(r[k]) + '</td>'; }).join('') + '</tr>'; });
-                h += '</tbody></table>';
-            } else {
-                h += '<table class="kv">';
-                Object.keys(s.rows[0]).forEach(function (k) { h += '<tr><td>' + esc(k) + '</td><td>' + esc(s.rows[0][k]) + '</td></tr>'; });
-                h += '</table>';
-            }
-        });
-        w.document.open(); w.document.write(h + '</body></html>'); w.document.close();
+    function printDesktopReport(report, id) {
+        // Pass the saved record id directly; a selected grid row may belong to a different document.
+        if (typeof window.printRpt !== 'function') { box('Print preview could not load. Refresh the page and try again.'); return; }
+        return window.printRpt(report, { id: id });
     }
 
     // ===================================================================================== misc

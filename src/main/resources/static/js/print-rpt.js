@@ -93,9 +93,11 @@
         /* A one-document print (slip / voucher / gate pass ...) with its document id: the desktop passes
            only that Id. The page's history filters (fromDate, toDate, status ...) are not sent, or the
            procedure would filter the document out. */
-        if (args.id !== undefined && isOneDoc(rpt)) {
+        // The 653 slip contract calls its record-ID argument "history".
+        var recordArg = args.id !== undefined ? 'id' : (given && given.history !== undefined ? 'history' : null);
+        if (recordArg && isOneDoc(rpt)) {
             Object.keys(args).forEach(function (k) {
-                if (k !== 'id' && k !== 'documentTypeId' && !(given && given[k] !== undefined)) delete args[k];
+                if (k !== recordArg && k !== 'documentTypeId' && !(given && given[k] !== undefined)) delete args[k];
             });
         }
         Object.keys(given || {}).forEach(function (k) { if (!(k in args)) args[k] = given[k]; });
@@ -114,8 +116,10 @@
             .then(function (j) { controlsCache[k] = j; return j; });
     }
 
-    function printRpt(rpt, given, btn) {
-        var win = nativeOpen.call(w, 'about:blank', '_blank');
+    function printRpt(rpt, given, btn, previewWindow) {
+        // Pages with asynchronous validation can reserve the preview during the click.
+        var win = previewWindow || nativeOpen.call(w, 'about:blank', '_blank');
+        if (!win) { alert('Allow pop-ups for this site to open the print preview.'); return Promise.resolve(); }
         return info(rpt).then(function (inf) {
             var args = resolveArgs(rpt, inf, given), q = new URLSearchParams();
             var miss = btn ? missing(btn, args) : [];

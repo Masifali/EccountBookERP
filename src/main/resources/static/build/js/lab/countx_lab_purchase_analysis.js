@@ -21,7 +21,7 @@
     var DEFAULT_TEXT = '-- Select --';                       // InfragisticsHelper.InsertDefaultRow
     var MAX_PIC_BYTES = 5 * 1024 * 1024;                     // DesktopAttachmentStore.MAX_BYTES
 
-    /* Form-specific combo columns (countx_desktop_combo.js). The first column is always the display member. */
+    /* Form-specific combo columns (countx_prod_combo.js). The first column is always the display member. */
     if (window.DesktopCombo) {
         /* GpNoFill (:770-785): Id hidden; GpSrNo, VehicleNo, OrderType, SupplierName, LabType. */
         window.DesktopCombo.define('paGatePass', [
@@ -759,25 +759,34 @@
     /** Insert() (:1799) — btnSave_Click forces RecId 0 (:1968); btnUpdate_Click keeps it (:1977). */
     function insert(button, isUpdate) {
         return act(button, async function () {
-            if (!isUpdate) st.recId = 0;
-            var body = collect(st.recId);
-            var r = await apiRaw('POST', API + '/save', body);
-            if (r.status === 409 && r.data && r.data.confirm) {                         // "Are you sure to Save?" / "Are you sure to Update?"
-                if (!window.confirm(r.data.message)) return;
-                body.confirm = true;
-                r = await apiRaw('POST', API + '/save', body);
+            // Reserve previews before the save request loses the browser's user activation.
+            var preview653 = $('IsPrint').checked ? openPrintPreview() : null;
+            var preview257 = $('chkPrintII').checked ? openPrintPreview() : null;
+            try {
+                if (!isUpdate) st.recId = 0;
+                var body = collect(st.recId);
+                var r = await apiRaw('POST', API + '/save', body);
+                if (r.status === 409 && r.data && r.data.confirm) {                         // "Are you sure to Save?" / "Are you sure to Update?"
+                    if (!window.confirm(r.data.message)) return;
+                    body.confirm = true;
+                    r = await apiRaw('POST', API + '/save', body);
+                }
+                if (!r.ok) {
+                    var m = r.data && (r.data.message || r.data.error) || ('The request failed (' + r.status + ').');
+                    alert(m);
+                    if (FOCUS[m]) focusCtl(FOCUS[m]);
+                    return;
+                }
+                alert(r.data.message);                                                       // "Save Successfully" / "Update Successfully"
+                var savedId = r.data.id, gpId = r.data.gatePassId;
+                await refresh();
+                if (preview653) { var slip = preview653; preview653 = null; await print653(savedId, false, slip); }
+                if (preview257) { var gp = preview257; preview257 = null; await print257(gpId, gp); }
+            } finally {
+                // Validation failure, cancelled confirmation or a failed request leaves no blank tabs.
+                if (preview653) preview653.close();
+                if (preview257) preview257.close();
             }
-            if (!r.ok) {
-                var m = r.data && (r.data.message || r.data.error) || ('The request failed (' + r.status + ').');
-                alert(m);
-                if (FOCUS[m]) focusCtl(FOCUS[m]);
-                return;
-            }
-            alert(r.data.message);                                                       // "Save Successfully" / "Update Successfully"
-            var savedId = r.data.id, gpId = r.data.gatePassId;
-            await refresh();
-            if ($('IsPrint').checked) await print653(savedId, false);                    // :1949
-            if ($('chkPrintII').checked) print257(gpId);                                 // :1953
         });
     }
 
@@ -948,19 +957,28 @@
     // =========================================================================== prints
 
     /** LabAnalysisReport653 (:3157) — 653-RptInvLabPurchaseAnalysisSlip.rpt; @Id is the lab record (print contract arg "history"). */
-    async function print653(id, toolbar) {
+    function openPrintPreview() {
+        if (typeof window.printRpt !== 'function') { alert('The print runtime is not loaded on this page.'); return null; }
+        var win = window.open('about:blank', '_blank');
+        if (!win) alert('Allow pop-ups for this site to open the print preview.');
+        return win;
+    }
+    async function print653(id, toolbar, preview) {
+        var win = preview;
         try {
             if (intOf(id) <= 0) throw new Error('Record Not Found For Display');
+            if (win === undefined) win = openPrintPreview();
+            if (!win) return;
             await api('GET', API + '/' + intOf(id) + '/print-check?toolbar=' + (toolbar ? 'true' : 'false'));
             if (!window.printRpt) throw new Error('The print runtime is not loaded on this page.');
-            window.printRpt(RPT_653, { history: intOf(id) });
-        } catch (e) { alert(msg(e)); }
+            await window.printRpt(RPT_653, { history: intOf(id) }, null, win);
+        } catch (e) { if (win) win.close(); alert(msg(e)); }
     }
     /** CommonServices.InwardGatePassWithWbAndLabSlip(GatePassId) (CommonServices.cs:14268) — 257 slip. */
-    function print257(gpId) {
-        if (intOf(gpId) <= 0) { alert('No Record Found For Display'); return; }
-        if (!window.printRpt) { alert('The print runtime is not loaded on this page.'); return; }
-        return window.printRpt(RPT_257, { id: intOf(gpId) });
+    function print257(gpId, preview) {
+        if (intOf(gpId) <= 0) { if (preview) preview.close(); alert('No Record Found For Display'); return; }
+        if (!window.printRpt) { if (preview) preview.close(); alert('The print runtime is not loaded on this page.'); return; }
+        return window.printRpt(RPT_257, { id: intOf(gpId) }, null, preview);
     }
 
     // ========================================================================== history
@@ -1194,7 +1212,14 @@
         var r = st.hist[i];
         if (!r) return;
         if (key === 'Edit') return act(button, async function () { await readById(r.Id); });
-        if (key === 'Print') return act(button, function () { return print653(r.Id, false); });
+        if (key === 'Print') return act(button, async function () {
+            var preview = openPrintPreview();
+            if (!preview) return;
+            try {
+                if (i !== st.histSel) await historySelectionChanged(i);
+                await print653(r.Id, false, preview);
+            } catch (e) { preview.close(); throw e; }
+        });
         if (key !== 'Update') return;
         var tr = $('grdhistory').querySelector('tbody tr[data-i="' + i + '"]');
         if (!r.WeightCutCompulsory) {
@@ -1222,6 +1247,8 @@
         var b = e.target.closest('button[data-act]');
         var pic = e.target.closest('a[data-pic]');
         var open = e.target.closest('a[data-open]');
+        // Reserve the print tab before changing rows performs asynchronous reads/saves.
+        if (b && b.getAttribute('data-act') === 'Print') { historyButton(i, 'Print', b); return; }
         if (open) {                                                                      // web rule 4: the DocNo opens the record (= Edit, :2590)
             var ro = st.hist[i];
             if (ro) act(open, async function () { if (i !== st.histSel) await historySelectionChanged(i); await readById(ro.Id); });

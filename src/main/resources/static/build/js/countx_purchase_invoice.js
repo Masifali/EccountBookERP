@@ -288,23 +288,40 @@ const purchaseInvoice = (() => {
     }
 
     // ------------------------------------------------------------------ save / delete
+    function validateSave() {
+        if (state.id && state.approved) throw Error('Record Not Update because Record has approved');
+        if (!state.details.length) throw Error('Grid Record Not Found');
+        if (!el('cmbsuppliername').value) throw Error('Supplier Name field is required');
+        if ((state.lists.locations || []).length && !el('cmbLocationType').value) throw Error('Location Type field is required');
+    }
     async function save(button) {
         await run(button, async () => {
-            await settled(); await attachmentEditor.settled();
-            // btnUpdate_Click:4016, then Insert():3488-3503 - form checks, then FormHelper.ConfirmAction.
-            if (state.id && state.approved) throw Error('Record Not Update because Record has approved');
-            if (!state.details.length) throw Error('Grid Record Not Found');
-            if (!el('cmbsuppliername').value) throw Error('Supplier Name field is required');
-            if ((state.lists.locations || []).length && !el('cmbLocationType').value) throw Error('Location Type field is required');
+            // Confirm while the invoice tab is still active, before opening its preview.
+            validateSave();
             if (!confirm(state.id ? 'Are you sure to Update' : 'Are you sure to Save')) return;
-            const data = await api('/save', { ...payload(), attachments: attachmentEditor.payload() });
-            const savedId = data.id;
-            await reset(); message(data.message);
-            // :3955-3980 - prints after save by the header check boxes.
-            if (el('ChkBoxParty').checked) print('220A-InvRptPurchaseBillSupplierRiceSlip.rpt', { id: savedId });
-            if (el('ChkBoxItemPrint').checked) print('220-InvRptPurchaseBillSupplierRiceSlip.rpt', { id: savedId });
-            if (el('chkSummary').checked) print('220B-InvRptPurchaseBillSupplierRiceSummary.rpt', { id: savedId });
-            if (el('ChkBokVoucher').checked) { const v = (await api('/' + savedId)).VoucherHeadId; print('103-AcRptPurchaseSalesVoucherSlip.rpt', { id: v, documentTypeId: DOC_TYPE }); }
+            // One window for all checked reports, reserved before any await loses user activation.
+            const reports = selectedPrints(), preview = reports.length ? openPrintWindow('Saving invoice...') : null;
+            let saved = false;
+            try {
+                await settled(); await attachmentEditor.settled();
+                // Pending calculations/attachments must finish before the saved payload is collected.
+                validateSave();
+                const data = await api('/save', { ...payload(), attachments: attachmentEditor.payload() });
+                const savedId = Number(data.id);
+                saved = true;
+                let notice = data.message || 'Record Saved Successfully';
+                try { await reset(); } catch (e) {
+                    // The record already exists; never leave a failed reset offering another new Save.
+                    state.id = savedId; state.h.Id = savedId; state.voucherHeadId = 0;
+                    window.history.replaceState(null, '', route + '?id=' + savedId);
+                    notice += ' The form could not reset: ' + e.message;
+                }
+                message(notice);
+                // :3955-3980 - use the saved IDs and the options captured at the Save click.
+                if (reports.length) await savedPrints(savedId, reports, preview, notice);
+            } finally {
+                if (!saved && preview && !preview.closed) preview.close();
+            }
         });
     }
     async function remove(button) {
@@ -315,13 +332,86 @@ const purchaseInvoice = (() => {
     }
 
     // ------------------------------------------------------------------ prints (GeneratereportSlip:6547, CommonServices 103/220A, GenerateReportVoucher104:6479)
+    function selectedPrints() {
+        return [
+            ['ChkBokVoucher', '103-Voucher', '103-AcRptPurchaseSalesVoucherSlip.rpt', true],
+            ['ChkBoxParty', '220A-Party Slip', '220A-InvRptPurchaseBillSupplierRiceSlip.rpt'],
+            ['ChkBoxItemPrint', '220-Item Slip', '220-InvRptPurchaseBillSupplierRiceSlip.rpt'],
+            ['chkSummary', '220B-Summary', '220B-InvRptPurchaseBillSupplierRiceSummary.rpt']
+        ].filter(r => el(r[0]).checked).map(r => ({ label: r[1], rpt: r[2], voucher: !!r[3] }));
+    }
+    function openPrintWindow(text) {
+        const preview = window.open('about:blank', '_blank');
+        if (preview) {
+            preview.document.title = 'Purchase Invoice Prints';
+            preview.document.body.textContent = text;
+        }
+        return preview;
+    }
+    async function reportPdf(rpt, args) {
+        const r = await fetch('/reports/print/by-template/' + encodeURIComponent(rpt) + '/pdf', {
+            method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', Accept: 'application/pdf, text/plain' }, body: JSON.stringify(args)
+        });
+        if (r.redirected || r.status === 401) throw Error('Please sign in to print this report');
+        if (!r.ok || !(r.headers.get('Content-Type') || '').includes('application/pdf')) throw Error(await r.text() || ('Print failed (' + r.status + ')'));
+        return URL.createObjectURL(await r.blob());
+    }
+    async function savedPrints(savedId, reports, preview, notice) {
+        if (!preview || preview.closed) {
+            message(notice + ' The preview window was blocked or closed. Open the saved reports below.');
+            const retry = document.createElement('button');
+            retry.type = 'button'; retry.textContent = 'Open print previews'; retry.style.marginLeft = '8px';
+            retry.addEventListener('click', () => run(retry, () => savedPrints(savedId, reports, openPrintWindow('Preparing reports...'), notice)));
+            el('fxMsg').appendChild(retry);
+            return;
+        }
+        const doc = preview.document;
+        doc.open();
+        doc.write('<!doctype html><html><head><title>Purchase Invoice Prints</title><style>'
+            + 'body{margin:0;font:14px "Segoe UI",sans-serif;background:#f4f6f8;color:#18343d}nav{display:flex;gap:8px;padding:10px;background:#007f80}'
+            + 'button{padding:8px 14px;border:1px solid #bed8db;border-radius:4px;background:#fff;cursor:pointer}button[aria-selected=true]{background:#d7f4ed;font-weight:600}'
+            + 'section{height:calc(100vh - 58px)}section[hidden]{display:none}p{padding:16px}iframe{width:100%;height:100%;border:0}'
+            + '</style></head><body><nav aria-label="Saved invoice reports"></nav><main></main></body></html>');
+        doc.close();
+        const panels = reports.map((report, index) => {
+            const tab = doc.createElement('button'), panel = doc.createElement('section'), status = doc.createElement('p');
+            tab.type = 'button'; tab.textContent = report.label; tab.setAttribute('aria-selected', String(index === 0));
+            panel.hidden = index !== 0; status.textContent = 'Preparing ' + report.label + '...'; panel.appendChild(status);
+            tab.addEventListener('click', () => panels.forEach(p => { p.panel.hidden = p.panel !== panel; p.tab.setAttribute('aria-selected', String(p.panel === panel)); }));
+            doc.querySelector('nav').appendChild(tab); doc.querySelector('main').appendChild(panel);
+            return { tab, panel, status };
+        });
+        let voucherId = 0, voucherError = '';
+        if (reports.some(r => r.voucher)) {
+            try {
+                voucherId = num(await api('/' + savedId), 'VoucherHeadId');
+                if (!voucherId) throw Error('No accounting voucher was found for this saved invoice.');
+            } catch (e) { voucherError = e.message; }
+        }
+        const errors = [];
+        for (let i = 0; i < reports.length; i++) {
+            const report = reports[i];
+            try {
+                if (report.voucher && voucherError) throw Error(voucherError);
+                const url = await reportPdf(report.rpt, report.voucher ? { id: voucherId, documentTypeId: DOC_TYPE } : { id: savedId });
+                const frame = doc.createElement('iframe'); frame.title = report.label; frame.src = url;
+                panels[i].panel.replaceChildren(frame);
+            } catch (e) {
+                panels[i].status.textContent = report.label + ': ' + e.message;
+                errors.push(report.label);
+            }
+        }
+        if (preview.closed) return savedPrints(savedId, reports, null, notice);
+        message(notice + (errors.length ? ' Could not preview ' + errors.join(', ') + '. See the print window for details.' : ''), errors.length > 0);
+    }
     // The clicked button stays disabled (busy) until the PDF has arrived or the request failed.
     function print(rpt, args, button) {
-        const w = window.open('', '_blank'); try { if (w) w.document.write('<p style="font:13px Segoe UI">Preparing report...</p>'); } catch (x) { /* popup blocked */ }
-        return PurchaseRequest.run(button || null, () => fetch('/reports/print/by-template/' + encodeURIComponent(rpt) + '/pdf', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', Accept: 'application/pdf, text/plain' }, body: JSON.stringify(args || {}) })
-            .then(r => (r.ok && (r.headers.get('Content-Type') || '').includes('application/pdf')) ? r.blob().then(b => { const u = URL.createObjectURL(b); if (w) w.location.href = u; else window.open(u, '_blank'); })
-                : r.text().then(t => { if (w) w.close(); message(t || ('Print failed (' + r.status + ')'), true); }))
-            .catch(e => { if (w) w.close(); fail(e); })).finally(rights);
+        return run(button, async () => {
+            const preview = openPrintWindow('Preparing report...');
+            if (!preview) { message('Allow pop-ups for this site to open the print preview.', true); return; }
+            try { preview.location.href = await reportPdf(rpt, args || {}); }
+            catch (e) { preview.close(); throw e; }
+        });
     }
     function slip(id, rpt, button) { if (!(id > 0)) { message('Record Id Not Found', true); return; } print(rpt, { id }, button); }
     function voucher103(voucherId, button) { if (!(voucherId > 0)) { message('Not Record Found For Display', true); return; } print('103-AcRptPurchaseSalesVoucherSlip.rpt', { id: voucherId, documentTypeId: DOC_TYPE }, button); }
