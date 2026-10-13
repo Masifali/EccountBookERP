@@ -386,7 +386,8 @@
     /* ---------------- Save / Update ---------------- */
     async function onSaveRecord() {
         const updating=numeric('txtId')>0;
-        if (field(updating?'btnupdate':'btnsave').disabled) return;
+        // PurchaseRequest.run disables the button while this handler runs; use the loaded rights here.
+        if (!(updating ? lookupData.canUpdate : lookupData.canSave)) return;
         if (updating && [204,241].includes(numeric('CmbOrderType')) && !numeric('CmbVariety')) { alert('Please select Variety First'); return; }
         // formvalidation(): the one MessageBox question in it (short vehicle number, :1725); the rest is checked by the server.
         const vehicle=field('txtvehicleno').value.trim().toUpperCase();

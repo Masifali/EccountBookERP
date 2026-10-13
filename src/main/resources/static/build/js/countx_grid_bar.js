@@ -405,10 +405,12 @@
         var placement = this.opts.placement || this.scope.getAttribute('data-gridbar-placement') || 'toolbar';
         var mount = placement === 'toolbar' ? resolveEl(mountSelector) : null;
         var anchor = this.table() || this.scope;
-        // Purchase pages share a reserved caption-strip slot with the full-screen toggle.
-        if (placement === 'toolbar' && /^\/purchase\//.test(global.location.pathname)
+        // Purchase and Sale pages share a reserved caption-strip slot with the full-screen toggle.
+        if (placement === 'toolbar' && /^\/(purchase|sale)\//.test(global.location.pathname)
             && global.PurchaseChrome && global.PurchaseChrome.gridTools) {
-            mount = global.PurchaseChrome.gridTools(anchor, mount);
+            // A dynamic grid keeps the same host even when its inner table is replaced.
+            anchor = this.scope.tagName === 'TABLE' ? anchor : this.scope;
+            mount = global.PurchaseChrome.gridTools(anchor, mount, this.scope.getAttribute('data-gridbar-heading'));
             // Reports already provide a full-screen action for their whole grid section.
             if (!mount.closest('.pr-grid-bar')) global.PurchaseChrome.fullscreen(anchor, this.title());
         }

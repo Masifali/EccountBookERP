@@ -12,8 +12,8 @@
  *       Adds a small toggle to a grid container: the grid then fills the window and scrolls
  *       inside itself (Esc or the toggle restores it). The page itself never scrolls sideways.
  *       data-fullscreen-mount="#toolbar" places the toggle alongside the grid controls.
- *   PurchaseChrome.gridTools(container, preferredMount)
- *       Returns the shared control slot above a grid; used by GridBar on purchase pages.
+ *   PurchaseChrome.gridTools(container, preferredMount, preferredHeading)
+ *       Returns the shared control slot above a marked Purchase or Sale grid.
  *
  * No framework; no dependency. Additive only - a page that does not call it is unaffected.
  * ============================================================================================ */
@@ -47,6 +47,8 @@
             '.pc-grid-heading>.cap,.pc-grid-heading>[class$="-title"]{max-width:calc(100% - 86px);overflow:hidden;text-overflow:ellipsis}' +
             '.pc-grid-heading>.cog,.pc-grid-heading>button:disabled[title*="not ported"]{display:none!important}' +
             '.pc-grid-heading-new{height:26px;background:#008080;color:#fff;flex-shrink:0}' +
+            '.sc-grid-heading{min-height:26px!important;background:#008080!important;color:#fff!important;flex-shrink:0;overflow:visible!important}' +
+            '.sc-grid-heading .pc-grid-tools{line-height:normal}' +
             '.pc-grid-tools{position:absolute;right:4px;top:0;width:74px;height:100%;display:flex;justify-content:flex-end;align-items:center;gap:6px;box-sizing:border-box}' +
             '.pc-grid-tools>.pc-fs-btn{position:static;width:28px;height:22px;min-width:28px;flex:0 0 28px;font-size:13px;opacity:1}' +
             '.pc-grid-tools>.gb-gear{position:static;width:36px;height:22px;flex:0 0 36px;margin:0!important}' +
@@ -91,7 +93,7 @@
         return null;
     }
 
-    function gridTools(container, preferred) {
+    function gridTools(container, preferred, preferredHeading) {
         injectStyle();
         var box = gridHost(container);
         if (!box) return null;
@@ -106,7 +108,7 @@
             gridToolbars.set(box, mount);
             return mount;
         }
-        var heading = mount && mount.classList.contains('pc-grid-tools') ? mount.parentElement : mount;
+        var heading = el(preferredHeading) || (mount && mount.classList.contains('pc-grid-tools') ? mount.parentElement : mount);
         heading = heading || gridHeading(box);
         if (!heading) {
             heading = doc.createElement('div');
@@ -114,6 +116,7 @@
             box.parentNode.insertBefore(heading, box);
         }
         heading.classList.add('pc-grid-heading');
+        if (/^\/sale\//.test(global.location.pathname)) heading.classList.add('sc-grid-heading');
         toolbarOwners.set(heading, box);
         if (!mount || !mount.classList.contains('pc-grid-tools')) {
             mount = doc.createElement('div');
