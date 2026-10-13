@@ -93,7 +93,9 @@
         .igp-tabs2 .tab-btn.active { background: #fff; height: 24px; position: relative; top: 1px; }
         .tab-content { display: none; padding: 3px; }
         .tab-content.active { display: block; }
-        .igp-gridbar { height: 23px; background: #008080; color: #fff; font: bold 13px Tahoma, sans-serif; line-height: 21px; padding-left: 6px; white-space: nowrap; overflow: hidden; }
+        .igp-gridbar { position: relative; box-sizing: border-box; height: 26px; background: #008080; color: #fff; font: bold 13px Tahoma, sans-serif; line-height: 24px; padding: 0 82px 0 6px; white-space: nowrap; overflow: hidden; }
+        .igp-gridbar-caption { display: block; overflow: hidden; text-overflow: ellipsis; }
+        .igp-history-tools { top: 27px; height: 26px; }
         /* Janus-style grids, scrolling inside their own box */
         .igp-grid, .grid-wrap { overflow: auto; background: #fff; border: 1px solid #9eb6ce; }
         .data-grid { border-collapse: collapse; width: auto; min-width: 100%; font: 11px Verdana, sans-serif; }
@@ -105,8 +107,8 @@
         .data-grid .tool-btn { font: 11px Verdana, sans-serif; padding: 0 4px; height: 18px; cursor: pointer; border: 1px solid #8aa; background: #f4f4f4; }
         .code-link { color: #0645ad; text-decoration: underline; cursor: pointer; }
         .totals-bar { display: flex; justify-content: space-between; padding: 2px 6px; font: bold 11px Verdana, sans-serif; background: #eef4fb; border: 1px solid #9eb6ce; border-top: none; }
-        #wrapMainHistory { height: calc(100vh - 29px - 27px - 364px - 25px - 6px - 23px - 22px - 44px); min-height: 160px; }
-        #wrapPoInfo { height: calc(100vh - 29px - 27px - 364px - 25px - 6px - 80px - 24px - 44px); min-height: 120px; }
+        #wrapMainHistory { height: calc(100vh - 29px - 27px - 364px - 25px - 6px - 26px - 22px - 44px); min-height: 160px; }
+        #wrapPoInfo { height: calc(100vh - 29px - 27px - 364px - 25px - 6px - 80px - 26px - 44px); min-height: 120px; }
         #wrapFullHistory { height: calc(100vh - 53px - 71px - 44px); min-height: 300px; }
         /* tool-btn (spinner host of countx_purchase_request.js) */
         .tool-btn { font-family: Verdana, sans-serif; }
@@ -312,9 +314,12 @@
 
         <!-- tabPage3: panel11 teal bar + grd -->
         <div id="tabGridHistory" class="tab-content active">
-            <div class="igp-gridbar">This Grid Show the  Vehicles Present In The Factory,Pending For Acceptance Or Rejection</div>
-            <div class="grid-wrap" id="wrapMainHistory">
-                <table data-gridbar="InwardGatePass:grdMainHistory" class="data-grid" id="grdMainHistory">
+            <div class="igp-gridbar">
+                <span class="igp-gridbar-caption">This Grid Show the  Vehicles Present In The Factory,Pending For Acceptance Or Rejection</span>
+                <div id="mainHistoryGridTools" class="pc-grid-tools" role="toolbar" aria-label="Open gate pass grid controls"></div>
+            </div>
+            <div class="grid-wrap" id="wrapMainHistory" data-fullscreen-mount="#mainHistoryGridTools">
+                <table data-gridbar="InwardGatePass:grdMainHistory" data-gridbar-mount="#mainHistoryGridTools" class="data-grid" id="grdMainHistory">
                     <thead>
                     <tr>
                         <th>Print</th><th>Edit</th><th>Gp No</th><th>Gp Date</th><th>G.Type</th><th>Order Type</th><th>Supplier Name</th>
@@ -359,9 +364,12 @@
                     <label class="igp-abs igp-radio" style="left:915px;top:43px;"><input type="radio" name="poDateFilter" value="approvedDate"> Approved Date</label>
                 </div>
             </div>
-            <div class="igp-gridbar" style="height:24px;">This Grid Show The Un-Completed And Approved Purchase Orders.... Complete.Cancel And Un-Approved Orders Will Not Appear here. </div>
-            <div class="grid-wrap" id="wrapPoInfo">
-                <table data-gridbar="InwardGatePass:grdPoInfo" class="data-grid" id="grdPoInfo">
+            <div class="igp-gridbar">
+                <span class="igp-gridbar-caption">This Grid Show The Un-Completed And Approved Purchase Orders.... Complete.Cancel And Un-Approved Orders Will Not Appear here.</span>
+                <div id="poInfoGridTools" class="pc-grid-tools" role="toolbar" aria-label="Purchase order grid controls"></div>
+            </div>
+            <div class="grid-wrap" id="wrapPoInfo" data-fullscreen-mount="#poInfoGridTools">
+                <table data-gridbar="InwardGatePass:grdPoInfo" data-gridbar-mount="#poInfoGridTools" class="data-grid" id="grdPoInfo">
                     <thead>
                     <tr>
                         <th>Branch</th><th>Document Type</th><th>Order No</th><th>Supplier Name</th><th>Item Name</th>
@@ -387,6 +395,7 @@
             <button type="button" id="btnHistRefresh" class="igp-tool tool-btn" onclick="withButtonLoading(this, onHistoryRefresh)" title="Alt+R"><span class="ic">&#8635;</span>Refresh</button>
         </div>
         <span class="igp-teal-title" style="left:6px;top:30px;">Inward Gate Pass History</span>
+        <div id="fullHistoryGridTools" class="pc-grid-tools igp-history-tools" style="top:27px;height:26px;" role="toolbar" aria-label="Gate pass history grid controls"></div>
     </div>
     <!-- panel17 (0,0) 1607 x 71: groupBox3 "Filters" (6,2) 1092 x 65 -->
     <div class="igp-rel" style="height:71px;">
@@ -408,8 +417,8 @@
         </div>
     </div>
     <!-- panel18: grdhistory (Dock Fill) -->
-    <div class="grid-wrap" id="wrapFullHistory">
-        <table data-gridbar="InwardGatePass:grdFullHistory" class="data-grid" id="grdFullHistory">
+    <div class="grid-wrap" id="wrapFullHistory" data-fullscreen-mount="#fullHistoryGridTools">
+        <table data-gridbar="InwardGatePass:grdFullHistory" data-gridbar-mount="#fullHistoryGridTools" class="data-grid" id="grdFullHistory">
             <thead>
             <tr>
                 <th>Print</th><th>Edit</th><th>Gp No</th><th>Gp Date</th><th>Gp Type</th><th>Order Type</th><th>Order No</th>
@@ -437,7 +446,7 @@
 
 <script th:src="@{/build/js/countx_purchase_request.js?v=20260923a}"></script>
 <script th:src="@{/build/js/countx_prod_combo.js?v=20261003s}"></script>
-<script th:src="@{/build/js/countx_purchase_page_chrome.js?v=20261001a}"></script>
+<script th:src="@{/build/js/countx_purchase_page_chrome.js?v=20261013-igp-toolbar2}"></script>
 <script th:src="@{/build/js/countx_inward_gate_pass.js?v=20261003t}"></script>
 <script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
 <script src="/js/print-rpt.js?v=20261003erp"></script>
@@ -451,6 +460,6 @@ window.printRptArgs = function (rpt, a) {
     return a;
 };
 </script>
-<script th:src="@{/build/js/countx_grid_bar.js?v=20261007-gridbar-flow}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20261013-igp-toolbar2}"></script>
 </body>
 </html>

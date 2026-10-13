@@ -405,16 +405,24 @@
         var placement = this.opts.placement || this.scope.getAttribute('data-gridbar-placement') || 'toolbar';
         var mount = placement === 'toolbar' ? resolveEl(mountSelector) : null;
         var anchor = this.table() || this.scope;
+        // Purchase pages share a reserved caption-strip slot with the full-screen toggle.
+        if (placement === 'toolbar' && /^\/purchase\//.test(global.location.pathname)
+            && global.PurchaseChrome && global.PurchaseChrome.gridTools) {
+            mount = global.PurchaseChrome.gridTools(anchor, mount);
+            // Reports already provide a full-screen action for their whole grid section.
+            if (!mount.closest('.pr-grid-bar')) global.PurchaseChrome.fullscreen(anchor, this.title());
+        }
         var p = anchor.parentNode;
         /* A table alone in a scroll box uses the box as the positioning anchor. */
         if (anchor.tagName === 'TABLE' && p && p !== doc.body) {
             var cs = global.getComputedStyle(p);
-            var only = toArr(p.children).filter(function (c) { return c !== anchor && !c.classList.contains('gb-bar'); }).length === 0;
+            var only = toArr(p.children).filter(function (c) { return c !== anchor && !c.matches('.gb-bar,.pc-fs-btn'); }).length === 0;
             if (only && /(auto|scroll)/.test(cs.overflow + cs.overflowX + cs.overflowY)) anchor = p;
         }
         var inferred = !mount && placement === 'toolbar' ? this.findGridHeader(anchor) : null;
         mount = mount || inferred;
         if (mount) {
+            if (this.barEl && this.barEl.parentNode) this.barEl.remove();
             var mountStyle = global.getComputedStyle(mount);
             if (this.autoSlot && this.autoSlot.parentNode) this.autoSlot.remove();
             /* Recognized caption strips can be made flex rows safely. This puts the control at
@@ -434,7 +442,7 @@
                 if (this.mmo) this.mmo.disconnect();
                 this.mountEl = mount;
                 this.mmo = new MutationObserver(function () {
-                    if (!self.gear.isConnected || self.mountNode.parentNode !== self.mountEl || self.gear.parentNode !== self.mountNode) self.placeGear();
+                    if (!self.gear.isConnected || self.gear.parentNode !== self.mountEl) self.placeGear();
                 });
                 this.mmo.observe(mount, { childList: true });
             }
