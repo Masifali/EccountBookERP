@@ -4,6 +4,7 @@ import com.mst.models.InwardGatePass;
 import com.mst.security.CurrentUserContext;
 import com.mst.services.InwardGatePassService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -45,8 +46,18 @@ public class InwardGatePassRestController {
     }
 
     @GetMapping("/order-party-items")
-    public List<Map<String,Object>> getOrderPartyItems(@RequestParam(defaultValue="41") int documentTypeId,@RequestParam int number,@RequestParam(required=false) String date,@RequestParam(defaultValue="0") int gatePassId) {
-        return service.getOrderPartyItems(documentTypeId,number,date,gatePassId);
+    public ResponseEntity<?> getOrderPartyItems(@RequestParam(defaultValue="41") int documentTypeId,@RequestParam int number,@RequestParam(required=false) String date,@RequestParam(defaultValue="0") int gatePassId) {
+        try {
+            return ResponseEntity.ok(service.getOrderPartyItems(documentTypeId,number,date,gatePassId));
+        } catch (org.springframework.dao.DataAccessException e) {
+            // SQL Server RAISERROR 50000 carries the desktop's business validation message
+            // (expired, unapproved, cancelled or missing order). Do not hide actual SQL failures.
+            for (Throwable cause=e; cause!=null; cause=cause.getCause()) {
+                if (cause instanceof java.sql.SQLException sql && sql.getErrorCode()==50000)
+                    return ResponseEntity.badRequest().body(Map.of("message",sql.getMessage()));
+            }
+            throw e;
+        }
     }
 
     @GetMapping("/lab-data/{id}")

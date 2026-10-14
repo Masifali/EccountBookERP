@@ -3,6 +3,7 @@ package com.mst.repositories;
 import com.mst.models.InwardGatePass;
 import com.mst.models.InwardGatePassDetail;
 import com.mst.models.InwardGatePassPurchaseBreakUp;
+import com.mst.repositories.support.DesktopProc;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -307,10 +308,10 @@ public class InwardGatePassRepository {
 
     /** CmbOrderno_Leave for 1500: PurchaseOrder.GetPurchaseOrderForGatePassInwardByOrderId -> [ST].[USP_GetPurchaseOrderForGPIByOrderId]. */
     public List<Map<String,Object>> getSteelOrderPartyItems(int org,int company,int year,int number,String date) {
-        String sql="EXEC [ST].[USP_GetPurchaseOrderForGPIByOrderId] @OrganizationId=?,@CompanyId=?,@DocumentTypeId=1500,@OrderNo=?,@FinancialYearId=?";
-        List<Object> args=new ArrayList<>(List.of(org,company,number,year));
-        if (date!=null && !date.isBlank()) { sql+=",@GpDate=?"; args.add(new org.springframework.jdbc.core.SqlParameterValue(java.sql.Types.DATE,date(date))); }
-        return jdbcTemplate.queryForList(sql,args.toArray());
+        if (number <= 0) return List.of();
+        var p=DesktopProc.params("OrganizationId",org,"CompanyId",company,"DocumentTypeId",1500,"OrderNo",number,"FinancialYearId",year);
+        if (date!=null && !date.isBlank()) p.put("GpDate",date(date));
+        return DesktopProc.rows(jdbcTemplate,"[ST].[USP_GetPurchaseOrderForGPIByOrderId]",p);
     }
 
     public List<Map<String,Object>> getPoInfoGrid(Integer orgId, Integer compId, Integer branchId, Integer yearId,
@@ -364,13 +365,16 @@ public class InwardGatePassRepository {
 
     /** SupplierCustomer.GetSupplierByPurchaseOrderNo (BLL 0600): Sp_SupplierCustomer_GetAllMethod @Activity='SupplierByPurchaseOrderNo'. */
     public List<Map<String,Object>> getOrderPartyItems(int org,int company,int branch,int year,int documentTypeId,int number,String date,int gatePassId) {
-        String sql="EXEC dbo.Sp_SupplierCustomer_GetAllMethod @PurchaseOrderId=?,@OrganizationId=?,@CompanyId=?,@DocumentTypeId=?";
-        List<Object> args=new ArrayList<>(List.of(number,org,company,documentTypeId));
-        if (year!=0) { sql+=",@FinancialYearId=?"; args.add(year); }
-        if (branch!=0) { sql+=",@BranchesId=?"; args.add(branch); }
-        if (gatePassId!=0) { sql+=",@GpId=?"; args.add(gatePassId); }
-        if (date!=null && !date.isBlank()) { sql+=",@GpDate=?"; args.add(new org.springframework.jdbc.core.SqlParameterValue(java.sql.Types.DATE,date(date))); }
-        return jdbcTemplate.queryForList(sql+",@Activity='SupplierByPurchaseOrderNo'",args.toArray());
+        if (number <= 0) return List.of();
+        var p=DesktopProc.params("PurchaseOrderId",number,"OrganizationId",org,"CompanyId",company,"DocumentTypeId",documentTypeId);
+        if (year!=0) p.put("FinancialYearId",year);
+        if (branch!=0) p.put("BranchesId",branch);
+        if (gatePassId!=0) p.put("GpId",gatePassId);
+        if (date!=null && !date.isBlank()) p.put("GpDate",date(date));
+        p.put("Activity","SupplierByPurchaseOrderNo");
+        // Some valid branches return no SELECT. Execute and drain results like the desktop
+        // DataTable fill; queryForList/executeQuery incorrectly turns that into a SQL 500.
+        return DesktopProc.rows(jdbcTemplate,"Sp_SupplierCustomer_GetAllMethod",p);
     }
 
     /** CommonServices.GetNoofAttachmentsByRefDocumentTypeID(Id, RefDocumentTypeId). */

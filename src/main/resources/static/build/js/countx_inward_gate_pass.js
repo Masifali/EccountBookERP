@@ -314,7 +314,11 @@
             return Promise.resolve();
         }
         if (gpType==='Export' || gpType==='Import') return Promise.resolve();
-        const clear=()=>{ poId=0; bindSelect('cmbsupp',[],'id','name'); field('CmbOrderno').value=''; bindSelect('CmbVariety',[],'id','name'); };
+        const clear=()=>{
+            poId=0; bindSelect('cmbsupp',[],'id','name'); field('CmbOrderno').value=''; bindSelect('CmbVariety',[],'id','name');
+            ++transitGeneration; transitRows=[]; bindSelect('cmbTransitVehicle',[],'id','name');
+        };
+        if(number<=0) { clear(); return Promise.resolve(); }
         return igpFetch('/api/inward-gate-pass/order-party-items?'+new URLSearchParams({documentTypeId:type,number,date:field('txtgpdate').value,gatePassId:numeric('txtId')})).then(r=>r.json()).then(async rows=>{
             if(generation!==orderGeneration) return;
             if(!rows.length) clear();
@@ -326,7 +330,7 @@
                 if (type===1500) field('cmbcity').value=String(rows[0].CityId??''); else setCaption('cmbcity',rows[0].CityArea);
             }
             if (type===41) { field('cmbTransitVehicle').disabled=false; await loadTransitVehicles(); }   // PreBillNoFill(supplier, POId)
-        }).catch(error=>{ clear(); showRequestError(error); });
+        }).catch(error=>{ if(generation!==orderGeneration) return; clear(); showRequestError(error); });
     }
 
     /* cmbsupp_Leave :5407 */

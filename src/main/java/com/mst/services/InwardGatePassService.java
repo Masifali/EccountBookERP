@@ -93,9 +93,11 @@ public class InwardGatePassService {
     /** CmbOrderno_Leave / ReadById order lookups: 41 and 700 use SupplierByPurchaseOrderNo, 1500 the Steel procedure. */
     public List<Map<String,Object>> getOrderPartyItems(int documentTypeId,int number,String date,int gatePassId) {
         if (gatePassId>0) records.require(gatePassId);
+        if (documentTypeId!=41 && documentTypeId!=700 && documentTypeId!=1500)
+            throw new IllegalArgumentException("Order lookup is available for Purchase Type 41, 700 and 1500 only");
+        if (number<=0) return List.of();
         if (documentTypeId==1500)
             return repository.getSteelOrderPartyItems(context.currentOrganizationId(),context.currentCompanyId(),context.currentFinancialYearId(),number,date);
-        if (documentTypeId!=41 && documentTypeId!=700) throw new IllegalArgumentException("Order lookup is available for Purchase Type 41, 700 and 1500 only");
         return repository.getOrderPartyItems(context.currentOrganizationId(),context.currentCompanyId(),context.currentBranchId(),context.currentFinancialYearId(),documentTypeId,number,date,gatePassId);
     }
 
