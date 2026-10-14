@@ -131,7 +131,10 @@ class ErpNavigationTemplateTest {
             request.addHeader("Sec-Fetch-Dest", "document");
             String standalone = engine.process("production/p280_input", context);
             assertEquals(1, standalone.split("id=\"erp-navigation\"", -1).length - 1);
-            verify(menus).viewRights();
+            // Rights were cached in this session by the first render; the rail is rebuilt from
+            // them without another procedure call.
+            assertTrue(standalone.contains("/erp/app/Accounts?module=3"));
+            verify(menus, never()).viewRights();
         }
     }
 }

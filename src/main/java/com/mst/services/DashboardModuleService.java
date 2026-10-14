@@ -46,6 +46,11 @@ public class DashboardModuleService {
     @Autowired private CurrentUserContext currentUserContext;
     @Autowired private ScreenRouteIndex screenRouteIndex;
 
+    @org.springframework.beans.factory.annotation.Value("${dashboard.menu-rights.query-timeout-seconds:10}")
+    private int rightsQueryTimeoutSeconds = 10;
+    @org.springframework.beans.factory.annotation.Value("${dashboard.menu-rights.lock-wait-ms:2000}")
+    private long rightsLockWaitMs = 2000;
+
     /**
      * The desktop reaches this through USP_GetUserRightsForViewbyUserId, but that procedure appears
      * nowhere else in this project and could not be confirmed against the database from here. The
@@ -1203,7 +1208,15 @@ public class DashboardModuleService {
             sql.append(names.get(i)).append("=?");
         }
         List<Map<String, Object>> out = new ArrayList<>();
-        for (Map<String, Object> r : jdbcTemplate.queryForList(sql.toString(), args.toArray())) {
+        // A slow/blocked permissions procedure must not hold a pooled connection
+        // indefinitely. Set the limit on this statement, not the shared template
+        // used by accounting saves and longer reports. JdbcTemplate closes the
+        // statement and releases its connection on success and on cancellation.
+        List<Map<String, Object>> rows = jdbcTemplate.query(sql.toString(), statement -> {
+            statement.setQueryTimeout(Math.max(1, rightsQueryTimeoutSeconds));
+            for (int i = 0; i < args.size(); i++) statement.setObject(i + 1, args.get(i));
+        }, new org.springframework.jdbc.core.ColumnMapRowMapper());
+        for (Map<String, Object> r : rows) {
             /* frmModules (:74), frmMenue (:91, :207) and InitializeMenu (:1451, :1484) all filter
                ScreenViewReights on x.Value and nothing else; the TargetUrl test belongs only to
                ScreenBindInNavigation (:1596), the search combo, so it is not applied to the cards.
@@ -1215,19 +1228,31 @@ public class DashboardModuleService {
     }
 
     /** The rights rows, from the procedure when it works and from the proven join when it does not. */
-    /* 2026-10-10: one page load calls rights() 8+ times (module cards, screen cards, app names,
-       sidebar ...) and each call ran USP_GetUserRightsForViewbyUserId, which is slow; Hikari then
-       reported "Apparent connection leak" for connections held past 60 s. The procedure result is
-       now shared per user/company/app for RIGHTS_TTL_MS, and concurrent callers wait for the one
-       running call instead of each starting their own. Failures are never cached. */
+    /* Share one load per user/company/app. Both the SQL statement and concurrent
+       waiters have limits: a slow refresh must not stall every navigation request.
+       A brief failure backoff prevents one page's many menu reads from repeatedly
+       running a timed-out procedure. A failure never reuses stale permissions. */
     private static final long RIGHTS_TTL_MS = 30_000L;
-    private final Map<String, Object[]> rightsCache = new java.util.concurrent.ConcurrentHashMap<>();
-    private final Map<String, Object> rightsLocks = new java.util.concurrent.ConcurrentHashMap<>();
+    private static final long RIGHTS_FAILURE_TTL_MS = 2_000L;
+    private final Map<String, RightsResult> rightsCache = new java.util.concurrent.ConcurrentHashMap<>();
+    private final Map<String, java.util.concurrent.locks.ReentrantLock> rightsLocks = new java.util.concurrent.ConcurrentHashMap<>();
+    private final java.util.concurrent.atomic.AtomicLong rightsGeneration = new java.util.concurrent.atomic.AtomicLong();
+
+    private static final class RightsResult {
+        final List<Map<String, Object>> rows;
+        final String error;
+        final long expiresAt;
+        RightsResult(List<Map<String, Object>> rows, String error) {
+            this.rows = new ArrayList<>(rows);
+            this.error = error;
+            this.expiresAt = System.currentTimeMillis() + (error == null ? RIGHTS_TTL_MS : RIGHTS_FAILURE_TTL_MS);
+        }
+        boolean fresh() { return System.currentTimeMillis() < expiresAt; }
+    }
 
     /** Drops the shared rights rows so the next page load reads them again from the procedure. */
-    public void clearRightsCache() { rightsCache.clear(); }
+    public void clearRightsCache() { rightsGeneration.incrementAndGet(); rightsCache.clear(); }
 
-    @SuppressWarnings("unchecked")
     private List<Map<String, Object>> rights() {
         String key;
         try {
@@ -1235,46 +1260,52 @@ public class DashboardModuleService {
             try { appId = currentUserContext.currentAppId(); } catch (Exception ignored) { }
             key = currentUserContext.currentUserId() + "|" + currentUserContext.currentCompanyId() + "|" + appId;
         } catch (Exception e) {
-            return rightsUncached();
+            return applyRights(new RightsResult(Collections.emptyList(), "Unable to resolve the signed-in menu context."));
         }
-        Object[] hit = rightsCache.get(key);
-        if (hit != null && System.currentTimeMillis() - (Long) hit[0] < RIGHTS_TTL_MS) {
-            lastError = null;
-            rightsSource = "USP_GetUserRightsForViewbyUserId";
-            return new ArrayList<>((List<Map<String, Object>>) hit[1]);
-        }
-        Object lock = rightsLocks.computeIfAbsent(key, k -> new Object());
-        synchronized (lock) {
+        RightsResult hit = rightsCache.get(key);
+        if (hit != null && hit.fresh()) return applyRights(hit);
+        java.util.concurrent.locks.ReentrantLock lock = rightsLocks.computeIfAbsent(key,
+                k -> new java.util.concurrent.locks.ReentrantLock());
+        boolean acquired = false;
+        try {
+            acquired = lock.tryLock(Math.max(1, rightsLockWaitMs), java.util.concurrent.TimeUnit.MILLISECONDS);
+            if (!acquired) return applyRights(new RightsResult(Collections.emptyList(),
+                    "Menu permissions are still loading. Please try again."));
             hit = rightsCache.get(key);
-            if (hit != null && System.currentTimeMillis() - (Long) hit[0] < RIGHTS_TTL_MS) {
-                lastError = null;
-                rightsSource = "USP_GetUserRightsForViewbyUserId";
-                return new ArrayList<>((List<Map<String, Object>>) hit[1]);
-            }
-            List<Map<String, Object>> rows = rightsUncached();
-            if (lastError == null) {
-                rightsCache.put(key, new Object[] { System.currentTimeMillis(), new ArrayList<>(rows) });
-            }
-            return rows;
+            if (hit != null && hit.fresh()) return applyRights(hit);
+            long generation = rightsGeneration.get();
+            RightsResult result = rightsUncached();
+            if (generation == rightsGeneration.get()) rightsCache.put(key, result);
+            return applyRights(result);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return applyRights(new RightsResult(Collections.emptyList(), "Menu loading was interrupted. Please try again."));
+        } finally {
+            if (acquired) lock.unlock();
         }
     }
 
-    private List<Map<String, Object>> rightsUncached() {
-        lastError = null;
-        rightsSource = "USP_GetUserRightsForViewbyUserId";
+    private RightsResult rightsUncached() {
         /* DashboardNew.GetViewRightsByUserId (:1791-1812): when the procedure throws, the desktop
            shows the message and continues with an EMPTY list. The hand-built join that used to
            stand in here was not the procedure: it had no SuperUsers branch, no
            ScreensAllocateToCompany / ModuleAllocateToOrganizationTemplates rules and a different
            ORDER BY, so on a failure it showed a screen list the desktop never shows. */
         try {
-            return viewRights();
+            return new RightsResult(viewRights(), null);
         } catch (Exception e) {
             LOG.error("USP_GetUserRightsForViewbyUserId failed", e);
-            rightsSource = "USP_GetUserRightsForViewbyUserId failed: " + e.getMessage();
-            lastError = e.getMessage();
-            return Collections.emptyList();
+            String error = e instanceof org.springframework.dao.QueryTimeoutException
+                    ? "Menu permissions took too long to load. Please try again."
+                    : "Unable to load menu permissions. Please try again.";
+            return new RightsResult(Collections.emptyList(), error);
         }
+    }
+
+    private List<Map<String, Object>> applyRights(RightsResult result) {
+        lastError = result.error;
+        rightsSource = "USP_GetUserRightsForViewbyUserId" + (result.error == null ? "" : " failed: " + result.error);
+        return new ArrayList<>(result.rows);
     }
 
     private volatile String rightsSource = "";

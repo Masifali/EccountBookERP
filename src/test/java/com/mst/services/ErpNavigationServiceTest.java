@@ -98,6 +98,11 @@ class ErpNavigationServiceTest {
         assertEquals(List.of(65, 79), ((List<Map<String,Object>>)second.get("recentScreens")).stream().map(r -> r.get("id")).toList());
         assertEquals(2, ((List<?>) navigation.forRequest(request, null, null).get("recentScreens")).size(), "Reload must not duplicate history");
         when(menus.viewRights()).thenReturn(List.of(trade));
+        // View rights are cached per session like the desktop's ScreenViewReights, so a change is
+        // only visible after the cache is dropped (sign-out or clearCachedViewRights).
+        assertEquals(1, ((List<?>) navigation.forRequest(request, null, null).get("favoriteScreens")).size(),
+                "Cached rights serve the session until they are cleared");
+        navigation.clearCachedViewRights(request.getSession());
         var revoked = navigation.forRequest(request, null, null);
         assertTrue(((List<?>)revoked.get("favoriteScreens")).isEmpty());
         assertEquals(1, ((List<?>)revoked.get("recentScreens")).size());

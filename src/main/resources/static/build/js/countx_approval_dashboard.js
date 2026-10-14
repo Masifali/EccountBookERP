@@ -175,6 +175,9 @@ function orderApprovalUrl(id) {
     if (id === 20 || id === 1100) {
         path = '/dashboard/purchase-order-for-approval';
         q.set('variant', id === 1100 ? 'fm' : 'po');
+    } else if (id === 23) {
+        path = '/dashboard/purchase-invoice-for-approval';
+        q.set('documentTypeId', '56');
     } else if (id === 28 || id === 54 || id === 90) {
         path = '/dashboard/sale-order-for-approval';
         q.set('documentTypeId', id === 28 ? '81' : id === 54 ? '127' : '90');

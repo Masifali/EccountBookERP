@@ -109,9 +109,13 @@ class AdminPanelNavigationTest {
         doReturn(List.of(SCREENS.get(0), SCREENS.get(1), legacy)).when(menus).viewRights();
         var card = menus.getAppCards().get(0);
         assertEquals(3, card.get("count"));
-        assertEquals(2, card.get("built"));
-        assertNull(menus.webRouteFor(318, legacy.get("ScreenName").toString(), legacy.get("TargetUrl").toString()));
-        assertNull(menus.webRouteFor(397, legacy.get("ScreenName").toString(), legacy.get("TargetUrl").toString()));
+        assertEquals(3, card.get("built"));
+        // UserRightsEditing (318/397) was ported on 2026-10-08 to its own page; it must never be
+        // routed to the UserRightsByCompany editor (409 -> /user-management/rights).
+        String editing = menus.webRouteFor(318, legacy.get("ScreenName").toString(), legacy.get("TargetUrl").toString());
+        assertEquals("/admin/user-rights-management", editing);
+        assertEquals(editing, menus.webRouteFor(397, legacy.get("ScreenName").toString(), legacy.get("TargetUrl").toString()));
+        assertNotEquals(menus.webRouteFor(409, "User Rights By Company", "Configurations.UserRightsByCompany"), editing);
     }
 
     @Test void mappingDoesNotAddScreensOutsideTheUsersAllocatedMenu() {
