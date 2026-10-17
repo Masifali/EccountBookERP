@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:if="${_csrf != null}" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:if="${_csrf != null}" th:content="${_csrf.headerName}">
+    <title>Food Production With Values New - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261007-gridbar-flow}"/>
+    <style>
+        /* Screen 601 - FoodProductionWithValuesNew_St (InitializeComponent :5861). tabControl1 = Input | OutPut | Over Head |
+           Transaction History | Summery | Settlement (Settlement AND Over Head are removed without the ProductionSettlement right,
+           :759). Input / OutPut / Over Head each hold a Form | History tab control (tabControl2 / 3 / 4). The "Main" group boxes keep
+           their designer geometry (groupBox1 1024x106, groupBox3 1028x110, groupBox6 1001x96). */
+        html, body { overflow-x: hidden; }
+        body { font-family: "Segoe UI", Verdana, Tahoma, sans-serif; background: #f0f0f0; font-size: 12px; color: #000; margin: 0; }
+        *, *::before, *::after { box-sizing: border-box; }
+        .fp-page { padding: 3px; }
+        .fp-tabs { display: flex; flex-wrap: wrap; gap: 2px; padding: 3px 4px 0 4px; background: #f0f0f0; border-bottom: 1px solid #8c8c8c; }
+        .fp-tab { border: 1px solid #a0a0a0; border-bottom: none; border-radius: 3px 3px 0 0; padding: 4px 12px; background: #e4e4e4; cursor: pointer; font: 700 9.75pt "Segoe UI Semibold", "Segoe UI", sans-serif; user-select: none; }
+        .fp-tab.is-active { background: #fff; position: relative; top: 1px; }
+        .fp-subtabs .fp-tab { font-weight: 600; font-size: 9pt; padding: 3px 12px; }
+        .fp-panel { display: none; background: #fff; border: 1px solid #a0a0a0; border-top: none; padding: 3px; }
+        .fp-panel.is-active { display: block; }
+        .fp-tool-strip { background: linear-gradient(to bottom, #fbfbfb 0%, #e6e6e6 100%); border-bottom: 1px solid #a0a0a0; min-height: 27px; display: flex; align-items: center; padding: 0 3px; gap: 1px; flex-wrap: wrap; }
+        .fp-tool { background: transparent; border: 1px solid transparent; padding: 2px 7px; font: 9.75pt Verdana, sans-serif; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; height: 24px; border-radius: 2px; color: #000; }
+        .fp-tool:hover:not(:disabled) { background: #cce8ff; border-color: #99d1ff; }
+        .fp-tool:disabled { color: #999; cursor: not-allowed; }
+        .fp-sep { width: 1px; height: 20px; background: #c8c8c8; margin: 0 3px; }
+        .fp-hdr { background: #008080; color: #fff; font: bold 12pt Tahoma, sans-serif; height: 29px; line-height: 29px; padding: 0 6px; display: flex; justify-content: space-between; align-items: center; }
+        .fp-hdr small { font: 9pt "Segoe UI", sans-serif; }
+        .fp-sub { background: #e9e9e9; border-top: 1px solid #c0c0c0; border-bottom: 1px solid #c0c0c0; height: 26px; display: flex; align-items: center; justify-content: space-between; padding: 0 4px; font-size: 9pt; font-weight: bold; }
+        .fp-sub .tools { display: inline-flex; gap: 3px; align-items: center; font-weight: normal; }
+        .fp-canvas-wrap { overflow-x: auto; background: #f0f0f0; padding: 3px 0; }
+        .abs { position: relative; }
+        .abs > * { position: absolute; }
+        fieldset.win-group { border: 1px solid #b5b5b5; margin: 0; padding: 0; background: #fff; }
+        fieldset.win-group > legend { font-family: Tahoma, sans-serif; font-weight: bold; font-size: 9.75pt; padding: 0 3px; margin: 0 0 0 6px; width: auto; border: 0; position: static; }
+        .win-label { font-size: 9pt; white-space: nowrap; line-height: 15px; }
+        .win-in { font-family: "Segoe UI", Verdana, sans-serif; font-size: 9pt; height: 23px; border: 1px solid #7a7a7a; padding: 1px 4px; background: #fff; }
+        .win-in[readonly], .win-in:disabled { background: #f0f0f0; color: #333; }
+        select.win-in { height: 26px; }
+        textarea.win-in { resize: none; padding: 2px 4px; }
+        .num { text-align: right; }
+        .fp-btn { background: #008080; color: #fff; border: 1px solid #006666; height: 26px; padding: 0 8px; font-size: 9pt; cursor: pointer; border-radius: 2px; }
+        .fp-btn:hover:not(:disabled) { background: #006666; }
+        .fp-btn:disabled { background: #9e9e9e; border-color: #7a7a7a; cursor: not-allowed; }
+        .fp-grid-wrap { overflow: auto; min-height: 120px; max-height: 420px; background: #fff; }
+        .fp-grid { width: 100%; border-collapse: collapse; font-size: 9pt; }
+        .fp-grid th { background: linear-gradient(to bottom, #fdfdfd 0%, #e4e4e4 100%); border: 1px solid #b8b8b8; padding: 3px 5px; text-align: left; position: sticky; top: 0; z-index: 2; white-space: nowrap; font-weight: normal; }
+        .fp-grid td { border: 1px solid #dcdcdc; padding: 2px 5px; white-space: nowrap; }
+        .fp-grid td.num, .fp-grid th.num { text-align: right; }
+        .fp-grid tbody tr.is-current td { background: #cce8ff; }
+        .fp-grid tfoot td { background: #ececec; font-weight: bold; border: 1px solid #c8c8c8; }
+        .fp-grid .col-x { width: 35px; text-align: center; padding: 1px; }
+        .fp-x { border: 1px solid #9a9a9a; background: #f3f3f3; font-size: 8pt; line-height: 1; padding: 2px 5px; cursor: pointer; }
+        .fp-x:hover { background: #e81123; color: #fff; border-color: #e81123; }
+        .fp-cellbtn { border: 1px solid #9a9a9a; background: #f3f3f3; font-size: 8.5pt; padding: 1px 6px; cursor: pointer; }
+        .fp-cellbtn:hover { background: #cce8ff; border-color: #3399ff; }
+        .fp-link { color: #0645ad; text-decoration: underline; cursor: pointer; background: none; border: none; padding: 0; font: inherit; }
+        .fp-grid input.cellin { width: 90px; height: 21px; border: 1px solid #b0b0b0; font-size: 9pt; padding: 1px 3px; text-align: right; }
+        .fp-grid input.cellin.txt { width: 160px; text-align: left; }
+        .fp-grid select.cellsel { width: 150px; height: 22px; border: 1px solid #b0b0b0; font-size: 9pt; }
+        .fp-empty td { color: #777; font-style: italic; }
+        .fp-note { font-size: 8.5pt; color: #7f0000; background: #ffebee; border: 1px solid #e57373; padding: 3px 8px; margin: 2px 0; }
+        .is-hidden { display: none !important; }
+        .is-busy { opacity: .7; cursor: progress !important; pointer-events: none; }
+        .fp-full { position: fixed !important; inset: 8px; z-index: 8000; background: #fff; box-shadow: 0 6px 24px rgba(0,0,0,.35); }
+        .fp-full .fp-grid-wrap { max-height: none; height: calc(100% - 28px) !important; }
+        .fp-calc-head { background: #d9d9d9; height: 24px; font-size: 9pt; font-weight: bold; }
+        .fp-calc-head span { position: absolute; top: 4px; }
+        .cx-modal { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: none; z-index: 9000; }
+        .cx-modal.is-open { display: block; }
+        .cx-modal-box { position: absolute; top: 3%; left: 50%; transform: translateX(-50%); width: min(1250px, 97vw); max-height: 94vh; display: flex; flex-direction: column; background: #f0f0f0; border: 1px solid #555; box-shadow: 0 6px 24px rgba(0,0,0,.4); }
+        .cx-modal-head { background: #008080; color: #fff; height: 28px; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; font-weight: bold; }
+        .cx-modal-head button { background: transparent; border: none; color: #fff; font-size: 16px; cursor: pointer; }
+        .cx-modal-body { padding: 6px; overflow: auto; }
+        @media print { .fp-tabs, .fp-tool-strip, button, .fp-note { display: none !important; } }
+    </style>
+</head>
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="fp-page">
+    <div id="rightsNote" class="fp-note is-hidden"></div>
+
+    <!-- tabControl1 -->
+    <div class="fp-tabs" id="tabs1">
+        <div class="fp-tab is-active" data-tab="InPut" onclick="SteelFP.tab('InPut')" title="Ctrl+NumPad1">Input</div>
+        <div class="fp-tab" data-tab="OutPut" onclick="SteelFP.tab('OutPut')" title="Ctrl+NumPad2">OutPut</div>
+        <div class="fp-tab" data-tab="OverHead" onclick="SteelFP.tab('OverHead')" title="Ctrl+NumPad4">Over Head</div>
+        <div class="fp-tab" data-tab="TransctionHistory" onclick="SteelFP.tab('TransctionHistory')" title="Ctrl+NumPad5">Transaction History</div>
+        <div class="fp-tab" data-tab="Summary" onclick="SteelFP.tab('Summary')" title="Ctrl+NumPad6">Summery</div>
+        <div class="fp-tab" data-tab="Settlement" onclick="SteelFP.tab('Settlement')">Settlement</div>
+    </div>
+
+    <!-- ======================================================================== Input -->
+    <div id="InPut" class="fp-panel is-active">
+        <div class="fp-tabs fp-subtabs" id="tabs2">
+            <div class="fp-tab is-active" data-tab="tabPage1" onclick="SteelFP.sub('tabs2','tabPage1')">Form</div>
+            <div class="fp-tab" data-tab="tabPage4" onclick="SteelFP.sub('tabs2','tabPage4')">History</div>
+        </div>
+        <div id="tabPage1" class="fp-panel is-active">
+            <div class="fp-tool-strip" id="toolStrip1">
+                <button type="button" class="fp-tool" id="btnnew" onclick="SteelFP.resetInput()" title="Ctrl+N"><i class="fa fa-file-o"></i> <u>N</u>ew</button>
+                <button type="button" class="fp-tool" id="btnRefresh" onclick="SteelFP.refreshJobOrders()" title="Ctrl+R"><i class="fa fa-refresh"></i> Refresh</button>
+                <button type="button" class="fp-tool" id="btnsave" onclick="SteelFP.saveInput()" title="Ctrl+S"><i class="fa fa-save"></i> <u>S</u>ave</button>
+                <button type="button" class="fp-tool is-hidden" id="btnUpdate" onclick="SteelFP.updateInput()" title="Ctrl+U"><i class="fa fa-pencil-square-o"></i> <u>U</u>pdate</button>
+                <span class="fp-sep"></span>
+                <button type="button" class="fp-tool" id="Print" onclick="SteelFP.printInput()" data-rpt="1512-FoodProductionSlip.rpt"><i class="fa fa-print"></i> 1512-Print</button>
+                <button type="button" class="fp-tool" id="btnJobOrderDefine" onclick="window.open('/production/steel/pre-costing-job-order','_blank')"><i class="fa fa-external-link"></i> Define Job Order</button>
+                <button type="button" class="fp-tool" id="btnVoucherReport" onclick="SteelFP.voucher118('input','btnVoucherReport')"><i class="fa fa-print"></i> 118-Voucher</button>
+            </div>
+            <div class="fp-hdr" id="label30"><span>Production Input</span><small id="lblRecIdInput"></small></div>
+            <div class="fp-canvas-wrap">
+            <fieldset class="win-group abs" id="groupBox1" style="width:1024px; height:106px; margin-left:7px;">
+                <legend>Main</legend>
+                <label class="win-label" style="left:4px; top:22px;">Doc No &amp; Date</label>
+                <input type="text" id="txtdocnumber" class="win-in num" style="left:92px; top:18px; width:77px;" readonly/>
+                <input type="date" id="txtDocdate" class="win-in" style="left:175px; top:18px; width:147px;"/>
+                <label class="win-label" style="left:328px; top:22px;">WIP Account</label>
+                <select id="CmbWorkInProcess" class="win-in dtcombo" data-dtcombo="single" data-dtcombo-caption="WorkInProcessAc" style="left:427px; top:16px; width:179px;"></select>
+                <label class="win-label" style="left:612px; top:16px;">Remarks</label>
+                <textarea id="txtRemarksInput" class="win-in" style="left:612px; top:45px; width:296px; height:56px;"></textarea>
+                <label class="win-label" style="left:4px; top:51px;">Job Order No</label>
+                <select id="CmbJobOrderNoInput" class="win-in dtcombo" data-dtcombo="single" data-dtcombo-caption="JobOrderNo" style="left:92px; top:45px; width:230px;" onchange="SteelFP.jobOrderChanged('input')"></select>
+                <label class="win-label" style="left:328px; top:51px;">WIP Item</label>
+                <select id="CmbWIPItem" class="win-in dtcombo" data-dtcombo="single" data-dtcombo-caption="ItemName" style="left:427px; top:45px; width:179px;"></select>
+                <label class="win-label" style="left:4px; top:81px;">Plant</label>
+                <select id="CmbPlantFeederInput" class="win-in dtcombo" data-dtcombo="single" data-dtcombo-caption="Plant Name" style="left:92px; top:75px; width:230px;"></select>
+                <button type="button" id="btnLoadInvoices" class="fp-btn" style="left:911px; top:74px; width:107px; height:27px;" onclick="SteelFP.loadInput()" title="Ctrl+L">Load InPut</button>
+            </fieldset>
+            </div>
+            <div id="hostInput">
+                <div class="fp-sub"><span id="label2">Input Detail</span><span class="tools"><span id="lblInputCount">0</span>
+                    <button type="button" class="fp-cellbtn" title="Full screen" onclick="SteelFP.full('hostInput')"><i class="fa fa-expand"></i></button></span></div>
+                <div class="fp-grid-wrap">
+                    <table class="fp-grid" id="grdStockConversionProductionDetail" data-gridbar="FoodProductionWithValuesNew_St:grdStockConversionProductionDetail" data-gridbar-mount="#hostInput > .fp-sub .tools">
+                        <thead><tr id="inHead"></tr></thead><tbody id="inBody"></tbody><tfoot id="inFoot"></tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div id="tabPage4" class="fp-panel">
+            <div class="fp-tool-strip" id="toolStrip7"><button type="button" class="fp-tool" onclick="SteelFP.inputHistory(0)"><i class="fa fa-history"></i> Input History</button></div>
+            <div id="hostInHist">
+                <div class="fp-sub"><span>Input History</span><span class="tools"><span id="lblInHistCount"></span>
+                    <button type="button" class="fp-cellbtn" title="Full screen" onclick="SteelFP.full('hostInHist')"><i class="fa fa-expand"></i></button></span></div>
+                <div class="fp-grid-wrap" style="height:331px;"><table class="fp-grid" id="grdinputhistory" data-gridbar="FoodProductionWithValuesNew_St:grdinputhistory" data-gridbar-mount="#hostInHist > .fp-sub .tools"><thead><tr id="inHistHead"></tr></thead><tbody id="inHistBody"></tbody></table></div>
+            </div>
+            <div class="fp-sub"><span>Detail</span></div>
+            <div class="fp-grid-wrap" style="height:316px;"><table class="fp-grid" id="grdInputDetail"><thead><tr id="inHistDetHead"></tr></thead><tbody id="inHistDetBody"></tbody><tfoot id="inHistDetFoot"></tfoot></table></div>
+        </div>
+    </div>
+
+    <!-- ======================================================================== OutPut -->
+    <div id="OutPut" class="fp-panel">
+        <div class="fp-tabs fp-subtabs" id="tabs3">
+            <div class="fp-tab is-active" data-tab="tabPage5" onclick="SteelFP.sub('tabs3','tabPage5')">Form</div>
+            <div class="fp-tab" data-tab="tabPage6" onclick="SteelFP.sub('tabs3','tabPage6')">History</div>
+        </div>
+        <div id="tabPage5" class="fp-panel is-active">
+            <div class="fp-tool-strip" id="toolStrip6">
+                <button type="button" class="fp-tool" id="btnNewOutPut" onclick="SteelFP.resetOutput()" title="Ctrl+N"><i class="fa fa-file-o"></i> <u>N</u>ew</button>
+                <button type="button" class="fp-tool" id="btnRefreshOutPut" onclick="SteelFP.refreshOutput()" title="Ctrl+R"><i class="fa fa-refresh"></i> Refresh</button>
+                <button type="button" class="fp-tool" id="btnSaveOutPut" onclick="SteelFP.saveOutput()" title="Ctrl+S"><i class="fa fa-save"></i> <u>S</u>ave</button>
+                <button type="button" class="fp-tool is-hidden" id="btnUpdateOutPut" onclick="SteelFP.updateOutput()" title="Ctrl+U"><i class="fa fa-pencil-square-o"></i> <u>U</u>pdate</button>
+                <span class="fp-sep"></span>
+                <button type="button" class="fp-tool" id="btnPrintOutPut" onclick="SteelFP.printOutput()" data-rpt="1512-FoodProductionSlip.rpt"><i class="fa fa-print"></i> 1512-Print</button>
+                <button type="button" class="fp-tool" id="btnVoucherOutPut" onclick="SteelFP.voucher118('output','btnVoucherOutPut')"><i class="fa fa-print"></i> 118-Voucher</button>
+                <button type="button" class="fp-tool" id="btnLoadOutPutFromjobOrder" onclick="SteelFP.loadOutput()"><i class="fa fa-download"></i> Load OutPut</button>
+            </div>
+            <div class="fp-hdr" id="label32"><span>Production  Output</span><small id="lblRecIdOutput"></small></div>
+            <div class="fp-canvas-wrap">
+            <fieldset class="win-group abs" id="groupBox3" style="width:1028px; height:110px; margin-left:16px;">
+                <legend>Main</legend>
+                <label class="win-label" style="left:6px; top:23px;">Doc No &amp; Date</label>
+                <input type="text" id="txtDocNoOutPut" class="win-in num" style="left:94px; top:19px; width:74px;" readonly/>
+                <input type="date" id="DocDateOutPut" class="win-in" style="left:174px; top:19px; width:122px;"/>
+                <label class="win-label" style="left:302px; top:19px;">Remarks</label>
+                <textarea id="txtRemarksHeaderOutPut" class="win-in" style="left:302px; top:47px; width:321px; height:55px;"></textarea>
+                <label class="win-label" style="left:631px; top:23px;">In Qty</label>
+                <input type="text" id="txtInPutTotalQty" class="win-in num" style="left:693px; top:19px; width:106px;" readonly value="0"/>
+                <label class="win-label" style="left:805px; top:23px;">In Weight</label>
+                <input type="text" id="txtInPutTotalWeight" class="win-in num" style="left:876px; top:19px; width:133px;" readonly value="0"/>
+                <label class="win-label" style="left:6px; top:53px;">Job Order No</label>
+                <select id="CmbJobOrderNoOutput" class="win-in dtcombo" data-dtcombo="single" data-dtcombo-caption="JobOrderNo" style="left:94px; top:47px; width:202px;" onchange="SteelFP.jobOrderChanged('output')"></select>
+                <label class="win-label" style="left:631px; top:53px;">Out Qty</label>
+                <input type="text" id="txtOutQtyTotal" class="win-in num" style="left:693px; top:49px; width:106px;" readonly value="0"/>
+                <label class="win-label" style="left:805px; top:53px;">Out Weight</label>
+                <input type="text" id="txtOutWeightTotal" class="win-in num" style="left:876px; top:49px; width:133px;" readonly value="0"/>
+                <label class="win-label" style="left:6px; top:82px;">Plant</label>
+                <select id="CmbPlantFeederOutput" class="win-in dtcombo" data-dtcombo="single" data-dtcombo-caption="Plant Name" style="left:94px; top:76px; width:202px;"></select>
+                <label class="win-label" style="left:631px; top:82px;">Bal Qty</label>
+                <input type="text" id="txtBalQtyTotal" class="win-in num" style="left:693px; top:78px; width:106px;" readonly value="0"/>
+                <label class="win-label" style="left:805px; top:82px;">Bal Weight</label>
+                <input type="text" id="txtBalWeightTotal" class="win-in num" style="left:876px; top:78px; width:133px;" readonly value="0"/>
+            </fieldset>
+            </div>
+            <!-- txtFGWeight / txtFGRate / txtAvgFinishGoodRate / btnApplyRate are Visible = false (off-canvas at x 1590+) -->
+            <div class="is-hidden"><input type="text" id="txtFGWeight"/><input type="text" id="txtFGRate"/><input type="text" id="txtAvgFinishGoodRate"/></div>
+            <div id="hostOutput">
+                <div class="fp-sub"><span id="label15">Output Detail</span><span class="tools"><span id="lblOutputCount">0</span>
+                    <button type="button" class="fp-cellbtn" title="Full screen" onclick="SteelFP.full('hostOutput')"><i class="fa fa-expand"></i></button></span></div>
+                <div class="fp-grid-wrap">
+                    <table class="fp-grid" id="grdByProduct" data-gridbar="FoodProductionWithValuesNew_St:grdByProduct" data-gridbar-mount="#hostOutput > .fp-sub .tools">
+                        <thead><tr id="outHead"></tr></thead><tbody id="outBody"></tbody><tfoot id="outFoot"></tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div id="tabPage6" class="fp-panel">
+            <div class="fp-tool-strip" id="toolStrip8">
+                <button type="button" class="fp-tool" onclick="SteelFP.outputHistory(50)"><i class="fa fa-history"></i> OutPut History</button>
+                <span class="fp-sep"></span>
+                <button type="button" class="fp-tool" id="btnLoadAllOutputHistoy" onclick="SteelFP.outputHistory(0)"><i class="fa fa-list"></i> Load All</button>
+            </div>
+            <div id="hostOutHist">
+                <div class="fp-sub"><span>OutPut History</span><span class="tools"><span id="lblOutHistCount"></span>
+                    <button type="button" class="fp-cellbtn" title="Full screen" onclick="SteelFP.full('hostOutHist')"><i class="fa fa-expand"></i></button></span></div>
+                <div class="fp-grid-wrap" style="height:331px;"><table class="fp-grid" id="grdOutputHistory" data-gridbar="FoodProductionWithValuesNew_St:grdOutputHistory" data-gridbar-mount="#hostOutHist > .fp-sub .tools"><thead><tr id="outHistHead"></tr></thead><tbody id="outHistBody"></tbody></table></div>
+            </div>
+            <div class="fp-sub"><span>Detail</span></div>
+            <div class="fp-grid-wrap" style="height:321px;"><table class="fp-grid" id="grdOutPutDetail"><thead><tr id="outHistDetHead"></tr></thead><tbody id="outHistDetBody"></tbody><tfoot id="outHistDetFoot"></tfoot></table></div>
+        </div>
+    </div>
+
+    <!-- ======================================================================== Over Head -->
+    <div id="OverHead" class="fp-panel">
+        <div class="fp-tabs fp-subtabs" id="tabs4">
+            <div class="fp-tab is-active" data-tab="tabPage2" onclick="SteelFP.sub('tabs4','tabPage2')">Form</div>
+            <div class="fp-tab" data-tab="tabPage3" onclick="SteelFP.sub('tabs4','tabPage3')">History</div>
+        </div>
+        <div id="tabPage2" class="fp-panel is-active">
+            <div class="fp-tool-strip" id="toolStrip5">
+                <button type="button" class="fp-tool" id="btnNewOverHead" onclick="SteelFP.resetOverhead()" title="Ctrl+N"><i class="fa fa-file-o"></i> <u>N</u>ew</button>
+                <button type="button" class="fp-tool" id="btnRefreshOverHead" onclick="SteelFP.refreshJobOrders()" title="Ctrl+R"><i class="fa fa-refresh"></i> Refresh</button>
+                <button type="button" class="fp-tool" id="btnSaveOverHead" onclick="SteelFP.saveOverhead()" title="Ctrl+S"><i class="fa fa-save"></i> <u>S</u>ave</button>
+                <button type="button" class="fp-tool is-hidden" id="btnUpdateOverHead" onclick="SteelFP.updateOverhead()" title="Ctrl+U"><i class="fa fa-pencil-square-o"></i> <u>U</u>pdate</button>
+                <span class="fp-sep"></span>
+                <button type="button" class="fp-tool" id="btnPrintOverHead" onclick="SteelFP.printOverhead()" data-rpt="1514-FoodProductionOverHeadJobOrderWise_Slip.rpt"><i class="fa fa-print"></i> <u>P</u>rint-1514</button>
+                <button type="button" class="fp-tool" id="btnVoucherOH" onclick="SteelFP.voucher118('overhead','btnVoucherOH')"><i class="fa fa-print"></i> 118-Voucher</button>
+                <button type="button" class="fp-tool" id="btnLoadOverHeadsFromJobOrder" onclick="SteelFP.loadOverheads()"><i class="fa fa-download"></i> Load Over Heads</button>
+            </div>
+            <div class="fp-hdr" id="label44"><span>Over Heads</span></div>
+            <div class="fp-canvas-wrap">
+            <fieldset class="win-group abs" id="groupBox6" style="width:1001px; height:96px; margin-left:11px;">
+                <legend>Main</legend>
+                <label class="win-label" style="left:4px; top:18px;">Doc No</label>
+                <input type="text" id="txtDocNoOverHead" class="win-in num" style="left:84px; top:14px; width:79px;" readonly/>
+                <input type="date" id="txtDocDateOverHead" class="win-in" style="left:166px; top:14px; width:174px;"/>
+                <label class="win-label" style="left:526px; top:18px;">Total InPut Qty</label>
+                <input type="text" id="txtInputQtyTotalOH" class="win-in num" style="left:628px; top:14px; width:106px;" readonly/>
+                <label class="win-label" style="left:742px; top:18px;">Total InPut Weight</label>
+                <input type="text" id="txtInputWeightTotalOH" class="win-in num" style="left:862px; top:14px; width:106px;" readonly/>
+                <label class="win-label" style="left:4px; top:46px;">Job Order No</label>
+                <select id="cmbJobOrderOverHead" class="win-in dtcombo" data-dtcombo="single" data-dtcombo-caption="JobOrderNo" style="left:85px; top:40px; width:255px;" onchange="SteelFP.jobOrderChanged('overhead')"></select>
+                <label class="win-label" style="left:526px; top:46px;">Total OutPut Qty</label>
+                <input type="text" id="txtOutputQtyTotalOH" class="win-in num" style="left:628px; top:42px; width:106px;" readonly/>
+                <label class="win-label" style="left:742px; top:46px;">Total OutPut Weight</label>
+                <input type="text" id="txtOutputWeightTotalOH" class="win-in num" style="left:862px; top:42px; width:106px;" readonly/>
+                <label class="win-label" style="left:4px; top:76px;">Plant Name</label>
+                <select id="CmbPlantFeederOverHead" class="win-in dtcombo" data-dtcombo="single" data-dtcombo-caption="Plant Name" style="left:85px; top:70px; width:255px;"></select>
+                <label class="win-label" style="left:528px; top:73px;">Total Finish Qty</label>
+                <input type="text" id="txtfinishQtyOh" class="win-in num" style="left:628px; top:69px; width:106px;" readonly/>
+                <label class="win-label" style="left:742px; top:73px;">Total Finish Weight</label>
+                <input type="text" id="txtfinishWeightOh" class="win-in num" style="left:862px; top:69px; width:106px;" readonly/>
+            </fieldset>
+            </div>
+            <div id="hostOH">
+                <div class="fp-sub"><span id="label47">Over Heads Detail</span><span class="tools"><span id="lblOhCount">0</span>
+                    <button type="button" class="fp-cellbtn" title="Full screen" onclick="SteelFP.full('hostOH')"><i class="fa fa-expand"></i></button></span></div>
+                <div class="fp-grid-wrap">
+                    <table class="fp-grid" id="grdDetailOverhead" data-gridbar="FoodProductionWithValuesNew_St:grdDetailOverhead" data-gridbar-mount="#hostOH > .fp-sub .tools">
+                        <thead><tr id="ohHead"></tr></thead><tbody id="ohBody"></tbody><tfoot id="ohFoot"></tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div id="tabPage3" class="fp-panel">
+            <div id="hostOhHist">
+                <div class="fp-sub"><span id="label89">Over Heads History <span style="font-weight:normal;">(Job Order Wise)</span></span><span class="tools"><span id="lblOhHistCount"></span>
+                    <button type="button" class="fp-cellbtn" onclick="SteelFP.overheadHistory(0)">Load All</button>
+                    <button type="button" class="fp-cellbtn" title="Full screen" onclick="SteelFP.full('hostOhHist')"><i class="fa fa-expand"></i></button></span></div>
+                <div class="fp-grid-wrap" style="height:322px;"><table class="fp-grid" id="grdOverHeadHistory" data-gridbar="FoodProductionWithValuesNew_St:grdOverHeadHistory" data-gridbar-mount="#hostOhHist > .fp-sub .tools"><thead><tr id="ohHistHead"></tr></thead><tbody id="ohHistBody"></tbody><tfoot id="ohHistFoot"></tfoot></table></div>
+            </div>
+            <div class="fp-sub"><span id="label34">Selected Job Order Detail</span></div>
+            <div class="fp-grid-wrap" style="height:290px;"><table class="fp-grid" id="grddetailOhHistory"><thead><tr id="ohHistDetHead"></tr></thead><tbody id="ohHistDetBody"></tbody><tfoot id="ohHistDetFoot"></tfoot></table></div>
+        </div>
+    </div>
+
+    <!-- ======================================================================== Transaction History -->
+    <div id="TransctionHistory" class="fp-panel">
+        <div class="fp-hdr" id="label90"><span>Transaction History</span><span class="tools" id="thTools" style="font:9pt 'Segoe UI';"><span id="lblThCount"></span></span></div>
+        <!-- panel15: btnSearch / Date From / Date To / Doc No From / Doc No To - drawn as the desktop draws them; btnSearch has
+             no handler on the desktop (GridHistory(50) runs when the tab is selected), so the filter boxes are informational there and here. -->
+        <div class="fp-canvas-wrap"><div class="abs" style="width:1059px; height:48px;">
+            <label class="win-label" style="left:25px; top:23px;">Date From</label><input type="date" id="txtfromDate" class="win-in" style="left:87px; top:19px; width:153px; height:25px;"/>
+            <label class="win-label" style="left:246px; top:23px;">Date To</label><input type="date" id="txtToDate" class="win-in" style="left:298px; top:19px; width:153px; height:25px;"/>
+            <label class="win-label" style="left:462px; top:23px;">Doc No From</label><input type="text" id="txtDocNoFrom" class="win-in num" style="left:538px; top:18px; width:113px; height:22px;"/>
+            <label class="win-label" style="left:660px; top:23px;">Doc No To</label><input type="text" id="txtDocNumberTo" class="win-in num" style="left:726px; top:18px; width:113px; height:22px;"/>
+            <button type="button" id="btnSearch" class="fp-cellbtn" style="left:864px; top:16px; width:75px; height:23px;" onclick="SteelFP.transactionHistory(0)">Search</button>
+        </div></div>
+        <div id="hostTH">
+            <div class="fp-grid-wrap" style="height:284px;"><table class="fp-grid" id="DatagridHistory" data-gridbar="FoodProductionWithValuesNew_St:DatagridHistory" data-gridbar-mount="#thTools"><thead><tr id="thHead"></tr></thead><tbody id="thBody"></tbody></table></div>
+        </div>
+        <div class="fp-sub"><span id="label91">Detail</span></div>
+        <div class="fp-grid-wrap" style="height:354px;"><table class="fp-grid" id="grdDetail"><thead><tr id="thDetHead"></tr></thead><tbody id="thDetBody"></tbody><tfoot id="thDetFoot"></tfoot></table></div>
+    </div>
+
+    <!-- ======================================================================== Summery -->
+    <div id="Summary" class="fp-panel">
+        <div class="fp-tool-strip" id="toolStrip3">
+            <button type="button" class="fp-tool" id="toolStripButton1" onclick="SteelFP.summaryNew()"><i class="fa fa-file-o"></i> <u>N</u>ew</button>
+            <button type="button" class="fp-tool" id="btnRefreshSummary" onclick="SteelFP.refreshJobOrders()"><i class="fa fa-refresh"></i> Refresh</button>
+            <span class="fp-sep"></span>
+            <button type="button" class="fp-tool" id="btnProductionRecoveryReport" onclick="SteelFP.printSummary1513()" data-rpt="1513-FoodProductionSummery_WithOutValue.rpt"><i class="fa fa-print"></i> 1513-Recovery Report</button>
+        </div>
+        <div class="fp-canvas-wrap"><div class="abs" style="width:1065px; height:59px;">
+            <label class="win-label" style="left:6px; top:7px;">Job Order No</label>
+            <select id="cmbsummeryJobOrderNo" class="win-in dtcombo" data-dtcombo="single" data-dtcombo-caption="Job Order No" style="left:8px; top:25px; width:233px;" onchange="SteelFP.summaryJobOrderChanged()"></select>
+            <label class="win-label" style="left:247px; top:7px;">Plant Name</label>
+            <select id="CmbPlantNameSummary" class="win-in dtcombo" data-dtcombo="single" data-dtcombo-caption="Plant Name" style="left:245px; top:25px; width:233px;"></select>
+            <button type="button" id="btnShow" class="fp-btn" style="left:484px; top:25px; width:63px;" onclick="SteelFP.summaryShow()">Show</button>
+        </div></div>
+        <div id="hostSum">
+            <div class="fp-sub"><span id="label92">Summary</span><span class="tools"><button type="button" class="fp-cellbtn" title="Full screen" onclick="SteelFP.full('hostSum')"><i class="fa fa-expand"></i></button></span></div>
+            <div class="fp-grid-wrap" style="height:207px;"><table class="fp-grid" id="grdSummery" data-gridbar="FoodProductionWithValuesNew_St:grdSummery" data-gridbar-mount="#hostSum > .fp-sub .tools"><thead><tr id="sumHead"></tr></thead><tbody id="sumBody"></tbody></table></div>
+        </div>
+        <div id="hostSumRep">
+            <div class="fp-sub"><span id="label93">Summary Detail</span><span class="tools"><span id="lblSumRepCount"></span>
+                <button type="button" class="fp-cellbtn" title="Full screen" onclick="SteelFP.full('hostSumRep')"><i class="fa fa-expand"></i></button></span></div>
+            <div class="fp-grid-wrap" style="height:360px;"><table class="fp-grid" id="grdSummeryReport" data-gridbar="FoodProductionWithValuesNew_St:grdSummeryReport" data-gridbar-mount="#hostSumRep > .fp-sub .tools"><thead><tr id="sumRepHead"></tr></thead><tbody id="sumRepBody"></tbody><tfoot id="sumRepFoot"></tfoot></table></div>
+        </div>
+    </div>
+
+    <!-- ======================================================================== Settlement -->
+    <div id="Settlement" class="fp-panel">
+        <div class="fp-canvas-wrap"><div class="abs" style="width:1065px; height:64px;">
+            <label class="win-label" style="left:8px; top:15px;">Job Order No</label>
+            <select id="CmbJobOrderSettlement" class="win-in dtcombo" data-dtcombo="single" data-dtcombo-caption="Job Order No" style="left:8px; top:33px; width:227px;"></select>
+            <label class="win-label is-hidden" style="left:237px; top:13px;">Difference Account</label>
+            <select id="CmbDifferenceAccountTitle" class="win-in is-hidden" style="left:237px; top:33px; width:227px;"></select>
+            <button type="button" id="btnGeneralSettlement" class="fp-btn" style="left:468px; top:33px; width:89px;" onclick="SteelFP.settlementGenerate()">Generate</button>
+            <button type="button" id="btnResetSettlement" class="fp-btn" style="left:558px; top:33px; width:59px;" onclick="SteelFP.settlementReset()">Reset</button>
+            <button type="button" id="btnApplyAvgRateFG" class="fp-btn" style="left:618px; top:33px; width:95px;" onclick="SteelFP.settlementApplyRate()">ApplyRate</button>
+            <button type="button" id="btnUpdateSettlement" class="fp-btn" style="left:714px; top:33px; width:79px;" onclick="SteelFP.settlementUpdate()">Update</button>
+            <button type="button" id="btnRecoveryReport" class="fp-btn" style="left:794px; top:33px; width:107px;" onclick="SteelFP.printSummary1513A()" data-rpt="1513A_ProductionSummeryWithValues.rpt">1513A_Print</button>
+            <button type="button" id="btnApproveSettlement" class="fp-btn is-hidden" style="left:902px; top:33px; width:79px;" onclick="SteelFP.settlementApprove()">Approve</button>
+            <button type="button" id="btnSettlementVoucher" class="fp-btn is-hidden" style="left:981px; top:33px; width:79px;" onclick="SteelFP.settlementVoucher()">Voucher</button>
+        </div></div>
+        <div class="fp-sub"><span id="label5">Input Raw Material</span></div>
+        <div class="fp-grid-wrap" style="height:128px;"><table class="fp-grid" id="grdInputsettlement"><thead><tr id="stInHead"></tr></thead><tbody id="stInBody"></tbody><tfoot id="stInFoot"></tfoot></table></div>
+        <div class="fp-sub"><span id="label7">OutPut By-Product &amp; Finish Goods</span></div>
+        <div class="fp-grid-wrap" style="height:149px;"><table class="fp-grid" id="grdOutPutSettlement"><thead><tr id="stOutHead"></tr></thead><tbody id="stOutBody"></tbody><tfoot id="stOutFoot"></tfoot></table></div>
+        <div class="fp-sub"><span id="label8">Over Heads</span></div>
+        <div class="fp-grid-wrap" style="height:120px;"><table class="fp-grid" id="grdOverHeadSettlement"><thead><tr id="stOhHead"></tr></thead><tbody id="stOhBody"></tbody><tfoot id="stOhFoot"></tfoot></table></div>
+        <div class="fp-canvas-wrap"><div class="abs" style="width:1065px; height:172px;">
+            <div class="abs" id="panel51" style="left:5px; top:5px; width:426px; height:164px; border:1px solid #c0c0c0; background:#fff;">
+                <div class="fp-calc-head abs" style="left:0; top:0; width:424px;"><span style="left:2px;">Description</span><span style="left:113px;">ItemQty</span><span style="left:198px;">NetWeight</span><span style="left:312px;">Amount</span></div>
+                <label class="win-label" style="left:2px; top:41px;">Raw Material</label>
+                <input type="text" id="txtItemQtyRM" class="win-in num" style="left:109px; top:37px; width:82px;" readonly/>
+                <input type="text" id="txtNetWeightRM" class="win-in num" style="left:195px; top:37px; width:107px;" readonly/>
+                <input type="text" id="txtAmountRM" class="win-in num" style="left:305px; top:37px; width:116px;" readonly/>
+                <label class="win-label" style="left:2px; top:73px;">By Product - Exp</label>
+                <input type="text" id="txtItemQtyBP" class="win-in num" style="left:109px; top:69px; width:82px;" readonly/>
+                <input type="text" id="txtNetWeightBP" class="win-in num" style="left:195px; top:69px; width:107px;" readonly/>
+                <input type="text" id="txtAmountBP" class="win-in num" style="left:305px; top:69px; width:116px;" readonly/>
+                <label class="win-label" style="left:2px; top:105px;">BP+OH Exp</label>
+                <input type="text" id="txtBPOverHead" class="win-in num" style="left:109px; top:101px; width:82px;" readonly/>
+                <input type="text" id="txtBPPMCharges" class="win-in num" style="left:195px; top:101px; width:107px;" readonly/>
+                <input type="text" id="txtBPTotalAmountWithExpenses" class="win-in num" style="left:305px; top:101px; width:116px;" readonly/>
+                <label class="win-label" style="left:2px; top:137px;">Finish Goods</label>
+                <input type="text" id="txtItemQtyFG" class="win-in num" style="left:109px; top:133px; width:82px;" readonly/>
+                <input type="text" id="txtNetWeightFG" class="win-in num" style="left:195px; top:133px; width:107px;" readonly/>
+                <input type="text" id="txtAmountFG" class="win-in num" style="left:305px; top:133px; width:116px;" readonly/>
+            </div>
+            <div class="abs" id="panel53" style="left:435px; top:5px; width:274px; height:68px; border:1px solid #c0c0c0; background:#fff;">
+                <div class="fp-calc-head abs" style="left:0; top:0; width:272px; height:20px;"><span style="left:6px; top:1px;">OverHeads Totals</span></div>
+                <label class="win-label" style="left:5px; top:27px;">Over Heads</label>
+                <input type="text" id="txtOverHeadsSettlement" class="win-in num" style="left:117px; top:23px; width:150px; height:27px;" readonly/>
+            </div>
+            <div class="abs" id="panel55" style="left:435px; top:73px; width:274px; height:85px; border:1px solid #c0c0c0; background:#fff;">
+                <div class="fp-calc-head abs" style="left:0; top:0; width:272px; height:20px;"><span style="left:6px; top:1px;">Finish Good Average Rate / Kg</span></div>
+                <label class="win-label" style="left:4px; top:26px;">WithOut Exp</label>
+                <input type="text" id="txtFinishGoodRateWithOutExp" class="win-in num" style="left:117px; top:22px; width:150px; height:27px;" readonly/>
+                <label class="win-label" style="left:4px; top:57px;">With Exp</label>
+                <input type="text" id="txtAvgRateFG" class="win-in num" style="left:117px; top:53px; width:150px; height:27px;" readonly/>
+            </div>
+            <div class="abs" id="panel74" style="left:714px; top:5px; width:260px; height:165px; border:1px solid #c0c0c0; background:#fff;">
+                <div class="fp-calc-head abs" style="left:0; top:0; width:258px; height:20px;"><span style="left:6px; top:1px;">Difference</span></div>
+                <label class="win-label" style="left:8px; top:23px;">Actual Finish Amount</label>
+                <input type="text" id="txtActualFinishGoodsAmount" class="win-in num" style="left:8px; top:41px; width:235px; height:25px;" readonly/>
+                <label class="win-label" style="left:8px; top:71px;">Finish Amount against Job Order Rate</label>
+                <input type="text" id="txtFinishAmountAgainstJobOrder" class="win-in num" style="left:8px; top:90px; width:235px; height:25px;" readonly/>
+                <label class="win-label" style="left:8px; top:117px;">Difference Amount</label>
+                <input type="text" id="txtDifferenceAmount" class="win-in num" style="left:8px; top:136px; width:235px; height:25px;" readonly/>
+            </div>
+        </div></div>
+    </div>
+</div>
+
+<!-- ======================= LoadInputDataByJobOrder / LoadOutPutDataByJobOrder / LoadOverHeadsDataByJobOrder -->
+<div class="cx-modal" id="loaderModal">
+    <div class="cx-modal-box">
+        <div class="cx-modal-head"><span id="loaderTitle">Input Data Against Job Order</span><button type="button" onclick="SteelFP.closeLoader()">&times;</button></div>
+        <div class="cx-modal-body">
+            <div class="fp-tool-strip"><button type="button" class="fp-tool" onclick="SteelFP.loaderReset()"><i class="fa fa-file-o"></i> <u>R</u>eset</button>
+                <button type="button" class="fp-tool" id="btnJobOrderDefineLoad" onclick="SteelFP.loaderLoad()"><i class="fa fa-download"></i> Load Data</button></div>
+            <div class="fp-grid-wrap" style="height:55vh; max-height:none;"><table class="fp-grid"><thead><tr id="loaderHead"></tr></thead><tbody id="loaderBody"></tbody></table></div>
+            <div style="display:flex; justify-content:flex-end; gap:6px; margin-top:6px;">
+                <button type="button" class="fp-cellbtn" style="height:26px;" onclick="SteelFP.closeLoader()">Close</button>
+                <button type="button" class="fp-btn" onclick="SteelFP.loaderApply()"><i class="fa fa-check"></i> Load Selected</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20261007-gridbar-flow}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20261003erp}"></script>
+<script src="/js/print-rpt.js?v=20261003erp"></script>
+<script th:src="@{/build/js/countx_production_steel_food_production_with_values.js?v=20261013a}"></script>
+</body>
+</html>

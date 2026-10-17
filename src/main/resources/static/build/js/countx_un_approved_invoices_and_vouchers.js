@@ -111,13 +111,23 @@ function render(wrapId, cards, group) {
     if (!cards.length) { wrap.innerHTML = ''; return; }
     wrap.innerHTML = cards.map(function (c, i) {
         var zero = num(c.count) <= 0;
-        return '<div class="ua-card' + (zero ? ' zero' : '') + '"'
-             + ' onclick="uaCardClick(\'' + group + '\',' + i + ')"'
+        var url = invoiceUndoUrl(num(c.id)), tag = url ? 'a' : 'div';
+        return '<' + tag + ' class="ua-card' + (zero ? ' zero' : '') + '"'
+             + (url ? ' href="' + esc(url) + '"' : '')
+             + ' onclick="return uaCardClick(\'' + group + '\',' + i + ',event)"'
              + ' title="TypeID ' + esc(c.id) + '">'
              + '<div class="t">' + esc(c.title) + '</div>'
              + '<div class="n">' + esc(c.count) + '</div>'
-             + '</div>';
+             + '</' + tag + '>';
     }).join('');
+}
+
+function invoiceUndoUrl(id) {
+    if (id !== 23) return null;
+    var q = new URLSearchParams({documentTypeId:'56',unApprove:'true'});
+    if (el('chkFrom') && el('chkFrom').checked && val('fromDate')) q.set('fromDate',val('fromDate'));
+    if (val('toDate')) q.set('toDate',val('toDate'));
+    return '/dashboard/purchase-invoice-for-approval?' + q.toString();
 }
 
 /* ---------------------------------------------------------------- the card click
@@ -146,8 +156,7 @@ function render(wrapId, cards, group) {
  *   1056         frmApprovalCommissionTradeBill        DocumentTypeId 1056
  *   1870         frmWorkOrderApproval                  DocumentTypeId 1870
  *
- * None of those screens has been ported. Un-approving a document is not something to approximate,
- * so the card names its screen instead of opening anything.
+ * Ported screens open below. Other cards identify their desktop target without changing documents.
  */
 var TARGETS = {
     23:   ['PendingApprovalPurchaseInvoice.cs', 56],
@@ -182,7 +191,7 @@ function targetFor(id) {
     return TARGETS[id] || null;
 }
 
-window.uaCardClick = function (group, i) {
+window.uaCardClick = function (group, i, event) {
     var list = group === 'accounts' ? S.accounts
              : group === 'inventory' ? S.inventory
              : S.commission;
@@ -190,6 +199,16 @@ window.uaCardClick = function (group, i) {
     if (!c) return;
 
     var id = num(c.id);
+    var invoiceUrl = invoiceUndoUrl(id);
+    if (invoiceUrl) {
+        clearMsg();
+        if (event && event.currentTarget && event.currentTarget.tagName === 'A') {
+            event.currentTarget.href = invoiceUrl;
+            return true;
+        }
+        window.location.assign(invoiceUrl);
+        return;
+    }
     var t = targetFor(id);
     if (!t) {
         msg('"' + txt(c.title) + '" (TypeID ' + id + ') has no branch in the desktop form\'s own '

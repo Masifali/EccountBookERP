@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Production Job Order (Pre Costing) - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261007-gridbar-flow}"/>
+    <style>
+        /* Screen 273 - ProductionPreCostingAndJobOrder (InitializeComponent :7193, ClientSize 1125 x 749).
+           tabControl1 (Form | History) has its tabs at the BOTTOM; panel4 (Main Information, Filters For Item,
+           Calculactions) keeps its designer geometry 1:1 px; tabControl2 (TabAppearance.Buttons) holds the six
+           detail tabs, each an entry panel in designer px, a teal bar and a filling grid. */
+        html, body { overflow-x: auto; }
+        body { font-family: Verdana, "Segoe UI", Tahoma, sans-serif; background: #f0f0f0; font-size: 12px; color: #000; margin: 0; }
+        *, *::before, *::after { box-sizing: border-box; }
+        .pc-page { display: flex; flex-direction: column; min-height: 100vh; min-width: 1125px; }
+        .pc-body { flex: 1 1 auto; padding: 3px; }
+        .pc-abs { position: absolute; margin: 0; }
+        .pc-lbl { font-family: "Segoe UI Semibold", "Segoe UI", Tahoma, sans-serif; font-weight: bold; font-size: 12px; line-height: 15px; white-space: pre-line; color: #000; }
+        .pc-in { font-family: Verdana, sans-serif; font-size: 13px; height: 23px; border: 1px solid #7a7a7a; padding: 1px 3px; background: #fff; }
+        .pc-in:disabled, .pc-in[readonly] { background: #f0f0f0; color: #333; }
+        .pc-in.num { text-align: right; }
+        .pc-cmb { font-family: Verdana, sans-serif; font-size: 13px; height: 26px; border: 1px solid #7a7a7a; background: #fff; }
+        .pc-gb { position: absolute; }
+        .pc-gb::before { content: ""; position: absolute; left: 0; right: 0; top: 7px; bottom: 0; border: 1px solid #d5dfe5; border-radius: 3px; pointer-events: none; }
+        .pc-gb > .pc-cap { position: absolute; left: 6px; top: 0; padding: 0 2px; background: #fff; font-family: Tahoma, sans-serif; font-size: 13px; font-weight: bold; line-height: 14px; }
+        .pc-teal { background: #008080; color: #fff; position: relative; }
+        .pc-teal-title { position: absolute; font-family: Tahoma, sans-serif; font-weight: bold; white-space: nowrap; }
+        .pc-strip { background: linear-gradient(to bottom, #fbfbfb 0%, #e6e6e6 100%); border-bottom: 1px solid #a0a0a0; height: 27px; display: flex; align-items: center; padding: 0 2px; gap: 1px; }
+        .pc-tool { background: transparent; border: 1px solid transparent; height: 24px; padding: 0 5px; font-family: Verdana, sans-serif; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; color: #000; white-space: nowrap; }
+        .pc-tool:hover:not(:disabled) { background: #cce8ff; border-color: #99d1ff; }
+        .pc-tool:disabled { color: #9a9a9a; cursor: not-allowed; }
+        .pc-btn { background: #008080; color: #fff; border: 1px solid #006666; font-family: Verdana, sans-serif; font-weight: bold; font-size: 13px; cursor: pointer; padding: 0; }
+        .pc-btn:hover:not(:disabled) { background: #006666; }
+        .pc-btn:disabled { background: #9e9e9e; border-color: #7a7a7a; cursor: not-allowed; }
+        .pc-plus { width: 25px; height: 27px; border: 1px solid #7a7a7a; background: #f3f3f3; font-family: Calibri, sans-serif; font-size: 13px; cursor: pointer; text-decoration: none; color: #000; display: inline-flex; align-items: center; justify-content: center; }
+        .pc-plus.off { color: #888; cursor: not-allowed; }
+        .pc-exit { color: #fff; text-decoration: none; font-size: 11px; margin-left: 12px; }
+        .is-hidden { display: none !important; }
+
+        /* tabControl2 - TabAppearance.Buttons, Segoe UI Semibold 10pt bold */
+        .pc-tabs2 { display: flex; gap: 2px; padding: 2px 3px 0; background: #fff; border-bottom: 1px solid #a0a0a0; }
+        .pc-tab2 { border: 1px solid #a0a0a0; background: #ececec; padding: 3px 10px; font-family: "Segoe UI Semibold", "Segoe UI", sans-serif; font-weight: bold; font-size: 13px; cursor: pointer; user-select: none; }
+        .pc-tab2.is-active { background: #fff; border-bottom-color: #fff; position: relative; top: 1px; }
+        .pc-panel { display: none; }
+        .pc-panel.is-active { display: block; }
+        .pc-entry { position: relative; background: #fff; }
+        .pc-bar { background: #008080; color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 0 4px; font-family: "Segoe UI", Tahoma, sans-serif; font-weight: bold; font-size: 13px; }
+        .pc-bar-tools { display: inline-flex; gap: 3px; align-items: center; font-weight: normal; }
+        .pc-grid-wrap { overflow: auto; background: #fff; border-top: 1px solid #c0c0c0; }
+        .pc-grid { border-collapse: collapse; font-family: Verdana, sans-serif; font-size: 11px; min-width: 100%; }
+        .pc-grid th { background: linear-gradient(to bottom, #fdfdfd 0%, #e4e4e4 100%); border: 1px solid #b8b8b8; padding: 3px 4px; text-align: center; position: sticky; top: 0; z-index: 2; white-space: normal; font-weight: normal; }
+        .pc-grid td { border: 1px solid #dcdcdc; padding: 2px 4px; white-space: nowrap; }
+        .pc-grid td.num { text-align: right; }
+        .pc-grid td.ctr { text-align: center; }
+        .pc-grid tbody tr.is-current td { background: #cce8ff; }
+        .pc-grid tbody tr.is-editing td { background: #fff3c4; }
+        .pc-grid tfoot td { background: #ececec; font-weight: bold; border: 1px solid #c8c8c8; }
+        .pc-grid .col-x { width: 25px; text-align: center; padding: 1px; }
+        .pc-x { border: 1px solid #9a9a9a; background: #f3f3f3; font-size: 11px; line-height: 1; padding: 2px 5px; cursor: pointer; }
+        .pc-x:hover:not(:disabled) { background: #e81123; color: #fff; border-color: #e81123; }
+        .pc-x:disabled { color: #aaa; cursor: not-allowed; }
+        .pc-grid input.cell { width: 80px; height: 20px; border: 1px solid #b0b0b0; font-size: 11px; text-align: right; padding: 1px 3px; }
+        .pc-cellbtn { border: 1px solid #9a9a9a; background: #f3f3f3; font-size: 11px; padding: 1px 6px; cursor: pointer; }
+        .pc-cellbtn:hover { background: #cce8ff; border-color: #3399ff; }
+        .pc-link { color: #0645ad; text-decoration: underline; cursor: pointer; background: none; border: none; padding: 0; font: inherit; }
+        .pc-empty td { color: #777; font-style: italic; }
+        .pc-note { font-size: 11px; color: #7f0000; background: #ffebee; border: 1px solid #e57373; padding: 3px 8px; margin: 2px 0; }
+        .is-busy { opacity: .7; cursor: progress !important; pointer-events: none; }
+
+        /* detail grids: entry + bar + grid; the form is 749 high, the grid fills what is left */
+        #grdPlannedOutputHost, #grdInputDetailHost { height: 300px; }
+        #grdOverHeadHost, #grdPackingMaterialHost { height: 290px; }
+        #grdPlantdetailHost, #grdLabStandardsHost { height: 330px; }
+        #DataGridHistoryHost { height: 231px; }
+        .pc-hist-detail { height: 283px; }
+
+        /* tabControl1 footer (Alignment = Bottom) */
+        .pc-footer { position: sticky; bottom: 0; display: flex; align-items: center; justify-content: space-between; background: #e9e9e9; border-top: 1px solid #a0a0a0; padding: 0 4px; height: 28px; z-index: 20; }
+        .pc-tab1 { border: 1px solid #a0a0a0; border-top: none; border-radius: 0 0 3px 3px; background: #ececec; padding: 3px 14px; font-family: Verdana, sans-serif; font-size: 13px; cursor: pointer; user-select: none; }
+        .pc-tab1.is-active { background: #fff; font-weight: 600; position: relative; top: -1px; }
+        .pc-footer-mid { font-size: 11px; color: #333; }
+
+        /* tabControl3 (history details, bottom tabs) */
+        .pc-tabs3 { display: flex; gap: 2px; border-bottom: 1px solid #a0a0a0; background: #f0f0f0; padding: 2px 3px 0; }
+
+        /* dialogs */
+        .cx-modal { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: none; z-index: 9000; }
+        .cx-modal.is-open { display: block; }
+        .cx-modal-box { position: absolute; top: 3%; left: 50%; transform: translateX(-50%); width: min(1150px, 97vw); max-height: 94vh; display: flex; flex-direction: column; background: #f0f0f0; border: 1px solid #555; box-shadow: 0 6px 24px rgba(0,0,0,.4); }
+        .cx-modal-box.small { width: min(560px, 94vw); }
+        .cx-modal-head { background: #008080; color: #fff; height: 28px; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; font-weight: bold; }
+        .cx-modal-head button { background: transparent; border: none; color: #fff; font-size: 16px; cursor: pointer; }
+        .cx-modal-body { padding: 6px; overflow: auto; }
+        .cx-filter { display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 4px 8px; align-items: end; background: #fff; border: 1px solid #c0c0c0; padding: 6px; margin-bottom: 4px; }
+        .cx-filter label { margin: 0; font-weight: normal; font-size: 12px; display: block; }
+        .cx-filter .pc-in, .cx-filter select { width: 100%; }
+        @media print { .pc-teal, .pc-footer, button, .pc-note { display: none !important; } .pc-grid-wrap { height: auto !important; overflow: visible !important; } }
+    </style>
+</head>
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="pc-page">
+
+<!-- ====================================================================== tabPage1 "Form" -->
+<div id="tabForm" class="pc-panel is-active">
+
+    <!-- panel3 (0,0) 1111 x 54 teal: toolStrip1 27 + label70 (10,31) + chkPrint (1024,30) -->
+    <div class="pc-teal" style="height:54px;">
+        <div class="pc-strip" id="toolStrip1">
+            <button type="button" class="pc-tool" id="btnnew" style="width:59px" onclick="PreCost.newClick()" title="Ctrl+N"><i class="fa fa-file-o"></i> New</button>
+            <button type="button" class="pc-tool" id="btnRefresh" style="width:80px" onclick="PreCost.refresh()" title="Ctrl+R"><i class="fa fa-refresh"></i> Refresh</button>
+            <button type="button" class="pc-tool" id="btnsave" style="width:64px" onclick="PreCost.save()" title="Ctrl+S"><i class="fa fa-save"></i> Save</button>
+            <button type="button" class="pc-tool is-hidden" id="btnUpdate" style="width:78px" onclick="PreCost.update()" title="Ctrl+U"><i class="fa fa-pencil-square-o"></i> Update</button>
+            <button type="button" class="pc-tool is-hidden" id="btnSaveAs" style="width:80px" onclick="PreCost.saveAs()" title="Ctrl+F12"><i class="fa fa-copy"></i> SaveAs</button>
+            <button type="button" class="pc-tool" id="Print" style="width:92px" onclick="PreCost.print()" data-rpt="630-PreCostProductionJobOrderSlip.rpt" title="Ctrl+P"><i class="fa fa-print"></i> Print-630</button>
+            <button type="button" class="pc-tool" id="btnattachment" style="width:109px" disabled title="The desktop Attachment dialog (DMS upload) is not ported; history lists the stored names."><i class="fa fa-paperclip"></i> Attachment</button>
+            <button type="button" class="pc-tool" id="btnLoadInvoices" style="width:122px" onclick="PreCost.openLoader()" title="Ctrl+L"><i class="fa fa-download"></i> Load Invoices</button>
+            <button type="button" class="pc-tool" id="BtnGenerateInPutRates" style="width:173px" onclick="PreCost.generateInputRates()"><i class="fa fa-calculator"></i> Generate Input Rates</button>
+            <button type="button" class="pc-tool" id="btnGenerate" style="width:139px" onclick="PreCost.runCalculations()"><i class="fa fa-cogs"></i> Run Calculations</button>
+            <button type="button" class="pc-tool" id="BtnShortcutKeys" style="width:125px" onclick="PreCost.shortcutKeys()">Shortcut Keys</button>
+            <a class="pc-exit" href="/production" style="margin-left:auto;color:#004d40;font-weight:bold;" title="Ctrl+E / Esc"><i class="fa fa-sign-out"></i> Exit</a>
+        </div>
+        <span class="pc-teal-title" style="left:10px;top:31px;font-size:16px;line-height:19px;">Production Job Order <span id="lblRecId" style="font-size:11px;font-weight:normal;margin-left:14px;"></span></span>
+        <label class="pc-abs" style="right:17px;top:30px;color:#fff;font-family:Verdana,sans-serif;font-weight:bold;font-size:13px;display:flex;align-items:center;gap:4px;"><input type="checkbox" id="chkPrint" style="margin:0">Preview</label>
+    </div>
+
+    <div id="rightsNote" class="pc-note is-hidden"></div>
+
+    <!-- panel4 (0,54) 1111 x 322 white -->
+    <div style="position:relative;height:322px;background:#fff;">
+        <!-- groupBox2 (5,3) 1058 x 176 "Main Information" -->
+        <div class="pc-gb" style="left:5px;top:3px;width:1058px;height:176px;">
+            <span class="pc-cap">Main Information</span>
+            <label class="pc-abs pc-lbl" for="txtPlanDate" style="left:4px;top:22px;">Doc No,Date</label>
+            <input type="text" id="txtPlanCode" class="pc-abs pc-in num" style="left:113px;top:18px;width:81px;" disabled>
+            <input type="date" id="txtPlanDate" class="pc-abs pc-in" style="left:195px;top:18px;width:132px;">
+            <label class="pc-abs pc-lbl" for="txtInvoiceReference" style="left:4px;top:50px;">Job Order No</label>
+            <input type="text" id="txtInvoiceReference" class="pc-abs pc-in" style="left:113px;top:46px;width:214px;">
+            <label class="pc-abs pc-lbl" for="cmbProductionType" style="left:4px;top:77px;">Production Type</label>
+            <select id="cmbProductionType" class="pc-abs pc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Production Type " style="left:113px;top:71px;width:189px;"></select>
+            <a id="btnProductionTypeDefine" class="pc-abs pc-plus" style="left:302px;top:70px;" href="/production/define-production-type" target="_blank" title="DefineProductionType (opens the web screen)">+</a>
+            <label class="pc-abs pc-lbl" for="cmbPlanType" style="left:331px;top:22px;">Plan Type</label>
+            <select id="cmbPlanType" class="pc-abs pc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Plan Type " style="left:402px;top:16px;width:188px;"></select>
+            <label class="pc-abs pc-lbl" for="cmbStatus" style="left:331px;top:50px;">Status</label>
+            <select id="cmbStatus" class="pc-abs pc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Status" style="left:402px;top:44px;width:188px;" disabled></select>
+            <label class="pc-abs pc-lbl" for="txtProductionInstruction" style="left:331px;top:77px;">Instruction</label>
+            <input type="text" id="txtProductionInstruction" class="pc-abs pc-in" style="left:402px;top:73px;width:383px;">
+            <label class="pc-abs pc-lbl" for="txtstartDate" style="left:594px;top:22px;">Start Date</label>
+            <input type="date" id="txtstartDate" class="pc-abs pc-in" style="left:652px;top:18px;width:133px;">
+            <label class="pc-abs pc-lbl" for="txtEndDate" style="left:594px;top:50px;">End Date</label>
+            <input type="date" id="txtEndDate" class="pc-abs pc-in" style="left:652px;top:46px;width:133px;">
+            <label class="pc-abs pc-lbl" for="CmbWorkInProcess" style="left:788px;top:17px;">WIP A/c</label>
+            <select id="CmbWorkInProcess" class="pc-abs pc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="WorkInProcess" style="left:859px;top:14px;width:178px;"></select>
+            <label class="pc-abs pc-lbl" for="CmbWipItem" style="left:788px;top:43px;">WIP Item</label>
+            <select id="CmbWipItem" class="pc-abs pc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="ItemName" style="left:859px;top:42px;width:178px;"></select>
+            <label class="pc-abs pc-lbl" for="CmbWipWarehouse" style="left:788px;top:64px;">Wip
+Warehouse</label>
+            <select id="CmbWipWarehouse" class="pc-abs pc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="WareHouse Name" style="left:859px;top:70px;width:178px;"></select>
+            <label class="pc-abs pc-lbl" for="txtPlantInstruction" style="left:4px;top:103px;">Plant Instruction</label>
+            <input type="text" id="txtPlantInstruction" class="pc-abs pc-in" style="left:113px;top:99px;width:924px;">
+            <label class="pc-abs pc-lbl" for="txtDeliveryInstruction" style="left:4px;top:128px;">Delivery Instruction</label>
+            <input type="text" id="txtDeliveryInstruction" class="pc-abs pc-in" style="left:113px;top:124px;width:924px;">
+            <label class="pc-abs pc-lbl" for="txtOtherInstruction" style="left:4px;top:153px;">Other Instruction</label>
+            <input type="text" id="txtOtherInstruction" class="pc-abs pc-in" style="left:113px;top:149px;width:924px;">
+            <!-- CmbLotAc, CmbLabourItemInPut/OutPut, CmbPackingMaterial, wages boxes: Visible = false on the desktop -->
+            <div class="is-hidden" aria-hidden="true"><select id="CmbLotAc"></select></div>
+        </div>
+
+        <!-- groupBox3 (7,179) 194 x 142 "Filters For Item" -->
+        <div class="pc-gb" style="left:7px;top:179px;width:194px;height:142px;">
+            <span class="pc-cap">Filters For Item</span>
+            <label class="pc-abs pc-lbl" for="cmbentrytype" style="left:4px;top:39px;">EntryType</label>
+            <select id="cmbentrytype" class="pc-abs pc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Entry Type" style="left:73px;top:33px;width:113px;" onchange="PreCost.entryTypeChanged()"></select>
+            <label class="pc-abs pc-lbl" for="cmbFiltersType" style="left:4px;top:74px;">Filter Type</label>
+            <select id="cmbFiltersType" class="pc-abs pc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Filter Type" style="left:73px;top:68px;width:113px;" onchange="PreCost.filterTypeChanged()"></select>
+            <label class="pc-abs pc-lbl" for="cmbDocNo" style="left:4px;top:101px;width:63px;">Doc No / Other</label>
+            <select id="cmbDocNo" class="pc-abs pc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Doc No" style="left:73px;top:102px;width:113px;" onchange="PreCost.docNoChanged()"></select>
+        </div>
+
+        <!-- groupBox1 (207,179) 839 x 142 "Calculactions" -->
+        <div class="pc-gb" style="left:207px;top:179px;width:839px;height:142px;">
+            <span class="pc-cap">Calculactions</span>
+            <!-- panel51 (6,22) 426 x 112 -->
+            <div class="pc-abs" style="left:6px;top:22px;width:426px;height:112px;border:1px solid #d5dfe5;">
+                <div class="pc-teal" style="height:24px;">
+                    <span class="pc-teal-title" style="left:2px;top:4px;font-family:'Segoe UI',sans-serif;font-size:13px;">Description</span>
+                    <span class="pc-teal-title" style="left:113px;top:4px;font-family:'Segoe UI',sans-serif;font-size:13px;">ItemQty</span>
+                    <span class="pc-teal-title" style="left:198px;top:4px;font-family:'Segoe UI',sans-serif;font-size:13px;">NetWeight</span>
+                    <span class="pc-teal-title" style="left:312px;top:4px;font-family:'Segoe UI',sans-serif;font-size:13px;">Amount</span>
+                </div>
+                <label class="pc-abs pc-lbl" style="left:6px;top:32px;">Raw Material</label>
+                <input type="text" id="txtInPutTotalQty" class="pc-abs pc-in num" style="left:104px;top:28px;width:82px;" disabled value="0">
+                <input type="text" id="txtInPutTotalWeight" class="pc-abs pc-in num" style="left:192px;top:28px;width:107px;" disabled value="0">
+                <input type="text" id="txtTotalAmountInPut" class="pc-abs pc-in num" style="left:304px;top:28px;width:116px;" disabled value="0">
+                <label class="pc-abs pc-lbl" style="left:6px;top:59px;">By Product</label>
+                <input type="text" id="txtTotalQtyBP" class="pc-abs pc-in num" style="left:104px;top:55px;width:82px;" disabled value="0">
+                <input type="text" id="txtTotalWeightBP" class="pc-abs pc-in num" style="left:192px;top:55px;width:107px;" disabled value="0">
+                <input type="text" id="txtTotalAmountBP" class="pc-abs pc-in num" style="left:304px;top:55px;width:116px;" disabled value="0">
+                <label class="pc-abs pc-lbl" style="left:6px;top:86px;">Finish Goods</label>
+                <input type="text" id="txtTotalQtyFG" class="pc-abs pc-in num" style="left:104px;top:82px;width:82px;" disabled value="0">
+                <input type="text" id="txtTotalWeightFG" class="pc-abs pc-in num" style="left:192px;top:82px;width:107px;" disabled value="0">
+                <input type="text" id="txtTotalAmountFG" class="pc-abs pc-in num" style="left:304px;top:82px;width:116px;" disabled value="0">
+            </div>
+            <!-- panel53 (436,24) 397 x 52 -->
+            <div class="pc-abs" style="left:436px;top:24px;width:397px;height:52px;border:1px solid #d5dfe5;">
+                <div class="pc-teal" style="height:20px;"><span class="pc-teal-title" style="left:73px;top:0;font-family:'Segoe UI',sans-serif;font-size:13px;line-height:20px;">OverHeads &amp; Packing Mateial Totals</span></div>
+                <label class="pc-abs pc-lbl" style="left:3px;top:26px;font-size:13px;">O.Heads</label>
+                <input type="text" id="txtOverHeadsAmount" class="pc-abs pc-in num" style="left:68px;top:23px;width:125px;" disabled value="0">
+                <label class="pc-abs pc-lbl" style="left:198px;top:26px;font-size:13px;">P.Material</label>
+                <input type="text" id="txtPackingMaterialAmount" class="pc-abs pc-in num" style="left:265px;top:23px;width:125px;" disabled value="0">
+            </div>
+            <!-- panel55 (436,81) 397 x 53 -->
+            <div class="pc-abs" style="left:436px;top:81px;width:397px;height:53px;border:1px solid #d5dfe5;">
+                <div class="pc-teal" style="height:20px;"><span class="pc-teal-title" style="left:106px;top:0;font-family:'Segoe UI',sans-serif;font-size:13px;line-height:20px;">Finish Good Average Rate</span></div>
+                <label class="pc-abs pc-lbl" style="left:2px;top:26px;font-size:13px;">W/O Exp</label>
+                <input type="text" id="txtFGRateWithoutExp" class="pc-abs pc-in num" style="left:68px;top:23px;width:125px;height:25px;font-size:14px;" disabled value="0">
+                <label class="pc-abs pc-lbl" style="left:198px;top:26px;font-size:13px;">With Exp</label>
+                <input type="text" id="txtFGAvgRate" class="pc-abs pc-in num" style="left:265px;top:23px;width:125px;height:25px;font-size:14px;" disabled value="0">
+            </div>
+        </div>
+    </div>
+
+    <!-- panel6 (0,376) fill: tabControl2 -->
+    <div class="pc-tabs2" id="tabs2">
+        <div class="pc-tab2 is-active" data-tab="tabPage3" onclick="PreCost.tab2('tabPage3')">Planned Output Requirnment</div>
+        <div class="pc-tab2" data-tab="tabPage4" onclick="PreCost.tab2('tabPage4')">Input Detail</div>
+        <div class="pc-tab2" data-tab="tabPage5" onclick="PreCost.tab2('tabPage5')">OverHeads</div>
+        <div class="pc-tab2" data-tab="tabPage6" onclick="PreCost.tab2('tabPage6')">Packing Material</div>
+        <div class="pc-tab2" data-tab="tabPage7" onclick="PreCost.tab2('tabPage7')">Plants Detail</div>
+        <div class="pc-tab2" data-tab="tabLabStandard" onclick="PreCost.tab2('tabLabStandard')">Lab Standards (Item And Party Wise)</div>
+    </div>
+
+    <!-- ---------------------------------------------------------- tabPage3 "Planned Output Requirnment" -->
+    <div id="tabPage3" class="pc-panel is-active">
+        <!-- paneloutputgrd (0,0) 1097 x 110 -->
+        <div class="pc-entry" style="height:110px;">
+            <label class="pc-abs pc-lbl" for="CmbEntryTypeOP" style="left:4px;top:8px;">EntryType</label>
+            <select id="CmbEntryTypeOP" class="pc-abs pc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="EntryType" style="left:4px;top:26px;width:108px;"></select>
+            <label class="pc-abs pc-lbl" for="cmbWareHouseOutPut" style="left:115px;top:8px;">WareHouse</label>
+            <select id="cmbWareHouseOutPut" class="pc-abs pc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="WareHouse Name" style="left:115px;top:26px;width:183px;"></select>
+            <label class="pc-abs pc-lbl" for="cmbJobLotOutput" style="left:300px;top:8px;">Job/Lot</label>
+            <select id="cmbJobLotOutput" class="pc-abs pc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Job Lot To" style="left:300px;top:26px;width:163px;"></select>
+            <label class="pc-abs pc-lbl" for="cmbItem" style="left:464px;top:8px;">Item Name</label>
+            <select id="cmbItem" class="pc-abs pc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Name" style="left:464px;top:26px;width:264px;" onchange="PreCost.outputItemLeave()"></select>
+            <label class="pc-abs pc-lbl" for="cmbCropYearOutput" style="left:730px;top:8px;">Crop Year</label>
+            <select id="cmbCropYearOutput" class="pc-abs pc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Crop Year" style="left:730px;top:26px;width:96px;"></select>
+            <label class="pc-abs pc-lbl" for="cmbPackingType" style="left:828px;top:8px;">PackingType</label>
+            <select id="cmbPackingType" class="pc-abs pc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="PackType" style="left:828px;top:26px;width:134px;"></select>
+            <label class="pc-abs pc-lbl" for="txtOuterqty" style="left:964px;top:6px;">Outer Qty</label>
+            <input type="text" id="txtOuterqty" class="pc-abs pc-in num" style="left:964px;top:27px;width:72px;" inputmode="decimal">
+            <label class="pc-abs pc-lbl" for="cmbouteruom" style="left:4px;top:58px;">Outer UOM</label>
+            <select id="cmbouteruom" class="pc-abs pc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Outer Uom" style="left:4px;top:77px;width:68px;" onchange="PreCost.outerUomChanged()"></select>
+            <label class="pc-abs pc-lbl" for="txtPrctOfInputforOutputQty" style="left:73px;top:58px;">% of Input</label>
+            <input type="text" id="txtPrctOfInputforOutputQty" class="pc-abs pc-in num" style="left:73px;top:79px;width:67px;" inputmode="decimal">
+            <label class="pc-abs pc-lbl" for="txtweight" style="left:141px;top:58px;">Weight</label>
+            <input type="text" id="txtweight" class="pc-abs pc-in num" style="left:141px;top:79px;width:90px;" disabled>
+            <label class="pc-abs pc-lbl" for="txtItemRateOutPut" style="left:232px;top:58px;">Rate</label>
+            <input type="text" id="txtItemRateOutPut" class="pc-abs pc-in num" style="left:232px;top:79px;width:66px;" inputmode="decimal">
+            <label class="pc-abs pc-lbl" for="CmbRateUomOutPut" style="left:300px;top:58px;">Rate Uom</label>
+            <select id="CmbRateUomOutPut" class="pc-abs pc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Rate Uom" style="left:300px;top:77px;width:71px;" onchange="PreCost.outputAmountCalc()"></select>
+            <label class="pc-abs pc-lbl" for="txtItemAmountOutPut" style="left:372px;top:58px;">Amount</label>
+            <input type="text" id="txtItemAmountOutPut" class="pc-abs pc-in num" style="left:372px;top:79px;width:91px;" readonly>
+            <label class="pc-abs pc-lbl" for="txtremarks" style="left:464px;top:58px;">Remarks</label>
+            <input type="text" id="txtremarks" class="pc-abs pc-in" style="left:464px;top:79px;width:405px;">
+            <button type="button" id="btnplus" class="pc-abs pc-btn" style="left:873px;top:77px;width:28px;height:26px;" onclick="PreCost.addOutput()">+</button>
+            <button type="button" id="btnUpdateDetail" class="pc-abs pc-btn is-hidden" style="left:903px;top:77px;width:68px;height:26px;" onclick="PreCost.updateOutput()">Update</button>
+            <button type="button" id="btnCancelUpdateDetial" class="pc-abs pc-btn is-hidden" style="left:973px;top:77px;width:65px;height:26px;" onclick="PreCost.cancelOutput()">Cancel</button>
+        </div>
+        <div class="pc-bar" style="height:23px;"><span></span><span class="pc-bar-tools"><span id="lblOutputCount">0</span></span></div>
+        <div class="pc-grid-wrap" id="grdPlannedOutputHost">
+            <table class="pc-grid" id="grdPlannedOutput" data-gridbar="ProductionPreCostingAndJobOrder:grdPlannedOutput" data-gridbar-mount="#tabPage3 .pc-bar .pc-bar-tools"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+        </div>
+    </div>
+
+    <!-- ---------------------------------------------------------- tabPage4 "Input Detail" -->
+    <div id="tabPage4" class="pc-panel">
+        <div class="pc-entry" style="height:110px;">
+            <label class="pc-abs pc-lbl" for="cmbwarehouseinput" style="left:8px;top:9px;">WareHouse</label>
+            <select id="cmbwarehouseinput" class="pc-abs pc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="WareHouse Name" style="left:8px;top:28px;width:191px;"></select>
+            <label class="pc-abs pc-lbl" for="cmbjoblotinput" style="left:203px;top:9px;">Job/Lot</label>
+            <select id="cmbjoblotinput" class="pc-abs pc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Job Lot From" style="left:201px;top:28px;width:235px;" onchange="PreCost.inputRateBind()"></select>
+            <label class="pc-abs pc-lbl" for="cmbItemInput" style="left:437px;top:9px;">Item Name</label>
+            <span id="lblStockWeight" class="pc-abs" style="left:586px;top:7px;width:83px;text-align:right;font-size:12px;">0</span>
+            <select id="cmbItemInput" class="pc-abs pc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Name" style="left:437px;top:28px;width:233px;" onchange="PreCost.inputItemLeave()"></select>
+            <label class="pc-abs pc-lbl" for="cmbcropyearinput" style="left:671px;top:9px;">Crop Year</label>
+            <select id="cmbcropyearinput" class="pc-abs pc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Crop Year" style="left:671px;top:28px;width:115px;" onchange="PreCost.inputRateBind()"></select>
+            <label class="pc-abs pc-lbl" for="cmbPackTypeInput" style="left:788px;top:9px;">PackingType</label>
+            <select id="cmbPackTypeInput" class="pc-abs pc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="PackType" style="left:788px;top:28px;width:124px;"></select>
+            <label class="pc-abs pc-lbl" for="txtqtyinput" style="left:914px;top:9px;">Qty</label>
+            <input type="text" id="txtqtyinput" class="pc-abs pc-in num" style="left:914px;top:30px;width:101px;" inputmode="decimal">
+            <label class="pc-abs pc-lbl" for="cmbpacksizeinput" style="left:8px;top:60px;">Pack Uom</label>
+            <select id="cmbpacksizeinput" class="pc-abs pc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Pack Uom" style="left:5px;top:77px;width:84px;" onchange="PreCost.packSizeChanged()"></select>
+            <label class="pc-abs pc-lbl" for="txtweightinput" style="left:90px;top:60px;">Weight</label>
+            <input type="text" id="txtweightinput" class="pc-abs pc-in num" style="left:93px;top:79px;width:98px;" inputmode="decimal">
+            <label class="pc-abs pc-lbl" for="txtRateInPut" style="left:191px;top:60px;">Rate</label>
+            <input type="text" id="txtRateInPut" class="pc-abs pc-in num" style="left:194px;top:79px;width:62px;" inputmode="decimal">
+            <label class="pc-abs pc-lbl" for="CmbRateUomInPut" style="left:261px;top:60px;">Rate Uom</label>
+            <select id="CmbRateUomInPut" class="pc-abs pc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Rate Uom" style="left:258px;top:77px;width:84px;" onchange="PreCost.inputAmountCalc()"></select>
+            <label class="pc-abs pc-lbl" for="txtAmountInPut" style="left:342px;top:60px;">Amount</label>
+            <input type="text" id="txtAmountInPut" class="pc-abs pc-in num" style="left:345px;top:79px;width:101px;" readonly>
+            <label class="pc-abs pc-lbl" for="txtremarksinput" style="left:454px;top:60px;">Remarks</label>
+            <input type="text" id="txtremarksinput" class="pc-abs pc-in" style="left:451px;top:79px;width:393px;">
+            <button type="button" id="btnadddetailinputgrd" class="pc-abs pc-btn" style="left:850px;top:77px;width:39px;height:26px;" onclick="PreCost.addInput()">+</button>
+            <button type="button" id="btnupdategrdinput" class="pc-abs pc-btn is-hidden" style="left:891px;top:77px;width:68px;height:26px;" onclick="PreCost.updateInput()">Update</button>
+            <button type="button" id="btncancelgrdinput" class="pc-abs pc-btn is-hidden" style="left:960px;top:77px;width:68px;height:26px;" onclick="PreCost.cancelInput()">Cancel</button>
+        </div>
+        <div class="pc-bar" style="height:23px;"><span></span><span class="pc-bar-tools"><span id="lblInputCount">0</span></span></div>
+        <div class="pc-grid-wrap" id="grdInputDetailHost">
+            <table class="pc-grid" id="grdInputDetail" data-gridbar="ProductionPreCostingAndJobOrder:grdInputDetail" data-gridbar-mount="#tabPage4 .pc-bar .pc-bar-tools"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+        </div>
+    </div>
+
+    <!-- ---------------------------------------------------------- tabPage5 "OverHeads" -->
+    <div id="tabPage5" class="pc-panel">
+        <div class="pc-entry" style="height:120px;">
+            <div class="pc-gb" style="left:1px;top:4px;width:1041px;height:114px;">
+                <span class="pc-cap">Detail</span>
+                <label class="pc-abs pc-lbl" for="cmbChartofAccountOverHead" style="left:12px;top:19px;">OverHead Account</label>
+                <select id="cmbChartofAccountOverHead" class="pc-abs pc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Account Title" style="left:12px;top:38px;width:228px;"></select>
+                <label class="pc-abs pc-lbl" for="CmbBrandNameOverHead" style="left:245px;top:19px;">OutPut Item Name</label>
+                <select id="CmbBrandNameOverHead" class="pc-abs pc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Brand Item Name" style="left:243px;top:38px;width:227px;" onchange="PreCost.ohBrandLeave()"></select>
+                <label class="pc-abs pc-lbl" for="CmbBrandUomOverHead" style="left:475px;top:19px;">Item Uom</label>
+                <select id="CmbBrandUomOverHead" class="pc-abs pc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="BrandItem UOM" style="left:473px;top:38px;width:99px;" onchange="PreCost.ohBrandUomLeave()"></select>
+                <label class="pc-abs pc-lbl" for="txtItemQtyOverHead" style="left:580px;top:19px;">Item Qty</label>
+                <input type="text" id="txtItemQtyOverHead" class="pc-abs pc-in num" style="left:577px;top:40px;width:83px;" inputmode="decimal">
+                <label class="pc-abs pc-lbl" for="txtItemRateOverHeads" style="left:667px;top:19px;">Rate</label>
+                <input type="text" id="txtItemRateOverHeads" class="pc-abs pc-in num" style="left:663px;top:40px;width:91px;" inputmode="decimal">
+                <label class="pc-abs pc-lbl" for="txtExpAmountOverHead" style="left:761px;top:19px;">Amount</label>
+                <input type="text" id="txtExpAmountOverHead" class="pc-abs pc-in num" style="left:757px;top:40px;width:113px;" inputmode="decimal">
+                <label class="pc-abs pc-lbl" for="txtLedgerRemarksOverHead" style="left:12px;top:68px;">Ledger Remarks</label>
+                <input type="text" id="txtLedgerRemarksOverHead" class="pc-abs pc-in" style="left:12px;top:88px;width:786px;">
+                <button type="button" id="btnAddOH" class="pc-abs pc-btn" style="left:802px;top:86px;width:38px;height:26px;" onclick="PreCost.addOverhead()">+</button>
+                <button type="button" id="btnUpdateOH" class="pc-abs pc-btn is-hidden" style="left:840px;top:86px;width:70px;height:26px;" onclick="PreCost.updateOverhead()">Update </button>
+                <button type="button" id="BtnCancelOH" class="pc-abs pc-btn is-hidden" style="left:910px;top:86px;width:67px;height:26px;" onclick="PreCost.cancelOverhead()">Cancel</button>
+            </div>
+        </div>
+        <div class="pc-bar" style="height:20px;"><span>Over Heads Detail</span><span class="pc-bar-tools"><span id="lblOverheadCount">0</span></span></div>
+        <div class="pc-grid-wrap" id="grdOverHeadHost">
+            <table class="pc-grid" id="grdOverHead" data-gridbar="ProductionPreCostingAndJobOrder:grdOverHead" data-gridbar-mount="#tabPage5 .pc-bar .pc-bar-tools"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+        </div>
+    </div>
+
+    <!-- ---------------------------------------------------------- tabPage6 "Packing Material" -->
+    <div id="tabPage6" class="pc-panel">
+        <div class="pc-entry" style="height:123px;">
+            <div class="pc-gb" style="left:3px;top:5px;width:1039px;height:111px;">
+                <span class="pc-cap">Detail</span>
+                <label class="pc-abs pc-lbl" for="CmbWarehousePackingMaterial" style="left:4px;top:17px;">Warehouse</label>
+                <select id="CmbWarehousePackingMaterial" class="pc-abs pc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="WareHouse Name" style="left:7px;top:36px;width:183px;"></select>
+                <label class="pc-abs pc-lbl" for="cmbItemPackingMaterial" style="left:197px;top:17px;">Packing Material Item Name</label>
+                <select id="cmbItemPackingMaterial" class="pc-abs pc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Packing Item" style="left:196px;top:36px;width:240px;"></select>
+                <label class="pc-abs pc-lbl" for="CmbBrandNamePackingMaterial" style="left:443px;top:19px;">OutPut Item  Name</label>
+                <select id="CmbBrandNamePackingMaterial" class="pc-abs pc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Brand Item Name" style="left:441px;top:36px;width:185px;" onchange="PreCost.pmBrandLeave()"></select>
+                <label class="pc-abs pc-lbl" for="CmbBrandUomPackingMaterial" style="left:631px;top:19px;">Item Uom</label>
+                <select id="CmbBrandUomPackingMaterial" class="pc-abs pc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="BrandItem UOM" style="left:629px;top:36px;width:77px;" onchange="PreCost.pmBrandUomLeave()"></select>
+                <label class="pc-abs pc-lbl" for="txtPackingMaterialQTY" style="left:710px;top:19px;">Item Qty</label>
+                <input type="text" id="txtPackingMaterialQTY" class="pc-abs pc-in num" style="left:709px;top:37px;width:99px;" inputmode="decimal">
+                <label class="pc-abs pc-lbl" for="txtPackingMaterialRate" style="left:812px;top:19px;">ItemRate</label>
+                <input type="text" id="txtPackingMaterialRate" class="pc-abs pc-in num" style="left:811px;top:37px;width:84px;" inputmode="decimal">
+                <label class="pc-abs pc-lbl" for="txtAmountPackingMaterial" style="left:897px;top:19px;">Amount</label>
+                <input type="text" id="txtAmountPackingMaterial" class="pc-abs pc-in num" style="left:897px;top:37px;width:133px;background:#fff;" readonly disabled>
+                <label class="pc-abs pc-lbl" for="txtremarksPackingMaterial" style="left:8px;top:65px;">Remarks</label>
+                <input type="text" id="txtremarksPackingMaterial" class="pc-abs pc-in" style="left:8px;top:83px;width:750px;">
+                <button type="button" id="btnAddDetailPm" class="pc-abs pc-btn" style="left:763px;top:81px;width:38px;height:26px;" onclick="PreCost.addPacking()">+</button>
+                <button type="button" id="btnUpdateDetailPm" class="pc-abs pc-btn is-hidden" style="left:801px;top:81px;width:70px;height:26px;" onclick="PreCost.updatePacking()">Update </button>
+                <button type="button" id="btnCancelDetailPm" class="pc-abs pc-btn is-hidden" style="left:871px;top:81px;width:67px;height:26px;" onclick="PreCost.cancelPacking()">Cancel</button>
+            </div>
+        </div>
+        <div class="pc-bar" style="height:20px;"><span>Packing Material Detail</span><span class="pc-bar-tools"><span id="lblPackingCount">0</span></span></div>
+        <div class="pc-grid-wrap" id="grdPackingMaterialHost">
+            <table class="pc-grid" id="grdPackingMaterial" data-gridbar="ProductionPreCostingAndJobOrder:grdPackingMaterial" data-gridbar-mount="#tabPage6 .pc-bar .pc-bar-tools"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+        </div>
+    </div>
+
+    <!-- ---------------------------------------------------------- tabPage7 "Plants Detail" -->
+    <div id="tabPage7" class="pc-panel">
+        <div class="pc-entry" style="height:77px;">
+            <div class="pc-gb" style="left:3px;top:5px;width:1039px;height:66px;">
+                <span class="pc-cap">Detail</span>
+                <label class="pc-abs pc-lbl" for="cmbPlantFeader" style="left:6px;top:20px;">Plant / Feader</label>
+                <select id="cmbPlantFeader" class="pc-abs pc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="PlantName " style="left:9px;top:36px;width:119px;"></select>
+                <a id="btnProductionPlant" class="pc-abs pc-plus" style="left:132px;top:36px;width:23px;height:26px;" href="/production/define-production-plant" target="_blank" title="DefineProductionPlant (opens the web screen)">+</a>
+                <label class="pc-abs pc-lbl" for="txtAssumedPlantCapacity" style="left:154px;top:18px;">Assumed Capacity</label>
+                <input type="text" id="txtAssumedPlantCapacity" class="pc-abs pc-in num" style="left:158px;top:37px;width:100px;" inputmode="decimal">
+                <label class="pc-abs pc-lbl" for="txtRemarksPlantDetail" style="left:258px;top:20px;">Remarks</label>
+                <input type="text" id="txtRemarksPlantDetail" class="pc-abs pc-in" style="left:261px;top:38px;width:589px;">
+                <button type="button" id="btnAddPlantDetail" class="pc-abs pc-btn" style="left:857px;top:36px;width:38px;height:26px;" onclick="PreCost.addPlant()">+</button>
+                <button type="button" id="btnUpdatePlantDetail" class="pc-abs pc-btn is-hidden" style="left:895px;top:36px;width:70px;height:26px;" onclick="PreCost.updatePlant()">Update </button>
+                <button type="button" id="btnCanclePlantdetail" class="pc-abs pc-btn is-hidden" style="left:965px;top:36px;width:67px;height:26px;" onclick="PreCost.cancelPlant()">Cancel</button>
+            </div>
+        </div>
+        <div class="pc-bar" style="height:20px;"><span>Plant Detail</span><span class="pc-bar-tools"><span id="lblPlantCount">0</span></span></div>
+        <div class="pc-grid-wrap" id="grdPlantdetailHost">
+            <table class="pc-grid" id="grdPlantdetail" data-gridbar="ProductionPreCostingAndJobOrder:grdPlantdetail" data-gridbar-mount="#tabPage7 .pc-bar .pc-bar-tools"><thead></thead><tbody></tbody></table>
+        </div>
+    </div>
+
+    <!-- ---------------------------------------------------------- tabLabStandard -->
+    <div id="tabLabStandard" class="pc-panel">
+        <div class="pc-entry" style="height:72px;">
+            <div class="pc-gb" style="left:3px;top:3px;width:790px;height:67px;">
+                <span class="pc-cap">Base Information</span>
+                <label class="pc-abs pc-lbl" for="CmbBrandNameLabStandard" style="left:4px;top:20px;">OutPut Item</label>
+                <select id="CmbBrandNameLabStandard" class="pc-abs pc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Brand Item Name" style="left:2px;top:37px;width:225px;" onchange="PreCost.labBrandLeave()"></select>
+                <div class="pc-abs" style="left:229px;top:12px;width:327px;height:22px;display:flex;align-items:center;gap:0;font-family:Verdana,sans-serif;font-weight:bold;font-size:11px;">
+                    <span style="width:42px;">Party</span>
+                    <label style="display:flex;align-items:center;gap:3px;margin:0 6px 0 0;"><input type="radio" name="partyNameMode" id="RadBusinessName" value="business" checked onchange="PreCost.partyModeChanged()">Business Name</label>
+                    <label style="display:flex;align-items:center;gap:3px;margin:0 6px 0 0;"><input type="radio" name="partyNameMode" id="RadNickName" value="nick" onchange="PreCost.partyModeChanged()">Nick Name</label>
+                    <label style="display:flex;align-items:center;gap:3px;margin:0;"><input type="radio" name="partyNameMode" id="radPartyCode" value="code" onchange="PreCost.partyModeChanged()">Code</label>
+                </div>
+                <select id="CmbBuyerName" class="pc-abs pc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Party Name" style="left:229px;top:37px;width:326px;" onchange="PreCost.labBuyerLeave()"></select>
+                <label class="pc-abs pc-lbl" for="CmbAnalysisGroup" style="left:559px;top:20px;">Standard Name</label>
+                <select id="CmbAnalysisGroup" class="pc-abs pc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Standard Name" style="left:558px;top:37px;width:200px;" onchange="PreCost.labGroupLeave()"></select>
+                <span id="BtnDefineLabStandards" class="pc-abs pc-plus off" style="left:760px;top:37px;" title="frmLabAnalysisScheduleItemAndPartyWise (Define Lab Standards) is not ported to the web yet.">+</span>
+            </div>
+        </div>
+        <div class="pc-bar" style="height:21px;"><span></span><span class="pc-bar-tools"><span id="lblLabCount">0</span></span></div>
+        <div class="pc-grid-wrap" id="grdLabStandardsHost">
+            <table class="pc-grid" id="grdLabStandards" data-gridbar="ProductionPreCostingAndJobOrder:grdLabStandards" data-gridbar-mount="#tabLabStandard .pc-bar .pc-bar-tools"><thead></thead><tbody></tbody></table>
+        </div>
+    </div>
+</div>
+
+<!-- ====================================================================== tabPage2 "History" -->
+<div id="tabHistory" class="pc-panel">
+    <!-- panel8 (3,3) 1111 x 52 teal: toolStrip2 + label77 (5,30) -->
+    <div class="pc-teal" style="height:52px;">
+        <div class="pc-strip" id="toolStrip2">
+            <button type="button" class="pc-tool" id="btnNewHistory" style="width:59px" onclick="PreCost.newHistory()"><i class="fa fa-file-o"></i> New</button>
+            <button type="button" class="pc-tool" id="BtnRefereshHistory" style="width:80px" onclick="PreCost.refreshHistory()"><i class="fa fa-refresh"></i> Refresh</button>
+        </div>
+        <span class="pc-teal-title" style="left:5px;top:30px;font-size:16px;line-height:19px;">Production Job Order History</span>
+    </div>
+    <!-- panel20 (3,55) 1111 x 66 white -->
+    <div style="position:relative;height:66px;background:#fff;">
+        <label class="pc-abs pc-lbl" for="cmbperemeter" style="left:4px;top:13px;">Date Type</label>
+        <select id="cmbperemeter" class="pc-abs pc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Parameters" style="left:97px;top:7px;width:240px;" onchange="PreCost.datePreset()"></select>
+        <label class="pc-abs pc-lbl" for="FromDateHistory" style="left:5px;top:41px;">Date From &amp; To</label>
+        <input type="date" id="FromDateHistory" class="pc-abs pc-in" style="left:97px;top:37px;width:119px;">
+        <input type="date" id="ToDateHistory" class="pc-abs pc-in" style="left:218px;top:37px;width:119px;">
+        <label class="pc-abs pc-lbl" for="txtOrderNoFrom" style="left:340px;top:13px;">Doc From</label>
+        <input type="text" id="txtOrderNoFrom" class="pc-abs pc-in num" style="left:400px;top:9px;width:89px;" inputmode="numeric">
+        <label class="pc-abs pc-lbl" for="txtOrderNoTo" style="left:340px;top:41px;">Doc To</label>
+        <input type="text" id="txtOrderNoTo" class="pc-abs pc-in num" style="left:400px;top:37px;width:89px;" inputmode="numeric">
+        <label class="pc-abs pc-lbl" for="xmbjoborderno" style="left:490px;top:13px;">Job Order No</label>
+        <select id="xmbjoborderno" class="pc-abs pc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Job Order No" style="left:576px;top:7px;width:239px;"></select>
+        <button type="button" id="btnshowHistory" class="pc-abs pc-btn" style="left:747px;top:35px;width:68px;height:26px;background:#0a6e6e;" onclick="PreCost.history()" title="Ctrl+S on this tab">Show</button>
+        <label class="pc-abs pc-lbl" style="left:825px;top:11px;display:flex;gap:4px;align-items:center;"><input type="radio" name="dateMode" id="drdocdate" value="doc" checked style="margin:0">Doc Date</label>
+        <label class="pc-abs pc-lbl" style="left:906px;top:11px;display:flex;gap:4px;align-items:center;"><input type="radio" name="dateMode" id="rdmodifydate" value="modify" style="margin:0">Modify Date</label>
+        <label class="pc-abs pc-lbl" style="left:825px;top:39px;display:flex;gap:4px;align-items:center;"><input type="radio" name="dateMode" id="rdentrydate" value="entry" style="margin:0">Entry Date</label>
+        <label class="pc-abs pc-lbl" style="left:906px;top:39px;display:flex;gap:4px;align-items:center;"><input type="radio" name="dateMode" id="rdapproveddate" value="approved" style="margin:0">Approved Date</label>
+    </div>
+    <!-- panel11 (3,121) 1111 x 26 teal "Filtered Records" -->
+    <div class="pc-bar" style="height:26px;font-family:Tahoma,sans-serif;font-size:15px;"><span>Filtered Records</span>
+        <span class="pc-bar-tools"><span id="lblHistoryScope" style="font-size:11px;"></span>&nbsp;<span id="lblHistoryCount" style="font-size:11px;"></span></span></div>
+    <!-- DataGridHistory (3,147) 1111 x 229 -->
+    <div class="pc-grid-wrap" id="DataGridHistoryHost">
+        <table class="pc-grid" id="DataGridHistory" data-gridbar="ProductionPreCostingAndJobOrder:DataGridHistory" data-gridbar-mount="#tabHistory .pc-bar .pc-bar-tools"><thead></thead><tbody></tbody></table>
+    </div>
+    <!-- tabControl3 (3,376) 1111 x 341 -->
+    <div class="pc-tabs3" id="tabs3">
+        <div class="pc-tab2 is-active" data-tab="tabPage9" onclick="PreCost.tab3('tabPage9')">OutPut</div>
+        <div class="pc-tab2" data-tab="tabPage8" onclick="PreCost.tab3('tabPage8')">Input</div>
+        <div class="pc-tab2" data-tab="tabPage11" onclick="PreCost.tab3('tabPage11')">Over Head</div>
+        <div class="pc-tab2" data-tab="tabPage10" onclick="PreCost.tab3('tabPage10')">Packing Material</div>
+    </div>
+    <div id="tabPage9" class="pc-panel is-active">
+        <div class="pc-bar" style="height:23px;"><span>OutPut Detail Of the above Selected Row</span></div>
+        <div class="pc-grid-wrap pc-hist-detail"><table class="pc-grid" id="grdOutPutHistory"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+    </div>
+    <div id="tabPage8" class="pc-panel">
+        <div class="pc-bar" style="height:21px;"><span>Input Detail Of the above Selected Row</span></div>
+        <div class="pc-grid-wrap pc-hist-detail"><table class="pc-grid" id="grdInputHistory"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+    </div>
+    <div id="tabPage11" class="pc-panel">
+        <div class="pc-bar" style="height:22px;"><span>OverHeads Detail Of the above Selected Row</span></div>
+        <div class="pc-grid-wrap pc-hist-detail"><table class="pc-grid" id="grdOverheadHistory"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+    </div>
+    <div id="tabPage10" class="pc-panel">
+        <div class="pc-bar" style="height:22px;"><span>Packing Material Detail Of the above Selected Row</span></div>
+        <div class="pc-grid-wrap pc-hist-detail"><table class="pc-grid" id="grdPackingMaterialHistory"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+    </div>
+</div>
+
+<!-- tabControl1 tabs (Alignment = Bottom) -->
+<div class="pc-footer" id="tabs1">
+    <div class="pc-tab1 is-active" data-tab="tabForm" onclick="PreCost.tab('tabForm')" title="Ctrl+T">Form</div>
+    <div class="pc-footer-mid">Ctrl+S Save · Ctrl+U Update · Ctrl+N New · Ctrl+L Load Invoices · Ctrl+T Form/History · Enter = next field</div>
+    <div class="pc-tab1" data-tab="tabHistory" onclick="PreCost.tab('tabHistory')" title="Ctrl+T"><i class="fa fa-history"></i> History</div>
+</div>
+</div>
+
+<!-- ============================================ LoadavailableTransactionsForIssuance (Load Invoices) -->
+<div class="cx-modal" id="loaderModal">
+    <div class="cx-modal-box">
+        <div class="cx-modal-head"><span>Load Available Transactions For Issuance</span><button type="button" onclick="PreCost.closeLoader(true)">&times;</button></div>
+        <div class="cx-modal-body">
+            <div class="cx-filter">
+                <div><label for="ldFromDate">From Date</label><input type="date" id="ldFromDate" class="pc-in"></div>
+                <div><label for="ldToDate">To Date</label><input type="date" id="ldToDate" class="pc-in"></div>
+                <div><label for="ldWarehouse">Warehouse</label><select id="ldWarehouse" class="pc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Warehouse"></select></div>
+                <div><label for="ldItem">Item</label><select id="ldItem" class="pc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Item"></select></div>
+                <div><label for="ldJobLot">Job Lot</label><select id="ldJobLot" class="pc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Job Lot"></select></div>
+                <div><label for="ldCropYear">Crop Year</label><select id="ldCropYear" class="pc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Crop Year"></select></div>
+                <div><label for="ldDocType">Document Type</label><select id="ldDocType" class="pc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Document Type"></select></div>
+                <div><label for="ldParty">Supplier / Customer</label><select id="ldParty" class="pc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Supplier / Customer"></select></div>
+                <div><label for="ldParentCategory">Parent Category</label><select id="ldParentCategory" class="pc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Parent Category"></select></div>
+                <div><label for="ldItemCategory">Item Category</label><select id="ldItemCategory" class="pc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Category"></select></div>
+                <div><label for="ldItemType">Item Type</label><select id="ldItemType" class="pc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Type"></select></div>
+                <div><button type="button" id="ldSearch" class="pc-btn" style="height:26px;width:100%;" onclick="PreCost.loaderSearch()"><i class="fa fa-search"></i> Search</button></div>
+            </div>
+            <div class="pc-bar" style="height:24px;"><span>Available Transactions</span><span id="lblLoaderCount"></span></div>
+            <div class="pc-grid-wrap" style="height:50vh;"><table class="pc-grid" id="grdLoader"><thead></thead><tbody></tbody></table></div>
+            <div style="display:flex;justify-content:flex-end;gap:6px;margin-top:6px;">
+                <button type="button" class="pc-cellbtn" style="height:26px;" onclick="PreCost.closeLoader(true)">Cancel</button>
+                <button type="button" class="pc-btn" style="height:26px;padding:0 12px;" onclick="PreCost.loaderLoad()"><i class="fa fa-download"></i> Load</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================== AttachmentView -->
+<div class="cx-modal" id="attachModal">
+    <div class="cx-modal-box small">
+        <div class="cx-modal-head"><span>Attachments</span><button type="button" onclick="PreCost.closeAttachments()">&times;</button></div>
+        <div class="cx-modal-body"><table class="pc-grid"><thead><tr><th>AttchmentPath</th></tr></thead><tbody id="attachBody"></tbody></table></div>
+    </div>
+</div>
+
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20261007-gridbar-flow}"></script>
+<script th:src="@{/build/js/countx_production_prod273_pre_costing_job_order.js?v=20261013a}"></script>
+<script src="/js/print-rpt.js?v=20261003erp"></script>
+</body>
+</html>

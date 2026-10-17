@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Stock Reconcilation - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_store.css?v=20260928b}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261007-gridbar-flow}" href="/build/css/countx_grid_bar.css?v=20261007-gridbar-flow">
+    <style>
+        /* StockReconcilation designer geometry (InitializeComponent :328-954), 1:1 px. ClientSize 1045x610:
+           panel1 white (30): toolStrip1 (27) + ctrlGrdBar1 (993,3) | panel3 teal (39): lblCaption | panel5 (66): filters | panel2 (Fill): grdfrm. */
+        :root { --src-teal: #0a6e6e; }
+        body { background: #fff; margin: 0; padding-bottom: 12px; }
+        .fx-scroll { overflow-x: auto; }
+        .fx-root { position: relative; font-family: "Microsoft Sans Serif", Tahoma, sans-serif; font-size: 11px; background: #fff; }
+        .fx-abs { position: absolute; box-sizing: border-box; margin: 0; }
+        .fx-rel { position: relative; }
+        .fx-lbl { font-family: Calibri, "Segoe UI", Tahoma, sans-serif; font-size: 13px; white-space: nowrap; line-height: 15px; color: #000; background: #fff; }
+        .fx-cmb { font-family: Calibri, "Segoe UI", sans-serif; font-size: 13px; height: 26px; border: 1px solid #7a7a7a; background: #fff; padding: 0 2px; }
+        .fx-dt { font-family: Calibri, "Segoe UI", sans-serif; font-size: 13px; height: 23px; border: 1px solid #7a7a7a; background: #fff; padding: 0 2px; }
+        .fx-strip { height: 30px; display: flex; align-items: center; background: #fff; border-bottom: 1px solid #d5d5d5; box-sizing: border-box; position: relative; }
+        .fx-tool { font-family: Verdana, sans-serif; font-size: 12px; height: 24px; background: transparent; border: 1px solid transparent; display: inline-flex; align-items: center; gap: 4px; padding: 0 6px; cursor: pointer; white-space: nowrap; color: #000; }
+        .fx-tool:hover:not(:disabled) { background: #ffe4a0; border-color: #e59d00; }
+        .fx-btn { background: var(--src-teal); color: #fff; border: 1px solid #054d4d; font-family: Calibri, "Segoe UI", sans-serif; font-size: 13px; padding: 0; cursor: pointer; }
+        .fx-btn:hover:not(:disabled) { background: #054d4d; }
+        .fx-caption { font: bold 21px "Segoe UI Symbol", "Segoe UI", Tahoma, sans-serif; color: #fff; white-space: nowrap; line-height: 30px; }
+        .fx-grid-host { overflow: auto; background: #fff; height: calc(100vh - 290px); min-height: 400px; position: relative; }
+        .fx-grid-host .win-grid { width: auto; min-width: 100%; font-family: Verdana, sans-serif; font-size: 11px; border-collapse: collapse; }
+        .fx-grid-host .win-grid th { background: linear-gradient(to bottom, #e6f7f7 0%, #bfe6e6 100%); border: 1px solid #8fbcbc; font-weight: normal; white-space: nowrap; padding: 2px 4px; text-align: center; position: sticky; top: 0; z-index: 2; }
+        .fx-grid-host .win-grid thead tr.flt td { position: sticky; top: 20px; z-index: 2; background: #f4fbfb; border: 1px solid #c8dede; padding: 0; }
+        .fx-grid-host .win-grid thead tr.flt input { width: 100%; box-sizing: border-box; border: 0; height: 18px; font: 11px Verdana, sans-serif; background: transparent; }
+        .fx-grid-host .win-grid td { border: 1px solid #d5e6e6; white-space: nowrap; padding: 1px 4px; overflow: hidden; text-overflow: ellipsis; }
+        .fx-grid-host .win-grid td.n { text-align: right; }
+        .fx-grid-host .win-grid td.neg { color: #d00; }
+        .fx-grid-host .win-grid tbody tr.sel td { background: #cde8ff; }
+        .fx-grid-host .win-grid tfoot td { background: #e6e6e6; font-weight: bold; text-align: right; position: sticky; bottom: 0; }
+        .fx-nav { font: 11px Verdana, sans-serif; padding: 2px 8px; border-top: 1px solid #c8dede; background: #f4f4f4; }
+        .is-hidden { display: none !important; }
+    </style>
+</head>
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="fx-scroll">
+<div class="fx-root" style="width:1045px;">
+    <!-- panel1 (30): toolStrip1 btnRefresh "&Refresh", toolStripButton1 "Reconcilation"; ctrlGrdBar1 (993,3) -->
+    <div class="fx-strip">
+        <button type="button" class="fx-tool" id="btnRefresh"><i class="fa fa-repeat"></i> <span><u>R</u>efresh</span></button>
+        <button type="button" class="fx-tool" id="toolStripButton1"><i class="fa fa-refresh"></i> <span>Reconcilation</span></button>
+        <div id="gbMount" class="fx-abs" style="left:993px;top:3px;width:45px;height:21px;"></div>
+    </div>
+    <!-- panel3 (39) -->
+    <div class="fx-rel" style="height:39px;background:#0a6e6e;">
+        <span class="fx-abs fx-caption" style="left:7px;top:5px;">Stock Reconcilation</span>
+    </div>
+    <!-- panel5 (66) -->
+    <div class="fx-rel" style="height:66px;">
+        <label class="fx-abs fx-lbl" style="left:9px;top:9px;">Date</label>
+        <input type="date" id="ToDate" class="fx-abs fx-dt" style="left:12px;top:33px;width:104px;">
+        <label class="fx-abs fx-lbl" style="left:119px;top:9px;" for="cmbItemCategory">Item Category</label>
+        <select id="cmbItemCategory" class="fx-abs fx-cmb win-combo" style="left:119px;top:31px;width:161px;"></select>
+        <label class="fx-abs fx-lbl" style="left:283px;top:9px;" for="cmbItemType">Item Type</label>
+        <select id="cmbItemType" class="fx-abs fx-cmb win-combo" style="left:283px;top:31px;width:161px;"></select>
+        <label class="fx-abs fx-lbl" style="left:446px;top:9px;" for="CmbItemName">ItemName</label>
+        <select id="CmbItemName" class="fx-abs fx-cmb win-combo" style="left:448px;top:31px;width:230px;"></select>
+        <label class="fx-abs fx-lbl" style="left:678px;top:9px;" for="CmbJobLot">Job Lot</label>
+        <select id="CmbJobLot" class="fx-abs fx-cmb win-combo" style="left:680px;top:31px;width:171px;"></select>
+        <button type="button" id="btnshow" class="fx-abs fx-btn" style="left:854px;top:31px;width:61px;height:26px;">Show</button>
+    </div>
+    <div id="grdWrap" class="fx-grid-host" data-gridbar-form="StockReconcilation" data-gridbar-grid="grdfrm"
+         data-gridbar-mount="#gbMount" data-gridbar-reorder="false" data-gridbar-hide="chooser,save,remove,collapse,expand">
+        <table class="win-grid" id="grdfrm"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+    </div>
+    <div class="fx-nav" id="lblNavigator"></div>
+</div>
+</div>
+<script th:src="@{/build/js/countx_store_common.js?v=20260928b}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20261007-gridbar-flow}" src="/build/js/countx_grid_bar.js?v=20261007-gridbar-flow"></script>
+<script th:src="@{/build/js/countx_inventory_stock_reconcilation.js?v=20261013a}"></script>
+</body>
+</html>

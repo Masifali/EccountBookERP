@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Delivery Order (Returnable) - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_store.css?v=20260925c}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261007-gridbar-flow}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_inv42.css?v=20261013a}">
+    <style>
+        /* DeliveryOrder_ReturnAble designer geometry (InitializeComponent), ClientSize 1070 x 584; tab pages 1058 wide. */
+        .r42-root { min-width: 1070px; }
+        #grdHost { height: calc(100vh - 360px); min-height: 267px; }
+        #grdhistoryHost { height: 281px; }
+        #GrdHistoryDetailHost { height: calc(100vh - 520px); min-height: 160px; }
+    </style>
+</head>
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="r42-scroll">
+<div class="r42-root">
+    <!-- tabControl1 headers (top) -->
+    <div class="r42-tabs">
+        <div class="win-tab is-active" data-tab="tabPage1" onclick="DoRet.tab('tabPage1')">Form</div>
+        <div class="win-tab" data-tab="tabPage2" onclick="DoRet.tab('tabPage2')">History</div>
+    </div>
+
+    <!-- ============================================================ tabPage1 "Form" -->
+    <div id="tabPage1" class="r42-panel is-active" style="padding:2px;">
+        <!-- panel2 / toolStrip1 (1058 x 27) -->
+        <div class="r42-strip" style="height:27px;">
+            <button type="button" class="r42-tool" id="btnnew" style="width:59px" onclick="DoRet.newClick()" title="Ctrl+N"><i class="fa fa-plus-circle" style="color:#2e7d32"></i> New</button>
+            <button type="button" class="r42-tool" id="btnRefresh" style="width:80px" onclick="DoRet.refresh()" title="Ctrl+R"><i class="fa fa-repeat"></i> Refresh</button>
+            <button type="button" class="r42-tool is-hidden" id="btnupdate" style="width:78px" onclick="DoRet.update()" title="Ctrl+U"><i class="fa fa-pencil"></i> Update</button>
+            <button type="button" class="r42-tool is-hidden" id="btnSaveAs" style="width:80px" onclick="DoRet.saveAs()" title="Ctrl+F12"><i class="fa fa-copy"></i> SaveAs</button>
+            <button type="button" class="r42-tool" id="btnsave" style="width:64px" onclick="DoRet.save()" title="Ctrl+S"><i class="fa fa-save"></i> Save</button>
+            <button type="button" class="r42-tool" id="btnattachment" style="width:109px" disabled title="Attachments are not ported to the web page"><i class="fa fa-paperclip"></i> Attachment</button>
+            <span class="r42-sep"></span>
+            <button type="button" class="r42-tool" id="btnprint" style="width:100px" onclick="DoRet.print()" title="Ctrl+P"><i class="fa fa-print"></i> 1200-Print</button>
+            <a href="/app/Inventory?module=42" class="r42-tool" style="margin-left:auto;text-decoration:none;color:#004d40;font-size:11px;font-weight:bold;"><i class="fa fa-arrow-left"></i> Exit</a>
+        </div>
+        <!-- panel3 (1058 x 28) dark teal: label23 (2,4), ChkPrint (909,6) -->
+        <div class="r42-teal dark" style="height:28px;">
+            <span class="r42-teal-title" style="left:2px;top:4px;">Delivery Order / Delivery Instructions Note</span>
+            <label class="r42-chk w" style="position:absolute;left:909px;top:6px;"><input type="checkbox" id="ChkPrint" checked> Preview On Save</label>
+        </div>
+        <!-- panel4 (1058 x 203) white -->
+        <div style="position:relative;height:203px;background:#fff;">
+            <!-- groupBox1 "Main" (4,2) 1009 x 128 -->
+            <div class="r42-gb" style="left:4px;top:2px;width:1009px;height:128px;">
+                <span class="r42-cap">Main</span>
+                <label class="r42-abs r42-lbl" for="txtdocno" style="left:6px;top:21px;">Doc No &amp; Data</label>
+                <input type="text" id="txtdocno" class="r42-abs r42-txt" style="left:100px;top:17px;width:95px;" readonly tabindex="-1">
+                <input type="date" id="DocDate" class="r42-abs r42-dt" style="left:196px;top:17px;width:130px;">
+                <label class="r42-abs r42-lbl" for="CmbDeliveryType" style="left:6px;top:48px;">Delivery Type</label>
+                <select id="CmbDeliveryType" class="r42-abs r42-cmb win-combo" style="left:100px;top:42px;width:226px;" onchange="DoRet.deliveryTypeChanged()"></select>
+                <label class="r42-abs r42-lbl" for="CmbSupplierCustomer" style="left:6px;top:75px;">Party Name</label>
+                <select id="CmbSupplierCustomer" class="r42-abs r42-cmb win-combo" style="left:100px;top:69px;width:226px;"></select>
+                <label class="r42-abs r42-lbl w" for="CmbReferenceParty" style="left:6px;top:94px;width:62px;">Reference<br>Party</label>
+                <a id="button1" class="r42-abs r42-mini" href="/party-processing/reference-parties" target="_blank" title="Define Reference Parties" style="left:75px;top:96px;width:23px;height:26px;display:flex;align-items:center;justify-content:center;text-decoration:none;color:#000;">+</a>
+                <select id="CmbReferenceParty" class="r42-abs r42-cmb win-combo" style="left:100px;top:96px;width:226px;"></select>
+
+                <label class="r42-abs r42-lbl" for="cmbvehicletype" style="left:330px;top:21px;">Vehicle Type</label>
+                <select id="cmbvehicletype" class="r42-abs r42-cmb win-combo" style="left:406px;top:15px;width:215px;"></select>
+                <label class="r42-abs r42-lbl" for="txtVehicleNo" style="left:330px;top:48px;">Vehicle No</label>
+                <input type="text" id="txtVehicleNo" class="r42-abs r42-txt" style="left:406px;top:44px;width:214px;text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()">
+                <label class="r42-abs r42-lbl w" for="datReturnableDate" style="left:330px;top:66px;width:67px;">Returnable<br>Date</label>
+                <input type="date" id="datReturnableDate" class="r42-abs r42-dt" style="left:406px;top:70px;width:214px;">
+                <label class="r42-abs r42-lbl" for="txtremarks" style="left:330px;top:100px;">Remarks</label>
+                <input type="text" id="txtremarks" class="r42-abs r42-txt" style="left:406px;top:96px;width:555px;">
+
+                <label class="r42-abs r42-lbl" for="CmbRequestedBy" style="left:626px;top:21px;">Requested By</label>
+                <select id="CmbRequestedBy" class="r42-abs r42-cmb win-combo" style="left:708px;top:15px;width:253px;"></select>
+                <label class="r42-abs r42-lbl" for="CmbApprovedBy" style="left:626px;top:48px;">Approved By</label>
+                <select id="CmbApprovedBy" class="r42-abs r42-cmb win-combo" style="left:708px;top:42px;width:253px;"></select>
+                <a id="RequestedApprovedLookup" class="r42-abs r42-mini" href="/inventory/lookup-definitions" target="_blank" title="Define Requested / Approved By (Inventory lookups, profile 13)" style="left:963px;top:15px;width:23px;height:26px;display:flex;align-items:center;justify-content:center;text-decoration:none;color:#000;">+</a>
+            </div>
+            <!-- groupBox3 "Detail" (3,132) 1010 x 68 -->
+            <div class="r42-gb" style="left:3px;top:132px;width:1010px;height:68px;">
+                <span class="r42-cap">Detail</span>
+                <label class="r42-abs r42-lbl" for="CmbWareHouse" id="labelWarFrom" style="left:3px;top:19px;">WareHouse</label>
+                <select id="CmbWareHouse" class="r42-abs r42-cmb win-combo" style="left:3px;top:40px;width:172px;"></select>
+                <label class="r42-abs r42-lbl" for="CmbItemCategory" style="left:176px;top:19px;">Item Category</label>
+                <select id="CmbItemCategory" class="r42-abs r42-cmb win-combo" style="left:176px;top:40px;width:159px;" onchange="DoRet.itemCategoryLeave()"></select>
+                <label class="r42-abs r42-lbl" style="left:338px;top:19px;">Item</label>
+                <label class="r42-abs r42-chk" style="left:373px;top:17px;"><input type="radio" name="rdItem" id="rdbtnItemName" checked onchange="DoRet.itemNameBind()"> Name</label>
+                <label class="r42-abs r42-chk" style="left:434px;top:17px;"><input type="radio" name="rdItem" id="rdbtnItemCode" onchange="DoRet.itemNameBind()"> Code</label>
+                <span class="r42-abs r42-lbl" id="lblBalance" style="left:510px;top:19px;">0</span>
+                <select id="CmbItemName" class="r42-abs r42-cmb win-combo" style="left:336px;top:40px;width:210px;" onchange="DoRet.itemNameLeave()"></select>
+                <label class="r42-abs r42-lbl" for="CmbPackUom" style="left:547px;top:22px;">UOM</label>
+                <select id="CmbPackUom" class="r42-abs r42-cmb win-combo" style="left:547px;top:40px;width:89px;"></select>
+                <label class="r42-abs r42-lbl" for="txtItemDescriptions" style="left:637px;top:20px;">Item Description</label>
+                <input type="text" id="txtItemDescriptions" class="r42-abs r42-txt" style="left:637px;top:41px;width:219px;">
+                <label class="r42-abs r42-lbl" for="txtqty" style="left:857px;top:21px;">Qty</label>
+                <input type="text" id="txtqty" class="r42-abs r42-txt r" style="left:857px;top:41px;width:82px;" inputmode="decimal">
+                <button type="button" id="btnplus" class="r42-abs r42-btn" style="left:940px;top:39px;width:33px;height:25px;font-family:Tahoma,sans-serif;" onclick="DoRet.plus()">+</button>
+                <button type="button" id="btnUpdateDetail" class="r42-abs r42-btn is-hidden" style="left:944px;top:39px;width:66px;height:25px;font-family:Tahoma,sans-serif;" onclick="DoRet.updateDetail()">Update</button>
+                <button type="button" id="btnCancelUpdateDetial" class="r42-abs r42-btn is-hidden" style="left:940px;top:13px;width:70px;height:25px;font-family:Tahoma,sans-serif;" onclick="DoRet.cancelUpdateDetail()">Cancel</button>
+            </div>
+        </div>
+        <!-- panel5 (1058 x 28) dark teal: label15 "Detail" (4,4), ctrlGrdBar1 (1017,3) -->
+        <div class="r42-teal dark" style="height:28px;">
+            <span class="r42-teal-title" style="left:4px;top:4px;">Detail</span>
+            <div id="gbMount1" class="r42-abs" style="left:1017px;top:3px;width:38px;height:21px;"></div>
+        </div>
+        <!-- grd (Fill) -->
+        <div class="r42-grid-host win-grid-scroll" id="grdHost" data-gridbar-form="DeliveryOrder_ReturnAble" data-gridbar-grid="grd" data-gridbar-mount="#gbMount1" data-gridbar-hide="chooser,save,remove,collapse,expand">
+            <table class="win-grid" id="grd"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+        </div>
+    </div>
+
+    <!-- ============================================================ tabPage2 "History" -->
+    <div id="tabPage2" class="r42-panel" style="padding:2px;">
+        <!-- toolStrip2 (27) -->
+        <div class="r42-strip" style="height:27px;">
+            <button type="button" class="r42-tool" id="btnNewHistory" style="width:68px" onclick="DoRet.newHistory()" title="Ctrl+N"><i class="fa fa-eraser"></i> Reset</button>
+            <button type="button" class="r42-tool" id="btnRefreshHistory" style="width:80px" onclick="DoRet.refreshHistory()" title="Ctrl+R"><i class="fa fa-repeat"></i> Refresh</button>
+        </div>
+        <!-- panel8 teal 28: label16 (4,4) -->
+        <div class="r42-teal" style="height:28px;">
+            <span class="r42-teal-title" style="left:4px;top:4px;">Delivery Order History</span>
+        </div>
+        <!-- panel16 (81): groupBox2 "Filters" (6,2) 1172 x 74 -->
+        <div style="position:relative;height:81px;background:#fff;">
+            <div class="r42-gb" style="left:6px;top:2px;width:1172px;max-width:calc(100% - 12px);height:74px;">
+                <span class="r42-cap">Filters</span>
+                <label class="r42-abs r42-lbl" for="FromDateHistory" style="left:4px;top:19px;">From Date</label>
+                <input type="date" id="FromDateHistory" class="r42-abs r42-dt" style="left:67px;top:15px;width:142px;">
+                <label class="r42-abs r42-lbl" for="ToDateHistory" style="left:4px;top:48px;">To Date</label>
+                <input type="date" id="ToDateHistory" class="r42-abs r42-dt" style="left:67px;top:44px;width:142px;">
+                <label class="r42-abs r42-lbl" for="txtFromDocNoHistory" style="left:214px;top:19px;">From Doc No</label>
+                <input type="text" id="txtFromDocNoHistory" class="r42-abs r42-txt r" style="left:294px;top:15px;width:83px;" inputmode="numeric">
+                <label class="r42-abs r42-lbl" for="txtToDocNoHistory" style="left:214px;top:48px;">To Doc No</label>
+                <input type="text" id="txtToDocNoHistory" class="r42-abs r42-txt r" style="left:294px;top:44px;width:83px;" inputmode="numeric">
+                <label class="r42-abs r42-lbl" for="CmbDeliveryTypeHistory" style="left:381px;top:19px;">Delivery Type</label>
+                <select id="CmbDeliveryTypeHistory" class="r42-abs r42-cmb win-combo" style="left:461px;top:13px;width:193px;"></select>
+                <label class="r42-abs r42-lbl" for="CmbCustomerHistory" style="left:381px;top:48px;">Customer</label>
+                <select id="CmbCustomerHistory" class="r42-abs r42-cmb win-combo" style="left:461px;top:42px;width:193px;"></select>
+                <label class="r42-abs r42-lbl" for="CmbRequestedByHistory" style="left:657px;top:19px;">Requested By</label>
+                <select id="CmbRequestedByHistory" class="r42-abs r42-cmb win-combo" style="left:740px;top:13px;width:180px;"></select>
+                <label class="r42-abs r42-lbl" for="CmbApprovedByHistory" style="left:657px;top:48px;">Approved By</label>
+                <select id="CmbApprovedByHistory" class="r42-abs r42-cmb win-combo" style="left:740px;top:42px;width:180px;"></select>
+                <button type="button" id="btnShowHistory" class="r42-abs r42-btn dark" style="left:923px;top:42px;width:58px;height:26px;" onclick="DoRet.showHistory()" title="Ctrl+S">Show</button>
+                <label class="r42-abs r42-chk" style="left:988px;top:26px;"><input type="radio" name="rdHistDate" id="drdocdate" value="doc" checked> Doc Date</label>
+                <label class="r42-abs r42-chk" style="left:988px;top:49px;"><input type="radio" name="rdHistDate" id="rdentrydate" value="entry"> Entry Date</label>
+                <label class="r42-abs r42-chk" style="left:1069px;top:26px;"><input type="radio" name="rdHistDate" id="rdmodifydate" value="modify"> Modify Date</label>
+                <label class="r42-abs r42-chk" style="left:1069px;top:49px;"><input type="radio" name="rdHistDate" id="rdapproveddate" value="approved"> Approved Date</label>
+            </div>
+        </div>
+        <!-- grdhistory (281) -->
+        <div class="r42-grid-host win-grid-scroll" id="grdhistoryHost" data-gridbar-form="DeliveryOrder_ReturnAble" data-gridbar-grid="grdhistory" data-gridbar-mount="#gbMount2" data-gridbar-hide="chooser,save,remove,collapse,expand">
+            <table class="win-grid" id="grdhistory"><thead></thead><tbody></tbody></table>
+        </div>
+        <!-- panel11 teal 23: label27 (2,3) Tahoma 10pt -->
+        <div class="r42-teal" style="height:23px;">
+            <span class="r42-teal-title sm" style="left:2px;top:3px;">Detail Of Above Selected Row</span>
+            <div id="gbMount2" class="r42-abs" style="left:1148px;top:1px;width:38px;height:21px;"></div>
+        </div>
+        <div class="r42-grid-host win-grid-scroll" id="GrdHistoryDetailHost">
+            <table class="win-grid" id="GrdHistoryDetail"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+        </div>
+    </div>
+</div>
+</div>
+
+<script th:src="@{/build/js/countx_store_common.js?v=20260925c}"></script>
+<script th:src="@{/build/js/countx_inventory_inv42_delivery_order_returnable.js?v=20261013a}"></script>
+<script src="/js/print-rpt.js?v=20261003erp"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20261007-gridbar-flow}"></script>
+</body>
+</html>

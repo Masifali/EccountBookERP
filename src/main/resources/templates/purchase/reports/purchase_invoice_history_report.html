@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Purchase Report - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}">
+    <link rel="stylesheet" th:href="@{/build/css/purchase/purchase_reports.css?v=20260930r3}">
+    <style>
+        .pr-dd { position: relative; display: inline-block; }
+        .pr-dd > summary { list-style: none; cursor: pointer; padding: 3px 10px; }
+        .pr-dd > summary::-webkit-details-marker { display: none; }
+        .pr-dd-menu { position: absolute; z-index: 30; background: #fff; border: 1px solid #888; min-width: 240px; padding: 2px 0; }
+        .pr-dd-menu button { display: block; width: 100%; text-align: left; border: 0; background: none; padding: 4px 10px; cursor: pointer; }
+        .pr-dd-menu button:hover { background: #cfe8e8; }
+        .pr-date { display: flex; gap: 3px; align-items: center; }
+        .pr-date input[type=date] { flex: 1; min-width: 0; }
+    </style>
+</head>
+<!-- 476 Architecture.WinApp.Inventory_Reports.frmPurchaseInvoiceHistory "Purchase Report" (module 52).
+     Layout: frmPurchaseInvoiceHistory.InitializeComponent (Filters group box 1129x187). -->
+<body class="pr">
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div id="prLoading" hidden role="status">Please wait...</div>
+<nav class="pr-toolstrip" aria-label="Toolbar">
+    <button type="button" id="btnNew" title="Ctrl+N (Alt+R)">Reset</button>
+    <button type="button" id="btnRefrsh" title="Ctrl+R">Refresh</button>
+    <details class="pr-dd" id="tsDropDown" hidden>
+        <summary>Print</summary>
+        <div class="pr-dd-menu" id="tsDropDownMenu"></div>
+    </details>
+    <button type="button" id="print" title="Ctrl+P (Alt+A)" hidden>AvgRateByItem-221</button>
+    <button type="button" id="btnPrintSummery" hidden>AcgRateBySupplier-222</button>
+    <button type="button" id="btnSummeryFormat1" hidden>232-SummeryReport</button>
+    <button type="button" id="btn232SummeryFormat2" hidden>232-SummeryFormat-II</button>
+    <button type="button" id="btn297PurchaseBill">297-PurchaseRegister</button>
+    <a class="pr-right" href="/purchase/reports" title="Ctrl+E / Esc">Exit</a>
+</nav>
+<div class="pr-caption">Purchase Invoice History</div>
+<div id="prMessage" role="status" aria-live="polite"></div>
+<div class="pr-panel">
+    <fieldset class="pr-filters" style="width:1129px;height:187px">
+        <legend>Filters</legend>
+        <label class="pr-abs" style="left:5px;top:20px" for="cmbBranchName">Branch Name</label>
+        <details class="pr-check pr-abs" id="cmbBranchName" style="left:129px;top:14px;width:249px"></details>
+        <label class="pr-abs" style="left:5px;top:48px" for="cmbDateType">Date Type</label>
+        <div class="pr-abs" style="left:129px;top:42px;width:250px"><select id="cmbDateType" data-dtcombo="single" data-dtcombo-caption="Parameters"></select></div>
+        <label class="pr-abs" style="left:5px;top:75px" for="GRNfromdate">Doc Date From &amp; To </label>
+        <div class="pr-abs" style="left:129px;top:71px;width:124px"><input type="date" id="GRNfromdate"></div>
+        <div class="pr-abs" style="left:255px;top:71px;width:124px"><input type="date" id="GRNToDate" aria-label="Doc Date To"></div>
+        <label class="pr-abs" style="left:5px;top:102px" for="datDueFromDate">Due Date From &amp; To</label>
+        <div class="pr-abs pr-date" style="left:129px;top:98px;width:124px"><input type="checkbox" id="chkDueFrom" aria-label="Use Due Date From"><input type="date" id="datDueFromDate"></div>
+        <div class="pr-abs pr-date" style="left:255px;top:98px;width:124px"><input type="checkbox" id="chkDueTo" aria-label="Use Due Date To"><input type="date" id="datDueToDate" aria-label="Due Date To"></div>
+        <label class="pr-abs" style="left:5px;top:129px" for="txtDocNoFrm">PoNo From &amp; To</label>
+        <div class="pr-abs" style="left:129px;top:125px;width:124px"><input type="text" id="txtDocNoFrm" inputmode="numeric"></div>
+        <div class="pr-abs" style="left:255px;top:125px;width:124px"><input type="text" id="txtDocNoTo" inputmode="numeric" aria-label="PoNo To"></div>
+        <label class="pr-abs" style="left:5px;top:156px" for="txtratefrom">Rate From &amp; To</label>
+        <div class="pr-abs" style="left:129px;top:152px;width:124px"><input type="text" id="txtratefrom" inputmode="decimal"></div>
+        <div class="pr-abs" style="left:255px;top:152px;width:124px"><input type="text" id="txtrateto" inputmode="decimal" aria-label="Rate To"></div>
+
+        <label class="pr-abs" style="left:384px;top:20px" for="CmbParentCategory">Parent Category</label>
+        <div class="pr-abs" style="left:477px;top:14px;width:227px"><select id="CmbParentCategory" data-dtcombo="single" data-dtcombo-caption="Parent Category"></select></div>
+        <label class="pr-abs" style="left:384px;top:48px" for="CmbItemCategory">Item Category</label>
+        <div class="pr-abs" style="left:477px;top:42px;width:227px"><select id="CmbItemCategory" data-dtcombo="single" data-dtcombo-caption="Item Category"></select></div>
+        <label class="pr-abs" style="left:384px;top:75px" for="CmbItemType">Item Type</label>
+        <div class="pr-abs" style="left:477px;top:69px;width:227px"><select id="CmbItemType" data-dtcombo="single" data-dtcombo-caption="Item Type"></select></div>
+        <label class="pr-abs" style="left:384px;top:102px" for="cmbItem">Item Name</label>
+        <div class="pr-abs" style="left:477px;top:96px;width:227px"><select id="cmbItem" data-dtcombo="single" data-dtcombo-caption="Item Name"></select></div>
+        <label class="pr-abs" style="left:384px;top:129px" for="CmbWareHouse">Warehouse</label>
+        <div class="pr-abs" style="left:477px;top:123px;width:227px"><select id="CmbWareHouse" data-dtcombo="single" data-dtcombo-caption="WareHouseName"></select></div>
+        <label class="pr-abs" style="left:384px;top:156px" for="CmbJobLot">JobLot</label>
+        <div class="pr-abs" style="left:477px;top:150px;width:227px"><select id="CmbJobLot" data-dtcombo="single" data-dtcombo-caption="JobLotDescription"></select></div>
+
+        <label class="pr-abs" style="left:706px;top:20px" for="CmbCropYear">CropYear</label>
+        <div class="pr-abs" style="left:816px;top:14px;width:237px"><select id="CmbCropYear" data-dtcombo="single" data-dtcombo-caption="Crop Year"></select></div>
+        <label class="pr-abs" style="left:706px;top:48px" for="CmbSupplier">Supplier Name</label>
+        <div class="pr-abs" style="left:816px;top:42px;width:237px"><select id="CmbSupplier" data-dtcombo="single" data-dtcombo-caption="Supplier Name"></select></div>
+        <label class="pr-abs" style="left:706px;top:75px" for="CmbCommissionAgent">Commission Agent</label>
+        <div class="pr-abs" style="left:816px;top:69px;width:237px"><select id="CmbCommissionAgent" data-dtcombo="single" data-dtcombo-caption="CommissionAgent"></select></div>
+        <label class="pr-abs" style="left:706px;top:102px" for="CmbCustomGroup">Custom Group</label>
+        <details class="pr-check pr-abs" id="CmbCustomGroup" style="left:816px;top:96px;width:237px"></details>
+        <label class="pr-abs" style="left:706px;top:129px" for="CmbReprotType">Report Type</label>
+        <div class="pr-abs" style="left:816px;top:123px;width:237px"><select id="CmbReprotType" data-dtcombo="single" data-dtcombo-caption="Report Name"></select></div>
+        <label class="pr-abs" id="label7" style="left:706px;top:156px" for="CmbCustomerItemGroup">Group By</label>
+        <div class="pr-abs" id="boxGroup" style="left:816px;top:150px;width:237px"><select id="CmbCustomerItemGroup" data-dtcombo="single" data-dtcombo-caption="GroupName"></select></div>
+        <button type="button" class="pr-show pr-abs" id="btnshow" style="left:1058px;top:150px;width:60px;height:26px" title="Ctrl+S">Show</button>
+    </fieldset>
+    <section id="gridSection">
+        <div class="pr-grid-bar">History <span id="lblCount"></span>
+            <span class="pr-right"><button type="button" id="btnGridPrint">Grid Print</button><button type="button" id="btnGridExport">Export</button><button type="button" id="btnFullscreen">Fullscreen</button></span>
+        </div>
+        <div class="pr-wrap" tabindex="0" id="gridWrap"><table class="pr-grid" id="DataGridHistory"></table></div>
+    </section>
+</div>
+<script th:src="@{/build/js/countx_doc_link.js?v=20261001pr}"></script>
+<script th:src="@{/build/js/purchase/reports/pr_common.js?v=20261005grn211}"></script>
+<script th:src="@{/build/js/purchase/reports/purchase_invoice_history_report.js?v=20261009pih}"></script>
+<script th:src="@{/build/js/countx_desktop_combo.js?v=20260927b}"></script>
+</body>
+</html>

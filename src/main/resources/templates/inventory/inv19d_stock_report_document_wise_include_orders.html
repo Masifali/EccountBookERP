@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Stock Report With Document Wise Include Orders - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_store.css?v=20260928b}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261007-gridbar-flow}" href="/build/css/countx_grid_bar.css?v=20261007-gridbar-flow">
+    <style>
+        /* StockReportWithDocumentWiseIncludeOrders designer geometry (InitializeComponent :600-1380), 1:1 px. 964 wide:
+           panel1 toolStrip1 (28) | panel5 (102: panel3 teal caption 26 + groupBox1 "Filters" 4,26 938x73) | panel4 teal "Filtered Record" (21) | grdfrm (Fill). */
+        :root { --swv-teal: #008080; }
+        body { background: #fff; margin: 0; padding-bottom: 12px; }
+        .fx-scroll { overflow-x: auto; }
+        .fx-root { position: relative; font-family: "Microsoft Sans Serif", Tahoma, sans-serif; font-size: 11px; background: #fff; }
+        .fx-abs { position: absolute; box-sizing: border-box; margin: 0; }
+        .fx-rel { position: relative; }
+        .fx-lbl { font-family: "Segoe UI Semibold", "Segoe UI", Tahoma, sans-serif; font-weight: bold; font-size: 12px; white-space: nowrap; line-height: 15px; color: #000; }
+        .fx-cmb { font-family: Verdana, sans-serif; font-size: 13px; height: 26px; border: 1px solid #7a7a7a; background: #fff; padding: 0 2px; }
+        .fx-dt { font-family: Verdana, sans-serif; font-size: 12px; height: 22px; border: 1px solid #7a7a7a; background: #fff; padding: 0 2px; }
+        .fx-strip { height: 28px; display: flex; align-items: center; background: linear-gradient(to bottom, #fcfcfc 0%, #e0e0e0 100%); border-bottom: 1px solid #b5b5b5; box-sizing: border-box; }
+        .fx-tool { font-family: Verdana, sans-serif; font-size: 13px; height: 25px; background: transparent; border: 1px solid transparent; display: inline-flex; align-items: center; gap: 4px; padding: 0 6px; cursor: pointer; white-space: nowrap; color: #000; }
+        .fx-tool:hover:not(:disabled) { background: #ffe4a0; border-color: #e59d00; }
+        .fx-teal { background: var(--swv-teal); position: relative; }
+        .fx-teal .cap { position: absolute; font: bold 16px Tahoma, sans-serif; color: #fff; white-space: nowrap; line-height: 19px; }
+        .fx-btn { background: var(--swv-teal); color: #fff; border: 1px solid #054d4d; font-family: Verdana, sans-serif; font-size: 13px; font-weight: bold; padding: 0; cursor: pointer; }
+        .fx-btn:hover:not(:disabled) { background: #054d4d; }
+        .fx-grp { border: 1px solid #d0d0d0; border-radius: 2px; padding: 0; }
+        .fx-grp legend { font-family: "Microsoft Sans Serif", Tahoma, sans-serif; font-size: 11px; padding: 0 2px; margin-left: 6px; color: #000; }
+        .fx-grid-host { overflow: auto; background: #fff; height: calc(100vh - 280px); min-height: 310px; position: relative; }
+        .fx-grid-host .win-grid { width: auto; min-width: 100%; font-family: Verdana, sans-serif; font-size: 11px; border-collapse: collapse; }
+        .fx-grid-host .win-grid th { background: linear-gradient(to bottom, #e6f7f7 0%, #bfe6e6 100%); border: 1px solid #8fbcbc; font-weight: normal; white-space: normal; padding: 2px 4px; text-align: center; position: sticky; top: 0; z-index: 2; height: 45px; vertical-align: middle; }
+        .fx-grid-host .win-grid thead tr.flt td { position: sticky; top: 51px; z-index: 2; background: #f4fbfb; border: 1px solid #c8dede; padding: 0; }
+        .fx-grid-host .win-grid thead tr.flt input { width: 100%; box-sizing: border-box; border: 0; height: 18px; font: 11px Verdana, sans-serif; background: transparent; }
+        .fx-grid-host .win-grid td { border: 1px solid #d5e6e6; white-space: nowrap; padding: 1px 4px; overflow: hidden; text-overflow: ellipsis; }
+        .fx-grid-host .win-grid td.n { text-align: right; }
+        .fx-grid-host .win-grid tbody tr.sel td { background: #cde8ff; }
+        .fx-grid-host .win-grid tfoot td { background: #e6e6e6; font-weight: bold; text-align: right; position: sticky; bottom: 0; }
+        .fx-nav { font: 11px Verdana, sans-serif; padding: 2px 8px; border-top: 1px solid #c8dede; background: #f4f4f4; }
+        .fx-modal { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: none; align-items: center; justify-content: center; z-index: 200; }
+        .fx-modal.is-open { display: flex; }
+        .fx-modal .box { background: #fff; border: 1px solid #7a7a7a; min-width: 360px; box-shadow: 0 4px 16px rgba(0,0,0,.3); }
+        .fx-modal .box h3 { margin: 0; padding: 4px 8px; background: var(--swv-teal); color: #fff; font: bold 13px Tahoma, sans-serif; }
+        .fx-modal table { border-collapse: collapse; width: 100%; font: 12px Verdana, sans-serif; }
+        .fx-modal td, .fx-modal th { border: 1px solid #d5e6e6; padding: 3px 8px; text-align: left; }
+        .fx-modal .foot { text-align: right; padding: 6px; }
+        .is-hidden { display: none !important; }
+    </style>
+</head>
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="fx-scroll">
+<div class="fx-root" style="width:964px;">
+    <!-- panel1 / toolStrip1: btnNew (&Reset), btnRefresh, btnPrint "1886_01-Register", btnshortcutkeys -->
+    <div class="fx-strip">
+        <button type="button" class="fx-tool" id="btnNew" title="Ctrl+N"><i class="fa fa-plus-circle" style="color:#2e9b45"></i> <span><u>R</u>eset</span></button>
+        <button type="button" class="fx-tool" id="btnRefresh" title="Ctrl+R"><i class="fa fa-repeat"></i> <span><u>R</u>efresh</span></button>
+        <button type="button" class="fx-tool" id="btnPrint" title="Ctrl+P"><i class="fa fa-print"></i> 1886_01-Register</button>
+        <button type="button" class="fx-tool" id="btnshortcutkeys" title="Ctrl+Alt"><i class="fa fa-keyboard-o"></i> ShortCut Keys</button>
+    </div>
+    <!-- panel5 (102, White): panel3 teal (26) + groupBox1 -->
+    <div class="fx-rel" style="height:102px;">
+        <div class="fx-abs fx-teal" style="left:0;top:0;width:964px;height:26px;"><span class="cap" style="left:2px;top:3px;">Stock Report With Document Wise Including Orders</span></div>
+        <fieldset class="fx-abs fx-grp" style="left:4px;top:26px;width:938px;height:73px;">
+            <legend>Filters</legend>
+            <label class="fx-abs fx-lbl" style="left:2px;top:20px;" for="cmbDateType">Date Type</label>
+            <select id="cmbDateType" class="fx-abs fx-cmb win-combo" style="left:66px;top:14px;width:217px;"></select>
+            <label class="fx-abs fx-lbl" style="left:2px;top:47px;" for="txtDateFrom">Date From</label>
+            <input type="date" id="txtDateFrom" class="fx-abs fx-dt" style="left:66px;top:43px;width:108px;">
+            <input type="date" id="txtDateTo" class="fx-abs fx-dt" style="left:175px;top:43px;width:108px;">
+            <label class="fx-abs fx-lbl" style="left:286px;top:20px;" for="cmbMainType">Parent Category</label>
+            <select id="cmbMainType" class="fx-abs fx-cmb win-combo" style="left:381px;top:14px;width:177px;"></select>
+            <label class="fx-abs fx-lbl" style="left:286px;top:47px;" for="cmbCategory">Item Category</label>
+            <select id="cmbCategory" class="fx-abs fx-cmb win-combo" style="left:381px;top:41px;width:177px;"></select>
+            <label class="fx-abs fx-lbl" style="left:563px;top:20px;" for="cmbItemType">Item Type </label>
+            <select id="cmbItemType" class="fx-abs fx-cmb win-combo" style="left:628px;top:14px;width:236px;"></select>
+            <label class="fx-abs fx-lbl" style="left:563px;top:47px;" for="cmbItemName">Item</label>
+            <select id="cmbItemName" class="fx-abs fx-cmb win-combo" style="left:628px;top:41px;width:236px;"></select>
+            <button type="button" id="btnshow" class="fx-abs fx-btn" style="left:869px;top:41px;width:60px;height:26px;" title="Ctrl+S">Show</button>
+        </fieldset>
+    </div>
+    <!-- panel4 (21, Teal): "Filtered Record" + ctrlGrdBar1 (918,0) 42x21 -->
+    <div class="fx-teal" style="height:21px;"><span class="cap" style="left:6px;top:2px;font-size:14px;line-height:18px;">Filtered Record</span><div id="gbMount" class="fx-abs" style="left:918px;top:0;width:42px;height:21px;"></div></div>
+    <div id="grdWrap" class="fx-grid-host" data-gridbar-form="StockReportWithDocumentWiseIncludeOrders" data-gridbar-grid="grdfrm"
+         data-gridbar-mount="#gbMount" data-gridbar-reorder="false" data-gridbar-hide="chooser,save,remove,collapse,expand">
+        <table class="win-grid" id="grdfrm"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+    </div>
+    <div class="fx-nav" id="lblNavigator"></div>
+</div>
+</div>
+<!-- ShortCutKeyPopUp (MakeShortCutKeys :500) -->
+<div class="fx-modal" id="shortcutModal">
+    <div class="box">
+        <h3>ShortCut Keys</h3>
+        <table><thead><tr><th>KeyCombination</th><th>Description</th></tr></thead><tbody id="shortcutRows"></tbody></table>
+        <div class="foot"><button type="button" class="fx-btn" id="shortcutClose" style="width:70px;height:24px;">Close</button></div>
+    </div>
+</div>
+<script th:src="@{/build/js/countx_store_common.js?v=20260928b}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20261007-gridbar-flow}" src="/build/js/countx_grid_bar.js?v=20261007-gridbar-flow"></script>
+<script th:src="@{/build/js/countx_inventory_inv19d_stock_report_document_wise_include_orders.js?v=20261013a}"></script>
+<script src="/js/print-rpt.js?v=20261003erp"></script>
+</body>
+</html>

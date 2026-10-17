@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${w4Title}">Order Management</title>
+
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_w4_dashboards.css?v=20261014w4}">
+</head>
+<body th:attr="data-w4-mode=${w4Mode}">
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+
+<!-- ==========================================================================
+     Order Management grids - three desktop forms over SPU_Invetnory_OrderManagementDashBoards
+
+       363 frmOrderManagement                   (419 lines)  tabControl: "Purchase" / "Sale", each a GridEX
+                                                              labelled "Purchase Orders" / "Sale Orders"
+       366 OrderManagementDashboardForPurchase  (235 lines)  label1 "Purchase Order Management Dashboard"
+       367 OrderManagementDashboardForSale      (235 lines)  label1 "Sale Order Management Dashboard"
+                                                              toolStrip1 "&Refresh" (BtnRefresh_Click), then one
+                                                              OrderManageMentGrids card per CardCount
+
+     Read-only: no save, update, delete or history on any of the three.
+     ========================================================================== -->
+<div class="w4-title-bar" th:text="${w4Title}">Order Management</div>
+<div class="w4-sub-header">
+    <span>&#128193; Screens &gt; <a href="/dashboard">DashBoard</a>
+        &gt; Purchase &amp; Sales Dashboard &gt; <span th:text="${w4Title}"></span></span>
+</div>
+
+<div class="w4-toolbar">
+    <button type="button" class="w4-btn" id="w4Refresh"><i class="fa fa-refresh"></i> Refresh</button>
+    <a class="w4-btn" href="/dashboard"><i class="fa fa-arrow-left"></i> Back to DashBoard</a>
+</div>
+
+<div id="w4Message"></div>
+
+<div th:if="${w4Mode == 'tabs'}" class="w4-tabs" id="w4Tabs">
+    <button type="button" class="on" data-tab="purchase">Purchase</button>
+    <button type="button" data-tab="sales">Sale</button>
+</div>
+
+<div class="w4-head" id="w4Head" th:if="${w4Mode != 'tabs'}" th:text="${w4Heading}">Heading</div>
+
+<div id="w4Body"></div>
+<div id="w4Empty" class="w4-empty" style="display:none;">Loading...</div>
+
+<div class="w4-modal" id="w4Modal">
+    <div class="w4-modal-box">
+        <div class="w4-modal-head">
+            <span id="w4ModalTitle">Orders</span>
+            <span id="w4ModalCount" style="font-weight:400;"></span>
+            <span style="flex:1;"></span>
+            <button type="button" class="w4-btn" id="w4ModalClose">Close</button>
+        </div>
+        <div class="w4-modal-body"><table class="w4-grid" id="w4ModalGrid"></table></div>
+    </div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/build/js/countx_w4_order_management_grids.js?v=20261014w4}"></script>
+</body>
+</html>

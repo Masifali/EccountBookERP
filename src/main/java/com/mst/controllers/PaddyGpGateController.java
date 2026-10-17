@@ -1,0 +1,47 @@
+package com.mst.controllers;
+
+import com.mst.services.PaddyGpGateService;
+import java.util.List;
+import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.*;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+
+/** Screen 464 frmGatePassInwardForGate (Paddy Purchase, module 48): page /purchase/gate-pass-inward-for-gate, API /api/paddy-purchase/gp-gate/*. */
+@Controller
+public class PaddyGpGateController {
+    @GetMapping("/purchase/gate-pass-inward-for-gate")
+    public String page(Model model) {
+        model.addAttribute("activeMenu", "purchase");
+        model.addAttribute("moduleTitle", "GPI FOR GATE PURCHASE");
+        return "purchase/paddy_gp_gate";
+    }
+
+    @RestController
+    @RequestMapping("/api/paddy-purchase/gp-gate")
+    public static class Api implements PaddyPurchaseApi {
+        @Autowired private PaddyGpGateService service;
+
+        @GetMapping("/init") public Map<String, Object> init() { return service.init(); }
+        @GetMapping("/lookups") public Map<String, Object> lookups() { return service.lookups(); }
+        @GetMapping("/gp-no") public Map<String, Object> gpNo() { return Map.of("gpNo", service.nextGpNo()); }
+        @GetMapping("/district-tehsil") public Map<String, Object> districtTehsil(@RequestParam int cityId) { return service.districtTehsil(cityId); }
+        @GetMapping("/open") public List<Map<String, Object>> open() { return service.openGatePasses(); }
+        @GetMapping("/history") public List<Map<String, Object>> history(@RequestParam(defaultValue = "0") int noOfRecords) { return service.history(noOfRecords); }
+        @GetMapping("/history-detail/{id}") public List<Map<String, Object>> historyDetail(@PathVariable int id) { return service.historyDetail(id); }
+        @GetMapping("/{id:[0-9]+}") public Map<String, Object> byId(@PathVariable int id) { return service.getById(id); }
+        @PostMapping("/save") public Map<String, Object> save(@RequestBody Map<String, Object> body) { return service.save(body); }
+        @GetMapping("/{id:[0-9]+}/attachments") public List<Map<String, Object>> attachments(@PathVariable int id) { return service.attachments(id); }
+
+        @GetMapping("/{id:[0-9]+}/attachments/{attachmentId:[0-9]+}")
+        public ResponseEntity<byte[]> attachment(@PathVariable int id, @PathVariable int attachmentId) {
+            var file = service.attachmentFile(id, attachmentId);
+            return ResponseEntity.ok().contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .header("X-Content-Type-Options", "nosniff")
+                    .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(file.name(), java.nio.charset.StandardCharsets.UTF_8).build().toString())
+                    .cacheControl(CacheControl.noStore()).body(file.bytes());
+        }
+    }
+}

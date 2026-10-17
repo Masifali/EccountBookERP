@@ -203,6 +203,83 @@ public class DashboardModuleService {
         WEB_ROUTES_BY_SCREEN_ID.put(292, "/stocks/stock-evaluation-vehicle-wise");          // StockEvaluationReportVehicleWise
         WEB_ROUTES_BY_SCREEN_ID.put(293, "/inventory/stock-transactions-with-value");       // InventoryEvaluationItemLedger - Transaction Report (With Value)
         WEB_ROUTES_BY_SCREEN_ID.put(299, "/inventory/stock-report-with-values");            // frmStockReportWithValues
+        /* Inventory / Production / DashBoard / Export hub gap closure 2026-10-14 (76 screens; _claude_stage/hubs_missing/reports/*.md) */
+        WEB_ROUTES_BY_SCREEN_ID.put(290, "/inventory/reports/fifo-audit-report"); // frmFiFoAuditReport
+        WEB_ROUTES_BY_SCREEN_ID.put(294, "/inventory/reports/required-raw-material-against-sale-orders"); // RequiredRawMaterialAgainstSaleOrders
+        WEB_ROUTES_BY_SCREEN_ID.put(295, "/inventory/reports/stock-reconciliation-report"); // StockReportReconcilation
+        WEB_ROUTES_BY_SCREEN_ID.put(296, "/inventory/reports/stock-report-with-fifo"); // StockReportyWithFIFO
+        WEB_ROUTES_BY_SCREEN_ID.put(776, "/inventory/define-item-engr"); // frmAddItem_Engr (Item Definition_Engr)
+        WEB_ROUTES_BY_SCREEN_ID.put(777, "/inventory/define-item-engr"); // frmAddItem_Engr (Define Item, Mfg Definitions)
+        WEB_ROUTES_BY_SCREEN_ID.put(803, "/inventory/reports/item-pricing-list"); // frmGetItemPricingList
+        WEB_ROUTES_BY_SCREEN_ID.put(300, "/inventory/reports/stock-report-store"); // RptGenrateStocksStore
+        WEB_ROUTES_BY_SCREEN_ID.put(842, "/inventory/reports/stock-by-fifo-pcc"); // StockReportByFifo
+        WEB_ROUTES_BY_SCREEN_ID.put(843, "/inventory/reports/stock-report-document-wise-include-orders"); // StockReportWithDocumentWiseIncludeOrders
+        WEB_ROUTES_BY_SCREEN_ID.put(815, "/inventory/reports/evaluation-transactions-report"); // EvaluationStockTransactionsReport
+        WEB_ROUTES_BY_SCREEN_ID.put(805, "/inventory/reports/stock-report-with-values-engr"); // frmStockReportWithValues_Engr
+        WEB_ROUTES_BY_SCREEN_ID.put(874, "/inventory/reports/stock-evaluation-cgs-report"); // frmStockEvaluationCgsReport
+        WEB_ROUTES_BY_SCREEN_ID.put(91, "/inventory/item-pricing-schedule"); // frmItemPricingSchedule
+        WEB_ROUTES_BY_SCREEN_ID.put(93, "/inventory/define-item-concrete"); // frmAddItemConcrete
+        WEB_ROUTES_BY_SCREEN_ID.put(94, "/inventory/commission-items"); // CommissionItems
+        WEB_ROUTES_BY_SCREEN_ID.put(95, "/inventory/customer-commission-policy"); // CustomerCommissionPolicy
+        WEB_ROUTES_BY_SCREEN_ID.put(96, "/inventory/customer-discount-policy"); // CustomerDiscountPolicy
+        WEB_ROUTES_BY_SCREEN_ID.put(97, "/inventory/stock-close-run"); // StockCloseRun
+        WEB_ROUTES_BY_SCREEN_ID.put(98, "/inventory/discount-policy-for-party"); // DiscountPolicyForParty
+        WEB_ROUTES_BY_SCREEN_ID.put(99, "/inventory/item-discounting-schedule"); // frmItemDiscountingScheduleForBooking
+        WEB_ROUTES_BY_SCREEN_ID.put(100, "/inventory/sales-pricing-with-margin"); // frmItemSalesPricingSchedule
+        WEB_ROUTES_BY_SCREEN_ID.put(103, "/inventory/monthly-stock-closing"); // MonthlyStockClosing
+        WEB_ROUTES_BY_SCREEN_ID.put(107, "/inventory/wholesale-pricing-schedule"); // frmPosWhSalePricing (WholeSale.frmItemPricingSchedule)
+        WEB_ROUTES_BY_SCREEN_ID.put(114, "/inventory/define-item-uom"); // InvDeffrmItemItemUom
+        WEB_ROUTES_BY_SCREEN_ID.put(796, "/inventory/pricing-schedule-for-booking"); // frmItemPricingSchedule_New
+        WEB_ROUTES_BY_SCREEN_ID.put(923, "/inventory/returnable/delivery-order-returnable"); // DeliveryOrder_ReturnAble
+        WEB_ROUTES_BY_SCREEN_ID.put(927, "/inventory/returnable/gdn-returnable"); // GdnReturnable
+        WEB_ROUTES_BY_SCREEN_ID.put(928, "/inventory/returnable/outward-gate-pass-returnable"); // OutwardGatePassReturnable
+        WEB_ROUTES_BY_SCREEN_ID.put(963, "/inventory/stock-in-trust"); // frmGatePassForStockInTrust
+        WEB_ROUTES_BY_SCREEN_ID.put(600, "/production/steel/pre-costing-job-order"); // ProductionPreCostingAndJobOrder_St (existing port SteelProductionJobOrderController)
+        WEB_ROUTES_BY_SCREEN_ID.put(601, "/production/steel/food-production-with-values"); // FoodProductionWithValuesNew_St (existing port SteelFoodProductionController)
+        WEB_ROUTES_BY_SCREEN_ID.put(307, "/production/reports/grns-pending-or-used"); // GrnsPendingOrUsedinProduction
+        WEB_ROUTES_BY_SCREEN_ID.put(311, "/production/reports/pending-invoice-for-production"); // frmProductionPendingPurchaseInvoice
+        WEB_ROUTES_BY_SCREEN_ID.put(820, "/production/reports/concrete-production-report"); // frmConcreteProductionReport
+        WEB_ROUTES_BY_SCREEN_ID.put(591, "/production/reports/salt-production-register"); // ProductionRegisterSalt
+        WEB_ROUTES_BY_SCREEN_ID.put(599, "/production/production-release"); // ProductionRelease
+        WEB_ROUTES_BY_SCREEN_ID.put(593, "/production/mfg/work-order"); // frmWorkOrder
+        WEB_ROUTES_BY_SCREEN_ID.put(595, "/production/mfg/work-station-operation"); // WorkStationOperation
+        WEB_ROUTES_BY_SCREEN_ID.put(770, "/production/mfg/operation"); // ProductionOperation
+        WEB_ROUTES_BY_SCREEN_ID.put(771, "/production/mfg/work-station"); // ProductionWorkStation
+        WEB_ROUTES_BY_SCREEN_ID.put(772, "/store/issuance-to-consumable-store"); // frmStoreIssuanceToCosumableStore (existing port)
+        WEB_ROUTES_BY_SCREEN_ID.put(773, "/production/mfg/routing"); // frmProductionRouting
+        WEB_ROUTES_BY_SCREEN_ID.put(775, "/store/department-request-to-consumable"); // DepartmentRequestToConsumableStore (existing port)
+        WEB_ROUTES_BY_SCREEN_ID.put(273, "/production/pre-costing-job-order"); // ProductionPreCostingAndJobOrder
+        WEB_ROUTES_BY_SCREEN_ID.put(284, "/production/production-new-against-job-order"); // FoodProductionWithValuesNew
+        WEB_ROUTES_BY_SCREEN_ID.put(285, "/production/recipe-branding"); // frmBillOfMaterial_Manufacturing
+        WEB_ROUTES_BY_SCREEN_ID.put(871, "/production/production-against-pre-costing-job-order"); // ProductionAgainstPreCostingJobOrder
+        WEB_ROUTES_BY_SCREEN_ID.put(883, "/production/output-allocation-export-invoice"); // ProductionOutputAllocationWithExportInvoice
+        WEB_ROUTES_BY_SCREEN_ID.put(887, "/production/production-costing"); // frmCreateProductionCostingReport
+        WEB_ROUTES_BY_SCREEN_ID.put(906, "/production/production-foh"); // frmProductionFohReportCreate
+        WEB_ROUTES_BY_SCREEN_ID.put(199, "/export/exchange-rate-forward-booking"); // ExchangeRateForwardBooking
+        WEB_ROUTES_BY_SCREEN_ID.put(363, "/dashboard/order-management"); // frmOrderManagement
+        WEB_ROUTES_BY_SCREEN_ID.put(364, "/dashboard/pending-document-for-multiple-approvals"); // PendingDocumentForMultipleApprovals
+        WEB_ROUTES_BY_SCREEN_ID.put(366, "/dashboard/order-management-dashboard-for-purchase"); // OrderManagementDashboardForPurchase
+        WEB_ROUTES_BY_SCREEN_ID.put(367, "/dashboard/order-management-dashboard-for-sale"); // OrderManagementDashboardForSale
+        WEB_ROUTES_BY_SCREEN_ID.put(368, "/dashboard/approval-dashboard-st"); // ApprovalDashboard_St
+        WEB_ROUTES_BY_SCREEN_ID.put(711, "/export/contract-register"); // ExImSaleContractRegister
+        WEB_ROUTES_BY_SCREEN_ID.put(712, "/accounts/reports/due-date-analysis-forecast"); // DueDateAnalysisPayablesAndReceivablesForcast
+        WEB_ROUTES_BY_SCREEN_ID.put(715, "/export/shipment-tracking-follow-up"); // ExportPendingShipmentsFollowupReport
+        WEB_ROUTES_BY_SCREEN_ID.put(718, "/accounts/reports/fcy-payables-receivables"); // FCYPayablesAndReceivablesRpt
+        WEB_ROUTES_BY_SCREEN_ID.put(723, "/dashboard/approval-dashboard"); // PendingVouchersForApproval -> ApprovalDashboard
+        WEB_ROUTES_BY_SCREEN_ID.put(724, "/dashboard/pending-works-rpt"); // InventoryPendingWorkDashboard -> frmPendingWorksRpt
+        WEB_ROUTES_BY_SCREEN_ID.put(594, "/production/mfg/work-order-in-progress"); // frmWorkOrderInProgress
+        WEB_ROUTES_BY_SCREEN_ID.put(781, "/production/mfg/work-order-semi-finish"); // frmWorkOrderForSemiFinish
+        WEB_ROUTES_BY_SCREEN_ID.put(596, "/production/pcc/stock-transfer-manual-concrete"); // frmStockTransferManualConcrete
+        WEB_ROUTES_BY_SCREEN_ID.put(774, "/production/mfg/bill-of-material"); // frmBillOfMaterial
+        WEB_ROUTES_BY_SCREEN_ID.put(845, "/production/mfg/bill-of-material-casting"); // frmBillOfMaterialCasting
+        WEB_ROUTES_BY_SCREEN_ID.put(598, "/production/pcc/bill-of-material"); // frmBillOfMaterialConcrete
+        WEB_ROUTES_BY_SCREEN_ID.put(822, "/production/pcc-conversion"); // frmConversion
+        WEB_ROUTES_BY_SCREEN_ID.put(807, "/production/engr-stage-move"); // frmStockTransferManual_Engr
+        WEB_ROUTES_BY_SCREEN_ID.put(846, "/production/engr-stage-move"); // frmStockTransferManual_Engr
+        WEB_ROUTES_BY_SCREEN_ID.put(795, "/production/engr-production"); // frmProductionEngr
+        WEB_ROUTES_BY_SCREEN_ID.put(597, "/production/pcc/concrete-production"); // frmConcreteProduction
+        WEB_ROUTES_BY_SCREEN_ID.put(930, "/production/recipe-branding"); // frmRecipe
+        WEB_ROUTES_BY_SCREEN_ID.put(929, "/production/manual-feed"); // frmProductionManualFeed
         WEB_ROUTES_BY_SCREEN_ID.put(171, "/inventory/reports/item-list");   // frmRptItemList
         WEB_ROUTES_BY_SCREEN_ID.put(580, "/inventory/stock-transactions"); // separate screen from 171 Item List
 

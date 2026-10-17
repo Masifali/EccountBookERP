@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>EccountBook</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}" href="/vendors/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20261002gf}" href="/build/css/countx_desktop_combo.css">
+<!--
+  Architecture.WinApp.ApprovalDashboard.PurchaseOrderForApproval (variant po, dashboard card TypeID 20) and
+  Architecture.WinApp.FeedMill.Approval.PurchaseOrderForApproval (variant fm, dashboard card TypeID 1100).
+  Text "EccountBook", base.Name "PurchaseOrderForApproval", WindowState Maximized, KeyPreview.
+  1:1 port of InitializeComponent, one DOM for both forms, the geometry switched by the body class v-po / v-fm:
+    panel1 Dock Fill > panel2 Dock Top 29 (toolStrip3: Reset, Refresh*, Cancel*, Approved, Pending For View)
+                       panel3 Dock Top (po 35 rgb(10,110,110) / fm 27): label23 "Purchase Order" / "Purchase Order Approval"
+                       panel4 Dock Fill > panel5 Dock Top (po 65 / fm 73 "Filters" group) filter strip
+                                          panel6 Dock Fill > tabControl1 "Po_History" | "Pending Order For View"
+      tabPage1: label7 Teal 27 / panel7 Dock Top (po 284 / fm 275) grd / panel8 Dock Fill GridDetail
+      tabPage2: grdPendingViewVoucher Dock Top (po 326 / fm 300) / GridDetailForPendingView Dock Fill
+    (* po only.  The hidden 205-PoDetailRegister / 206-PoDetail toolbar buttons are Visible = false on the desktop.)
+-->
+<style>
+    :root { --teal: #008080; --hdr: rgb(10,110,110); --jb: #9eb6ce; }
+    html, body { margin: 0; padding: 0; height: 100%; background: #fff; overflow: hidden; }
+    body { font-family: "Segoe UI", Tahoma, sans-serif; font-size: 12px; color: #000; }
+    #frm { position: absolute; inset: 0; overflow-x: auto; overflow-y: hidden; background: #fff; }
+    body.poa-popup #frm { top: 26px; }
+    #poTitle { position: absolute; left: 0; right: 0; top: 0; height: 26px; display: flex; align-items: center;
+               justify-content: space-between; padding: 0 0 0 8px; background: #fff; border-bottom: 1px solid #c8c8c8;
+               font: 12px "Segoe UI", sans-serif; }
+    #poTitle button { height: 26px; width: 44px; border: 0; background: transparent; font: 16px "Segoe UI", sans-serif; cursor: pointer; }
+    #poTitle button:hover { background: #e81123; color: #fff; }
+    #panel1 { display: flex; flex-direction: column; height: 100%; min-width: 960px; }
+
+    /* panel2 / toolStrip3 */
+    #panel2 { flex: 0 0 29px; height: 29px; background: #fff; display: flex; align-items: center; padding-left: 3px; border-bottom: 1px solid #e3e3e3; }
+    .tsb { height: 24px; margin-right: 2px; padding: 0 8px; border: 1px solid transparent; background: transparent; font: 13px Verdana, sans-serif; cursor: pointer; white-space: nowrap; }
+    .tsb:hover:not(:disabled) { border-color: #9eb6ce; background: linear-gradient(#fff, #e3ebf4); }
+    .tsb:disabled { color: #888; cursor: progress; }
+    body.v-fm .po-only { display: none; }
+
+    /* panel3 */
+    #panel3 { flex: 0 0 35px; height: 35px; position: relative; background: var(--hdr); }
+    body.v-fm #panel3 { flex-basis: 27px; height: 27px; }
+    #label23 { position: absolute; left: 6px; top: 5px; font: 19px "Microsoft Sans Serif", "Segoe UI", sans-serif; color: #fff; line-height: 24px; white-space: nowrap; }
+    body.v-fm #label23 { left: 3px; top: 3px; line-height: 19px; }
+
+    /* panel4 / panel5 */
+    #panel4 { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
+    #panel5 { flex: 0 0 65px; height: 65px; position: relative; background: #fff; }
+    body.v-fm #panel5 { flex-basis: 73px; height: 73px; }
+    #grpFilters { display: none; position: absolute; left: 0; top: 0; width: 939px; height: 73px; box-sizing: border-box; border: 1px solid #c8c8c8; }
+    body.v-fm #grpFilters { display: block; }
+    #grpFilters span { position: absolute; left: 6px; top: -1px; font: 12px "Segoe UI", sans-serif; background: #fff; padding: 0 2px; line-height: 12px; }
+    .lbl { position: absolute; font: 600 12px "Segoe UI Semibold", "Segoe UI", sans-serif; line-height: 15px; color: #000; white-space: nowrap; }
+    .dtp { position: absolute; box-sizing: border-box; font: 13px Verdana, sans-serif; border: 1px solid #7a7a7a; padding: 0 2px; background: #fff; }
+    .txt { position: absolute; box-sizing: border-box; height: 23px; font: 13px Verdana, sans-serif; border: 1px solid #7a7a7a; padding: 0 2px; }
+    .cbx { position: absolute; height: 26px; }
+    .cbx select { width: 100%; height: 26px; font: 13px Verdana, sans-serif; }
+    .fbtn { position: absolute; height: 26px; box-sizing: border-box; padding: 0; border: 0; background: var(--hdr);
+            color: #fff; font: bold 12px Verdana, sans-serif; cursor: pointer; }
+    .fbtn:disabled { opacity: .7; cursor: progress; }
+
+    /* po geometry (panel5 65) */
+    body.v-po #label27 { left: 5px; top: 11px; }   body.v-po #fromdate { left: 68px; top: 7px; width: 118px; height: 23px; }
+    body.v-po #label33 { left: 5px; top: 40px; }   body.v-po #todate { left: 68px; top: 36px; width: 118px; height: 23px; }
+    body.v-po #label4 { left: 191px; top: 11px; }  body.v-po #txtSrFrom { left: 254px; top: 7px; width: 100px; }
+    body.v-po #label5 { left: 192px; top: 40px; }  body.v-po #txtSrTo { left: 254px; top: 36px; width: 100px; }
+    body.v-po #label1 { left: 358px; top: 11px; }  body.v-po #cbSupplier { left: 448px; top: 5px; width: 211px; }
+    body.v-po #label2 { left: 358px; top: 40px; }  body.v-po #cbItem { left: 448px; top: 34px; width: 211px; }
+    body.v-po #label3 { left: 663px; top: 11px; }  body.v-po #cbStatus { left: 732px; top: 5px; width: 211px; }
+    body.v-po #label6 { left: 663px; top: 40px; }  body.v-po #cbApproved { left: 732px; top: 34px; width: 145px; }
+    body.v-po #btnshow { left: 882px; top: 34px; width: 61px; }
+    /* fm geometry (panel5 73, group box "Filters") */
+    body.v-fm #label27 { left: 7px; top: 20px; }   body.v-fm #fromdate { left: 74px; top: 16px; width: 107px; height: 22px; }
+    body.v-fm #label33 { left: 7px; top: 48px; }   body.v-fm #todate { left: 74px; top: 44px; width: 107px; height: 22px; }
+    body.v-fm #label4 { left: 186px; top: 20px; }  body.v-fm #txtSrFrom { left: 253px; top: 16px; width: 107px; }
+    body.v-fm #label5 { left: 186px; top: 48px; }  body.v-fm #txtSrTo { left: 253px; top: 44px; width: 107px; }
+    body.v-fm #label1 { left: 363px; top: 20px; }  body.v-fm #cbSupplier { left: 451px; top: 14px; width: 211px; }
+    body.v-fm #label2 { left: 363px; top: 48px; }  body.v-fm #cbItem { left: 451px; top: 42px; width: 211px; }
+    body.v-fm #label3 { left: 664px; top: 20px; }  body.v-fm #cbStatus { left: 730px; top: 14px; width: 145px; }
+    body.v-fm #label6 { left: 664px; top: 48px; }  body.v-fm #cbApproved { left: 730px; top: 42px; width: 145px; }
+    body.v-fm #btnshow { left: 878px; top: 42px; width: 55px; }
+
+    /* panel6 / tabControl1 (tabs on top, Verdana 9) */
+    #panel6 { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
+    #t1Strip { flex: 0 0 22px; display: flex; align-items: flex-end; padding-left: 2px; background: #fff; border-bottom: 1px solid #898c95; font: 12px Verdana, sans-serif; }
+    #t1Strip a { display: inline-block; height: 20px; line-height: 20px; padding: 0 8px; margin-right: -1px; cursor: pointer; user-select: none;
+                 color: #000; background: linear-gradient(#f3f3f3, #e3e3e3); border: 1px solid #898c95; border-bottom: 0; text-decoration: none; }
+    #t1Strip a.on { height: 22px; line-height: 22px; background: #fff; position: relative; top: 1px; }
+    .t1Page { flex: 1 1 auto; display: none; min-height: 0; padding: 3px; box-sizing: border-box; flex-direction: column; }
+    .t1Page.on { display: flex; }
+    .bar { flex: 0 0 27px; height: 27px; position: relative; background: var(--teal); }
+    #label8 { display: none; position: absolute; left: 5px; top: 4px; font: bold 13px "Segoe UI Semibold", "Segoe UI", sans-serif; color: #fff; line-height: 19px; }
+    body.v-fm #label8 { display: block; }
+    #panel7 { flex: 0 0 284px; height: 284px; display: flex; flex-direction: column; min-height: 0; }
+    body.v-fm #panel7 { flex-basis: 275px; height: 275px; }
+    #panel8 { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 80px; }
+    #pnlPending { flex: 0 0 326px; height: 326px; display: flex; flex-direction: column; min-height: 0; }
+    body.v-fm #pnlPending { flex-basis: 300px; height: 300px; }
+    #pnlPendingDetail { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 80px; }
+
+    /* Janus GridEX, VisualStyle Office2007, Verdana 8.25 */
+    .jg { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; border: 1px solid var(--jb); }
+    .jg-wrap { flex: 1 1 auto; overflow: auto; min-height: 0; background: #fff; }
+    .jg table { border-collapse: separate; border-spacing: 0; table-layout: fixed; font: 11px Verdana, sans-serif; }
+    .jg thead th { position: sticky; top: 0; z-index: 3; height: 30px; padding: 0 3px; text-align: center; font-weight: normal; overflow: hidden;
+             white-space: normal; line-height: 13px; background: linear-gradient(#f9fcfd, #d3e2f0); border-right: 1px solid var(--jb); border-bottom: 1px solid var(--jb); }
+    .jg thead tr.flt td { position: sticky; top: 31px; z-index: 2; background: #fff; padding: 1px; height: 20px; border-bottom: 1px solid var(--jb); border-right: 1px solid #e3e9ef; }
+    .jg tr.flt input { width: 100%; height: 17px; box-sizing: border-box; border: 1px solid #c5d3e2; font: 11px Verdana, sans-serif; padding: 0 2px; }
+    .jg td { height: 19px; padding: 0 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-sizing: border-box;
+             border-right: 1px solid #e3e9ef; border-bottom: 1px solid #e3e9ef; }
+    .jg td.r { text-align: right; } .jg td.c { text-align: center; }
+    .jg td.fz, .jg th.fz { position: sticky; z-index: 1; background: #fff; }
+    .jg thead th.fz { z-index: 4; background: linear-gradient(#f9fcfd, #d3e2f0); }
+    .jg thead tr.flt td.fz { z-index: 4; }
+    .jg tfoot td.fz { z-index: 3; background: #e7eef6; }
+    .jg tbody tr.cur td { background: #ffe8a6; }
+    .jg tbody tr.chk td { background: #dde9f7; }
+    .jg tbody tr.cur.chk td { background: #ffe0a0; }
+    .jg tbody td.cc { outline: 1px dotted #000; outline-offset: -2px; }
+    .jg tfoot td { position: sticky; bottom: 0; z-index: 2; background: #e7eef6; border-top: 1px solid var(--jb); font-weight: bold; height: 20px; }
+    .jg a.lnk { color: #0000ff; text-decoration: underline; cursor: pointer; }
+    .jg button.cb { height: 17px; padding: 0 4px; font: 11px Verdana, sans-serif; border: 1px solid #8ea3b9; border-radius: 2px;
+                    background: linear-gradient(#fff, #e3ebf4); cursor: pointer; width: 100%; }
+    .jg button.cb:hover { background: linear-gradient(#fff6d6, #ffd977); }
+    .jg-nav { flex: 0 0 22px; height: 22px; display: flex; align-items: center; gap: 2px; padding: 0 4px;
+              background: linear-gradient(#f4f8fb, #dbe6f1); border-top: 1px solid var(--jb); font: 11px Verdana, sans-serif; }
+    .jg-nav button { width: 20px; height: 18px; padding: 0; border: 1px solid transparent; background: transparent; cursor: pointer; font: 10px Verdana; }
+    .jg-nav button:hover:not(:disabled) { border-color: var(--jb); background: #fff; }
+    .jg-nav span { padding: 0 6px; white-space: nowrap; }
+
+    /* AttachmentView */
+    #attModal { position: fixed; inset: 0; background: rgba(0,0,0,.25); display: none; align-items: center; justify-content: center; z-index: 60; }
+    #attModal .box { background: #fff; border: 1px solid #555; min-width: 520px; max-width: 90vw; font: 12px "Segoe UI", sans-serif; }
+    #attModal .hd { background: var(--teal); color: #fff; font: bold 13px Tahoma, sans-serif; padding: 4px 8px; display: flex; justify-content: space-between; align-items: center; }
+    #attModal .hd button { border: 0; background: transparent; color: #fff; font-size: 15px; cursor: pointer; }
+    #attModal table { border-collapse: collapse; width: 100%; font: 11px Verdana, sans-serif; }
+    #attModal th, #attModal td { border: 1px solid #c5d3e2; padding: 3px 5px; text-align: left; }
+    #attModal th { background: linear-gradient(#f9fcfd, #d3e2f0); font-weight: normal; }
+</style>
+</head>
+<body th:class="${(popup ? 'poa-popup ' : 'erp-viewport-page ') + ('fm'.equals(variant) ? 'v-fm' : 'v-po')}" th:attr="data-variant=${variant}">
+<th:block th:if="${!popup}"><div th:replace="~{fragments/erp_navigation :: navigation}"></div></th:block>
+<div id="poTitle" th:if="${popup}"><span>EccountBook</span><button type="button" id="btnClose" title="Close (Esc)">&#x2715;</button></div>
+
+<div id="frm">
+<div id="panel1">
+    <div id="panel2">
+        <button type="button" class="tsb" id="btnNew"><u>R</u>eset</button>
+        <button type="button" class="tsb po-only" id="Btnrefresh"><u>R</u>efresh</button>
+        <button type="button" class="tsb po-only" id="BtnCancel">Cancel</button>
+        <button type="button" class="tsb" id="btnApprovedOrder">Approved</button>
+        <button type="button" class="tsb" id="btnPendingForView">Pending For View</button>
+    </div>
+    <div id="panel3"><span id="label23">Purchase Order</span></div>
+    <div id="panel4">
+        <div id="panel5">
+            <div id="grpFilters"><span>Filters</span></div>
+            <span class="lbl" id="label27">From Date</span>
+            <input type="date" class="dtp" id="fromdate">
+            <span class="lbl" id="label33">To Date</span>
+            <input type="date" class="dtp" id="todate">
+            <span class="lbl" id="label4">Po Sr From</span>
+            <input type="text" class="txt" id="txtSrFrom" autocomplete="off">
+            <span class="lbl" id="label5">Po Sr To</span>
+            <input type="text" class="txt" id="txtSrTo" autocomplete="off">
+            <span class="lbl" id="label1">Supplier Name</span>
+            <div class="cbx" id="cbSupplier"><select id="CmbSupplier" data-dtcombo="single" data-dtcombo-caption="Supplier Name"><option value=""></option></select></div>
+            <span class="lbl" id="label2">Item Name</span>
+            <div class="cbx" id="cbItem"><select id="CmbItem" data-dtcombo="single" data-dtcombo-caption="Item Name"><option value=""></option></select></div>
+            <span class="lbl" id="label3">Status</span>
+            <div class="cbx" id="cbStatus"><select id="CmbStatus" data-dtcombo="single" data-dtcombo-caption="Status"></select></div>
+            <span class="lbl" id="label6">IsApproved</span>
+            <div class="cbx" id="cbApproved"><select id="CmbApproved" data-dtcombo="single" data-dtcombo-caption="Status"></select></div>
+            <button type="button" class="fbtn" id="btnshow">Show</button>
+        </div>
+        <div id="panel6">
+            <div id="t1Strip"><a data-tab="tabPage1" class="on">Po_History</a><a data-tab="tabPage2">Pending Order For View</a></div>
+            <div class="t1Page on" id="tabPage1">
+                <div class="bar" id="label7"><span id="label8">Main Information</span></div>
+                <div id="panel7"><div class="jg" id="jgGrd"><div class="jg-wrap"><table id="grd" tabindex="0"></table></div><div class="jg-nav" data-for="grd"></div></div></div>
+                <div id="panel8"><div class="jg" id="jgDetail"><div class="jg-wrap"><table id="GridDetail" tabindex="0"></table></div><div class="jg-nav" data-for="GridDetail"></div></div></div>
+            </div>
+            <div class="t1Page" id="tabPage2">
+                <div id="pnlPending"><div class="jg" id="jgPending"><div class="jg-wrap"><table id="grdPendingViewVoucher" tabindex="0"></table></div><div class="jg-nav" data-for="grdPendingViewVoucher"></div></div></div>
+                <div id="pnlPendingDetail"><div class="jg" id="jgPendingDetail"><div class="jg-wrap"><table id="GridDetailForPendingView" tabindex="0"></table></div><div class="jg-nav" data-for="GridDetailForPendingView"></div></div></div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+<div id="attModal"><div class="box">
+    <div class="hd"><span>Attachments</span><button type="button" id="attClose">&#x2715;</button></div>
+    <div style="max-height:60vh;overflow:auto;"><table><thead><tr><th>AttachmentName</th><th>CustomName</th><th>EntryDate</th></tr></thead><tbody id="attBody"></tbody></table></div>
+</div></div>
+
+<script th:src="@{/build/js/countx_desktop_combo.js?v=20261002gf}" src="/build/js/countx_desktop_combo.js"></script>
+<script th:src="@{/build/js/countx_doc_link.js?v=20261001pr}" src="/build/js/countx_doc_link.js"></script>
+<script th:src="@{/build/js/countx_purchase_order_for_approval.js?v=20261010poa}" src="/build/js/countx_purchase_order_for_approval.js"></script>
+</body>
+</html>

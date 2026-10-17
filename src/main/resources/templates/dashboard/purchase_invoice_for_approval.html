@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:if="${_csrf != null}" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:if="${_csrf != null}" th:content="${_csrf.headerName}">
+    <title th:text="${moduleTitle}">Purchase Invoice Approval</title>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261007-gridbar-flow}">
+    <style>
+        body{margin:0;background:#e4e9ed;color:#243238;font:12px "Segoe UI",sans-serif}
+        *{box-sizing:border-box}h1{margin:0;background:#0f5959;color:white;padding:8px 12px;font-size:17px}
+        .pia-toolbar{display:flex;gap:6px;flex-wrap:wrap;padding:7px;background:#f5f7f9;border-bottom:1px solid #b0bec5;align-items:center}
+        button,.pia-back{font:inherit;padding:5px 10px;background:white;border:1px solid #90a4ae;color:#164b4b;cursor:pointer;text-decoration:none}
+        button:disabled{opacity:.5;cursor:default}button:hover:enabled,.pia-back:hover{background:#e0f2f1}
+        .pia-primary{background:#0f5959;color:white}.pia-primary:hover:enabled{color:#0f5959}
+        #piaMessage{padding:7px 10px;margin:8px;background:white;border:1px solid #a6c8c8;white-space:pre-wrap}
+        #piaMessage:empty{display:none}#piaMessage.error{background:#fdecea;color:#9f1c11;border-color:#e4aaa4}
+        #piaFilters{margin:8px;padding:10px;background:white;border:1px solid #b0bec5;display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+        #piaFilters label{display:flex;flex-direction:column;gap:4px;min-width:140px;flex:1}
+        input,select{font:inherit;border:1px solid #8ca2ad;padding:4px;min-height:27px;max-width:100%}
+        input[type=checkbox]{min-height:0;vertical-align:middle}
+        .pia-heading{display:flex;align-items:center;gap:12px;min-height:30px;background:#007f7f;color:white;margin:8px 8px 0;padding:3px 8px}
+        .pia-heading h2{font-size:12px;margin:0;flex:1}.pia-tools{display:flex;align-items:center;gap:6px;flex-shrink:0}
+        .pia-grid{overflow:auto;margin:0 8px;background:white;border:1px solid #b0bec5;max-height:38vh;min-height:125px}
+        table{border-collapse:collapse;width:100%;white-space:nowrap}th,td{padding:5px 7px;border:1px solid #ccd6df;text-align:left}
+        th{position:sticky;top:0;background:#e0eaf2;font-weight:600;z-index:1}tbody tr:nth-child(even){background:#f2f6f9}
+        tbody tr.selected{background:#fff1c7}tbody tr{cursor:pointer}td.number{text-align:right}
+        td button{padding:3px 7px;margin-right:4px}#piaCount{padding:6px 8px;color:#536771}
+    </style>
+</head>
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<h1 id="piaTitle" th:text="${moduleTitle}">Purchase Invoice Approval</h1>
+<div class="pia-toolbar">
+    <a id="piaBack" class="pia-back" href="/dashboard/approval-dashboard">← Back to Approval Dashboard</a>
+    <button type="button" id="piaReset" disabled>Reset</button>
+    <button type="button" id="piaRefresh" disabled>Refresh</button>
+    <button type="button" id="piaApprove" class="pia-primary" disabled>Approve selected</button>
+</div>
+<div id="piaMessage" role="status" aria-live="polite"></div>
+<form id="piaFilters">
+    <label>From Date<input type="date" id="piaFrom"></label>
+    <label>To Date<input type="date" id="piaTo" required></label>
+    <label>Supplier Name<select id="piaSupplier"><option value="0">All suppliers</option></select></label>
+    <label>Item Name<select id="piaItem"><option value="0">All items</option></select></label>
+    <button type="submit" id="piaShow" class="pia-primary" disabled>Show</button>
+</form>
+<div class="pia-heading"><h2 id="piaInvoicesTitle">Pending purchase invoices</h2><div id="piaInvoicesTools" class="pia-tools"></div></div>
+<div class="pia-grid"><table id="piaInvoices" data-gridbar="PendingApprovalPurchaseInvoice:DataGridHistory" data-gridbar-mount="#piaInvoicesTools"><thead></thead><tbody></tbody></table></div>
+<div id="piaCount">Loading invoices…</div>
+<div class="pia-heading"><h2 id="piaDetailsTitle">Invoice details</h2><div id="piaDetailsTools" class="pia-tools"></div></div>
+<div class="pia-grid"><table id="piaDetails" data-gridbar="PendingApprovalPurchaseInvoice:PurchaseInvoiceApprovalDetail" data-gridbar-mount="#piaDetailsTools"><thead></thead><tbody></tbody></table></div>
+<script th:src="@{/build/js/countx_purchase_invoice_for_approval.js?v=20261014-invoice-undo}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20261013approval1}"></script>
+</body>
+</html>

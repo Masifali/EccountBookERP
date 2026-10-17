@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Stock Close Run - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_store.css?v=20260928b}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261007-gridbar-flow}" href="/build/css/countx_grid_bar.css?v=20261007-gridbar-flow">
+    <style>
+        /* StockCloseRun designer geometry (InitializeComponent :666-1044), 1:1 px. ClientSize 800 x 518:
+           toolStrip1 (27) | panel12 teal (26) | panel1 white (76) | grd (Fill). ctrlGrdBar1 sits at (760,2) over the strip. */
+        body { background: #fff; margin: 0; padding-bottom: 12px; }
+        .fx-scroll { overflow-x: auto; }
+        .fx-root { position: relative; min-width: 800px; font-family: Verdana, sans-serif; font-size: 11px; background: #fff; }
+        .fx-abs { position: absolute; box-sizing: border-box; margin: 0; }
+        .fx-rel { position: relative; }
+        .fx-lbl { font-family: "Segoe UI Semibold", "Segoe UI", Tahoma, sans-serif; font-weight: bold; font-size: 13px; white-space: nowrap; line-height: 17px; color: #000; }
+        .fx-cmb { font-family: Verdana, sans-serif; font-size: 13px; height: 26px; border: 1px solid #7a7a7a; background: #fff; padding: 0 2px; }
+        .fx-txt { font-family: Verdana, sans-serif; font-size: 13px; height: 23px; border: 1px solid #7a7a7a; background: #fff; padding: 1px 3px; }
+        .fx-dt { font-family: Verdana, sans-serif; font-size: 13px; height: 23px; border: 1px solid #7a7a7a; background: #fff; padding: 0 2px; }
+        .fx-strip { height: 27px; display: flex; align-items: center; background: #fff; border-bottom: 1px solid #b5b5b5; box-sizing: border-box; position: relative; }
+        .fx-tool { font-family: Verdana, sans-serif; font-size: 13px; height: 24px; background: transparent; border: 1px solid transparent; display: inline-flex; align-items: center; gap: 4px; padding: 0 6px; cursor: pointer; white-space: nowrap; color: #000; }
+        .fx-tool:hover:not(:disabled) { background: #ffe4a0; border-color: #e59d00; }
+        .fx-tool:disabled { color: #9a9a9a; cursor: default; }
+        .fx-btn { background: #008080; color: #fff; border: 1px solid #054d4d; font-family: Tahoma, sans-serif; font-size: 13px; font-weight: bold; padding: 0; cursor: pointer; }
+        .fx-btn:hover:not(:disabled) { background: #054d4d; }
+        .fx-amt-lbl { font-family: "Segoe UI Semibold", "Segoe UI", Tahoma, sans-serif; font-weight: bold; font-size: 13px; white-space: nowrap; }
+        .fx-amt { font-family: Verdana, sans-serif; font-weight: bold; font-size: 12px; text-align: center; }
+        .fx-grid-host { overflow: auto; background: #fff; height: calc(100vh - 260px); min-height: 389px; position: relative; }
+        .fx-grid-host .win-grid { width: auto; min-width: 100%; font-family: Verdana, sans-serif; font-size: 11px; border-collapse: collapse; }
+        .fx-grid-host .win-grid th { background: linear-gradient(to bottom, #e6f7f7 0%, #bfe6e6 100%); border: 1px solid #8fbcbc; font-weight: normal; white-space: nowrap; padding: 2px 4px; text-align: center; position: sticky; top: 0; z-index: 2; }
+        .fx-grid-host .win-grid thead tr.flt td { position: sticky; top: 20px; z-index: 2; background: #f4fbfb; border: 1px solid #c8dede; padding: 0; }
+        .fx-grid-host .win-grid thead tr.flt input { width: 100%; box-sizing: border-box; border: 0; height: 18px; font: 11px Verdana, sans-serif; background: transparent; }
+        .fx-grid-host .win-grid td { border: 1px solid #d5e6e6; white-space: nowrap; padding: 1px 4px; overflow: hidden; text-overflow: ellipsis; }
+        .fx-grid-host .win-grid td.n { text-align: right; }
+        .fx-grid-host .win-grid td input.ed { width: 90px; text-align: right; font: 11px Verdana, sans-serif; border: 1px solid #9ab; }
+        .fx-grid-host .win-grid tbody tr.sel td { background: #cde8ff; }
+        .fx-grid-host .win-grid tfoot td { background: #e6e6e6; font-weight: bold; text-align: right; position: sticky; bottom: 0; }
+        .fx-nav { font: 11px Verdana, sans-serif; padding: 2px 8px; border-top: 1px solid #c8dede; background: #f4f4f4; }
+        .is-hidden { display: none !important; }
+    </style>
+</head>
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="fx-scroll">
+<div class="fx-root" id="frmRoot" data-variant="STOCK_CLOSE_RUN" data-screen="StockCloseRun" data-api="/inventory/stock-close-run/api">
+    <!-- toolStrip1: btnnew, btnSave, btnSlip "300-Slip", btnprint "103-Voucher", BtnShortCutkeys (Visible=false) -->
+    <div class="fx-strip">
+        <button type="button" class="fx-tool" id="btnnew" title="Ctrl+N"><i class="fa fa-plus-circle" style="color:#2e7d32"></i> <span><u>N</u>ew</span></button>
+        <button type="button" class="fx-tool" id="btnSave" title="Ctrl+S"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+        <button type="button" class="fx-tool" id="btnSlip" title="Alt+1"><i class="fa fa-print"></i> <span>300-Slip</span></button>
+        <button type="button" class="fx-tool" id="btnprint" title="Alt+2"><i class="fa fa-print"></i> <span>103-Voucher</span></button>
+        <button type="button" class="fx-tool is-hidden" id="BtnShortCutkeys">ShortCut Keys</button>
+        <a href="/modules" class="fx-tool" style="margin-left:auto;text-decoration:none;color:#004d40;font-size:11px;font-weight:bold;"><i class="fa fa-arrow-left"></i> Exit</a>
+    </div>
+    <!-- panel12 (0,27) 800 x 26 Teal: label24 (4,3) "Stock Closing"; chkPrintPreview (695,4) -->
+    <div class="fx-rel" style="height:26px;background:#008080;">
+        <span class="fx-abs" style="left:4px;top:3px;font:bold 16px Tahoma, sans-serif;color:#fff;white-space:nowrap;line-height:19px;" id="label24">Stock Closing</span>
+        <label class="fx-abs" style="left:695px;top:4px;display:inline-flex;align-items:center;gap:3px;color:#fff;font:bold 12px 'Segoe UI', Tahoma, sans-serif;white-space:nowrap;"><input type="checkbox" id="chkPrintPreview" style="margin:0"> Print Preview</label>
+    </div>
+    <!-- panel1 (0,53) 800 x 76 white -->
+    <div class="fx-rel" style="height:76px;background:#fff;">
+        <label class="fx-abs fx-lbl" style="left:6px;top:10px;" for="CmbDifferenceAccount">Difference Account</label>
+        <select id="CmbDifferenceAccount" class="fx-abs fx-cmb win-combo" style="left:134px;top:5px;width:227px;"></select>
+        <label class="fx-abs fx-lbl" style="left:6px;top:38px;" for="datAsOnDate">As On Date:</label>
+        <input type="date" id="datAsOnDate" class="fx-abs fx-dt" style="left:134px;top:35px;width:168px;">
+        <button type="button" id="btnShow" class="fx-abs fx-btn" style="left:308px;top:35px;width:53px;height:23px;">Show</button>
+        <label class="fx-abs fx-lbl" style="left:362px;top:9px;" for="txtRemarks">Remarks</label>
+        <input type="text" id="txtRemarks" class="fx-abs fx-txt" style="left:423px;top:6px;width:373px;">
+        <!-- AmountsPanel (423,30) 373 x 42, Visible=false until rows are shown -->
+        <div class="fx-abs is-hidden" id="AmountsPanel" style="left:423px;top:30px;width:373px;height:42px;">
+            <span class="fx-abs fx-amt-lbl" style="left:3px;top:3px;">Closing Amount</span>
+            <span class="fx-abs fx-amt" id="txtClosingAmount" style="left:4px;top:22px;width:110px;">0</span>
+            <span class="fx-abs fx-amt-lbl" style="left:120px;top:3px;">Opening Amount</span>
+            <span class="fx-abs fx-amt" id="txtOpeningAmount" style="left:123px;top:22px;width:119px;">0</span>
+            <span class="fx-abs fx-amt-lbl" style="left:246px;top:3px;">Difference Amount</span>
+            <span class="fx-abs fx-amt" id="txtDifferenceAmount" style="left:248px;top:20px;width:122px;">0</span>
+        </div>
+    </div>
+    <!-- grd (Fill); ctrlGrdBar1 (760,2) Visible=false until Ctrl+Shift+G -->
+    <div class="fx-rel" style="height:23px;background:#008080;">
+        <div id="gbMount" class="fx-abs" style="left:760px;top:1px;width:38px;height:21px;"></div>
+    </div>
+    <div id="grdWrap" class="fx-grid-host" data-gridbar-form="StockCloseRun" data-gridbar-grid="grd"
+         data-gridbar-mount="#gbMount" data-gridbar-reorder="false" data-gridbar-hide="chooser,save,remove,collapse,expand">
+        <table class="win-grid" id="grd"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+    </div>
+    <div class="fx-nav" id="lblNavigator"></div>
+</div>
+</div>
+<script th:src="@{/build/js/countx_store_common.js?v=20260928b}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20261007-gridbar-flow}" src="/build/js/countx_grid_bar.js?v=20261007-gridbar-flow"></script>
+<script th:src="@{/build/js/countx_inventory_inv4c_stock_close_run.js?v=20261013a}"></script>
+<script src="/js/print-rpt.js?v=20261003erp"></script>
+</body>
+</html>

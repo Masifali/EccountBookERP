@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Exchange Rate Forward Booking - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20261002gf}" href="/build/css/countx_desktop_combo.css">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20261002gv}" href="/build/css/countx_prod_combo.css">
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261007-gridbar-flow}" href="/build/css/countx_grid_bar.css">
+    <link rel="stylesheet" th:href="@{/build/css/countx_w4_dashboards.css?v=20261014a}" href="/build/css/countx_w4_dashboards.css">
+    <link rel="stylesheet" th:href="@{/build/css/countx_w4_exchange_rate_forward_booking.css?v=20261014a}" href="/build/css/countx_w4_exchange_rate_forward_booking.css">
+<!--
+  Screen 199 "Exchange Rate Forward Booking" - Architecture.WinApp.Account_Definition.ExchangeRateForwardBooking.
+  Toolstrip: New | Refresh | Save | Update(hidden) | Attachment | Print-01 | ShortCut Keys. One page: Information group, then
+  the History bar (grid gear) with the Filters group box and the history grid.
+-->
+</head>
+<body class="erp-viewport-page">
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="w4-title-bar">Exchange Rate Forward Booking</div>
+<div class="w4-toolbar" role="toolbar">
+  <button type="button" class="w4-btn" id="BtnNew" title="Ctrl+N"><u>N</u>ew</button>
+  <button type="button" class="w4-btn" id="btnRefresh" title="Ctrl+R"><u>R</u>efresh</button>
+  <button type="button" class="w4-btn" id="BtnSave" title="Ctrl+S"><u>S</u>ave</button>
+  <button type="button" class="w4-btn fb-hidden" id="btnUpdate" title="Ctrl+U"><u>U</u>pdate</button>
+  <button type="button" class="w4-btn" id="btnattachment" title="Ctrl+E">Attachment</button>
+  <button type="button" class="w4-btn" id="BtnPrint" title="Ctrl+P">Print-01</button>
+  <button type="button" class="w4-btn" id="btnshortcutkeys">ShortCut Keys</button>
+</div>
+<div id="w4Message"></div>
+<div class="fb-wrap">
+  <div class="fb-grp">
+    <div class="fb-cap">Information</div>
+    <div class="fb-form">
+      <div class="fb-f"><label for="txtDocNo">Doc No</label><input id="txtDocNo" disabled></div>
+      <div class="fb-f"><label>Bank A/C</label><select id="cmbBank" data-dtcombo="single" data-dtcombo-caption="Bank"><option value=""></option></select></div>
+      <div class="fb-f"><label for="txtContract">Contract Ref No</label><input id="txtContract" maxlength="50" autocomplete="off"></div>
+      <div class="fb-f"><label for="datDeal">Deal Date</label><input type="date" id="datDeal"></div>
+      <div class="fb-f"><label>Client</label><select id="cmbClient" data-dtcombo="single" data-dtcombo-caption="Client"><option value=""></option></select></div>
+      <div class="fb-f"><label>Fcy Code</label><select id="cmbFcy" data-dtcombo="single" data-dtcombo-caption="Fcy Code"><option value=""></option></select></div>
+      <div class="fb-f"><label for="txtFcyAmount">Fcy Amount</label><input id="txtFcyAmount" autocomplete="off" inputmode="decimal"></div>
+      <div class="fb-f"><label for="txtRate">Booking Rate</label><input id="txtRate" autocomplete="off" inputmode="decimal"></div>
+      <div class="fb-f"><label>Hcy Code</label><select id="cmbHcy" data-dtcombo="single" data-dtcombo-caption="Hcy Code"><option value=""></option></select></div>
+      <div class="fb-f"><label for="txtHcyAmount">Hcy Amount</label><input id="txtHcyAmount" disabled></div>
+      <div class="fb-f"><label for="txtFixedDays">Tenor Fixed Days</label><input id="txtFixedDays" autocomplete="off" inputmode="numeric"></div>
+      <div class="fb-f"><label for="datFixedMaturity">Fixed Maturity</label><input type="date" id="datFixedMaturity" disabled></div>
+      <div class="fb-f"><label for="txtOptionalDays">Tenor Optional Days</label><input id="txtOptionalDays" autocomplete="off" inputmode="numeric"></div>
+      <div class="fb-f"><label for="datStartOptional">Start Of Optional Period</label><input type="date" id="datStartOptional" disabled></div>
+      <div class="fb-f"><label for="datFinalMaturity">Final Maturity</label><input type="date" id="datFinalMaturity" disabled></div>
+      <div class="fb-f"><label for="txtTotalDays">Total Days</label><input id="txtTotalDays" disabled></div>
+    </div>
+  </div>
+
+  <div class="fb-grp">
+    <div class="fb-hist-bar"><span>History</span><span id="gbMount"></span></div>
+    <div class="fb-cap">Filters</div>
+    <div class="fb-filters">
+      <div class="fb-f fb-chk"><input type="checkbox" id="chkFrom" checked><label for="chkFrom">From Date</label></div>
+      <div class="fb-f"><input type="date" id="datFrom"></div>
+      <div class="fb-f fb-chk"><input type="checkbox" id="chkTo" checked><label for="chkTo">To Date</label></div>
+      <div class="fb-f"><input type="date" id="datTo"></div>
+      <div class="fb-f"><label for="txtFromDocNo">From Doc No</label><input id="txtFromDocNo" autocomplete="off"></div>
+      <div class="fb-f"><label for="txtToDocNo">To Doc No</label><input id="txtToDocNo" autocomplete="off"></div>
+      <div class="fb-f"><label>Bank A/C</label><select id="cmbHBank" data-dtcombo="single" data-dtcombo-caption="Bank"><option value=""></option></select></div>
+      <div class="fb-f"><label>Client</label><select id="cmbHClient" data-dtcombo="single" data-dtcombo-caption="Client"><option value=""></option></select></div>
+      <div class="fb-f fb-chk"><input type="radio" name="dateBy" id="rdDoc" value="docdate" checked><label for="rdDoc">Doc Date</label></div>
+      <div class="fb-f fb-chk"><input type="radio" name="dateBy" id="rdEntry" value="entrydate"><label for="rdEntry">Entry Date</label></div>
+      <div class="fb-f fb-chk"><input type="radio" name="dateBy" id="rdModify" value="modifydate"><label for="rdModify">Modify Date</label></div>
+      <button type="button" class="w4-btn" id="btnShow">Show</button>
+    </div>
+    <div class="fb-gridwrap" id="wrapHistory" data-gridbar-form="ExchangeRateForwardBooking" data-gridbar-grid="DataGridHistory"
+         data-gridbar-mount="#gbMount" data-gridbar-reorder="false" data-gridbar-nullgrid="true" data-gridbar-title="Exchange Rate Forward Booking History">
+      <table id="gridHist"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+    </div>
+  </div>
+</div>
+
+<div class="fb-dlg" id="dlgAttach"><div class="box"><div class="hd"><span>Attachment</span><a href="#" id="atX" style="color:#fff">X</a></div>
+  <div class="bd"><input type="file" id="atFile" multiple class="fb-hidden"><button type="button" class="w4-btn" id="atChoose">Choose files</button>
+  <table style="margin-top:6px"><thead><tr><th>File</th><th>Size (MB)</th><th></th></tr></thead><tbody id="atRows"></tbody></table>
+  <div style="margin-top:6px"><button type="button" class="w4-btn" id="atClose">Close</button></div></div></div></div>
+<div class="fb-dlg" id="dlgView"><div class="box"><div class="hd"><span>Attachments</span><a href="#" id="vwX" style="color:#fff">X</a></div>
+  <div class="bd"><table><thead><tr><th>File</th><th>Size (MB)</th><th>Entry User</th></tr></thead><tbody id="vwRows"></tbody></table></div></div></div>
+<div class="fb-dlg" id="dlgKeys"><div class="box"><div class="hd"><span>ShortCut Keys</span><a href="#" id="kyX" style="color:#fff">X</a></div>
+  <div class="bd"><table><thead><tr><th>KeyCombination</th><th>Description</th></tr></thead><tbody>
+  <tr><td>Ctrl+S</td><td>Save</td></tr><tr><td>Ctrl+U</td><td>Update</td></tr><tr><td>Ctrl+E</td><td>Attachment</td></tr>
+  <tr><td>Ctrl+R</td><td>Refresh</td></tr><tr><td>Ctrl+N</td><td>New</td></tr><tr><td>Ctrl+P</td><td>Print</td></tr>
+  <tr><td>F5</td><td>Focus Bank A/C</td></tr><tr><td>Ctrl+Down</td><td>Go to history grid</td></tr><tr><td>Esc</td><td>Close dialog</td></tr>
+  </tbody></table></div></div></div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}" src="/vendors/jquery/dist/jquery.min.js"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20261002gv}" src="/build/js/countx_prod_combo.js"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20261007-gridbar-flow}" src="/build/js/countx_grid_bar.js"></script>
+<script th:src="@{/build/js/countx_w4_exchange_rate_forward_booking.js?v=20261014a}" src="/build/js/countx_w4_exchange_rate_forward_booking.js"></script>
+</body>
+</html>

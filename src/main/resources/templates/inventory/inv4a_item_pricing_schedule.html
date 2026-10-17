@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Item Pricing Schedule - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_store.css?v=20260928b}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261007-gridbar-flow}" href="/build/css/countx_grid_bar.css?v=20261007-gridbar-flow">
+    <link rel="stylesheet" th:href="@{/build/css/countx_inv4a.css?v=20261013a}" href="/build/css/countx_inv4a.css?v=20261013a">
+    <style>
+        /* frmItemPricingSchedule designer geometry (InitializeComponent :1003-2380), 1:1 px. ClientSize 1084 x 661;
+           tabControl1 (tabs at the bottom) → tabPage panels 1070 wide: panel3 toolStrip (28) | panel4 teal (33) |
+           panel5 filters (137: groupBox1 559 x 134 + groupBox2 504 x 134) | panel7: label18 teal (30) + grd (Fill). */
+        .fx-root { width: 1070px; }
+        #grdHost { height: calc(100vh - 330px); min-height: 300px; }
+        #DataGridHistoryHost { height: calc(100vh - 250px); min-height: 380px; }
+    </style>
+</head>
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="fx-scroll">
+<div class="fx-root" id="tabRoot">
+
+    <!-- ===================================================== tabPage1 "Form" -->
+    <div id="tabForm" class="fx-panel is-active">
+        <!-- panel3 / toolStrip1: btnnew, btnsave, btnUpdate(hidden), separator, btnrefresh -->
+        <div class="fx-strip" style="height:28px;">
+            <button type="button" class="fx-tool" id="btnnew" style="width:59px" title="Ctrl+N"><i class="fa fa-plus-circle" style="color:#2e9b45"></i> <u>N</u>ew</button>
+            <button type="button" class="fx-tool" id="btnsave" style="width:64px" title="Ctrl+S"><i class="fa fa-save"></i> <u>S</u>ave</button>
+            <button type="button" class="fx-tool is-hidden" id="btnUpdate" style="width:78px" title="Ctrl+U"><i class="fa fa-pencil"></i> <u>U</u>pdate</button>
+            <span class="fx-sep"></span>
+            <button type="button" class="fx-tool" id="btnrefresh" style="width:80px"><i class="fa fa-repeat"></i> Refresh</button>
+            <a href="/app/Inventory?module=4" class="fx-tool" style="margin-left:auto;text-decoration:none;color:#004d40;font-size:11px;font-weight:bold;" title="Ctrl+E / Esc"><i class="fa fa-arrow-left"></i> Exit</a>
+        </div>
+        <!-- panel4 (33) #0a6e6e; label15 (7,7) -->
+        <div class="fx-teal" style="height:33px;background:#0a6e6e;">
+            <span class="fx-teal-title" style="left:7px;top:7px;">Item Pricing Schedule</span>
+        </div>
+        <!-- panel5 (137) -->
+        <div class="fx-rel" style="height:137px;">
+            <!-- groupBox1 (4,2) 559 x 134 "By Filter Item's" -->
+            <fieldset class="fx-abs fx-grp" style="left:4px;top:2px;width:559px;height:134px;">
+                <legend>By Filter Item's</legend>
+                <label class="fx-abs fx-lbl" style="left:12px;top:12px;" for="CmbParentCatagory">Parent Catagory</label>
+                <select id="CmbParentCatagory" class="fx-abs fx-cmb win-combo" style="left:109px;top:6px;width:252px;"></select>
+                <label class="fx-abs fx-lbl" style="left:12px;top:41px;" for="cmbItemCategory">Item Category</label>
+                <select id="cmbItemCategory" class="fx-abs fx-cmb win-combo" style="left:109px;top:35px;width:252px;"></select>
+                <label class="fx-abs fx-lbl" style="left:12px;top:70px;" for="cmbItemType">Item Type</label>
+                <select id="cmbItemType" class="fx-abs fx-cmb win-combo" style="left:109px;top:64px;width:252px;"></select>
+                <label class="fx-abs fx-lbl" style="left:12px;top:97px;" for="txtApplyRateUom">Apply Rate Uom</label>
+                <input type="text" id="txtApplyRateUom" class="fx-abs fx-txt" style="left:109px;top:93px;width:252px;" inputmode="decimal">
+                <label class="fx-abs fx-lbl" style="left:368px;top:12px;">Effected Date</label>
+                <label class="fx-abs fx-chk" style="left:451px;top:10px;"><input type="checkbox" id="chkApplyDate"> Apply Date</label>
+                <input type="date" id="datEffectedForFilter" class="fx-abs fx-dt" style="left:368px;top:37px;width:185px;" disabled>
+                <label class="fx-abs fx-chk" style="left:368px;top:68px;"><input type="checkbox" id="CbOnlyShowRatedItems" checked> Show Only Rated Items</label>
+                <button type="button" id="btnSearch" class="fx-abs fx-btn" style="left:487px;top:92px;width:66px;height:25px;">Search</button>
+            </fieldset>
+            <!-- groupBox2 (563,2) 504 x 134 "By One by One Item" -->
+            <fieldset class="fx-abs fx-grp" style="left:563px;top:2px;width:504px;height:134px;">
+                <legend>By One by One Item</legend>
+                <label class="fx-abs fx-lbl" style="left:6px;top:12px;" for="txtEffectedDate">Effected Date</label>
+                <input type="date" id="txtEffectedDate" class="fx-abs fx-dt" style="left:85px;top:8px;width:136px;">
+                <label class="fx-abs fx-lbl" style="left:224px;top:12px;" for="datEffectedTime">Effected Time</label>
+                <input type="time" id="datEffectedTime" class="fx-abs fx-dt" style="left:304px;top:8px;width:130px;" step="1">
+                <label class="fx-abs fx-lbl" style="left:6px;top:41px;" for="cmbItem">Item Name</label>
+                <select id="cmbItem" class="fx-abs fx-cmb win-combo" style="left:85px;top:35px;width:349px;"></select>
+                <label class="fx-abs fx-lbl" style="left:6px;top:70px;" for="CmbRateUom">Rate Uom</label>
+                <select id="CmbRateUom" class="fx-abs fx-cmb win-combo" style="left:85px;top:64px;width:136px;"></select>
+                <label class="fx-abs fx-lbl" style="left:224px;top:70px;" for="txtLastRate">Last Rate</label>
+                <input type="text" id="txtLastRate" class="fx-abs fx-txt" style="left:304px;top:66px;width:130px;" readonly tabindex="-1">
+                <label class="fx-abs fx-lbl" style="left:6px;top:97px;" for="txtNewPrice">New Rate</label>
+                <input type="text" id="txtNewPrice" class="fx-abs fx-txt" style="left:85px;top:93px;width:136px;" inputmode="decimal">
+                <label class="fx-abs fx-lbl" style="left:224px;top:97px;" for="datPreviousDate">Previous Date</label>
+                <input type="date" id="datPreviousDate" class="fx-abs fx-dt" style="left:304px;top:93px;width:130px;" disabled>
+                <button type="button" id="btnAdd" class="fx-abs fx-btn" style="left:436px;top:91px;width:65px;height:26px;">Add</button>
+            </fieldset>
+        </div>
+        <!-- panel7: label18 teal (30) "Detail Grid" + ctrlGrdBar2 (1022,2) -->
+        <div class="fx-teal" style="height:30px;">
+            <span class="fx-teal-title" style="left:6px;top:5px;">Detail Grid</span>
+            <div id="gbMount2" class="fx-abs" style="left:1022px;top:2px;width:45px;height:25px;"></div>
+        </div>
+        <div id="grdHost" class="fx-grid-host" data-gridbar-form="frmItemPricingSchedule" data-gridbar-grid="grd"
+             data-gridbar-mount="#gbMount2" data-gridbar-reorder="false" data-gridbar-hide="chooser,save,remove,collapse,expand">
+            <table class="win-grid" id="grd"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+        </div>
+        <div class="fx-nav" id="lblNavigator"></div>
+    </div>
+
+    <!-- ===================================================== tabPage2 "History" -->
+    <div id="tabHistory" class="fx-panel">
+        <!-- panel8 (91): label11 teal (27) + groupBox3 (5,29) 940 x 58 "Filters" -->
+        <div class="fx-teal" style="height:27px;">
+            <span class="fx-teal-title" style="left:6px;top:3px;">Item Pricing Schedule History</span>
+        </div>
+        <div class="fx-rel" style="height:64px;">
+            <fieldset class="fx-abs fx-grp" style="left:5px;top:2px;width:940px;height:58px;">
+                <legend>Filters</legend>
+                <label class="fx-abs fx-lbl" style="left:4px;top:17px;" for="CmbItemCategoryHistory">Item Category</label>
+                <select id="CmbItemCategoryHistory" class="fx-abs fx-cmb win-combo" style="left:92px;top:11px;width:217px;"></select>
+                <label class="fx-abs fx-lbl" style="left:315px;top:17px;" for="CmbItemTypeHistory">Item Type</label>
+                <select id="CmbItemTypeHistory" class="fx-abs fx-cmb win-combo" style="left:382px;top:11px;width:185px;"></select>
+                <label class="fx-abs fx-lbl" style="left:572px;top:17px;" for="datEffectedDateHistory">Effected Date</label>
+                <input type="date" id="datEffectedDateHistory" class="fx-abs fx-dt" style="left:655px;top:13px;width:138px;">
+                <button type="button" id="btnPrintHistory" class="fx-abs fx-btn" style="left:799px;top:10px;width:70px;height:28px;" data-rpt="325-ItemPricingList.rpt">Print</button>
+            </fieldset>
+        </div>
+        <!-- panel9: label19 teal (26) "History Grid" + ctrlGrdBar1 (1022,2) -->
+        <div class="fx-teal" style="height:26px;">
+            <span class="fx-teal-title sm" style="left:6px;top:4px;">History Grid</span>
+            <div id="gbMount1" class="fx-abs" style="left:1022px;top:1px;width:45px;height:25px;"></div>
+        </div>
+        <div id="DataGridHistoryHost" class="fx-grid-host" data-gridbar-form="frmItemPricingSchedule" data-gridbar-grid="DataGridHistory"
+             data-gridbar-mount="#gbMount1" data-gridbar-reorder="false" data-gridbar-hide="chooser,save,remove,collapse,expand">
+            <table class="win-grid" id="DataGridHistory"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+        </div>
+    </div>
+
+    <!-- tab headers (TabAlignment.Bottom) -->
+    <div class="fx-tabs">
+        <div class="win-tab is-active" data-tab="tabForm">Form</div>
+        <div class="win-tab" data-tab="tabHistory">History</div>
+    </div>
+</div>
+</div>
+<script th:src="@{/build/js/countx_store_common.js?v=20260928b}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20261007-gridbar-flow}" src="/build/js/countx_grid_bar.js?v=20261007-gridbar-flow"></script>
+<script th:src="@{/build/js/countx_inventory_inv4a_common.js?v=20261013a}" src="/build/js/countx_inventory_inv4a_common.js?v=20261013a"></script>
+<script th:src="@{/build/js/countx_inventory_inv4a_item_pricing_schedule.js?v=20261013a}" src="/build/js/countx_inventory_inv4a_item_pricing_schedule.js?v=20261013a"></script>
+<script src="/js/print-rpt.js?v=20261003erp"></script>
+</body>
+</html>

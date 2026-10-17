@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Purchase Invoice For Ghalla Mandi - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/build/css/countx_purchase_request.css?v=20260923a}" />
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20261003s}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_paddy_purchase.css?v=20261009a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_paddy_invoice.css?v=20261009b}"/>
+    <!--
+        Screen 467 "Purchase Invoice For Ghalla Mandi" - Architecture.WinApp.Paddy_Purchase.frmPurchaseInvoiceForGhallaMandi (InvPurchaseInvoice DocumentTypeId 168; also Supplier Portal 893).
+        Designer geometry 1:1 in px: the same tabs / panels as frmPurchaseInvoiceForGate (tabControl1 1316 x 716; panel4 1310 x 145; panel7 126; panel12 137; grd 274), with the header re-laid out:
+        Loading Contractor (cmbsuppliername), Ghalla_Mandi (cmbGhallaMandi, Enabled=false), no Order No, Remarks box 224 x 131. The main grid is editable (ItemRate, RateUom only).
+        Desktop names are the element ids. Every combo is countx_prod_combo.js. "Load GRN" is the popup form frmLoadGrnForGhallaMandi (1149 wide, DocumentTypeId 167).
+    -->
+</head>
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="pp-scroll">
+<div class="pp-root" style="width:1322px;padding:0 6px;">
+
+<!-- ======================================================= tabForm -->
+<div id="viewForm" style="width:1310px;">
+    <!-- panel2 / toolStrip1: toolStripLabel1, btnFrmRefresh, separator, btnNew, btnUpdate, btnSave, btnDelete (hidden), btnAttachment, toolStripButton3, btnPrint, btnSlip220A -->
+    <div class="pp-strip" style="height:28px;">
+        <span class="pi-title">Purchase Invoice Ghalla_Mandi</span>
+        <button type="button" id="btnFrmRefresh" class="pp-tool tool-btn" title="Alt+R"><span class="ic">&#8635;</span>Refresh</button>
+        <span class="pp-sep"></span>
+        <button type="button" id="btnNew" class="pp-tool tool-btn" title="Ctrl+N"><span class="ic">&#10010;</span>New</button>
+        <button type="button" id="btnUpdate" class="pp-tool tool-btn" style="display:none;" title="Ctrl+U"><span class="ic">&#9998;</span>Update</button>
+        <button type="button" id="btnSave" class="pp-tool tool-btn" title="Ctrl+S"><span class="ic">&#128190;</span>Save</button>
+        <button type="button" id="btnDelete" class="pp-tool tool-btn" style="display:none;"><span class="ic">&#10006;</span>Delete</button>
+        <button type="button" id="btnAttachment" class="pp-tool tool-btn" title="Ctrl+F10"><span class="ic">&#128206;</span>Attechment</button>
+        <button type="button" id="toolStripButton3" class="pp-tool tool-btn" title="Ctrl+L"><span class="ic">&#128230;</span>Load GRN</button>
+        <button type="button" id="btnPrint" class="pp-tool tool-btn" title="Ctrl+P"><span class="ic">&#128438;</span>103-Voucher</button>
+        <button type="button" id="btnSlip220A" class="pp-tool tool-btn"><span class="ic">&#128438;</span>220A-Print</button>
+    </div>
+
+    <!-- panel4 (1310 x 145) -->
+    <div class="pp-panel4" style="height:145px;" id="panel4">
+        <label class="pp-lbl reg pi-l" style="left:8px;top:13px;">Doc Date</label>
+        <input type="date" id="DocDate" class="pp-dt" style="left:115px;top:9px;width:219px;height:21px;font-size:9pt;">
+        <label class="pp-lbl reg pi-l" style="left:8px;top:41px;">Doc No</label>
+        <input type="text" id="txtdocno" class="pp-txt" style="left:115px;top:36px;width:84px;height:22px;background:#fff;" readonly>
+        <label class="pp-lbl reg pi-l" style="left:206px;top:41px;">Bill No</label>
+        <input type="text" id="txtbillno" class="pp-txt" style="left:250px;top:37px;width:84px;height:22px;">
+        <label class="pp-lbl reg pi-l" style="left:8px;top:69px;">Loading Contractor</label>
+        <select id="cmbsuppliername" class="pp-cmb" style="left:115px;top:63px;width:220px;height:24px;" data-dtcombo="single" data-dtcombo-caption="Loading Contractor"></select>
+        <label class="pp-lbl reg pi-l" style="left:8px;top:95px;">Due Days</label>
+        <input type="text" id="txtDueDays" class="pp-txt" data-guard="digits" style="left:115px;top:90px;width:70px;height:22px;">
+        <label class="pp-lbl reg pi-l" style="left:194px;top:95px;">Due Date</label>
+        <input type="date" id="DueDate" class="pp-dt" style="left:258px;top:91px;width:76px;height:20px;font-size:8.25pt;" disabled>
+        <label class="pp-lbl reg pi-l" style="left:8px;top:122px;">Ghalla_Mandi</label>
+        <select id="cmbGhallaMandi" class="pp-cmb" style="left:115px;top:116px;width:220px;height:24px;" data-dtcombo="single" data-dtcombo-caption="Ghalla_Mandi" disabled></select>
+
+        <label class="pp-lbl reg pi-l" style="left:343px;top:13px;">Comm Agent</label>
+        <select id="cmbcommagent" class="pp-cmb" style="left:419px;top:7px;width:229px;height:24px;" data-dtcombo="single" data-dtcombo-caption="Commission Agent Name"></select>
+        <label class="pp-lbl reg pi-l" style="left:343px;top:41px;">Comm Type</label>
+        <select id="cmbcommtype" class="pp-cmb" style="left:419px;top:35px;width:85px;height:24px;" data-dtcombo="single" data-dtcombo-caption="CommissionType"></select>
+        <label class="pp-lbl reg pi-l" style="left:507px;top:41px;">Comm Rate</label>
+        <input type="text" id="txtcommrate" class="pp-txt" data-guard="decimal" style="left:578px;top:36px;width:70px;height:22px;">
+        <label class="pp-lbl reg pi-l" style="left:343px;top:69px;">Rate UOM</label>
+        <select id="cmbcommuom" class="pp-cmb" style="left:419px;top:63px;width:85px;height:24px;" data-dtcombo="single" data-dtcombo-caption="UOM"></select>
+        <label class="pp-lbl reg pi-l" style="left:510px;top:69px;">Amount</label>
+        <input type="text" id="txtcommamount" class="pp-txt" style="left:578px;top:63px;width:70px;height:25px;background:#f0f0f0;font-family:'Segoe UI',Tahoma,sans-serif;">
+        <label class="pp-lbl reg pi-l" style="left:343px;top:99px;">Remarks</label>
+        <textarea id="txtcommremarks" class="pp-txt" style="left:419px;top:93px;width:229px;height:45px;padding:2px 3px;resize:none;"></textarea>
+
+        <label class="pp-lbl reg pi-l" style="left:654px;top:13px;">Remarks</label>
+        <textarea id="txtRemarks" class="pp-txt" style="left:717px;top:7px;width:224px;height:131px;padding:2px 3px;resize:none;"></textarea>
+
+        <label class="pp-chk pi-chk" style="left:948px;top:13px;"><input type="checkbox" id="ChkBok" checked>Voucher</label>
+        <label class="pp-chk pi-chk" style="left:948px;top:33px;"><input type="checkbox" id="ChkBoxParty" checked>Print Preview</label>
+        <label class="pp-lbl reg pi-l" style="left:947px;top:89px;">Delivery Term</label>
+        <input type="text" id="txtDeliveryTerm" class="pp-txt" style="left:1030px;top:84px;width:161px;height:25px;background:#fff;font-family:'Segoe UI',Tahoma,sans-serif;" readonly>
+        <label class="pp-lbl reg pi-l" style="left:947px;top:120px;">Bill Amount</label>
+        <input type="text" id="txtBillAmount" class="pp-txt" style="left:1030px;top:113px;width:161px;height:25px;background:#fff;font-family:'Segoe UI',Tahoma,sans-serif;text-align:right;" readonly>
+        <input type="hidden" id="txtSupplierGLId"><input type="hidden" id="txtCommAgentId">
+    </div>
+
+    <!-- panel5 -> panel7 (126): panel9 grdFreight (641) + panel10 grdInvExp (668) -->
+    <div class="pi-row" style="height:126px;">
+        <div class="pp-gridwrap pi-eg" id="wrapFreight" style="width:641px;height:126px;"><table class="data-grid pg-eb" id="grdFreight"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        <div class="pp-gridwrap pi-eg" id="wrapInvExp" style="width:668px;height:126px;"><table class="data-grid pg-eb" id="grdInvExp"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+    </div>
+    <!-- panel12 (137): panel13 grdGLedger (641) + panel16 grdEmptyBags (668) -->
+    <div class="pi-row" style="height:137px;">
+        <div class="pp-gridwrap pi-eg" id="wrapGL" style="width:641px;height:137px;"><table class="data-grid pg-eb" id="grdGLedger"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        <div class="pp-gridwrap pi-eg" id="wrapEmptyBags" style="width:668px;height:137px;"><table class="data-grid pg-eb" id="grdEmptyBags"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+    </div>
+    <!-- panel8 (274): grd (AllowEdit false) -->
+    <div class="pp-gridwrap" id="wrapGrd" style="width:1310px;height:274px;"><table class="data-grid" id="grd"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+</div>
+
+<!-- ======================================================= tabHistory -->
+<div id="viewHistory" style="display:none;width:1310px;">
+    <!-- toolStrip2: btnLoadAll, btnRegister -->
+    <div class="pp-strip" style="height:28px;">
+        <button type="button" id="btnLoadAll" class="pp-tool tool-btn" title="Alt+L"><span class="ic">&#8635;</span>LoadAll</button>
+        <button type="button" id="btnRegister" class="pp-tool tool-btn"><span class="ic">&#128438;</span>Register</button>
+    </div>
+    <div class="pp-teal" style="height:34px;"><span class="pp-teal-title" style="left:14px;top:5px;">PURCHASE INVOICE HISTORY</span></div>
+    <div class="pp-gridwrap" id="wrapHistory" style="width:1310px;height:394px;"><table class="data-grid" id="grdHistory"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+    <div class="pp-gridwrap" id="wrapDetail" style="width:1310px;height:254px;"><table class="data-grid" id="grdDetail"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+</div>
+
+<!-- ======================================================= popup frmLoadGrnForGhallaMandi (1149 wide) -->
+<div class="pp-modal" id="grnModal"><div class="pp-modal-box" style="width:1149px;max-width:96vw;min-height:560px;">
+    <div class="pp-teal" style="height:42px;"><span class="pp-teal-title" style="left:6px;top:9px;">Grn Load</span><button type="button" id="popClose" class="pi-x">X</button></div>
+    <div class="pp-panel4" style="height:64px;" id="popPanel">
+        <label class="pp-lbl reg pi-l" style="left:12px;top:11px;font-size:9pt;">From Date</label>
+        <input type="date" id="popFromDate" class="pp-dt" style="left:15px;top:32px;width:113px;height:22px;">
+        <label class="pp-lbl reg pi-l" style="left:126px;top:11px;font-size:9pt;">To Date</label>
+        <input type="date" id="popToDate" class="pp-dt" style="left:129px;top:32px;width:113px;height:22px;">
+        <label class="pp-lbl reg pi-l" style="left:240px;top:11px;font-size:9pt;">Loading Contractor</label>
+        <select id="popSupplier" class="pp-cmb" style="left:243px;top:31px;width:213px;height:24px;" data-dtcombo="single" data-dtcombo-caption="Loading Contractor"></select>
+        <label class="pp-lbl reg pi-l" style="left:455px;top:11px;font-size:9pt;">Ghalla_Mandi</label>
+        <select id="popGhalla" class="pp-cmb" style="left:458px;top:31px;width:201px;height:24px;" data-dtcombo="single" data-dtcombo-caption="Ghalla_Mandi"></select>
+        <button type="button" id="btngrnlod" class="pp-btn" style="left:661px;top:31px;width:62px;height:24px;font-weight:bold;font-size:8.25pt;">Search</button>
+        <button type="button" id="btnLoadOnInvoice" class="pp-btn" style="left:724px;top:31px;width:61px;height:24px;font-weight:bold;font-size:8.25pt;">Load</button>
+        <button type="button" id="popReset" class="pp-btn" style="left:785px;top:31px;width:56px;height:24px;font-weight:bold;font-size:8.25pt;">Reset</button>
+    </div>
+    <div class="pp-gridwrap" id="wrapPop" style="width:1149px;height:480px;"><table class="data-grid" id="grdPop"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+</div></div>
+
+<div class="pp-modal" id="attModal"><div class="pp-modal-box">
+    <div class="pp-modal-title"><span>Attachments</span><button type="button" id="attClose">X</button></div>
+    <div style="padding:8px;" id="attBody"></div>
+</div></div>
+
+</div>
+</div>
+
+<script th:src="@{/build/js/countx_purchase_request.js?v=20260923a}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20261003s}"></script>
+<script th:src="@{/build/js/countx_purchase_page_chrome.js?v=20261013-purchase-toolbar}"></script>
+<script th:src="@{/build/js/countx_paddy_common.js?v=20261009a}"></script>
+<script th:src="@{/build/js/countx_paddy_invoice_common.js?v=20261009b}"></script>
+<script th:src="@{/build/js/countx_paddy_invoice_ghalla.js?v=20261009a}"></script>
+<script src="/js/print-rpt.js?v=20261003erp"></script>
+</body>
+</html>

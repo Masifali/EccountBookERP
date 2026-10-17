@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:if="${_csrf != null}" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:if="${_csrf != null}" th:content="${_csrf.headerName}">
+    <title>Sales Order Approval</title>
+    <style>
+        body{margin:0;background:#e4e9ed;color:#243238;font:12px "Segoe UI",sans-serif}
+        *{box-sizing:border-box} h1{margin:0;background:#0f5959;color:white;padding:8px 12px;font-size:17px}
+        .soa-toolbar{display:flex;gap:6px;flex-wrap:wrap;padding:7px;background:#f5f7f9;border-bottom:1px solid #b0bec5}
+        button,.soa-back{font:inherit;padding:5px 10px;background:white;border:1px solid #90a4ae;color:#164b4b;cursor:pointer;text-decoration:none}
+        button:disabled{opacity:.5;cursor:default}button:hover:enabled,.soa-back:hover{background:#e0f2f1}
+        .soa-primary{background:#0f5959;color:white}.soa-primary:hover:enabled{color:#0f5959}
+        #soaMessage{padding:7px 10px;margin:8px;background:white;border:1px solid #a6c8c8;white-space:pre-wrap}
+        #soaMessage:empty{display:none}#soaMessage.error{background:#fdecea;color:#9f1c11;border-color:#e4aaa4}
+        #soaFilters{margin:8px;padding:10px;background:white;border:1px solid #b0bec5;display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+        #soaFilters label{display:flex;flex-direction:column;gap:4px;min-width:140px;flex:1}
+        input,select{font:inherit;border:1px solid #8ca2ad;padding:4px;min-height:27px;max-width:100%}
+        h2{font-size:12px;background:#0f7777;color:white;margin:8px 8px 0;padding:6px 8px}
+        .soa-grid{overflow:auto;margin:0 8px;background:white;border:1px solid #b0bec5;max-height:38vh;min-height:125px}
+        table{border-collapse:collapse;width:100%;white-space:nowrap}th,td{padding:5px 7px;border:1px solid #ccd6df;text-align:left}
+        th{position:sticky;top:0;background:#e0eaf2;font-weight:600;z-index:1}tbody tr:nth-child(even){background:#f2f6f9}
+        tbody tr.selected{background:#fff1c7}tbody tr{cursor:pointer}td.number{text-align:right}
+        td button{padding:3px 7px;margin-right:4px}td a{color:#075fa1}#soaCount{padding:6px 8px;color:#536771}
+        [hidden]{display:none!important}
+    </style>
+</head>
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<h1 id="soaTitle">Sales Order Approval</h1>
+<div class="soa-toolbar">
+    <a class="soa-back" href="/dashboard/approval-dashboard">← Back to Approval Dashboard</a>
+    <button type="button" id="soaReset">Reset</button>
+    <button type="button" id="soaRefresh">Refresh</button>
+    <button type="button" id="soaApprove" class="soa-primary">Approve selected</button>
+    <button type="button" id="soaApproveCancel">Approve &amp; cancel selected</button>
+</div>
+<div id="soaMessage" role="status" aria-live="polite"></div>
+<form id="soaFilters">
+    <label>From Date<input type="date" id="soaFrom"></label>
+    <label>To Date<input type="date" id="soaTo" required></label>
+    <label>Customer Name<select id="soaCustomer"><option value="0">All customers</option></select></label>
+    <label>Item Name<select id="soaItem"><option value="0">All items</option></select></label>
+    <label>Approval<select id="soaApproved"><option>Not Approved</option><option>Approved</option><option>All</option></select></label>
+    <label>Status<select id="soaStatus"><option>Open</option><option>Cancel</option><option>Complete</option></select></label>
+    <button type="submit" id="soaShow" class="soa-primary">Show</button>
+</form>
+<h2>Orders</h2>
+<div class="soa-grid"><table id="soaOrders"><thead></thead><tbody></tbody></table></div>
+<div id="soaCount">Loading orders…</div>
+<h2>Order details</h2>
+<div class="soa-grid"><table id="soaDetails"><thead></thead><tbody></tbody></table></div>
+<script th:src="@{/build/js/countx_sale_order_for_approval.js?v=20261011approval2}"></script>
+</body>
+</html>

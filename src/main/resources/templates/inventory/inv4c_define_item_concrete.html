@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Define Item Concrete - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_store.css?v=20260928b}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261007-gridbar-flow}" href="/build/css/countx_grid_bar.css?v=20261007-gridbar-flow">
+    <style>
+        /* frmAddItemConcrete designer geometry (InitializeComponent :1990-5023), 1:1 px. ClientSize 1155 x 663, tabCAddItem
+           (tabs at the BOTTOM) fills the form. tpItemDefinitionAddItem: panel6 toolStrip (32) | panel2 teal (32) | panel1 (590):
+           groupBox2 "Main Information" (5,3) 602x337, groupBox1 "Item Allocation" (609,3) 245x337, groupBox3 "Related Defination"
+           (854,3) 269x337 | panelDetails (Visible=false; BtnShowDetails is Visible=false too, so "More Detail" never opens). */
+        body { background: #fff; margin: 0; padding-bottom: 36px; }
+        .fx-scroll { overflow-x: auto; }
+        .fx-root { position: relative; min-width: 1155px; font-family: Verdana, sans-serif; font-size: 13px; background: #fff; }
+        .fx-abs { position: absolute; box-sizing: border-box; margin: 0; }
+        .fx-rel { position: relative; }
+        .fx-lbl { font-family: "Segoe UI Semibold", "Segoe UI", Tahoma, sans-serif; font-weight: bold; font-size: 12px; white-space: nowrap; line-height: 15px; color: #000; }
+        .fx-cmb { font-family: Verdana, sans-serif; font-size: 13px; height: 26px; border: 1px solid #7a7a7a; background: #fff; padding: 0 2px; }
+        .fx-txt { font-family: Verdana, sans-serif; font-size: 13px; height: 23px; border: 1px solid #7a7a7a; background: #fff; padding: 1px 3px; }
+        .fx-txt[readonly] { background: #f0f0f0; }
+        .fx-chk { display: inline-flex; align-items: center; gap: 3px; font-family: "Segoe UI", Tahoma, sans-serif; font-size: 12px; white-space: nowrap; color: #000; }
+        .fx-chk input { margin: 0; }
+        .fx-gb { position: absolute; box-sizing: border-box; }
+        .fx-gb::before { content: ""; position: absolute; left: 0; right: 0; top: 7px; bottom: 0; border: 1px solid #d5dfe5; border-radius: 3px; pointer-events: none; }
+        .fx-gb > .fx-cap { position: absolute; left: 6px; top: 0; padding: 0 2px; background: #fff; font-family: Tahoma, sans-serif; font-size: 13px; font-weight: bold; line-height: 14px; }
+        .fx-teal { background: #008080; position: relative; }
+        .fx-teal-title { position: absolute; font-family: Tahoma, sans-serif; font-size: 16px; font-weight: bold; color: #fff; white-space: nowrap; line-height: 19px; }
+        .fx-strip { height: 27px; display: flex; align-items: center; background: linear-gradient(to bottom, #fcfcfc 0%, #e0e0e0 100%); border-bottom: 1px solid #b5b5b5; }
+        .fx-tool { font-family: Verdana, sans-serif; font-size: 13px; height: 24px; background: transparent; border: 1px solid transparent; display: inline-flex; align-items: center; gap: 4px; padding: 0 6px; cursor: pointer; white-space: nowrap; color: #000; }
+        .fx-tool:hover:not(:disabled) { background: #ffe4a0; border-color: #e59d00; }
+        .fx-tool:disabled { color: #9a9a9a; cursor: default; }
+        .fx-sep { width: 6px; height: 20px; border-left: 1px solid #b5b5b5; margin-left: 3px; }
+        .fx-btn { background: #008080; color: #fff; border: 1px solid #054d4d; font-family: Verdana, sans-serif; font-size: 12px; padding: 0; cursor: pointer; text-align: left; padding-left: 4px; }
+        .fx-btn:hover:not(:disabled) { background: #054d4d; }
+        .fx-btn.c { text-align: center; padding-left: 0; font-weight: bold; }
+        .fx-grid-host { overflow: auto; background: #fff; position: relative; }
+        .fx-grid-host .win-grid { width: auto; min-width: 100%; font-family: Verdana, sans-serif; font-size: 11px; border-collapse: collapse; }
+        .fx-grid-host .win-grid th { background: linear-gradient(to bottom, #e6f7f7 0%, #bfe6e6 100%); border: 1px solid #8fbcbc; font-weight: normal; white-space: nowrap; padding: 2px 4px; text-align: center; position: sticky; top: 0; z-index: 2; }
+        .fx-grid-host .win-grid thead tr.flt td { position: sticky; top: 20px; z-index: 2; background: #f4fbfb; border: 1px solid #c8dede; padding: 0; }
+        .fx-grid-host .win-grid thead tr.flt input { width: 100%; box-sizing: border-box; border: 0; height: 18px; font: 11px Verdana, sans-serif; background: transparent; }
+        .fx-grid-host .win-grid td { border: 1px solid #d5e6e6; white-space: nowrap; padding: 1px 4px; overflow: hidden; text-overflow: ellipsis; }
+        .fx-grid-host .win-grid td.n { text-align: right; }
+        .fx-grid-host .win-grid td.c { text-align: center; }
+        .fx-grid-host .win-grid td a { color: #0000ee; text-decoration: underline; cursor: pointer; }
+        .fx-grid-host .win-grid td input.nm { width: 180px; font: 11px Verdana, sans-serif; border: 1px solid #9ab; }
+        .fx-grid-host .win-grid tbody tr.sel td { background: #cde8ff; }
+        .fx-nav { font: 11px Verdana, sans-serif; padding: 2px 8px; border-top: 1px solid #c8dede; background: #f4f4f4; }
+        .fx-tabs { display: flex; gap: 2px; border-top: 1px solid #7a9a9e; padding-left: 2px; background: #f0f0f0; height: 25px; }
+        .fx-tabs .win-tab { border-radius: 0 0 3px 3px; border-top: none; border-bottom: 1px solid #999; font-family: Verdana, sans-serif; font-size: 13px; font-weight: normal; padding: 2px 10px; }
+        .fx-tabs .win-tab.is-active { top: -1px; background: #fff; }
+        .fx-panel { display: none; }
+        .fx-panel.is-active { display: block; }
+        #grdAllocationHost { position: absolute; left: 3px; top: 19px; width: 239px; height: 315px; }
+        #grdhistoryHost { height: calc(100vh - 330px); min-height: 214px; }
+        .is-hidden { display: none !important; }
+    </style>
+</head>
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="fx-scroll">
+<div class="fx-root" id="frmRoot" data-variant="CONCRETE" data-screen="frmAddItemConcrete" data-api="/inventory/define-item-concrete/api">
+
+    <!-- ============================================================ tpItemDefinitionAddItem "Add Item" -->
+    <div id="tabForm" class="fx-panel is-active">
+        <!-- panel6 (3,3) 1120 x 32 / toolStrip1: btnnew, Refresh, | btnupdate, btnsave, | btnprint (Visible=false), | btnattachment | -->
+        <div class="fx-strip" style="height:32px;">
+            <button type="button" class="fx-tool" id="btnnew" title="Ctrl+N"><i class="fa fa-plus-circle" style="color:#2e7d32"></i> <span><u>N</u>ew</span></button>
+            <button type="button" class="fx-tool" id="toolStripButton1"><i class="fa fa-repeat"></i> <span>Refresh</span></button>
+            <span class="fx-sep"></span>
+            <button type="button" class="fx-tool is-hidden" id="btnupdate" title="Ctrl+U"><i class="fa fa-pencil"></i> <span><u>U</u>pdate</span></button>
+            <button type="button" class="fx-tool" id="btnsave" title="Ctrl+S"><i class="fa fa-save"></i> <span><u>S</u>ave</span></button>
+            <span class="fx-sep"></span>
+            <button type="button" class="fx-tool is-hidden" id="btnprint"><i class="fa fa-print"></i> <span><u>P</u>rint</span></button>
+            <span class="fx-sep"></span>
+            <button type="button" class="fx-tool" id="btnattachment" disabled title="Attachments are not ported to the web page"><i class="fa fa-paperclip"></i> <span><u>A</u>ttachment</span></button>
+            <span class="fx-sep"></span>
+            <a href="/modules" class="fx-tool" style="margin-left:auto;text-decoration:none;color:#004d40;font-size:11px;font-weight:bold;"><i class="fa fa-arrow-left"></i> Exit</a>
+        </div>
+        <!-- panel2 (3,35) 1120 x 32 Teal; label13 (9,7) "Add Item" -->
+        <div class="fx-teal" style="height:32px;">
+            <span class="fx-teal-title" style="left:9px;top:7px;">Add Item</span>
+        </div>
+        <!-- panel1 (3,67) 1141 x 590 (the Main Information / Allocation / Related groups are 337 tall) -->
+        <div class="fx-rel" style="height:343px;background:#fff;">
+            <!-- groupBox2 (5,3) 602 x 337 "Main Information" -->
+            <div class="fx-gb" style="left:5px;top:3px;width:602px;height:337px;">
+                <span class="fx-cap">Main Information</span>
+                <label class="fx-abs fx-lbl" style="left:5px;top:26px;" for="cmbItemCategory">Item Category</label>
+                <select id="cmbItemCategory" class="fx-abs fx-cmb win-combo" style="left:90px;top:20px;width:192px;"></select>
+                <label class="fx-abs fx-lbl" style="left:5px;top:55px;" for="txtItemCodeNew">Item Code</label>
+                <input type="text" id="txtItemCodeNew" class="fx-abs fx-txt" style="left:90px;top:51px;width:192px;" readonly>
+                <label class="fx-abs fx-lbl" style="left:5px;top:84px;" for="txtItemName">Item Name</label>
+                <input type="text" id="txtItemName" class="fx-abs fx-txt" style="left:90px;top:80px;width:192px;" maxlength="100">
+                <label class="fx-abs fx-lbl" style="left:5px;top:115px;" for="CmbQualityGrade">Quality Grade</label>
+                <select id="CmbQualityGrade" class="fx-abs fx-cmb win-combo" style="left:90px;top:109px;width:192px;"></select>
+                <label class="fx-abs fx-lbl" style="left:5px;top:147px;" for="cmbItemType">Item Type</label>
+                <select id="cmbItemType" class="fx-abs fx-cmb win-combo" style="left:90px;top:141px;width:192px;"></select>
+                <label class="fx-abs fx-lbl" style="left:5px;top:179px;" for="cmbItemClass">Item Class</label>
+                <select id="cmbItemClass" class="fx-abs fx-cmb win-combo" style="left:90px;top:173px;width:192px;"></select>
+                <label class="fx-abs fx-lbl" style="left:5px;top:211px;" for="cmbBaseUnit">Base Unit</label>
+                <select id="cmbBaseUnit" class="fx-abs fx-cmb win-combo" style="left:90px;top:205px;width:192px;"></select>
+                <label class="fx-abs fx-lbl" style="left:5px;top:240px;" for="CmbMaxMrmtUnit">Length Unit</label>
+                <select id="CmbMaxMrmtUnit" class="fx-abs fx-cmb win-combo" style="left:90px;top:234px;width:192px;"></select>
+                <!-- txtItemCode (90,265) Visible=false, ReadOnly -->
+                <input type="text" id="txtItemCode" class="fx-abs fx-txt is-hidden" style="left:90px;top:265px;width:192px;" readonly>
+
+                <label class="fx-abs fx-lbl" style="left:286px;top:26px;" for="txtMaxMeaurement">Max Length</label>
+                <input type="text" id="txtMaxMeaurement" class="fx-abs fx-txt" style="left:376px;top:22px;width:220px;" inputmode="decimal">
+                <label class="fx-abs fx-lbl" style="left:291px;top:55px;" for="txtWeightKgs">Weight (Kgs)</label>
+                <input type="text" id="txtWeightKgs" class="fx-abs fx-txt" style="left:376px;top:51px;width:192px;" inputmode="decimal">
+                <label class="fx-abs fx-lbl" style="left:286px;top:84px;" for="cmbPurchaseGL">Stock GL A/c</label>
+                <select id="cmbPurchaseGL" class="fx-abs fx-cmb win-combo" style="left:376px;top:78px;width:220px;"></select>
+                <label class="fx-abs fx-lbl" style="left:286px;top:115px;" for="cmbSaleGL">Sale GL A/c</label>
+                <select id="cmbSaleGL" class="fx-abs fx-cmb win-combo" style="left:376px;top:109px;width:220px;"></select>
+                <label class="fx-abs fx-lbl" style="left:286px;top:147px;" for="cmbCGSGL">CGS GL A/c</label>
+                <select id="cmbCGSGL" class="fx-abs fx-cmb win-combo" style="left:376px;top:141px;width:220px;"></select>
+                <label class="fx-abs fx-lbl" style="left:286px;top:179px;" for="cmbTaxType">Tax Type</label>
+                <select id="cmbTaxType" class="fx-abs fx-cmb win-combo" style="left:376px;top:173px;width:160px;"></select>
+                <label class="fx-abs fx-chk" style="left:544px;top:177px;"><input type="checkbox" id="chbGST"> GST</label>
+                <label class="fx-abs fx-chk" style="left:376px;top:203px;"><input type="checkbox" id="chkCommissionOnSale" checked> Commission on Sale</label>
+                <label class="fx-abs fx-chk" style="left:376px;top:222px;"><input type="checkbox" id="chkCommissionOnPurchase" checked> Commission on Purchase</label>
+                <label class="fx-abs fx-chk" style="left:376px;top:241px;"><input type="checkbox" id="chkstatus" checked> Is Active</label>
+                <label class="fx-abs fx-chk" style="left:376px;top:263px;"><input type="radio" name="variant" id="rdWithVariant" value="with"> With Variant</label>
+                <label class="fx-abs fx-chk" style="left:482px;top:263px;"><input type="radio" name="variant" id="rdWithoutVariant" value="without"> Without Variant</label>
+            </div>
+            <!-- groupBox1 (609,3) 245 x 337 "Item Allocation " / grdAllocation (Fill) -->
+            <div class="fx-gb" style="left:609px;top:3px;width:245px;height:337px;">
+                <span class="fx-cap">Item Allocation </span>
+                <div class="fx-grid-host" id="grdAllocationHost">
+                    <table class="win-grid" id="grdAllocation"><thead></thead><tbody></tbody></table>
+                </div>
+            </div>
+            <!-- groupBox3 (854,3) 269 x 337 "Related Defination" — each button opens another screen on the desktop -->
+            <div class="fx-gb" style="left:854px;top:3px;width:269px;height:337px;">
+                <span class="fx-cap">Related Defination</span>
+                <button type="button" class="fx-abs fx-btn" id="btnitmuom" style="left:5px;top:22px;width:91px;height:31px;" disabled title="Define UOM (InvDeffrmItemItemUom) is not ported yet">Item Uom</button>
+                <button type="button" class="fx-abs fx-btn" id="btnitmtype" style="left:6px;top:56px;width:109px;height:31px;" data-href="/inventory/item-types">Item Type</button>
+                <button type="button" class="fx-abs fx-btn" id="btnitmcat" style="left:6px;top:90px;width:126px;height:31px;" data-href="/inventory/item-categories">Item Category</button>
+                <button type="button" class="fx-abs fx-btn" id="btnQualityGrate" style="left:6px;top:124px;width:145px;height:31px;" disabled title="ItemQcGrade (Quality Grade) is not ported yet">Quality Grade</button>
+                <button type="button" class="fx-abs fx-btn" id="btnitmuomtaxsch" style="left:6px;top:159px;width:164px;height:31px;" data-href="/inventory/item-uom-schedule">Item Uom Schedule</button>
+                <button type="button" class="fx-abs fx-btn" id="btnitmtaxsch" style="left:6px;top:193px;width:186px;height:31px;" data-href="/inventory/item-tax-schedules">Item Tax Schedule</button>
+                <button type="button" class="fx-abs fx-btn" id="BtnAttributeVarientAllocationtoItem" style="left:5px;top:228px;width:213px;height:31px;" disabled title="Variant allocation to item is not ported yet">Varient Allocation to Item</button>
+                <button type="button" class="fx-abs fx-btn" id="btnItemAllocation" style="left:6px;top:263px;width:225px;height:31px;" data-href="/inventory/item-company-allocations">Item Allocation to Location</button>
+                <button type="button" class="fx-abs fx-btn" id="button1" style="left:6px;top:297px;width:257px;height:31px;" data-href="/inventory/item-warehouse-allocations">Items Allocate to Warehouse</button>
+            </div>
+        </div>
+        <!-- label14 "More Details" (Visible=false) / BtnShowDetails "+" (Visible=false) / panelDetails (Visible=false): groupBox4 "More Detail" -->
+        <div class="fx-rel is-hidden" id="moreDetailsBar" style="height:28px;">
+            <span class="fx-abs fx-teal-title" style="left:0;top:2px;color:#000;" id="label14">More Details</span>
+            <button type="button" class="fx-abs fx-btn c" id="BtnShowDetails" style="left:95px;top:0;width:43px;height:28px;">+</button>
+        </div>
+        <div class="fx-rel is-hidden" id="panelDetails" style="height:270px;background:#fff;">
+            <div class="fx-gb" style="left:5px;top:5px;width:1070px;height:262px;">
+                <span class="fx-cap">More Detail</span>
+                <label class="fx-abs fx-lbl" style="left:5px;top:21px;" for="cmbManufacturerID">Manufacturer ID</label>
+                <select id="cmbManufacturerID" class="fx-abs fx-cmb win-combo" style="left:128px;top:15px;width:207px;"></select>
+                <label class="fx-abs fx-lbl" style="left:5px;top:49px;" for="txtManufacturerPartNo">Manufacturer Part No</label>
+                <input type="text" id="txtManufacturerPartNo" class="fx-abs fx-txt" style="left:128px;top:45px;width:207px;" maxlength="50">
+                <label class="fx-abs fx-lbl" style="left:5px;top:78px;" for="cmbBuyerOrSupplier">Buyer/Supplier</label>
+                <select id="cmbBuyerOrSupplier" class="fx-abs fx-cmb win-combo" style="left:128px;top:72px;width:207px;"></select>
+                <label class="fx-abs fx-lbl" style="left:5px;top:107px;" for="txtBuyerPartNo">Buyer Part No</label>
+                <input type="text" id="txtBuyerPartNo" class="fx-abs fx-txt" style="left:128px;top:103px;width:207px;" maxlength="50">
+                <label class="fx-abs fx-lbl" style="left:5px;top:134px;" for="txtProductNumber">Product Number</label>
+                <input type="text" id="txtProductNumber" class="fx-abs fx-txt" style="left:128px;top:130px;width:207px;" maxlength="50">
+                <label class="fx-abs fx-lbl" style="left:5px;top:162px;" for="txtReorderLevel">ReOrder Level</label>
+                <input type="text" id="txtReorderLevel" class="fx-abs fx-txt" style="left:128px;top:158px;width:207px;" inputmode="numeric">
+                <label class="fx-abs fx-lbl" style="left:5px;top:191px;" for="cmbcountry">Item Region</label>
+                <select id="cmbcountry" class="fx-abs fx-cmb win-combo" style="left:128px;top:185px;width:207px;"></select>
+                <label class="fx-abs fx-lbl" style="left:5px;top:219px;" for="txtMaxStockLevel">Max Stock Level</label>
+                <input type="text" id="txtMaxStockLevel" class="fx-abs fx-txt" style="left:128px;top:215px;width:207px;" inputmode="numeric">
+                <label class="fx-abs fx-lbl" style="left:346px;top:21px;" for="txtCostPrice">Cost Price</label>
+                <input type="text" id="txtCostPrice" class="fx-abs fx-txt" style="left:451px;top:17px;width:141px;" inputmode="decimal">
+                <label class="fx-abs fx-lbl" style="left:346px;top:49px;" for="cmbCostUOM">Cost UOM</label>
+                <input type="text" id="cmbCostUOM" class="fx-abs fx-cmb" style="left:451px;top:43px;width:141px;" title="CostUOMFill is never called on the desktop; the text is what is saved">
+                <label class="fx-abs fx-lbl" style="left:346px;top:78px;" for="txtPurchaseRate">Purchase Rate</label>
+                <input type="text" id="txtPurchaseRate" class="fx-abs fx-txt" style="left:451px;top:74px;width:141px;" inputmode="decimal">
+                <label class="fx-abs fx-lbl" style="left:346px;top:107px;" for="cmbPurchaseUOM">Purchase UOM</label>
+                <input type="text" id="cmbPurchaseUOM" class="fx-abs fx-cmb" style="left:451px;top:101px;width:141px;">
+                <label class="fx-abs fx-lbl" style="left:346px;top:134px;" for="txtSaleRate">Sale Rate</label>
+                <input type="text" id="txtSaleRate" class="fx-abs fx-txt" style="left:451px;top:130px;width:141px;" inputmode="decimal">
+                <label class="fx-abs fx-lbl" style="left:346px;top:162px;" for="cmbSaleUOM">Sale UOM</label>
+                <input type="text" id="cmbSaleUOM" class="fx-abs fx-cmb" style="left:451px;top:156px;width:141px;">
+                <label class="fx-abs fx-lbl" style="left:346px;top:191px;" for="cmbAmountCalcType">Amount calc Type</label>
+                <select id="cmbAmountCalcType" class="fx-abs fx-cmb win-combo" style="left:451px;top:185px;width:141px;">
+                    <option value=""></option><option value="Multiply">Multiply</option><option value="Devide">Devide</option>
+                </select>
+                <label class="fx-abs fx-chk" style="left:341px;top:217px;"><input type="checkbox" id="chbVST"> VAT</label>
+                <label class="fx-abs fx-chk" style="left:394px;top:217px;"><input type="checkbox" id="chbExcise"> Excise</label>
+                <label class="fx-abs fx-chk" style="left:458px;top:217px;"><input type="checkbox" id="chbOther"> Other</label>
+                <!-- pnlimage (597,20) 473 x 224 — Visible=false; pictures are not ported -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ tpItemDefinitionAddItemHistory "History" -->
+    <div id="tabHistory" class="fx-panel">
+        <!-- panel10 (0,0) 1126 x 52 Teal: toolStrip2 (27) btnLoadAll; label31 (11,28) "Item History" -->
+        <div class="fx-teal" style="height:52px;">
+            <div class="fx-strip">
+                <button type="button" class="fx-tool" id="btnLoadAll"><i class="fa fa-download"></i> <span><u>L</u>oadAll</span></button>
+            </div>
+            <span class="fx-teal-title" style="left:11px;top:28px;">Item History</span>
+        </div>
+        <!-- panel9 (0,52) 1126 x 68 white: groupBox5 "Filter By Category" (5,3) 436x60; grpUpdateItemName (441,3) 642x60 Visible=false -->
+        <div class="fx-rel" style="height:68px;background:#fff;">
+            <div class="fx-gb" style="left:5px;top:3px;width:456px;height:60px;">
+                <span class="fx-cap">Filter By Category</span>
+                <label class="fx-abs fx-lbl" style="left:6px;top:28px;" for="cmbitemcathistory">Item Category</label>
+                <select id="cmbitemcathistory" class="fx-abs fx-cmb win-combo" style="left:108px;top:24px;width:268px;"></select>
+                <button type="button" class="fx-abs fx-btn c" id="btnsearch" style="left:381px;top:23px;width:70px;height:26px;">Search</button>
+            </div>
+            <div class="fx-gb is-hidden" id="grpUpdateItemName" style="left:465px;top:3px;width:657px;height:60px;">
+                <span class="fx-cap">Update ItemName</span>
+                <span class="fx-abs" style="left:7px;top:18px;width:534px;height:34px;font:11px 'Segoe UI', Tahoma, sans-serif;line-height:13px;">When you change the name of an item in the grid, you should then check the corresponding row and click the 'Update Item Name' button. This action will update the item name in that specific row.</span>
+                <button type="button" class="fx-abs fx-btn c" id="btnUomUpdate" style="left:554px;top:13px;width:97px;height:40px;white-space:normal;line-height:13px;">Update Item Name</button>
+            </div>
+        </div>
+        <!-- panel4 (0,120) 1126 x 28 Teal: label30 (12,3) "Add Item History"; ctrlGrdBar1 (1079,1) -->
+        <div class="fx-teal" style="height:28px;">
+            <span class="fx-teal-title" style="left:12px;top:3px;">Add Item History</span>
+            <div id="gbMount" class="fx-abs" style="left:1100px;top:1px;width:43px;height:26px;"></div>
+        </div>
+        <div id="grdhistoryHost" class="fx-grid-host" data-gridbar-form="frmAddItemConcrete" data-gridbar-grid="grdhistory"
+             data-gridbar-mount="#gbMount" data-gridbar-reorder="false" data-gridbar-hide="chooser,save,remove,collapse,expand">
+            <table class="win-grid" id="grdhistory"><thead></thead><tbody></tbody></table>
+        </div>
+        <div class="fx-nav" id="lblNavigator"></div>
+    </div>
+
+    <!-- tab headers, bottom (TabAlignment.Bottom) -->
+    <div class="fx-tabs">
+        <div class="win-tab is-active" data-tab="tabForm">Add Item</div>
+        <div class="win-tab" data-tab="tabHistory">History</div>
+    </div>
+</div>
+</div>
+<script th:src="@{/build/js/countx_store_common.js?v=20260928b}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20261007-gridbar-flow}" src="/build/js/countx_grid_bar.js?v=20261007-gridbar-flow"></script>
+<script th:src="@{/build/js/countx_inventory_inv4c_define_item_concrete.js?v=20261013a}"></script>
+</body>
+</html>

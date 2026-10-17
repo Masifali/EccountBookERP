@@ -4,6 +4,7 @@ import com.mst.models.InwardGatePass;
 import com.mst.security.CurrentUserContext;
 import com.mst.services.InwardGatePassService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -45,7 +46,7 @@ public class InwardGatePassRestController {
         return service.getById(id);
     }
 
-    @GetMapping("/order-party-items")
+    @GetMapping(value="/order-party-items", produces=MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getOrderPartyItems(@RequestParam(defaultValue="41") int documentTypeId,@RequestParam int number,@RequestParam(required=false) String date,@RequestParam(defaultValue="0") int gatePassId) {
         try {
             return ResponseEntity.ok(service.getOrderPartyItems(documentTypeId,number,date,gatePassId));

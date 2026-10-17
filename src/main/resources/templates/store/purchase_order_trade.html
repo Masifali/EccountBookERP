@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Purchase Order Store - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_store.css?v=20260928b}">
+    <style>
+        /* Screen 328, PurchsaeOrderTrade designer geometry 1:1 in px (ClientSize 1196 x 661); tabPage 1188 x 632, tabs at bottom. */
+        body { background: #fff; margin: 0; padding-bottom: 36px; }
+        .dz-scroll { overflow-x: auto; }
+        .dz-root { position: relative; font-family: "Microsoft Sans Serif", Tahoma, sans-serif; font-size: 11px; background: #fff; }
+        .dz-p { position: relative; background: #fff; }
+        .dz-abs { position: absolute; box-sizing: border-box; margin: 0; }
+        .dz-lbl { font-family: "Segoe UI Semibold", "Segoe UI", Tahoma, sans-serif; font-weight: bold; font-size: 12px; line-height: 15px; white-space: nowrap; color: #000; }
+        .dz-txt { font-family: Verdana, sans-serif; font-size: 13px; height: 23px; border: 1px solid #7a7a7a; padding: 1px 3px; background: #fff; }
+        .dz-txt[readonly] { background: #f0f0f0; }
+        .dz-txt.w[readonly] { background: #fff; }
+        .dz-txt:disabled { background: #f0f0f0; color: #6d6d6d; }
+        .dz-txt.r { text-align: right; }
+        .dz-cmb { font-family: Verdana, sans-serif; font-size: 13px; height: 26px; border: 1px solid #7a7a7a; background: #fff; padding: 0 2px; }
+        .dz-cmb:disabled { background: #f0f0f0; color: #6d6d6d; }
+        .dz-dt { font-family: Verdana, sans-serif; font-size: 13px; height: 23px; border: 1px solid #7a7a7a; background: #fff; padding: 0 2px; }
+        .dz-dtc { display: flex; align-items: center; gap: 2px; height: 23px; border: 1px solid #7a7a7a; background: #fff; padding: 0 2px; }
+        .dz-dtc input[type=date] { border: none; font-family: Verdana, sans-serif; font-size: 12px; height: 19px; width: 100%; min-width: 0; padding: 0; }
+        .dz-dtc input[type=checkbox] { margin: 0; }
+        .dz-gb { position: absolute; box-sizing: border-box; }
+        .dz-gb::before { content: ""; position: absolute; left: 0; right: 0; top: 7px; bottom: 0; border: 1px solid #d5dfe5; border-radius: 3px; pointer-events: none; }
+        .dz-gb > .dz-cap { position: absolute; left: 6px; top: 0; padding: 0 2px; background: #fff; font-family: Tahoma, sans-serif; font-size: 13px; font-weight: bold; line-height: 14px; color: #000; }
+        .dz-chk { display: inline-flex; align-items: center; gap: 3px; font-family: "Segoe UI Semibold", "Segoe UI", Tahoma, sans-serif; font-weight: bold; font-size: 12px; height: 19px; white-space: nowrap; cursor: pointer; }
+        .dz-chk input { margin: 0; }
+        .dz-chk.wt { color: #fff; }
+        .dz-teal { background: #008080; position: relative; }
+        .dz-teal-title { position: absolute; font-family: Tahoma, sans-serif; font-size: 16px; font-weight: bold; color: #fff; white-space: nowrap; line-height: 19px; }
+        .dz-teal-title.s { font-size: 15px; line-height: 18px; }
+        .dz-strip { height: 27px; display: flex; align-items: center; background: linear-gradient(to bottom, #fcfcfc 0%, #e0e0e0 100%); border-bottom: 1px solid #b5b5b5; box-sizing: border-box; }
+        .dz-strip.white { background: #fff; }
+        .dz-tool { font-family: Verdana, sans-serif; font-size: 13px; height: 24px; background: transparent; border: 1px solid transparent; display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 0 4px; cursor: pointer; box-sizing: border-box; color: #000; white-space: nowrap; }
+        .dz-tool:hover:not(:disabled) { background: #ffe4a0; border-color: #e59d00; }
+        .dz-tool:disabled { color: #9a9a9a; cursor: default; }
+        .dz-sep { width: 6px; height: 20px; border-left: 1px solid #b5b5b5; margin-left: 3px; flex: none; }
+        .dz-btn { font-family: Verdana, sans-serif; font-size: 13px; font-weight: bold; background: #008080; color: #fff; border: 1px solid #005959; cursor: pointer; padding: 0; }
+        .dz-btn:disabled { opacity: .6; cursor: default; }
+        .dz-gbar { width: 38px; height: 22px; background: transparent; color: #fff; border: 1px solid transparent; font-size: 14px; }
+        .dz-host { overflow: auto; background: #fff; border-top: 1px solid #9eb6ce; max-height: none; }
+        .dz-host .win-grid { width: auto; min-width: 100%; font-family: Verdana, sans-serif; font-size: 11px; }
+        .dz-host .win-grid th { background: linear-gradient(to bottom, #e3efff 0%, #c4dcf8 100%); border: 1px solid #9eb6ce; font-weight: normal; }
+        .dz-host .win-grid td { border: 1px solid #d5e1f0; }
+        .dz-host .win-grid tbody tr:hover { background: #fff0cf; }
+        .dz-tabs { display: flex; gap: 0; padding-left: 2px; height: 25px; align-items: flex-end; border-bottom: 1px solid #9a9a9a; }
+        .dz-tabs .win-tab { font-family: "Segoe UI", Tahoma, sans-serif; font-size: 14px; font-weight: normal; padding: 1px 8px; height: 21px; line-height: 19px; background: #f0f0f0; border: 1px solid #9a9a9a; border-bottom: none; border-radius: 2px 2px 0 0; color: #000; box-sizing: border-box; }
+        .dz-tabs .win-tab.is-active { background: #fff; height: 24px; top: 1px; color: #000; }
+        .dz-tabs.bottom { border-bottom: none; border-top: 1px solid #9a9a9a; align-items: flex-start; height: 25px; }
+        .dz-tabs.bottom .win-tab { font-family: Verdana, sans-serif; font-size: 13px; border-radius: 0 0 2px 2px; border-top: none; border-bottom: 1px solid #9a9a9a; }
+        .dz-tabs.bottom .win-tab.is-active { top: -1px; }
+        .dz-page { border: 1px solid #9a9a9a; border-top: none; background: #fff; box-sizing: border-box; }
+        .dz-modal-box { width: auto !important; max-width: 98vw; background: #fff !important; }
+        .dz-modal-box .cx-modal-body { padding: 0; }
+        .dz-root { width: 1196px; }
+        .dz-tp { width: 1188px; margin: 4px 4px 0 4px; padding: 3px; box-sizing: border-box; background: #fff; }
+        .dz-gb.v9 > .dz-cap { font-family: Verdana, sans-serif; font-size: 12px; }
+        .is-hidden { display: none !important; }
+    </style>
+</head>
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="dz-scroll">
+<div class="dz-root">
+
+<!-- ======= tabPage1 "Form" : tabControl1 (Alignment Bottom), page 1188 x 632 ======= -->
+<div id="tabForm" class="win-tab-panel is-active dz-tp">
+    <!-- panel2 / toolStrip1 -->
+    <div style="height:27px;background:#fff;">
+        <div class="dz-strip">
+            <button type="button" class="dz-tool" id="btnNew" style="width:59px" onclick="PoTrade.newDoc()"><i class="fa fa-file-o"></i> New</button>
+            <button type="button" class="dz-tool" id="btnRefresh" style="width:80px" onclick="PoTrade.refresh()"><i class="fa fa-repeat"></i> Refresh</button>
+            <span class="dz-sep"></span>
+            <button type="button" class="dz-tool" id="btnUpdate" style="width:78px" onclick="PoTrade.update()"><i class="fa fa-pencil"></i> Update</button>
+            <button type="button" class="dz-tool" id="btnSave" style="width:64px" onclick="PoTrade.save()"><i class="fa fa-floppy-o"></i> Save</button>
+            <button type="button" class="dz-tool is-hidden" id="btnSaveAs" style="width:85px" onclick="PoTrade.saveAs()"><i class="fa fa-files-o"></i> Save As</button>
+            <span class="dz-sep"></span>
+            <button type="button" class="dz-tool" id="btnPrint" style="width:92px" onclick="PoTrade.print()"><i class="fa fa-print"></i> 201-Print</button>
+            <span class="dz-sep"></span>
+            <button type="button" class="dz-tool" id="btnShortcut" style="width:126px" onclick="PoTrade.shortcuts()"><i class="fa fa-keyboard-o"></i> ShortCut Keys</button>
+            <span class="dz-sep"></span>
+            <button type="button" class="dz-tool" id="btnLoader" style="width:184px" onclick="PoTrade.openLoader()"><i class="fa fa-download"></i> Load Purchase Demand</button>
+            <span id="rightsNote" style="margin-left:12px;color:#a00;font-size:12px;"></span>
+        </div>
+    </div>
+    <!-- panel3 : title bar -->
+    <div class="dz-teal" style="height:25px;">
+        <span class="dz-teal-title" style="left:2px;top:3px;font-size:15px;">PURCHASE ORDER</span>
+        <label class="dz-chk wt dz-abs" style="left:1095px;top:3px;"><input type="checkbox" id="ChkBoxPrint"> Preview</label>
+    </div>
+    <!-- panel4 / groupBox1 "Main" (5,2) 944 x 128 -->
+    <div style="position:relative;height:134px;">
+        <div class="dz-gb" style="left:5px;top:2px;width:944px;height:128px;">
+            <span class="dz-cap">Main</span>
+            <label class="dz-abs dz-lbl" style="left:6px;top:20px;">Doc No &amp; Date</label>
+            <input type="text" id="txtdocno" class="dz-abs dz-txt" style="left:98px;top:16px;width:79px;" readonly tabindex="-1">
+            <input type="text" id="txtBranchSrNo" class="dz-abs dz-txt" style="left:178px;top:16px;width:80px;" readonly tabindex="-1">
+            <input type="date" id="DocDate" class="dz-abs dz-dt" style="left:259px;top:16px;width:135px;">
+            <label class="dz-abs dz-lbl" style="left:6px;top:47px;">Supplier Name</label>
+            <select id="combsuppname" class="dz-abs dz-cmb" style="left:98px;top:43px;width:295px;"></select>
+            <label class="dz-abs dz-lbl" style="left:6px;top:73px;">Supplier Ref No</label>
+            <input type="text" id="txtsupprefno" class="dz-abs dz-txt" style="left:98px;top:69px;width:295px;" maxlength="100">
+            <label class="dz-abs dz-lbl" style="left:6px;top:99px;">Remarks</label>
+            <input type="text" id="txtremarks" class="dz-abs dz-txt" style="left:98px;top:95px;width:840px;">
+            <label class="dz-abs dz-lbl" style="left:397px;top:20px;">Delivery Term</label>
+            <select id="combdeliverytrm" class="dz-abs dz-cmb" style="left:507px;top:16px;width:134px;"></select>
+            <label class="dz-abs dz-lbl" style="left:397px;top:47px;">Delivery Start Date</label>
+            <input type="date" id="deliverystartdate" class="dz-abs dz-dt" style="left:507px;top:43px;width:134px;">
+            <label class="dz-abs dz-lbl" style="left:397px;top:73px;">Delivery Days</label>
+            <input type="text" id="txtdeliverydays" class="dz-abs dz-txt" style="left:507px;top:69px;width:134px;" onkeypress="return PoTrade.digitKey(event)">
+            <label class="dz-abs dz-lbl" style="left:650px;top:20px;">Payment Terms</label>
+            <select id="combpttrm" class="dz-abs dz-cmb" style="left:754px;top:16px;width:184px;" onchange="PoTrade.paymentChanged()"></select>
+            <label class="dz-abs dz-lbl" style="left:649px;top:47px;">Due Days &amp; Date</label>
+            <input type="text" id="txtduedays" class="dz-abs dz-txt" style="left:754px;top:43px;width:55px;" onkeypress="return PoTrade.digitKey(event)" oninput="PoTrade.dueDaysChanged()">
+            <input type="date" id="duedate" class="dz-abs dz-dt" style="left:810px;top:43px;width:128px;">
+            <label class="dz-abs dz-lbl" style="left:650px;top:73px;">Status</label>
+            <select id="CmbStatus" class="dz-abs dz-cmb" style="left:754px;top:69px;width:184px;"></select>
+        </div>
+    </div>
+    <!-- panel5 / groupBox3 "Detail" (3,3) 944 x 118 -->
+    <div style="position:relative;height:126px;">
+        <div class="dz-gb" style="left:3px;top:3px;width:944px;height:118px;">
+            <span class="dz-cap">Detail</span>
+            <label class="dz-abs dz-lbl" style="left:7px;top:20px;">Item</label>
+            <label class="dz-chk dz-abs" style="left:42px;top:18px;"><input type="radio" name="itemSearch" id="rdbtnItemName" checked onchange="PoTrade.searchModeChanged()"> Name</label>
+            <label class="dz-chk dz-abs" style="left:100px;top:18px;"><input type="radio" name="itemSearch" id="rdbtnItemCode" onchange="PoTrade.searchModeChanged()"> Code</label>
+            <select id="cmbItem" class="dz-abs dz-cmb" style="left:7px;top:39px;width:214px;" onchange="PoTrade.itemLeave()"></select>
+            <label class="dz-abs dz-lbl" style="left:225px;top:20px;">Job/Lot</label>
+            <select id="combjob" class="dz-abs dz-cmb" style="left:225px;top:39px;width:136px;"></select>
+            <label class="dz-abs dz-lbl" style="left:364px;top:20px;">Pack Uom</label>
+            <select id="combitempck" class="dz-abs dz-cmb" style="left:364px;top:39px;width:85px;" onchange="PoTrade.calcWeight()"></select>
+            <label class="dz-abs dz-lbl" style="left:451px;top:20px;">Item Qty</label>
+            <input type="text" id="txtqty" class="dz-abs dz-txt r" style="left:451px;top:39px;width:89px;" onkeypress="return PoTrade.decimalKey(event,this)" oninput="PoTrade.calcWeight()">
+            <label class="dz-abs dz-lbl" style="left:541px;top:20px;">Total Qty</label>
+            <input type="text" id="txtweight" class="dz-abs dz-txt r" style="left:541px;top:39px;width:81px;" disabled>
+            <label class="dz-abs dz-lbl" style="left:624px;top:20px;">Rate</label>
+            <input type="text" id="txtRate" class="dz-abs dz-txt r" style="left:624px;top:39px;width:88px;" value="0" onkeypress="return PoTrade.decimalKey(event,this)" oninput="PoTrade.calcAmount()">
+            <label class="dz-abs dz-lbl" style="left:715px;top:19px;">Rate Uom</label>
+            <select id="combrateuom" class="dz-abs dz-cmb" style="left:715px;top:39px;width:86px;" onchange="PoTrade.calcAmount()"></select>
+            <label class="dz-abs dz-lbl" style="left:804px;top:18px;">Item Amount</label>
+            <input type="text" id="txtItemAmount" class="dz-abs dz-txt r w" style="left:804px;top:39px;width:121px;" readonly tabindex="-1">
+            <label class="dz-abs dz-lbl" style="left:7px;top:67px;">Remarks</label>
+            <input type="text" id="txtremarksdetail" class="dz-abs dz-txt" style="left:7px;top:88px;width:443px;">
+            <button type="button" class="dz-abs dz-btn" id="btnplus" style="left:791px;top:86px;width:39px;height:26px;" onclick="PoTrade.add()">+</button>
+            <button type="button" class="dz-abs dz-btn is-hidden" id="btnUpdateDetail" style="left:791px;top:86px;width:68px;height:26px;font-size:12px;" onclick="PoTrade.updateDetail()">Update</button>
+            <button type="button" class="dz-abs dz-btn is-hidden" id="btnCancelUpdateDetial" style="left:860px;top:86px;width:66px;height:26px;font-size:12px;" onclick="PoTrade.resetDetail()">Cancel</button>
+        </div>
+    </div>
+    <!-- panel14 : detail grid -->
+    <div class="dz-teal" style="height:25px;">
+        <span class="dz-teal-title" style="left:4px;top:4px;font-size:13px;line-height:16px;">Detail</span>
+    </div>
+    <div class="dz-host win-grid-scroll" style="height:calc(100vh - 430px);min-height:220px;"><table class="win-grid" id="grd"><thead></thead><tbody></tbody></table></div>
+</div>
+
+<!-- ======= tabPage2 "History" ======= -->
+<div id="tabHistory" class="win-tab-panel dz-tp">
+    <div class="dz-teal" style="height:25px;">
+        <span class="dz-teal-title" style="left:4px;top:3px;font-size:15px;">PURCHASE ORDER HISTORY</span>
+    </div>
+    <div style="height:27px;background:#fff;">
+        <div class="dz-strip">
+            <button type="button" class="dz-tool" id="btnNewHistory" style="width:64px" onclick="PoTrade.newHistory()"><i class="fa fa-file-o"></i> Reset</button>
+            <button type="button" class="dz-tool" id="btnRefreshHistory" style="width:76px" onclick="PoTrade.refreshHistory()"><i class="fa fa-repeat"></i> Refresh</button>
+        </div>
+    </div>
+    <div style="position:relative;height:75px;background:#fff;">
+        <div class="dz-gb" style="left:2px;top:2px;width:1059px;height:69px;">
+            <span class="dz-cap">Filters</span>
+            <label class="dz-abs dz-lbl" style="left:6px;top:21px;">Branch Name</label>
+            <div id="cmbBranchBox" class="dz-abs" style="left:6px;top:37px;width:200px;height:26px;">
+                <input type="text" id="cmbBranchText" class="dz-txt" style="width:100%;height:26px;cursor:pointer;" readonly onclick="PoTrade.branchToggle()">
+                <div id="cmbBranchList" class="is-hidden" style="position:absolute;left:0;top:26px;width:100%;max-height:200px;overflow:auto;background:#fff;border:1px solid #7a7a7a;z-index:50;"></div>
+            </div>
+            <label class="dz-abs dz-lbl" style="left:212px;top:21px;">From Date</label>
+            <span class="dz-abs dz-dtc" style="left:212px;top:39px;width:137px;"><input type="checkbox" id="chkFromDate" checked><input type="date" id="FromDateHistory"></span>
+            <label class="dz-abs dz-lbl" style="left:351px;top:21px;">To Date</label>
+            <span class="dz-abs dz-dtc" style="left:351px;top:39px;width:137px;"><input type="checkbox" id="chkToDate" checked><input type="date" id="ToDateHistory"></span>
+            <label class="dz-abs dz-lbl" style="left:490px;top:21px;">From Doc No</label>
+            <input type="text" id="txtFromDocNoHistory" class="dz-abs dz-txt" style="left:490px;top:39px;width:100px;" onkeypress="return PoTrade.digitKey(event)">
+            <label class="dz-abs dz-lbl" style="left:591px;top:21px;">To Doc No</label>
+            <input type="text" id="txtToDocNoHistory" class="dz-abs dz-txt" style="left:591px;top:39px;width:100px;" onkeypress="return PoTrade.digitKey(event)">
+            <label class="dz-abs dz-lbl" style="left:693px;top:21px;">Supplier Name</label>
+            <select id="cmbSupplierNameHistory" class="dz-abs dz-cmb" style="left:693px;top:37px;width:194px;"></select>
+            <button type="button" class="dz-abs dz-btn" id="btnshow" style="left:890px;top:37px;width:66px;height:26px;background:#0a6e6e;" onclick="PoTrade.showHistory()">Show</button>
+            <label class="dz-chk dz-abs" style="left:962px;top:11px;"><input type="radio" name="histDate" id="rdpqtydoc" value="doc" checked> Doc Date</label>
+            <label class="dz-chk dz-abs" style="left:962px;top:30px;"><input type="radio" name="histDate" id="rdpqtyentry" value="entry"> Entry Date</label>
+            <label class="dz-chk dz-abs" style="left:962px;top:49px;"><input type="radio" name="histDate" id="rdpqtymodify" value="modify"> Modify Date</label>
+        </div>
+    </div>
+    <div class="dz-host win-grid-scroll" style="height:calc(100vh - 470px);min-height:170px;"><table class="win-grid" id="grdhistory"><thead></thead><tbody></tbody></table></div>
+    <div class="dz-teal" style="height:22px;">
+        <span class="dz-teal-title" style="left:4px;top:3px;font-size:13px;line-height:17px;">Detail of Above Selected Row</span>
+    </div>
+    <div class="dz-host win-grid-scroll" style="height:170px;"><table class="win-grid" id="grdDetail"><thead></thead><tbody></tbody></table></div>
+</div>
+
+<div class="dz-tabs bottom" style="margin:0 4px;">
+    <div class="win-tab is-active" data-tab="tabForm" onclick="PoTrade.tab('tabForm')">Form</div>
+    <div class="win-tab" data-tab="tabHistory" onclick="PoTrade.tab('tabHistory')">History</div>
+</div>
+
+</div>
+</div>
+
+<!-- frmPendingPurchaseDemand loader -->
+<div class="cx-modal" id="ldrModal">
+    <div class="cx-modal-box dz-modal-box" style="width:1100px !important;">
+        <div class="cx-modal-head"><span>EccountBookERP</span><button type="button" onclick="PoTrade.closeLoader()">&times;</button></div>
+        <div class="cx-modal-body dz-root" style="width:1100px;">
+            <div style="position:relative;height:62px;background:#fff;">
+                <label class="dz-abs dz-lbl" style="left:6px;top:6px;">From Date</label>
+                <input type="date" id="ldrFrom" class="dz-abs dz-dt" style="left:6px;top:24px;width:130px;">
+                <label class="dz-abs dz-lbl" style="left:142px;top:6px;">To Date</label>
+                <input type="date" id="ldrTo" class="dz-abs dz-dt" style="left:142px;top:24px;width:130px;">
+                <label class="dz-abs dz-lbl" style="left:278px;top:6px;">From Doc No</label>
+                <input type="text" id="ldrDocFrom" class="dz-abs dz-txt" style="left:278px;top:24px;width:90px;" onkeypress="return PoTrade.digitKey(event)">
+                <label class="dz-abs dz-lbl" style="left:374px;top:6px;">To Doc No</label>
+                <input type="text" id="ldrDocTo" class="dz-abs dz-txt" style="left:374px;top:24px;width:90px;" onkeypress="return PoTrade.digitKey(event)">
+                <label class="dz-abs dz-lbl" style="left:470px;top:6px;">Item</label>
+                <select id="ldrItem" class="dz-abs dz-cmb" style="left:470px;top:22px;width:300px;"></select>
+                <button type="button" class="dz-abs dz-btn" style="left:780px;top:22px;width:66px;height:26px;" onclick="PoTrade.ldrShow()">Show</button>
+                <button type="button" class="dz-abs dz-btn" style="left:852px;top:22px;width:66px;height:26px;" onclick="PoTrade.ldrLoad()">Load</button>
+            </div>
+            <div class="dz-host win-grid-scroll" style="height:200px;"><table class="win-grid" id="ldrGrd"><thead></thead><tbody></tbody></table></div>
+            <div class="dz-host win-grid-scroll" style="height:220px;"><table class="win-grid" id="ldrDetail"><thead></thead><tbody></tbody></table></div>
+        </div>
+    </div>
+</div>
+
+<div class="cx-modal" id="keysModal">
+    <div class="cx-modal-box dz-modal-box" style="width:420px !important;">
+        <div class="cx-modal-head"><span>ShortCut Keys</span><button type="button" onclick="PoTrade.closeKeys()">&times;</button></div>
+        <div class="cx-modal-body"><table class="win-grid"><tbody id="keysBody"></tbody></table></div>
+    </div>
+</div>
+
+<script th:src="@{/build/js/countx_store_common.js?v=20260928b}"></script>
+<script th:src="@{/build/js/countx_store_purchase_order_trade.js?v=20261008a}"></script>
+<script src="/js/print-rpt.js?v=20261003erp"></script>
+</body>
+</html>

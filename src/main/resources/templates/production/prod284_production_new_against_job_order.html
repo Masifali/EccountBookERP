@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ProductionNew Against (Pre Costing Job Order) - EccountBookERP</title>
+    <!--
+      Screen 284 "ProductionNew Against (Pre Costing Job Order)" - Architecture.WinApp.Production/FoodProductionWithValuesNew.cs
+      (base.Name FoodProductionWithValuesNew, ClientSize 1067 x 741). tabControl1 fills the form with the tabs at the TOP:
+      Input (80) | OutPut (112) | Packing Material (111) | Over Head (110) | Transaction History | Summery | Settlement (142).
+      Input / OutPut / Packing Material / Over Head each hold a second tab control with its tabs at the BOTTOM ("Form", "History").
+      Over Head and Settlement are removed when the user lacks the ProductionSettlement right (frmFoodProduction_Load:945).
+      Designer geometry (InitializeComponent:7132) is reproduced 1:1 in px; control names are the element ids.
+    -->
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_store.css?v=20260925c}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261007-gridbar-flow}"/>
+    <style>
+        body { background: #fff; padding-bottom: 20px; }
+        .pn-scroll { overflow-x: auto; }
+        .pn-root { min-width: 1067px; position: relative; font-family: Verdana, sans-serif; font-size: 13px; }
+        .pn-abs { position: absolute; box-sizing: border-box; margin: 0; }
+        .pn-lbl { font-family: "Segoe UI Semibold", "Segoe UI", Tahoma, sans-serif; font-weight: bold; font-size: 12px; line-height: 15px; white-space: nowrap; color: #000; }
+        .pn-lbl.r { text-align: right; }
+        .pn-txt { font-family: Verdana, sans-serif; font-size: 13px; height: 23px; border: 1px solid #7a7a7a; padding: 1px 3px; background: #fff; }
+        .pn-txt[readonly] { background: #fff; color: #000; }
+        .pn-txt.ro { background: #f0f0f0; }
+        .pn-txt.r { text-align: right; }
+        .pn-cmb { font-family: Verdana, sans-serif; font-size: 13px; height: 26px; border: 1px solid #7a7a7a; background: #fff; padding: 0 2px; }
+        .pn-dt { font-family: Verdana, sans-serif; font-size: 12px; height: 23px; border: 1px solid #7a7a7a; background: #fff; padding: 0 2px; }
+        .pn-gb { position: absolute; box-sizing: border-box; }
+        .pn-gb::before { content: ""; position: absolute; left: 0; right: 0; top: 7px; bottom: 0; border: 1px solid #d5dfe5; border-radius: 3px; pointer-events: none; }
+        .pn-gb > .pn-cap { position: absolute; left: 6px; top: 0; padding: 0 2px; background: #fff; font-family: Tahoma, sans-serif; font-size: 13px; font-weight: bold; line-height: 14px; }
+        .pn-teal { background: #008080; position: relative; }
+        .pn-teal-title { position: absolute; font-family: Tahoma, sans-serif; font-size: 16px; font-weight: bold; color: #fff; white-space: nowrap; line-height: 19px; }
+        .pn-teal-title.sm { font-size: 13px; line-height: 17px; }
+        .pn-strip { height: 27px; display: flex; align-items: center; background: linear-gradient(to bottom, #fcfcfc 0%, #e0e0e0 100%); border-bottom: 1px solid #b5b5b5; }
+        .pn-strip.teal { background: #008080; border-bottom: none; }
+        .pn-strip.teal .pn-tool { color: #fff; }
+        .pn-tool { font-family: Verdana, sans-serif; font-size: 13px; height: 24px; background: transparent; border: 1px solid transparent; display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 0 4px; cursor: pointer; box-sizing: border-box; white-space: nowrap; }
+        .pn-tool:hover:not(:disabled) { background: #ffe4a0; border-color: #e59d00; color: #000; }
+        .pn-tool:disabled { color: #9a9a9a; cursor: default; }
+        .pn-sep { width: 6px; height: 20px; border-left: 1px solid #b5b5b5; margin-left: 3px; }
+        .pn-btn { background: #008080; color: #fff; border: 1px solid #005959; font-family: Verdana, sans-serif; font-size: 13px; cursor: pointer; }
+        .pn-btn:disabled { opacity: .6; cursor: default; }
+        .pn-grid-host { overflow: auto; background: #fff; border-top: 1px solid #9eb6ce; position: relative; }
+        .pn-grid-host .win-grid { width: auto; min-width: 100%; font-family: Verdana, sans-serif; font-size: 11px; }
+        .pn-grid-host .win-grid th { background: linear-gradient(to bottom, #e3efff 0%, #c4dcf8 100%); border: 1px solid #9eb6ce; font-weight: normal; }
+        .pn-grid-host .win-grid td { border: 1px solid #d5e1f0; }
+        .pn-grid-host .win-grid tbody tr:hover { background: #fff0cf; }
+        .pn-grid-host .win-grid tbody tr.is-selected { background: #d6ecff; }
+        .pn-grid-host .win-grid tfoot td { background: #eef4fb; font-weight: bold; border: 1px solid #9eb6ce; }
+        .pn-grid-host .win-grid tr.grp td { background: #e8eef5; font-weight: bold; }
+        .pn-grid-host td.num { text-align: right; }
+        .pn-grid-host td.ctr { text-align: center; }
+        .pn-grid-host td input.ed { width: 90px; text-align: right; }
+        .pn-grid-host td input.ed.txt { width: 160px; text-align: left; }
+        .pn-grid-host td select.ed { width: 150px; }
+        .pn-grid-host td.lnk { color: #0645ad; text-decoration: underline; cursor: pointer; }
+        .pn-grid-host td.xbtn { text-align: center; cursor: pointer; font-weight: bold; color: #a00; width: 35px; }
+        .pn-grid-host td.addbtn { text-align: center; cursor: pointer; font-weight: bold; color: #060; width: 35px; }
+        .pn-grid-host td.editbtn { text-align: center; cursor: pointer; color: #0645ad; text-decoration: underline; }
+        /* top tab strip (tabControl1) */
+        .pn-tabs { display: flex; gap: 2px; border-bottom: 1px solid #7a9a9e; padding-left: 2px; background: #f0f0f0; height: 26px; }
+        .pn-tabs .win-tab { font-family: Verdana, sans-serif; font-size: 13px; font-weight: normal; padding: 3px 10px; }
+        .pn-tabs .win-tab.is-active { background: #fff; }
+        /* bottom tab strips (tabControl2/3/Pm/4) */
+        .pn-btabs { display: flex; gap: 2px; border-top: 1px solid #7a9a9e; padding-left: 2px; background: #f0f0f0; height: 25px; }
+        .pn-btabs .win-tab { border-radius: 0 0 3px 3px; border-top: none; border-bottom: 1px solid #999; font-family: Verdana, sans-serif; font-size: 13px; font-weight: normal; padding: 2px 10px; }
+        .pn-btabs .win-tab.is-active { top: -1px; background: #fff; }
+        .pn-panel { display: none; }
+        .pn-panel.is-active { display: block; }
+        .pn-page { width: 1059px; min-height: 701px; position: relative; }
+        .pn-fill-grid { height: calc(100vh - 420px); min-height: 300px; }
+        .pn-h331 { height: 331px; }
+        .pn-h-rest { height: calc(100vh - 560px); min-height: 220px; }
+        .pn-chkpanel { position: absolute; font-family: "Segoe UI Semibold", Tahoma, sans-serif; font-weight: bold; font-size: 12px; color: #fff; display: flex; align-items: center; gap: 4px; }
+        .pn-hdr-lbl { position: absolute; font-family: "Segoe UI Semibold", Tahoma, sans-serif; font-weight: bold; font-size: 13px; color: #fff; white-space: nowrap; }
+        .pn-box { position: absolute; border: 1px solid #c5c5c5; background: #fff; box-sizing: border-box; }
+        .pn-box .pn-teal { height: 20px; }
+        .pn-box .pn-teal .pn-teal-title { font-size: 13px; line-height: 17px; top: 1px; left: 6px; }
+        /* dialogs */
+        .cx-modal-box { width: 964px; max-width: 98vw; background: #fff; }
+        .cx-modal-body { padding: 0; background: #fff; }
+        #dlgWages .cx-modal-box { width: 1100px; max-width: 98vw; }
+        #dlgWages iframe { width: 100%; height: 80vh; border: 0; }
+        .pn-filter { position: relative; height: 47px; background: #fff; }
+        .pn-note { font-family: Verdana, sans-serif; font-size: 11px; color: #555; padding: 4px 6px; }
+    </style>
+</head>
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="pn-scroll">
+<div class="pn-root">
+
+    <!-- tabControl1 (TOP tabs, Dock Fill 1067 x 731) -->
+    <div class="pn-tabs" id="tabControl1">
+        <div class="win-tab is-active" data-tab="InPut" onclick="PN.tab('InPut')">Input</div>
+        <div class="win-tab" data-tab="OutPut" onclick="PN.tab('OutPut')">OutPut</div>
+        <div class="win-tab" data-tab="PackingMaterial" onclick="PN.tab('PackingMaterial')">Packing Material</div>
+        <div class="win-tab" data-tab="OverHead" id="tabOverHead" onclick="PN.tab('OverHead')">Over Head</div>
+        <div class="win-tab" data-tab="TransctionHistory" onclick="PN.tab('TransctionHistory')">Transaction History</div>
+        <div class="win-tab" data-tab="Summary" onclick="PN.tab('Summary')">Summery</div>
+        <div class="win-tab" data-tab="Settlement" id="tabSettlement" onclick="PN.tab('Settlement')">Settlement</div>
+    </div>
+
+    <!-- ============================================================================= InPut (1059 x 701) -->
+    <div id="InPut" class="pn-panel pn-page is-active">
+        <!-- tabControl2 / tabPage1 "Form" -->
+        <div id="tabPage1" class="pn-panel is-active">
+            <!-- toolStrip1 (3,3) 1039 x 27 -->
+            <div class="pn-strip" id="toolStrip1">
+                <button type="button" class="pn-tool" id="btnnew" style="width:59px" onclick="PN.inp.reset()" title="Ctrl+N"><i class="fa fa-plus-circle" style="color:#2e7d32"></i> <u>N</u>ew</button>
+                <button type="button" class="pn-tool" id="btnRefresh" style="width:80px" onclick="PN.refreshJobOrders()" title="Ctrl+R"><i class="fa fa-repeat"></i> Refresh</button>
+                <button type="button" class="pn-tool" id="btnsave" style="width:64px" onclick="PN.inp.save()" title="Ctrl+S"><i class="fa fa-save"></i> <u>S</u>ave</button>
+                <button type="button" class="pn-tool is-hidden" id="btnUpdate" style="width:78px" onclick="PN.inp.update()" title="Ctrl+U"><i class="fa fa-pencil"></i> <u>U</u>pdate</button>
+                <span class="pn-sep"></span>
+                <button type="button" class="pn-tool" id="Print" style="width:92px" onclick="PN.inp.print()" data-rpt="601-InvFoodProductionSlip.rpt"><i class="fa fa-print"></i> 601-Print</button>
+                <button type="button" class="pn-tool" id="btnVoucherReport" style="width:115px" onclick="PN.voucher118('input')" data-rpt="118-AcRptVoucherSlip.rpt"><i class="fa fa-file-text-o"></i> 118-Voucher</button>
+                <button type="button" class="pn-tool" id="btnJobOrderDefine" style="width:120px" onclick="PN.defineJobOrder()"><i class="fa fa-external-link"></i> Define Job Order</button>
+                <a href="/app/Production?module=18" class="pn-tool" style="margin-left:auto;text-decoration:none;color:#004d40;font-size:11px;font-weight:bold;"><i class="fa fa-arrow-left"></i> Exit</a>
+            </div>
+            <!-- panel63 teal (0,0) 1039 x 29 / label30 (6,5) -->
+            <div class="pn-teal" style="height:29px;"><span class="pn-teal-title" style="left:6px;top:5px;">Production Input</span></div>
+            <!-- panel72 (0,29) 1039 x 120 / groupBox1 "Main" (7,3) 1024 x 106 -->
+            <div style="position:relative;height:120px;background:#fff;">
+                <div class="pn-gb" style="left:7px;top:3px;width:1024px;height:106px;">
+                    <span class="pn-cap">Main</span>
+                    <label class="pn-abs pn-lbl" for="txtdocnumber" style="left:4px;top:22px;">Doc No &amp; Date</label>
+                    <input type="text" id="txtdocnumber" class="pn-abs pn-txt" style="left:92px;top:18px;width:77px;" readonly tabindex="-1">
+                    <input type="date" id="txtDocdate" class="pn-abs pn-dt" style="left:175px;top:18px;width:147px;">
+                    <label class="pn-abs pn-lbl" for="CmbJobOrderNo" style="left:4px;top:51px;">Job Order No</label>
+                    <select id="CmbJobOrderNo" class="pn-abs pn-cmb win-combo" style="left:92px;top:45px;width:230px;" onchange="PN.inp.jobOrderLeave()"></select>
+                    <label class="pn-abs pn-lbl" for="CmbPlantFeeder" style="left:4px;top:81px;">Plant</label>
+                    <select id="CmbPlantFeeder" class="pn-abs pn-cmb win-combo" style="left:92px;top:75px;width:230px;"></select>
+                    <label class="pn-abs pn-lbl" for="CmbWorkInProcess" style="left:328px;top:22px;">WIP Account</label>
+                    <select id="CmbWorkInProcess" class="pn-abs pn-cmb win-combo" style="left:427px;top:16px;width:179px;"></select>
+                    <label class="pn-abs pn-lbl" for="CmbWIPItem" style="left:328px;top:51px;">WIP Item</label>
+                    <select id="CmbWIPItem" class="pn-abs pn-cmb win-combo" style="left:427px;top:45px;width:179px;"></select>
+                    <label class="pn-abs pn-lbl" for="CmbProductionDepartment" style="left:328px;top:80px;">Pro_Department</label>
+                    <select id="CmbProductionDepartment" class="pn-abs pn-cmb win-combo" style="left:427px;top:74px;width:179px;"></select>
+                    <span class="pn-abs" style="left:612px;top:16px;width:296px;height:26px;background:#d3d3d3;font-family:Tahoma,sans-serif;font-weight:bold;font-size:13px;display:flex;align-items:center;justify-content:center;">Remarks</span>
+                    <textarea id="txtRemarks" class="pn-abs pn-txt" style="left:612px;top:45px;width:296px;height:56px;resize:none;"></textarea>
+                    <button type="button" id="btnLoadInvoices" class="pn-abs pn-btn" style="left:911px;top:74px;width:107px;height:27px;" onclick="PN.inp.loadInput()" title="Ctrl+L">Load InPut</button>
+                </div>
+            </div>
+            <!-- panel12 teal (0,0) 1039 x 28 "Input Detail" / ctrlGrdBar3 (990,1) -->
+            <div class="pn-teal" style="height:28px;"><span class="pn-teal-title" style="left:3px;top:4px;">Input Detail</span></div>
+            <!-- panel14 / grdStockConversionProductionDetail (fill) -->
+            <div class="pn-grid-host win-grid-scroll pn-fill-grid" id="grdStockConversionProductionDetailHost">
+                <table data-gridbar="FoodProductionWithValuesNew:grdStockConversionProductionDetail" class="win-grid" id="grdStockConversionProductionDetail"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+            </div>
+        </div>
+        <!-- tabControl2 / tabPage4 "History" -->
+        <div id="tabPage4" class="pn-panel">
+            <!-- toolStrip7 teal (3,3) 1045 x 26 "Input History" / ctrlGrdBar10 -->
+            <div class="pn-strip teal" style="height:26px;"><button type="button" class="pn-tool" id="toolStripButton4" style="width:120px;height:23px;font-weight:bold" onclick="PN.inp.history()">Input History</button></div>
+            <!-- panel58 / grdinputhistory (0,0) 1039 x 331 -->
+            <div class="pn-grid-host win-grid-scroll pn-h331" id="grdinputhistoryHost">
+                <table data-gridbar="FoodProductionWithValuesNew:grdinputhistory" class="win-grid" id="grdinputhistory"><thead></thead><tbody></tbody></table>
+            </div>
+            <!-- panel59 / grdInputDetail (fill) -->
+            <div class="pn-grid-host win-grid-scroll pn-h-rest" id="grdInputDetailHost">
+                <table class="win-grid" id="grdInputDetail"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+            </div>
+        </div>
+        <!-- tabControl2 headers, BOTTOM -->
+        <div class="pn-btabs" id="tabControl2">
+            <div class="win-tab is-active" data-tab="tabPage1" onclick="PN.subTab('InPut','tabPage1')">Form</div>
+            <div class="win-tab" data-tab="tabPage4" onclick="PN.subTab('InPut','tabPage4')">History</div>
+        </div>
+    </div>
+
+    <!-- ============================================================================= OutPut -->
+    <div id="OutPut" class="pn-panel pn-page">
+        <div id="tabPage5" class="pn-panel is-active">
+            <!-- panel4 / toolStrip6 (0,0) 1045 x 27 -->
+            <div class="pn-strip" id="toolStrip6">
+                <button type="button" class="pn-tool" id="btnNewOutPut" style="width:59px" onclick="PN.out.reset()" title="Ctrl+N"><i class="fa fa-plus-circle" style="color:#2e7d32"></i> <u>N</u>ew</button>
+                <button type="button" class="pn-tool" id="btnRefreshOutPut" style="width:80px" onclick="PN.out.refresh()" title="Ctrl+R"><i class="fa fa-repeat"></i> Refresh</button>
+                <button type="button" class="pn-tool" id="btnSaveOutPut" style="width:64px" onclick="PN.out.save()" title="Ctrl+S"><i class="fa fa-save"></i> <u>S</u>ave</button>
+                <button type="button" class="pn-tool is-hidden" id="btnUpdateOutPut" style="width:78px" onclick="PN.out.update()" title="Ctrl+U"><i class="fa fa-pencil"></i> <u>U</u>pdate</button>
+                <span class="pn-sep"></span>
+                <button type="button" class="pn-tool" id="btnPrintOutPut" style="width:92px" onclick="PN.out.print()" data-rpt="601-InvFoodProductionSlip.rpt"><i class="fa fa-print"></i> 601-Print</button>
+                <button type="button" class="pn-tool" id="btnVoucherOutPut" style="width:115px" onclick="PN.voucher118('output')" data-rpt="118-AcRptVoucherSlip.rpt"><i class="fa fa-file-text-o"></i> 118-Voucher</button>
+                <button type="button" class="pn-tool" id="btnPenForRateEntries" style="width:135px" onclick="PN.out.pendingForRates()"><i class="fa fa-list"></i> Pending For Rates </button>
+                <button type="button" class="pn-tool" id="btnLoadOutPutFromjobOrder" style="width:93px" onclick="PN.out.loadOutput()"><i class="fa fa-download"></i> Load OutPut</button>
+            </div>
+            <!-- panel64 teal 29 "Production  Output" -->
+            <div class="pn-teal" style="height:29px;"><span class="pn-teal-title" style="left:6px;top:5px;">Production  Output</span></div>
+            <!-- panel30 (0,31) 1045 x 150 / groupBox3 "Main" (16,35) 1028 x 110 -->
+            <div style="position:relative;height:150px;background:#fff;">
+                <div class="pn-gb" style="left:16px;top:4px;width:1028px;height:110px;">
+                    <span class="pn-cap">Main</span>
+                    <label class="pn-abs pn-lbl" for="txtDocNoOutPut" style="left:6px;top:23px;">Doc No &amp; Date</label>
+                    <input type="text" id="txtDocNoOutPut" class="pn-abs pn-txt" style="left:94px;top:19px;width:74px;" readonly tabindex="-1">
+                    <input type="date" id="DocDateOutPut" class="pn-abs pn-dt" style="left:174px;top:19px;width:122px;">
+                    <label class="pn-abs pn-lbl" for="CmbJobOrderNoOutput" style="left:6px;top:53px;">Job Order No</label>
+                    <select id="CmbJobOrderNoOutput" class="pn-abs pn-cmb win-combo" style="left:94px;top:47px;width:202px;" onchange="PN.out.jobOrderLeave()"></select>
+                    <label class="pn-abs pn-lbl" for="CmbPlantFeederOutput" style="left:6px;top:82px;">Plant</label>
+                    <select id="CmbPlantFeederOutput" class="pn-abs pn-cmb win-combo" style="left:94px;top:76px;width:202px;"></select>
+                    <span class="pn-abs" style="left:302px;top:19px;width:321px;height:23px;background:#f5f5f5;font-family:Tahoma,sans-serif;font-weight:bold;font-size:13px;display:flex;align-items:center;justify-content:center;">Remarks</span>
+                    <textarea id="txtRemarksHeaderOutPut" class="pn-abs pn-txt" style="left:302px;top:47px;width:321px;height:55px;resize:none;"></textarea>
+                    <label class="pn-abs pn-lbl r" style="left:631px;top:23px;width:56px;">In Qty</label>
+                    <input type="text" id="txtInPutTotalQty" class="pn-abs pn-txt r" style="left:693px;top:19px;width:106px;" readonly tabindex="-1" value="0">
+                    <label class="pn-abs pn-lbl" style="left:805px;top:23px;">In Weight</label>
+                    <input type="text" id="txtInPutTotalWeight" class="pn-abs pn-txt r" style="left:876px;top:19px;width:133px;" readonly tabindex="-1" value="0">
+                    <label class="pn-abs pn-lbl r" style="left:631px;top:53px;width:56px;">Out Qty</label>
+                    <input type="text" id="txtOutQtyTotal" class="pn-abs pn-txt r" style="left:693px;top:49px;width:106px;" readonly tabindex="-1" value="0">
+                    <label class="pn-abs pn-lbl" style="left:805px;top:53px;">Out Weight</label>
+                    <input type="text" id="txtOutWeightTotal" class="pn-abs pn-txt r" style="left:876px;top:49px;width:133px;" readonly tabindex="-1" value="0">
+                    <label class="pn-abs pn-lbl r" style="left:631px;top:82px;width:56px;">Bal Qty</label>
+                    <input type="text" id="txtBalQtyTotal" class="pn-abs pn-txt r" style="left:693px;top:78px;width:106px;" readonly tabindex="-1" value="0">
+                    <label class="pn-abs pn-lbl" style="left:805px;top:82px;">Bal Weight</label>
+                    <input type="text" id="txtBalWeightTotal" class="pn-abs pn-txt r" style="left:876px;top:78px;width:133px;" readonly tabindex="-1" value="0">
+                    <!-- txtFGWeight / txtFGRate / txtAvgFinishGoodRate / btnApplyRate are Visible=false on the desktop (:406-437) -->
+                    <input type="hidden" id="txtAvgFinishGoodRate" value="">
+                </div>
+            </div>
+            <!-- panel22 teal 31 "Output Detail" / ctrlGrdBar7 -->
+            <div class="pn-teal" style="height:31px;"><span class="pn-teal-title" style="left:6px;top:4px;">Output Detail</span></div>
+            <div class="pn-grid-host win-grid-scroll pn-fill-grid" id="grdByProductHost">
+                <table data-gridbar="FoodProductionWithValuesNew:grdByProduct" class="win-grid" id="grdByProduct"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+            </div>
+        </div>
+        <div id="tabPage6" class="pn-panel">
+            <div class="pn-strip teal" style="height:26px;"><button type="button" class="pn-tool" id="toolStripButton9" style="width:133px;height:23px;font-weight:bold" onclick="PN.out.history()">OutPut History</button></div>
+            <div class="pn-grid-host win-grid-scroll pn-h331" id="grdOutputHistoryHost">
+                <table data-gridbar="FoodProductionWithValuesNew:grdOutputHistory" class="win-grid" id="grdOutputHistory"><thead></thead><tbody></tbody></table>
+            </div>
+            <div class="pn-grid-host win-grid-scroll pn-h-rest" id="grdOutPutDetailHost">
+                <table class="win-grid" id="grdOutPutDetail"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+            </div>
+        </div>
+        <div class="pn-btabs" id="tabControl3">
+            <div class="win-tab is-active" data-tab="tabPage5" onclick="PN.subTab('OutPut','tabPage5')">Form</div>
+            <div class="win-tab" data-tab="tabPage6" onclick="PN.subTab('OutPut','tabPage6')">History</div>
+        </div>
+    </div>
+
+    <!-- ============================================================================= Packing Material -->
+    <div id="PackingMaterial" class="pn-panel pn-page">
+        <div id="PmForm" class="pn-panel is-active">
+            <!-- panel41 teal (0,0) 1045 x 54: toolStrip4 27 + label96 (3,30) -->
+            <div class="pn-teal" style="height:54px;">
+                <div class="pn-strip" id="toolStrip4">
+                    <button type="button" class="pn-tool" id="btnNewpackingmaterial" style="width:59px" onclick="PN.pm.reset()" title="Ctrl+N"><i class="fa fa-plus-circle" style="color:#2e7d32"></i> <u>N</u>ew</button>
+                    <button type="button" class="pn-tool" id="btnRefreshPackingMaterial" style="width:80px" onclick="PN.refreshJobOrders()" title="Ctrl+R"><i class="fa fa-repeat"></i> Refresh</button>
+                    <button type="button" class="pn-tool" id="btnsavepackingmaterial" style="width:64px" onclick="PN.pm.save()" title="Ctrl+S"><i class="fa fa-save"></i> <u>S</u>ave</button>
+                    <button type="button" class="pn-tool is-hidden" id="btnUpdatepackingmaterial" style="width:78px" onclick="PN.pm.update()" title="Ctrl+U"><i class="fa fa-pencil"></i> <u>U</u>pdate</button>
+                    <span class="pn-sep"></span>
+                    <button type="button" class="pn-tool" id="btnPackingMaterialSlip" style="width:92px" onclick="PN.pm.print()" data-rpt="606-InvFoodProductionPackingAndOverHeadReportByJobOrder.rpt"><i class="fa fa-print"></i> <u>P</u>rint-606</button>
+                    <button type="button" class="pn-tool" id="btnVoucherPM" style="width:115px" onclick="PN.voucher118('pm')" data-rpt="118-AcRptVoucherSlip.rpt"><i class="fa fa-file-text-o"></i> 118-Voucher</button>
+                    <button type="button" class="pn-tool" id="btnLoadPMFromJobOrder" style="width:154px" onclick="PN.pm.load()"><i class="fa fa-download"></i> Load Packing Material</button>
+                </div>
+                <span class="pn-teal-title" style="left:3px;top:30px;">Packing Material</span>
+            </div>
+            <!-- panel42 (0,54) 1045 x 121 / groupBox5 "Main" (14,6) 991 x 108 -->
+            <div style="position:relative;height:121px;background:#fff;">
+                <div class="pn-gb" style="left:14px;top:6px;width:991px;height:108px;">
+                    <span class="pn-cap">Main</span>
+                    <label class="pn-abs pn-lbl" for="txtDocNoPackingMaterial" style="left:5px;top:21px;">Doc No &amp; Date</label>
+                    <input type="text" id="txtDocNoPackingMaterial" class="pn-abs pn-txt" style="left:93px;top:17px;width:72px;background:#f5f5f5;" readonly tabindex="-1">
+                    <input type="date" id="txtdocdatePackingMaterial" class="pn-abs pn-dt" style="left:169px;top:17px;width:175px;">
+                    <label class="pn-abs pn-lbl" for="cmbJobOrderPackingMaterial" style="left:5px;top:51px;">Job Order No</label>
+                    <select id="cmbJobOrderPackingMaterial" class="pn-abs pn-cmb win-combo" style="left:93px;top:45px;width:251px;" onchange="PN.pm.jobOrderLeave()"></select>
+                    <label class="pn-abs pn-lbl" for="CmbPlantFeederPackingMaterial" style="left:5px;top:82px;">Plant Name</label>
+                    <select id="CmbPlantFeederPackingMaterial" class="pn-abs pn-cmb win-combo" style="left:93px;top:76px;width:251px;" onchange="PN.pm.plantLeave()"></select>
+                    <label class="pn-abs pn-lbl r" style="left:492px;top:21px;width:96px;">Total InPut Qty</label>
+                    <input type="text" id="txtTotalInputQtyPm" class="pn-abs pn-txt r" style="left:594px;top:17px;width:106px;" readonly tabindex="-1">
+                    <label class="pn-abs pn-lbl r" style="left:708px;top:21px;width:116px;">Total InPut Weight</label>
+                    <input type="text" id="txtTotalInputWeightPm" class="pn-abs pn-txt r" style="left:828px;top:17px;width:106px;" readonly tabindex="-1">
+                    <label class="pn-abs pn-lbl r" style="left:492px;top:51px;width:96px;">Total OutPut Qty</label>
+                    <input type="text" id="txtTotaloutputQtyPm" class="pn-abs pn-txt r" style="left:594px;top:47px;width:106px;" readonly tabindex="-1">
+                    <label class="pn-abs pn-lbl r" style="left:708px;top:51px;width:116px;">Total OutPut Weight</label>
+                    <input type="text" id="txtTotalOutPutWeightPm" class="pn-abs pn-txt r" style="left:828px;top:47px;width:106px;" readonly tabindex="-1">
+                    <label class="pn-abs pn-lbl r" style="left:494px;top:82px;width:94px;">Total Finish Qty</label>
+                    <input type="text" id="txtTotalFinishQtyPm" class="pn-abs pn-txt r" style="left:594px;top:78px;width:106px;" readonly tabindex="-1">
+                    <label class="pn-abs pn-lbl r" style="left:708px;top:82px;width:116px;">Total Finish Weight</label>
+                    <input type="text" id="txtTotalFinishWeightPm" class="pn-abs pn-txt r" style="left:828px;top:78px;width:106px;" readonly tabindex="-1">
+                </div>
+            </div>
+            <!-- panel6 teal 26 "Packing Material Detail" / ctrlGrdBar13 -->
+            <div class="pn-teal" style="height:26px;"><span class="pn-teal-title sm" style="left:3px;top:3px;">Packing Material Detail</span></div>
+            <div class="pn-grid-host win-grid-scroll pn-fill-grid" id="grddetailPackingMaterialHost">
+                <table data-gridbar="FoodProductionWithValuesNew:grddetailPackingMaterial" class="win-grid" id="grddetailPackingMaterial"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+            </div>
+        </div>
+        <div id="PmHistory" class="pn-panel">
+            <!-- panel71 teal (3,3) 1045 x 32: label88 (4,6) + chkPendingForRates (621,7) -->
+            <div class="pn-teal" style="height:32px;">
+                <span class="pn-teal-title" style="left:4px;top:6px;">Packing Material History</span>
+                <label class="pn-chkpanel" id="chkPendingForRatesWrap" style="left:621px;top:7px;"><input type="checkbox" id="chkPendingForRates" onchange="PN.pm.history()"> Show Only Zero-Rated Entry</label>
+            </div>
+            <div class="pn-grid-host win-grid-scroll" id="grdPackingMaterialHistoryHost" style="height:calc(100vh - 260px);min-height:328px;">
+                <table data-gridbar="FoodProductionWithValuesNew:grdPackingMaterialHistory" class="win-grid" id="grdPackingMaterialHistory"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+            </div>
+        </div>
+        <div class="pn-btabs" id="tabControlPm">
+            <div class="win-tab is-active" data-tab="PmForm" onclick="PN.subTab('PackingMaterial','PmForm')">Form</div>
+            <div class="win-tab" data-tab="PmHistory" onclick="PN.subTab('PackingMaterial','PmHistory')">History</div>
+        </div>
+    </div>
+
+    <!-- ============================================================================= Over Head -->
+    <div id="OverHead" class="pn-panel pn-page">
+        <div id="tabPage2" class="pn-panel is-active">
+            <!-- panel69 teal 54: toolStrip5 + label44 (3,31) -->
+            <div class="pn-teal" style="height:54px;">
+                <div class="pn-strip" id="toolStrip5">
+                    <button type="button" class="pn-tool" id="btnNewOverHead" style="width:59px" onclick="PN.oh.reset()" title="Ctrl+N"><i class="fa fa-plus-circle" style="color:#2e7d32"></i> <u>N</u>ew</button>
+                    <button type="button" class="pn-tool" id="btnRefreshOverHead" style="width:80px" onclick="PN.refreshJobOrders()" title="Ctrl+R"><i class="fa fa-repeat"></i> Refresh</button>
+                    <button type="button" class="pn-tool" id="btnSaveOverHead" style="width:64px" onclick="PN.oh.save()" title="Ctrl+S"><i class="fa fa-save"></i> <u>S</u>ave</button>
+                    <button type="button" class="pn-tool is-hidden" id="btnUpdateOverHead" style="width:78px" onclick="PN.oh.update()" title="Ctrl+U"><i class="fa fa-pencil"></i> <u>U</u>pdate</button>
+                    <span class="pn-sep"></span>
+                    <button type="button" class="pn-tool" id="btnPrintOverHead" style="width:92px" onclick="PN.oh.print()" data-rpt="606-InvFoodProductionPackingAndOverHeadReportByJobOrder.rpt"><i class="fa fa-print"></i> <u>P</u>rint-606</button>
+                    <button type="button" class="pn-tool" id="btnVoucherOH" style="width:115px" onclick="PN.voucher118('oh')" data-rpt="118-AcRptVoucherSlip.rpt"><i class="fa fa-file-text-o"></i> 118-Voucher</button>
+                    <button type="button" class="pn-tool" id="btnLoadOverHeadsFromJobOrder" style="width:123px" onclick="PN.oh.load()"><i class="fa fa-download"></i> Load Over Heads</button>
+                </div>
+                <span class="pn-teal-title" style="left:3px;top:31px;">Over Heads</span>
+            </div>
+            <!-- panel9 (0,54) 1045 x 109 / groupBox6 "Main" (11,6) 1001 x 96 -->
+            <div style="position:relative;height:109px;background:#fff;">
+                <div class="pn-gb" style="left:11px;top:6px;width:1001px;height:96px;">
+                    <span class="pn-cap">Main</span>
+                    <label class="pn-abs pn-lbl" for="txtDocNoOverHead" style="left:4px;top:18px;">Doc No</label>
+                    <input type="text" id="txtDocNoOverHead" class="pn-abs pn-txt" style="left:84px;top:14px;width:79px;background:#f5f5f5;" readonly tabindex="-1">
+                    <input type="date" id="txtDocDateOverHead" class="pn-abs pn-dt" style="left:166px;top:14px;width:174px;">
+                    <label class="pn-abs pn-lbl" for="cmbJobOrderOverHead" style="left:4px;top:46px;">Job Order No</label>
+                    <select id="cmbJobOrderOverHead" class="pn-abs pn-cmb win-combo" style="left:85px;top:40px;width:255px;" onchange="PN.oh.jobOrderLeave()"></select>
+                    <label class="pn-abs pn-lbl" for="CmbPlantFeederOverHead" style="left:4px;top:76px;">Plant Name</label>
+                    <select id="CmbPlantFeederOverHead" class="pn-abs pn-cmb win-combo" style="left:85px;top:70px;width:255px;" onchange="PN.oh.plantLeave()"></select>
+                    <label class="pn-abs pn-lbl r" style="left:526px;top:18px;width:96px;">Total InPut Qty</label>
+                    <input type="text" id="txtInputQtyTotalOH" class="pn-abs pn-txt r" style="left:628px;top:14px;width:106px;" readonly tabindex="-1">
+                    <label class="pn-abs pn-lbl r" style="left:742px;top:18px;width:116px;">Total InPut Weight</label>
+                    <input type="text" id="txtInputWeightTotalOH" class="pn-abs pn-txt r" style="left:862px;top:14px;width:106px;" readonly tabindex="-1">
+                    <label class="pn-abs pn-lbl r" style="left:526px;top:46px;width:96px;">Total OutPut Qty</label>
+                    <input type="text" id="txtOutputQtyTotalOH" class="pn-abs pn-txt r" style="left:628px;top:42px;width:106px;" readonly tabindex="-1">
+                    <label class="pn-abs pn-lbl r" style="left:742px;top:46px;width:116px;">Total OutPut Weight</label>
+                    <input type="text" id="txtOutputWeightTotalOH" class="pn-abs pn-txt r" style="left:862px;top:42px;width:106px;" readonly tabindex="-1">
+                    <label class="pn-abs pn-lbl r" style="left:528px;top:73px;width:94px;">Total Finish Qty</label>
+                    <input type="text" id="txtfinishQtyOh" class="pn-abs pn-txt r" style="left:628px;top:69px;width:106px;" readonly tabindex="-1">
+                    <label class="pn-abs pn-lbl r" style="left:742px;top:73px;width:116px;">Total Finish Weight</label>
+                    <input type="text" id="txtfinishWeightOh" class="pn-abs pn-txt r" style="left:862px;top:69px;width:106px;" readonly tabindex="-1">
+                </div>
+            </div>
+            <div class="pn-teal" style="height:26px;"><span class="pn-teal-title sm" style="left:3px;top:3px;">Over Heads Detail</span></div>
+            <div class="pn-grid-host win-grid-scroll pn-fill-grid" id="grdDetailOverheadHost">
+                <table data-gridbar="FoodProductionWithValuesNew:grdDetailOverhead" class="win-grid" id="grdDetailOverhead"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+            </div>
+        </div>
+        <div id="tabPage3" class="pn-panel">
+            <!-- panel8 teal 32 "Over Heads History" "(Job Order Wise)" -->
+            <div class="pn-teal" style="height:32px;">
+                <span class="pn-teal-title" style="left:3px;top:6px;">Over Heads History</span>
+                <span class="pn-teal-title sm" style="left:174px;top:7px;">(Job Order Wise)</span>
+            </div>
+            <div class="pn-grid-host win-grid-scroll" id="grdOverHeadHistoryHost" style="height:322px;">
+                <table data-gridbar="FoodProductionWithValuesNew:grdOverHeadHistory" class="win-grid" id="grdOverHeadHistory"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+            </div>
+            <div class="pn-teal" style="height:32px;"><span class="pn-teal-title sm" style="left:3px;top:7px;">Selected Job Order Detail</span></div>
+            <div class="pn-grid-host win-grid-scroll" id="grddetailOhHistoryHost" style="height:calc(100vh - 600px);min-height:200px;">
+                <table class="win-grid" id="grddetailOhHistory"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+            </div>
+        </div>
+        <div class="pn-btabs" id="tabControl4">
+            <div class="win-tab is-active" data-tab="tabPage2" onclick="PN.subTab('OverHead','tabPage2')">Form</div>
+            <div class="win-tab" data-tab="tabPage3" onclick="PN.subTab('OverHead','tabPage3')">History</div>
+        </div>
+    </div>
+
+    <!-- ============================================================================= Transaction History -->
+    <div id="TransctionHistory" class="pn-panel pn-page">
+        <!-- panel11 teal 30 "Transaction History" / ctrlGrdBar1 -->
+        <div class="pn-teal" style="height:30px;"><span class="pn-teal-title" style="left:3px;top:5px;">Transaction History</span></div>
+        <!-- the search row (txtfromDate, txtToDate, txtDocNoFrom, txtDocNumberTo, btnSearch) - btnSearch has NO Click handler on the desktop -->
+        <div class="pn-filter">
+            <label class="pn-abs pn-lbl" style="left:25px;top:23px;font-size:13px;">Date From</label>
+            <input type="date" id="txtfromDate" class="pn-abs pn-dt" style="left:87px;top:19px;width:153px;height:25px;">
+            <label class="pn-abs pn-lbl" style="left:246px;top:23px;font-size:13px;">Date To</label>
+            <input type="date" id="txtToDate" class="pn-abs pn-dt" style="left:298px;top:19px;width:153px;height:25px;">
+            <label class="pn-abs pn-lbl" style="left:462px;top:23px;font-size:13px;">Doc No From</label>
+            <input type="text" id="txtDocNoFrom" class="pn-abs pn-txt" style="left:538px;top:18px;width:113px;height:22px;">
+            <label class="pn-abs pn-lbl" style="left:660px;top:23px;font-size:13px;">Doc No To</label>
+            <input type="text" id="txtDocNumberTo" class="pn-abs pn-txt" style="left:726px;top:18px;width:113px;height:22px;">
+            <button type="button" id="btnSearch" class="pn-abs" style="left:864px;top:16px;width:75px;height:23px;" title="This button has no Click handler on the desktop form; the grid always shows GetAll (GridHistory:5118).">Search</button>
+        </div>
+        <!-- panel16 / DatagridHistory 284 -->
+        <div class="pn-grid-host win-grid-scroll" id="DatagridHistoryHost" style="height:284px;">
+            <table data-gridbar="FoodProductionWithValuesNew:DatagridHistory" class="win-grid" id="DatagridHistory"><thead></thead><tbody></tbody></table>
+        </div>
+        <!-- panel43 teal 27 "Detail" / ctrlGrdBar2 -->
+        <div class="pn-teal" style="height:27px;"><span class="pn-teal-title sm" style="left:5px;top:5px;">Detail</span></div>
+        <div class="pn-grid-host win-grid-scroll" id="grdDetailHost" style="height:calc(100vh - 560px);min-height:200px;">
+            <table data-gridbar="FoodProductionWithValuesNew:grdDetail" class="win-grid" id="grdDetail"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+        </div>
+    </div>
+
+    <!-- ============================================================================= Summery -->
+    <div id="Summary" class="pn-panel pn-page">
+        <!-- panel19 / toolStrip3 -->
+        <div class="pn-strip" id="toolStrip3">
+            <button type="button" class="pn-tool" id="toolStripButton1" style="width:59px" onclick="PN.sum.reset()"><i class="fa fa-plus-circle" style="color:#2e7d32"></i> <u>N</u>ew</button>
+            <button type="button" class="pn-tool" id="btnRefreshSummary" style="width:80px" onclick="PN.refreshJobOrdersAll()"><i class="fa fa-repeat"></i> Refresh</button>
+            <span class="pn-sep"></span>
+            <button type="button" class="pn-tool" id="btnProductionRecoveryReport" style="width:171px" onclick="PN.sum.print602()" data-rpt="602-InvRptProductionSummery.rpt"><i class="fa fa-print"></i> 602-Recovery Report</button>
+            <span class="pn-sep"></span>
+            <button type="button" class="pn-tool" id="btn607ProductionIssuanceGrnWiseReport" style="width:202px" onclick="PN.sum.print607()" data-rpt="607-FoodProductionIssuanceGrnWiseByJobOrderId.rpt"><i class="fa fa-print"></i> 607-Grn Wise Input Detail</button>
+        </div>
+        <!-- panel20 (0,0) 1059 x 59 white -->
+        <div style="position:relative;height:59px;background:#fff;">
+            <label class="pn-abs pn-lbl" for="cmbsummeryJobOrderNo" style="left:6px;top:7px;">Job Order No</label>
+            <select id="cmbsummeryJobOrderNo" class="pn-abs pn-cmb win-combo" style="left:8px;top:25px;width:233px;" onchange="PN.sum.jobOrderChanged()"></select>
+            <label class="pn-abs pn-lbl" for="CmbPlantNameSummary" style="left:247px;top:7px;">Plant Name</label>
+            <select id="CmbPlantNameSummary" class="pn-abs pn-cmb win-combo" style="left:245px;top:25px;width:233px;"></select>
+            <button type="button" id="btnShow" class="pn-abs pn-btn" style="left:484px;top:25px;width:63px;height:26px;" onclick="PN.sum.show()">Show</button>
+        </div>
+        <!-- panel23 (0,59) 1059 x 233: panel45 teal 26 "Summary" + grdSummery 207 -->
+        <div class="pn-teal" style="height:26px;"><span class="pn-teal-title sm" style="left:3px;top:3px;">Summary</span></div>
+        <div class="pn-grid-host win-grid-scroll" id="grdSummeryHost" style="height:207px;">
+            <table data-gridbar="FoodProductionWithValuesNew:grdSummery" class="win-grid" id="grdSummery"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+        </div>
+        <!-- tabControl5 (0,292) 1059 x 379 (top tabs; tabPage8 "Detail" is removed at Load:950) -->
+        <div class="pn-tabs" id="tabControl5" style="height:25px;">
+            <div class="win-tab is-active" data-tab="tabPage7" onclick="PN.subTab('Summary','tabPage7')">Summary</div>
+            <div class="win-tab" data-tab="tabPage9" onclick="PN.subTab('Summary','tabPage9')">Detail Summery</div>
+        </div>
+        <div id="tabPage7" class="pn-panel is-active">
+            <div class="pn-teal" style="height:29px;"><span class="pn-teal-title sm" style="left:5px;top:6px;">Summary Detail</span></div>
+            <div class="pn-grid-host win-grid-scroll" id="grdSummeryReportHost" style="height:315px;">
+                <table data-gridbar="FoodProductionWithValuesNew:grdSummeryReport" class="win-grid" id="grdSummeryReport"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+            </div>
+        </div>
+        <div id="tabPage9" class="pn-panel">
+            <div class="pn-teal" style="height:29px;"><span class="pn-teal-title sm" style="left:5px;top:6px;">Summary Detail</span></div>
+            <div class="pn-grid-host win-grid-scroll" id="grdDocWiseSummeryReportHost" style="height:331px;">
+                <table data-gridbar="FoodProductionWithValuesNew:grdDocWiseSummeryReport" class="win-grid" id="grdDocWiseSummeryReport"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================================= Settlement -->
+    <div id="Settlement" class="pn-panel pn-page">
+        <!-- panel32 (0,0) 1059 x 64 -->
+        <div style="position:relative;height:64px;background:#fff;">
+            <label class="pn-abs pn-lbl" for="CmbJobOrderSettlement" style="left:8px;top:15px;">Job Order No</label>
+            <select id="CmbJobOrderSettlement" class="pn-abs pn-cmb win-combo" style="left:8px;top:33px;width:227px;"></select>
+            <label class="pn-abs pn-lbl" for="CmbDifferenceAccountTitle" style="left:237px;top:13px;">Difference Account</label>
+            <select id="CmbDifferenceAccountTitle" class="pn-abs pn-cmb win-combo" style="left:237px;top:33px;width:227px;"></select>
+            <button type="button" id="btnGeneralSettlement" class="pn-abs pn-btn" style="left:468px;top:7px;width:94px;height:26px;" onclick="PN.st.generate()">Generate</button>
+            <button type="button" id="btnApplyAvgRateFG" class="pn-abs pn-btn" style="left:468px;top:34px;width:94px;height:26px;" onclick="PN.st.applyAvgRate()">ApplyRate</button>
+            <button type="button" id="btnUpdateSettlement" class="pn-abs pn-btn" style="left:564px;top:7px;width:79px;height:26px;" onclick="PN.st.updateSettlement()">Update</button>
+            <button type="button" id="btnResetSettlement" class="pn-abs pn-btn" style="left:564px;top:34px;width:79px;height:26px;" onclick="PN.st.resetClick()">Reset</button>
+            <button type="button" id="btnSettlementVoucher" class="pn-abs pn-btn" style="left:645px;top:7px;width:92px;height:26px;" onclick="PN.st.voucher()" data-rpt="103-AcRptPurchaseSalesVoucherSlip.rpt">Voucher</button>
+            <button type="button" id="btnApproveSettlement" class="pn-abs pn-btn is-hidden" style="left:645px;top:34px;width:92px;height:26px;" onclick="PN.st.approve()">Approve</button>
+            <button type="button" id="btnRecoveryReport" class="pn-abs pn-btn" style="left:758px;top:7px;width:101px;height:26px;" onclick="PN.st.print('602A')" data-rpt="602A-InvRptProductionSummeryWithValues.rpt">602A_Print</button>
+            <button type="button" id="btn613SummaryReport" class="pn-abs pn-btn" style="left:758px;top:34px;width:101px;height:26px;" onclick="PN.st.print('613')" data-rpt="613-InvRptProductionSummeryWithExpValues.rpt">613_Print</button>
+            <button type="button" id="btn615Report" class="pn-abs pn-btn" style="left:860px;top:7px;width:101px;height:26px;" onclick="PN.st.print('615')" data-rpt="615-InvRptProductionSummery.rpt">615_Print</button>
+            <label class="pn-abs pn-lbl" style="left:995px;top:4px;width:64px;height:57px;display:flex;align-items:center;justify-content:center;text-align:center;white-space:normal;line-height:14px;gap:3px;"><input type="checkbox" id="chkIncludeWages" checked style="margin:0">Include Wages In Print</label>
+        </div>
+        <!-- panel33 (0,64) 1059 x 157: panel49 teal 29 "Input Raw Material" + grdInputsettlement 128 -->
+        <div class="pn-teal" style="height:29px;"><span class="pn-teal-title sm" style="left:3px;top:6px;">Input Raw Material</span></div>
+        <div class="pn-grid-host win-grid-scroll" id="grdInputsettlementHost" style="height:128px;">
+            <table data-gridbar="FoodProductionWithValuesNew:grdInputsettlement" class="win-grid" id="grdInputsettlement"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+        </div>
+        <!-- panel34 teal 26 "OutPut By-Product & Finish Goods" + panel35 grdOutPutSettlement 149 -->
+        <div class="pn-teal" style="height:26px;"><span class="pn-teal-title sm" style="left:8px;top:5px;">OutPut By-Product &amp; Finish Goods</span></div>
+        <div class="pn-grid-host win-grid-scroll" id="grdOutPutSettlementHost" style="height:149px;">
+            <table data-gridbar="FoodProductionWithValuesNew:grdOutPutSettlement" class="win-grid" id="grdOutPutSettlement"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+        </div>
+        <!-- panel36 (0,396) 1059 x 143: panel37 teal 23 "Over Heads" (10,4) / "Packing Material" (639,4); panel38 left 628, panel39 fill -->
+        <div class="pn-teal" style="height:23px;">
+            <span class="pn-teal-title sm" style="left:10px;top:4px;">Over Heads</span>
+            <span class="pn-teal-title sm" style="left:639px;top:4px;">Packing Material</span>
+        </div>
+        <div style="display:flex;height:120px;">
+            <div class="pn-grid-host win-grid-scroll" id="grdOverHeadSettlementHost" style="width:628px;height:120px;flex:none;">
+                <table class="win-grid" id="grdOverHeadSettlement"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+            </div>
+            <div class="pn-grid-host win-grid-scroll" id="grdPackingMaterialSettlementHost" style="flex:1;height:120px;border-left:1px solid #9eb6ce;">
+                <table class="win-grid" id="grdPackingMaterialSettlement"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+            </div>
+        </div>
+        <!-- panel40 (0,539) 1059 x 162 (fill): panel51 (5,5) 426 x 171, panel53 (435,5) 274 x 85, panel55 (435,91) 274 x 85, panel74 (714,5) 260 x 171 -->
+        <div style="position:relative;height:182px;background:#fff;">
+            <div class="pn-box" style="left:5px;top:5px;width:426px;height:171px;">
+                <div class="pn-teal" style="height:24px;">
+                    <span class="pn-teal-title sm" style="left:2px;top:4px;">Description</span>
+                    <span class="pn-teal-title sm" style="left:113px;top:4px;">ItemQty</span>
+                    <span class="pn-teal-title sm" style="left:198px;top:4px;">NetWeight</span>
+                    <span class="pn-teal-title sm" style="left:312px;top:4px;">Amount</span>
+                </div>
+                <label class="pn-abs pn-lbl" style="left:2px;top:41px;">Raw Material</label>
+                <input type="text" id="txtItemQtyRM" class="pn-abs pn-txt r" style="left:109px;top:37px;width:82px;" readonly tabindex="-1">
+                <input type="text" id="txtNetWeightRM" class="pn-abs pn-txt r" style="left:195px;top:37px;width:107px;" readonly tabindex="-1">
+                <input type="text" id="txtAmountRM" class="pn-abs pn-txt r" style="left:305px;top:37px;width:116px;" readonly tabindex="-1">
+                <label class="pn-abs pn-lbl" style="left:2px;top:73px;">By Product - Exp</label>
+                <input type="text" id="txtItemQtyBP" class="pn-abs pn-txt r" style="left:109px;top:69px;width:82px;" readonly tabindex="-1">
+                <input type="text" id="txtNetWeightBP" class="pn-abs pn-txt r" style="left:195px;top:69px;width:107px;" readonly tabindex="-1">
+                <input type="text" id="txtAmountBP" class="pn-abs pn-txt r" style="left:305px;top:69px;width:116px;" readonly tabindex="-1">
+                <label class="pn-abs pn-lbl" style="left:2px;top:105px;">BP+OH+PM Exp</label>
+                <input type="text" id="txtBPOverHead" class="pn-abs pn-txt r" style="left:109px;top:101px;width:82px;" readonly tabindex="-1">
+                <input type="text" id="txtBPPMCharges" class="pn-abs pn-txt r" style="left:195px;top:101px;width:107px;" readonly tabindex="-1">
+                <input type="text" id="txtBPTotalAmountWithExpenses" class="pn-abs pn-txt r" style="left:305px;top:101px;width:116px;" readonly tabindex="-1">
+                <label class="pn-abs pn-lbl" style="left:2px;top:137px;">Finish Goods</label>
+                <input type="text" id="txtItemQtyFG" class="pn-abs pn-txt r" style="left:109px;top:133px;width:82px;" readonly tabindex="-1">
+                <input type="text" id="txtNetWeightFG" class="pn-abs pn-txt r" style="left:195px;top:133px;width:107px;" readonly tabindex="-1">
+                <input type="text" id="txtAmountFG" class="pn-abs pn-txt r" style="left:305px;top:133px;width:116px;" readonly tabindex="-1">
+            </div>
+            <div class="pn-box" style="left:435px;top:5px;width:274px;height:85px;">
+                <div class="pn-teal"><span class="pn-teal-title">OverHeads &amp; Packing Mateial Totals</span></div>
+                <label class="pn-abs pn-lbl" style="left:5px;top:27px;font-size:13px;">Over Heads</label>
+                <input type="text" id="txtOverHeadsSettlement" class="pn-abs pn-txt r" style="left:117px;top:23px;width:150px;height:27px;" readonly tabindex="-1">
+                <label class="pn-abs pn-lbl" style="left:5px;top:58px;font-size:13px;">Packing Material</label>
+                <input type="text" id="txtPackingMaterialSettlement" class="pn-abs pn-txt r" style="left:117px;top:54px;width:150px;height:27px;" readonly tabindex="-1">
+            </div>
+            <div class="pn-box" style="left:435px;top:91px;width:274px;height:85px;">
+                <div class="pn-teal"><span class="pn-teal-title">Finish Good Average Rate / Kg</span></div>
+                <label class="pn-abs pn-lbl" style="left:4px;top:26px;font-size:13px;">WithOut Exp</label>
+                <input type="text" id="txtFinishGoodRateWithOutExp" class="pn-abs pn-txt r" style="left:117px;top:22px;width:150px;height:27px;" readonly tabindex="-1">
+                <label class="pn-abs pn-lbl" style="left:4px;top:57px;font-size:13px;">With Exp</label>
+                <input type="text" id="txtAvgRateFG" class="pn-abs pn-txt r" style="left:117px;top:53px;width:150px;height:27px;" readonly tabindex="-1">
+            </div>
+            <div class="pn-box" style="left:714px;top:5px;width:260px;height:171px;">
+                <div class="pn-teal"><span class="pn-teal-title">Difference</span></div>
+                <label class="pn-abs pn-lbl" style="left:8px;top:24px;font-size:13px;">Actual Finish Amount</label>
+                <input type="text" id="txtActualFinishGoodsAmount" class="pn-abs pn-txt r" style="left:8px;top:42px;width:235px;height:25px;" readonly tabindex="-1">
+                <label class="pn-abs pn-lbl" style="left:8px;top:72px;font-size:13px;">Finish Amount against Job Order Rate</label>
+                <input type="text" id="txtFinishAmountAgainstJobOrder" class="pn-abs pn-txt r" style="left:8px;top:91px;width:235px;height:25px;" readonly tabindex="-1">
+                <label class="pn-abs pn-lbl" style="left:8px;top:118px;font-size:13px;">Difference Amount</label>
+                <input type="text" id="txtDifferenceAmount" class="pn-abs pn-txt r" style="left:8px;top:137px;width:235px;height:25px;" readonly tabindex="-1">
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+<!-- ======================= Load...DataByJobOrder dialogs (one modal, four data sources) -->
+<div class="cx-modal" id="dlgLoader">
+    <div class="cx-modal-box">
+        <div class="cx-modal-head"><span id="dlgLoaderTitle">EccountBookERP</span><button type="button" onclick="PN.loader.close()">&times;</button></div>
+        <div class="cx-modal-body">
+            <div class="pn-teal" style="height:47px;">
+                <div class="pn-strip" style="height:25px;">
+                    <button type="button" class="pn-tool" style="width:76px;height:22px" onclick="PN.loader.refresh()"><i class="fa fa-repeat"></i> Refresh</button>
+                    <span class="pn-sep"></span>
+                    <button type="button" class="pn-tool" id="BtnLoader" style="width:58px;height:22px" onclick="PN.loader.load()"><i class="fa fa-download"></i> Load</button>
+                    <span class="pn-sep"></span>
+                    <label class="pn-abs pn-lbl" style="position:static;margin-left:8px;display:flex;align-items:center;gap:4px;"><input type="checkbox" id="ldAll" onchange="PN.loader.checkAll(this.checked)"> Select All</label>
+                </div>
+                <span class="pn-teal-title" id="dlgLoaderCaption" style="left:4px;top:25px;">Pending Job Order Rows For Loading</span>
+            </div>
+            <div class="pn-grid-host win-grid-scroll" id="grdLoaderHost" style="height:454px;max-height:calc(92vh - 140px);">
+                <table class="win-grid" id="grdLoader"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+            </div>
+            <div class="pn-note">Checked rows are added to the detail grid with their balance (balQty / balWeight / balAmount); rows already in the grid (same job-order row id) are skipped (:2167 / :3307 / :3787 / :5097).</div>
+        </div>
+    </div>
+</div>
+
+<!-- ======================= LoadOutPutPendingforRates -->
+<div class="cx-modal" id="dlgPending">
+    <div class="cx-modal-box">
+        <div class="cx-modal-head"><span>Pending For Rates</span><button type="button" onclick="PN.pend.close()">&times;</button></div>
+        <div class="cx-modal-body">
+            <div class="pn-teal" style="height:26px;"><span class="pn-teal-title sm" style="left:4px;top:4px;">OutPut Documents Pending For Rates</span></div>
+            <div class="pn-filter" style="height:56px;">
+                <label class="pn-abs pn-lbl" style="left:8px;top:6px;">Job Order No</label>
+                <select id="cmbPendJobOrder" class="pn-abs pn-cmb win-combo" style="left:8px;top:24px;width:233px;"></select>
+                <label class="pn-abs pn-lbl" style="left:252px;top:6px;">From Date</label>
+                <input type="date" id="pendFrom" class="pn-abs pn-dt" style="left:252px;top:25px;width:140px;">
+                <label class="pn-abs pn-lbl" style="left:402px;top:6px;">To Date</label>
+                <input type="date" id="pendTo" class="pn-abs pn-dt" style="left:402px;top:25px;width:140px;">
+                <button type="button" class="pn-abs pn-btn" style="left:556px;top:24px;width:75px;height:26px;" onclick="PN.pend.search()">Search</button>
+            </div>
+            <div class="pn-grid-host win-grid-scroll" id="grdPendingHost" style="height:420px;max-height:calc(92vh - 170px);">
+                <table class="win-grid" id="grdPending"><thead></thead><tbody></tbody></table>
+            </div>
+            <div class="pn-note">Click a row to open that OutPut document in the OutPut tab (ReadByIdOutPut(LoadPendingforRates.OutPutDocId) :3262).</div>
+        </div>
+    </div>
+</div>
+
+<!-- ======================= frmwagesBillHeader (ShowDialog) -->
+<div class="cx-modal" id="dlgWages">
+    <div class="cx-modal-box">
+        <div class="cx-modal-head"><span>Contractor Wages Bill</span><button type="button" onclick="PN.wagesClose()">&times;</button></div>
+        <div class="cx-modal-body"><iframe id="wagesFrame" title="frmwagesBillHeader"></iframe></div>
+    </div>
+</div>
+
+<script th:src="@{/build/js/countx_store_common.js?v=20260925c}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20261003erp}"></script>
+<script th:src="@{/build/js/countx_production_prod284_production_new_against_job_order.js?v=20261013a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20261007-gridbar-flow}"></script>
+</body>
+</html>

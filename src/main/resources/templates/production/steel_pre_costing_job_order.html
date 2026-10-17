@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:if="${_csrf != null}" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:if="${_csrf != null}" th:content="${_csrf.headerName}">
+    <title>Production Job Order (Steel) - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261007-gridbar-flow}"/>
+    <style>
+        /* Screen 600 - ProductionPreCostingAndJobOrder_St (InitializeComponent :5290). Geometry is the designer's:
+           panel3 (Teal, 54) with toolStrip1 + label70; panel4 (357) = groupBox2 "Main Information" 1041x207 at (5,3),
+           groupBox3 "Filters For Item" 194x142 at (7,211), groupBox1 "Calculactions" 839x142 at (207,211);
+           panel6 = tabControl2 (Planned Output Requirnment | Input Detail | OverHeads | Plants Detail - tabPage6
+           "Packing Material" is removed on load :654); tabControl1 at the BOTTOM (Form | History, :6987). */
+        html, body { overflow-x: hidden; }
+        body { font-family: "Segoe UI", Verdana, Tahoma, sans-serif; background: #f0f0f0; font-size: 12px; color: #000; margin: 0; }
+        *, *::before, *::after { box-sizing: border-box; }
+        .sj-page { display: flex; flex-direction: column; min-height: 100vh; }
+        .sj-body { flex: 1 1 auto; padding: 3px; }
+        .sj-title-panel { background: #008080; color: #fff; }
+        .sj-tool-strip { background: linear-gradient(to bottom, #fbfbfb 0%, #e6e6e6 100%); border-bottom: 1px solid #a0a0a0; min-height: 27px; display: flex; align-items: center; padding: 0 4px; gap: 2px; flex-wrap: wrap; }
+        .sj-tool { background: transparent; border: 1px solid transparent; padding: 2px 8px; font: 9.75pt Verdana, sans-serif; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; height: 24px; border-radius: 2px; color: #000; }
+        .sj-tool:hover:not(:disabled) { background: #cce8ff; border-color: #99d1ff; }
+        .sj-tool:disabled { color: #9a9a9a; cursor: not-allowed; }
+        .sj-title-row { display: flex; align-items: center; justify-content: space-between; height: 27px; padding: 0 10px; }
+        .sj-title { font-family: Tahoma, sans-serif; font-weight: bold; font-size: 12pt; }
+        .sj-exit { color: #fff; text-decoration: none; font-size: 11px; margin-left: 12px; }
+        .sj-exit:hover { color: #e0f2f1; text-decoration: underline; }
+
+        /* panel4 - absolute designer coordinates inside a 1050x357 canvas, scrollable when narrower */
+        .sj-canvas-wrap { overflow-x: auto; background: #f0f0f0; }
+        .sj-panel4 { position: relative; width: 1050px; height: 357px; }
+        .abs { position: relative; }
+        .abs > * { position: absolute; }
+        fieldset.win-group { border: 1px solid #b5b5b5; margin: 0; padding: 0; background: #fff; }
+        fieldset.win-group > legend { font-family: Tahoma, sans-serif; font-weight: bold; font-size: 9.75pt; padding: 0 3px; margin: 0 0 0 6px; width: auto; border: 0; position: static; }
+        .win-label { font-size: 9pt; white-space: nowrap; line-height: 15px; }
+        .win-in { font-family: "Segoe UI", Verdana, sans-serif; font-size: 9pt; height: 23px; border: 1px solid #7a7a7a; padding: 1px 4px; background: #fff; }
+        .win-in[readonly], .win-in:disabled { background: #f0f0f0; color: #333; }
+        select.win-in { height: 26px; }
+        textarea.win-in { height: 37px; resize: none; padding: 2px 4px; }
+        .num { text-align: right; }
+        .sj-hdr { background: #008080; color: #fff; font-weight: bold; font-size: 9pt; height: 24px; line-height: 24px; padding: 0 4px; }
+        .sj-calc-head { background: #d9d9d9; height: 24px; font-size: 9pt; font-weight: bold; }
+        .sj-calc-head span { position: absolute; top: 4px; }
+
+        /* tabControl2 */
+        .sj-tabs-top { display: flex; gap: 2px; border-bottom: 1px solid #a0a0a0; margin-top: 2px; }
+        .sj-tab { background: #ececec; border: 1px solid #a0a0a0; border-bottom: none; padding: 3px 14px; font-size: 9pt; cursor: pointer; border-radius: 3px 3px 0 0; color: #000; user-select: none; }
+        .sj-tab.is-active { background: #fff; position: relative; top: 1px; font-weight: 600; }
+        .sj-panel { display: none; }
+        .sj-panel.is-active { display: block; }
+        .sj-tab-body { background: #fff; border: 1px solid #a0a0a0; border-top: none; padding: 3px; }
+        .sj-entry { position: relative; height: 110px; background: #fff; }
+        .sj-entry.h120 { height: 118px; }
+        .sj-entry.h77 { height: 70px; }
+        .sj-btn { background: #008080; color: #fff; border: 1px solid #006666; height: 26px; padding: 0 6px; font-size: 9pt; cursor: pointer; border-radius: 2px; }
+        .sj-btn:hover:not(:disabled) { background: #006666; }
+        .sj-btn:disabled { background: #9e9e9e; border-color: #7a7a7a; cursor: not-allowed; }
+        .sj-bar { background: #e9e9e9; border-top: 1px solid #c0c0c0; border-bottom: 1px solid #c0c0c0; height: 23px; display: flex; align-items: center; justify-content: space-between; padding: 0 4px; font-size: 9pt; font-weight: bold; }
+        .sj-bar-tools { display: inline-flex; gap: 3px; align-items: center; font-weight: normal; }
+        .sj-grid-wrap { overflow: auto; min-height: 118px; max-height: 300px; background: #fff; }
+        .sj-grid { width: 100%; border-collapse: collapse; font-size: 9pt; }
+        .sj-grid th { background: linear-gradient(to bottom, #fdfdfd 0%, #e4e4e4 100%); border: 1px solid #b8b8b8; padding: 3px 5px; text-align: left; position: sticky; top: 0; z-index: 2; white-space: nowrap; font-weight: normal; }
+        .sj-grid td { border: 1px solid #dcdcdc; padding: 2px 5px; white-space: nowrap; }
+        .sj-grid td.num, .sj-grid th.num { text-align: right; }
+        .sj-grid tbody tr.is-current td { background: #cce8ff; }
+        .sj-grid tbody tr.is-editing td { background: #fff3c4; }
+        .sj-grid tfoot td { background: #ececec; font-weight: bold; border: 1px solid #c8c8c8; }
+        .sj-grid .col-x { width: 25px; text-align: center; padding: 1px; }
+        .sj-x { border: 1px solid #9a9a9a; background: #f3f3f3; font-size: 8pt; line-height: 1; padding: 2px 5px; cursor: pointer; }
+        .sj-x:hover { background: #e81123; color: #fff; border-color: #e81123; }
+        .sj-cellbtn { border: 1px solid #9a9a9a; background: #f3f3f3; font-size: 8.5pt; padding: 1px 6px; cursor: pointer; }
+        .sj-cellbtn:hover { background: #cce8ff; border-color: #3399ff; }
+        .sj-link { color: #0645ad; text-decoration: underline; cursor: pointer; background: none; border: none; padding: 0; font: inherit; }
+        .sj-grid input.sj-cellin { width: 90px; height: 21px; border: 1px solid #b0b0b0; font-size: 9pt; padding: 1px 3px; text-align: right; }
+        .sj-empty td { color: #777; font-style: italic; }
+
+        /* History */
+        .sj-hist-title { background: #008080; color: #fff; font: bold 12pt Tahoma, sans-serif; height: 27px; line-height: 27px; padding: 0 5px; display: flex; justify-content: space-between; align-items: center; }
+        .sj-sub { background: #e9e9e9; font-size: 9pt; height: 21px; line-height: 21px; padding: 0 5px; border-top: 1px solid #c0c0c0; }
+        .sj-hist-wrap { overflow: auto; height: 189px; background: #fff; border: 1px solid #c0c0c0; }
+        .sj-hist-detail { overflow: auto; height: 145px; background: #fff; border: 1px solid #c0c0c0; }
+        .sj-hist-row { display: flex; gap: 3px; }
+        .sj-hist-row > div { flex: 1 1 50%; min-width: 0; }
+
+        /* tabControl1 bottom */
+        .sj-footer { position: sticky; bottom: 0; display: flex; align-items: center; justify-content: space-between; background: #e9e9e9; border-top: 1px solid #a0a0a0; padding: 0 4px; height: 28px; z-index: 20; }
+        .sj-footer .sj-tab { border: 1px solid #a0a0a0; border-top: none; border-radius: 0 0 3px 3px; top: 0; }
+        .sj-footer-mid { font-size: 9pt; color: #333; }
+
+        .is-busy { opacity: .7; cursor: progress !important; pointer-events: none; }
+        .is-hidden { display: none !important; }
+        .sj-note { font-size: 8.5pt; color: #7f0000; background: #ffebee; border: 1px solid #e57373; padding: 3px 8px; margin: 2px 0; }
+        .sj-full { position: fixed !important; inset: 8px; z-index: 8000; background: #fff; box-shadow: 0 6px 24px rgba(0,0,0,.35); }
+        .sj-full .sj-grid-wrap, .sj-full .sj-hist-wrap, .sj-full .sj-hist-detail { max-height: none; height: calc(100% - 28px) !important; }
+
+        /* Dialogs - LoadavailableTransactionsForIssuance, AttachmentView */
+        .cx-modal { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: none; z-index: 9000; }
+        .cx-modal.is-open { display: block; }
+        .cx-modal-box { position: absolute; top: 3%; left: 50%; transform: translateX(-50%); width: min(1250px, 97vw); max-height: 94vh; display: flex; flex-direction: column; background: #f0f0f0; border: 1px solid #555; box-shadow: 0 6px 24px rgba(0,0,0,.4); }
+        .cx-modal-box.small { width: min(560px, 94vw); }
+        .cx-modal-head { background: #008080; color: #fff; height: 28px; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; font-weight: bold; }
+        .cx-modal-head button { background: transparent; border: none; color: #fff; font-size: 16px; cursor: pointer; }
+        .cx-modal-body { padding: 6px; overflow: auto; }
+        .cx-filter { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 4px 8px; align-items: end; background: #fff; border: 1px solid #c0c0c0; padding: 6px; margin-bottom: 4px; }
+        .cx-filter label { margin: 0; font-weight: normal; font-size: 9pt; display: block; }
+        .cx-filter .win-in { width: 100%; }
+        @media print { .sj-title-panel, .sj-footer, button, .sj-note { display: none !important; } }
+    </style>
+</head>
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="sj-page">
+
+<!-- ====================================================================== panel3 (Teal) -->
+<div class="sj-title-panel">
+    <div class="sj-tool-strip" id="toolStrip1">
+        <button type="button" class="sj-tool" id="btnnew" onclick="SteelJO.reset()" title="Ctrl+N"><i class="fa fa-file-o"></i> <u>N</u>ew</button>
+        <button type="button" class="sj-tool" id="btnsave" onclick="SteelJO.save()" title="Ctrl+S"><i class="fa fa-save"></i> <u>S</u>ave</button>
+        <button type="button" class="sj-tool is-hidden" id="btnUpdate" onclick="SteelJO.update()" title="Ctrl+U"><i class="fa fa-pencil-square-o"></i> <u>U</u>pdate</button>
+        <button type="button" class="sj-tool" id="btnattachment" disabled title="btnattachment opens the desktop Attachment (DMS upload) dialog, which has no web form yet. History still lists saved attachments."><i class="fa fa-paperclip"></i> <u>A</u>ttachment</button>
+        <button type="button" class="sj-tool" id="btnRefresh" onclick="SteelJO.refresh()"><i class="fa fa-refresh"></i> Refresh</button>
+        <button type="button" class="sj-tool" id="btnLoadInvoices" onclick="SteelJO.openLoader()"><i class="fa fa-download"></i> Load Invoices</button>
+        <button type="button" class="sj-tool" id="BtnGenerateInPutRates" onclick="SteelJO.generateInputRates()"><i class="fa fa-calculator"></i> Generate Input Rates</button>
+        <button type="button" class="sj-tool" id="btnGenerate" onclick="SteelJO.generate()"><i class="fa fa-cogs"></i> Generate</button>
+        <button type="button" class="sj-tool" id="Print" onclick="SteelJO.printCurrent()" data-rpt="1563-ProductionJobOrderSlip.rpt"><i class="fa fa-print"></i> 1563-Print</button>
+    </div>
+    <div class="sj-title-row">
+        <div><span class="sj-title" id="label70">Production Job Order</span>
+            <span id="lblRecId" style="font-size:9pt; margin-left:14px;"></span></div>
+        <div><a class="sj-exit" href="/production" title="Ctrl+E / Esc"><i class="fa fa-sign-out"></i> Exit</a></div>
+    </div>
+</div>
+
+<div class="sj-body">
+    <div id="rightsNote" class="sj-note is-hidden"></div>
+
+    <!-- ================================================================== tabPage1 "Form" -->
+    <div id="tabForm" class="sj-panel is-active">
+        <div class="sj-canvas-wrap">
+        <div class="sj-panel4 abs">
+            <!-- groupBox2 "Main Information" (5,3) 1041x207 -->
+            <fieldset class="win-group abs" id="groupBox2" style="left:5px; top:3px; width:1041px; height:207px;">
+                <legend>Main Information</legend>
+                <label class="win-label" style="left:4px; top:22px;" for="txtPlanCode">Doc No</label>
+                <input type="text" id="txtPlanCode" class="win-in num" style="left:104px; top:18px; width:204px;" disabled/>
+                <label class="win-label" style="left:313px; top:22px;" for="CmbWipItem">WIP Item</label>
+                <select id="CmbWipItem" class="win-in dtcombo" data-dtcombo="single" data-dtcombo-caption="ItemName" style="left:395px; top:16px; width:144px;"></select>
+                <label class="win-label" style="left:544px; top:16px;" for="txtPlantInstruction">Plant Instruction</label>
+                <textarea id="txtPlantInstruction" class="win-in" style="left:544px; top:39px; width:409px;"></textarea>
+
+                <label class="win-label" style="left:4px; top:52px;" for="txtPlanDate">Doc Date</label>
+                <input type="date" id="txtPlanDate" class="win-in" style="left:104px; top:48px; width:204px;"/>
+                <label class="win-label" style="left:313px; top:52px;" for="cmbPlanType">Plan Type</label>
+                <select id="cmbPlanType" class="win-in dtcombo" data-dtcombo="single" data-dtcombo-caption="Plan Type " style="left:395px; top:46px; width:144px;"></select>
+
+                <label class="win-label" style="left:4px; top:81px;" for="txtInvoiceReference">Job Order No</label>
+                <input type="text" id="txtInvoiceReference" class="win-in" style="left:104px; top:77px; width:204px;"/>
+                <label class="win-label" style="left:313px; top:81px;" for="txtstartDate">Start Date</label>
+                <input type="date" id="txtstartDate" class="win-in" style="left:395px; top:77px; width:144px;"/>
+                <label class="win-label" style="left:545px; top:80px;" for="txtDeliveryInstruction">Delivery Instruction</label>
+                <textarea id="txtDeliveryInstruction" class="win-in" style="left:544px; top:104px; width:409px;"></textarea>
+
+                <label class="win-label" style="left:4px; top:110px;" for="cmbProductionType">Production Type</label>
+                <select id="cmbProductionType" class="win-in dtcombo" data-dtcombo="single" data-dtcombo-caption="Production Type " style="left:104px; top:104px; width:204px;"></select>
+                <label class="win-label" style="left:313px; top:110px;" for="txtEndDate">End Date</label>
+                <input type="date" id="txtEndDate" class="win-in" style="left:395px; top:106px; width:144px;"/>
+
+                <label class="win-label" style="left:4px; top:140px;" for="CmbWorkInProcess">WIP A/c</label>
+                <select id="CmbWorkInProcess" class="win-in dtcombo" data-dtcombo="single" data-dtcombo-caption="WorkInProcess" style="left:104px; top:134px; width:204px;"></select>
+                <label class="win-label" style="left:313px; top:140px;" for="cmbStatus">Status</label>
+                <select id="cmbStatus" class="win-in dtcombo" data-dtcombo="single" data-dtcombo-caption="Status" style="left:395px; top:134px; width:144px;" disabled></select>
+                <label class="win-label" style="left:544px; top:142px;" for="txtOtherInstruction">Other Instruction</label>
+                <textarea id="txtOtherInstruction" class="win-in" style="left:544px; top:164px; width:409px;"></textarea>
+
+                <label class="win-label" style="left:4px; top:164px; white-space:normal; width:100px;" for="txtProductionInstruction">Production Instruction</label>
+                <textarea id="txtProductionInstruction" class="win-in" style="left:104px; top:164px; width:434px;"></textarea>
+                <label style="left:959px; top:177px; font-size:9pt; font-weight:normal; margin:0;" title="chkPrint - after a successful Save/Update print 1563 for the saved job order"><input type="checkbox" id="chkPrint"> Preview</label>
+            </fieldset>
+
+            <!-- groupBox3 "Filters For Item" (7,211) 194x142 -->
+            <fieldset class="win-group abs" id="groupBox3" style="left:7px; top:211px; width:194px; height:142px;">
+                <legend>Filters For Item</legend>
+                <label class="win-label" style="left:4px; top:39px;" for="cmbentrytype">EntryType</label>
+                <select id="cmbentrytype" class="win-in" style="left:73px; top:33px; width:113px;" onchange="SteelJO.entryTypeChanged()"></select>
+                <label class="win-label" style="left:4px; top:74px;" for="cmbFiltersType">Filter Type</label>
+                <select id="cmbFiltersType" class="win-in" style="left:73px; top:68px; width:113px;" onchange="SteelJO.filterTypeChanged()"></select>
+                <label class="win-label" style="left:4px; top:101px; white-space:normal; width:63px;" for="cmbDocNo">Doc No / Other</label>
+                <select id="cmbDocNo" class="win-in dtcombo" data-dtcombo="single" data-dtcombo-caption="Doc No" style="left:73px; top:102px; width:113px;" onchange="SteelJO.docNoChanged()"></select>
+            </fieldset>
+
+            <!-- groupBox1 "Calculactions" (207,211) 839x142 -->
+            <fieldset class="win-group abs" id="groupBox1" style="left:207px; top:211px; width:839px; height:142px;">
+                <legend>Calculactions</legend>
+                <div class="abs" id="panel51" style="left:6px; top:22px; width:426px; height:112px; border:1px solid #c0c0c0;">
+                    <div class="sj-calc-head abs" style="left:0; top:0; width:424px;">
+                        <span style="left:2px;">Description</span><span style="left:113px;">ItemQty</span><span style="left:198px;">NetWeight</span><span style="left:312px;">Amount</span>
+                    </div>
+                    <label class="win-label" style="left:6px; top:32px;">Raw Material</label>
+                    <input type="text" id="txtInPutTotalQty" class="win-in num" style="left:104px; top:28px; width:82px;" disabled value="0"/>
+                    <input type="text" id="txtInPutTotalWeight" class="win-in num" style="left:192px; top:28px; width:107px;" disabled value="0"/>
+                    <input type="text" id="txtTotalAmountInPut" class="win-in num" style="left:304px; top:28px; width:116px;" disabled value="0"/>
+                    <label class="win-label" style="left:6px; top:59px;">By Product</label>
+                    <input type="text" id="txtTotalQtyBP" class="win-in num" style="left:104px; top:55px; width:82px;" disabled value="0"/>
+                    <input type="text" id="txtTotalWeightBP" class="win-in num" style="left:192px; top:55px; width:107px;" disabled value="0"/>
+                    <input type="text" id="txtTotalAmountBP" class="win-in num" style="left:304px; top:55px; width:116px;" disabled value="0"/>
+                    <label class="win-label" style="left:6px; top:86px;">Finish Goods</label>
+                    <input type="text" id="txtTotalQtyFG" class="win-in num" style="left:104px; top:82px; width:82px;" disabled value="0"/>
+                    <input type="text" id="txtTotalWeightFG" class="win-in num" style="left:192px; top:82px; width:107px;" disabled value="0"/>
+                    <input type="text" id="txtTotalAmountFG" class="win-in num" style="left:304px; top:82px; width:116px;" disabled value="0"/>
+                </div>
+                <div class="abs" id="panel53" style="left:436px; top:24px; width:397px; height:52px; border:1px solid #c0c0c0;">
+                    <div class="sj-calc-head abs" style="left:0; top:0; width:395px; height:20px;"><span style="left:137px; top:2px;">OverHeads Totals</span></div>
+                    <label class="win-label" style="left:3px; top:26px;">O.Heads</label>
+                    <input type="text" id="txtOverHeadsAmount" class="win-in num" style="left:68px; top:23px; width:125px;" disabled value="0"/>
+                    <label class="win-label is-hidden" style="left:198px; top:26px;">P.Material</label>
+                    <input type="text" id="txtPackingMaterialAmount" class="win-in num is-hidden" style="left:265px; top:23px; width:125px;" disabled value="0"/>
+                </div>
+                <div class="abs" id="panel55" style="left:436px; top:81px; width:397px; height:53px; border:1px solid #c0c0c0;">
+                    <div class="sj-calc-head abs" style="left:0; top:0; width:395px; height:20px;"><span style="left:106px; top:2px;">Finish Good Average Rate</span></div>
+                    <label class="win-label" style="left:2px; top:26px;">W/O Exp</label>
+                    <input type="text" id="txtFGRateWithoutExp" class="win-in num" style="left:68px; top:23px; width:125px; height:25px;" disabled value="0"/>
+                    <label class="win-label" style="left:198px; top:26px;">With Exp</label>
+                    <input type="text" id="txtFGAvgRate" class="win-in num" style="left:265px; top:23px; width:125px; height:25px;" disabled value="0"/>
+                </div>
+            </fieldset>
+        </div>
+        </div>
+
+        <!-- ============================================================ tabControl2 -->
+        <div class="sj-tabs-top" id="tabs2">
+            <div class="sj-tab is-active" data-tab="tabPage3" onclick="SteelJO.tab2('tabPage3')">Planned Output Requirnment</div>
+            <div class="sj-tab" data-tab="tabPage4" onclick="SteelJO.tab2('tabPage4')">Input Detail</div>
+            <div class="sj-tab" data-tab="tabPage5" onclick="SteelJO.tab2('tabPage5')">OverHeads</div>
+            <div class="sj-tab" data-tab="tabPage7" onclick="SteelJO.tab2('tabPage7')">Plants Detail</div>
+        </div>
+
+        <!-- tabPage3 "Planned Output Requirnment" -->
+        <div id="tabPage3" class="sj-panel is-active sj-tab-body">
+            <div class="sj-canvas-wrap">
+            <div class="sj-entry abs" id="paneloutputgrd" style="width:1036px;">
+                <label class="win-label" style="left:4px; top:7px;">EntryType</label>
+                <label class="win-label" style="left:114px; top:7px;">WareHouse</label>
+                <label class="win-label" style="left:299px; top:7px;">Job/Lot</label>
+                <label class="win-label" style="left:475px; top:7px;">Item Name</label>
+                <label class="win-label" style="left:766px; top:7px;">PackingType</label>
+                <label class="win-label" style="left:877px; top:7px;">Outer Qty</label>
+                <label class="win-label" style="left:951px; top:7px;">Outer UOM</label>
+                <select id="CmbEntryTypeOP" class="win-in" style="left:4px; top:26px; width:108px;"></select>
+                <select id="cmbWareHouseOutPut" class="win-in dtcombo" data-dtcombo="single" data-dtcombo-caption="WareHouseName" style="left:114px; top:26px; width:183px;"></select>
+                <select id="cmbJobLotOutput" class="win-in dtcombo" data-dtcombo="single" data-dtcombo-caption="JobLotDescription" style="left:299px; top:26px; width:173px;"></select>
+                <select id="cmbItem" class="win-in dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Name" style="left:474px; top:26px; width:289px;" onchange="SteelJO.outputItemChanged()"></select>
+                <select id="cmbPackingType" class="win-in dtcombo" data-dtcombo="single" data-dtcombo-caption="PackType" style="left:765px; top:26px; width:110px;"></select>
+                <input type="text" id="txtOuterqty" class="win-in num" style="left:877px; top:28px; width:72px;" oninput="SteelJO.outputQtyChanged()"/>
+                <select id="cmbouteruom" class="win-in" style="left:951px; top:26px; width:68px;" onchange="SteelJO.outputQtyChanged()"></select>
+
+                <label class="win-label" style="left:4px; top:57px;">Weight</label>
+                <label class="win-label" style="left:100px; top:57px;">Rate</label>
+                <label class="win-label" style="left:172px; top:57px;">Rate Uom</label>
+                <label class="win-label" style="left:245px; top:57px;">Amount</label>
+                <label class="win-label" style="left:334px; top:57px;">Remarks</label>
+                <input type="text" id="txtweight" class="win-in num" style="left:4px; top:79px; width:95px;" disabled/>
+                <input type="text" id="txtItemRateOutPut" class="win-in num" style="left:100px; top:79px; width:70px;" oninput="SteelJO.outputAmount()"/>
+                <select id="CmbRateUomOutPut" class="win-in" style="left:172px; top:77px; width:71px;" onchange="SteelJO.outputAmount()"></select>
+                <input type="text" id="txtItemAmountOutPut" class="win-in num" style="left:245px; top:79px; width:89px;" readonly/>
+                <input type="text" id="txtremarks" class="win-in" style="left:335px; top:79px; width:540px;"/>
+                <button type="button" id="btnplus" class="sj-btn" style="left:876px; top:77px; width:28px;" onclick="SteelJO.addOutput()">+</button>
+                <button type="button" id="btnUpdateDetail" class="sj-btn is-hidden" style="left:879px; top:77px; width:68px;" onclick="SteelJO.updateOutput()">Update</button>
+                <button type="button" id="btnCancelUpdateDetial" class="sj-btn is-hidden" style="left:949px; top:77px; width:65px;" onclick="SteelJO.cancelOutput()">Cancel</button>
+            </div>
+            </div>
+            <div id="hostOutput">
+                <div class="sj-bar"><span>Planned Output</span><span class="sj-bar-tools"><span id="lblOutputCount">0</span>
+                    <button type="button" class="sj-cellbtn" title="Full screen" onclick="SteelJO.full('hostOutput')"><i class="fa fa-expand"></i></button></span></div>
+                <div class="sj-grid-wrap">
+                    <table class="sj-grid" id="grdPlannedOutput" data-gridbar="ProductionPreCostingAndJobOrder_St:grdPlannedOutput" data-gridbar-mount="#hostOutput > .sj-bar .sj-bar-tools">
+                        <thead><tr id="outputHead"></tr></thead><tbody id="outputBody"></tbody><tfoot id="outputFoot"></tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- tabPage4 "Input Detail" -->
+        <div id="tabPage4" class="sj-panel sj-tab-body">
+            <div class="sj-canvas-wrap">
+            <div class="sj-entry abs" id="panelinputgrd" style="width:1036px;">
+                <label class="win-label" style="left:8px; top:9px;">WareHouse</label>
+                <label class="win-label" style="left:202px; top:9px;">Job/Lot</label>
+                <label class="win-label" style="left:436px; top:9px;">Item Name</label>
+                <label class="win-label" style="left:671px; top:9px;">PackingType</label>
+                <label class="win-label" style="left:797px; top:9px;">Qty</label>
+                <label class="win-label" style="left:899px; top:10px;">Pack Uom</label>
+                <select id="cmbwarehouseinput" class="win-in dtcombo" data-dtcombo="single" data-dtcombo-caption="WareHouseName" style="left:8px; top:28px; width:191px;" onchange="SteelJO.inputAvgRate()"></select>
+                <select id="cmbjoblotinput" class="win-in dtcombo" data-dtcombo="single" data-dtcombo-caption="JobLotDescription" style="left:200px; top:28px; width:235px;" onchange="SteelJO.inputAvgRate()"></select>
+                <select id="cmbItemInput" class="win-in dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Name" style="left:436px; top:28px; width:233px;" onchange="SteelJO.inputItemChanged()"></select>
+                <select id="cmbPackTypeInput" class="win-in dtcombo" data-dtcombo="single" data-dtcombo-caption="PackType" style="left:671px; top:28px; width:124px;"></select>
+                <input type="text" id="txtqtyinput" class="win-in num" style="left:797px; top:30px; width:101px;" oninput="SteelJO.inputQtyChanged()"/>
+                <select id="cmbpacksizeinput" class="win-in" style="left:899px; top:27px; width:94px;" onchange="SteelJO.inputQtyChanged()"></select>
+
+                <label class="win-label" style="left:7px; top:60px;">Weight</label>
+                <label class="win-label" style="left:104px; top:60px;">Rate / kg</label>
+                <label class="win-label" style="left:183px; top:60px;">Rate Uom</label>
+                <label class="win-label" style="left:268px; top:60px;">Amount</label>
+                <label class="win-label" style="left:373px; top:60px;">Remarks</label>
+                <input type="text" id="txtweightinput" class="win-in num" style="left:7px; top:79px; width:96px;" oninput="SteelJO.inputAmount()"/>
+                <input type="text" id="txtRateInPut" class="win-in num" style="left:104px; top:79px; width:78px;" readonly/>
+                <select id="CmbRateUomInPut" class="win-in" style="left:183px; top:77px; width:84px;" onchange="SteelJO.inputAmount()"></select>
+                <input type="text" id="txtAmountInPut" class="win-in num" style="left:268px; top:79px; width:101px;" readonly/>
+                <input type="text" id="txtremarksinput" class="win-in" style="left:370px; top:79px; width:479px;"/>
+                <button type="button" id="btnadddetailinputgrd" class="sj-btn" style="left:850px; top:77px; width:39px;" onclick="SteelJO.addInput()">+</button>
+                <button type="button" id="btnupdategrdinput" class="sj-btn is-hidden" style="left:852px; top:77px; width:68px;" onclick="SteelJO.updateInput()">Update</button>
+                <button type="button" id="btncancelgrdinput" class="sj-btn is-hidden" style="left:922px; top:77px; width:68px;" onclick="SteelJO.cancelInput()">Cancel</button>
+            </div>
+            </div>
+            <div id="hostInput">
+                <div class="sj-bar"><span>Input Detail</span><span class="sj-bar-tools"><span id="lblInputCount">0</span>
+                    <button type="button" class="sj-cellbtn" title="Full screen" onclick="SteelJO.full('hostInput')"><i class="fa fa-expand"></i></button></span></div>
+                <div class="sj-grid-wrap">
+                    <table class="sj-grid" id="grdInputDetail" data-gridbar="ProductionPreCostingAndJobOrder_St:grdInputDetail" data-gridbar-mount="#hostInput > .sj-bar .sj-bar-tools">
+                        <thead><tr id="inputHead"></tr></thead><tbody id="inputBody"></tbody><tfoot id="inputFoot"></tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- tabPage5 "OverHeads" -->
+        <div id="tabPage5" class="sj-panel sj-tab-body">
+            <div class="sj-canvas-wrap">
+            <fieldset class="win-group abs" id="groupBox7" style="width:1041px; height:114px; margin:4px 0 0 1px;">
+                <legend>Detail</legend>
+                <label class="win-label" style="left:12px; top:19px;">OverHead Account</label>
+                <label class="win-label" style="left:245px; top:19px;">OutPut Item Name</label>
+                <label class="win-label" style="left:475px; top:19px;">Item Uom</label>
+                <label class="win-label" style="left:580px; top:19px;">Item Qty</label>
+                <label class="win-label" style="left:667px; top:19px;" id="lblRateOverHead">Rate</label>
+                <label class="win-label" style="left:761px; top:19px;" id="lblAmountOverHead">Amount</label>
+                <select id="cmbChartofAccountOverHead" class="win-in dtcombo" data-dtcombo="single" data-dtcombo-caption="Account Title" style="left:12px; top:38px; width:228px;"></select>
+                <select id="CmbBrandNameOverHead" class="win-in" style="left:243px; top:38px; width:227px;" onchange="SteelJO.ohBrandChanged()"></select>
+                <select id="CmbBrandUomOverHead" class="win-in" style="left:473px; top:38px; width:99px;" onchange="SteelJO.ohBrandUomChanged()"></select>
+                <input type="text" id="txtItemQtyOverHead" class="win-in num" style="left:577px; top:40px; width:83px;" onblur="SteelJO.ohCalc()"/>
+                <input type="text" id="txtItemRateOverHeads" class="win-in num" style="left:663px; top:40px; width:91px;" oninput="SteelJO.ohCalc()"/>
+                <input type="text" id="txtExpAmountOverHead" class="win-in num" style="left:757px; top:40px; width:113px;"/>
+                <label class="win-label" style="left:12px; top:68px;" id="lblRemarksOverHead">Ledger Remarks</label>
+                <input type="text" id="txtLedgerRemarksOverHead" class="win-in" style="left:12px; top:88px; width:786px;"/>
+                <button type="button" id="btnAddOH" class="sj-btn" style="left:802px; top:86px; width:38px;" onclick="SteelJO.addOH()">+</button>
+                <button type="button" id="btnUpdateOH" class="sj-btn is-hidden" style="left:840px; top:86px; width:70px;" onclick="SteelJO.updateOH()">Update </button>
+                <button type="button" id="BtnCancelOH" class="sj-btn is-hidden" style="left:910px; top:86px; width:67px;" onclick="SteelJO.cancelOH()">Cancel</button>
+            </fieldset>
+            </div>
+            <div id="hostOH">
+                <div class="sj-bar"><span id="label67">Over Heads Detail</span><span class="sj-bar-tools"><span id="lblOHCount">0</span>
+                    <button type="button" class="sj-cellbtn" title="Full screen" onclick="SteelJO.full('hostOH')"><i class="fa fa-expand"></i></button></span></div>
+                <div class="sj-grid-wrap">
+                    <table class="sj-grid" id="grdOverHead" data-gridbar="ProductionPreCostingAndJobOrder_St:grdOverHead" data-gridbar-mount="#hostOH > .sj-bar .sj-bar-tools">
+                        <thead><tr><th class="col-x">X</th><th>ChartOfAccount</th><th>Brand</th><th class="num">BrandUom</th><th class="num">ItemQty</th><th class="num">ItemRate</th><th class="num">Amount</th><th>Remarks</th></tr></thead>
+                        <tbody id="ohBody"></tbody><tfoot id="ohFoot"></tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- tabPage7 "Plants Detail" -->
+        <div id="tabPage7" class="sj-panel sj-tab-body">
+            <div class="sj-canvas-wrap">
+            <fieldset class="win-group abs" id="groupBox4" style="width:1039px; height:66px; margin:5px 0 0 3px;">
+                <legend>Detail</legend>
+                <label class="win-label" style="left:6px; top:20px;">Plant / Feader</label>
+                <label class="win-label" style="left:159px; top:20px;">Remarks</label>
+                <select id="cmbPlantFeader" class="win-in dtcombo" data-dtcombo="single" data-dtcombo-caption="Plant/Feader " style="left:9px; top:36px; width:119px;"></select>
+                <button type="button" id="btnProductionPlant" class="sj-btn" style="left:132px; top:36px; width:23px; padding:0;" title="DefineProductionPlant - opens the Define Production Plant page" onclick="window.open('/production/define-production-plant','_blank')">+</button>
+                <input type="text" id="txtRemarksPlantDetail" class="win-in" style="left:159px; top:38px; width:693px;"/>
+                <button type="button" id="btnAddPlantDetail" class="sj-btn" style="left:857px; top:36px; width:38px;" onclick="SteelJO.addPlant()">+</button>
+                <button type="button" id="btnUpdatePlantDetail" class="sj-btn is-hidden" style="left:895px; top:36px; width:70px;" onclick="SteelJO.updatePlant()">Update </button>
+                <button type="button" id="btnCanclePlantdetail" class="sj-btn is-hidden" style="left:965px; top:36px; width:67px;" onclick="SteelJO.cancelPlant()">Cancel</button>
+            </fieldset>
+            </div>
+            <div id="hostPlant">
+                <div class="sj-bar"><span id="label85">Plant Detail</span><span class="sj-bar-tools"><span id="lblPlantCount">0</span>
+                    <button type="button" class="sj-cellbtn" title="Full screen" onclick="SteelJO.full('hostPlant')"><i class="fa fa-expand"></i></button></span></div>
+                <div class="sj-grid-wrap">
+                    <table class="sj-grid" id="grdPlantdetail" data-gridbar="ProductionPreCostingAndJobOrder_St:grdPlantdetail" data-gridbar-mount="#hostPlant > .sj-bar .sj-bar-tools">
+                        <thead><tr><th class="col-x">X</th><th style="width:200px;">PlantName</th><th style="width:300px;">RemarksDetail</th></tr></thead>
+                        <tbody id="plantBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================================================= tabPage2 "History" -->
+    <div id="tabHistory" class="sj-panel">
+        <div class="sj-tool-strip" id="toolStrip2" style="border:1px solid #a0a0a0;">
+            <button type="button" class="sj-tool" id="btnNewHistory" onclick="SteelJO.newHistory()"><i class="fa fa-file-o"></i> <u>N</u>ew</button>
+            <button type="button" class="sj-tool" id="btnloadall" onclick="SteelJO.loadHistory(0)"><i class="fa fa-list"></i> Load All</button>
+        </div>
+        <div class="sj-hist-title" id="label77"><span>Production Job Order History</span>
+            <span class="sj-bar-tools" id="histTools"><span id="lblHistoryCount" style="font-size:9pt; font-weight:normal;"></span></span></div>
+        <div id="hostHistory">
+            <div class="sj-hist-wrap">
+                <table class="sj-grid" id="DataGridHistory" data-gridbar="ProductionPreCostingAndJobOrder_St:DataGridHistory" data-gridbar-mount="#histTools">
+                    <thead><tr id="historyHead"></tr></thead><tbody id="historyBody"></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="sj-sub" id="label80">Input Detail Of the above Selected Row</div>
+        <div class="sj-hist-detail"><table class="sj-grid" id="grdInputHistory"><thead><tr id="hInHead"></tr></thead><tbody id="hInBody"></tbody><tfoot id="hInFoot"></tfoot></table></div>
+        <div class="sj-sub" id="label81">OutPut Detail Of the above Selected Row</div>
+        <div class="sj-hist-detail" style="height:153px;"><table class="sj-grid" id="grdOutPutHistory"><thead><tr id="hOutHead"></tr></thead><tbody id="hOutBody"></tbody><tfoot id="hOutFoot"></tfoot></table></div>
+        <div class="sj-hist-row">
+            <div><div class="sj-sub" id="label82">OverHeads Detail Of the above Selected Row</div>
+                <div class="sj-hist-detail" style="height:114px;"><table class="sj-grid" id="grdOverheadHistory"><thead><tr id="hOhHead"></tr></thead><tbody id="hOhBody"></tbody><tfoot id="hOhFoot"></tfoot></table></div></div>
+            <!-- panel20 "Packing Material Detail Of the above Selected Row" is Visible = false on the desktop -->
+        </div>
+    </div>
+</div>
+
+<!-- ============================================ tabControl1 (Alignment = Bottom) -->
+<div class="sj-footer" id="tabs1">
+    <div class="sj-tab is-active" data-tab="tabForm" onclick="SteelJO.tab('tabForm')" title="Ctrl+T">Form</div>
+    <div class="sj-footer-mid">Ctrl+S Save · Ctrl+U Update · Ctrl+N New · Ctrl+T Form/History · Ctrl+E / Esc Exit · Enter = next field</div>
+    <div class="sj-tab" data-tab="tabHistory" onclick="SteelJO.tab('tabHistory')" title="Ctrl+T"><i class="fa fa-history"></i> History</div>
+</div>
+</div>
+
+<!-- ============================ LoadavailableTransactionsForIssuance (btnLoadInvoices :4462) -->
+<div class="cx-modal" id="loaderModal">
+    <div class="cx-modal-box">
+        <div class="cx-modal-head"><span>Available Transactions For Issuance</span>
+            <button type="button" onclick="SteelJO.closeLoader()">&times;</button></div>
+        <div class="cx-modal-body">
+            <div class="cx-filter">
+                <div><label for="FromDate">From Date</label><input type="date" id="FromDate" class="win-in"/></div>
+                <div><label for="Todate">To Date</label><input type="date" id="Todate" class="win-in"/></div>
+                <div><label for="CmbItemParentCategory">Parent Categories</label><select id="CmbItemParentCategory" class="win-in"></select></div>
+                <div><label for="CmbItemCategory">Item Category</label><select id="CmbItemCategory" class="win-in"></select></div>
+                <div><label for="CmbItemType">Item Type</label><select id="CmbItemType" class="win-in"></select></div>
+                <div><label for="CmbJobLot">JobLot</label><select id="CmbJobLot" class="win-in"></select></div>
+                <div><label for="CmbCropYear">CropYear</label><select id="CmbCropYear" class="win-in"></select></div>
+                <div><label for="CmbWarehouse">WarehouseName</label><select id="CmbWarehouse" class="win-in"></select></div>
+                <div><label for="CmbReferenceDocument">Document Type</label><select id="CmbReferenceDocument" class="win-in"></select></div>
+                <div><label for="CmbSupplier">Party Name</label><select id="CmbSupplier" class="win-in"></select></div>
+                <div><label for="CmbItemName">Item Name</label><select id="CmbItemName" class="win-in dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Name"></select></div>
+                <div><button type="button" id="btngrnlod" class="sj-btn" onclick="SteelJO.loaderShow()"><i class="fa fa-search"></i> Load</button>
+                     <button type="button" id="btnReset" class="sj-cellbtn" style="height:26px;" onclick="SteelJO.loaderReset()">Reset</button></div>
+            </div>
+            <div class="sj-bar"><span>Available Transactions For Issuance</span><span id="lblLoaderCount"></span></div>
+            <div class="sj-grid-wrap" style="height:50vh; max-height:none;">
+                <table class="sj-grid"><thead><tr id="loaderHead"></tr></thead><tbody id="loaderBody"></tbody></table>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
+                <span style="font-size:9pt;">Total Selected Qty <b id="lblSelectedQty">0</b> &nbsp; Weight <b id="lblSelectedWeight">0</b></span>
+                <span><button type="button" class="sj-cellbtn" style="height:26px;" onclick="SteelJO.closeLoader()">Close</button>
+                      <button type="button" class="sj-btn" id="btnLoadOnInvoice" onclick="SteelJO.loaderApply()"><i class="fa fa-check"></i> Load On Invoice</button></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================== AttachmentView -->
+<div class="cx-modal" id="attachModal">
+    <div class="cx-modal-box small">
+        <div class="cx-modal-head"><span>Attachments</span><button type="button" onclick="SteelJO.closeAttachments()">&times;</button></div>
+        <div class="cx-modal-body"><table class="sj-grid"><thead><tr><th>AttchmentPath</th></tr></thead><tbody id="attachBody"></tbody></table></div>
+    </div>
+</div>
+
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20261007-gridbar-flow}"></script>
+<script src="/js/print-rpt.js?v=20261003erp"></script>
+<script th:src="@{/build/js/countx_production_steel_pre_costing_job_order.js?v=20261013a}"></script>
+</body>
+</html>

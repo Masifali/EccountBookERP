@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${w3aTitle} + ' - EccountBookERP'">Production Report - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_store.css?v=20260928b}">
+    <style>
+        /* W3A shared report page: Production_Reports / Pcc / Salt.Reports screens (strip + filter group + Janus-style grid) */
+        body { background: #fff; margin: 0; padding-bottom: 12px; }
+        .w3-root { font-family: "Microsoft Sans Serif", Tahoma, sans-serif; font-size: 11px; background: #fff; }
+        .w3-strip { height: 27px; display: flex; align-items: center; background: linear-gradient(to bottom, #fcfcfc 0%, #e0e0e0 100%); border-bottom: 1px solid #b5b5b5; box-sizing: border-box; }
+        .w3-tool { font-family: Verdana, sans-serif; font-size: 13px; height: 24px; background: transparent; border: 1px solid transparent; display: inline-flex; align-items: center; gap: 4px; padding: 0 6px; cursor: pointer; white-space: nowrap; color: #000; }
+        .w3-tool:hover { background: #ffe4a0; border-color: #e59d00; }
+        .w3-title { background: #0a6e6e; color: #fff; font: bold 16px Tahoma, sans-serif; padding: 5px 6px; }
+        .w3-filters { display: flex; flex-wrap: wrap; gap: 6px 14px; padding: 8px 6px; border-bottom: 1px solid #d0d0d0; align-items: flex-end; }
+        .w3-f { display: flex; flex-direction: column; gap: 2px; }
+        .w3-f label { font: bold 12px "Segoe UI Semibold", "Segoe UI", Tahoma, sans-serif; white-space: nowrap; }
+        .w3-f input, .w3-f select { font: 13px Verdana, sans-serif; height: 26px; border: 1px solid #7a7a7a; background: #fff; padding: 0 3px; box-sizing: border-box; }
+        .w3-f input[type=date] { width: 130px; } .w3-f input.cmb { width: 230px; } .w3-f input.sm { width: 110px; } .w3-f select { width: 140px; }
+        .w3-btn { background: #0a6e6e; color: #fff; border: 1px solid #054d4d; font: bold 13px Verdana, sans-serif; height: 26px; padding: 0 14px; cursor: pointer; }
+        .w3-btn:hover { background: #054d4d; }
+        .w3-multi { position: relative; width: 230px; }
+        .w3-multi-btn { width: 100%; height: 26px; background: #fff; border: 1px solid #7a7a7a; text-align: left; padding: 0 4px; font: 13px Verdana, sans-serif; display: flex; justify-content: space-between; align-items: center; overflow: hidden; white-space: nowrap; cursor: pointer; }
+        .w3-multi-btn span { overflow: hidden; text-overflow: ellipsis; }
+        .w3-multi-list { position: absolute; z-index: 50; top: 26px; left: 0; min-width: 100%; max-height: 260px; overflow: auto; background: #fff; border: 1px solid #7a7a7a; padding: 3px 6px; box-shadow: 0 2px 6px rgba(0,0,0,.2); display: none; }
+        .w3-multi-list label { display: block; white-space: nowrap; font: 12px Verdana, sans-serif; font-weight: normal; }
+        .w3-multi-list label.all { border-bottom: 1px solid #ddd; margin-bottom: 2px; font-weight: bold; }
+        .w3-gridtitle { background: #008080; color: #fff; font: bold 13px "Segoe UI", Tahoma, sans-serif; padding: 2px 6px; }
+        .w3-grid-host { overflow: auto; background: #fff; max-height: calc(100vh - 330px); min-height: 160px; position: relative; }
+        .w3-grid-host.half { max-height: 300px; min-height: 100px; }
+        table.w3-grid { width: auto; min-width: 100%; font-family: Verdana, sans-serif; font-size: 11px; border-collapse: collapse; }
+        table.w3-grid th { background: linear-gradient(to bottom, #e6f7f7 0%, #bfe6e6 100%); border: 1px solid #8fbcbc; font-weight: normal; white-space: nowrap; padding: 2px 4px; text-align: center; position: sticky; top: 0; z-index: 2; }
+        table.w3-grid tr.flt td { position: sticky; top: 20px; z-index: 2; background: #f4fbfb; border: 1px solid #c8dede; padding: 0; }
+        table.w3-grid tr.flt input { width: 100%; box-sizing: border-box; border: 0; height: 18px; font: 11px Verdana, sans-serif; background: transparent; }
+        table.w3-grid td { border: 1px solid #d5e6e6; white-space: nowrap; padding: 1px 4px; overflow: hidden; text-overflow: ellipsis; }
+        table.w3-grid td.n { text-align: right; }
+        table.w3-grid td a { color: #0000ee; text-decoration: underline; cursor: pointer; }
+        table.w3-grid tr.grp td { background: #e3f1f1; font-weight: bold; }
+        table.w3-grid tbody tr.sel td { background: #cde8ff; }
+        table.w3-grid tfoot td { background: #e6e6e6; font-weight: bold; text-align: right; position: sticky; bottom: 0; }
+        .w3-nav { font: 11px Verdana, sans-serif; padding: 2px 8px; border-top: 1px solid #c8dede; background: #f4f4f4; }
+        .w3-msg { padding: 4px 8px; color: #b00020; font: 12px Verdana, sans-serif; display: none; }
+        .is-hidden { display: none !important; }
+    </style>
+</head>
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="w3-root" id="w3Root" th:attr="data-key=${w3aKey}">
+    <div class="w3-strip" id="w3Strip"></div>
+    <div class="w3-title" th:text="${w3aTitle}">Report</div>
+    <div class="w3-msg" id="w3Msg" role="alert"></div>
+    <div class="w3-filters" id="w3Filters"></div>
+    <div id="w3Grids"></div>
+</div>
+<script th:src="@{/build/js/countx_w3a_report.js?v=20261014w3a}"></script>
+<script src="/js/print-rpt.js?v=20261003erp"></script>
+</body>
+</html>

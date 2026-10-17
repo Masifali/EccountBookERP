@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Item Discounting Schedule - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_store.css?v=20260928b}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261007-gridbar-flow}" href="/build/css/countx_grid_bar.css?v=20261007-gridbar-flow">
+    <link rel="stylesheet" th:href="@{/build/css/countx_inv4a.css?v=20261013a}" href="/build/css/countx_inv4a.css?v=20261013a">
+    <style>
+        /* frmItemDiscountingScheduleForBooking designer geometry (InitializeComponent :947-2142), 1:1 px. ClientSize 950 x 719;
+           three bottom tabs: "Discount Policy" (cards), "Form" (ScheduleTab — added only when a card is clicked), "history".
+           Form: panel3 toolStrip (28) | panel4 (39) | panel5 (268: groupBox1 121 + FilterItemGroupBox 72 + OneByOneItemGroupBox 64) | datagrid (Fill). */
+        .fx-root { width: 936px; }
+        #datagridHost { height: calc(100vh - 460px); min-height: 220px; }
+        #DataGridHistoryHost { height: calc(100vh - 200px); min-height: 400px; }
+        #FlowLayout { display: flex; flex-wrap: wrap; align-content: flex-start; min-height: 300px; padding: 4px; }
+        .fx-gb { position: relative; border: 1px solid #d0d0d0; border-radius: 2px; margin: 0; }
+        .fx-gb > legend { font-family: Tahoma, sans-serif; font-size: 13px; font-weight: bold; padding: 0 2px; margin-left: 6px; }
+    </style>
+</head>
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="fx-scroll">
+<div class="fx-root" id="tabRoot">
+
+    <!-- ===================================================== DiscountPolicyTab "Discount Policy" -->
+    <div id="tabPolicy" class="fx-panel is-active">
+        <div class="fx-rel" style="height:43px;border-bottom:1px solid #ddd;">
+            <span class="fx-abs" style="left:8px;top:11px;font:bold 16px Tahoma, sans-serif;line-height:21px;">Discount Policy Types</span>
+            <a href="/app/Inventory?module=4" class="fx-tool fx-abs" style="right:6px;top:8px;text-decoration:none;color:#004d40;font-size:11px;font-weight:bold;" title="Ctrl+E / Esc"><i class="fa fa-arrow-left"></i> Exit</a>
+        </div>
+        <div id="FlowLayout"></div>
+    </div>
+
+    <!-- ===================================================== ScheduleTab "Form" -->
+    <div id="tabForm" class="fx-panel">
+        <div class="fx-strip" style="height:28px;">
+            <button type="button" class="fx-tool" id="btnnew" style="width:55px" title="Ctrl+N"><i class="fa fa-plus-circle" style="color:#2e9b45"></i> <u>N</u>ew</button>
+            <button type="button" class="fx-tool" id="btnsave" style="width:55px" title="Ctrl+S"><i class="fa fa-save"></i> <u>S</u>ave</button>
+            <button type="button" class="fx-tool is-hidden" id="btnUpdate" style="width:69px" title="Ctrl+U"><i class="fa fa-pencil"></i> <u>U</u>pdate</button>
+            <span class="fx-sep"></span>
+        </div>
+        <!-- panel4 (39): lblPolicyType (7,2) 227 x 30 -->
+        <div class="fx-teal" style="height:39px;">
+            <span class="fx-teal-title" style="left:7px;top:8px;" id="lblPolicyType">Discounting Schedule</span>
+        </div>
+        <!-- panel5 (268) -->
+        <div>
+            <!-- groupBox1 "Form Main" 936 x 121 -->
+            <fieldset class="fx-gb" style="height:121px;box-sizing:border-box;">
+                <legend>Form Main</legend>
+                <label class="fx-abs fx-lbl" style="left:14px;top:7px;" for="txtFromDate">From Date</label>
+                <input type="date" id="txtFromDate" class="fx-abs fx-dt" style="left:137px;top:3px;width:87px;">
+                <label class="fx-abs fx-lbl" style="left:230px;top:7px;" for="txtToDate">To Date</label>
+                <input type="date" id="txtToDate" class="fx-abs fx-dt" style="left:283px;top:3px;width:87px;">
+                <label class="fx-abs fx-lbl" style="left:14px;top:34px;" for="txtDiscountName">Discount Name</label>
+                <input type="text" id="txtDiscountName" class="fx-abs fx-txt" style="left:137px;top:30px;width:233px;">
+                <label class="fx-abs fx-lbl" style="left:14px;top:60px;" for="txtDiscountDiscription">Discount Discription</label>
+                <input type="text" id="txtDiscountDiscription" class="fx-abs fx-txt" style="left:137px;top:56px;width:233px;">
+                <label class="fx-abs fx-lbl" style="left:14px;top:87px;" for="CmbDiscountBy">Apply Discount To</label>
+                <select id="CmbDiscountBy" class="fx-abs fx-cmb win-combo" style="left:137px;top:81px;width:233px;"></select>
+                <label class="fx-abs fx-lbl" style="left:381px;top:7px;" for="cmbDiscountType">Discount Type</label>
+                <select id="cmbDiscountType" class="fx-abs fx-cmb win-combo" style="left:484px;top:1px;width:214px;"></select>
+                <label class="fx-abs fx-lbl" style="left:381px;top:34px;" for="cmbTargetTaype">Target Type</label>
+                <select id="cmbTargetTaype" class="fx-abs fx-cmb win-combo" style="left:484px;top:28px;width:214px;"></select>
+                <label class="fx-abs fx-lbl" style="left:381px;top:60px;" for="txtDiscountValue">Discount Percent</label>
+                <input type="text" id="txtDiscountValue" class="fx-abs fx-txt" style="left:484px;top:56px;width:214px;" inputmode="decimal">
+                <!-- lblFromTime/txtFromTime/lblToTime/txtToTime (Hide() in Load :171-174) and Range From/To (Visible = false) are not rendered -->
+            </fieldset>
+            <!-- FilterItemGroupBox "Filter Item" 936 x 72 (Visible = false until "Filter Items") -->
+            <fieldset class="fx-gb is-hidden" id="FilterItemGroupBox" style="height:72px;box-sizing:border-box;">
+                <legend>Filter Item</legend>
+                <label class="fx-abs fx-lbl" style="left:6px;top:8px;" for="cmbItemCategory">Item Category</label>
+                <select id="cmbItemCategory" class="fx-abs fx-cmb win-combo" style="left:9px;top:26px;width:271px;"></select>
+                <label class="fx-abs fx-lbl" style="left:283px;top:8px;" for="cmbItemType">Item Type</label>
+                <select id="cmbItemType" class="fx-abs fx-cmb win-combo" style="left:283px;top:26px;width:162px;"></select>
+                <button type="button" id="btnSearch" class="fx-abs fx-btn" style="left:449px;top:26px;width:64px;height:26px;">Search</button>
+            </fieldset>
+            <!-- OneByOneItemGroupBox "Select Item" 936 x 64 (Visible = false until "One By One Item") -->
+            <fieldset class="fx-gb is-hidden" id="OneByOneItemGroupBox" style="height:64px;box-sizing:border-box;">
+                <legend>Select Item</legend>
+                <label class="fx-abs fx-lbl" style="left:9px;top:3px;" for="cmbItem">Item</label>
+                <select id="cmbItem" class="fx-abs fx-cmb win-combo" style="left:9px;top:21px;width:271px;"></select>
+                <button type="button" id="btnAdd" class="fx-abs fx-btn" style="left:282px;top:21px;width:64px;height:26px;">Add</button>
+            </fieldset>
+        </div>
+        <div id="datagridHost" class="fx-grid-host" data-gridbar-form="frmItemDiscountingScheduleForBooking" data-gridbar-grid="datagrid" data-gridbar-reorder="false" data-gridbar-hide="chooser,save,remove,collapse,expand">
+            <table class="win-grid" id="datagrid"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+        </div>
+    </div>
+
+    <!-- ===================================================== tabPage2 "history" -->
+    <div id="tabHistory" class="fx-panel">
+        <div style="height:37px;background:#fff;"></div>
+        <div id="DataGridHistoryHost" class="fx-grid-host">
+            <table class="win-grid" id="DataGridHistory"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+        </div>
+    </div>
+
+    <div class="fx-tabs">
+        <div class="win-tab is-active" data-tab="tabPolicy">Discount Policy</div>
+        <div class="win-tab is-hidden" data-tab="tabForm" id="tabFormHeader">Form</div>
+        <div class="win-tab" data-tab="tabHistory">history</div>
+    </div>
+</div>
+</div>
+<script th:src="@{/build/js/countx_store_common.js?v=20260928b}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20261007-gridbar-flow}" src="/build/js/countx_grid_bar.js?v=20261007-gridbar-flow"></script>
+<script th:src="@{/build/js/countx_inventory_inv4a_common.js?v=20261013a}" src="/build/js/countx_inventory_inv4a_common.js?v=20261013a"></script>
+<script th:src="@{/build/js/countx_inventory_inv4a_item_discounting_schedule.js?v=20261013a}" src="/build/js/countx_inventory_inv4a_item_discounting_schedule.js?v=20261013a"></script>
+</body>
+</html>

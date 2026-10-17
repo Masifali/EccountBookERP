@@ -41,8 +41,7 @@ import java.util.Map;
  * Every card carries TypeID as its Id and Count as its number.
  *
  * Read-only: this screen only opens other screens. It has no save, update or delete of its own,
- * and the un-approval itself happens on the form the card opens - none of which are ported yet,
- * so nothing here un-approves anything.
+ * and the un-approval itself happens on the form the card opens after the user selects documents.
  */
 @Service
 public class UnApprovedInvoicesAndVouchersService {
