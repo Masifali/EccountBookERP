@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}">
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}">
+    <title>Production FOH</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261007-gridbar-flow}"/>
+    <style>
+        /* frmProductionFohReportCreate.cs - AutoScrollMinSize 980 x 650; tabMain "FOH Allocation" / "FOH Expense".
+           Teal = Color.Teal (#008080). */
+        html, body { margin: 0; padding: 0; height: 100%; }
+        body { font-family: Verdana, "Segoe UI", sans-serif; background: #fff; font-size: 9.75pt; color: #000; }
+        *, *::before, *::after { box-sizing: border-box; }
+        .foh-form { min-width: 980px; height: 100vh; min-height: 650px; display: flex; flex-direction: column; }
+        .main-tabs { flex: 0 0 26px; display: flex; gap: 2px; padding: 2px 4px 0; border-bottom: 1px solid #b7c3cc; }
+        .main-tabs button, .sub-tabs button { font: 9.75pt Verdana, "Segoe UI", sans-serif; border: 1px solid #b7c3cc; border-bottom: none; background: #eef2f5; padding: 2px 14px; cursor: pointer; }
+        .main-tabs button.on, .sub-tabs button.on { background: #fff; font-weight: bold; }
+        .sub-tabs { flex: 0 0 26px; display: flex; gap: 2px; padding: 2px 4px 0; border-bottom: 1px solid #b7c3cc; }
+        .page { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; overflow: auto; }
+        .sub-page { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
+        .teal { background: #008080; color: #fff; }
+        .tool { flex: 0 0 27px; display: flex; align-items: stretch; gap: 1px; background: linear-gradient(#f7f9fb, #e3e8ee); border-bottom: 1px solid #c9d1da; font: 9.75pt Verdana, sans-serif; }
+        .tool button { background: none; border: 1px solid transparent; font: inherit; padding: 0 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; color: #000; }
+        .tool button:hover:not(:disabled) { background: #c2e0ff; border-color: #3399ff; }
+        .tool button:disabled { color: #888; cursor: not-allowed; }
+        .tool .fa { color: #1b6f8a; }
+        .tool .sep { width: 1px; background: #c9d1da; margin: 3px 2px; }
+        .bar21 { flex: 0 0 21px; position: relative; }
+        .bar21 > span { position: absolute; left: 4px; top: 2px; font: bold 10pt Tahoma, sans-serif; color: #fff; white-space: nowrap; }
+        .bar21 > .gb-gear { position: absolute; right: 4px; top: 2px; }
+        .lbl { font: 9pt "Segoe UI", sans-serif; white-space: nowrap; position: absolute; }
+        .abs { position: absolute; }
+        .txt { font: 9.75pt Verdana, sans-serif; height: 23px; border: 1px solid #7a9a9e; padding: 0 3px; text-align: right; background: #fff; }
+        .txt[readonly] { background: #f0f0f0; }
+        .win-combo { font: 9.75pt Verdana, sans-serif; height: 26px; }
+        .btn { font: 9pt "Segoe UI", sans-serif; border: 1px solid #7a7a7a; background: linear-gradient(#fdfdfd, #e1e1e1); cursor: pointer; padding: 0 6px; }
+        .btn:disabled { color: #888; cursor: not-allowed; }
+        .btn-teal { background: rgb(10,110,110); color: #fff; font: bold 9.75pt Verdana, sans-serif; border: 1px solid rgb(10,110,110); cursor: pointer; }
+        .btn-teal:disabled { background: #9e9e9e; }
+        .hdt { display: inline-flex; align-items: center; gap: 3px; border: 1px solid #7a9a9e; height: 22px; padding: 0 3px; background: #fff; font: 9.75pt Verdana, sans-serif; }
+        .hdt input[type=date], .hdt input[type=month] { border: none; font: inherit; width: 118px; }
+
+        .strip { flex: 0 0 auto; position: relative; }
+        #allocTop { flex: 0 0 36px; position: relative; border-bottom: 1px solid #c9d1da; }
+        #allocBody { flex: 1 1 auto; display: flex; min-height: 200px; }
+        #panelPlant { flex: 0 0 310px; display: flex; flex-direction: column; border-right: 1px solid #c9d1da; }
+        #panelJobPlant { flex: 0 0 450px; display: flex; flex-direction: column; }
+        #panelEntry { flex: 0 0 52px; position: relative; border-bottom: 1px solid #c9d1da; }
+        .grid-wrap { flex: 1 1 auto; min-height: 60px; overflow: auto; border: 1px solid #7a9a9e; width: 100%; background: #fff; }
+        #wrapSummary { flex: 0 0 184px; }
+        .grid { border-collapse: collapse; font: 8.25pt Verdana, sans-serif; min-width: 100%; }
+        .grid th { background: linear-gradient(to bottom, #fdfdfd 0%, #e4e4e4 100%); border: 1px solid #b8b8b8; padding: 2px 4px; text-align: center;
+                   font-weight: normal; position: sticky; top: 0; z-index: 3; white-space: normal; line-height: 1.15; }
+        .grid td { border: 1px solid #dcdcdc; padding: 1px 3px; white-space: nowrap; height: 20px; }
+        .grid td.num { text-align: right; }
+        .grid tbody tr.cur td { background: #cce8ff; }
+        .grid tr.grp td { background: #e8eef2; font-weight: bold; }
+        .grid tr.grptot td { background: #f3f3f3; font-weight: bold; text-align: right; border-top: 1px solid #999; }
+        .grid a.lnk { color: #0645ad; text-decoration: underline; cursor: pointer; }
+        .grid input.edit { width: 100%; min-width: 70px; height: 18px; border: 1px solid #7a9a9e; font: 8.25pt Verdana, sans-serif; text-align: right; padding: 0 2px; }
+        .grid input.edit.left { text-align: left; }
+        .grid button.cb { height: 18px; font: bold 8pt Verdana, sans-serif; padding: 0 6px; cursor: pointer; }
+        .status { font: 8.5pt "Segoe UI", sans-serif; color: #333; padding: 2px 6px; min-height: 18px; background: #f4f4f4; border-top: 1px solid #ccc; }
+        .is-hidden { display: none !important; }
+        .is-busy { opacity: .65; cursor: progress !important; }
+        #filters { flex: 0 0 45px; position: relative; border-bottom: 1px solid #c9d1da; }
+        #filters fieldset { position: absolute; left: 4px; top: 0; width: 893px; height: 43px; border: 1px solid #b7c3cc; margin: 0; padding: 0; }
+        #filters legend { font: 9pt "Segoe UI", sans-serif; padding: 0 2px; margin-left: 6px; }
+        #filters label.rd { position: absolute; top: 16px; font: 9pt "Segoe UI", sans-serif; white-space: nowrap; }
+        #wrapHistory { flex: 1 1 auto; }
+        #wrapHistDetail { flex: 0 0 193px; }
+
+        .pa-modal { position: fixed; inset: 0; background: rgba(0,0,0,.3); z-index: 9000; display: flex; align-items: center; justify-content: center; }
+        .pa-dlg { background: #fff; border: 1px solid #555; box-shadow: 0 6px 24px rgba(0,0,0,.4); font: 9pt "Segoe UI", sans-serif; max-width: 94vw; }
+        .pa-dlg .cap { height: 26px; display: flex; align-items: center; justify-content: space-between; padding: 0 8px; background: #f0f0f0; border-bottom: 1px solid #ccc; }
+        .pa-dlg .cap button { border: none; background: none; font-size: 15px; cursor: pointer; }
+        .pa-dlg .msg { padding: 14px 16px; white-space: pre-wrap; display: flex; gap: 10px; max-width: 560px; }
+        .pa-dlg .msg i { font-size: 22px; }
+        .pa-dlg .btns { padding: 8px 12px; background: #f0f0f0; text-align: right; }
+        .pa-dlg .btns button { min-width: 72px; margin-left: 6px; height: 24px; }
+        #dlgKeys table { border-collapse: collapse; margin: 8px; }
+        #dlgKeys td, #dlgKeys th { border: 1px solid #ccc; padding: 2px 8px; }
+    </style>
+</head>
+<body>
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="foh-form" id="frmProductionFohReportCreate">
+    <div class="main-tabs" id="tabMain">
+        <button type="button" data-main="0" class="on">FOH Allocation</button>
+        <button type="button" data-main="1">FOH Expense</button>
+    </div>
+
+    <!-- ============================================================ tabFohAllocation -->
+    <div class="page" id="tabFohAllocation">
+        <div class="tool" id="toolStrip3">
+            <button type="button" id="BtnNewFohAloocation"><i class="fa fa-plus-circle"></i><u>N</u>ew</button>
+            <span class="sep"></span>
+            <button type="button" id="btnPrintFohallocation"><i class="fa fa-print"></i>Print-666_01</button>
+            <button type="button" id="btnShortCutKeyFohAllocation"><i class="fa fa-keyboard-o"></i>ShortCut Keys</button>
+        </div>
+        <div id="allocTop">
+            <span class="lbl" style="left:6px; top:11px;">Month</span>
+            <label class="abs hdt" style="left:49px; top:7px; height:23px;"><input type="month" id="txtMonthDateFohAllocation"></label>
+            <button type="button" id="btnShowFohAllocation" class="abs btn-teal" style="left:182px; top:7px; width:59px; height:24px;">Show</button>
+        </div>
+        <div id="allocBody">
+            <div id="panelPlant">
+                <div class="bar21 teal"><span>Plant Wise</span></div>
+                <div class="grid-wrap" tabindex="0"><table class="grid" id="grdPlantFohAllocation"></table></div>
+            </div>
+            <div id="panelJobPlant">
+                <div class="bar21 teal"><span>Job Order And Plant Wise</span></div>
+                <div class="grid-wrap" tabindex="0"><table class="grid" id="grdJobPlantFohAllocation"></table></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ tabFohExpense -->
+    <div class="page is-hidden" id="tabFohExpense">
+        <div class="sub-tabs" id="tabControl1">
+            <button type="button" data-sub="0" class="on">Form</button>
+            <button type="button" data-sub="1">History</button>
+        </div>
+
+        <div class="sub-page" id="tabFormFohExpense">
+            <div class="tool" id="toolStrip1">
+                <button type="button" id="BtnNewFohExpense"><i class="fa fa-plus-circle"></i><u>N</u>ew</button>
+                <button type="button" id="BtnRefreshFohExpense"><i class="fa fa-refresh"></i>Refresh</button>
+                <span class="sep"></span>
+                <button type="button" id="BtnSaveFohExpense"><i class="fa fa-floppy-o"></i><u>S</u>ave</button>
+                <button type="button" id="btnUpdateFohExpense" class="is-hidden"><i class="fa fa-pencil"></i>Update</button>
+                <button type="button" id="BtnDeleteFohExpense" class="is-hidden"><i class="fa fa-trash"></i>Delete</button>
+                <button type="button" id="BtnPrintFohExpense"><i class="fa fa-print"></i>Print-922</button>
+                <button type="button" id="BtnShortCutKeyFohExpense"><i class="fa fa-keyboard-o"></i>ShortCut Keys</button>
+            </div>
+            <div id="panelEntry">
+                <span class="lbl" style="left:4px; top:6px;">Month</span>
+                <select id="CmbMonthDateFohExpense" class="abs win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Month" style="left:4px; top:22px; width:120px;"></select>
+                <span class="lbl" style="left:125px; top:6px;">Account</span>
+                <select id="CmbAccountFohExpense" class="abs win-combo dtcombo" data-dtcombo="w3cFohAccount" data-dtcombo-caption="Account Title" style="left:125px; top:22px; width:250px;"></select>
+                <span class="lbl" style="left:377px; top:6px;">Total Amount (Net)</span>
+                <input id="txtAccountNetAmountFohExpense" class="abs txt" readonly style="left:377px; top:24px; width:120px;">
+                <span class="lbl" style="left:499px; top:6px;">Method Type</span>
+                <select id="CmbMethodTypeFohExpense" class="abs win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Method Type" style="left:499px; top:22px; width:258px;"></select>
+                <button type="button" id="BtnShowFohExpense" class="abs btn-teal" style="left:763px; top:22px; width:50px; height:26px;">Run</button>
+            </div>
+            <div class="bar21 teal" id="panel14"><span>Detail Data</span></div>
+            <div class="grid-wrap" id="wrapFoh" tabindex="0"><table class="grid" id="grdFohExpense" data-gridbar="frmProductionFohReportCreate:grdFohExpense" data-gridbar-mount="#panel14"></table></div>
+            <div class="bar21 teal" id="panel16"><span>Plant Wise Summary</span></div>
+            <div class="grid-wrap" id="wrapSummary" tabindex="0"><table class="grid" id="grdPlantWiseSummaryFohExpense"></table></div>
+        </div>
+
+        <div class="sub-page is-hidden" id="tabHistoryFohExpense">
+            <div class="tool" id="toolStrip2">
+                <button type="button" id="btnResetHistoryFohExpense"><i class="fa fa-plus-circle"></i><u>N</u>ew</button>
+                <button type="button" id="btnRefreshHistoryFohExpense"><i class="fa fa-refresh"></i>Refresh</button>
+            </div>
+            <div class="bar21 teal" style="flex-basis:26px;"><span style="top:4px; font-size:11pt;">FOH Expense History</span></div>
+            <div id="filters">
+                <fieldset>
+                    <legend>Filters</legend>
+                    <span class="lbl" style="left:2px; top:18px;">From Date</span>
+                    <label class="abs hdt" style="left:62px; top:12px;"><input type="checkbox" id="chkFromDateHistory" checked><input type="date" id="FromDateHistoryFohExpense"></label>
+                    <span class="lbl" style="left:195px; top:18px;">To Date</span>
+                    <label class="abs hdt" style="left:245px; top:12px;"><input type="checkbox" id="chkToDateHistory" checked><input type="date" id="ToDateHistoryFohExpense"></label>
+                    <span class="lbl" style="left:379px; top:18px;">Month</span>
+                    <select id="CmbMonthHistoryFohExpense" class="abs win-combo dtcombo" data-dtcombo="single" data-dtcombo-caption="Month" style="left:423px; top:10px; width:120px;"></select>
+                    <button type="button" id="btnShowHistoryFohExpense" class="abs btn-teal" style="left:544px; top:10px; width:62px; height:26px;">Show</button>
+                    <label class="rd" style="left:607px;"><input type="radio" name="histBasis" id="rdentrydate" value="entry" checked> Entry Date</label>
+                    <label class="rd" style="left:688px;"><input type="radio" name="histBasis" id="rdmodifydate" value="modify"> Modify Date</label>
+                    <label class="rd" style="left:783px;"><input type="radio" name="histBasis" id="rdapproveddate" value="approved"> Approved Date</label>
+                </fieldset>
+            </div>
+            <div class="bar21 teal" id="panel29" style="flex-basis:24px;"><span style="top:3px; font-size:11pt;">Filtered Records</span></div>
+            <div class="grid-wrap" id="wrapHistory" tabindex="0"><table class="grid" id="grdHistoryFohExpense" data-gridbar="frmProductionFohReportCreate:grdHistoryFohExpense" data-gridbar-mount="#panel29"></table></div>
+            <div class="bar21 teal" id="panel13" style="flex-basis:20px;"><span style="top:1px; font-size:9.5pt;">Detail of the selected above row</span></div>
+            <div class="grid-wrap" id="wrapHistDetail" tabindex="0"><table class="grid" id="grdDetailHistoryFohExpense"></table></div>
+        </div>
+    </div>
+    <div class="status" id="lblStatus"></div>
+</div>
+
+<div class="pa-modal is-hidden" id="dlgKeys">
+    <div class="pa-dlg">
+        <div class="cap"><span>ShortCut Keys</span><button type="button" data-close>&times;</button></div>
+        <table id="tblKeys"></table>
+    </div>
+</div>
+
+<script th:src="@{/build/js/countx_report_kit.js?v=20260924a}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js?v=20261003erp}"></script>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20261007-gridbar-flow}"></script>
+<script th:src="@{/build/js/countx_w3c_production_foh.js?v=20261014w3c}"></script>
+<script src="/js/print-rpt.js?v=20261003erp"></script>
+</body>
+</html>

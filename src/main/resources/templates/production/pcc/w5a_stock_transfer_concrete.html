@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Stock Transfer Manual - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_w3b_mfg.css?v=20261014a}"/>
+</head>
+<body>
+<div class="rc-page" style="min-width:1100px;">
+    <!-- Screen 596 - frmStockTransferManualConcrete (DocumentTypeId 1860). Web arrangement of the desktop's Form tab (Main group box, Detail entry group,
+         detail grid) and History tab; captions follow InitializeComponent. Avg Rate / Amount / Net Weight / Item Weight / Variant Unit are disabled boxes on the desktop. -->
+    <div class="rc-teal" style="height:55px;">
+        <div class="rc-strip">
+            <button type="button" class="rc-tool" id="btnNew" onclick="Stc.newClick()" title="Ctrl+N"><i class="fa fa-file-o"></i> New</button>
+            <button type="button" class="rc-tool" id="btnRefresh" onclick="Stc.refresh()" title="Ctrl+R"><i class="fa fa-refresh"></i> Refresh</button>
+            <button type="button" class="rc-tool" id="btnSave" onclick="Stc.save()" title="Ctrl+S"><i class="fa fa-save"></i> Save</button>
+            <button type="button" class="rc-tool is-hidden" id="btnUpdate" onclick="Stc.update()" title="Ctrl+U"><i class="fa fa-pencil-square-o"></i> Update</button>
+            <button type="button" class="rc-tool is-hidden" id="btnDelete" onclick="Stc.del()" title="Ctrl+Shift+Delete"><i class="fa fa-trash"></i> Delete</button>
+            <button type="button" class="rc-tool" id="btnAttachment" disabled title="Not ported"><i class="fa fa-paperclip"></i> Attachment</button>
+            <button type="button" class="rc-tool" id="btnPrint" onclick="Stc.print()" title="Ctrl+P"><i class="fa fa-print"></i> 1860-Print</button>
+            <button type="button" class="rc-tool" id="btnKeys" onclick="Stc.keys()"><i class="fa fa-keyboard-o"></i> ShortCut Keys</button>
+            <a class="rc-exit" href="/production" title="Esc"><i class="fa fa-sign-out"></i> Exit</a>
+        </div>
+        <span class="rc-teal-title" style="left:7px;top:32px;font-size:16px;line-height:19px;">Stock Transfer</span>
+        <label style="position:absolute;right:12px;top:32px;font-size:13px;"><input type="checkbox" id="chkPreview"> Preview</label>
+    </div>
+    <div id="rightsNote" class="rc-note is-hidden"></div>
+    <div style="padding:4px 6px;">
+        <button type="button" class="rc-tab1 is-active" id="tabForm" onclick="Stc.tab('form')">Form</button>
+        <button type="button" class="rc-tab1" id="tabHist" onclick="Stc.tab('hist')">History</button>
+    </div>
+
+    <div id="panelForm" class="rc-panel is-active">
+        <div style="position:relative;height:100px;background:#f0f0f0;">
+            <div class="rc-gb" style="left:4px;top:2px;width:1060px;height:94px;">
+                <span class="rc-cap">Main</span>
+                <label class="rc-abs rc-lbl" style="left:8px;top:24px;">Doc No &amp; Date</label>
+                <input type="text" id="txtdocno" class="rc-abs rc-in num" style="left:112px;top:20px;width:80px;" readonly disabled>
+                <input type="date" id="txtdocdate" class="rc-abs rc-in" style="left:196px;top:20px;width:125px;">
+                <label class="rc-abs rc-lbl" style="left:8px;top:52px;">Gp No &amp; Date</label>
+                <input type="text" id="txtgatepsrno" class="rc-abs rc-in num" style="left:112px;top:48px;width:80px;" inputmode="numeric">
+                <input type="date" id="txtgpdate" class="rc-abs rc-in" style="left:196px;top:48px;width:125px;" disabled title="Not read by the desktop save: GpDate is saved as the Doc Date">
+                <label class="rc-abs rc-lbl" style="left:350px;top:24px;">Vehicle No</label>
+                <input type="text" id="txtvehichleno" class="rc-abs rc-in" style="left:424px;top:20px;width:220px;" maxlength="150">
+                <label class="rc-abs rc-lbl" style="left:350px;top:52px;">Remarks</label>
+                <textarea id="txtRemarksHead" class="rc-abs rc-in" style="left:424px;top:48px;width:600px;height:38px;"></textarea>
+            </div>
+        </div>
+
+        <div style="position:relative;height:158px;background:#f0f0f0;border-top:1px solid #a0a0a0;">
+            <div class="rc-gb" style="left:4px;top:2px;width:1060px;height:152px;">
+                <span class="rc-cap">Detail</span>
+                <label class="rc-abs rc-lbl" style="left:8px;top:18px;">WareHouse From</label>
+                <select id="CmbWareHouseFrom" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="WareHouseName" style="left:8px;top:35px;width:240px;" onchange="Stc.stockNow()"></select>
+                <label class="rc-abs rc-lbl" style="left:258px;top:18px;">WareHouse To</label>
+                <select id="cmbWareHouseTo" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="WareHouseName" style="left:258px;top:35px;width:240px;"></select>
+                <label class="rc-abs rc-lbl" style="left:508px;top:18px;">Job Lot From</label>
+                <select id="cmbJobLot" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Job Lot From" style="left:508px;top:35px;width:240px;"></select>
+                <label class="rc-abs rc-lbl" style="left:758px;top:18px;">Job Lot To</label>
+                <select id="CmbJobLotTo" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Job Lot To" style="left:758px;top:35px;width:240px;"></select>
+
+                <label class="rc-abs rc-lbl" style="left:8px;top:64px;">Item Name</label>
+                <select id="cmbItemName" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Name" style="left:8px;top:81px;width:300px;" onchange="Stc.itemLeave()"></select>
+                <label class="rc-abs rc-lbl" style="left:318px;top:64px;">Pack Uom</label>
+                <select id="CmbPackUom" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="PackUOM" style="left:318px;top:81px;width:110px;" onchange="Stc.calc()"></select>
+                <label class="rc-abs rc-lbl" style="left:438px;top:64px;">Attribute Variant</label>
+                <select id="CmbAttributeVarient" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Varient" style="left:438px;top:81px;width:200px;" onchange="Stc.variantLeave()"></select>
+                <label class="rc-abs rc-lbl" style="left:648px;top:64px;">Variant Unit</label>
+                <input type="text" id="txtVarientEquivalent" class="rc-abs rc-in num" style="left:648px;top:81px;width:80px;" disabled>
+                <label class="rc-abs rc-lbl" style="left:738px;top:64px;">Qty</label>
+                <input type="text" id="txtQty" class="rc-abs rc-in num" style="left:738px;top:81px;width:90px;" inputmode="decimal" oninput="Stc.qtyChanged()">
+                <label class="rc-abs rc-lbl" style="left:838px;top:64px;">Balance Qty</label>
+                <span id="LabBalanceQty" class="rc-abs" style="left:838px;top:85px;width:120px;font-size:12px;font-weight:bold;">0</span>
+
+                <label class="rc-abs rc-lbl" style="left:8px;top:108px;">Item Weight</label>
+                <input type="text" id="txtitemweight" class="rc-abs rc-in num" style="left:8px;top:123px;width:90px;" disabled>
+                <label class="rc-abs rc-lbl" style="left:108px;top:108px;">Net Weight</label>
+                <input type="text" id="txtDetailNetWeight" class="rc-abs rc-in num" style="left:108px;top:123px;width:100px;" readonly disabled>
+                <label class="rc-abs rc-lbl" style="left:218px;top:108px;">Avg Rate</label>
+                <input type="text" id="txtAvgRate" class="rc-abs rc-in num" style="left:218px;top:123px;width:100px;" disabled value="0">
+                <label class="rc-abs rc-lbl" style="left:328px;top:108px;">Amount</label>
+                <input type="text" id="txtAmount" class="rc-abs rc-in num" style="left:328px;top:123px;width:110px;" readonly disabled>
+                <label class="rc-abs rc-lbl" style="left:448px;top:108px;">Remarks</label>
+                <input type="text" id="txtRemarksDetail" class="rc-abs rc-in" style="left:448px;top:123px;width:330px;" maxlength="150">
+                <button type="button" class="rc-abs rc-btn" id="btnplus" style="left:788px;top:122px;width:39px;height:23px;" onclick="Stc.addRow()">+</button>
+                <button type="button" class="rc-abs rc-btn is-hidden" id="btnUpdateDetail" style="left:788px;top:122px;width:64px;height:23px;" onclick="Stc.updateRow()">Update</button>
+                <button type="button" class="rc-abs rc-btn is-hidden" id="btnCancelUpdateDetial" style="left:856px;top:122px;width:64px;height:23px;" onclick="Stc.cancelRow()">Cancel</button>
+            </div>
+        </div>
+        <div class="rc-bar" style="height:23px;"><span>Detail</span></div>
+        <div class="w3-host" style="height:280px;"><table class="rc-grid" id="grd"></table></div>
+    </div>
+
+    <div id="panelHist" class="rc-panel">
+        <div style="position:relative;height:84px;background:#fff;">
+            <div class="rc-gb" style="left:4px;top:2px;width:1060px;height:78px;">
+                <span class="rc-cap">Filters</span>
+                <label class="rc-abs rc-lbl" style="left:8px;top:24px;">Parameter</label>
+                <select id="cmbperemeter" class="rc-abs rc-cmb" style="left:80px;top:20px;width:150px;" onchange="Stc.paramChanged()"></select>
+                <label class="rc-abs rc-lbl" style="left:246px;top:24px;">From Date</label>
+                <input type="date" id="fromdate" class="rc-abs rc-in" style="left:318px;top:20px;width:125px;">
+                <label class="rc-abs rc-lbl" style="left:458px;top:24px;">To Date</label>
+                <input type="date" id="ToDate" class="rc-abs rc-in" style="left:518px;top:20px;width:125px;">
+                <label class="rc-abs rc-lbl" style="left:8px;top:52px;">Doc From</label>
+                <input type="text" id="txtfromdocno" class="rc-abs rc-in num" style="left:80px;top:48px;width:78px;" inputmode="numeric">
+                <label class="rc-abs rc-lbl" style="left:172px;top:52px;">Doc To</label>
+                <input type="text" id="txttodocno" class="rc-abs rc-in num" style="left:224px;top:48px;width:78px;" inputmode="numeric">
+                <label class="rc-abs rc-lbl" style="left:318px;top:52px;">Vehicle No</label>
+                <input type="text" id="txtVehicleNoHistory" class="rc-abs rc-in" style="left:392px;top:48px;width:180px;">
+                <button type="button" class="rc-abs rc-btn" style="left:700px;top:46px;width:55px;height:25px;" onclick="Stc.history()" title="Ctrl+S">Show</button>
+                <button type="button" class="rc-abs rc-btn" style="left:762px;top:46px;width:55px;height:25px;" onclick="Stc.newHistory()">New</button>
+            </div>
+        </div>
+        <div class="rc-bar" style="height:23px;"><span>Filtered Records</span></div>
+        <div class="w3-host" style="height:240px;"><table class="rc-grid" id="grdhistory"></table></div>
+        <div class="rc-bar" style="height:24px;"><span>Detail of the Above Selected Row</span></div>
+        <div class="w3-host" style="height:200px;"><table class="rc-grid" id="GridDetailHistory"></table></div>
+    </div>
+</div>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_w3b_common.js?v=20261014a}"></script>
+<script th:src="@{/build/js/countx_w5a_stock_transfer_concrete.js?v=20261014a}"></script>
+</body>
+</html>

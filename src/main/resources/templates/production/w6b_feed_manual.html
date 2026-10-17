@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Production Manual - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_w3b_mfg.css?v=20261014a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_w6b_feed_manual.css?v=20261014a}"/>
+</head>
+<body>
+<div class="rc-page" style="min-width:1180px;">
+    <!-- Screen 929 - Architecture.WinApp.FeedMill.Production.frmProductionManualFeed (DocumentTypeId 1122, rights key "frmProductionManualFeed"). Captions are the designer's. -->
+    <div class="rc-teal" style="height:55px;">
+        <div class="rc-strip">
+            <button type="button" class="rc-tool" id="btnNew" onclick="Pm.newClick()" title="Ctrl+N"><i class="fa fa-file-o"></i> New</button>
+            <button type="button" class="rc-tool" id="btnRefresh" onclick="Pm.refresh()" title="Ctrl+R"><i class="fa fa-refresh"></i> Refresh</button>
+            <button type="button" class="rc-tool" id="btnSave" onclick="Pm.save()" title="Ctrl+S"><i class="fa fa-save"></i> Save</button>
+            <button type="button" class="rc-tool is-hidden" id="btnSaveAs" onclick="Pm.save()"><i class="fa fa-clone"></i> Save As</button>
+            <button type="button" class="rc-tool is-hidden" id="btnUpdate" onclick="Pm.save()" title="Ctrl+U"><i class="fa fa-pencil-square-o"></i> Update</button>
+            <button type="button" class="rc-tool is-hidden" id="btnDelete" onclick="Pm.del()"><i class="fa fa-trash"></i> Delete</button>
+            <button type="button" class="rc-tool" id="btnPrint" onclick="Pm.print()" title="Ctrl+P"><i class="fa fa-print"></i> Print</button>
+            <button type="button" class="rc-tool" id="btnVoucher" onclick="Pm.voucher()"><i class="fa fa-file-text-o"></i> Voucher</button>
+            <a class="rc-exit" href="/production" title="Esc"><i class="fa fa-sign-out"></i> Exit</a>
+        </div>
+        <span class="rc-teal-title" style="left:7px;top:32px;font-size:16px;line-height:19px;">Production Manual</span>
+        <label class="rc-abs" style="right:150px;top:32px;color:#fff;"><input type="checkbox" id="ChkPreviewSlip" checked> Preview Slip</label>
+        <label class="rc-abs" style="right:12px;top:32px;color:#fff;"><input type="checkbox" id="chkPrintVoucher" checked> Print Voucher</label>
+    </div>
+    <div id="rightsNote" class="rc-note is-hidden"></div>
+    <div style="padding:4px 6px;">
+        <button type="button" class="rc-tab1 is-active" id="tabForm" onclick="Pm.tab('form')">Form</button>
+        <button type="button" class="rc-tab1" id="tabHist" onclick="Pm.tab('hist')">History</button>
+    </div>
+
+    <div id="panelForm" class="rc-panel is-active">
+        <div class="rc-bar" style="height:22px;"><span>Main</span></div>
+        <div style="position:relative;height:112px;background:#f0f0f0;">
+            <label class="rc-abs rc-lbl" style="left:6px;top:12px;">Doc No,Date</label>
+            <input type="text" id="txtdocno" class="rc-abs rc-in num" style="left:90px;top:8px;width:76px;" readonly>
+            <input type="date" id="DocDate" class="rc-abs rc-in" style="left:170px;top:8px;width:112px;" onchange="Pm.dateChanged()">
+            <label class="rc-abs rc-lbl" style="left:6px;top:42px;">Production No</label>
+            <input type="text" id="txtProductionNo" class="rc-abs rc-in" style="left:90px;top:38px;width:192px;">
+            <label class="rc-abs rc-lbl" style="left:300px;top:12px;">Production Type</label>
+            <select id="CmbProductionType" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Production Type" style="left:395px;top:8px;width:200px;" onchange="Pm.typeChanged()"></select>
+            <label class="rc-abs rc-lbl" style="left:300px;top:42px;">Shift</label>
+            <select id="CmbShift" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Shift" style="left:395px;top:38px;width:200px;"></select>
+            <label class="rc-abs rc-lbl" style="left:620px;top:12px;">Plant Name</label>
+            <select id="CmbPlant" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Plant Name" style="left:700px;top:8px;width:230px;"></select>
+            <label class="rc-abs rc-lbl" style="left:6px;top:76px;">Remarks</label>
+            <input type="text" id="txtremarks" class="rc-abs rc-in" style="left:90px;top:72px;width:840px;">
+        </div>
+
+        <div class="rc-bar" style="height:22px;"><span>Output</span></div>
+        <div style="position:relative;height:40px;background:#f0f0f0;">
+            <label class="rc-abs rc-lbl" style="left:6px;top:12px;">Warehouse</label>
+            <select id="CmbWarehouse" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Warehouse" style="left:70px;top:8px;width:150px;"></select>
+            <label class="rc-abs rc-lbl" style="left:230px;top:12px;">Item</label>
+            <select id="CmbItem" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Item" style="left:265px;top:8px;width:210px;" onchange="Pm.itemChanged()"></select>
+            <label class="rc-abs rc-lbl" style="left:485px;top:12px;">BOM No</label>
+            <select id="CmbBom" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="BOM No" style="left:535px;top:8px;width:170px;" onchange="Pm.bomChanged()"></select>
+            <label class="rc-abs rc-lbl" style="left:715px;top:12px;">Uom</label>
+            <select id="CmbUom" class="rc-abs rc-cmb" style="left:745px;top:8px;width:90px;"></select>
+            <label class="rc-abs rc-lbl" style="left:845px;top:12px;">Qty</label>
+            <input type="text" id="txtQty" class="rc-abs rc-in num" style="left:875px;top:8px;width:80px;" inputmode="decimal">
+            <button type="button" class="rc-abs rc-btn" id="btnAddRow" style="left:965px;top:7px;width:60px;height:24px;" onclick="Pm.addRow()">Add</button>
+            <button type="button" class="rc-abs rc-btn is-hidden" id="btnCancelRow" style="left:1030px;top:7px;width:60px;height:24px;" onclick="Pm.cancelRow()">Cancel</button>
+        </div>
+        <div class="w3-host" style="height:150px;"><table class="rc-grid pm-grid" id="grdOutPut"></table></div>
+
+        <div class="rc-bar" style="height:26px;"><span>Input</span>
+            <span class="rc-bar-tools">
+                <button type="button" class="rc-btn" style="width:130px;height:22px;" id="btnLoadInputFromBom" onclick="Pm.loadFromBom()">Load Input From BOM</button>
+                <button type="button" class="rc-btn" style="width:80px;height:22px;" onclick="Pm.clearInput()">Clear Input</button>
+                <button type="button" class="rc-btn" style="width:170px;height:22px;" onclick="Pm.sameWarehouse('inp')">Same WareHouse In All Rows</button>
+                <button type="button" class="rc-btn is-hidden" id="btnUpdateQtySingle" style="width:150px;height:22px;" onclick="Pm.updateQtySingle()">Update Qty if Single BOM</button>
+                <button type="button" class="rc-btn" style="width:230px;height:22px;" id="btnGenerateRatesOutput" onclick="Pm.generate()">Update Input,Consumption.OH &amp; Output Rate</button>
+            </span></div>
+        <div class="w3-host" style="height:170px;"><table class="rc-grid pm-grid" id="grdInput"></table></div>
+        <div class="rc-bar" style="height:22px;"><span>Over Head</span></div>
+        <div class="w3-host" style="height:120px;"><table class="rc-grid pm-grid" id="grdOverHead"></table></div>
+        <div class="rc-bar" style="height:26px;"><span>Consumption</span>
+            <span class="rc-bar-tools"><button type="button" class="rc-btn" style="width:170px;height:22px;" onclick="Pm.sameWarehouse('con')">Same WareHouse In All Rows</button></span></div>
+        <div class="w3-host" style="height:130px;"><table class="rc-grid pm-grid" id="grdConsumption"></table></div>
+        <div class="rc-bar" style="height:22px;"><span>Calculation</span></div>
+        <div style="position:relative;height:60px;background:#f0f0f0;">
+            <label class="rc-abs rc-lbl" style="left:6px;top:8px;">Total Inputs</label>
+            <input type="text" id="txtTotalInputs" class="rc-abs rc-in num" style="left:90px;top:4px;width:110px;" readonly>
+            <label class="rc-abs rc-lbl" style="left:215px;top:8px;">Total Over Head</label>
+            <input type="text" id="txtTotalOverHead" class="rc-abs rc-in num" style="left:310px;top:4px;width:110px;" readonly>
+            <label class="rc-abs rc-lbl" style="left:435px;top:8px;">Total Consumption</label>
+            <input type="text" id="txtTotalConsumption" class="rc-abs rc-in num" style="left:540px;top:4px;width:110px;" readonly>
+            <label class="rc-abs rc-lbl" style="left:665px;top:8px;">Net Value</label>
+            <input type="text" id="txtNetValue" class="rc-abs rc-in num" style="left:725px;top:4px;width:120px;" readonly>
+            <label class="rc-abs rc-lbl" style="left:860px;top:8px;">Value / Qty</label>
+            <input type="text" id="txtValuePerQty" class="rc-abs rc-in num" style="left:930px;top:4px;width:110px;" readonly>
+            <label class="rc-abs rc-lbl" style="left:6px;top:36px;">Total Output Amount</label>
+            <input type="text" id="txtTotalOutPutAutoRatedAmount" class="rc-abs rc-in num" style="left:130px;top:32px;width:120px;" readonly>
+        </div>
+        <div style="padding:3px 8px;font-size:11px;color:#555;">F1 on an Item cell opens the picker; double-click an Output row to edit it in the panel above; Ctrl+Delete is not used (use the X buttons).</div>
+    </div>
+
+    <div id="panelHist" class="rc-panel">
+        <div style="position:relative;height:100px;background:#fff;">
+            <div class="rc-gb" style="left:4px;top:2px;width:1060px;height:94px;">
+                <span class="rc-cap">Main</span>
+                <label class="rc-abs rc-lbl" style="left:6px;top:24px;">Date Type</label>
+                <select id="cmbperemeter" class="rc-abs rc-cmb" style="left:70px;top:19px;width:140px;" onchange="Pm.dateType()"></select>
+                <label class="rc-abs rc-lbl" style="left:220px;top:24px;"><input type="checkbox" id="chkFrom" checked> From Date</label>
+                <input type="date" id="fromdate" class="rc-abs rc-in" style="left:312px;top:20px;width:125px;">
+                <label class="rc-abs rc-lbl" style="left:446px;top:24px;"><input type="checkbox" id="chkTo" checked> To Date</label>
+                <input type="date" id="ToDate" class="rc-abs rc-in" style="left:524px;top:20px;width:125px;">
+                <label class="rc-abs rc-lbl" style="left:660px;top:24px;">From Doc</label>
+                <input type="text" id="txtDocNoFrom" class="rc-abs rc-in num" style="left:722px;top:20px;width:55px;" inputmode="numeric">
+                <label class="rc-abs rc-lbl" style="left:786px;top:24px;">To Doc</label>
+                <input type="text" id="txtDocNoTo" class="rc-abs rc-in num" style="left:836px;top:20px;width:55px;" inputmode="numeric">
+                <label class="rc-abs rc-lbl" style="left:6px;top:58px;">Production No</label>
+                <select id="CmbHistNo" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Production No" style="left:90px;top:54px;width:200px;"></select>
+                <label class="rc-abs rc-lbl" style="left:310px;top:58px;">Production Type</label>
+                <select id="CmbHistType" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Production Type" style="left:405px;top:54px;width:200px;"></select>
+                <label class="rc-abs rc-lbl" style="left:625px;top:58px;">Shift Name</label>
+                <select id="CmbHistShift" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Shift Name" style="left:700px;top:54px;width:200px;"></select>
+            </div>
+        </div>
+        <div class="rc-bar" style="height:26px;"><span>Filtered Records</span>
+            <span class="rc-bar-tools"><button type="button" class="rc-btn" style="width:62px;height:22px;" onclick="Pm.history()">Show</button>
+            <button type="button" class="rc-btn" style="width:62px;height:22px;" onclick="Pm.refreshHistLookups()">Refresh</button>
+            <button type="button" class="rc-btn" style="width:62px;height:22px;" onclick="Pm.newHistory()">New</button></span></div>
+        <div class="w3-host" style="height:220px;"><table class="rc-grid" id="grdhistory"></table></div>
+        <div class="rc-bar" style="height:22px;"><span>Input</span></div>
+        <div class="w3-host" style="height:100px;"><table class="rc-grid" id="hInput"></table></div>
+        <div class="rc-bar" style="height:22px;"><span>Output</span></div>
+        <div class="w3-host" style="height:100px;"><table class="rc-grid" id="hOutput"></table></div>
+        <div class="rc-bar" style="height:22px;"><span>Over Head</span></div>
+        <div class="w3-host" style="height:80px;"><table class="rc-grid" id="hOverHead"></table></div>
+        <div class="rc-bar" style="height:22px;"><span>Consumption</span></div>
+        <div class="w3-host" style="height:90px;"><table class="rc-grid" id="hConsumption"></table></div>
+    </div>
+</div>
+
+<!-- GrdPopUp replacement (F1 on a grid item cell) -->
+<div class="cx-modal" id="pickModal">
+    <div class="cx-modal-box" style="width:min(620px,94vw);">
+        <div class="cx-modal-head"><span id="pickTitle">Select</span><button type="button" onclick="Pm.pickClose()">&times;</button></div>
+        <div class="cx-modal-body">
+            <input type="text" id="pickSearch" class="rc-in" style="width:100%;margin-bottom:4px;" placeholder="Search...">
+            <div class="w3-host" style="height:300px;"><table class="rc-grid" id="pickGrid"></table></div>
+        </div>
+    </div>
+</div>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_w3b_common.js?v=20261014a}"></script>
+<script th:src="@{/build/js/countx_w6b_feed_manual.js?v=20261014a}"></script>
+</body>
+</html>

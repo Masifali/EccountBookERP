@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${w5bTitle} + ' - EccountBookERP'">Bill Of Material - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261007-gridbar-flow}"/>
+    <style>
+        /* Screen 285 - frmBillOfMaterial_Manufacturing (InitializeComponent :3304, ClientSize 1184 x 711).
+           tabControl1 (Form | History) tabs at the BOTTOM. Form: teal title strip (55), panel2 (157: Main Information +
+           Calculation Summary), then Input Material (left, 675) | OverHead (194) over Consumption (right). The three
+           grids are typed in directly (GridEX AllowEdit) - the "+" column adds a row, "X" removes it. */
+        html, body { overflow-x: auto; }
+        body { font-family: Verdana, "Segoe UI", Tahoma, sans-serif; background: #f0f0f0; font-size: 12px; color: #000; margin: 0; }
+        *, *::before, *::after { box-sizing: border-box; }
+        .rc-page { display: flex; flex-direction: column; min-height: 100vh; min-width: 1184px; }
+        .rc-abs { position: absolute; margin: 0; }
+        .rc-lbl { font-family: "Segoe UI Semibold", "Segoe UI", Tahoma, sans-serif; font-weight: bold; font-size: 12px; line-height: 15px; white-space: nowrap; color: #000; }
+        .rc-in { font-family: Verdana, sans-serif; font-size: 13px; height: 23px; border: 1px solid #7a7a7a; padding: 1px 3px; background: #fff; }
+        .rc-in:disabled, .rc-in[readonly] { background: #f0f0f0; color: #333; }
+        .rc-in.num { text-align: right; }
+        .rc-cmb { font-family: Verdana, sans-serif; font-size: 13px; height: 26px; border: 1px solid #7a7a7a; background: #fff; }
+        .rc-gb { position: absolute; }
+        .rc-gb::before { content: ""; position: absolute; left: 0; right: 0; top: 7px; bottom: 0; border: 1px solid #d5dfe5; border-radius: 3px; pointer-events: none; }
+        .rc-gb > .rc-cap { position: absolute; left: 6px; top: 0; padding: 0 2px; background: #fff; font-family: Tahoma, sans-serif; font-size: 13px; font-weight: bold; line-height: 14px; }
+        .rc-teal { background: #008080; color: #fff; position: relative; }
+        .rc-teal-title { position: absolute; font-family: Tahoma, sans-serif; font-weight: bold; white-space: nowrap; }
+        .rc-strip { background: linear-gradient(to bottom, #fbfbfb 0%, #e6e6e6 100%); border-bottom: 1px solid #a0a0a0; height: 27px; display: flex; align-items: center; padding: 0 2px; gap: 1px; }
+        .rc-tool { background: transparent; border: 1px solid transparent; height: 24px; padding: 0 5px; font-family: Verdana, sans-serif; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; color: #000; white-space: nowrap; }
+        .rc-tool:hover:not(:disabled) { background: #cce8ff; border-color: #99d1ff; }
+        .rc-tool:disabled { color: #9a9a9a; cursor: not-allowed; }
+        .rc-sep { width: 6px; height: 20px; border-left: 1px solid #b5b5b5; margin: 0 3px; }
+        .rc-btn { background: #008080; color: #fff; border: 1px solid #006666; font-family: Verdana, sans-serif; font-weight: bold; font-size: 13px; cursor: pointer; padding: 0; }
+        .rc-btn:hover:not(:disabled) { background: #006666; }
+        .rc-exit { color: #004d40; text-decoration: none; font-size: 11px; font-weight: bold; margin-left: auto; }
+        .is-hidden { display: none !important; }
+        .rc-panel { display: none; }
+        .rc-panel.is-active { display: block; }
+        .rc-bar { background: #008080; color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 0 6px; font-family: Tahoma, sans-serif; font-weight: bold; font-size: 13px; }
+        .rc-bar-tools { display: inline-flex; gap: 3px; align-items: center; font-weight: normal; }
+        .rc-grid-wrap { overflow: auto; background: #fff; border: 1px solid #c0c0c0; }
+        .rc-grid { border-collapse: collapse; font-family: Verdana, sans-serif; font-size: 11px; min-width: 100%; }
+        .rc-grid th { background: linear-gradient(to bottom, #fdfdfd 0%, #e4e4e4 100%); border: 1px solid #b8b8b8; padding: 3px 4px; text-align: center; position: sticky; top: 0; z-index: 2; font-weight: normal; white-space: nowrap; }
+        .rc-grid td { border: 1px solid #dcdcdc; padding: 1px 3px; white-space: nowrap; }
+        .rc-grid td.num { text-align: right; }
+        .rc-grid td.ctr { text-align: center; }
+        .rc-grid tbody tr.is-current td { background: #cce8ff; }
+        .rc-grid tfoot td { background: #ececec; font-weight: bold; border: 1px solid #c8c8c8; text-align: right; }
+        .rc-grid .col-x { width: 40px; text-align: center; padding: 1px; }
+        .rc-x { border: 1px solid #9a9a9a; background: #f3f3f3; font-size: 11px; line-height: 1; padding: 2px 6px; cursor: pointer; }
+        .rc-x:hover { background: #e81123; color: #fff; border-color: #e81123; }
+        .rc-add { border: 1px solid #9a9a9a; background: #f3f3f3; font-size: 11px; line-height: 1; padding: 2px 6px; cursor: pointer; }
+        .rc-add:hover { background: #cce8ff; border-color: #3399ff; }
+        .rc-grid input.cell { width: 80px; height: 20px; border: 1px solid #b0b0b0; font-size: 11px; text-align: right; padding: 1px 3px; }
+        .rc-grid input.cell.txt { width: 160px; text-align: left; }
+        .rc-grid select.cell { height: 21px; border: 1px solid #b0b0b0; font-size: 11px; max-width: 230px; }
+        .rc-cellbtn { border: 1px solid #9a9a9a; background: #f3f3f3; font-size: 11px; padding: 1px 6px; cursor: pointer; }
+        .rc-cellbtn:hover { background: #cce8ff; border-color: #3399ff; }
+        .rc-link { color: #0645ad; text-decoration: underline; cursor: pointer; background: none; border: none; padding: 0; font: inherit; }
+        .rc-empty td { color: #777; font-style: italic; }
+        .rc-note { font-size: 11px; color: #7f0000; background: #ffebee; border: 1px solid #e57373; padding: 3px 8px; margin: 2px 0; }
+        .rc-split { display: flex; gap: 0; }
+        .rc-left { width: 675px; flex: 0 0 675px; }
+        .rc-right { flex: 1 1 auto; min-width: 495px; }
+        
+        
+        
+        
+        
+        
+        
+        .rc-footer { position: sticky; bottom: 0; display: flex; align-items: center; justify-content: space-between; background: #e9e9e9; border-top: 1px solid #a0a0a0; padding: 0 4px; height: 28px; z-index: 20; }
+        .rc-tab1 { border: 1px solid #a0a0a0; border-top: none; border-radius: 0 0 3px 3px; background: #ececec; padding: 3px 14px; font-family: Verdana, sans-serif; font-size: 13px; cursor: pointer; user-select: none; }
+        .rc-tab1.is-active { background: #fff; font-weight: 600; position: relative; top: -1px; }
+        .cx-modal { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: none; z-index: 9000; }
+        .cx-modal.is-open { display: block; }
+        .cx-modal-box { position: absolute; top: 10%; left: 50%; transform: translateX(-50%); width: min(560px, 94vw); background: #f0f0f0; border: 1px solid #555; box-shadow: 0 6px 24px rgba(0,0,0,.4); }
+        .cx-modal-head { background: #008080; color: #fff; height: 28px; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; font-weight: bold; }
+        .cx-modal-head button { background: transparent; border: none; color: #fff; font-size: 16px; cursor: pointer; }
+        .cx-modal-body { padding: 6px; overflow: auto; }
+        @media print { .rc-teal, .rc-footer, button, .rc-note { display: none !important; } .rc-grid-wrap { height: auto !important; overflow: visible !important; } }
+    
+        /* W5B flowing layout (the desktop uses absolute designer geometry; this is an approximation) */
+        .w5-main { display: flex; flex-wrap: wrap; gap: 6px 18px; padding: 8px; background: #f0f0f0; align-items: flex-end; }
+        .w5-f { display: flex; flex-direction: column; gap: 2px; }
+        .w5-f > .rc-lbl { font-size: 11px; }
+        .w5-f .rc-in, .w5-f .rc-cmb { width: 190px; }
+        .w5-f .rc-in.sm { width: 90px; }
+        .w5-sum { display: flex; flex-wrap: wrap; gap: 4px 14px; padding: 6px 8px; background: #fff; border: 1px solid #d5dfe5; margin: 4px 8px; }
+        .w5-sum .w5-f .rc-in { width: 110px; }
+        .w5-grids { display: flex; flex-wrap: wrap; gap: 0 6px; padding: 0 8px; }
+        .w5-grids > div { flex: 1 1 560px; min-width: 420px; }
+        .w5-host { height: 230px; }
+        .w5-host.tall { height: 300px; }
+        .w5-host.hist { height: 200px; }
+        .w5-filter { display: flex; flex-wrap: wrap; gap: 6px 14px; padding: 8px; background: #f0f0f0; align-items: flex-end; }
+        .rc-grid select.cell, .rc-grid input.cell.txt { max-width: 230px; }
+        .cx-modal-box.wide { width: min(900px, 96vw); }
+        @media (max-width: 700px) { .rc-page { min-width: 0; } .w5-f .rc-in, .w5-f .rc-cmb { width: 100%; } }
+    </style>
+</head>
+<body>
+<!-- W5B: one template for 774 frmBillOfMaterial, 845 frmBillOfMaterialCasting, 598 frmBillOfMaterialConcrete.
+     data-v on an element = the variants (mfg casting concrete) that show it; the page script removes the others. -->
+<div th:replace="~{fragments/erp_navigation :: navigation}"></div>
+<div class="rc-page" id="w5b" th:attr="data-variant=${w5bVariant},data-route=${w5bRoute},data-rpt=${w5bRpt},data-screen=${w5bScreen}">
+
+<div id="tabForm" class="rc-panel is-active">
+    <div class="rc-teal" style="height:55px;">
+        <div class="rc-strip" id="toolStrip1">
+            <button type="button" class="rc-tool" id="btnnew" onclick="BomW5B.newClick()" title="Ctrl+N"><i class="fa fa-file-o"></i> New</button>
+            <button type="button" class="rc-tool is-hidden" id="btnsave" onclick="BomW5B.save()" title="Ctrl+S"><i class="fa fa-save"></i> Save</button>
+            <button type="button" class="rc-tool is-hidden" id="btnUpdate" onclick="BomW5B.update()" title="Ctrl+U"><i class="fa fa-pencil-square-o"></i> Update</button>
+            <span class="rc-sep"></span>
+            <button type="button" class="rc-tool" id="btnPrint" onclick="BomW5B.print()" th:attr="data-rpt=${w5bRpt}" title="Ctrl+P"><i class="fa fa-print"></i> <span th:text="${#strings.substringBefore(w5bRpt,'_')} + '-Print'">Print</span></button>
+            <button type="button" class="rc-tool" id="btnRefresh" onclick="BomW5B.refresh()" title="Ctrl+R"><i class="fa fa-refresh"></i> Refresh</button>
+            <button type="button" class="rc-tool is-hidden" id="btnDelete" onclick="BomW5B.deleteClick()" title="Ctrl+Shift+Delete"><i class="fa fa-trash"></i> Delete</button>
+            <a class="rc-tool" data-v="mfg" href="/production/mfg/work-station-operation" style="text-decoration:none"><i class="fa fa-cogs"></i> Define Work Stations</a>
+            <button type="button" class="rc-tool" id="btnshortcutkeys" onclick="BomW5B.shortcutKeys()">ShortCut Keys</button>
+            <a class="rc-exit" href="/production" title="Ctrl+E / Esc"><i class="fa fa-sign-out"></i> Exit</a>
+        </div>
+        <span class="rc-teal-title" style="left:7px;top:32px;font-size:16px;line-height:19px;"><span th:text="${w5bTitle}">Bill Of Material</span> <span id="lblRecId" style="font-size:11px;font-weight:normal;margin-left:14px;"></span></span>
+        <label class="rc-abs" style="right:22px;top:31px;color:#fff;font-weight:bold;font-size:12px;display:flex;align-items:center;gap:4px;"><input type="checkbox" id="ChkPreview" checked style="margin:0">Preview</label>
+    </div>
+    <div id="rightsNote" class="rc-note is-hidden"></div>
+
+    <div class="w5-main">
+        <div class="w5-f"><label class="rc-lbl" for="txtdocno">Doc No</label><input type="text" id="txtdocno" class="rc-in num sm" readonly></div>
+        <div class="w5-f"><label class="rc-lbl" for="datDocDate">Doc Date</label><input type="date" id="datDocDate" class="rc-in sm" style="width:130px"></div>
+        <div class="w5-f"><label class="rc-lbl" for="txtEffectedDate">Effected Date</label><input type="date" id="txtEffectedDate" class="rc-in" style="width:130px"></div>
+        <div class="w5-f"><label class="rc-lbl" for="txtBom">BOM</label><input type="text" id="txtBom" class="rc-in"></div>
+        <div class="w5-f"><label class="rc-lbl" for="cmbBOMType">BOM Type</label><select id="cmbBOMType" class="rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="BOM Type"></select></div>
+        <div class="w5-f" data-v="mfg casting"><label class="rc-lbl" for="CmbCastingType">Casting Type</label><select id="CmbCastingType" class="rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Casting Type"></select></div>
+        <div class="w5-f" data-v="concrete"><label class="rc-lbl" for="CmbProductionType">Finish Type</label><select id="CmbProductionType" class="rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Production Type" onchange="BomW5B.productionTypeLeave()"></select></div>
+        <div class="w5-f" data-v="concrete"><label class="rc-lbl" for="CmbPlantName">Plant Name</label><select id="CmbPlantName" class="rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Plant Name"></select></div>
+        <div class="w5-f" data-v="mfg concrete"><label class="rc-lbl" for="cmbItem">Item</label><select id="cmbItem" class="rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Name" onchange="BomW5B.itemLeave()"></select></div>
+        <div class="w5-f"><label class="rc-lbl" for="cmbUOM">UOM</label><select id="cmbUOM" class="rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="UOM" style="width:100px"></select></div>
+        <div class="w5-f"><label class="rc-lbl" for="txtQty">Qty</label><input type="text" id="txtQty" class="rc-in num sm" inputmode="decimal"></div>
+        <div class="w5-f" data-v="concrete"><label class="rc-lbl" for="txtTopForce">Top Force</label><input type="text" id="txtTopForce" class="rc-in num sm" inputmode="decimal"></div>
+        <div class="w5-f" data-v="concrete"><label class="rc-lbl" for="txtBottomForce">Bottom Force</label><input type="text" id="txtBottomForce" class="rc-in num sm" inputmode="decimal"></div>
+        <div class="w5-f" id="rowRouting" data-v="mfg"><label class="rc-lbl" for="CmbRoutingName">Routing Name</label><select id="CmbRoutingName" class="rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Routing Name" onchange="BomW5B.routingLeave()"></select></div>
+        <label class="rc-lbl" data-v="mfg concrete" style="display:flex;align-items:center;gap:3px;"><input type="checkbox" id="ChkIsActive" checked style="margin:0">IsActive</label>
+        <label class="rc-lbl" style="display:flex;align-items:center;gap:3px;"><input type="checkbox" id="chkIsDefault" style="margin:0">IsDefault</label>
+        <div class="w5-f"><label class="rc-lbl" for="txtRemarksHeader">Remarks</label><textarea id="txtRemarksHeader" class="rc-in" style="width:300px;height:44px;resize:none;"></textarea></div>
+    </div>
+
+    <div class="w5-sum">
+        <span class="rc-lbl" style="align-self:center">Calculation Summery</span>
+        <div class="w5-f"><label class="rc-lbl" for="txtTotalInputs">Total Inputs</label><input type="text" id="txtTotalInputs" class="rc-in num" readonly></div>
+        <div class="w5-f"><label class="rc-lbl" for="txtOverHead">Total O.H</label><input type="text" id="txtOverHead" class="rc-in num" readonly></div>
+        <div class="w5-f" data-v="mfg concrete"><label class="rc-lbl" for="txtWagesAmount"><span data-v="mfg">Total OP</span><span data-v="concrete">Total Wages</span></label><input type="text" id="txtWagesAmount" class="rc-in num" readonly></div>
+        <div class="w5-f"><label class="rc-lbl" for="txtLessByProduct">By Product</label><input type="text" id="txtLessByProduct" class="rc-in num" readonly></div>
+        <div class="w5-f"><label class="rc-lbl" for="txtNetValue">Net Value</label><input type="text" id="txtNetValue" class="rc-in num" readonly></div>
+        <div class="w5-f"><label class="rc-lbl" for="txtValuePerQty">Value / Qty</label><input type="text" id="txtValuePerQty" class="rc-in num" readonly></div>
+    </div>
+
+    <datalist id="dlInItems"></datalist><datalist id="dlOutItems"></datalist><datalist id="dlAccounts"></datalist><datalist id="dlMainItems"></datalist>
+
+    <div class="w5-grids">
+        <div>
+            <div class="rc-bar" style="height:19px;"><span>Input Material</span><span id="lblInputCount"></span></div>
+            <div class="rc-grid-wrap w5-host tall"><table class="rc-grid" id="grdInputMaterial"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        </div>
+        <div>
+            <div class="rc-bar" style="height:19px;"><span>OutPut by Product/Scrap</span><span id="lblOutputCount"></span></div>
+            <div class="rc-grid-wrap w5-host"><table class="rc-grid" id="grdOutPutByProduct"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+            <div class="rc-bar" style="height:19px;"><span>OverHead</span><span id="lblOverheadCount"></span></div>
+            <div class="rc-grid-wrap w5-host"><table class="rc-grid" id="grdOverHead"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        </div>
+        <div data-v="mfg concrete">
+            <div class="rc-bar" style="height:19px;"><span>Contractor Wages Of <span id="labItemCaption"></span></span><span id="lblWagesCount"></span></div>
+            <div class="rc-grid-wrap w5-host"><table class="rc-grid" id="grdContractorWages"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        </div>
+        <div data-v="mfg">
+            <div class="rc-bar" style="height:19px;"><span>Operations Detail</span><span id="lblOperationCount"></span></div>
+            <div class="rc-grid-wrap w5-host"><table class="rc-grid" id="grdOperatinalDetail"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        </div>
+    </div>
+</div>
+
+<!-- ====================================================================== tabPage2 "History" -->
+<div id="tabHistory" class="rc-panel">
+    <div class="rc-teal" style="height:30px;"><span class="rc-teal-title" style="left:7px;top:5px;font-size:15px;"><span th:text="${w5bHistoryTitle}">History</span> <span id="lblHistoryScope" style="font-size:11px;font-weight:normal;margin-left:12px;"></span></span></div>
+    <div class="w5-filter">
+        <div class="w5-f"><label class="rc-lbl" for="cmbDateTypeHistory">Date Type</label><select id="cmbDateTypeHistory" class="rc-cmb" onchange="BomW5B.datePreset()"></select></div>
+        <div class="w5-f"><label class="rc-lbl" for="txtFromdateHistory">From</label><input type="date" id="txtFromdateHistory" class="rc-in" style="width:130px"></div>
+        <div class="w5-f"><label class="rc-lbl" for="txtToDateHistory">To</label><input type="date" id="txtToDateHistory" class="rc-in" style="width:130px"></div>
+        <div class="w5-f"><label class="rc-lbl" for="txtFromNoHistory">From No</label><input type="text" id="txtFromNoHistory" class="rc-in num sm"></div>
+        <div class="w5-f"><label class="rc-lbl" for="txtToDocNoHistory">To No</label><input type="text" id="txtToDocNoHistory" class="rc-in num sm"></div>
+        <div class="w5-f"><label class="rc-lbl" for="CmbBomNoHistory">BOM No</label><select id="CmbBomNoHistory" class="rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="BOM"></select></div>
+        <div class="w5-f"><label class="rc-lbl" for="cmbbomtypeHistory">BOM Type</label><select id="cmbbomtypeHistory" class="rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="BOM Type"></select></div>
+        <div class="w5-f" data-v="mfg concrete"><label class="rc-lbl" for="cmbItemhistory">Item</label><select id="cmbItemhistory" class="rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Item"></select></div>
+        <button type="button" class="rc-btn" id="btnshow" style="height:26px;width:80px" onclick="BomW5B.history()" title="Ctrl+S">Show</button>
+        <button type="button" class="rc-tool" onclick="BomW5B.refreshHistory()"><i class="fa fa-refresh"></i> Refresh</button>
+        <button type="button" class="rc-tool" onclick="BomW5B.newHistory()"><i class="fa fa-file-o"></i> New</button>
+        <span id="lblHistoryCount" class="rc-lbl"></span>
+    </div>
+    <div class="rc-grid-wrap w5-host hist"><table class="rc-grid" id="DatagridHistory" data-gridbar="W5B_Bom:DatagridHistory"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+    <div class="w5-grids">
+        <div><div class="rc-bar" style="height:19px;"><span>Input Material</span></div>
+            <div class="rc-grid-wrap w5-host hist"><table class="rc-grid" id="grdHistoryInput"><thead></thead><tbody></tbody><tfoot></tfoot></table></div></div>
+        <div><div class="rc-bar" style="height:19px;"><span>OutPut by Product/Scrap</span></div>
+            <div class="rc-grid-wrap w5-host hist"><table class="rc-grid" id="grdHistoryOutput"><thead></thead><tbody></tbody><tfoot></tfoot></table></div></div>
+        <div><div class="rc-bar" style="height:19px;"><span>OverHead</span></div>
+            <div class="rc-grid-wrap w5-host hist"><table class="rc-grid" id="grdHistoryOverHead"><thead></thead><tbody></tbody><tfoot></tfoot></table></div></div>
+        <div data-v="mfg concrete"><div class="rc-bar" style="height:19px;"><span>Contractor Wages</span></div>
+            <div class="rc-grid-wrap w5-host hist"><table class="rc-grid" id="grdWagesHistory"><thead></thead><tbody></tbody><tfoot></tfoot></table></div></div>
+        <div data-v="mfg"><div class="rc-bar" style="height:19px;"><span>Operations Detail</span></div>
+            <div class="rc-grid-wrap w5-host hist"><table class="rc-grid" id="grdHistoryOperations"><thead></thead><tbody></tbody><tfoot></tfoot></table></div></div>
+    </div>
+</div>
+
+<div class="rc-footer" id="tabs1">
+    <div class="rc-tab1 is-active" data-tab="tabForm" onclick="BomW5B.tab('tabForm')" title="Ctrl+T">Form</div>
+    <div style="font-size:11px;color:#333;">Ctrl+S Save · Ctrl+U Update · Ctrl+Shift+Del Delete · Ctrl+N New · Ctrl+D add row · Ctrl+Del remove row · F1 pick · Ctrl+T Form/History</div>
+    <div class="rc-tab1" data-tab="tabHistory" onclick="BomW5B.tab('tabHistory')" title="Ctrl+T"><i class="fa fa-history"></i> History</div>
+</div>
+</div>
+
+<div class="cx-modal" id="pickModal">
+    <div class="cx-modal-box wide">
+        <div class="cx-modal-head"><span id="pickTitle"></span><button type="button" onclick="BomW5B.closePicker()">&times;</button></div>
+        <div class="cx-modal-body"><table class="rc-grid"><thead id="pickHead"></thead><tbody id="pickBody"></tbody></table></div>
+    </div>
+</div>
+
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_grid_bar.js?v=20261007-gridbar-flow}"></script>
+<script th:src="@{/build/js/countx_production_w5b_bom.js?v=20261014a}"></script>
+<script src="/js/print-rpt.js?v=20261003erp"></script>
+</body>
+</html>

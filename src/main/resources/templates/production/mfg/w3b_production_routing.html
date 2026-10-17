@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Production Routing - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_w3b_mfg.css?v=20261014a}"/>
+</head>
+<body>
+<div class="rc-page" style="min-width:1064px;">
+    <!-- Screen 773 - frmProductionRouting (InitializeComponent: tabPage1 holds PanelForm (left, 623 wide: toolbar panel3, Routing Name panel2,
+         operation entry panel16, grdOperationsDetail) and panel1 (right, 435 wide: history filter + DatagridHistory grouped by Routing Name). -->
+    <div style="display:flex;align-items:flex-start;">
+    <div style="width:623px;flex:0 0 623px;">
+        <div class="rc-teal" style="height:55px;">
+            <div class="rc-strip" id="toolStrip1">
+                <button type="button" class="rc-tool" id="btnnew" onclick="Rt.newClick()" title="Ctrl+N"><i class="fa fa-file-o"></i> New</button>
+                <button type="button" class="rc-tool" id="btnsave" onclick="Rt.save()" title="Ctrl+S"><i class="fa fa-save"></i> Save</button>
+                <button type="button" class="rc-tool is-hidden" id="btnUpdate" onclick="Rt.update()" title="Ctrl+U"><i class="fa fa-pencil-square-o"></i> Update</button>
+                <button type="button" class="rc-tool" id="btnRefresh" onclick="Rt.refresh()" title="Ctrl+R"><i class="fa fa-refresh"></i> Refresh</button>
+                <button type="button" class="rc-tool is-hidden" id="btnDelete" onclick="Rt.del()" title="Ctrl+Shift+Delete"><i class="fa fa-trash"></i> Delete</button>
+                <button type="button" class="rc-tool" id="btnshortcutkeys" onclick="Rt.shortcutKeys()">ShortCut Keys</button>
+                <a class="rc-exit" href="/production" title="Ctrl+E / Esc"><i class="fa fa-sign-out"></i> Exit</a>
+            </div>
+            <span class="rc-teal-title" style="left:7px;top:32px;font-size:16px;line-height:19px;">Production Routing</span>
+        </div>
+        <div id="rightsNote" class="rc-note is-hidden"></div>
+        <div style="position:relative;height:35px;background:#f0f0f0;">
+            <label class="rc-abs rc-lbl" style="left:5px;top:9px;">Routing Name</label>
+            <select id="CmbRountingName" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Routing Name" style="left:91px;top:3px;width:301px;" onchange="Rt.routingNameLeave()"></select>
+            <button type="button" id="BtnLookup" class="rc-abs rc-tool" style="left:392px;top:3px;width:28px;height:27px;border:1px solid #9a9a9a;" onclick="Rt.lookup()" title="Define Routing Name">...</button>
+        </div>
+        <div style="position:relative;height:54px;background:#f0f0f0;border-top:1px solid #d0d0d0;">
+            <label class="rc-abs rc-lbl" style="left:7px;top:5px;">Work Station / Operations</label>
+            <select id="cmbWorkStationOperation" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Work Station/Operation" style="left:5px;top:25px;width:306px;"></select>
+            <label class="rc-abs rc-lbl" style="left:314px;top:5px;">Capacity Qty</label>
+            <input type="text" id="txtCapacityQty" class="rc-abs rc-in num" style="left:313px;top:27px;width:80px;" inputmode="decimal">
+            <label class="rc-abs rc-lbl" style="left:395px;top:5px;">Hours</label>
+            <input type="text" id="txtHours" class="rc-abs rc-in num" style="left:394px;top:27px;width:52px;" inputmode="numeric">
+            <label class="rc-abs rc-lbl" style="left:448px;top:5px;">Minutes</label>
+            <input type="text" id="txtMinutes" class="rc-abs rc-in num" style="left:447px;top:27px;width:58px;" inputmode="numeric">
+            <label class="rc-abs rc-lbl" style="left:504px;top:5px;">Seq No</label>
+            <input type="text" id="txtSeqNo" class="rc-abs rc-in num" style="left:506px;top:27px;width:44px;" inputmode="numeric">
+            <label class="rc-abs rc-lbl" style="left:249px;top:3px;display:flex;align-items:center;gap:3px;"><input type="checkbox" id="chkIsActive" checked style="margin:0">Active</label>
+            <button type="button" id="BtnCancelOp" class="rc-abs rc-btn is-hidden" style="left:553px;top:3px;width:64px;height:22px;" onclick="Rt.cancelOp()">Cancel</button>
+            <button type="button" id="BtnAddOp" class="rc-abs rc-btn" style="left:553px;top:27px;width:38px;height:22px;" onclick="Rt.addOp()">+</button>
+            <button type="button" id="BtnUpdateOp" class="rc-abs rc-btn is-hidden" style="left:553px;top:27px;width:64px;height:22px;" onclick="Rt.updateOp()">Update</button>
+        </div>
+        <div class="w3-host" id="grdOperationsDetailHost" style="height:532px;"><table class="rc-grid" id="grdOperationsDetail"></table></div>
+    </div>
+    <div style="width:435px;flex:0 0 435px;border-left:1px solid #a0a0a0;">
+        <div class="rc-teal" style="height:52px;"><span class="rc-teal-title" style="left:5px;top:31px;font-size:16px;line-height:19px;">Production Routing History</span></div>
+        <div style="position:relative;height:46px;background:#fff;">
+            <div class="rc-gb" style="left:2px;top:1px;width:430px;height:45px;">
+                <span class="rc-cap">Filters</span>
+                <label class="rc-abs rc-lbl" style="left:4px;top:19px;">Routing Name</label>
+                <select id="CmbroutingNameHistory" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Routing Name" style="left:89px;top:13px;width:273px;"></select>
+                <button type="button" id="btnshow" class="rc-abs rc-btn" style="left:367px;top:14px;width:62px;height:25px;" onclick="Rt.history()" title="Alt+S">Show</button>
+            </div>
+        </div>
+        <div class="rc-bar" style="height:23px;"><span>Filtered Records</span></div>
+        <div class="w3-host" id="DatagridHistoryHost" style="height:555px;"><table class="rc-grid" id="DatagridHistory"></table></div>
+    </div>
+    </div>
+</div>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_w3b_common.js?v=20261014a}"></script>
+<script th:src="@{/build/js/countx_w3b_production_routing.js?v=20261014a}"></script>
+</body>
+</html>

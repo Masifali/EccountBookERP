@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Work Order For Semi Finish - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_w3b_mfg.css?v=20261014a}"/>
+</head>
+<body>
+<div class="rc-page" style="min-width:1000px;">
+    <!-- Screen 781 - frmWorkOrderForSemiFinish (DocumentTypeId 1621). Web arrangement of the desktop's Form tab (header group box, detail entry panel,
+         detail grid) and History tab; captions follow InitializeComponent. Order No (CmbOrderNoDetail) is never bound in the desktop, so it is not drawn. -->
+    <div class="rc-teal" style="height:55px;">
+        <div class="rc-strip">
+            <button type="button" class="rc-tool" id="btnNew" onclick="Sf.newClick()" title="Ctrl+N"><i class="fa fa-file-o"></i> New</button>
+            <button type="button" class="rc-tool" id="btnRefresh" onclick="Sf.refresh()" title="Ctrl+R"><i class="fa fa-refresh"></i> Refresh</button>
+            <button type="button" class="rc-tool" id="btnSave" onclick="Sf.save()" title="Ctrl+S"><i class="fa fa-save"></i> Save</button>
+            <button type="button" class="rc-tool is-hidden" id="btnSaveAs" onclick="Sf.saveAs()" title="Ctrl+F12"><i class="fa fa-clone"></i> SaveAs</button>
+            <button type="button" class="rc-tool is-hidden" id="btnUpdate" onclick="Sf.update()" title="Ctrl+U"><i class="fa fa-pencil-square-o"></i> Update</button>
+            <button type="button" class="rc-tool is-hidden" id="btnDelete" onclick="Sf.del()" title="Ctrl+Shift+Delete"><i class="fa fa-trash"></i> Delete</button>
+            <button type="button" class="rc-tool" id="btnAttachment" disabled title="Not ported"><i class="fa fa-paperclip"></i> Attachment</button>
+            <button type="button" class="rc-tool" id="btnPrint" onclick="Sf.print()" title="Ctrl+P"><i class="fa fa-print"></i> 1621-Print</button>
+            <button type="button" class="rc-tool" id="btnKeys" onclick="Sf.keys()"><i class="fa fa-keyboard-o"></i> ShortCut Keys</button>
+            <a class="rc-exit" href="/production" title="Esc"><i class="fa fa-sign-out"></i> Exit</a>
+        </div>
+        <span class="rc-teal-title" style="left:7px;top:32px;font-size:16px;line-height:19px;">Work Order For Semi Finish - Melting Heat</span>
+        <label style="position:absolute;right:12px;top:32px;font-size:13px;"><input type="checkbox" id="chkPreview" checked> Preview</label>
+    </div>
+    <div id="rightsNote" class="rc-note is-hidden"></div>
+    <div style="padding:4px 6px;">
+        <button type="button" class="rc-tab1 is-active" id="tabForm" onclick="Sf.tab('form')">Form</button>
+        <button type="button" class="rc-tab1" id="tabHist" onclick="Sf.tab('hist')">History</button>
+    </div>
+
+    <div id="panelForm" class="rc-panel is-active">
+        <div style="position:relative;height:100px;background:#f0f0f0;">
+            <label class="rc-abs rc-lbl" style="left:6px;top:11px;">Doc No,Date</label>
+            <input type="text" id="txtdocno" class="rc-abs rc-in num" style="left:84px;top:7px;width:107px;" readonly>
+            <input type="date" id="txtdocdate" class="rc-abs rc-in" style="left:193px;top:7px;width:125px;">
+            <label class="rc-abs rc-lbl" style="left:6px;top:36px;">W.Order No</label>
+            <input type="text" id="txtWorkOrderNo" class="rc-abs rc-in" style="left:84px;top:32px;width:234px;">
+            <label class="rc-abs rc-lbl" style="left:6px;top:61px;">Lead Time</label>
+            <input type="text" id="txtLeadTimeHeader" class="rc-abs rc-in num" style="left:84px;top:57px;width:234px;" inputmode="decimal" title="Not saved by the desktop either">
+
+            <label class="rc-abs rc-lbl" style="left:340px;top:11px;">Start Date</label>
+            <input type="date" id="txtStartdate" class="rc-abs rc-in" style="left:410px;top:7px;width:125px;">
+            <label class="rc-abs rc-lbl" style="left:340px;top:36px;">End Date</label>
+            <input type="date" id="txtEndDate" class="rc-abs rc-in" style="left:410px;top:32px;width:125px;">
+            <label class="rc-abs rc-lbl" style="left:340px;top:61px;">Dead Line</label>
+            <input type="date" id="txtDeadLineDateMain" class="rc-abs rc-in" style="left:410px;top:57px;width:125px;">
+
+            <label class="rc-abs rc-lbl" style="left:560px;top:11px;">Batch Desc</label>
+            <input type="text" id="txtBatchDesc" class="rc-abs rc-in" style="left:640px;top:7px;width:379px;" maxlength="50">
+            <label class="rc-abs rc-lbl" style="left:560px;top:36px;width:76px;white-space:normal;">Remarks / Instructions</label>
+            <textarea id="txtRemarksHeader" class="rc-abs rc-in" style="left:640px;top:32px;width:379px;height:47px;"></textarea>
+        </div>
+
+        <div style="position:relative;height:106px;background:#f0f0f0;border-top:1px solid #a0a0a0;">
+            <label class="rc-abs rc-lbl" style="left:6px;top:9px;">Item Category</label>
+            <select id="cmbCategory" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="ItemCategory" style="left:6px;top:26px;width:190px;" onchange="Sf.categoryLeave()"></select>
+            <label class="rc-abs rc-lbl" style="left:206px;top:9px;">Modal Sample</label>
+            <select id="cmbSampleModal" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="SampleNo" style="left:206px;top:26px;width:180px;" onchange="Sf.modalLeave()"></select>
+            <label class="rc-abs rc-lbl" style="left:396px;top:9px;">Item</label>
+            <label class="rc-abs" style="left:432px;top:7px;font-size:12px;"><input type="radio" name="itemBy" id="rdbtnItemName" value="name" checked onchange="Sf.itemBy()"> Name</label>
+            <label class="rc-abs" style="left:496px;top:7px;font-size:12px;"><input type="radio" name="itemBy" id="rdbtnItemCode" value="code" onchange="Sf.itemBy()"> Code</label>
+            <select id="cmbItem" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Name" style="left:396px;top:26px;width:260px;" onchange="Sf.itemLeave()"></select>
+            <label class="rc-abs rc-lbl" style="left:666px;top:9px;">UOM</label>
+            <select id="cmbUomDetail" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="UOM" style="left:666px;top:26px;width:110px;"></select>
+            <label class="rc-abs rc-lbl" style="left:786px;top:9px;">Modal Description</label>
+            <select id="cmbVariantDescription" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="VariantDescription" style="left:786px;top:26px;width:233px;"></select>
+
+            <label class="rc-abs rc-lbl" style="left:6px;top:58px;">Casting Type</label>
+            <select id="cmbCastingTypeDetail" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Casting Type" style="left:6px;top:74px;width:210px;" onchange="Sf.castingLeave()"></select>
+            <label class="rc-abs rc-lbl" style="left:226px;top:58px;">Qty</label>
+            <input type="text" id="txtQtyDetaill" class="rc-abs rc-in num" style="left:226px;top:75px;width:125px;" inputmode="decimal" oninput="Sf.qtyChanged()">
+            <label class="rc-abs rc-lbl" style="left:360px;top:58px;">Weight Per Qty</label>
+            <input type="text" id="txtItemWeight" class="rc-abs rc-in num" style="left:360px;top:75px;width:104px;" disabled>
+            <label class="rc-abs rc-lbl" style="left:474px;top:58px;">Casting Weight</label>
+            <input type="text" id="txtCastingWeight" class="rc-abs rc-in num" style="left:474px;top:75px;width:104px;" disabled>
+            <button type="button" class="rc-abs rc-btn" id="BtnAddOp" style="left:588px;top:75px;width:39px;height:23px;" onclick="Sf.addOp()">+</button>
+            <button type="button" class="rc-abs rc-btn is-hidden" id="BtnUpdateOp" style="left:588px;top:75px;width:64px;height:23px;" onclick="Sf.updateOp()">Update</button>
+            <button type="button" class="rc-abs rc-btn is-hidden" id="BtnCancelOp" style="left:656px;top:75px;width:64px;height:23px;" onclick="Sf.cancelOp()">Cancel</button>
+        </div>
+        <div class="w3-host" style="height:300px;"><table class="rc-grid" id="grdDetail"></table></div>
+    </div>
+
+    <div id="panelHist" class="rc-panel">
+        <div style="position:relative;height:56px;background:#fff;">
+            <div class="rc-gb" style="left:4px;top:2px;width:830px;height:50px;">
+                <span class="rc-cap">Filters</span>
+                <label class="rc-abs rc-lbl" style="left:6px;top:24px;">Date From</label>
+                <input type="checkbox" id="chkFrom" class="rc-abs" style="left:72px;top:23px;" title="Use this date">
+                <input type="date" id="txtFromdateHistory" class="rc-abs rc-in" style="left:92px;top:20px;width:125px;">
+                <label class="rc-abs rc-lbl" style="left:232px;top:24px;">Date To</label>
+                <input type="checkbox" id="chkTo" class="rc-abs" style="left:288px;top:23px;" title="Use this date">
+                <input type="date" id="txtToDateHistory" class="rc-abs rc-in" style="left:308px;top:20px;width:125px;">
+                <label class="rc-abs rc-lbl" style="left:450px;top:24px;">Doc From</label>
+                <input type="text" id="txtFromNoHistory" class="rc-abs rc-in num" style="left:512px;top:20px;width:78px;" inputmode="numeric">
+                <label class="rc-abs rc-lbl" style="left:600px;top:24px;">Doc To</label>
+                <input type="text" id="txtToDocNoHistory" class="rc-abs rc-in num" style="left:650px;top:20px;width:78px;" inputmode="numeric">
+                <button type="button" class="rc-abs rc-btn" style="left:745px;top:19px;width:55px;height:25px;" onclick="Sf.history()" title="Ctrl+S">Show</button>
+            </div>
+        </div>
+        <div class="rc-bar" style="height:23px;"><span>Filtered Records</span></div>
+        <div class="w3-host" style="height:260px;"><table class="rc-grid" id="DatagridHistory"></table></div>
+        <div class="rc-bar" style="height:24px;"><span>Detail Detail of the Above Selected Row</span></div>
+        <div class="w3-host" style="height:200px;"><table class="rc-grid" id="grdhistoryDetail"></table></div>
+    </div>
+</div>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_w3b_common.js?v=20261014a}"></script>
+<script th:src="@{/build/js/countx_w5a_work_order_semi_finish.js?v=20261014a}"></script>
+</body>
+</html>

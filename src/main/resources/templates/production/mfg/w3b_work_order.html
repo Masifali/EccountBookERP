@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Work Order - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_w3b_mfg.css?v=20261014a}"/>
+</head>
+<body>
+<div class="rc-page" style="min-width:1100px;">
+    <!-- Screen 593 - frmWorkOrder (DocumentTypeId 1614). Layout is a web arrangement of the desktop's Main Information / Operations / Items / Customers
+         panels and the History tab; field order and captions follow InitializeComponent. -->
+    <div class="rc-teal" style="height:55px;">
+        <div class="rc-strip">
+            <button type="button" class="rc-tool" id="btnNew" onclick="Wo.newClick()" title="Ctrl+N"><i class="fa fa-file-o"></i> New</button>
+            <button type="button" class="rc-tool" id="btnRefresh" onclick="Wo.refresh()" title="Ctrl+R"><i class="fa fa-refresh"></i> Refresh</button>
+            <button type="button" class="rc-tool" id="btnSave" onclick="Wo.save()" title="Ctrl+S"><i class="fa fa-save"></i> Save</button>
+            <button type="button" class="rc-tool" id="btnSaveAs" onclick="Wo.saveAs()"><i class="fa fa-clone"></i> Save As</button>
+            <button type="button" class="rc-tool is-hidden" id="btnUpdate" onclick="Wo.save()" title="Ctrl+U"><i class="fa fa-pencil-square-o"></i> Update</button>
+            <button type="button" class="rc-tool is-hidden" id="btnDelete" onclick="Wo.del()"><i class="fa fa-trash"></i> Delete</button>
+            <button type="button" class="rc-tool is-hidden" id="btnPrint" onclick="Wo.print()"><i class="fa fa-print"></i> 1614 Print</button>
+            <a class="rc-exit" href="/production" title="Esc"><i class="fa fa-sign-out"></i> Exit</a>
+        </div>
+        <span class="rc-teal-title" style="left:7px;top:32px;font-size:16px;line-height:19px;">Work Order</span>
+    </div>
+    <div id="rightsNote" class="rc-note is-hidden"></div>
+    <div style="padding:4px 6px;">
+        <button type="button" class="rc-tab1 is-active" id="tabForm" onclick="Wo.tab('form')">Form</button>
+        <button type="button" class="rc-tab1" id="tabHist" onclick="Wo.tab('hist')">History</button>
+    </div>
+
+    <div id="panelForm" class="rc-panel is-active">
+        <div class="rc-bar" style="height:22px;"><span>Main Information</span></div>
+        <div style="position:relative;height:148px;background:#f0f0f0;">
+            <label class="rc-abs rc-lbl" style="left:8px;top:8px;">Doc No</label>
+            <input type="text" id="txtDocNo" class="rc-abs rc-in num" style="left:90px;top:4px;width:90px;" readonly>
+            <label class="rc-abs rc-lbl" style="left:200px;top:8px;">Doc Date</label>
+            <input type="date" id="dtpDocDate" class="rc-abs rc-in" style="left:265px;top:4px;width:130px;">
+            <label class="rc-abs rc-lbl" style="left:415px;top:8px;">Manual Doc Code</label>
+            <input type="text" id="txtManualDocCode" class="rc-abs rc-in" style="left:530px;top:4px;width:150px;">
+            <label class="rc-abs rc-lbl" style="left:700px;top:8px;">Batch</label>
+            <input type="text" id="txtBatchDesc" class="rc-abs rc-in" style="left:750px;top:4px;width:200px;">
+
+            <label class="rc-abs rc-lbl" style="left:8px;top:40px;">Item</label>
+            <select id="cmbItem" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Item" style="left:90px;top:35px;width:305px;" onchange="Wo.itemLeave()"></select>
+            <label class="rc-abs rc-lbl" style="left:415px;top:40px;">Uom</label>
+            <select id="cmbItemUom" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Uom" style="left:530px;top:35px;width:150px;"></select>
+            <label class="rc-abs rc-lbl" style="left:700px;top:40px;">Item Qty</label>
+            <input type="text" id="txtItemQty" class="rc-abs rc-in num" style="left:750px;top:36px;width:100px;" inputmode="decimal">
+
+            <label class="rc-abs rc-lbl" style="left:8px;top:72px;">BOM</label>
+            <select id="cmbBOMNo" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="BOM" style="left:90px;top:67px;width:305px;" onchange="Wo.bomLeave()"></select>
+            <label class="rc-abs rc-lbl" style="left:415px;top:72px;">Start Date</label>
+            <input type="date" id="dtpStartDate" class="rc-abs rc-in" style="left:530px;top:68px;width:130px;">
+            <label class="rc-abs rc-lbl" style="left:680px;top:72px;">End Date</label>
+            <input type="date" id="dtpEndDate" class="rc-abs rc-in" style="left:750px;top:68px;width:130px;">
+            <label class="rc-abs rc-lbl" style="left:900px;top:72px;">Deadline</label>
+            <input type="date" id="dtpDeadLine" class="rc-abs rc-in" style="left:965px;top:68px;width:130px;">
+
+            <label class="rc-abs rc-lbl" style="left:8px;top:104px;">Remarks</label>
+            <input type="text" id="txtRemarksHeader" class="rc-abs rc-in" style="left:90px;top:100px;width:590px;">
+        </div>
+
+        <div class="rc-bar" style="height:22px;"><span>Operations</span></div>
+        <div style="position:relative;height:36px;background:#f0f0f0;">
+            <label class="rc-abs rc-lbl" style="left:8px;top:11px;">Work Station / Operation</label>
+            <select id="cmbWso" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Work Station/Operation" style="left:170px;top:5px;width:320px;"></select>
+            <button type="button" class="rc-abs rc-btn" style="left:500px;top:7px;width:38px;height:22px;" onclick="Wo.addOp()">+</button>
+        </div>
+        <div class="w3-host" style="height:150px;"><table class="rc-grid" id="grdOperations"></table></div>
+
+        <div style="display:flex;gap:0;">
+            <div style="flex:1 1 55%;min-width:0;">
+                <div class="rc-bar" style="height:22px;"><span>Items</span></div>
+                <div style="position:relative;height:36px;background:#f0f0f0;">
+                    <select id="cmbMatItem" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Item" style="left:6px;top:5px;width:250px;" onchange="Wo.matItemLeave()"></select>
+                    <select id="cmbMatUom" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Uom" style="left:262px;top:5px;width:110px;"></select>
+                    <input type="text" id="txtMatQty" class="rc-abs rc-in num" style="left:378px;top:6px;width:80px;" inputmode="decimal" placeholder="Qty">
+                    <button type="button" class="rc-abs rc-btn" style="left:466px;top:7px;width:38px;height:22px;" onclick="Wo.addMat()">+</button>
+                </div>
+                <div class="w3-host" style="height:170px;"><table class="rc-grid" id="grdItems"></table></div>
+            </div>
+            <div style="flex:1 1 45%;min-width:0;border-left:1px solid #a0a0a0;">
+                <div class="rc-bar" style="height:22px;"><span>Customers</span></div>
+                <div style="position:relative;height:36px;background:#f0f0f0;">
+                    <select id="cmbCustomer" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Customer" style="left:6px;top:5px;width:230px;" onchange="Wo.custLeave()"></select>
+                    <select id="cmbSaleOrder" class="rc-abs rc-cmb" style="left:242px;top:5px;width:110px;" onchange="Wo.orderLeave()"></select>
+                    <input type="text" id="txtCustQty" class="rc-abs rc-in num" style="left:358px;top:6px;width:80px;" inputmode="decimal" placeholder="Qty">
+                    <button type="button" class="rc-abs rc-btn" style="left:446px;top:7px;width:38px;height:22px;" onclick="Wo.addCust()">+</button>
+                </div>
+                <div class="w3-host" style="height:170px;"><table class="rc-grid" id="grdCustomers"></table></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="panelHist" class="rc-panel">
+        <div style="position:relative;height:70px;background:#fff;">
+            <div class="rc-gb" style="left:4px;top:2px;width:1060px;height:64px;">
+                <span class="rc-cap">Filters</span>
+                <label class="rc-abs rc-lbl" style="left:6px;top:24px;">Date Type</label>
+                <select id="cmbDateType" class="rc-abs rc-cmb" style="left:70px;top:19px;width:140px;" onchange="Wo.dateType()"></select>
+                <label class="rc-abs rc-lbl" style="left:220px;top:24px;">From</label>
+                <input type="date" id="dtpFrom" class="rc-abs rc-in" style="left:258px;top:20px;width:125px;">
+                <label class="rc-abs rc-lbl" style="left:392px;top:24px;">To</label>
+                <input type="date" id="dtpTo" class="rc-abs rc-in" style="left:416px;top:20px;width:125px;">
+                <label class="rc-abs rc-lbl" style="left:552px;top:24px;">Doc No</label>
+                <input type="text" id="txtFromDocNo" class="rc-abs rc-in num" style="left:600px;top:20px;width:55px;" inputmode="numeric">
+                <input type="text" id="txtToDocNo" class="rc-abs rc-in num" style="left:660px;top:20px;width:55px;" inputmode="numeric">
+                <label class="rc-abs rc-lbl" style="left:725px;top:24px;">Work Order</label>
+                <select id="cmbHistWo" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Work Order" style="left:800px;top:19px;width:120px;"></select>
+                <label class="rc-abs rc-lbl" style="left:925px;top:24px;">Item</label>
+                <select id="cmbHistItem" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Item" style="left:960px;top:19px;width:90px;"></select>
+            </div>
+        </div>
+        <div class="rc-bar" style="height:26px;"><span>Filtered Records</span><span class="rc-bar-tools"><button type="button" class="rc-btn" style="width:62px;height:22px;" onclick="Wo.history()" title="Alt+S">Show</button></span></div>
+        <div class="w3-host" style="height:260px;"><table class="rc-grid" id="DatagridHistory"></table></div>
+        <div class="rc-bar" style="height:22px;"><span>Operations of the selected Work Order</span></div>
+        <div class="w3-host" style="height:200px;"><table class="rc-grid" id="grdHistOps"></table></div>
+    </div>
+</div>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_w3b_common.js?v=20261014a}"></script>
+<script th:src="@{/build/js/countx_w3b_work_order.js?v=20261014a}"></script>
+</body>
+</html>

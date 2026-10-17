@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Work Order In Progress - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_w3b_mfg.css?v=20261014a}"/>
+</head>
+<body>
+<div class="rc-page" style="min-width:1100px;">
+    <!-- Screen 594 - frmWorkOrderInProgress (DocumentTypeId 1620). Web arrangement of the desktop's "Work Order Main Info" grid, the
+         "Detail" group box and the "Work Order In Progress Detail Info" grid (InitializeComponent :2269-:2704). The History tab is removed
+         by the desktop at load (:268), so it is not present here either. -->
+    <div class="rc-teal" style="height:55px;">
+        <div class="rc-strip">
+            <button type="button" class="rc-tool" id="btnNew" onclick="Wip.newClick()" title="Ctrl+N"><i class="fa fa-file-o"></i> New</button>
+            <button type="button" class="rc-tool" id="btnRefresh" onclick="Wip.refresh()"><i class="fa fa-refresh"></i> Refresh</button>
+            <button type="button" class="rc-tool" id="btnUpdate" onclick="Wip.save()" title="Ctrl+S / Ctrl+U"><i class="fa fa-pencil-square-o"></i> Update</button>
+            <button type="button" class="rc-tool" id="btnAttachment" disabled title="Not ported"><i class="fa fa-paperclip"></i> Attachment</button>
+            <button type="button" class="rc-tool" id="btnPrint" onclick="Wip.print()" title="Ctrl+P"><i class="fa fa-print"></i> 1620-Print</button>
+            <button type="button" class="rc-tool" id="btnKeys" onclick="Wip.keys()"><i class="fa fa-keyboard-o"></i> ShortCut Keys</button>
+            <a class="rc-exit" href="/production" title="Esc"><i class="fa fa-sign-out"></i> Exit</a>
+        </div>
+        <span class="rc-teal-title" style="left:7px;top:32px;font-size:16px;line-height:19px;">Work Order In Progress</span>
+    </div>
+    <div id="rightsNote" class="rc-note is-hidden"></div>
+
+    <div class="rc-bar" style="height:22px;"><span>Work Order Main Info</span></div>
+    <div class="w3-host" style="height:210px;"><table class="rc-grid" id="grdWorkOrderMain"></table></div>
+
+    <div class="rc-bar" style="height:22px;"><span>Work Order In Progress Detail Info</span></div>
+    <div class="rc-gb" style="position:relative;height:118px;background:#f0f0f0;display:block;">
+        <span class="rc-cap" style="background:#f0f0f0;">Detail</span>
+        <label class="rc-abs rc-lbl" style="left:8px;top:22px;">Item Name</label>
+        <select id="CmbItemDetail" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Name" style="left:90px;top:17px;width:260px;" onchange="Wip.itemLeave()"></select>
+        <label class="rc-abs rc-lbl" style="left:362px;top:22px;">UOM</label>
+        <select id="cmbItemUOM" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="UOM" style="left:400px;top:17px;width:110px;"></select>
+        <label class="rc-abs rc-lbl" style="left:522px;top:22px;">Qty</label>
+        <input type="text" id="txtQtyDetail" class="rc-abs rc-in num" style="left:552px;top:18px;width:88px;" disabled>
+        <label class="rc-abs rc-lbl" style="left:652px;top:22px;">Work Station</label>
+        <input type="text" id="txtWorkStation" class="rc-abs rc-in" style="left:735px;top:18px;width:167px;" disabled>
+        <label class="rc-abs rc-lbl" style="left:912px;top:22px;">Operation</label>
+        <input type="text" id="txtOperation" class="rc-abs rc-in" style="left:982px;top:18px;width:167px;" disabled>
+
+        <label class="rc-abs rc-lbl" style="left:8px;top:56px;">Start Date</label>
+        <input type="date" id="txtStartDate" class="rc-abs rc-in" style="left:90px;top:52px;width:130px;">
+        <label class="rc-abs rc-lbl" style="left:232px;top:56px;">Start Time</label>
+        <input type="time" id="txtStartTime" step="1" class="rc-abs rc-in" style="left:310px;top:52px;width:110px;">
+        <label class="rc-abs rc-lbl" style="left:432px;top:56px;">Complete Date</label>
+        <input type="date" id="txtCompleteDate" class="rc-abs rc-in" style="left:530px;top:52px;width:130px;">
+        <label class="rc-abs rc-lbl" style="left:672px;top:56px;">Complete Time</label>
+        <input type="time" id="txtCompleteTime" step="1" class="rc-abs rc-in" style="left:770px;top:52px;width:110px;">
+
+        <label class="rc-abs rc-lbl" style="left:8px;top:90px;">Remarks</label>
+        <input type="text" id="txtRemarksDetail" class="rc-abs rc-in" style="left:90px;top:86px;width:560px;">
+        <button type="button" class="rc-abs rc-btn is-hidden" id="BtnUpdateDetail" style="left:662px;top:86px;width:70px;height:25px;" onclick="Wip.updateDetail()">Update</button>
+        <button type="button" class="rc-abs rc-btn is-hidden" id="BtnCancelDetail" style="left:740px;top:86px;width:70px;height:25px;" onclick="Wip.cancelDetail()">Cancel</button>
+    </div>
+    <div class="w3-host" style="height:230px;"><table class="rc-grid" id="grd"></table></div>
+</div>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_w3b_common.js?v=20261014a}"></script>
+<script th:src="@{/build/js/countx_w5a_work_order_in_progress.js?v=20261014a}"></script>
+</body>
+</html>

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Production (Casting) - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_w3b_mfg.css?v=20261014a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_engr_production.css?v=20261014a}"/>
+</head>
+<body>
+<div class="rc-page" style="min-width:1180px;">
+    <!-- Screen 795 - Architecture.WinApp.Mfg.frmProductionEngr (DocumentTypeId 1670, rights key "frmProductionEngr"). Captions are the designer's. -->
+    <div class="rc-teal" style="height:55px;">
+        <div class="rc-strip">
+            <button type="button" class="rc-tool" id="btnNew" onclick="Ep.newClick()" title="Ctrl+N"><i class="fa fa-file-o"></i> New</button>
+            <button type="button" class="rc-tool" id="btnRefresh" onclick="Ep.refresh()" title="Ctrl+R"><i class="fa fa-refresh"></i> Refresh</button>
+            <button type="button" class="rc-tool" id="btnSave" onclick="Ep.save()" title="Ctrl+S"><i class="fa fa-save"></i> Save</button>
+            <button type="button" class="rc-tool is-hidden" id="btnUpdate" onclick="Ep.save()" title="Ctrl+U"><i class="fa fa-pencil-square-o"></i> Update</button>
+            <button type="button" class="rc-tool is-hidden" id="btnDelete" onclick="Ep.del()"><i class="fa fa-trash"></i> Delete</button>
+            <button type="button" class="rc-tool" id="btnGenerate" onclick="Ep.generate()"><i class="fa fa-cogs"></i> Generate</button>
+            <button type="button" class="rc-tool" id="btnPrint" onclick="Ep.print()" title="Ctrl+P"><i class="fa fa-print"></i> 1670-Print</button>
+            <button type="button" class="rc-tool" id="btnVoucher" onclick="Ep.voucher()"><i class="fa fa-file-text-o"></i> Voucher</button>
+            <a class="rc-exit" href="/production" title="Esc"><i class="fa fa-sign-out"></i> Exit</a>
+        </div>
+        <span class="rc-teal-title" style="left:7px;top:32px;font-size:16px;line-height:19px;">Production (Casting)</span>
+        <label class="rc-abs" style="right:12px;top:32px;color:#fff;"><input type="checkbox" id="ChkBox" checked> Print</label>
+    </div>
+    <div id="rightsNote" class="rc-note is-hidden"></div>
+    <div style="padding:4px 6px;">
+        <button type="button" class="rc-tab1 is-active" id="tabForm" onclick="Ep.tab('form')">Form</button>
+        <button type="button" class="rc-tab1" id="tabHist" onclick="Ep.tab('hist')">History</button>
+    </div>
+
+    <div id="panelForm" class="rc-panel is-active">
+        <div class="rc-bar" style="height:22px;"><span>Main</span></div>
+        <div style="position:relative;height:150px;background:#f0f0f0;">
+            <label class="rc-abs rc-lbl" style="left:6px;top:12px;">Doc No,Date</label>
+            <input type="text" id="txtdocno" class="rc-abs rc-in num" style="left:90px;top:8px;width:76px;" readonly>
+            <input type="date" id="DocDate" class="rc-abs rc-in" style="left:170px;top:8px;width:112px;">
+            <label class="rc-abs rc-lbl" style="left:6px;top:42px;">Production No</label>
+            <input type="text" id="txtProductionNo" class="rc-abs rc-in" style="left:90px;top:38px;width:192px;">
+            <label class="rc-abs rc-lbl" style="left:300px;top:12px;">Batch Code</label>
+            <select id="CmbJobLot" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Batch Code" style="left:380px;top:8px;width:200px;"></select>
+            <label class="rc-abs rc-lbl" style="left:300px;top:42px;">Heat Code</label>
+            <select id="CmbHeatCode" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Heat Code" style="left:380px;top:38px;width:200px;"></select>
+            <label class="rc-abs rc-lbl" style="left:600px;top:12px;">In Time</label>
+            <input type="datetime-local" id="InTime" class="rc-abs rc-in" style="left:664px;top:8px;width:170px;" onchange="Ep.timeChanged()">
+            <label class="rc-abs rc-lbl" style="left:600px;top:42px;">Out Time</label>
+            <input type="datetime-local" id="OutTime" class="rc-abs rc-in" style="left:664px;top:38px;width:170px;" onchange="Ep.timeChanged()">
+            <label class="rc-abs rc-lbl" style="left:850px;top:12px;">Total Time</label>
+            <input type="text" id="txtTotalTime" class="rc-abs rc-in" style="left:920px;top:8px;width:170px;" readonly>
+            <label class="rc-abs rc-lbl" style="left:6px;top:72px;">Casting Type</label>
+            <select id="CmbCastingType" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Casting Type" style="left:90px;top:68px;width:192px;" onchange="Ep.castingLeave()"></select>
+            <label class="rc-abs rc-lbl" style="left:300px;top:72px;">Bill Of Material</label>
+            <select id="CmbBillOfMaterial" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Bill Of Material" style="left:380px;top:68px;width:200px;"></select>
+            <button type="button" class="rc-abs rc-btn" id="btnLoadInputFromBom" style="left:596px;top:67px;width:140px;height:24px;" onclick="Ep.loadFromBom()">Load Input From BOM</button>
+            <button type="button" class="rc-abs rc-btn" id="btnLoadOutPut" style="left:744px;top:67px;width:110px;height:24px;" onclick="Ep.loadOutput()">Load Output</button>
+            <label class="rc-abs rc-lbl" style="left:870px;top:72px;"><input type="checkbox" id="ChkSettlement"> Settlement</label>
+            <label class="rc-abs rc-lbl" style="left:6px;top:104px;">Remarks</label>
+            <input type="text" id="txtremarks" class="rc-abs rc-in" style="left:90px;top:100px;width:990px;">
+        </div>
+
+        <div class="rc-bar" style="height:22px;"><span>Input</span></div>
+        <div class="w3-host" style="height:170px;"><table class="rc-grid ep-grid" id="grdInput"></table></div>
+        <div class="rc-bar" style="height:22px;"><span>Over Head</span></div>
+        <div class="w3-host" style="height:130px;"><table class="rc-grid ep-grid" id="grdOverHead"></table></div>
+        <div class="rc-bar" style="height:22px;"><span>Scrap</span></div>
+        <div class="w3-host" style="height:130px;"><table class="rc-grid ep-grid" id="grdScrap"></table></div>
+        <div class="rc-bar" style="height:22px;"><span>Output</span></div>
+        <div class="w3-host" style="height:190px;"><table class="rc-grid ep-grid" id="grdOutPut"></table></div>
+        <div class="rc-bar" style="height:22px;"><span>Summary</span>
+            <span class="rc-bar-tools"><b id="labelGainLossCaption">Gain/Loss</b> <b id="labelGainLossPercent">%</b></span></div>
+        <div class="w3-host" style="height:130px;"><table class="rc-grid" id="grdSummary"></table></div>
+        <div style="padding:3px 8px;font-size:11px;color:#555;">F1 on an Item, Work Order or Account cell opens the picker; Ctrl+Delete removes the row; Ctrl+D adds a row (Input / Scrap / Over Head).</div>
+    </div>
+
+    <div id="panelHist" class="rc-panel">
+        <div style="position:relative;height:70px;background:#fff;">
+            <div class="rc-gb" style="left:4px;top:2px;width:960px;height:64px;">
+                <span class="rc-cap">Main</span>
+                <label class="rc-abs rc-lbl" style="left:6px;top:24px;">Date Type</label>
+                <select id="cmbperemeter" class="rc-abs rc-cmb" style="left:70px;top:19px;width:140px;" onchange="Ep.dateType()"></select>
+                <label class="rc-abs rc-lbl" style="left:220px;top:24px;"><input type="checkbox" id="chkFrom" checked> From Date</label>
+                <input type="date" id="fromdate" class="rc-abs rc-in" style="left:312px;top:20px;width:125px;">
+                <label class="rc-abs rc-lbl" style="left:446px;top:24px;"><input type="checkbox" id="chkTo" checked> To Date</label>
+                <input type="date" id="ToDate" class="rc-abs rc-in" style="left:524px;top:20px;width:125px;">
+                <label class="rc-abs rc-lbl" style="left:660px;top:24px;">From Doc</label>
+                <input type="text" id="txtDocNoFrom" class="rc-abs rc-in num" style="left:722px;top:20px;width:55px;" inputmode="numeric">
+                <label class="rc-abs rc-lbl" style="left:786px;top:24px;">To Doc</label>
+                <input type="text" id="txtDocNoTo" class="rc-abs rc-in num" style="left:836px;top:20px;width:55px;" inputmode="numeric">
+            </div>
+        </div>
+        <div class="rc-bar" style="height:26px;"><span>Filtered Records</span>
+            <span class="rc-bar-tools"><button type="button" class="rc-btn" style="width:62px;height:22px;" onclick="Ep.history()">Show</button>
+            <button type="button" class="rc-btn" style="width:62px;height:22px;" onclick="Ep.newHistory()">New</button></span></div>
+        <div class="w3-host" style="height:240px;"><table class="rc-grid" id="grdhistory"></table></div>
+        <div class="rc-bar" style="height:22px;"><span>Input</span></div>
+        <div class="w3-host" style="height:110px;"><table class="rc-grid" id="hInput"></table></div>
+        <div class="rc-bar" style="height:22px;"><span>Output</span></div>
+        <div class="w3-host" style="height:110px;"><table class="rc-grid" id="hOutput"></table></div>
+        <div class="rc-bar" style="height:22px;"><span>Scrap</span></div>
+        <div class="w3-host" style="height:90px;"><table class="rc-grid" id="hScrap"></table></div>
+        <div class="rc-bar" style="height:22px;"><span>Over Head</span></div>
+        <div class="w3-host" style="height:90px;"><table class="rc-grid" id="hOverHead"></table></div>
+    </div>
+</div>
+
+<!-- GrdPopUp replacement (F1 on a grid cell; multi-select where the desktop uses MultiSelect) -->
+<div class="cx-modal" id="pickModal">
+    <div class="cx-modal-box" style="width:min(620px,94vw);">
+        <div class="cx-modal-head"><span id="pickTitle">Select</span><button type="button" onclick="Ep.pickClose()">&times;</button></div>
+        <div class="cx-modal-body">
+            <input type="text" id="pickSearch" class="rc-in" style="width:100%;margin-bottom:4px;" placeholder="Search...">
+            <div class="w3-host" style="height:300px;"><table class="rc-grid" id="pickGrid"></table></div>
+            <div style="text-align:right;padding-top:4px;"><button type="button" class="rc-btn" id="pickOk" style="width:70px;height:24px;" onclick="Ep.pickOk()">OK</button></div>
+        </div>
+    </div>
+</div>
+
+<!-- BtnLoadOutPut_Click selection grid (work orders for the production output) -->
+<div class="cx-modal" id="woModal">
+    <div class="cx-modal-box" style="width:min(1100px,96vw);top:5%;">
+        <div class="cx-modal-head"><span>Work Order</span><button type="button" onclick="Ep.woClose()">&times;</button></div>
+        <div class="cx-modal-body">
+            <div style="padding-bottom:4px;"><button type="button" class="rc-btn" style="width:70px;height:24px;" onclick="Ep.woPick()">Load</button>
+                <button type="button" class="rc-btn" style="width:70px;height:24px;" onclick="Ep.woClose()">Close</button></div>
+            <div class="w3-host" style="height:380px;"><table class="rc-grid" id="woGrid"></table></div>
+        </div>
+    </div>
+</div>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_w3b_common.js?v=20261014a}"></script>
+<script th:src="@{/build/js/countx_engr_production.js?v=20261014a}"></script>
+</body>
+</html>

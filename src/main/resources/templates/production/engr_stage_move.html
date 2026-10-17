@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Production Move - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_w3b_mfg.css?v=20261014a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_engr_stage_move.css?v=20261014a}"/>
+</head>
+<body>
+<div class="rc-page" style="min-width:1120px;">
+    <!-- Screens 807 / 846 - Architecture.WinApp.Mfg.frmStockTransferManual_Engr (DocumentTypeId 1663, rights key "frmStockTransferManual_Engr").
+         Control positions follow InitializeComponent (Main group box, Detail entry panel, grid); captions are the designer's. -->
+    <div class="rc-teal" style="height:55px;">
+        <div class="rc-strip">
+            <button type="button" class="rc-tool" id="btnNew" onclick="Sm.newClick()" title="Ctrl+N"><i class="fa fa-file-o"></i> New</button>
+            <button type="button" class="rc-tool" id="btnRefresh" onclick="Sm.refresh()" title="Ctrl+R"><i class="fa fa-refresh"></i> Refresh</button>
+            <button type="button" class="rc-tool" id="btnSave" onclick="Sm.save()" title="Ctrl+S"><i class="fa fa-save"></i> Save</button>
+            <button type="button" class="rc-tool is-hidden" id="btnUpdate" onclick="Sm.save()" title="Ctrl+U"><i class="fa fa-pencil-square-o"></i> Update</button>
+            <button type="button" class="rc-tool is-hidden" id="btnDelete" onclick="Sm.del()"><i class="fa fa-trash"></i> Delete</button>
+            <button type="button" class="rc-tool" id="btnPrint" onclick="Sm.print()" title="Ctrl+P"><i class="fa fa-print"></i> 1663-Print</button>
+            <button type="button" class="rc-tool" id="btnLoadStock" onclick="Sm.loadStock()"><i class="fa fa-download"></i> Load Stock</button>
+            <a class="rc-exit" href="/production" title="Esc"><i class="fa fa-sign-out"></i> Exit</a>
+        </div>
+        <span class="rc-teal-title" style="left:7px;top:32px;font-size:16px;line-height:19px;">Production Move (Stage Shift)</span>
+        <label class="rc-abs" style="right:12px;top:32px;color:#fff;"><input type="checkbox" id="ChkBoxPrintPreview" checked> Preview</label>
+    </div>
+    <div id="rightsNote" class="rc-note is-hidden"></div>
+    <div style="padding:4px 6px;">
+        <button type="button" class="rc-tab1 is-active" id="tabForm" onclick="Sm.tab('form')">Form</button>
+        <button type="button" class="rc-tab1" id="tabHist" onclick="Sm.tab('hist')">History</button>
+    </div>
+
+    <div id="panelForm" class="rc-panel is-active">
+        <div class="rc-bar" style="height:22px;"><span>Main</span></div>
+        <div style="position:relative;height:98px;background:#f0f0f0;">
+            <label class="rc-abs rc-lbl" style="left:6px;top:18px;">Doc No,Date</label>
+            <input type="text" id="txtdocno" class="rc-abs rc-in num" style="left:84px;top:14px;width:76px;" readonly>
+            <input type="date" id="DocDate" class="rc-abs rc-in" style="left:164px;top:14px;width:112px;" onchange="Sm.docDateChanged()">
+            <label class="rc-abs rc-lbl" style="left:6px;top:46px;">Transfer Type</label>
+            <select id="CmbTransferType" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Transfer Type" style="left:84px;top:40px;width:192px;" onchange="Sm.transferTypeLeave()"></select>
+            <label class="rc-abs rc-lbl" style="left:283px;top:18px;">Warehouse From</label>
+            <select id="CmbWarehouseFrom" class="rc-abs rc-cmb" style="left:380px;top:12px;width:210px;" disabled></select>
+            <label class="rc-abs rc-lbl" style="left:283px;top:46px;">Warehouse To</label>
+            <select id="CmbWarehouseTo" class="rc-abs rc-cmb" style="left:380px;top:40px;width:210px;" disabled></select>
+            <label class="rc-abs rc-lbl" style="left:606px;top:18px;">Production Stage From</label>
+            <select id="CmbProductionStageFrom" class="rc-abs rc-cmb" style="left:738px;top:12px;width:210px;" disabled></select>
+            <label class="rc-abs rc-lbl" style="left:606px;top:46px;">Production Stage To</label>
+            <select id="CmbProductionStageTo" class="rc-abs rc-cmb" style="left:738px;top:40px;width:210px;" disabled></select>
+            <label class="rc-abs rc-lbl" style="left:6px;top:73px;">Remarks</label>
+            <input type="text" id="txtRemarksHead" class="rc-abs rc-in" style="left:84px;top:69px;width:864px;">
+        </div>
+
+        <div class="rc-bar" style="height:22px;"><span>Detail</span></div>
+        <div id="DetailManualEntryPanel" class="is-hidden" style="position:relative;height:150px;background:#f0f0f0;">
+            <label class="rc-abs rc-lbl" style="left:2px;top:6px;">Item Category</label>
+            <select id="CmbCategory" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Category" style="left:2px;top:24px;width:138px;" onchange="Sm.categoryLeave()"></select>
+            <label class="rc-abs rc-lbl" style="left:146px;top:6px;">Modal Sample</label>
+            <select id="CmbSampleModal" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="SampleNo" style="left:143px;top:24px;width:110px;" onchange="Sm.sampleModalLeave()"></select>
+            <label class="rc-abs rc-lbl" style="left:259px;top:6px;">Item</label>
+            <label class="rc-abs rc-lbl" style="left:292px;top:4px;"><input type="radio" name="rdItem" id="rdbtnItemName" checked onchange="Sm.itemMode()"> Name</label>
+            <label class="rc-abs rc-lbl" style="left:351px;top:4px;"><input type="radio" name="rdItem" id="rdbtnItemCode" onchange="Sm.itemMode()"> Code</label>
+            <select id="CmbItem" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Name" style="left:259px;top:24px;width:219px;" onchange="Sm.itemLeave()"></select>
+            <label class="rc-abs rc-lbl" style="left:484px;top:6px;">UOM</label>
+            <select id="CmbPackUom" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="UOM" style="left:484px;top:24px;width:72px;" onchange="Sm.availableLeave()"></select>
+            <label class="rc-abs rc-lbl" style="left:565px;top:6px;">Modal Description</label>
+            <select id="CmbVariantDescription" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Modal Description" style="left:562px;top:24px;width:152px;" onchange="Sm.availableLeave()"></select>
+            <label class="rc-abs rc-lbl" style="left:720px;top:6px;">Batch No</label>
+            <select id="txtBatchNo" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Batch" style="left:720px;top:24px;width:132px;" onchange="Sm.availableLeave()"></select>
+            <label class="rc-abs rc-lbl" style="left:858px;top:6px;">Casting Type</label>
+            <select id="CmbCastingType" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Casting Type" style="left:858px;top:24px;width:150px;" onchange="Sm.availableLeave()"></select>
+
+            <label class="rc-abs rc-lbl" style="left:1px;top:54px;">Warehouse From</label>
+            <select id="CmbWareHouseFromDetail" class="rc-abs rc-cmb" style="left:2px;top:73px;width:150px;" disabled></select>
+            <label class="rc-abs rc-lbl" style="left:158px;top:54px;">Warehouse To</label>
+            <select id="CmbWarehouseToDetail" class="rc-abs rc-cmb" style="left:158px;top:73px;width:150px;" disabled></select>
+            <label class="rc-abs rc-lbl" style="left:314px;top:54px;">Production Stage From</label>
+            <select id="CmbProductionStageFromDetail" class="rc-abs rc-cmb" style="left:314px;top:73px;width:156px;" disabled></select>
+            <label class="rc-abs rc-lbl" style="left:476px;top:54px;">Production Stage To</label>
+            <select id="CmbProductionStageToDetail" class="rc-abs rc-cmb" style="left:476px;top:73px;width:156px;" disabled></select>
+            <label class="rc-abs rc-lbl" style="left:638px;top:54px;">Work Station From</label>
+            <select id="CmbWorkStationFromDetail" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Work Station" style="left:638px;top:73px;width:156px;" onchange="Sm.availableLeave()"></select>
+            <label class="rc-abs rc-lbl" style="left:800px;top:54px;">Work Station To</label>
+            <select id="CmbWorkStationToDetail" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Work Station" style="left:800px;top:73px;width:156px;"></select>
+            <label class="rc-abs rc-lbl" style="left:963px;top:56px;">Available Qty</label>
+            <input type="text" id="txtAvailableQty" class="rc-abs rc-in num" style="left:963px;top:74px;width:96px;" readonly>
+
+            <label class="rc-abs rc-lbl" style="left:3px;top:102px;">Transfer Qty</label>
+            <input type="text" id="txtTransferQty" class="rc-abs rc-in num" style="left:3px;top:120px;width:90px;" inputmode="decimal" oninput="Sm.calcAmount()">
+            <label class="rc-abs rc-lbl" style="left:100px;top:102px;">Avg Rate</label>
+            <input type="text" id="txtAvgRate" class="rc-abs rc-in num" style="left:100px;top:120px;width:84px;" inputmode="decimal" oninput="Sm.calcAmount()">
+            <label class="rc-abs rc-lbl" style="left:188px;top:100px;">Rate Uom</label>
+            <select id="CmbRateUom" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Rate Uom" style="left:188px;top:118px;width:94px;" onchange="Sm.calcAmount()"></select>
+            <label class="rc-abs rc-lbl" style="left:287px;top:102px;">Amount</label>
+            <input type="text" id="txtAmount" class="rc-abs rc-in num" style="left:287px;top:120px;width:112px;" readonly>
+            <label class="rc-abs rc-lbl" style="left:404px;top:102px;">Work Order No</label>
+            <select id="CmbWorkOrderNo" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Work Order" style="left:404px;top:118px;width:140px;"></select>
+            <label class="rc-abs rc-lbl" style="left:550px;top:101px;">Remarks</label>
+            <input type="text" id="txtRemarksDetail" class="rc-abs rc-in" style="left:550px;top:120px;width:268px;">
+            <button type="button" class="rc-abs rc-btn" id="btnplus" style="left:825px;top:118px;width:38px;height:24px;" onclick="Sm.addDetail()">+</button>
+            <button type="button" class="rc-abs rc-btn is-hidden" id="btnUpdateDetail" style="left:822px;top:118px;width:70px;height:24px;" onclick="Sm.updateDetail()">Update</button>
+            <button type="button" class="rc-abs rc-btn is-hidden" id="btnCancelUpdateDetial" style="left:896px;top:118px;width:70px;height:24px;" onclick="Sm.cancelDetail()">Cancel</button>
+        </div>
+        <div class="w3-host" style="height:300px;"><table class="rc-grid" id="grd"></table></div>
+        <div style="padding:3px 8px;font-size:11px;color:#555;">Double-click a row to edit it in the entry panel (transfer types 6 and 8 only). F1 on Variant, Work Station or Work Order cells opens the picker; Ctrl+Delete removes the row.</div>
+    </div>
+
+    <div id="panelHist" class="rc-panel">
+        <div style="position:relative;height:70px;background:#fff;">
+            <div class="rc-gb" style="left:4px;top:2px;width:960px;height:64px;">
+                <span class="rc-cap">Main</span>
+                <label class="rc-abs rc-lbl" style="left:6px;top:24px;">Date Type</label>
+                <select id="cmbperemeter" class="rc-abs rc-cmb" style="left:70px;top:19px;width:140px;" onchange="Sm.dateType()"></select>
+                <label class="rc-abs rc-lbl" style="left:220px;top:24px;"><input type="checkbox" id="chkFrom" checked> From Date</label>
+                <input type="date" id="fromdate" class="rc-abs rc-in" style="left:312px;top:20px;width:125px;">
+                <label class="rc-abs rc-lbl" style="left:446px;top:24px;"><input type="checkbox" id="chkTo" checked> To Date</label>
+                <input type="date" id="ToDate" class="rc-abs rc-in" style="left:524px;top:20px;width:125px;">
+                <label class="rc-abs rc-lbl" style="left:660px;top:24px;">From Doc</label>
+                <input type="text" id="txtDocNoFrom" class="rc-abs rc-in num" style="left:722px;top:20px;width:55px;" inputmode="numeric">
+                <label class="rc-abs rc-lbl" style="left:786px;top:24px;">To Doc</label>
+                <input type="text" id="txtDocNoTo" class="rc-abs rc-in num" style="left:836px;top:20px;width:55px;" inputmode="numeric">
+            </div>
+        </div>
+        <div class="rc-bar" style="height:26px;"><span>Filtered Records</span>
+            <span class="rc-bar-tools"><button type="button" class="rc-btn" style="width:62px;height:22px;" onclick="Sm.history()" title="Ctrl+S">Show</button>
+            <button type="button" class="rc-btn" style="width:62px;height:22px;" onclick="Sm.newHistory()">New</button></span></div>
+        <div class="w3-host" style="height:260px;"><table class="rc-grid" id="grdhistory"></table></div>
+        <div class="rc-bar" style="height:22px;"><span>Detail Information Of Above Selected Row</span></div>
+        <div class="w3-host" style="height:200px;"><table class="rc-grid" id="GridDetailHistory"></table></div>
+    </div>
+</div>
+
+<!-- GrdPopUp replacement (F1 on a grid cell) -->
+<div class="cx-modal" id="pickModal">
+    <div class="cx-modal-box" style="width:min(560px,94vw);">
+        <div class="cx-modal-head"><span id="pickTitle">Select</span><button type="button" onclick="Sm.pickClose()">&times;</button></div>
+        <div class="cx-modal-body">
+            <input type="text" id="pickSearch" class="rc-in" style="width:100%;margin-bottom:4px;" placeholder="Search...">
+            <div class="w3-host" style="height:300px;"><table class="rc-grid" id="pickGrid"></table></div>
+        </div>
+    </div>
+</div>
+
+<!-- frmLoadAvailableStockEngr -->
+<div class="cx-modal" id="loadModal">
+    <div class="cx-modal-box" style="width:min(1000px,96vw);top:5%;">
+        <div class="cx-modal-head"><span>Load Available Stock</span><button type="button" onclick="Sm.loadClose()">&times;</button></div>
+        <div class="cx-modal-body">
+            <div style="position:relative;height:36px;">
+                <label class="rc-abs rc-lbl" style="left:2px;top:9px;">Item Category</label>
+                <select id="LdCategory" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="ItemCategory" style="left:90px;top:4px;width:200px;" onchange="Sm.loadCategory()"></select>
+                <label class="rc-abs rc-lbl" style="left:306px;top:9px;">Item</label>
+                <select id="LdItem" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Item Name" style="left:342px;top:4px;width:260px;"></select>
+                <button type="button" class="rc-abs rc-btn" style="left:620px;top:5px;width:60px;height:24px;" onclick="Sm.loadFill()" title="Ctrl+S">Show</button>
+                <button type="button" class="rc-abs rc-btn" style="left:690px;top:5px;width:60px;height:24px;" onclick="Sm.loadPick()" title="Ctrl+L">Load</button>
+                <button type="button" class="rc-abs rc-btn" style="left:760px;top:5px;width:60px;height:24px;" onclick="Sm.loadClose()">Close</button>
+            </div>
+            <div class="w3-host" style="height:380px;"><table class="rc-grid" id="ldGrid"></table></div>
+        </div>
+    </div>
+</div>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_w3b_common.js?v=20261014a}"></script>
+<script th:src="@{/build/js/countx_engr_stage_move.js?v=20261014a}"></script>
+</body>
+</html>

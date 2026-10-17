@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Stock Conversion - EccountBookERP</title>
+    <link rel="stylesheet" th:href="@{/vendors/font-awesome/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css}">
+    <link rel="stylesheet" th:href="@{/build/css/countx_prod_combo.css?v=20260928b}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_w3b_mfg.css?v=20261014a}"/>
+    <link rel="stylesheet" th:href="@{/build/css/countx_pcc822_conversion.css?v=20261014a}"/>
+</head>
+<body>
+<div class="rc-page" style="min-width:1250px;">
+    <!-- Screen 822 - Architecture.WinApp.Pcc.frmConversion (DocumentTypeId 1867, rights key "frmConversion"). The layout is a web arrangement of the
+         desktop's panels (Main Information, Input Material, Output / By Product entry + grid, Over Head, Contractor Wages, calculation summary) and the
+         History tab; captions and column order follow InitializeComponent / the grid settings. -->
+    <div class="rc-teal" style="height:55px;">
+        <div class="rc-strip">
+            <button type="button" class="rc-tool" id="btnNew" onclick="Cv.newClick()" title="Ctrl+N"><i class="fa fa-file-o"></i> New</button>
+            <button type="button" class="rc-tool" id="btnRefresh" onclick="Cv.refresh()" title="Ctrl+R"><i class="fa fa-refresh"></i> Refresh</button>
+            <button type="button" class="rc-tool" id="btnSave" onclick="Cv.save()" title="Ctrl+S"><i class="fa fa-save"></i> Save</button>
+            <button type="button" class="rc-tool is-hidden" id="btnUpdate" onclick="Cv.save()" title="Ctrl+U"><i class="fa fa-pencil-square-o"></i> Update</button>
+            <button type="button" class="rc-tool is-hidden" id="btnDelete" onclick="Cv.del()"><i class="fa fa-trash"></i> Delete</button>
+            <button type="button" class="rc-tool" id="btnPrint" onclick="Cv.printSlip()"><i class="fa fa-print"></i> Print</button>
+            <button type="button" class="rc-tool" id="btnVoucherReport" onclick="Cv.printVoucher()"><i class="fa fa-file-text-o"></i> Voucher Report</button>
+            <a class="rc-exit" href="/production" title="Esc"><i class="fa fa-sign-out"></i> Exit</a>
+        </div>
+        <span class="rc-teal-title" style="left:7px;top:32px;font-size:16px;line-height:19px;">Stock Conversion</span>
+    </div>
+    <div id="rightsNote" class="rc-note is-hidden"></div>
+    <div style="padding:4px 6px;">
+        <button type="button" class="rc-tab1 is-active" id="tabForm" onclick="Cv.tab('form')">Form</button>
+        <button type="button" class="rc-tab1" id="tabHist" onclick="Cv.tab('hist')">History</button>
+    </div>
+
+    <div id="panelForm" class="rc-panel is-active">
+        <div class="rc-bar" style="height:22px;"><span>Main Information</span></div>
+        <div style="position:relative;height:104px;background:#f0f0f0;">
+            <label class="rc-abs rc-lbl" style="left:8px;top:8px;">Doc Date</label>
+            <input type="date" id="txtdocdate" class="rc-abs rc-in" style="left:100px;top:4px;width:130px;">
+            <label class="rc-abs rc-lbl" style="left:250px;top:8px;">Doc No</label>
+            <input type="text" id="txtdocno" class="rc-abs rc-in num" style="left:305px;top:4px;width:90px;" readonly>
+            <label class="rc-abs rc-lbl" style="left:415px;top:8px;">Conversion No</label>
+            <input type="text" id="txtProductionNo" class="rc-abs rc-in" style="left:510px;top:4px;width:170px;">
+            <label class="rc-abs rc-lbl" style="left:700px;top:8px;">Production Type</label>
+            <select id="CmbProductionType" class="rc-abs rc-cmb" style="left:810px;top:3px;width:180px;" onchange="Cv.productionTypeLeave()"></select>
+
+            <label class="rc-abs rc-lbl" style="left:8px;top:40px;">Plant Name</label>
+            <select id="CmbPlantName" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Plant" style="left:100px;top:35px;width:295px;" onchange="Cv.plantLeave()"></select>
+            <label class="rc-abs rc-lbl" style="left:415px;top:40px;">Remarks</label>
+            <input type="text" id="txtRemarksHeader" class="rc-abs rc-in" style="left:510px;top:36px;width:480px;">
+
+            <label class="rc-abs rc-lbl" style="left:8px;top:74px;"><input type="checkbox" id="ChkPreviewSlip" checked> Preview Slip</label>
+            <label class="rc-abs rc-lbl" style="left:140px;top:74px;"><input type="checkbox" id="chkPrintVoucher" checked> Print Voucher</label>
+            <span class="rc-abs rc-lbl" style="left:300px;top:74px;color:#7f0000;">Attachments are not available on this page.</span>
+        </div>
+
+        <div class="rc-bar" style="height:22px;"><span>Input Material</span>
+            <span class="rc-bar-tools">
+                <button type="button" class="rc-btn cv-btn" onclick="Cv.updateWarehouseInput()" title="Set every input row's warehouse to the first output row's warehouse">Update Warehouse</button>
+                <button type="button" class="rc-btn cv-btn" onclick="Cv.clearInput()">Clear Input</button>
+            </span></div>
+        <div class="w3-host" style="height:190px;"><table class="rc-grid" id="grdInputMaterial"></table></div>
+
+        <div class="rc-bar" style="height:22px;"><span>Output / By Product</span>
+            <span class="rc-bar-tools">
+                <button type="button" class="rc-btn cv-btn" onclick="Cv.updateWarehouseOutput()" title="Set every output row's warehouse to the first output row's warehouse">Update Warehouse</button>
+            </span></div>
+        <div style="position:relative;height:66px;background:#f0f0f0;">
+            <label class="rc-abs rc-lbl" style="left:8px;top:8px;"><input type="radio" name="rdSearch" id="rdSearchByName" value="name" checked onchange="Cv.itemSearchMode()"> Name</label>
+            <label class="rc-abs rc-lbl" style="left:78px;top:8px;"><input type="radio" name="rdSearch" id="rdSearchByCode" value="code" onchange="Cv.itemSearchMode()"> Code</label>
+            <label class="rc-abs rc-lbl" style="left:8px;top:40px;">Item</label>
+            <select id="cmbItemBOM" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Item" style="left:50px;top:35px;width:290px;" onchange="Cv.itemLeave()"></select>
+            <label class="rc-abs rc-lbl" style="left:350px;top:40px;">Uom</label>
+            <select id="cmbUOM" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Uom" style="left:386px;top:35px;width:100px;"></select>
+            <label class="rc-abs rc-lbl" style="left:496px;top:40px;">Qty</label>
+            <input type="text" id="txtQty" class="rc-abs rc-in num" style="left:526px;top:36px;width:80px;" inputmode="decimal">
+            <label class="rc-abs rc-lbl" style="left:616px;top:40px;">Attribute</label>
+            <select id="CmbAttribute" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Attribute" style="left:675px;top:35px;width:160px;" onchange="Cv.attributeLeave()"></select>
+            <input type="text" id="txtVarientEquivalent" class="rc-abs rc-in num" style="left:842px;top:36px;width:60px;" readonly>
+            <label class="rc-abs rc-lbl" style="left:912px;top:40px;">Warehouse Name</label>
+            <select id="CmbWarehouseName" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Warehouse" style="left:1020px;top:35px;width:170px;"></select>
+            <button type="button" class="rc-abs rc-btn" id="BtnAddDetail" style="left:1198px;top:36px;width:38px;height:24px;" onclick="Cv.addDetail()">+</button>
+            <button type="button" class="rc-abs rc-btn is-hidden" id="BtnUpdateDetail" style="left:1198px;top:36px;width:60px;height:24px;" onclick="Cv.updateDetail()">Update</button>
+            <button type="button" class="rc-abs rc-btn is-hidden" id="BtnCancelDetail" style="left:1262px;top:36px;width:60px;height:24px;" onclick="Cv.cancelDetail()">Cancel</button>
+        </div>
+        <div class="w3-host" style="height:150px;"><table class="rc-grid" id="grdOutPutByProduct"></table></div>
+
+        <div style="display:flex;gap:0;">
+            <div style="flex:1 1 42%;min-width:0;">
+                <div class="rc-bar" style="height:22px;"><span>Over Head</span></div>
+                <div class="w3-host" style="height:150px;"><table class="rc-grid" id="grdOverHead"></table></div>
+            </div>
+            <div style="flex:1 1 58%;min-width:0;border-left:1px solid #a0a0a0;">
+                <div class="rc-bar" style="height:22px;"><span>Contractor Wages</span></div>
+                <div style="position:relative;height:34px;background:#f0f0f0;">
+                    <label class="rc-abs rc-lbl" style="left:6px;top:10px;">Contractor</label>
+                    <select id="CmbContractorForUpdateInWagesGrid" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Contractor" style="left:72px;top:4px;width:200px;"></select>
+                    <label class="rc-abs rc-lbl" style="left:282px;top:10px;">Activity</label>
+                    <select id="CmbActivityforContractorUpdateInWagesGrid" class="rc-abs rc-cmb" style="left:334px;top:4px;width:180px;"></select>
+                    <button type="button" class="rc-abs rc-btn cv-btn" style="left:524px;top:5px;width:120px;height:24px;" onclick="Cv.updateContractorInWages()">Update Contractor</button>
+                </div>
+                <div class="w3-host" style="height:116px;"><table class="rc-grid" id="grdContractorWages"></table></div>
+            </div>
+        </div>
+
+        <div class="rc-bar" style="height:22px;"><span>Calculation</span></div>
+        <div style="position:relative;height:40px;background:#f0f0f0;">
+            <label class="rc-abs rc-lbl" style="left:8px;top:12px;">Total Inputs</label>
+            <input type="text" id="txtTotalInputs" class="rc-abs rc-in num" style="left:90px;top:8px;width:110px;" readonly>
+            <label class="rc-abs rc-lbl" style="left:215px;top:12px;">Over Head</label>
+            <input type="text" id="txtOverHead" class="rc-abs rc-in num" style="left:285px;top:8px;width:110px;" readonly>
+            <label class="rc-abs rc-lbl" style="left:410px;top:12px;">Wages Amount</label>
+            <input type="text" id="txtWagesAmount" class="rc-abs rc-in num" style="left:505px;top:8px;width:110px;" readonly>
+            <label class="rc-abs rc-lbl" style="left:630px;top:12px;">Total OutPut Auto Rated Amount</label>
+            <input type="text" id="txtTotalOutPutAutoRatedAmount" class="rc-abs rc-in num" style="left:830px;top:8px;width:120px;" readonly>
+            <label class="rc-abs rc-lbl" style="left:965px;top:12px;">Per Qty</label>
+            <input type="text" id="txtOutPutAutoRatePerQtyAmount" class="rc-abs rc-in num" style="left:1015px;top:8px;width:90px;" readonly>
+            <button type="button" class="rc-abs rc-btn cv-btn" style="left:1118px;top:8px;width:120px;height:24px;" onclick="Cv.generateRates(true)">Generate Rates</button>
+        </div>
+    </div>
+
+    <div id="panelHist" class="rc-panel">
+        <div style="position:relative;height:70px;background:#fff;">
+            <div class="rc-gb" style="left:4px;top:2px;width:1150px;height:64px;">
+                <span class="rc-cap">Filters</span>
+                <label class="rc-abs rc-lbl" style="left:6px;top:24px;">Date Type</label>
+                <select id="cmbDateType" class="rc-abs rc-cmb" style="left:70px;top:19px;width:140px;" onchange="Cv.dateType()"></select>
+                <label class="rc-abs rc-lbl" style="left:220px;top:24px;">From</label>
+                <input type="date" id="dtpFrom" class="rc-abs rc-in" style="left:258px;top:20px;width:125px;">
+                <label class="rc-abs rc-lbl" style="left:392px;top:24px;">To</label>
+                <input type="date" id="dtpTo" class="rc-abs rc-in" style="left:416px;top:20px;width:125px;">
+                <label class="rc-abs rc-lbl" style="left:552px;top:24px;">Doc No</label>
+                <input type="text" id="txtFromDocNo" class="rc-abs rc-in num" style="left:600px;top:20px;width:55px;" inputmode="numeric">
+                <input type="text" id="txtToDocNo" class="rc-abs rc-in num" style="left:660px;top:20px;width:55px;" inputmode="numeric">
+                <label class="rc-abs rc-lbl" style="left:730px;top:24px;">Conversion No</label>
+                <select id="cmbHistConversionNo" class="rc-abs rc-cmb dtcombo" data-dtcombo="single" data-dtcombo-caption="Conversion No" style="left:825px;top:19px;width:170px;"></select>
+                <label class="rc-abs rc-lbl" style="left:1005px;top:24px;"><input type="checkbox" id="chkUseDates" checked> Dates</label>
+            </div>
+        </div>
+        <div class="rc-bar" style="height:26px;"><span>Filtered Records</span><span class="rc-bar-tools"><button type="button" class="rc-btn" style="width:62px;height:22px;" onclick="Cv.history()" title="Alt+S">Show</button></span></div>
+        <div class="w3-host" style="height:230px;"><table class="rc-grid" id="DatagridHistory"></table></div>
+        <div style="display:flex;gap:0;">
+            <div style="flex:1 1 50%;min-width:0;"><div class="rc-bar" style="height:22px;"><span>Input</span></div><div class="w3-host" style="height:130px;"><table class="rc-grid" id="grdHistoryInput"></table></div></div>
+            <div style="flex:1 1 50%;min-width:0;border-left:1px solid #a0a0a0;"><div class="rc-bar" style="height:22px;"><span>Output</span></div><div class="w3-host" style="height:130px;"><table class="rc-grid" id="grdHistoryOutput"></table></div></div>
+        </div>
+        <div style="display:flex;gap:0;">
+            <div style="flex:1 1 50%;min-width:0;"><div class="rc-bar" style="height:22px;"><span>Over Head</span></div><div class="w3-host" style="height:110px;"><table class="rc-grid" id="grdHistoryOverHead"></table></div></div>
+            <div style="flex:1 1 50%;min-width:0;border-left:1px solid #a0a0a0;"><div class="rc-bar" style="height:22px;"><span>Wages</span></div><div class="w3-host" style="height:110px;"><table class="rc-grid" id="grdWagesHistory"></table></div></div>
+        </div>
+    </div>
+</div>
+
+<!-- GrdPopUp replacement (F1 on a grid cell) -->
+<div class="cx-modal" id="pickModal">
+    <div class="cx-modal-box" style="width:min(620px,94vw);">
+        <div class="cx-modal-head"><span id="pickTitle">Select</span><button type="button" onclick="Cv.pickClose()">&times;</button></div>
+        <div class="cx-modal-body">
+            <input type="text" id="pickSearch" class="rc-in" style="width:100%;margin-bottom:4px;" placeholder="Search...">
+            <div class="w3-host" style="height:300px;"><table class="rc-grid" id="pickGrid"></table></div>
+        </div>
+    </div>
+</div>
+<!-- Yes / No / Cancel (Insert: warehouse not allocated to the plant) -->
+<div class="cx-modal" id="ynModal">
+    <div class="cx-modal-box" style="width:min(560px,94vw);">
+        <div class="cx-modal-head"><span>Confirm</span></div>
+        <div class="cx-modal-body">
+            <div id="ynText" style="white-space:pre-wrap;margin-bottom:8px;"></div>
+            <div style="text-align:right;">
+                <button type="button" class="rc-btn cv-btn" id="ynYes" style="width:70px;height:24px;">Yes</button>
+                <button type="button" class="rc-btn cv-btn" id="ynNo" style="width:70px;height:24px;">No</button>
+                <button type="button" class="rc-btn cv-btn" id="ynCancel" style="width:70px;height:24px;">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script th:src="@{/build/js/countx_prod_combo.js?v=20260928a}"></script>
+<script th:src="@{/build/js/countx_w3b_common.js?v=20261014a}"></script>
+<script th:src="@{/build/js/countx_crystal_print.js}"></script>
+<script th:src="@{/build/js/countx_pcc822_conversion.js?v=20261014a}"></script>
+</body>
+</html>
