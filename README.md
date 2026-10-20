@@ -1,3 +1,0 @@
-# EccountBookERP
-
-EccountBookERP Solution repository.
