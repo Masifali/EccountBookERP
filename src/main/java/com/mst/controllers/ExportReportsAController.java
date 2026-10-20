@@ -33,13 +33,6 @@ import java.util.Map;
 @Controller
 public class ExportReportsAController {
 
-    private static final String RCV = "/api/export/receivable-by-due-date";
-    private static final String SCH = "/api/export/contract-schedule-periodic";
-    private static final String CST = "/api/export/shipment-costing";
-    private static final String PND = "/api/export/shipments-document-status";
-    private static final String DTH = "/api/export/detail-history";
-    private static final String DOR = "/api/export/delivery-order-report";
-    private static final String REG = "/api/export/contract-register";
 
     @Autowired private ExportReportsAService svc;
 
@@ -76,45 +69,45 @@ public class ExportReportsAController {
 
     // ------------------------------------------------------------------ 235
 
-    @GetMapping(RCV + "/setup") @ResponseBody
+    @GetMapping("/api/export/receivable-by-due-date/setup") @ResponseBody
     public ResponseEntity<?> rcvSetup() { return call(() -> svc.receivableSetup(), "Error occurred during database call."); }
 
-    @GetMapping(RCV + "/combos") @ResponseBody
+    @GetMapping("/api/export/receivable-by-due-date/combos") @ResponseBody
     public ResponseEntity<?> rcvCombos() { return call(() -> svc.receivableCombos(), "Load failed."); }
 
-    @PostMapping(RCV + "/show") @ResponseBody
+    @PostMapping("/api/export/receivable-by-due-date/show") @ResponseBody
     public ResponseEntity<?> rcvShow(@RequestBody Map<String, Object> body) { return call(() -> svc.receivableShow(body), "Load failed."); }
 
     // ------------------------------------------------------------------ 236
 
-    @GetMapping(SCH + "/setup") @ResponseBody
+    @GetMapping("/api/export/contract-schedule-periodic/setup") @ResponseBody
     public ResponseEntity<?> schSetup() { return call(() -> svc.scheduleSetup(), "Error occurred during database call."); }
 
-    @PostMapping(SCH + "/show") @ResponseBody
+    @PostMapping("/api/export/contract-schedule-periodic/show") @ResponseBody
     public ResponseEntity<?> schShow(@RequestBody Map<String, Object> body) { return call(() -> svc.scheduleShow(body), "Load failed."); }
 
     // ------------------------------------------------------------------ 238
 
-    @GetMapping(CST + "/setup") @ResponseBody
+    @GetMapping("/api/export/shipment-costing/setup") @ResponseBody
     public ResponseEntity<?> cstSetup() { return call(() -> svc.costingSetup(), "Error occurred during database call."); }
 
-    @GetMapping(CST + "/show") @ResponseBody
+    @GetMapping("/api/export/shipment-costing/show") @ResponseBody
     public ResponseEntity<?> cstShow(@RequestParam(value = "invoiceId", defaultValue = "0") int invoiceId) {
         return call(() -> svc.costingShow(invoiceId), "Load failed.");
     }
 
     // ------------------------------------------------------------------ 239
 
-    @GetMapping(PND + "/setup") @ResponseBody
+    @GetMapping("/api/export/shipments-document-status/setup") @ResponseBody
     public ResponseEntity<?> pndSetup() { return call(() -> svc.pendingSetup(), "Error occurred during database call."); }
 
-    @GetMapping(PND + "/combos") @ResponseBody
+    @GetMapping("/api/export/shipments-document-status/combos") @ResponseBody
     public ResponseEntity<?> pndCombos() { return call(() -> svc.pendingCombos(), "Load failed."); }
 
-    @PostMapping(PND + "/show") @ResponseBody
+    @PostMapping("/api/export/shipments-document-status/show") @ResponseBody
     public ResponseEntity<?> pndShow(@RequestBody Map<String, Object> body) { return call(() -> svc.pendingShow(body), "Load failed."); }
 
-    @PostMapping(PND + "/status") @ResponseBody
+    @PostMapping("/api/export/shipments-document-status/status") @ResponseBody
     public ResponseEntity<?> pndStatus(@RequestBody Map<String, Object> body) {
         Object v = body.get("invoiceId");
         int id;
@@ -126,41 +119,41 @@ public class ExportReportsAController {
 
     // ------------------------------------------------------------------ 249
 
-    @GetMapping(DTH + "/setup") @ResponseBody
+    @GetMapping("/api/export/detail-history/setup") @ResponseBody
     public ResponseEntity<?> dthSetup() { return call(() -> svc.detailHistorySetup(), "Error occurred during database call."); }
 
-    @PostMapping(DTH + "/show") @ResponseBody
+    @PostMapping("/api/export/detail-history/show") @ResponseBody
     public ResponseEntity<?> dthShow(@RequestBody Map<String, Object> body) { return call(() -> svc.detailHistoryShow(body), "Load failed."); }
 
     // ------------------------------------------------------------------ 250
 
-    @GetMapping(DOR + "/setup") @ResponseBody
+    @GetMapping("/api/export/delivery-order-report/setup") @ResponseBody
     public ResponseEntity<?> dorSetup() { return call(() -> svc.doSetup(), "Error occurred during database call."); }
 
-    @GetMapping(DOR + "/combos") @ResponseBody
+    @GetMapping("/api/export/delivery-order-report/combos") @ResponseBody
     public ResponseEntity<?> dorCombos() { return call(() -> svc.doCombosRefresh(), "Load failed."); }
 
-    @PostMapping(DOR + "/show") @ResponseBody
+    @PostMapping("/api/export/delivery-order-report/show") @ResponseBody
     public ResponseEntity<?> dorShow(@RequestBody Map<String, Object> body) { return call(() -> svc.doShow(body), "Load failed."); }
 
     // ------------------------------------------------------------------ 251
 
-    @GetMapping(REG + "/setup") @ResponseBody
+    @GetMapping("/api/export/contract-register/setup") @ResponseBody
     public ResponseEntity<?> regSetup() { return call(() -> svc.registerSetup(), "Error occurred during database call."); }
 
-    @GetMapping(REG + "/combos") @ResponseBody
+    @GetMapping("/api/export/contract-register/combos") @ResponseBody
     public ResponseEntity<?> regCombos() { return call(() -> svc.registerCombos(), "Load failed."); }
 
-    @PostMapping(REG + "/card") @ResponseBody
+    @PostMapping("/api/export/contract-register/card") @ResponseBody
     public ResponseEntity<?> regCard(@RequestBody Map<String, Object> body) { return call(() -> svc.registerCard(body), "Load failed."); }
 
-    @PostMapping(REG + "/summary") @ResponseBody
+    @PostMapping("/api/export/contract-register/summary") @ResponseBody
     public ResponseEntity<?> regSummary(@RequestBody Map<String, Object> body) { return call(() -> svc.registerSummary(body), "Load failed."); }
 
-    @PostMapping(REG + "/product-wise") @ResponseBody
+    @PostMapping("/api/export/contract-register/product-wise") @ResponseBody
     public ResponseEntity<?> regProductWise(@RequestBody Map<String, Object> body) { return call(() -> svc.registerProductWise(body), "Load failed."); }
 
-    @PostMapping(REG + "/status") @ResponseBody
+    @PostMapping("/api/export/contract-register/status") @ResponseBody
     public ResponseEntity<?> regStatus(@RequestBody Map<String, Object> body) { return call(() -> svc.registerStatusChange(body), "Update failed."); }
 
     // ------------------------------------------------------------------ plumbing

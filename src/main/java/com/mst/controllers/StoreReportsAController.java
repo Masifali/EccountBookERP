@@ -56,17 +56,17 @@ public class StoreReportsAController {
         return "store/reports/store_purchase_register";
     }
 
-    @GetMapping(SPR + "/lookups")
+    @GetMapping("/api/store/reports/store-purchase-register/lookups")
     @ResponseBody
     public ResponseEntity<?> sprLookups() { return run(service::purchaseRegisterLookups, "Could not load the filters."); }
 
     /** Refresh button — branches and combos again. */
-    @GetMapping(SPR + "/refresh")
+    @GetMapping("/api/store/reports/store-purchase-register/refresh")
     @ResponseBody
     public ResponseEntity<?> sprRefresh() { return run(service::purchaseRegisterRefresh, "Could not refresh."); }
 
     /** cmbBranchName_Leave with a branch ticked. */
-    @GetMapping(SPR + "/combos")
+    @GetMapping("/api/store/reports/store-purchase-register/combos")
     @ResponseBody
     public ResponseEntity<?> sprCombos() { return run(service::purchaseRegisterCombos, "Could not load the filters."); }
 
@@ -93,7 +93,7 @@ public class StoreReportsAController {
     }
 
     /** kind: print | printWithTax | grn | order | invoice. */
-    @GetMapping(SPR + "/slip/{kind}/{id}")
+    @GetMapping("/api/store/reports/store-purchase-register/slip/{kind}/{id}")
     @ResponseBody
     public ResponseEntity<?> sprSlip(@PathVariable String kind, @PathVariable int id,
                                      @RequestParam(defaultValue = "0") int documentTypeId) {
@@ -108,11 +108,11 @@ public class StoreReportsAController {
         return "store/reports/store_purchase_demand_register";
     }
 
-    @GetMapping(PDR + "/lookups")
+    @GetMapping("/api/store/reports/store-purchase-demand-register/lookups")
     @ResponseBody
     public ResponseEntity<?> pdrLookups() { return run(service::demandRegisterLookups, "Could not load the filters."); }
 
-    @GetMapping(PDR + "/combos")
+    @GetMapping("/api/store/reports/store-purchase-demand-register/combos")
     @ResponseBody
     public ResponseEntity<?> pdrCombos() { return run(service::demandRegisterCombos, "Could not load the filters."); }
 
@@ -135,13 +135,13 @@ public class StoreReportsAController {
                 "Could not run the report.");
     }
 
-    @GetMapping(PDR + "/slip/{id}")
+    @GetMapping("/api/store/reports/store-purchase-demand-register/slip/{id}")
     @ResponseBody
     public ResponseEntity<?> pdrSlip(@PathVariable int id) {
         return run(() -> service.demandSlip(id), "Could not print.");
     }
 
-    @PostMapping(PDR + "/status")
+    @PostMapping("/api/store/reports/store-purchase-demand-register/status")
     @ResponseBody
     public ResponseEntity<?> pdrStatus(@RequestBody StoreReportsADto.DemandStatus body) {
         return run(() -> service.demandStatus(body), "Could not update the status.");
@@ -155,11 +155,11 @@ public class StoreReportsAController {
         return "store/reports/store_issuance_return_register";
     }
 
-    @GetMapping(SRR + "/lookups")
+    @GetMapping("/api/store/reports/store-issuance-return-register/lookups")
     @ResponseBody
     public ResponseEntity<?> srrLookups() { return run(service::returnRegisterLookups, "Could not load the filters."); }
 
-    @GetMapping(SRR + "/combos")
+    @GetMapping("/api/store/reports/store-issuance-return-register/combos")
     @ResponseBody
     public ResponseEntity<?> srrCombos() { return run(service::returnRegisterCombos, "Could not load the filters."); }
 
@@ -178,13 +178,13 @@ public class StoreReportsAController {
                 accountId, fromDocNo, toDocNo), "Could not run the report.");
     }
 
-    @GetMapping(SRR + "/slip/{id}")
+    @GetMapping("/api/store/reports/store-issuance-return-register/slip/{id}")
     @ResponseBody
     public ResponseEntity<?> srrSlip(@PathVariable int id) {
         return run(() -> service.returnSlip(id), "Could not print.");
     }
 
-    @GetMapping(SRR + "/voucher")
+    @GetMapping("/api/store/reports/store-issuance-return-register/voucher")
     @ResponseBody
     public ResponseEntity<?> srrVoucher(@RequestParam(defaultValue = "0") int voucherHeadId,
                                         @RequestParam(defaultValue = "0") int documentTypeId) {
@@ -193,7 +193,7 @@ public class StoreReportsAController {
 
     // ------------------------------------------------------------ NoOfAttachments links (all three, D8)
 
-    @GetMapping({SPR + "/attachments", PDR + "/attachments", SRR + "/attachments"})
+    @GetMapping({"/api/store/reports/store-purchase-register/attachments", "/api/store/reports/store-purchase-demand-register/attachments", "/api/store/reports/store-issuance-return-register/attachments"})
     @ResponseBody
     public ResponseEntity<?> attachments(HttpServletRequest request,
                                          @RequestParam(defaultValue = "0") int id,
@@ -202,7 +202,7 @@ public class StoreReportsAController {
         return run(() -> service.attachments(screen, id, documentTypeId), "Could not load the attachments.");
     }
 
-    @GetMapping({SPR + "/attachments/{attachmentId}", PDR + "/attachments/{attachmentId}", SRR + "/attachments/{attachmentId}"})
+    @GetMapping({"/api/store/reports/store-purchase-register/attachments/{attachmentId}", "/api/store/reports/store-purchase-demand-register/attachments/{attachmentId}", "/api/store/reports/store-issuance-return-register/attachments/{attachmentId}"})
     @ResponseBody
     public ResponseEntity<?> attachmentDownload(HttpServletRequest request, @PathVariable int attachmentId,
                                                 @RequestParam(defaultValue = "0") int id,

@@ -29,8 +29,6 @@ import java.util.Map;
 @Controller
 public class LgsARateAgreementController {
 
-    private static final String RN = "/api/logistics/{page:rate-negotiation|rate-negotiation-transporter}";
-    private static final String AG = "/api/logistics/agreement";
 
     @Autowired private LgsARateNegotiationService rn;
     @Autowired private LgsAAgreementService ag;
@@ -53,45 +51,45 @@ public class LgsARateAgreementController {
         return "logistics/rate-negotiation";
     }
 
-    @GetMapping(RN + "/setup") @ResponseBody
+    @GetMapping("/api/logistics/{page:rate-negotiation|rate-negotiation-transporter}/setup") @ResponseBody
     public ResponseEntity<?> rnSetup(@PathVariable("page") String page) { return HrmApi.run(() -> rn.setup(tr(page))); }
 
-    @GetMapping(RN + "/refresh") @ResponseBody
+    @GetMapping("/api/logistics/{page:rate-negotiation|rate-negotiation-transporter}/refresh") @ResponseBody
     public ResponseEntity<?> rnRefresh(@PathVariable("page") String page) { return HrmApi.run(() -> rn.refresh(tr(page))); }
 
-    @GetMapping(RN + "/history-combos") @ResponseBody
+    @GetMapping("/api/logistics/{page:rate-negotiation|rate-negotiation-transporter}/history-combos") @ResponseBody
     public ResponseEntity<?> rnHistoryCombos(@PathVariable("page") String page) { return HrmApi.run(() -> rn.refreshHistory(tr(page))); }
 
-    @GetMapping(RN + "/doc-no") @ResponseBody
+    @GetMapping("/api/logistics/{page:rate-negotiation|rate-negotiation-transporter}/doc-no") @ResponseBody
     public ResponseEntity<?> rnDocNo(@PathVariable("page") String page) { return HrmApi.run(() -> rn.docNo(tr(page))); }
 
-    @GetMapping(RN + "/history") @ResponseBody
+    @GetMapping("/api/logistics/{page:rate-negotiation|rate-negotiation-transporter}/history") @ResponseBody
     public ResponseEntity<?> rnHistory(@PathVariable("page") String page, @RequestParam Map<String, String> q) {
         return HrmApi.run(() -> rn.history(tr(page), q));
     }
 
-    @GetMapping(RN + "/history-detail") @ResponseBody
+    @GetMapping("/api/logistics/{page:rate-negotiation|rate-negotiation-transporter}/history-detail") @ResponseBody
     public ResponseEntity<?> rnHistoryDetail(@PathVariable("page") String page, @RequestParam("id") int id) {
         return HrmApi.run(() -> rn.historyDetail(tr(page), id));
     }
 
-    @GetMapping(RN + "/by-id") @ResponseBody
+    @GetMapping("/api/logistics/{page:rate-negotiation|rate-negotiation-transporter}/by-id") @ResponseBody
     public ResponseEntity<?> rnById(@PathVariable("page") String page, @RequestParam("id") int id,
                                     @RequestParam(value = "edit", defaultValue = "true") boolean edit) {
         return HrmApi.run(() -> rn.read(tr(page), id, edit));
     }
 
-    @PostMapping(RN + "/save") @ResponseBody
+    @PostMapping("/api/logistics/{page:rate-negotiation|rate-negotiation-transporter}/save") @ResponseBody
     public ResponseEntity<?> rnSave(@PathVariable("page") String page, @RequestBody Map<String, Object> body) {
         return HrmApi.run(() -> rn.save(tr(page), body));
     }
 
-    @PostMapping(RN + "/delete") @ResponseBody
+    @PostMapping("/api/logistics/{page:rate-negotiation|rate-negotiation-transporter}/delete") @ResponseBody
     public ResponseEntity<?> rnDelete(@PathVariable("page") String page, @RequestParam("id") int id) {
         return HrmApi.run(() -> rn.delete(tr(page), id));
     }
 
-    @GetMapping(RN + "/slip-check") @ResponseBody
+    @GetMapping("/api/logistics/{page:rate-negotiation|rate-negotiation-transporter}/slip-check") @ResponseBody
     public ResponseEntity<?> rnSlipCheck(@PathVariable("page") String page, @RequestParam("id") int id) {
         return HrmApi.run(() -> rn.slipCheck(tr(page), id));
     }
@@ -101,35 +99,35 @@ public class LgsARateAgreementController {
     @GetMapping("/logistics/agreement")
     public String agreementPage(Model model) { model.addAttribute("activeMenu", "apps"); return "logistics/agreement"; }
 
-    @GetMapping(AG + "/setup") @ResponseBody
+    @GetMapping("/api/logistics/agreement/setup") @ResponseBody
     public ResponseEntity<?> agSetup() { return HrmApi.run(() -> ag.setup()); }
 
-    @GetMapping(AG + "/refresh") @ResponseBody
+    @GetMapping("/api/logistics/agreement/refresh") @ResponseBody
     public ResponseEntity<?> agRefresh() { return HrmApi.run(() -> ag.refresh()); }
 
-    @GetMapping(AG + "/history-combos") @ResponseBody
+    @GetMapping("/api/logistics/agreement/history-combos") @ResponseBody
     public ResponseEntity<?> agHistoryCombos() { return HrmApi.run(() -> ag.refreshHistory()); }
 
-    @GetMapping(AG + "/doc-no") @ResponseBody
+    @GetMapping("/api/logistics/agreement/doc-no") @ResponseBody
     public ResponseEntity<?> agDocNo() { return HrmApi.run(() -> ag.docNo()); }
 
-    @GetMapping(AG + "/history") @ResponseBody
+    @GetMapping("/api/logistics/agreement/history") @ResponseBody
     public ResponseEntity<?> agHistory(@RequestParam Map<String, String> q) { return HrmApi.run(() -> ag.history(q)); }
 
-    @GetMapping(AG + "/history-detail") @ResponseBody
+    @GetMapping("/api/logistics/agreement/history-detail") @ResponseBody
     public ResponseEntity<?> agHistoryDetail(@RequestParam("id") int id) { return HrmApi.run(() -> ag.historyDetail(id)); }
 
-    @GetMapping(AG + "/by-id") @ResponseBody
+    @GetMapping("/api/logistics/agreement/by-id") @ResponseBody
     public ResponseEntity<?> agById(@RequestParam("id") int id, @RequestParam(value = "edit", defaultValue = "true") boolean edit) {
         return HrmApi.run(() -> ag.read(id, edit));
     }
 
-    @PostMapping(AG + "/save") @ResponseBody
+    @PostMapping("/api/logistics/agreement/save") @ResponseBody
     public ResponseEntity<?> agSave(@RequestBody Map<String, Object> body) { return HrmApi.run(() -> ag.save(body)); }
 
-    @PostMapping(AG + "/delete") @ResponseBody
+    @PostMapping("/api/logistics/agreement/delete") @ResponseBody
     public ResponseEntity<?> agDelete(@RequestParam("id") int id) { return HrmApi.run(() -> ag.delete(id)); }
 
-    @GetMapping(AG + "/slip-check") @ResponseBody
+    @GetMapping("/api/logistics/agreement/slip-check") @ResponseBody
     public ResponseEntity<?> agSlipCheck(@RequestParam("id") int id) { return HrmApi.run(() -> ag.slipCheck(id)); }
 }

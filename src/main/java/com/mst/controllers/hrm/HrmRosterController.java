@@ -26,8 +26,6 @@ import static com.mst.services.hrm.HrmRosterService.SCREEN_EMPLOYEE_ROASTER;
 @Controller
 public class HrmRosterController {
 
-    private static final String DUTY = "/api/hrm/roster/duty-roaster";
-    private static final String EMP = "/api/hrm/roster/employee-roaster";
 
     @Autowired private HrmRosterService service;
 
@@ -36,32 +34,32 @@ public class HrmRosterController {
     @GetMapping("/hrm/duty-roaster")
     public String dutyRoasterPage(Model model) { model.addAttribute("activeMenu", "apps"); return "hrm/roster/duty-roaster"; }
 
-    @GetMapping(DUTY + "/setup") @ResponseBody
+    @GetMapping("/api/hrm/roster/duty-roaster/setup") @ResponseBody
     public ResponseEntity<?> dutySetup() { return HrmApi.run(() -> service.dutySetup()); }
 
-    @GetMapping(DUTY + "/lists") @ResponseBody
+    @GetMapping("/api/hrm/roster/duty-roaster/lists") @ResponseBody
     public ResponseEntity<?> dutyLists() { return HrmApi.run(() -> service.dutyLists()); }
 
-    @GetMapping(DUTY + "/employees") @ResponseBody
+    @GetMapping("/api/hrm/roster/duty-roaster/employees") @ResponseBody
     public ResponseEntity<?> dutyEmployees(@RequestParam(value = "sectionId", defaultValue = "0") int sectionId,
                                            @RequestParam(value = "locationId", defaultValue = "0") int locationId,
                                            @RequestParam(value = "departmentIds", required = false) String departmentIds) {
         return HrmApi.run(() -> service.dutyEmployees(sectionId, locationId, departmentIds));
     }
 
-    @PostMapping(DUTY + "/load") @ResponseBody
+    @PostMapping("/api/hrm/roster/duty-roaster/load") @ResponseBody
     public ResponseEntity<?> dutyLoad(@RequestBody RosterLoadDto body) { return HrmApi.run(() -> service.load(SCREEN_DUTY_ROASTER, body)); }
 
-    @PostMapping(DUTY + "/save") @ResponseBody
+    @PostMapping("/api/hrm/roster/duty-roaster/save") @ResponseBody
     public ResponseEntity<?> dutySave(@RequestBody RosterSaveDto body) { return HrmApi.run(() -> service.save(SCREEN_DUTY_ROASTER, body)); }
 
-    @PostMapping(DUTY + "/history") @ResponseBody
+    @PostMapping("/api/hrm/roster/duty-roaster/history") @ResponseBody
     public ResponseEntity<?> dutyHistory(@RequestBody RosterHistoryDto body) { return HrmApi.run(() -> service.dutyHistory(body)); }
 
-    @GetMapping(DUTY + "/history-detail") @ResponseBody
+    @GetMapping("/api/hrm/roster/duty-roaster/history-detail") @ResponseBody
     public ResponseEntity<?> dutyHistoryDetail(@RequestParam("id") int id) { return HrmApi.run(() -> service.historyDetail(SCREEN_DUTY_ROASTER, id)); }
 
-    @GetMapping(DUTY + "/by-id") @ResponseBody
+    @GetMapping("/api/hrm/roster/duty-roaster/by-id") @ResponseBody
     public ResponseEntity<?> dutyById(@RequestParam("id") long id) { return HrmApi.run(() -> service.dutyById(id)); }
 
     // ------------------------------------------------------------------ 657 Employee Roaster
@@ -69,24 +67,24 @@ public class HrmRosterController {
     @GetMapping("/hrm/employee-roaster")
     public String employeeRoasterPage(Model model) { model.addAttribute("activeMenu", "apps"); return "hrm/roster/employee-roaster"; }
 
-    @GetMapping(EMP + "/setup") @ResponseBody
+    @GetMapping("/api/hrm/roster/employee-roaster/setup") @ResponseBody
     public ResponseEntity<?> employeeSetup() { return HrmApi.run(() -> service.employeeSetup()); }
 
-    @GetMapping(EMP + "/lists") @ResponseBody
+    @GetMapping("/api/hrm/roster/employee-roaster/lists") @ResponseBody
     public ResponseEntity<?> employeeLists() { return HrmApi.run(() -> service.employeeLists()); }
 
-    @PostMapping(EMP + "/load") @ResponseBody
+    @PostMapping("/api/hrm/roster/employee-roaster/load") @ResponseBody
     public ResponseEntity<?> employeeLoad(@RequestBody RosterLoadDto body) { return HrmApi.run(() -> service.load(SCREEN_EMPLOYEE_ROASTER, body)); }
 
-    @PostMapping(EMP + "/save") @ResponseBody
+    @PostMapping("/api/hrm/roster/employee-roaster/save") @ResponseBody
     public ResponseEntity<?> employeeSave(@RequestBody RosterSaveDto body) { return HrmApi.run(() -> service.save(SCREEN_EMPLOYEE_ROASTER, body)); }
 
-    @GetMapping(EMP + "/history") @ResponseBody
+    @GetMapping("/api/hrm/roster/employee-roaster/history") @ResponseBody
     public ResponseEntity<?> employeeHistory() { return HrmApi.run(() -> service.employeeHistory()); }
 
-    @GetMapping(EMP + "/history-detail") @ResponseBody
+    @GetMapping("/api/hrm/roster/employee-roaster/history-detail") @ResponseBody
     public ResponseEntity<?> employeeHistoryDetail(@RequestParam("id") int id) { return HrmApi.run(() -> service.historyDetail(SCREEN_EMPLOYEE_ROASTER, id)); }
 
-    @GetMapping(EMP + "/by-id") @ResponseBody
+    @GetMapping("/api/hrm/roster/employee-roaster/by-id") @ResponseBody
     public ResponseEntity<?> employeeById(@RequestParam("id") long id) { return HrmApi.run(() -> service.employeeById(id)); }
 }

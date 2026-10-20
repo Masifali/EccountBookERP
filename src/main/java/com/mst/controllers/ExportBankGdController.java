@@ -36,11 +36,6 @@ import java.util.Map;
 @Controller
 public class ExportBankGdController {
 
-    private static final String CI = "/api/export/custom-invoice";
-    private static final String GM = "/api/export/gd-bank-invoice-mapping";
-    private static final String FC = "/api/export/fcy-receipt-gd-utilization";
-    private static final String BR = "/api/export/gd-bank-request";
-    private static final String BM = "/api/export/gd-break-up-manual";
 
     @Autowired private ExportCustomInvoiceService ci;
     @Autowired private ExportGdMappingService gm;
@@ -67,121 +62,121 @@ public class ExportBankGdController {
 
     // ------------------------------------------------------------------ 951 Custom / Bank Invoice
 
-    @GetMapping(CI + "/setup") @ResponseBody
+    @GetMapping("/api/export/custom-invoice/setup") @ResponseBody
     public ResponseEntity<?> ciSetup() { return call(() -> ci.setup(), "Error occurred during database call."); }
 
-    @GetMapping(CI + "/refresh") @ResponseBody
+    @GetMapping("/api/export/custom-invoice/refresh") @ResponseBody
     public ResponseEntity<?> ciRefresh(@RequestParam(value = "recId", defaultValue = "0") int recId) { return call(() -> ci.refresh(recId), "Load failed."); }
 
-    @GetMapping(CI + "/generate-code") @ResponseBody
+    @GetMapping("/api/export/custom-invoice/generate-code") @ResponseBody
     public ResponseEntity<?> ciGenerateCode() { return call(() -> ci.generateCode(), "Load failed."); }
 
-    @GetMapping(CI + "/commercial-invoices") @ResponseBody
+    @GetMapping("/api/export/custom-invoice/commercial-invoices") @ResponseBody
     public ResponseEntity<?> ciCommercialInvoices(@RequestParam(value = "recId", defaultValue = "0") int recId) { return call(() -> ci.commercialInvoices(recId), "Load failed."); }
 
-    @GetMapping(CI + "/consignees") @ResponseBody
+    @GetMapping("/api/export/custom-invoice/consignees") @ResponseBody
     public ResponseEntity<?> ciConsignees(@RequestParam(value = "customerId", defaultValue = "0") int customerId) { return call(() -> ci.consignees(customerId), "Load failed."); }
 
-    @GetMapping(CI + "/uoms") @ResponseBody
+    @GetMapping("/api/export/custom-invoice/uoms") @ResponseBody
     public ResponseEntity<?> ciUoms(@RequestParam(value = "itemId", defaultValue = "0") int itemId) { return call(() -> ci.uoms(itemId), "Load failed."); }
 
-    @GetMapping(CI + "/hs-codes") @ResponseBody
+    @GetMapping("/api/export/custom-invoice/hs-codes") @ResponseBody
     public ResponseEntity<?> ciHsCodes(@RequestParam(value = "itemId", defaultValue = "0") int itemId,
                                        @RequestParam(value = "customerId", defaultValue = "0") int customerId) {
         return call(() -> ci.hsCodes(itemId, customerId), "Load failed.");
     }
 
-    @GetMapping(CI + "/fis") @ResponseBody
+    @GetMapping("/api/export/custom-invoice/fis") @ResponseBody
     public ResponseEntity<?> ciFis(@RequestParam(value = "recId", defaultValue = "0") int recId) { return call(() -> ci.fis(recId), "Load failed."); }
 
-    @GetMapping(CI + "/history-combos") @ResponseBody
+    @GetMapping("/api/export/custom-invoice/history-combos") @ResponseBody
     public ResponseEntity<?> ciHistoryCombos() { return call(() -> ci.historyCombos(), "Load failed."); }
 
-    @PostMapping(CI + "/history") @ResponseBody
+    @PostMapping("/api/export/custom-invoice/history") @ResponseBody
     public ResponseEntity<?> ciHistory(@RequestBody Map<String, Object> body) { return call(() -> ci.history(body), "Load failed."); }
 
-    @GetMapping(CI + "/history-detail") @ResponseBody
+    @GetMapping("/api/export/custom-invoice/history-detail") @ResponseBody
     public ResponseEntity<?> ciHistoryDetail(@RequestParam("id") int id) { return call(() -> ci.historyDetail(id), "Load failed."); }
 
-    @GetMapping(CI + "/by-id") @ResponseBody
+    @GetMapping("/api/export/custom-invoice/by-id") @ResponseBody
     public ResponseEntity<?> ciById(@RequestParam("id") int id) { return call(() -> ci.readById(id), "Load failed."); }
 
-    @PostMapping(CI + "/save") @ResponseBody
+    @PostMapping("/api/export/custom-invoice/save") @ResponseBody
     public ResponseEntity<?> ciSave(@RequestBody Map<String, Object> body) { return call(() -> ci.save(body), "Save failed."); }
 
     // ------------------------------------------------------------------ 952 GD / Bank Invoice & GD Mapping
 
-    @GetMapping(GM + "/setup") @ResponseBody
+    @GetMapping("/api/export/gd-bank-invoice-mapping/setup") @ResponseBody
     public ResponseEntity<?> gmSetup() { return call(() -> gm.setup(), "Error occurred during database call."); }
 
-    @GetMapping(GM + "/refresh") @ResponseBody
+    @GetMapping("/api/export/gd-bank-invoice-mapping/refresh") @ResponseBody
     public ResponseEntity<?> gmRefresh(@RequestParam(value = "recId", defaultValue = "0") int recId) { return call(() -> gm.refreshGdBreakUp(recId), "Load failed."); }
 
-    @GetMapping(GM + "/invoices") @ResponseBody
+    @GetMapping("/api/export/gd-bank-invoice-mapping/invoices") @ResponseBody
     public ResponseEntity<?> gmInvoices(@RequestParam(value = "recId", defaultValue = "0") int recId) { return call(() -> gm.invoices(recId), "Load failed."); }
 
-    @GetMapping(GM + "/by-invoice") @ResponseBody
+    @GetMapping("/api/export/gd-bank-invoice-mapping/by-invoice") @ResponseBody
     public ResponseEntity<?> gmByInvoice(@RequestParam("invoiceId") int invoiceId) { return call(() -> gm.byInvoice(invoiceId), "Load failed."); }
 
-    @GetMapping(GM + "/history") @ResponseBody
+    @GetMapping("/api/export/gd-bank-invoice-mapping/history") @ResponseBody
     public ResponseEntity<?> gmHistory(@RequestParam(value = "fromDate", required = false) String fromDate,
                                        @RequestParam(value = "toDate", required = false) String toDate,
                                        @RequestParam(value = "bankId", defaultValue = "0") int bankId) {
         return call(() -> gm.gdHistory(fromDate, toDate, bankId), "Load failed.");
     }
 
-    @GetMapping(GM + "/history-banks") @ResponseBody
+    @GetMapping("/api/export/gd-bank-invoice-mapping/history-banks") @ResponseBody
     public ResponseEntity<?> gmHistoryBanks() { return call(() -> gm.historyBanks(), "Load failed."); }
 
-    @PostMapping(GM + "/save") @ResponseBody
+    @PostMapping("/api/export/gd-bank-invoice-mapping/save") @ResponseBody
     public ResponseEntity<?> gmSave(@RequestBody Map<String, Object> body) { return call(() -> gm.saveGdBreakUp(body), "Save failed."); }
 
-    @GetMapping(GM + "/custom-invoices") @ResponseBody
+    @GetMapping("/api/export/gd-bank-invoice-mapping/custom-invoices") @ResponseBody
     public ResponseEntity<?> gmCustomInvoices(@RequestParam(value = "invoiceId", defaultValue = "0") int invoiceId) { return call(() -> gm.customInvoices(invoiceId), "Load failed."); }
 
-    @GetMapping(GM + "/payment-terms") @ResponseBody
+    @GetMapping("/api/export/gd-bank-invoice-mapping/payment-terms") @ResponseBody
     public ResponseEntity<?> gmPaymentTerms(@RequestParam("invoiceId") int invoiceId) { return call(() -> gm.paymentTerms(invoiceId), "Load failed."); }
 
-    @GetMapping(GM + "/advance/history-invoices") @ResponseBody
+    @GetMapping("/api/export/gd-bank-invoice-mapping/advance/history-invoices") @ResponseBody
     public ResponseEntity<?> gmAdvHistoryInvoices() { return call(() -> gm.advanceHistoryInvoices(), "Load failed."); }
 
-    @GetMapping(GM + "/advance/history") @ResponseBody
+    @GetMapping("/api/export/gd-bank-invoice-mapping/advance/history") @ResponseBody
     public ResponseEntity<?> gmAdvHistory(@RequestParam(value = "invoiceId", defaultValue = "0") int invoiceId,
                                           @RequestParam(value = "fromDate", required = false) String fromDate,
                                           @RequestParam(value = "toDate", required = false) String toDate) {
         return call(() -> gm.advanceHistory(invoiceId, fromDate, toDate), "Load failed.");
     }
 
-    @PostMapping(GM + "/advance/save") @ResponseBody
+    @PostMapping("/api/export/gd-bank-invoice-mapping/advance/save") @ResponseBody
     public ResponseEntity<?> gmAdvSave(@RequestBody Map<String, Object> body) { return call(() -> gm.saveAdvanceUtilize(body), "Save failed."); }
 
     // ------------------------------------------------------------------ 953 Fcy Receipts Utilization
 
-    @GetMapping(FC + "/setup") @ResponseBody
+    @GetMapping("/api/export/fcy-receipt-gd-utilization/setup") @ResponseBody
     public ResponseEntity<?> fcSetup() { return call(() -> fc.setup(), "Error occurred during database call."); }
 
-    @GetMapping(FC + "/pending") @ResponseBody
+    @GetMapping("/api/export/fcy-receipt-gd-utilization/pending") @ResponseBody
     public ResponseEntity<?> fcPending() { return call(() -> fc.pending(), "Load failed."); }
 
-    @GetMapping(FC + "/gds") @ResponseBody
+    @GetMapping("/api/export/fcy-receipt-gd-utilization/gds") @ResponseBody
     public ResponseEntity<?> fcGds(@RequestParam(value = "fcyReceiptId", defaultValue = "0") int fcyReceiptId) { return call(() -> fc.gds(fcyReceiptId), "Load failed."); }
 
-    @GetMapping(FC + "/history") @ResponseBody
+    @GetMapping("/api/export/fcy-receipt-gd-utilization/history") @ResponseBody
     public ResponseEntity<?> fcHistory(@RequestParam(value = "fromDate", required = false) String fromDate,
                                        @RequestParam(value = "toDate", required = false) String toDate) {
         return call(() -> fc.history(fromDate, toDate), "Load failed.");
     }
 
-    @GetMapping(FC + "/utilization") @ResponseBody
+    @GetMapping("/api/export/fcy-receipt-gd-utilization/utilization") @ResponseBody
     public ResponseEntity<?> fcUtilization(@RequestParam("id") int id) { return call(() -> fc.utilizationByReceipt(id), "Load failed."); }
 
-    @GetMapping(FC + "/by-id") @ResponseBody
+    @GetMapping("/api/export/fcy-receipt-gd-utilization/by-id") @ResponseBody
     public ResponseEntity<?> fcById(@RequestParam("id") int id) { return call(() -> fc.readById(id), "Load failed."); }
 
-    @PostMapping(FC + "/save") @ResponseBody
+    @PostMapping("/api/export/fcy-receipt-gd-utilization/save") @ResponseBody
     public ResponseEntity<?> fcSave(@RequestBody Map<String, Object> body) { return call(() -> fc.save(body), "Save failed."); }
 
-    @PostMapping(FC + "/delete-by-receipt") @ResponseBody
+    @PostMapping("/api/export/fcy-receipt-gd-utilization/delete-by-receipt") @ResponseBody
     public ResponseEntity<?> fcDelete(@RequestBody Map<String, Object> body) {
         final int id = intOf(body.get("id"));
         return call(() -> fc.deleteByReceipt(id), "Delete failed.");
@@ -189,47 +184,47 @@ public class ExportBankGdController {
 
     // ------------------------------------------------------------------ 197 Gd Bank Request
 
-    @GetMapping(BR + "/setup") @ResponseBody
+    @GetMapping("/api/export/gd-bank-request/setup") @ResponseBody
     public ResponseEntity<?> brSetup() { return call(() -> br.setup(), "Error occurred during database call."); }
 
-    @GetMapping(BR + "/generate-code") @ResponseBody
+    @GetMapping("/api/export/gd-bank-request/generate-code") @ResponseBody
     public ResponseEntity<?> brGenerateCode() { return call(() -> br.generateCode(), "Load failed."); }
 
-    @GetMapping(BR + "/banks") @ResponseBody
+    @GetMapping("/api/export/gd-bank-request/banks") @ResponseBody
     public ResponseEntity<?> brBanks() { return call(() -> br.banks(), "Load failed."); }
 
-    @GetMapping(BR + "/history-banks") @ResponseBody
+    @GetMapping("/api/export/gd-bank-request/history-banks") @ResponseBody
     public ResponseEntity<?> brHistoryBanks() { return call(() -> br.historyBanks(), "Load failed."); }
 
-    @GetMapping(BR + "/gds") @ResponseBody
+    @GetMapping("/api/export/gd-bank-request/gds") @ResponseBody
     public ResponseEntity<?> brGds(@RequestParam("bankId") int bankId, @RequestParam(value = "recId", defaultValue = "0") int recId) {
         return call(() -> br.gds(bankId, recId), "Load failed.");
     }
 
-    @GetMapping(BR + "/by-id") @ResponseBody
+    @GetMapping("/api/export/gd-bank-request/by-id") @ResponseBody
     public ResponseEntity<?> brById(@RequestParam("id") int id) { return call(() -> br.readById(id), "Load failed."); }
 
-    @GetMapping(BR + "/history-detail") @ResponseBody
+    @GetMapping("/api/export/gd-bank-request/history-detail") @ResponseBody
     public ResponseEntity<?> brHistoryDetail(@RequestParam("id") int id) { return call(() -> br.historyDetail(id), "Load failed."); }
 
-    @PostMapping(BR + "/history") @ResponseBody
+    @PostMapping("/api/export/gd-bank-request/history") @ResponseBody
     public ResponseEntity<?> brHistory(@RequestBody Map<String, Object> body) { return call(() -> br.history(body), "Load failed."); }
 
-    @PostMapping(BR + "/save") @ResponseBody
+    @PostMapping("/api/export/gd-bank-request/save") @ResponseBody
     public ResponseEntity<?> brSave(@RequestBody Map<String, Object> body) { return call(() -> br.save(body), "Save failed."); }
 
     // ------------------------------------------------------------------ 198 GD Break Up Manual
 
-    @GetMapping(BM + "/setup") @ResponseBody
+    @GetMapping("/api/export/gd-break-up-manual/setup") @ResponseBody
     public ResponseEntity<?> bmSetup() { return call(() -> bm.setup(), "Error occurred during database call."); }
 
-    @GetMapping(BM + "/history") @ResponseBody
+    @GetMapping("/api/export/gd-break-up-manual/history") @ResponseBody
     public ResponseEntity<?> bmHistory() { return call(() -> bm.history(), "Load failed."); }
 
-    @GetMapping(BM + "/by-id") @ResponseBody
+    @GetMapping("/api/export/gd-break-up-manual/by-id") @ResponseBody
     public ResponseEntity<?> bmById(@RequestParam("id") int id) { return call(() -> bm.byId(id), "Load failed."); }
 
-    @PostMapping(BM + "/save") @ResponseBody
+    @PostMapping("/api/export/gd-break-up-manual/save") @ResponseBody
     public ResponseEntity<?> bmSave(@RequestBody Map<String, Object> body) { return call(() -> bm.save(body), "Save failed."); }
 
     // ------------------------------------------------------------------ plumbing

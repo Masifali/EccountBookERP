@@ -32,7 +32,6 @@ import java.util.Map;
 @Controller
 public class ProductionSettlementController {
 
-    private static final String API = "/api/production/production-against-job-order/settlement";
 
     @Autowired private ProductionSettlementService service;
 
@@ -43,35 +42,35 @@ public class ProductionSettlementController {
     }
 
     /** frmFoodProduction_Load:262. */
-    @GetMapping(API + "/load")
+    @GetMapping("/api/production/production-against-job-order/settlement/load")
     @ResponseBody
     public ResponseEntity<?> load() {
         try { return ResponseEntity.ok(service.load()); } catch (Exception e) { return error(e); }
     }
 
     /** JobOrderNoFillForSettlement(all ? 0 : 1). */
-    @GetMapping(API + "/job-orders")
+    @GetMapping("/api/production/production-against-job-order/settlement/job-orders")
     @ResponseBody
     public ResponseEntity<?> jobOrders(@RequestParam(defaultValue = "false") boolean all) {
         try { return ResponseEntity.ok(service.jobOrders(all ? 0 : 1)); } catch (Exception e) { return error(e); }
     }
 
     /** btnGeneralSettlement_Click:376. */
-    @GetMapping(API + "/generate")
+    @GetMapping("/api/production/production-against-job-order/settlement/generate")
     @ResponseBody
     public ResponseEntity<?> generate(@RequestParam(defaultValue = "0") int jobOrderId, HttpSession session) {
         try { return ResponseEntity.ok(service.generate(jobOrderId, session)); } catch (Exception e) { return error(e); }
     }
 
     /** GetUomScheduleByItemId (ProporationFinishGoodsSettlement:1210). */
-    @GetMapping(API + "/uom-by-item")
+    @GetMapping("/api/production/production-against-job-order/settlement/uom-by-item")
     @ResponseBody
     public ResponseEntity<?> uomByItem(@RequestParam(defaultValue = "0") int itemId) {
         try { return ResponseEntity.ok(service.uomByItem(itemId)); } catch (Exception e) { return error(e); }
     }
 
     /** UpdateSettlement():1327 - {result:true} | {result:false, message, caption, icon} | 400 {message}. */
-    @PostMapping(API + "/update-output")
+    @PostMapping("/api/production/production-against-job-order/settlement/update-output")
     @ResponseBody
     public ResponseEntity<?> updateOutput(@RequestBody Map<String, Object> body, HttpSession session) {
         try {
@@ -83,7 +82,7 @@ public class ProductionSettlementController {
     }
 
     /** InPutUpdateSettlement():1431. */
-    @PostMapping(API + "/update-input")
+    @PostMapping("/api/production/production-against-job-order/settlement/update-input")
     @ResponseBody
     public ResponseEntity<?> updateInput(@RequestBody Map<String, Object> body, HttpSession session) {
         try {
@@ -93,7 +92,7 @@ public class ProductionSettlementController {
     }
 
     /** SettlementFinancials():1505 - the checks before the write. */
-    @PostMapping(API + "/financials/gate")
+    @PostMapping("/api/production/production-against-job-order/settlement/financials/gate")
     @ResponseBody
     public ResponseEntity<?> financialsGate(@RequestBody Map<String, Object> body) {
         try {
@@ -103,7 +102,7 @@ public class ProductionSettlementController {
     }
 
     /** SettlementFinancials():1627 - RequestFromSettlementForJobOrderForSpecialApproval. */
-    @PostMapping(API + "/financials/request-special-approval")
+    @PostMapping("/api/production/production-against-job-order/settlement/financials/request-special-approval")
     @ResponseBody
     public ResponseEntity<?> requestSpecialApproval(@RequestBody Map<String, Object> body) {
         try {
@@ -113,7 +112,7 @@ public class ProductionSettlementController {
     }
 
     /** SettlementFinancials():1642 - InvFoodProduction.SetDataForSettlementFinancials. */
-    @PostMapping(API + "/financials/save")
+    @PostMapping("/api/production/production-against-job-order/settlement/financials/save")
     @ResponseBody
     public ResponseEntity<?> saveFinancials(@RequestBody Map<String, Object> body) {
         try {
@@ -124,7 +123,7 @@ public class ProductionSettlementController {
     }
 
     /** btnApproveSettlement_Click:1905. */
-    @PostMapping(API + "/approve")
+    @PostMapping("/api/production/production-against-job-order/settlement/approve")
     @ResponseBody
     public ResponseEntity<?> approve(@RequestBody Map<String, Object> body) {
         try {
@@ -134,7 +133,7 @@ public class ProductionSettlementController {
     }
 
     /** btnSettlementVoucher_Click:1975 - VoucherHeadIdGet(JobOrderId, 142). */
-    @GetMapping(API + "/voucher-head")
+    @GetMapping("/api/production/production-against-job-order/settlement/voucher-head")
     @ResponseBody
     public ResponseEntity<?> voucherHead(@RequestParam(defaultValue = "0") int jobOrderId) {
         try {
@@ -145,7 +144,7 @@ public class ProductionSettlementController {
     }
 
     /** Rows behind a print button, so the page can say "Record Not Found For DisPlay" as the desktop does. */
-    @GetMapping(API + "/print-rows")
+    @GetMapping("/api/production/production-against-job-order/settlement/print-rows")
     @ResponseBody
     public ResponseEntity<?> printRows(@RequestParam String report,
                                        @RequestParam(defaultValue = "0") int jobOrderId,

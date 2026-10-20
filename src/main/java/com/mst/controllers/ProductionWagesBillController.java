@@ -34,7 +34,6 @@ import java.util.function.Supplier;
 @Controller
 public class ProductionWagesBillController {
 
-    private static final String API = "/api/production/wages-bill";
 
     @Autowired
     private ProductionWagesBillService service;
@@ -52,7 +51,7 @@ public class ProductionWagesBillController {
     }
 
     /** frmwagesBillHeader_Load:321. */
-    @GetMapping(API + "/state")
+    @GetMapping("/api/production/wages-bill/state")
     @ResponseBody
     public ResponseEntity<?> state(@RequestParam(defaultValue = "0") int refDocTypeId,
                                    @RequestParam(defaultValue = "0") int refDocId) {
@@ -60,26 +59,26 @@ public class ProductionWagesBillController {
     }
 
     /** btnRefresh_Click:2531 - rights and contractors again (configurations come with /state). */
-    @GetMapping(API + "/contractors")
+    @GetMapping("/api/production/wages-bill/contractors")
     @ResponseBody
     public ResponseEntity<?> contractors() { return run(service::contractors); }
 
     /** CommonServices.GetWagesAccount(ids, 0, 1). */
-    @GetMapping(API + "/wages-accounts")
+    @GetMapping("/api/production/wages-bill/wages-accounts")
     @ResponseBody
     public ResponseEntity<?> wagesAccounts(@RequestParam(required = false) String ids) {
         return run(() -> service.wagesAccounts(ids));
     }
 
     /** GenerateDocNo():465. */
-    @GetMapping(API + "/next-doc-no")
+    @GetMapping("/api/production/wages-bill/next-doc-no")
     @ResponseBody
     public ResponseEntity<?> nextDocNo() {
         return run(() -> one("docNo", service.nextDocNo()));
     }
 
     /** GetIdByRefDocTypeIdAndRefDocId (LoadDataForWages:2186, with RefDocument). */
-    @GetMapping(API + "/id-by-reference")
+    @GetMapping("/api/production/wages-bill/id-by-reference")
     @ResponseBody
     public ResponseEntity<?> idByReference(@RequestParam(defaultValue = "0") int refDocumentTypeId,
                                            @RequestParam(defaultValue = "0") int refDocNoId,
@@ -88,7 +87,7 @@ public class ProductionWagesBillController {
     }
 
     /** PendingGrnAndGdn():1974 / PendingTicket():2040. */
-    @GetMapping(API + "/pending")
+    @GetMapping("/api/production/wages-bill/pending")
     @ResponseBody
     public ResponseEntity<?> pending(@RequestParam(defaultValue = "0") int refDocTypeId,
                                      @RequestParam(defaultValue = "0") int refDocId) {
@@ -96,7 +95,7 @@ public class ProductionWagesBillController {
     }
 
     /** LoadDataForWages:2209 - InvGrn.GetGrnDetialForContractorWages. */
-    @GetMapping(API + "/reference-detail")
+    @GetMapping("/api/production/wages-bill/reference-detail")
     @ResponseBody
     public ResponseEntity<?> referenceDetail(@RequestParam(defaultValue = "0") int id,
                                              @RequestParam(defaultValue = "0") int documentTypeId,
@@ -105,7 +104,7 @@ public class ProductionWagesBillController {
     }
 
     /** CommonServices.CheckItemsFreeofcostforWages, one answer per row sent. */
-    @PostMapping(API + "/free-of-cost")
+    @PostMapping("/api/production/wages-bill/free-of-cost")
     @ResponseBody
     @SuppressWarnings("unchecked")
     public ResponseEntity<?> freeOfCost(@RequestBody Map<String, Object> body) {
@@ -113,7 +112,7 @@ public class ProductionWagesBillController {
     }
 
     /** CommonServices.GetWagesRate, one answer per row sent. */
-    @PostMapping(API + "/wages-rate")
+    @PostMapping("/api/production/wages-bill/wages-rate")
     @ResponseBody
     @SuppressWarnings("unchecked")
     public ResponseEntity<?> wagesRate(@RequestBody Map<String, Object> body) {
@@ -121,12 +120,12 @@ public class ProductionWagesBillController {
     }
 
     /** InvContractorWagesBillHeader.GetByID. */
-    @GetMapping(API + "/bill/{id}")
+    @GetMapping("/api/production/wages-bill/bill/{id}")
     @ResponseBody
     public ResponseEntity<?> bill(@PathVariable int id) { return run(() -> service.bill(id)); }
 
     /** RetreivalDetailGridDeletedData():2332. */
-    @GetMapping(API + "/previous-records")
+    @GetMapping("/api/production/wages-bill/previous-records")
     @ResponseBody
     public ResponseEntity<?> previousRecords(@RequestParam(defaultValue = "0") int refDocTypeId,
                                              @RequestParam(defaultValue = "0") int refDocId) {
@@ -134,7 +133,7 @@ public class ProductionWagesBillController {
     }
 
     /** ValidationOnformClose():2597 - WagesDeleteByRefDocTypeAndId after the operator said Yes. */
-    @PostMapping(API + "/delete-by-reference")
+    @PostMapping("/api/production/wages-bill/delete-by-reference")
     @ResponseBody
     public ResponseEntity<?> deleteByReference(@RequestBody Map<String, Object> body) {
         return run(() -> {
@@ -144,12 +143,12 @@ public class ProductionWagesBillController {
     }
 
     /** DocumentTypeFillForCombo():569 / btnRefreshHistory_Click:3556. */
-    @GetMapping(API + "/history-document-types")
+    @GetMapping("/api/production/wages-bill/history-document-types")
     @ResponseBody
     public ResponseEntity<?> historyDocumentTypes() { return run(service::historyDocumentTypes); }
 
     /** bindHistory():3247. */
-    @GetMapping(API + "/history")
+    @GetMapping("/api/production/wages-bill/history")
     @ResponseBody
     public ResponseEntity<?> history(@RequestParam(required = false) String from,
                                      @RequestParam(required = false) String to,
@@ -160,14 +159,14 @@ public class ProductionWagesBillController {
     }
 
     /** History "Voucher" button:3420 - VoucherHeadIdGet(Id, 101). */
-    @GetMapping(API + "/voucher-head-id")
+    @GetMapping("/api/production/wages-bill/voucher-head-id")
     @ResponseBody
     public ResponseEntity<?> voucherHeadId(@RequestParam(defaultValue = "0") int id) {
         return run(() -> one("voucherHeadId", service.voucherHeadId(id)));
     }
 
     /** BtnCancelPendingRecords_Click:4037. */
-    @PostMapping(API + "/cancel-pending")
+    @PostMapping("/api/production/wages-bill/cancel-pending")
     @ResponseBody
     @SuppressWarnings("unchecked")
     public ResponseEntity<?> cancelPending(@RequestBody Map<String, Object> body) {
@@ -176,7 +175,7 @@ public class ProductionWagesBillController {
     }
 
     /** btnsave_Click:3029 / btnUpdate_Click:3042 -> Insert():2702. */
-    @PostMapping(API + "/save")
+    @PostMapping("/api/production/wages-bill/save")
     @ResponseBody
     public ResponseEntity<?> save(@RequestBody Map<String, Object> body) {
         return write(() -> service.save(body));

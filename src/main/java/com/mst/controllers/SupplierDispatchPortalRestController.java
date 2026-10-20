@@ -27,8 +27,6 @@ import java.util.Map;
 @RestController
 public class SupplierDispatchPortalRestController {
     private static final Logger LOG = LoggerFactory.getLogger(SupplierDispatchPortalRestController.class);
-    private static final String API = "/api/purchase/supplier-dispatch";
-    private static final String ATT = "/api/purchase/supplier-dispatch-attachments";
 
     private final SupplierDispatchPortalService service;
     private final SupplierDispatchAttachmentService attachments;
@@ -38,25 +36,25 @@ public class SupplierDispatchPortalRestController {
         this.attachments = attachments;
     }
 
-    @GetMapping(API + "/lookups")
+    @GetMapping("/api/purchase/supplier-dispatch/lookups")
     public Map<String, Object> lookups() { return service.lookups(); }
 
-    @GetMapping(API + "/refresh")
+    @GetMapping("/api/purchase/supplier-dispatch/refresh")
     public Map<String, Object> refresh() { return service.formRefresh(); }
 
-    @GetMapping(API + "/numbers")
+    @GetMapping("/api/purchase/supplier-dispatch/numbers")
     public Map<String, Object> numbers() { return service.numbers(); }
 
-    @GetMapping(API + "/history-refresh")
+    @GetMapping("/api/purchase/supplier-dispatch/history-refresh")
     public Map<String, Object> historyRefresh() { return service.historyRefresh(); }
 
-    @GetMapping(API + "/uoms")
+    @GetMapping("/api/purchase/supplier-dispatch/uoms")
     public List<Map<String, Object>> uoms(@RequestParam(defaultValue = "0") int itemId) { return service.uoms(itemId); }
 
-    @GetMapping(API + "/orders")
+    @GetMapping("/api/purchase/supplier-dispatch/orders")
     public List<Map<String, Object>> orders(@RequestParam(defaultValue = "0") int supplierId) { return service.orders(supplierId); }
 
-    @GetMapping(API + "/history")
+    @GetMapping("/api/purchase/supplier-dispatch/history")
     public List<Map<String, Object>> history(@RequestParam(defaultValue = "") String branchIds,
                                              @RequestParam(defaultValue = "doc") String dateType,
                                              @RequestParam(defaultValue = "true") boolean fromChecked,
@@ -68,33 +66,33 @@ public class SupplierDispatchPortalRestController {
         return service.history(branchIds, dateType, fromChecked, fromDate, toChecked, toDate, fromDocNo, toDocNo);
     }
 
-    @GetMapping(API + "/{id}")
+    @GetMapping("/api/purchase/supplier-dispatch/{id}")
     public Map<String, Object> load(@PathVariable int id) { return service.load(id); }
 
-    @GetMapping(API + "/{id}/image/{which}")
+    @GetMapping("/api/purchase/supplier-dispatch/{id}/image/{which}")
     public ResponseEntity<byte[]> image(@PathVariable int id, @PathVariable String which) {
         Map<String, Object> m = service.image(id, which);
         if (m == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok().contentType(MediaType.parseMediaType(String.valueOf(m.get("type")))).body((byte[]) m.get("bytes"));
     }
 
-    @GetMapping(API + "/{id}/print-check")
+    @GetMapping("/api/purchase/supplier-dispatch/{id}/print-check")
     public Map<String, Object> printCheck(@PathVariable int id) { return service.checkPrint(id); }
 
-    @PostMapping(API + "/save")
+    @PostMapping("/api/purchase/supplier-dispatch/save")
     public Map<String, Object> save(@RequestBody Map<String, Object> dto) { return service.save(dto); }
 
-    @PostMapping(API + "/{id}/delete")
+    @PostMapping("/api/purchase/supplier-dispatch/{id}/delete")
     public Map<String, Object> delete(@PathVariable int id) { return service.delete(id); }
 
     /** The Attachment form's list of a saved record (and the History NoOfAttachments link). */
-    @GetMapping(ATT + "/{type}/{id}")
+    @GetMapping("/api/purchase/supplier-dispatch-attachments/{type}/{id}")
     public List<Map<String, Object>> attachmentList(@PathVariable int type, @PathVariable int id) {
         service.requireReadable(id);
         return attachments.list(id, type);
     }
 
-    @GetMapping(ATT + "/{type}/{id}/{attachment}")
+    @GetMapping("/api/purchase/supplier-dispatch-attachments/{type}/{id}/{attachment}")
     public ResponseEntity<byte[]> attachmentDownload(@PathVariable int type, @PathVariable int id, @PathVariable int attachment) {
         service.requireReadable(id);
         var file = attachments.download(id, type, attachment);

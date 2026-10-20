@@ -19,42 +19,42 @@ public class SaleBookingOrderController {
     @GetMapping("/sale/booking-order")
     public String page(Model model) { model.addAttribute("activeMenu", "sale"); return "sale/booking_order"; }
 
-    @GetMapping(API + "/lookups") @ResponseBody
+    @GetMapping("/sale/api/booking-order/lookups") @ResponseBody
     public ResponseEntity<?> lookups() { return run(service::lookups, "Could not load the screen."); }
-    @GetMapping(API + "/numbers") @ResponseBody
+    @GetMapping("/sale/api/booking-order/numbers") @ResponseBody
     public ResponseEntity<?> numbers(@RequestParam(defaultValue = "0") int categoryId) { return run(() -> service.numbers(categoryId), "Could not read the document number."); }
-    @GetMapping(API + "/uoms") @ResponseBody
+    @GetMapping("/sale/api/booking-order/uoms") @ResponseBody
     public ResponseEntity<?> uoms(@RequestParam int itemId) { return write(() -> service.uoms(itemId), "Could not load the units."); }
-    @GetMapping(API + "/crop-years") @ResponseBody
+    @GetMapping("/sale/api/booking-order/crop-years") @ResponseBody
     public ResponseEntity<?> cropYears(@RequestParam int itemId, @RequestParam(required = false) String date) { return run(() -> service.cropYears(itemId, date), "Could not load the crop years."); }
-    @GetMapping(API + "/pricing") @ResponseBody
+    @GetMapping("/sale/api/booking-order/pricing") @ResponseBody
     public ResponseEntity<?> pricing(@RequestParam int itemId, @RequestParam int cropYearId, @RequestParam(defaultValue = "0") int customerId, @RequestParam(required = false) String date) {
         return run(() -> service.pricing(itemId, cropYearId, customerId, date), "Could not read the item rate.");
     }
-    @GetMapping(API + "/customer-discount") @ResponseBody
+    @GetMapping("/sale/api/booking-order/customer-discount") @ResponseBody
     public ResponseEntity<?> customerDiscount(@RequestParam int customerId, @RequestParam int itemId, @RequestParam(required = false) String date) {
         return run(() -> service.customerDiscount(customerId, itemId, date), "Could not read the customer discount.");
     }
-    @GetMapping(API + "/packing-add-less") @ResponseBody
+    @GetMapping("/sale/api/booking-order/packing-add-less") @ResponseBody
     public ResponseEntity<?> packingAddLess(@RequestParam int uomId, @RequestParam(defaultValue = "0") int customerId, @RequestParam(required = false) String date) {
         return run(() -> service.packingAddLess(uomId, customerId, date), "Could not read the packing price.");
     }
-    @GetMapping(API + "/history") @ResponseBody
+    @GetMapping("/sale/api/booking-order/history") @ResponseBody
     public ResponseEntity<?> history(@RequestParam(defaultValue = "doc") String mode, @RequestParam(required = false) String from, @RequestParam(required = false) String to,
                                      @RequestParam(defaultValue = "0") double fromNo, @RequestParam(defaultValue = "0") double toNo, @RequestParam(defaultValue = "0") int customerId,
                                      @RequestParam(required = false) String branchIds) {
         return run(() -> service.history(mode, from, to, fromNo, toNo, customerId, branchIds), "Could not load the history.");
     }
-    @GetMapping(API + "/history-customers") @ResponseBody
+    @GetMapping("/sale/api/booking-order/history-customers") @ResponseBody
     public ResponseEntity<?> historyCustomers(@RequestParam(defaultValue = "") String branchIds) { return run(() -> service.historyCustomers(branchIds), "Could not load the customers."); }
-    @GetMapping(API + "/{id:[0-9]+}") @ResponseBody
+    @GetMapping("/sale/api/booking-order/{id:[0-9]+}") @ResponseBody
     public ResponseEntity<?> record(@PathVariable int id) { return write(() -> service.record(id), "Record not found..."); }
 
-    @PostMapping(API + "/checks") @ResponseBody
+    @PostMapping("/sale/api/booking-order/checks") @ResponseBody
     public ResponseEntity<?> checks(@RequestBody Map<String, Object> body) { return write(() -> service.checks(body), "Could not check the booking order."); }
     @PostMapping(API) @ResponseBody
     public ResponseEntity<?> insert(@RequestBody Map<String, Object> body) { body.put("id", 0); return write(() -> service.save(body), "Could not save the record."); }
-    @PutMapping(API + "/{id:[0-9]+}") @ResponseBody
+    @PutMapping("/sale/api/booking-order/{id:[0-9]+}") @ResponseBody
     public ResponseEntity<?> update(@PathVariable int id, @RequestBody Map<String, Object> body) { body.put("id", id); body.put("mode", "update"); return write(() -> service.save(body), "Could not update the record."); }
 
     private interface Call { Object get() throws Exception; }

@@ -30,31 +30,31 @@ public class ExportPreShipmentInspectionController {
         return "export/pre_shipment_inspection";
     }
 
-    @GetMapping(API + "/setup") @ResponseBody
+    @GetMapping("/api/export/pre-shipment-inspection/setup") @ResponseBody
     public ResponseEntity<?> setup() { return call(() -> svc.setup(), "Error occurred during database call."); }
 
-    @GetMapping(API + "/refresh") @ResponseBody
+    @GetMapping("/api/export/pre-shipment-inspection/refresh") @ResponseBody
     public ResponseEntity<?> refresh() { return call(() -> svc.refresh(), "Load failed."); }
 
-    @GetMapping(API + "/doc-no") @ResponseBody
+    @GetMapping("/api/export/pre-shipment-inspection/doc-no") @ResponseBody
     public ResponseEntity<?> docNo() { return call(() -> svc.docNo(), "Load failed."); }
 
-    @GetMapping(API + "/history-items") @ResponseBody
+    @GetMapping("/api/export/pre-shipment-inspection/history-items") @ResponseBody
     public ResponseEntity<?> historyItems() { return call(() -> svc.historyItems(), "Load failed."); }
 
-    @GetMapping(API + "/contracts") @ResponseBody
+    @GetMapping("/api/export/pre-shipment-inspection/contracts") @ResponseBody
     public ResponseEntity<?> contracts(@RequestParam("customerId") int customerId) { return call(() -> svc.contracts(customerId), "Load failed."); }
 
-    @GetMapping(API + "/by-id") @ResponseBody
+    @GetMapping("/api/export/pre-shipment-inspection/by-id") @ResponseBody
     public ResponseEntity<?> byId(@RequestParam("id") int id) { return call(() -> svc.readById(id), "Load failed."); }
 
-    @GetMapping(API + "/details") @ResponseBody
+    @GetMapping("/api/export/pre-shipment-inspection/details") @ResponseBody
     public ResponseEntity<?> details(@RequestParam("id") int id) { return call(() -> svc.detailsOf(id), "Load failed."); }
 
-    @PostMapping(API + "/history") @ResponseBody
+    @PostMapping("/api/export/pre-shipment-inspection/history") @ResponseBody
     public ResponseEntity<?> history(@RequestBody Map<String, Object> body) { return call(() -> svc.history(body), "Load failed."); }
 
-    @PostMapping(API + "/save") @ResponseBody
+    @PostMapping("/api/export/pre-shipment-inspection/save") @ResponseBody
     public ResponseEntity<?> save(@RequestBody Map<String, Object> body) { return call(() -> svc.save(body), "Save failed."); }
 
     private interface Call { Object run() throws Exception; }

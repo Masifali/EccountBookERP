@@ -18,7 +18,6 @@ import java.util.NoSuchElementException;
 @Controller
 public class SaleInvoiceDirect139Controller {
 
-    private static final String API = "/sale/api/sale-invoice-direct-139";
 
     private final SaleInvoiceDirect139Service service;
     public SaleInvoiceDirect139Controller(SaleInvoiceDirect139Service service) { this.service = service; }
@@ -29,27 +28,27 @@ public class SaleInvoiceDirect139Controller {
         return "sale/sale_invoice_direct_139";
     }
 
-    @GetMapping(API + "/lookups") @ResponseBody
+    @GetMapping("/sale/api/sale-invoice-direct-139/lookups") @ResponseBody
     public ResponseEntity<?> lookups() { return run(service::lookups, "Could not load the screen."); }
 
-    @GetMapping(API + "/numbers") @ResponseBody
+    @GetMapping("/sale/api/sale-invoice-direct-139/numbers") @ResponseBody
     public ResponseEntity<?> numbers() { return run(service::numbers, "Could not read the document number."); }
 
-    @GetMapping(API + "/uoms") @ResponseBody
+    @GetMapping("/sale/api/sale-invoice-direct-139/uoms") @ResponseBody
     public ResponseEntity<?> uoms(@RequestParam int itemId) { return run(() -> service.uoms(itemId), "Could not load the units."); }
 
-    @GetMapping(API + "/stock") @ResponseBody
+    @GetMapping("/sale/api/sale-invoice-direct-139/stock") @ResponseBody
     public ResponseEntity<?> stock(@RequestParam int itemId, @RequestParam(required = false) String docDate,
                                    @RequestParam(defaultValue = "0") int packingTypeId, @RequestParam(defaultValue = "0") int stockUom) {
         return run(() -> service.stock(itemId, docDate, packingTypeId, stockUom), "Could not read the stock.");
     }
 
-    @GetMapping(API + "/history") @ResponseBody
+    @GetMapping("/sale/api/sale-invoice-direct-139/history") @ResponseBody
     public ResponseEntity<?> history(@RequestParam(defaultValue = "0") int noOfRecords) {
         return run(() -> service.history(noOfRecords), "History failed.");
     }
 
-    @GetMapping(API + "/{id}") @ResponseBody
+    @GetMapping("/sale/api/sale-invoice-direct-139/{id}") @ResponseBody
     public ResponseEntity<?> load(@PathVariable int id) {
         try {
             return ResponseEntity.ok(service.read(id));
@@ -60,7 +59,7 @@ public class SaleInvoiceDirect139Controller {
         }
     }
 
-    @PostMapping(API + "/save") @ResponseBody
+    @PostMapping("/sale/api/sale-invoice-direct-139/save") @ResponseBody
     public ResponseEntity<?> save(@RequestBody Map<String, Object> req) { return write(() -> service.save(req), "Save failed."); }
 
     // --------------------------------------------------------------------------- helpers

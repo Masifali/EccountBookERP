@@ -43,25 +43,25 @@ public class StoreIssuanceToConsumableController {
         return "store/store_issuance_to_consumable";
     }
 
-    @GetMapping(API + "/lookups")
+    @GetMapping("/api/store/issuance-to-consumable-store/lookups")
     @ResponseBody
     public ResponseEntity<?> lookups() { return run(service::lookups, "Could not load the screen."); }
 
-    @GetMapping(API + "/refresh")
+    @GetMapping("/api/store/issuance-to-consumable-store/refresh")
     @ResponseBody
     public ResponseEntity<?> refresh() { return run(service::refresh, "Refresh failed."); }
 
-    @GetMapping(API + "/doc-no")
+    @GetMapping("/api/store/issuance-to-consumable-store/doc-no")
     @ResponseBody
     public ResponseEntity<?> docNo() {
         return run(() -> java.util.Collections.singletonMap("docNo", service.docNo()), "Could not generate the Doc No.");
     }
 
-    @GetMapping(API + "/loader/lookups")
+    @GetMapping("/api/store/issuance-to-consumable-store/loader/lookups")
     @ResponseBody
     public ResponseEntity<?> loaderLookups() { return run(service::loaderLookups, "Could not load the filters."); }
 
-    @GetMapping(API + "/loader/pending")
+    @GetMapping("/api/store/issuance-to-consumable-store/loader/pending")
     @ResponseBody
     public ResponseEntity<?> pending(@RequestParam(required = false) String fromDate,
                                      @RequestParam(required = false) String toDate,
@@ -77,13 +77,13 @@ public class StoreIssuanceToConsumableController {
                 workStationFromId, workStationToId, workOrderId, itemId), "Could not load pending requests.");
     }
 
-    @GetMapping(API + "/history")
+    @GetMapping("/api/store/issuance-to-consumable-store/history")
     @ResponseBody
     public ResponseEntity<?> history(@RequestParam(defaultValue = "0") int noOfRecords) {
         return run(() -> service.history(noOfRecords), "History failed.");
     }
 
-    @GetMapping(API + "/{id}")
+    @GetMapping("/api/store/issuance-to-consumable-store/{id}")
     @ResponseBody
     public ResponseEntity<?> load(@PathVariable int id) {
         try {
@@ -95,7 +95,7 @@ public class StoreIssuanceToConsumableController {
         }
     }
 
-    @GetMapping(API + "/{id}/slip")
+    @GetMapping("/api/store/issuance-to-consumable-store/{id}/slip")
     @ResponseBody
     public ResponseEntity<?> slip(@PathVariable int id) {
         try {
@@ -111,13 +111,13 @@ public class StoreIssuanceToConsumableController {
         }
     }
 
-    @PostMapping(API + "/precheck")
+    @PostMapping("/api/store/issuance-to-consumable-store/precheck")
     @ResponseBody
     public ResponseEntity<?> precheck(@RequestBody StoreIssuanceToConsumableDto dto) {
         return write(() -> service.precheck(dto));
     }
 
-    @PostMapping(API + "/save")
+    @PostMapping("/api/store/issuance-to-consumable-store/save")
     @ResponseBody
     public ResponseEntity<?> save(@RequestBody StoreIssuanceToConsumableDto dto) {
         return write(() -> service.save(dto));

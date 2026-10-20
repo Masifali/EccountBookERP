@@ -30,7 +30,6 @@ import java.util.function.Supplier;
 @Controller
 public class Inact1CreditNotesController {
     private static final int SCREEN_ID = 27;
-    private static final String API = "/api/accounts/credit-notes";
 
     @Autowired private Inact1CreditNotesService service;
     @Autowired private CurrentUserContext context;
@@ -49,24 +48,24 @@ public class Inact1CreditNotesController {
         return "accounts/inact1_credit_notes";
     }
 
-    @GetMapping(API + "/load") @ResponseBody
+    @GetMapping("/api/accounts/credit-notes/load") @ResponseBody
     public ResponseEntity<?> load() { return run(() -> { gate(); return service.load(); }); }
 
-    @GetMapping(API + "/generate-code") @ResponseBody
+    @GetMapping("/api/accounts/credit-notes/generate-code") @ResponseBody
     public ResponseEntity<?> generateCode() { return run(() -> { gate(); return service.generateCode(); }); }
 
-    @GetMapping(API + "/show-detail") @ResponseBody
+    @GetMapping("/api/accounts/credit-notes/show-detail") @ResponseBody
     public ResponseEntity<?> showDetail(@RequestParam(required = false) String fromDate, @RequestParam(required = false) String toDate) {
         return run(() -> { gate(); return service.showDetail(fromDate, toDate); });
     }
 
-    @GetMapping(API + "/history") @ResponseBody
+    @GetMapping("/api/accounts/credit-notes/history") @ResponseBody
     public ResponseEntity<?> history() { return run(() -> { gate(); return service.history(); }); }
 
-    @GetMapping(API + "/history-detail") @ResponseBody
+    @GetMapping("/api/accounts/credit-notes/history-detail") @ResponseBody
     public ResponseEntity<?> historyDetail(@RequestParam int id) { return run(() -> { gate(); return service.historyDetail(id); }); }
 
-    @PostMapping(API + "/save") @ResponseBody
+    @PostMapping("/api/accounts/credit-notes/save") @ResponseBody
     public ResponseEntity<?> save(@RequestBody Map<String, Object> body) { return run(() -> { gate(); return service.save(body); }); }
 
     private ResponseEntity<?> run(Supplier<Object> work) {

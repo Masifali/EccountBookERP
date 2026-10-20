@@ -88,6 +88,20 @@ public class LegacyUserPasswordEncoder implements PasswordEncoder {
 			return null;
 		}
 	}
+	public static  String decodeaaa(String encryptedPassword) {
+		if (encryptedPassword == null || encryptedPassword.isEmpty()) {
+			return "";
+		}
+		try {
+			byte[] keyBytes = KEY.getBytes(StandardCharsets.UTF_8);
+			Cipher cipher = Cipher.getInstance(TRANSFORMATION);
+			cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(keyBytes, "AES"), new IvParameterSpec(keyBytes));
+			byte[] decrypted = cipher.doFinal(Base64.getDecoder().decode(encryptedPassword));
+			return new String(decrypted, StandardCharsets.UTF_8);
+		} catch (Exception ex) {
+			return null;
+		}
+	}
 
 	@Override
 	public boolean matches(CharSequence rawPassword, String encodedPassword) {

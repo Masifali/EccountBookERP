@@ -26,7 +26,6 @@ import java.util.Map;
 @Controller
 public class PurchaseDemandController {
 
-    private static final String API = "/api/store/purchase-demand";
 
     private final PurchaseDemandService service;
     public PurchaseDemandController(PurchaseDemandService service) { this.service = service; }
@@ -37,17 +36,17 @@ public class PurchaseDemandController {
         return "store/purchase_demand";
     }
 
-    @GetMapping(API + "/lookups")
+    @GetMapping("/api/store/purchase-demand/lookups")
     @ResponseBody
     public ResponseEntity<?> lookups() { return run(service::lookups, "Could not load the screen."); }
 
-    @GetMapping(API + "/last-purchase")
+    @GetMapping("/api/store/purchase-demand/last-purchase")
     @ResponseBody
     public ResponseEntity<?> lastPurchase(@RequestParam(defaultValue = "0") int itemId) {
         return run(() -> service.lastPurchase(itemId), "Could not read the last purchase.");
     }
 
-    @GetMapping(API + "/outstanding")
+    @GetMapping("/api/store/purchase-demand/outstanding")
     @ResponseBody
     public ResponseEntity<?> outstanding(@RequestParam(defaultValue = "0") int itemId,
                                          @RequestParam(required = false) String docDate,
@@ -56,13 +55,13 @@ public class PurchaseDemandController {
         return run(() -> service.outstanding(itemId, docDate, itemConditionId, recId), "Could not read the outstanding quantity.");
     }
 
-    @GetMapping(API + "/barcode")
+    @GetMapping("/api/store/purchase-demand/barcode")
     @ResponseBody
     public ResponseEntity<?> barcode(@RequestParam(required = false) String no) {
         return run(() -> Collections.singletonMap("itemId", service.itemIdByBarcode(no)), "Could not read the barcode.");
     }
 
-    @GetMapping(API + "/history")
+    @GetMapping("/api/store/purchase-demand/history")
     @ResponseBody
     public ResponseEntity<?> history(@RequestParam(defaultValue = "doc") String dateType,
                                      @RequestParam(required = false) String fromDate,
@@ -72,7 +71,7 @@ public class PurchaseDemandController {
         return run(() -> service.history(dateType, fromDate, toDate, fromDocNo, toDocNo), "History failed.");
     }
 
-    @GetMapping(API + "/{id}")
+    @GetMapping("/api/store/purchase-demand/{id}")
     @ResponseBody
     public ResponseEntity<?> load(@PathVariable int id) {
         try {
@@ -84,7 +83,7 @@ public class PurchaseDemandController {
         }
     }
 
-    @GetMapping(API + "/{id}/slip")
+    @GetMapping("/api/store/purchase-demand/{id}/slip")
     @ResponseBody
     public ResponseEntity<?> slip(@PathVariable int id) {
         try {
@@ -98,7 +97,7 @@ public class PurchaseDemandController {
         }
     }
 
-    @PostMapping(API + "/save")
+    @PostMapping("/api/store/purchase-demand/save")
     @ResponseBody
     public ResponseEntity<?> save(@RequestBody PurchaseDemandDto dto) {
         try {

@@ -41,24 +41,24 @@ public class ExportVoucherForUploadController {
         return "accounts/export_voucher_for_upload";
     }
 
-    @GetMapping(API + "/init") @ResponseBody
+    @GetMapping("/accounts/api/export-voucher-for-upload/init") @ResponseBody
     public Map<String, Object> init() { return service.init(); }
 
-    @GetMapping(API + "/refresh") @ResponseBody
+    @GetMapping("/accounts/api/export-voucher-for-upload/refresh") @ResponseBody
     public Map<String, Object> refresh() { return service.refresh(); }
 
-    @PostMapping(API + "/rows") @ResponseBody
+    @PostMapping("/accounts/api/export-voucher-for-upload/rows") @ResponseBody
     public Map<String, Object> rows(@RequestBody Map<String, Object> body) { return service.rows(body); }
 
-    @PostMapping(API + "/upload") @ResponseBody
+    @PostMapping("/accounts/api/export-voucher-for-upload/upload") @ResponseBody
     public Map<String, Object> upload(@RequestBody Map<String, Object> body) { return service.upload(body); }
 
-    @GetMapping(API + "/attachments") @ResponseBody
+    @GetMapping("/accounts/api/export-voucher-for-upload/attachments") @ResponseBody
     public List<Map<String, Object>> attachments(@RequestParam int id, @RequestParam int documentTypeId) {
         return service.attachments(id, documentTypeId);
     }
 
-    @GetMapping(API + "/attachments/{attachmentId:[0-9]+}")
+    @GetMapping("/accounts/api/export-voucher-for-upload/attachments/{attachmentId:[0-9]+}")
     public ResponseEntity<byte[]> attachment(@PathVariable int attachmentId, @RequestParam int id, @RequestParam int documentTypeId) {
         ExportVoucherForUploadService.Download file = service.attachment(id, documentTypeId, attachmentId);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_OCTET_STREAM)

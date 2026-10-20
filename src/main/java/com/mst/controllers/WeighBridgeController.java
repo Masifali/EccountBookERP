@@ -39,7 +39,6 @@ import java.util.concurrent.Callable;
 @Controller
 public class WeighBridgeController {
 
-    private static final String API = "/api/weighbridge";
 
     @Autowired
     private WeighBridgeService service;
@@ -51,22 +50,22 @@ public class WeighBridgeController {
     }
 
     /** InitializeComponentMethod():661. */
-    @GetMapping(API + "/lookups")
+    @GetMapping("/api/weighbridge/lookups")
     @ResponseBody
     public ResponseEntity<?> lookups() { return run(service::lookups, "Could not load the screen."); }
 
     /** btnRefresh_Click:4629. */
-    @GetMapping(API + "/refresh-lists")
+    @GetMapping("/api/weighbridge/refresh-lists")
     @ResponseBody
     public ResponseEntity<?> refreshLists() { return run(service::refreshLists, "Refresh failed."); }
 
     /** BtnRefreshHistory_Click:3706. */
-    @GetMapping(API + "/refresh-history-lists")
+    @GetMapping("/api/weighbridge/refresh-history-lists")
     @ResponseBody
     public ResponseEntity<?> refreshHistoryLists() { return run(service::refreshHistoryLists, "Refresh failed."); }
 
     /** WeightBridge_Helper.GetTicketNoDbCall. */
-    @GetMapping(API + "/ticket-no")
+    @GetMapping("/api/weighbridge/ticket-no")
     @ResponseBody
     public ResponseEntity<?> ticketNo() {
         return run(() -> { Map<String, Object> m = new LinkedHashMap<>(); m.put("ticketNo", service.nextTicketNo()); return m; },
@@ -74,7 +73,7 @@ public class WeighBridgeController {
     }
 
     /** GatePassBending():3816. mode = lab | engr | outward | general | party. */
-    @GetMapping(API + "/ref-docs")
+    @GetMapping("/api/weighbridge/ref-docs")
     @ResponseBody
     public ResponseEntity<?> refDocs(@RequestParam String mode,
                                      @RequestParam(required = false, defaultValue = "0") int documentTypeId) {
@@ -82,7 +81,7 @@ public class WeighBridgeController {
     }
 
     /** cmbRefDocNo_Leave():3946. kind = inward | outward | general | party. */
-    @GetMapping(API + "/gate-pass")
+    @GetMapping("/api/weighbridge/gate-pass")
     @ResponseBody
     public ResponseEntity<?> gatePass(@RequestParam String kind,
                                       @RequestParam(required = false, defaultValue = "0") int documentTypeId,
@@ -91,41 +90,41 @@ public class WeighBridgeController {
         return run(() -> service.gatePass(kind, documentTypeId, id, gpSrNo), "Could not read the gate pass.");
     }
 
-    @GetMapping(API + "/lab-items")
+    @GetMapping("/api/weighbridge/lab-items")
     @ResponseBody
     public ResponseEntity<?> labItems(@RequestParam int gpId,
                                       @RequestParam(required = false, defaultValue = "0") int actionId) {
         return run(() -> service.labItems(gpId, actionId), "Could not read the lab items.");
     }
 
-    @GetMapping(API + "/delivery-order-items")
+    @GetMapping("/api/weighbridge/delivery-order-items")
     @ResponseBody
     public ResponseEntity<?> deliveryOrderItems(@RequestParam(required = false, defaultValue = "0") int deliveryOrderId,
                                                 @RequestParam(required = false, defaultValue = "0") int gpId) {
         return run(() -> service.deliveryOrderItems(deliveryOrderId, gpId), "Could not read the delivery order items.");
     }
 
-    @GetMapping(API + "/delivery-order-parties-items")
+    @GetMapping("/api/weighbridge/delivery-order-parties-items")
     @ResponseBody
     public ResponseEntity<?> deliveryOrderPartiesAndItems(@RequestParam int gpId,
                                                           @RequestParam(required = false, defaultValue = "0") int recId) {
         return run(() -> service.deliveryOrderPartiesAndItems(gpId, recId), "Could not read the delivery order parties.");
     }
 
-    @GetMapping(API + "/delivery-order-invoices")
+    @GetMapping("/api/weighbridge/delivery-order-invoices")
     @ResponseBody
     public ResponseEntity<?> deliveryOrderInvoices(@RequestParam int gpId) {
         return run(() -> service.deliveryOrderInvoices(gpId), "Could not read the invoice numbers.");
     }
 
-    @GetMapping(API + "/sale-order-items")
+    @GetMapping("/api/weighbridge/sale-order-items")
     @ResponseBody
     public ResponseEntity<?> saleOrderItems(@RequestParam int saleOrderId) {
         return run(() -> service.saleOrderItems(saleOrderId), "Could not read the sale order items.");
     }
 
     /** BindPendingFor1st():1729. A date is absent when its picker checkbox is cleared. */
-    @GetMapping(API + "/pending-first")
+    @GetMapping("/api/weighbridge/pending-first")
     @ResponseBody
     public ResponseEntity<?> pendingFirst(@RequestParam(required = false) String fromDate,
                                           @RequestParam(required = false) String toDate,
@@ -135,7 +134,7 @@ public class WeighBridgeController {
     }
 
     /** bindGridPendingForSecond():1975. */
-    @GetMapping(API + "/pending-second")
+    @GetMapping("/api/weighbridge/pending-second")
     @ResponseBody
     public ResponseEntity<?> pendingSecond(@RequestParam(required = false) String fromDate,
                                            @RequestParam(required = false) String toDate,
@@ -145,7 +144,7 @@ public class WeighBridgeController {
     }
 
     /** BindHistoryGrid():3537. */
-    @GetMapping(API + "/history")
+    @GetMapping("/api/weighbridge/history")
     @ResponseBody
     public ResponseEntity<?> history(@RequestParam(required = false, defaultValue = "doc") String dateMode,
                                      @RequestParam(required = false) String fromDate,
@@ -164,7 +163,7 @@ public class WeighBridgeController {
     }
 
     /** ReadById(ID):2587. */
-    @GetMapping(API + "/{id}")
+    @GetMapping("/api/weighbridge/{id}")
     @ResponseBody
     public ResponseEntity<?> load(@PathVariable int id) {
         try {
@@ -177,7 +176,7 @@ public class WeighBridgeController {
     }
 
     /** 280 slip; withImages = the 281 slip. */
-    @GetMapping(API + "/slip/{id}")
+    @GetMapping("/api/weighbridge/slip/{id}")
     @ResponseBody
     public ResponseEntity<?> slip(@PathVariable int id,
                                   @RequestParam(required = false, defaultValue = "false") boolean withImages) {
@@ -185,19 +184,19 @@ public class WeighBridgeController {
     }
 
     /** 257 inward gate pass slip with the lab and weighbridge sub-reports. */
-    @GetMapping(API + "/gate-pass-slip/{gatePassId}")
+    @GetMapping("/api/weighbridge/gate-pass-slip/{gatePassId}")
     @ResponseBody
     public ResponseEntity<?> gatePassSlip(@PathVariable int gatePassId) {
         return run(() -> service.inwardGatePassSlip(gatePassId), "Could not read the gate pass slip.");
     }
 
-    @PostMapping(API + "/save")
+    @PostMapping("/api/weighbridge/save")
     @ResponseBody
     public ResponseEntity<?> save(@RequestBody WeighBridgeService.Request request) {
         return write(() -> service.save(request), "Save failed.");
     }
 
-    @PostMapping(API + "/update")
+    @PostMapping("/api/weighbridge/update")
     @ResponseBody
     public ResponseEntity<?> update(@RequestBody WeighBridgeService.Request request) {
         return write(() -> service.update(request), "Update failed.");

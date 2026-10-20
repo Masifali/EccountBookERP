@@ -23,7 +23,6 @@ import java.util.Map;
 @Controller
 public class ExportPerformaInvoiceController {
 
-    private static final String API = "/api/export/performa-invoice";
 
     @Autowired private ExportPerformaInvoiceService svc;
 
@@ -33,25 +32,25 @@ public class ExportPerformaInvoiceController {
         return "export/performa_invoice";
     }
 
-    @GetMapping(API + "/setup") @ResponseBody
+    @GetMapping("/api/export/performa-invoice/setup") @ResponseBody
     public ResponseEntity<?> setup() { return call(() -> svc.setup(), "Error occurred during database call."); }
 
-    @GetMapping(API + "/new-code") @ResponseBody
+    @GetMapping("/api/export/performa-invoice/new-code") @ResponseBody
     public ResponseEntity<?> newCode() { return call(() -> svc.newCode(), "Load failed."); }
 
-    @GetMapping(API + "/items") @ResponseBody
+    @GetMapping("/api/export/performa-invoice/items") @ResponseBody
     public ResponseEntity<?> items() { return call(() -> svc.items(), "Load failed."); }
 
-    @GetMapping(API + "/uoms") @ResponseBody
+    @GetMapping("/api/export/performa-invoice/uoms") @ResponseBody
     public ResponseEntity<?> uoms(@RequestParam(value = "itemId", defaultValue = "0") int itemId) { return call(() -> svc.uoms(itemId), "Load failed."); }
 
-    @GetMapping(API + "/history") @ResponseBody
+    @GetMapping("/api/export/performa-invoice/history") @ResponseBody
     public ResponseEntity<?> history() { return call(() -> svc.history(), "Load failed."); }
 
-    @GetMapping(API + "/by-id") @ResponseBody
+    @GetMapping("/api/export/performa-invoice/by-id") @ResponseBody
     public ResponseEntity<?> byId(@RequestParam("id") int id) { return call(() -> svc.readById(id), "Load failed."); }
 
-    @PostMapping(API + "/save") @ResponseBody
+    @PostMapping("/api/export/performa-invoice/save") @ResponseBody
     public ResponseEntity<?> save(@RequestBody Map<String, Object> body) { return call(() -> svc.save(body), "Save failed."); }
 
     // ------------------------------------------------------------------ plumbing (same contract as 881 / 882)

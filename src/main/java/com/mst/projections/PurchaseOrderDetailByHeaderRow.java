@@ -1,0 +1,57 @@
+package com.mst.projections;
+
+/** Row of Sp_PurchaseOrder_GetAllMethod @Activity='ReadByPurchaseOrderHeaderId' (native). */
+public interface PurchaseOrderDetailByHeaderRow {
+    Integer getId();
+    Integer getPurchaseOrderId();
+    Integer getOrderItemId();
+    Integer getOrderItemUOMId();
+    Double getAmount();
+    Double getOrderItemQty();
+    Double getOrderItemRate();
+    String getOrderRemarks();
+    String getCrop();
+    Integer getJobLotId();
+    Double getNetWeight();
+    Integer getOrderItemRateUOMId();
+    String getItemCode();
+    String getItemName();
+    String getUOMCode();
+    Double getUOMDescription();
+    String getJobLotDescription();
+    String getCityArea();
+    String getLabSampleNo();
+    String getAmountCalcType();
+    String getTaxableStatus();
+    Double getBagWeight();
+    Double getBagPrice();
+    String getRateUom();
+    Double getEquivalentRate();
+    String getMoisture();
+    Double getTaxAmount();
+    Integer getLineId();
+    Double getRetailRate();
+    Integer getTaxNameId();
+    Double getTaxPercent();
+    Double getTotalAmount();
+    String getTaxName();
+    Integer getInvLabSampleAnalysisHeaderId();
+    Double getWeightPerQty();
+    Integer getCurrencyId();
+    Double getExchangeRate();
+    Double getFcyAmount();
+    Integer getCityId();
+    java.sql.Timestamp getPackingDate();
+    java.sql.Timestamp getExpiryDate();
+    Integer getCropYearId();
+    Integer getLeadTime();
+    String getWeightCapacity();
+    Integer getRefDocumentTypeId();
+    String getRefDocumentType();
+    Integer getRefDocId();
+    String getRefDocNo();
+    Integer getRefDocInvoiceId();
+    String getRefDocInvoiceNo();
+    Integer getLabAnalysisStandardScheduleId();
+    Double getDemandBalanceQty();
+}

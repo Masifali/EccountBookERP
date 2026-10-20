@@ -18,7 +18,6 @@ import java.util.NoSuchElementException;
 @Controller
 public class SaleInvoicePartyStockReserveController {
 
-    private static final String API = "/sale/api/sale-invoice-party-stock-reserve";
 
     private final SaleInvoicePartyStockReserveService service;
     public SaleInvoicePartyStockReserveController(SaleInvoicePartyStockReserveService service) { this.service = service; }
@@ -29,19 +28,19 @@ public class SaleInvoicePartyStockReserveController {
         return "sale/sale_invoice_party_stock_reserve";
     }
 
-    @GetMapping(API + "/lookups") @ResponseBody
+    @GetMapping("/sale/api/sale-invoice-party-stock-reserve/lookups") @ResponseBody
     public ResponseEntity<?> lookups() { return run(service::lookups, "Could not load the screen."); }
 
-    @GetMapping(API + "/numbers") @ResponseBody
+    @GetMapping("/sale/api/sale-invoice-party-stock-reserve/numbers") @ResponseBody
     public ResponseEntity<?> numbers() { return run(service::numbers, "Could not read the document number."); }
 
-    @GetMapping(API + "/uoms") @ResponseBody
+    @GetMapping("/sale/api/sale-invoice-party-stock-reserve/uoms") @ResponseBody
     public ResponseEntity<?> uoms(@RequestParam int itemId) { return run(() -> service.uoms(itemId), "Could not load the units."); }
 
-    @GetMapping(API + "/items-by-warehouse") @ResponseBody
+    @GetMapping("/sale/api/sale-invoice-party-stock-reserve/items-by-warehouse") @ResponseBody
     public ResponseEntity<?> itemsByWarehouse(@RequestParam int warehouseId) { return run(() -> service.itemsByWarehouse(warehouseId), "Could not load the items."); }
 
-    @GetMapping(API + "/stock") @ResponseBody
+    @GetMapping("/sale/api/sale-invoice-party-stock-reserve/stock") @ResponseBody
     public ResponseEntity<?> stock(@RequestParam int itemId, @RequestParam(required = false) String docDate,
                                    @RequestParam(defaultValue = "0") int warehouseId, @RequestParam(defaultValue = "0") int jobLotId,
                                    @RequestParam(required = false) String cropYear, @RequestParam(defaultValue = "0") int packingTypeId,
@@ -49,21 +48,21 @@ public class SaleInvoicePartyStockReserveController {
         return run(() -> service.stock(itemId, docDate, warehouseId, jobLotId, cropYear, packingTypeId, stockUom), "Could not read the stock.");
     }
 
-    @GetMapping(API + "/exchange-rate") @ResponseBody
+    @GetMapping("/sale/api/sale-invoice-party-stock-reserve/exchange-rate") @ResponseBody
     public ResponseEntity<?> exchangeRate(@RequestParam int currencyId) { return run(() -> service.exchangeRate(currencyId), "Could not read the exchange rate."); }
 
-    @GetMapping(API + "/ledger") @ResponseBody
+    @GetMapping("/sale/api/sale-invoice-party-stock-reserve/ledger") @ResponseBody
     public ResponseEntity<?> ledger(@RequestParam int customerId, @RequestParam(required = false) String docDate) {
         return run(() -> service.ledger(customerId, docDate), "Could not read the ledger balance.");
     }
 
-    @GetMapping(API + "/history-branches") @ResponseBody
+    @GetMapping("/sale/api/sale-invoice-party-stock-reserve/history-branches") @ResponseBody
     public ResponseEntity<?> historyBranches() { return run(service::historyBranches, "Could not load the branches."); }
 
-    @GetMapping(API + "/history-customers") @ResponseBody
+    @GetMapping("/sale/api/sale-invoice-party-stock-reserve/history-customers") @ResponseBody
     public ResponseEntity<?> historyCustomers() { return run(service::historyCustomers, "Could not load the customers."); }
 
-    @GetMapping(API + "/history") @ResponseBody
+    @GetMapping("/sale/api/sale-invoice-party-stock-reserve/history") @ResponseBody
     public ResponseEntity<?> history(@RequestParam(required = false) String dateMode, @RequestParam(required = false) String from,
                                      @RequestParam(required = false) String to, @RequestParam(defaultValue = "0") int fromDocNo,
                                      @RequestParam(defaultValue = "0") int toDocNo, @RequestParam(defaultValue = "0") int customerId,
@@ -71,10 +70,10 @@ public class SaleInvoicePartyStockReserveController {
         return run(() -> service.history(dateMode, from, to, fromDocNo, toDocNo, customerId, branchIds), "History failed.");
     }
 
-    @GetMapping(API + "/auto-update-ids") @ResponseBody
+    @GetMapping("/sale/api/sale-invoice-party-stock-reserve/auto-update-ids") @ResponseBody
     public ResponseEntity<?> autoUpdateIds() { return run(service::autoUpdateIds, "Could not list the records."); }
 
-    @GetMapping(API + "/{id:\\d+}") @ResponseBody
+    @GetMapping("/sale/api/sale-invoice-party-stock-reserve/{id:\\d+}") @ResponseBody
     public ResponseEntity<?> load(@PathVariable int id) {
         try {
             return ResponseEntity.ok(service.read(id));
@@ -85,10 +84,10 @@ public class SaleInvoicePartyStockReserveController {
         }
     }
 
-    @PostMapping(API + "/save") @ResponseBody
+    @PostMapping("/sale/api/sale-invoice-party-stock-reserve/save") @ResponseBody
     public ResponseEntity<?> save(@RequestBody Map<String, Object> req) { return write(() -> service.save(req), "Save failed."); }
 
-    @DeleteMapping(API + "/{id:\\d+}") @ResponseBody
+    @DeleteMapping("/sale/api/sale-invoice-party-stock-reserve/{id:\\d+}") @ResponseBody
     public ResponseEntity<?> delete(@PathVariable int id) { return write(() -> service.delete(id), "Delete failed."); }
 
     // --------------------------------------------------------------------------- helpers

@@ -32,7 +32,6 @@ import java.util.Map;
 @Controller
 public class ProductionEvaluationWagesController {
 
-    private static final String API = "/api/production/reports/evaluation-detail-wages";
 
     @Autowired private ProductionEvaluationWagesService service;
 
@@ -43,35 +42,35 @@ public class ProductionEvaluationWagesController {
     }
 
     /** frmEvaulationDetailSalesReports_Load:151 (features, BranchesFill, Start_Period, formats). */
-    @GetMapping(API + "/load")
+    @GetMapping("/api/production/reports/evaluation-detail-wages/load")
     @ResponseBody
     public ResponseEntity<?> load() {
         try { return ResponseEntity.ok(service.load()); } catch (Exception e) { return error(e); }
     }
 
     /** BranchesFill (Refresh). */
-    @GetMapping(API + "/branches")
+    @GetMapping("/api/production/reports/evaluation-detail-wages/branches")
     @ResponseBody
     public ResponseEntity<?> branches() {
         try { return ResponseEntity.ok(service.branches()); } catch (Exception e) { return error(e); }
     }
 
     /** ComboFill:280. */
-    @PostMapping(API + "/combos")
+    @PostMapping("/api/production/reports/evaluation-detail-wages/combos")
     @ResponseBody
     public ResponseEntity<?> combos(@RequestBody Map<String, Object> body) {
         try { return ResponseEntity.ok(service.combos(str(body.get("branchText")))); } catch (Exception e) { return error(e); }
     }
 
     /** JobOrderFill:363. */
-    @PostMapping(API + "/job-orders")
+    @PostMapping("/api/production/reports/evaluation-detail-wages/job-orders")
     @ResponseBody
     public ResponseEntity<?> jobOrders(@RequestBody Map<String, Object> body) {
         try { return ResponseEntity.ok(service.jobOrders(str(body.get("branchText")))); } catch (Exception e) { return error(e); }
     }
 
     /** GridFill:482. */
-    @PostMapping(API + "/grid")
+    @PostMapping("/api/production/reports/evaluation-detail-wages/grid")
     @ResponseBody
     public ResponseEntity<?> grid(@RequestBody Map<String, Object> body) {
         try { return ResponseEntity.ok(service.grid(body)); } catch (Exception e) { return error(e); }

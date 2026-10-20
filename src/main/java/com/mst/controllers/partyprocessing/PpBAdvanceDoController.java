@@ -18,7 +18,6 @@ import java.util.Map;
 @Controller
 public class PpBAdvanceDoController {
 
-    private static final String API = "/api/party-processing/advance-delivery-order";
 
     @Autowired private PpBAdvanceDoService service;
 
@@ -29,45 +28,45 @@ public class PpBAdvanceDoController {
         return "partyprocessing/advance-delivery-order";
     }
 
-    @GetMapping(API + "/setup") @ResponseBody
+    @GetMapping("/api/party-processing/advance-delivery-order/setup") @ResponseBody
     public ResponseEntity<?> setup() { return HrmApi.run(service::setup); }
 
-    @GetMapping(API + "/refresh") @ResponseBody
+    @GetMapping("/api/party-processing/advance-delivery-order/refresh") @ResponseBody
     public ResponseEntity<?> refresh() { return HrmApi.run(service::refresh); }
 
-    @GetMapping(API + "/code") @ResponseBody
+    @GetMapping("/api/party-processing/advance-delivery-order/code") @ResponseBody
     public ResponseEntity<?> code() { return HrmApi.run(service::code); }
 
-    @GetMapping(API + "/uoms") @ResponseBody
+    @GetMapping("/api/party-processing/advance-delivery-order/uoms") @ResponseBody
     public ResponseEntity<?> uoms(@RequestParam("itemId") int itemId) { return HrmApi.run(() -> service.uoms(itemId)); }
 
-    @PostMapping(API + "/stock") @ResponseBody
+    @PostMapping("/api/party-processing/advance-delivery-order/stock") @ResponseBody
     public ResponseEntity<?> stock(@RequestBody Map<String, Object> body) { return HrmApi.run(() -> service.stock(body)); }
 
-    @PostMapping(API + "/row-stock") @ResponseBody
+    @PostMapping("/api/party-processing/advance-delivery-order/row-stock") @ResponseBody
     public ResponseEntity<?> rowStock(@RequestBody Map<String, Object> body) { return HrmApi.run(() -> service.rowStock(body)); }
 
-    @GetMapping(API + "/invoice-setup") @ResponseBody
+    @GetMapping("/api/party-processing/advance-delivery-order/invoice-setup") @ResponseBody
     public ResponseEntity<?> invoiceSetup() { return HrmApi.run(service::invoiceSetup); }
 
-    @PostMapping(API + "/invoices") @ResponseBody
+    @PostMapping("/api/party-processing/advance-delivery-order/invoices") @ResponseBody
     public ResponseEntity<?> invoices(@RequestBody Map<String, Object> body) { return HrmApi.run(() -> service.invoices(body)); }
 
-    @GetMapping(API + "/history-customers") @ResponseBody
+    @GetMapping("/api/party-processing/advance-delivery-order/history-customers") @ResponseBody
     public ResponseEntity<?> historyCustomers() { return HrmApi.run(service::historyCustomers); }
 
-    @PostMapping(API + "/history") @ResponseBody
+    @PostMapping("/api/party-processing/advance-delivery-order/history") @ResponseBody
     public ResponseEntity<?> history(@RequestBody Map<String, Object> body) { return HrmApi.run(() -> service.history(body)); }
 
-    @GetMapping(API + "/by-id") @ResponseBody
+    @GetMapping("/api/party-processing/advance-delivery-order/by-id") @ResponseBody
     public ResponseEntity<?> byId(@RequestParam("id") int id) { return HrmApi.run(() -> service.byId(id)); }
 
-    @PostMapping(API + "/save") @ResponseBody
+    @PostMapping("/api/party-processing/advance-delivery-order/save") @ResponseBody
     public ResponseEntity<?> save(@RequestBody Map<String, Object> body) { return HrmApi.run(() -> service.save(body)); }
 
-    @PostMapping(API + "/delete") @ResponseBody
+    @PostMapping("/api/party-processing/advance-delivery-order/delete") @ResponseBody
     public ResponseEntity<?> delete(@RequestParam("id") int id) { return HrmApi.run(() -> service.delete(id)); }
 
-    @GetMapping(API + "/slip") @ResponseBody
+    @GetMapping("/api/party-processing/advance-delivery-order/slip") @ResponseBody
     public ResponseEntity<?> slip(@RequestParam("id") int id) { return HrmApi.run(() -> service.slip(id)); }
 }

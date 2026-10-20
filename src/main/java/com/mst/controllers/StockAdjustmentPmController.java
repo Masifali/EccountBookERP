@@ -25,7 +25,6 @@ import java.util.Map;
 @Controller
 public class StockAdjustmentPmController {
 
-    private static final String API = "/api/packing-material/stock-adjustment";
 
     private final StockAdjustmentPmService service;
     public StockAdjustmentPmController(StockAdjustmentPmService service) { this.service = service; }
@@ -36,19 +35,19 @@ public class StockAdjustmentPmController {
         return "packing_material/stock_adjustment_pm";
     }
 
-    @GetMapping(API + "/lookups")
+    @GetMapping("/api/packing-material/stock-adjustment/lookups")
     @ResponseBody
     public ResponseEntity<?> lookups() { return run(service::lookups, "Could not load the screen."); }
 
-    @GetMapping(API + "/doc-no")
+    @GetMapping("/api/packing-material/stock-adjustment/doc-no")
     @ResponseBody
     public ResponseEntity<?> docNo() { return run(() -> Collections.singletonMap("docNo", service.docNo()), "Could not number the document."); }
 
-    @GetMapping(API + "/accounts")
+    @GetMapping("/api/packing-material/stock-adjustment/accounts")
     @ResponseBody
     public ResponseEntity<?> accounts(@RequestParam(defaultValue = "0") int entryTypeId) { return run(() -> service.accounts(entryTypeId), "Could not load accounts."); }
 
-    @GetMapping(API + "/stock")
+    @GetMapping("/api/packing-material/stock-adjustment/stock")
     @ResponseBody
     public ResponseEntity<?> stock(@RequestParam(defaultValue = "0") int recId, @RequestParam(defaultValue = "0") int itemId,
                                    @RequestParam(defaultValue = "0") int conditionId, @RequestParam(defaultValue = "0") int warehouseId,
@@ -57,7 +56,7 @@ public class StockAdjustmentPmController {
         return run(() -> service.stock(recId, itemId, conditionId, warehouseId, rackId, entryTypeId, docDate), "Could not read the stock.");
     }
 
-    @GetMapping(API + "/history")
+    @GetMapping("/api/packing-material/stock-adjustment/history")
     @ResponseBody
     public ResponseEntity<?> history(@RequestParam(required = false) String fromDate, @RequestParam(required = false) String toDate,
                                      @RequestParam(defaultValue = "0") int fromDocNo, @RequestParam(defaultValue = "0") int toDocNo,
@@ -65,7 +64,7 @@ public class StockAdjustmentPmController {
         return run(() -> service.history(fromDate, toDate, fromDocNo, toDocNo, adjustmentTypeId), "History failed.");
     }
 
-    @GetMapping(API + "/{id}")
+    @GetMapping("/api/packing-material/stock-adjustment/{id}")
     @ResponseBody
     public ResponseEntity<?> load(@PathVariable int id) {
         try {
@@ -77,7 +76,7 @@ public class StockAdjustmentPmController {
         }
     }
 
-    @PostMapping(API + "/save")
+    @PostMapping("/api/packing-material/stock-adjustment/save")
     @ResponseBody
     public ResponseEntity<?> save(@RequestBody StockAdjustmentPmDto dto) { return write(() -> service.save(dto), "Save failed."); }
 

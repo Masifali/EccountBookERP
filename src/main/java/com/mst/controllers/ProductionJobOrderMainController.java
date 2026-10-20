@@ -64,7 +64,7 @@ public class ProductionJobOrderMainController {
     // ------------------------------------------------------------------ load
 
     /** frmProductionJobOrder_Load:367 — rights, both configuration flags and every picker. */
-    @GetMapping(API + "/lookups")
+    @GetMapping("/api/production/job-order-main/lookups")
     @ResponseBody
     public ResponseEntity<?> lookups() {
         try {
@@ -76,7 +76,7 @@ public class ProductionJobOrderMainController {
     }
 
     /** ReadById(ID):1905 — header plus the four grids. */
-    @GetMapping(API + "/{id}")
+    @GetMapping("/api/production/job-order-main/{id}")
     @ResponseBody
     public ResponseEntity<?> load(@PathVariable int id) {
         try {
@@ -91,7 +91,7 @@ public class ProductionJobOrderMainController {
 
     // ------------------------------------------------------------------ save
 
-    @PostMapping(API + "/save")
+    @PostMapping("/api/production/job-order-main/save")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> save(@RequestBody ProductionJobOrderMainDto dto) {
         try {
@@ -113,7 +113,7 @@ public class ProductionJobOrderMainController {
      * BindHistoryGrid():2022. dateMode is the desktop's four radio buttons — doc | entry | modify
      * | approved — and decides WHICH pair of date parameters the procedure receives.
      */
-    @GetMapping(API + "/history")
+    @GetMapping("/api/production/job-order-main/history")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> history(
             @RequestParam(required = false, defaultValue = "doc") String dateMode,
@@ -133,7 +133,7 @@ public class ProductionJobOrderMainController {
 
     // ------------------------------------------------------------------ code generators
 
-    @GetMapping(API + "/next-code")
+    @GetMapping("/api/production/job-order-main/next-code")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> nextCode() {
         Map<String, Object> r = new LinkedHashMap<>();
@@ -142,7 +142,7 @@ public class ProductionJobOrderMainController {
     }
 
     /** cmbPlanType_Leave:768 — the serial beside Plan Type, per plan type and financial year. */
-    @GetMapping(API + "/next-plan-type-code")
+    @GetMapping("/api/production/job-order-main/next-plan-type-code")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> nextPlanTypeCode(@RequestParam String planType) {
         Map<String, Object> r = new LinkedHashMap<>();
@@ -152,7 +152,7 @@ public class ProductionJobOrderMainController {
 
     // ------------------------------------------------------- Export Schedule loader dialog
 
-    @GetMapping(API + "/schedule-lookups")
+    @GetMapping("/api/production/job-order-main/schedule-lookups")
     @ResponseBody
     public ResponseEntity<?> scheduleLookups() {
         try {
@@ -163,7 +163,7 @@ public class ProductionJobOrderMainController {
         }
     }
 
-    @GetMapping(API + "/schedule")
+    @GetMapping("/api/production/job-order-main/schedule")
     @ResponseBody
     public ResponseEntity<?> schedule(
             @RequestParam(required = false) String fromDate,
@@ -185,7 +185,7 @@ public class ProductionJobOrderMainController {
     // ------------------------------------------------------- per-row delete guards
 
     /** GridDetail_ColumnButtonClick:1016 — may this saved plant row be removed? */
-    @GetMapping(API + "/plant-deletable")
+    @GetMapping("/api/production/job-order-main/plant-deletable")
     @ResponseBody
     public ResponseEntity<?> plantDeletable(@RequestParam int jobOrderId,
                                             @RequestParam int plantId,
@@ -202,7 +202,7 @@ public class ProductionJobOrderMainController {
      * grdByProduct / grdFinishGoods delete in update mode (:1226 / :1428). POST, not GET: it
      * removes a row, and a GET that deletes can be fired by a stray link or a prefetch.
      */
-    @PostMapping(API + "/delete-rate-schedule-row")
+    @PostMapping("/api/production/job-order-main/delete-rate-schedule-row")
     @ResponseBody
     public ResponseEntity<?> deleteRateScheduleRow(@RequestParam int jobOrderId,
                                                    @RequestParam int detailId) {
@@ -222,7 +222,7 @@ public class ProductionJobOrderMainController {
 
     /** PrintJobOrder620:14005 — the "No Record Found For Display" pre-check. The PDF itself is
      *  /api/reports/jo-620/print.pdf. */
-    @GetMapping(API + "/print-check")
+    @GetMapping("/api/production/job-order-main/print-check")
     @ResponseBody
     public ResponseEntity<?> printCheck(@RequestParam int id) {
         try {
@@ -236,7 +236,7 @@ public class ProductionJobOrderMainController {
     }
 
     /** DataGridHistory_LinkClicked:2082 — the Attachments link column. */
-    @GetMapping(API + "/attachments")
+    @GetMapping("/api/production/job-order-main/attachments")
     @ResponseBody
     public ResponseEntity<?> attachments(@RequestParam int id) {
         try {

@@ -29,7 +29,6 @@ import java.util.Map;
 @Controller
 public class ItemStoreController {
 
-    private static final String API = "/api/store/item-store";
 
     private final ItemStoreService service;
     public ItemStoreController(ItemStoreService service) { this.service = service; }
@@ -41,12 +40,12 @@ public class ItemStoreController {
     }
 
     /** InvDefrmAddItem_Load :307 / toolStripButton1_Click :1216. */
-    @GetMapping(API + "/lookups")
+    @GetMapping("/api/store/item-store/lookups")
     @ResponseBody
     public ResponseEntity<?> lookups() { return run(service::lookups, "Could not load the screen."); }
 
     /** cmbItemCategory_Leave :536 / cmbItemType_Leave :1690. */
-    @GetMapping(API + "/defaults")
+    @GetMapping("/api/store/item-store/defaults")
     @ResponseBody
     public ResponseEntity<?> defaults(@RequestParam(defaultValue = "0") int categoryId,
                                       @RequestParam(defaultValue = "0") int typeId,
@@ -55,7 +54,7 @@ public class ItemStoreController {
     }
 
     /** grdfrmfill :1254 - noOfRecords 50 on the tab switch, 0 on Search / LoadAll. */
-    @GetMapping(API + "/history")
+    @GetMapping("/api/store/item-store/history")
     @ResponseBody
     public ResponseEntity<?> history(@RequestParam(defaultValue = "0") int noOfRecords,
                                      @RequestParam(defaultValue = "0") int categoryId,
@@ -64,7 +63,7 @@ public class ItemStoreController {
     }
 
     /** grdhistory_DoubleClick :1010. */
-    @GetMapping(API + "/{id}")
+    @GetMapping("/api/store/item-store/{id}")
     @ResponseBody
     public ResponseEntity<?> load(@PathVariable int id) {
         try {
@@ -76,7 +75,7 @@ public class ItemStoreController {
         }
     }
 
-    @GetMapping(API + "/{id}/images/{imageId}")
+    @GetMapping("/api/store/item-store/{id}/images/{imageId}")
     public ResponseEntity<?> image(@PathVariable int id, @PathVariable int imageId) {
         try {
             DesktopInventoryItemFileService.Download d = service.image(id, imageId);
@@ -92,7 +91,7 @@ public class ItemStoreController {
     }
 
     /** BtnSave_Click :759 (Id 0) and btnupdate_Click :896 (Id = RecId). */
-    @PostMapping(API + "/save")
+    @PostMapping("/api/store/item-store/save")
     @ResponseBody
     public ResponseEntity<?> save(@RequestBody ItemStoreDto dto) {
         try {

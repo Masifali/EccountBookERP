@@ -1,0 +1,59 @@
+package com.mst.projections;
+
+import java.sql.Timestamp;
+import java.util.Date;
+
+/** Row of Sp_GatePassInward_GetAllMethod @Activity='GatepassHistory' (native, #History). */
+public interface GatePassInwardHistoryRow {
+    Long getRecordNo();
+    Integer getId();
+    Integer getGpSrNo();
+    Date getGpDate();
+    String getOrderType();
+    String getCompanyName();
+    String getVehicleType();
+    String getVehicleNo();
+    Timestamp getBiltyDate();
+    String getBiltyNo();
+    Integer getItemQty();
+    String getOtherRemarks();
+    Timestamp getInTime();
+    Timestamp getOutTime();
+    String getUserName();
+    Timestamp getEntryDate();
+    String getModifyUserName();
+    Timestamp getModifyDate();
+    String getDescription();
+    Double getFreight();
+    Double getAdvanceByParty();
+    Double getAdvanceByFactory();
+    Double getTotalPayableFreight();
+    Double getNetPaid();
+    Double getRateCut();
+    String getRateCutRemarks();
+    Double getAccessWeight();
+    String getApprovalStatus();
+    Integer getOrderNo();
+    String getGatepassType();
+    String getStatus();
+    Double getSupplierFirstWeight();
+    Double getSupplierSecondWeight();
+    Double getSupplierWeight();
+    Double getFactoryWeight();
+    Double getDifferenceWeight();
+    String getVarietyName();
+    Double getWeightComparedToPoWt();
+    Double getPackUnit();
+    Integer getNoOfAttachments();
+    Integer getPurchaseOrderId();
+    Integer getPackingTypeId();
+    String getPackingType();
+    Integer getDriverBioDataId();
+    String getDriverName();
+    String getDriverCNICNO();
+    String getDriverMobileNo();
+    String getWhatsappNo();
+    String getAlternateCellNo();
+    String getFatherName();
+    String getFatherCnicNo();
+}

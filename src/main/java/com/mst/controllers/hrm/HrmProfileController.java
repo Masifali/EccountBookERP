@@ -45,16 +45,16 @@ public class HrmProfileController {
     @GetMapping("/hrm/designation")
     public String designationPage(Model model) { return page(model, "designation"); }
 
-    @GetMapping(API + "/designation/setup") @ResponseBody
+    @GetMapping("/api/hrm/profile/designation/setup") @ResponseBody
     public ResponseEntity<?> designationSetup() { return HrmApi.run(() -> service.designationSetup()); }
 
-    @GetMapping(API + "/designation/list") @ResponseBody
+    @GetMapping("/api/hrm/profile/designation/list") @ResponseBody
     public ResponseEntity<?> designationList() { return HrmApi.run(() -> service.designations()); }
 
-    @GetMapping(API + "/designation/by-id") @ResponseBody
+    @GetMapping("/api/hrm/profile/designation/by-id") @ResponseBody
     public ResponseEntity<?> designationById(@RequestParam("id") int id) { return HrmApi.run(() -> service.designation(id)); }
 
-    @PostMapping(API + "/designation/save") @ResponseBody
+    @PostMapping("/api/hrm/profile/designation/save") @ResponseBody
     public ResponseEntity<?> designationSave(@RequestBody HrmNameDto body) { return HrmApi.run(() -> service.saveDesignation(body)); }
 
     // ------------------------------------------------------------------ 634 Employee Group
@@ -62,16 +62,16 @@ public class HrmProfileController {
     @GetMapping("/hrm/employee-group")
     public String employeeGroupPage(Model model) { return page(model, "employee-group"); }
 
-    @GetMapping(API + "/employee-group/setup") @ResponseBody
+    @GetMapping("/api/hrm/profile/employee-group/setup") @ResponseBody
     public ResponseEntity<?> employeeGroupSetup() { return HrmApi.run(() -> service.employeeGroupSetup()); }
 
-    @GetMapping(API + "/employee-group/list") @ResponseBody
+    @GetMapping("/api/hrm/profile/employee-group/list") @ResponseBody
     public ResponseEntity<?> employeeGroupList() { return HrmApi.run(() -> service.employeeGroups()); }
 
-    @GetMapping(API + "/employee-group/by-id") @ResponseBody
+    @GetMapping("/api/hrm/profile/employee-group/by-id") @ResponseBody
     public ResponseEntity<?> employeeGroupById(@RequestParam("id") int id) { return HrmApi.run(() -> service.employeeGroup(id)); }
 
-    @PostMapping(API + "/employee-group/save") @ResponseBody
+    @PostMapping("/api/hrm/profile/employee-group/save") @ResponseBody
     public ResponseEntity<?> employeeGroupSave(@RequestBody ProfileCodeNameDto body) { return HrmApi.run(() -> service.saveEmployeeGroup(body)); }
 
     // ------------------------------------------------------------------ 635 Employee Category
@@ -79,16 +79,16 @@ public class HrmProfileController {
     @GetMapping("/hrm/employee-category")
     public String employeeCategoryPage(Model model) { return page(model, "employee-category"); }
 
-    @GetMapping(API + "/employee-category/setup") @ResponseBody
+    @GetMapping("/api/hrm/profile/employee-category/setup") @ResponseBody
     public ResponseEntity<?> employeeCategorySetup() { return HrmApi.run(() -> service.employeeCategorySetup()); }
 
-    @GetMapping(API + "/employee-category/list") @ResponseBody
+    @GetMapping("/api/hrm/profile/employee-category/list") @ResponseBody
     public ResponseEntity<?> employeeCategoryList() { return HrmApi.run(() -> service.employeeCategories()); }
 
-    @GetMapping(API + "/employee-category/by-id") @ResponseBody
+    @GetMapping("/api/hrm/profile/employee-category/by-id") @ResponseBody
     public ResponseEntity<?> employeeCategoryById(@RequestParam("id") int id) { return HrmApi.run(() -> service.employeeCategory(id)); }
 
-    @PostMapping(API + "/employee-category/save") @ResponseBody
+    @PostMapping("/api/hrm/profile/employee-category/save") @ResponseBody
     public ResponseEntity<?> employeeCategorySave(@RequestBody ProfileCodeNameDto body) { return HrmApi.run(() -> service.saveEmployeeCategory(body)); }
 
     // ------------------------------------------------------------------ 636 Benefit
@@ -96,19 +96,19 @@ public class HrmProfileController {
     @GetMapping("/hrm/benefit")
     public String benefitPage(Model model) { return page(model, "benefit"); }
 
-    @GetMapping(API + "/benefit/setup") @ResponseBody
+    @GetMapping("/api/hrm/profile/benefit/setup") @ResponseBody
     public ResponseEntity<?> benefitSetup() { return HrmApi.run(() -> service.benefitSetup()); }
 
-    @GetMapping(API + "/benefit/list") @ResponseBody
+    @GetMapping("/api/hrm/profile/benefit/list") @ResponseBody
     public ResponseEntity<?> benefitList() { return HrmApi.run(() -> service.benefits()); }
 
-    @GetMapping(API + "/benefit/combos") @ResponseBody
+    @GetMapping("/api/hrm/profile/benefit/combos") @ResponseBody
     public ResponseEntity<?> benefitCombos() { return HrmApi.run(() -> service.benefitCombos()); }
 
-    @GetMapping(API + "/benefit/by-id") @ResponseBody
+    @GetMapping("/api/hrm/profile/benefit/by-id") @ResponseBody
     public ResponseEntity<?> benefitById(@RequestParam("id") int id) { return HrmApi.run(() -> service.benefit(id)); }
 
-    @PostMapping(API + "/benefit/save") @ResponseBody
+    @PostMapping("/api/hrm/profile/benefit/save") @ResponseBody
     public ResponseEntity<?> benefitSave(@RequestBody ProfileBenefitDto body) { return HrmApi.run(() -> service.saveBenefit(body)); }
 
     // ------------------------------------------------------------------ 638 Department
@@ -116,19 +116,19 @@ public class HrmProfileController {
     @GetMapping("/hrm/department")
     public String departmentPage(Model model) { return page(model, "department"); }
 
-    @GetMapping(API + "/department/setup") @ResponseBody
+    @GetMapping("/api/hrm/profile/department/setup") @ResponseBody
     public ResponseEntity<?> departmentSetup() { return HrmApi.run(() -> service.departmentSetup()); }
 
-    @GetMapping(API + "/department/list") @ResponseBody
+    @GetMapping("/api/hrm/profile/department/list") @ResponseBody
     public ResponseEntity<?> departmentList() { return HrmApi.run(() -> service.departments()); }
 
-    @GetMapping(API + "/department/combos") @ResponseBody
+    @GetMapping("/api/hrm/profile/department/combos") @ResponseBody
     public ResponseEntity<?> departmentCombos() { return HrmApi.run(() -> service.departmentCombos()); }
 
-    @GetMapping(API + "/department/by-id") @ResponseBody
+    @GetMapping("/api/hrm/profile/department/by-id") @ResponseBody
     public ResponseEntity<?> departmentById(@RequestParam("id") int id) { return HrmApi.run(() -> service.department(id)); }
 
-    @PostMapping(API + "/department/save") @ResponseBody
+    @PostMapping("/api/hrm/profile/department/save") @ResponseBody
     public ResponseEntity<?> departmentSave(@RequestBody ProfileDepartmentDto body) { return HrmApi.run(() -> service.saveDepartment(body)); }
 
     // ------------------------------------------------------------------ 639 Section
@@ -136,16 +136,16 @@ public class HrmProfileController {
     @GetMapping("/hrm/section")
     public String sectionPage(Model model) { return page(model, "section"); }
 
-    @GetMapping(API + "/section/setup") @ResponseBody
+    @GetMapping("/api/hrm/profile/section/setup") @ResponseBody
     public ResponseEntity<?> sectionSetup() { return HrmApi.run(() -> service.sectionSetup()); }
 
-    @GetMapping(API + "/section/list") @ResponseBody
+    @GetMapping("/api/hrm/profile/section/list") @ResponseBody
     public ResponseEntity<?> sectionList() { return HrmApi.run(() -> service.sections()); }
 
-    @GetMapping(API + "/section/by-id") @ResponseBody
+    @GetMapping("/api/hrm/profile/section/by-id") @ResponseBody
     public ResponseEntity<?> sectionById(@RequestParam("id") int id) { return HrmApi.run(() -> service.section(id)); }
 
-    @PostMapping(API + "/section/save") @ResponseBody
+    @PostMapping("/api/hrm/profile/section/save") @ResponseBody
     public ResponseEntity<?> sectionSave(@RequestBody ProfileSectionDto body) { return HrmApi.run(() -> service.saveSection(body)); }
 
     // ------------------------------------------------------------------ 640 Location
@@ -153,19 +153,19 @@ public class HrmProfileController {
     @GetMapping("/hrm/location")
     public String locationPage(Model model) { return page(model, "location"); }
 
-    @GetMapping(API + "/location/setup") @ResponseBody
+    @GetMapping("/api/hrm/profile/location/setup") @ResponseBody
     public ResponseEntity<?> locationSetup() { return HrmApi.run(() -> service.locationSetup()); }
 
-    @GetMapping(API + "/location/list") @ResponseBody
+    @GetMapping("/api/hrm/profile/location/list") @ResponseBody
     public ResponseEntity<?> locationList() { return HrmApi.run(() -> service.locations()); }
 
-    @GetMapping(API + "/location/combos") @ResponseBody
+    @GetMapping("/api/hrm/profile/location/combos") @ResponseBody
     public ResponseEntity<?> locationCombos() { return HrmApi.run(() -> service.locationCombos()); }
 
-    @GetMapping(API + "/location/by-id") @ResponseBody
+    @GetMapping("/api/hrm/profile/location/by-id") @ResponseBody
     public ResponseEntity<?> locationById(@RequestParam("id") int id) { return HrmApi.run(() -> service.location(id)); }
 
-    @PostMapping(API + "/location/save") @ResponseBody
+    @PostMapping("/api/hrm/profile/location/save") @ResponseBody
     public ResponseEntity<?> locationSave(@RequestBody ProfileLocationDto body) { return HrmApi.run(() -> service.saveLocation(body)); }
 
     // ------------------------------------------------------------------ 641 Profile Type
@@ -173,16 +173,16 @@ public class HrmProfileController {
     @GetMapping("/hrm/profile-type")
     public String profileTypePage(Model model) { return page(model, "profile-type"); }
 
-    @GetMapping(API + "/profile-type/setup") @ResponseBody
+    @GetMapping("/api/hrm/profile/profile-type/setup") @ResponseBody
     public ResponseEntity<?> profileTypeSetup() { return HrmApi.run(() -> service.profileTypeSetup()); }
 
-    @GetMapping(API + "/profile-type/list") @ResponseBody
+    @GetMapping("/api/hrm/profile/profile-type/list") @ResponseBody
     public ResponseEntity<?> profileTypeList() { return HrmApi.run(() -> service.profileTypes()); }
 
-    @GetMapping(API + "/profile-type/by-id") @ResponseBody
+    @GetMapping("/api/hrm/profile/profile-type/by-id") @ResponseBody
     public ResponseEntity<?> profileTypeById(@RequestParam("id") int id) { return HrmApi.run(() -> service.profileType(id)); }
 
-    @PostMapping(API + "/profile-type/save") @ResponseBody
+    @PostMapping("/api/hrm/profile/profile-type/save") @ResponseBody
     public ResponseEntity<?> profileTypeSave(@RequestBody ProfileCodeNameDto body) { return HrmApi.run(() -> service.saveProfileType(body)); }
 
     // ------------------------------------------------------------------ 642 Define Profile
@@ -190,15 +190,15 @@ public class HrmProfileController {
     @GetMapping("/hrm/define-profile")
     public String defineProfilePage(Model model) { return page(model, "define-profile"); }
 
-    @GetMapping(API + "/define-profile/setup") @ResponseBody
+    @GetMapping("/api/hrm/profile/define-profile/setup") @ResponseBody
     public ResponseEntity<?> defineProfileSetup() { return HrmApi.run(() -> service.profileSetup()); }
 
-    @GetMapping(API + "/define-profile/list") @ResponseBody
+    @GetMapping("/api/hrm/profile/define-profile/list") @ResponseBody
     public ResponseEntity<?> defineProfileList() { return HrmApi.run(() -> service.profiles()); }
 
-    @GetMapping(API + "/define-profile/by-id") @ResponseBody
+    @GetMapping("/api/hrm/profile/define-profile/by-id") @ResponseBody
     public ResponseEntity<?> defineProfileById(@RequestParam("id") int id) { return HrmApi.run(() -> service.profile(id)); }
 
-    @PostMapping(API + "/define-profile/save") @ResponseBody
+    @PostMapping("/api/hrm/profile/define-profile/save") @ResponseBody
     public ResponseEntity<?> defineProfileSave(@RequestBody ProfileDefineDto body) { return HrmApi.run(() -> service.saveProfile(body)); }
 }

@@ -32,13 +32,6 @@ import java.util.Map;
 @Controller
 public class ExportReportsNController {
 
-    private static final String SCA = "/api/export/contract-schedule-periodic-a";
-    private static final String CMP = "/api/export/comparison-summary";
-    private static final String FWD = "/api/export/invoice-against-forwarding-pre-invoices";
-    private static final String BOL = "/api/export/bill-of-lading-report";
-    private static final String CNT = "/api/export/container-list";
-    private static final String PIR = "/api/export/pre-invoice-register";
-    private static final String BGD = "/api/export/bank-gd-summary";
 
     @Autowired private ExportReportsNService svc;
 
@@ -67,72 +60,72 @@ public class ExportReportsNController {
 
     // ------------------------------------------------------------------ 237
 
-    @GetMapping(SCA + "/setup") @ResponseBody
+    @GetMapping("/api/export/contract-schedule-periodic-a/setup") @ResponseBody
     public ResponseEntity<?> scaSetup() { return call(() -> svc.scheduleASetup(), "Error occurred during database call."); }
 
-    @PostMapping(SCA + "/show") @ResponseBody
+    @PostMapping("/api/export/contract-schedule-periodic-a/show") @ResponseBody
     public ResponseEntity<?> scaShow(@RequestBody Map<String, Object> body) { return call(() -> svc.scheduleAShow(body), "Load failed."); }
 
     // ------------------------------------------------------------------ 248
 
-    @GetMapping(CMP + "/setup") @ResponseBody
+    @GetMapping("/api/export/comparison-summary/setup") @ResponseBody
     public ResponseEntity<?> cmpSetup() { return call(() -> svc.comparisonSetup(), "Error occurred during database call."); }
 
-    @GetMapping(CMP + "/combos") @ResponseBody
+    @GetMapping("/api/export/comparison-summary/combos") @ResponseBody
     public ResponseEntity<?> cmpCombos() { return call(() -> svc.comparisonRefresh(), "Load failed."); }
 
-    @PostMapping(CMP + "/show") @ResponseBody
+    @PostMapping("/api/export/comparison-summary/show") @ResponseBody
     public ResponseEntity<?> cmpShow(@RequestBody Map<String, Object> body) { return call(() -> svc.comparisonShow(body), "Load failed."); }
 
     // ------------------------------------------------------------------ 259
 
-    @GetMapping(FWD + "/setup") @ResponseBody
+    @GetMapping("/api/export/invoice-against-forwarding-pre-invoices/setup") @ResponseBody
     public ResponseEntity<?> fwdSetup() { return call(() -> svc.forwardingSetup(), "Error occurred during database call."); }
 
-    @PostMapping(FWD + "/show") @ResponseBody
+    @PostMapping("/api/export/invoice-against-forwarding-pre-invoices/show") @ResponseBody
     public ResponseEntity<?> fwdShow(@RequestBody Map<String, Object> body) { return call(() -> svc.forwardingShow(body), "Load failed."); }
 
     // ------------------------------------------------------------------ 264
 
-    @GetMapping(BOL + "/setup") @ResponseBody
+    @GetMapping("/api/export/bill-of-lading-report/setup") @ResponseBody
     public ResponseEntity<?> bolSetup() { return call(() -> svc.bolSetup(), "Error occurred during database call."); }
 
-    @GetMapping(BOL + "/combos") @ResponseBody
+    @GetMapping("/api/export/bill-of-lading-report/combos") @ResponseBody
     public ResponseEntity<?> bolCombos() { return call(() -> svc.bolRefresh(), "Load failed."); }
 
-    @PostMapping(BOL + "/show") @ResponseBody
+    @PostMapping("/api/export/bill-of-lading-report/show") @ResponseBody
     public ResponseEntity<?> bolShow(@RequestBody Map<String, Object> body) { return call(() -> svc.bolShow(body), "Load failed."); }
 
     // ------------------------------------------------------------------ 268
 
-    @GetMapping(CNT + "/setup") @ResponseBody
+    @GetMapping("/api/export/container-list/setup") @ResponseBody
     public ResponseEntity<?> cntSetup() { return call(() -> svc.containerSetup(), "Error occurred during database call."); }
 
-    @PostMapping(CNT + "/show") @ResponseBody
+    @PostMapping("/api/export/container-list/show") @ResponseBody
     public ResponseEntity<?> cntShow(@RequestBody Map<String, Object> body) { return call(() -> svc.containerShow(body), "Load failed."); }
 
     // ------------------------------------------------------------------ 271
 
-    @GetMapping(PIR + "/setup") @ResponseBody
+    @GetMapping("/api/export/pre-invoice-register/setup") @ResponseBody
     public ResponseEntity<?> pirSetup() { return call(() -> svc.preInvoiceSetup(), "Error occurred during database call."); }
 
-    @PostMapping(PIR + "/show") @ResponseBody
+    @PostMapping("/api/export/pre-invoice-register/show") @ResponseBody
     public ResponseEntity<?> pirShow(@RequestBody Map<String, Object> body) { return call(() -> svc.preInvoiceShow(body), "Load failed."); }
 
-    @GetMapping(PIR + "/contract-check") @ResponseBody
+    @GetMapping("/api/export/pre-invoice-register/contract-check") @ResponseBody
     public ResponseEntity<?> pirContractCheck(@RequestParam(value = "contractId", defaultValue = "0") int contractId) {
         return call(() -> svc.preInvoiceContractCheck(contractId), "Load failed.");
     }
 
     // ------------------------------------------------------------------ 272
 
-    @GetMapping(BGD + "/setup") @ResponseBody
+    @GetMapping("/api/export/bank-gd-summary/setup") @ResponseBody
     public ResponseEntity<?> bgdSetup() { return call(() -> svc.bankGdSetup(), "Error occurred during database call."); }
 
-    @PostMapping(BGD + "/show") @ResponseBody
+    @PostMapping("/api/export/bank-gd-summary/show") @ResponseBody
     public ResponseEntity<?> bgdShow(@RequestBody Map<String, Object> body) { return call(() -> svc.bankGdShow(body), "Load failed."); }
 
-    @GetMapping(BGD + "/gd-break-up") @ResponseBody
+    @GetMapping("/api/export/bank-gd-summary/gd-break-up") @ResponseBody
     public ResponseEntity<?> bgdBreakUp(@RequestParam(value = "gdId", defaultValue = "0") int gdId,
                                         @RequestParam(value = "documentTypeId", defaultValue = "0") int documentTypeId) {
         return call(() -> svc.gdBreakUp(gdId, documentTypeId), "Load failed.");

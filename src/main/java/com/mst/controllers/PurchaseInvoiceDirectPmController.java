@@ -22,7 +22,6 @@ import org.springframework.web.server.ResponseStatusException;
 @Controller
 public class PurchaseInvoiceDirectPmController {
 
-    private static final String API = "/api/packing-material/purchase-invoice-direct";
 
     private final PurchaseInvoiceDirectPmService service;
 
@@ -36,27 +35,27 @@ public class PurchaseInvoiceDirectPmController {
         return "packing_material/purchase_invoice_direct_pm";
     }
 
-    @GetMapping(API + "/lookups")
+    @GetMapping("/api/packing-material/purchase-invoice-direct/lookups")
     @ResponseBody
     public ResponseEntity<?> lookups() { return run(service::lookups, "Could not load the screen."); }
 
-    @GetMapping(API + "/numbers")
+    @GetMapping("/api/packing-material/purchase-invoice-direct/numbers")
     @ResponseBody
     public ResponseEntity<?> numbers() { return run(service::numbers, "Could not generate the document number."); }
 
-    @GetMapping(API + "/tax-options")
+    @GetMapping("/api/packing-material/purchase-invoice-direct/tax-options")
     @ResponseBody
     public ResponseEntity<?> taxOptions(@RequestParam(defaultValue = "0") int itemId, @RequestParam String docDate) {
         return run(() -> service.taxOptions(itemId, docDate), "Could not read the tax schedule.");
     }
 
-    @GetMapping(API + "/tax-by-items")
+    @GetMapping("/api/packing-material/purchase-invoice-direct/tax-by-items")
     @ResponseBody
     public ResponseEntity<?> taxByItems(@RequestParam(required = false) String itemIds, @RequestParam String docDate) {
         return run(() -> service.taxByItems(itemIds, docDate), "Could not read the tax schedule.");
     }
 
-    @GetMapping(API + "/stock")
+    @GetMapping("/api/packing-material/purchase-invoice-direct/stock")
     @ResponseBody
     public ResponseEntity<?> stock(@RequestParam int itemId, @RequestParam String docDate, @RequestParam(defaultValue = "0") int conditionId,
                                    @RequestParam(defaultValue = "0") int recId, @RequestParam(defaultValue = "0") int warehouseId,
@@ -64,25 +63,25 @@ public class PurchaseInvoiceDirectPmController {
         return run(() -> service.stock(itemId, docDate, conditionId, recId, warehouseId, rackId), "Could not read the stock.");
     }
 
-    @GetMapping(API + "/ref-docs")
+    @GetMapping("/api/packing-material/purchase-invoice-direct/ref-docs")
     @ResponseBody
     public ResponseEntity<?> refDocs(@RequestParam(defaultValue = "0") int refDocumentTypeId, @RequestParam(defaultValue = "0") int recId) {
         return run(() -> service.refDocs(refDocumentTypeId, recId), "Could not load reference documents.");
     }
 
-    @GetMapping(API + "/exchange-rate")
+    @GetMapping("/api/packing-material/purchase-invoice-direct/exchange-rate")
     @ResponseBody
     public ResponseEntity<?> exchangeRate(@RequestParam(defaultValue = "0") int currencyId) {
         return run(() -> service.exchangeRate(currencyId), "Could not read the exchange rate.");
     }
 
-    @PostMapping(API + "/{id}/detail/{detailId}/check-delete")
+    @PostMapping("/api/packing-material/purchase-invoice-direct/{id}/detail/{detailId}/check-delete")
     @ResponseBody
     public ResponseEntity<?> checkDelete(@PathVariable int id, @PathVariable int detailId) {
         return run(() -> service.checkDetailDelete(id, detailId), "Could not delete the row.");
     }
 
-    @GetMapping(API + "/history")
+    @GetMapping("/api/packing-material/purchase-invoice-direct/history")
     @ResponseBody
     public ResponseEntity<?> history(@RequestParam(defaultValue = "doc") String dateType,
                                      @RequestParam(required = false) String fromDate, @RequestParam(required = false) String toDate,
@@ -91,29 +90,29 @@ public class PurchaseInvoiceDirectPmController {
         return run(() -> service.history(dateType, fromDate, toDate, fromDocNo, toDocNo, supplierId, branchIds), "History failed.");
     }
 
-    @GetMapping(API + "/history-suppliers")
+    @GetMapping("/api/packing-material/purchase-invoice-direct/history-suppliers")
     @ResponseBody
     public ResponseEntity<?> historySuppliers(@RequestParam(required = false) String branchIds) {
         return run(() -> service.historySuppliers(branchIds), "Could not refresh.");
     }
 
-    @GetMapping(API + "/{id}")
+    @GetMapping("/api/packing-material/purchase-invoice-direct/{id}")
     @ResponseBody
     public ResponseEntity<?> record(@PathVariable int id) { return run(() -> service.record(id), "Record Not Found"); }
 
-    @GetMapping(API + "/{id}/voucher")
+    @GetMapping("/api/packing-material/purchase-invoice-direct/{id}/voucher")
     @ResponseBody
     public ResponseEntity<?> voucher(@PathVariable int id) { return run(() -> service.voucherHead(id), "Record Not Found"); }
 
-    @PostMapping(API + "/save")
+    @PostMapping("/api/packing-material/purchase-invoice-direct/save")
     @ResponseBody
     public ResponseEntity<?> save(@RequestBody PurchaseInvoiceDirectPmRequest request) { return run(() -> service.save(request), "Save failed."); }
 
-    @PostMapping(API + "/{id}/delete")
+    @PostMapping("/api/packing-material/purchase-invoice-direct/{id}/delete")
     @ResponseBody
     public ResponseEntity<?> delete(@PathVariable int id) { return run(() -> service.delete(id), "Delete failed."); }
 
-    @GetMapping(API + "/{id}/attachments/{attachmentId}")
+    @GetMapping("/api/packing-material/purchase-invoice-direct/{id}/attachments/{attachmentId}")
     public ResponseEntity<byte[]> attachment(@PathVariable int id, @PathVariable int attachmentId) {
         DesktopInventoryItemFileService.Download d = service.attachment(id, attachmentId);
         HttpHeaders h = new HttpHeaders();

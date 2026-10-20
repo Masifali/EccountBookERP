@@ -29,7 +29,6 @@ import java.util.Map;
  */
 @Controller
 public class StoreGatePassGeneralInwardController extends SaleEngrControllerBase {
-    private static final String API = "/api/store/inward-gate-pass-general";
     private final StoreGatePassGeneralInwardService service;
 
     public StoreGatePassGeneralInwardController(StoreGatePassGeneralInwardService service) { this.service = service; }
@@ -40,25 +39,25 @@ public class StoreGatePassGeneralInwardController extends SaleEngrControllerBase
         return "store/inward_gate_pass_general";
     }
 
-    @GetMapping(API + "/initial") @ResponseBody
+    @GetMapping("/api/store/inward-gate-pass-general/initial") @ResponseBody
     public Map<String, Object> initial() { return service.initial(); }
 
-    @GetMapping(API + "/next-no") @ResponseBody
+    @GetMapping("/api/store/inward-gate-pass-general/next-no") @ResponseBody
     public Map<String, Object> nextNo() { return Map.of("nextNo", service.nextNo()); }
 
-    @GetMapping(API + "/warehouses") @ResponseBody
+    @GetMapping("/api/store/inward-gate-pass-general/warehouses") @ResponseBody
     public List<Map<String, Object>> warehouses() { return service.warehouses(); }
 
-    @GetMapping(API + "/uoms") @ResponseBody
+    @GetMapping("/api/store/inward-gate-pass-general/uoms") @ResponseBody
     public List<Map<String, Object>> uoms(@RequestParam(defaultValue = "0") int itemId) { return service.uoms(itemId); }
 
-    @GetMapping(API + "/ref-docs") @ResponseBody
+    @GetMapping("/api/store/inward-gate-pass-general/ref-docs") @ResponseBody
     public List<Map<String, Object>> refDocs(@RequestParam int typeId, @RequestParam(defaultValue = "0") int recId) { return service.refDocs(typeId, recId); }
 
-    @GetMapping(API + "/history-parties") @ResponseBody
+    @GetMapping("/api/store/inward-gate-pass-general/history-parties") @ResponseBody
     public List<Map<String, Object>> historyParties() { return service.historyParties(); }
 
-    @GetMapping(API + "/history") @ResponseBody
+    @GetMapping("/api/store/inward-gate-pass-general/history") @ResponseBody
     public List<Map<String, Object>> history(@RequestParam(required = false) String status,
                                              @RequestParam(defaultValue = "doc") String dateMode,
                                              @RequestParam(defaultValue = "true") boolean useFrom,
@@ -74,19 +73,19 @@ public class StoreGatePassGeneralInwardController extends SaleEngrControllerBase
         return service.history(f);
     }
 
-    @GetMapping(API + "/{id:[0-9]+}") @ResponseBody
+    @GetMapping("/api/store/inward-gate-pass-general/{id:[0-9]+}") @ResponseBody
     public Map<String, Object> record(@PathVariable int id) { return service.record(id); }
 
-    @GetMapping(API + "/{id:[0-9]+}/details") @ResponseBody
+    @GetMapping("/api/store/inward-gate-pass-general/{id:[0-9]+}/details") @ResponseBody
     public List<Map<String, Object>> details(@PathVariable int id) { return service.details(id); }
 
-    @PostMapping(API + "/save") @ResponseBody
+    @PostMapping("/api/store/inward-gate-pass-general/save") @ResponseBody
     public Map<String, Object> save(@RequestBody StoreGatePassGeneralInwardService.Request r) { return service.save(r); }
 
-    @GetMapping(API + "/{id:[0-9]+}/attachments") @ResponseBody
+    @GetMapping("/api/store/inward-gate-pass-general/{id:[0-9]+}/attachments") @ResponseBody
     public List<Map<String, Object>> attachments(@PathVariable int id) { return service.attachmentList(id); }
 
-    @GetMapping(API + "/{id:[0-9]+}/attachments/{attachmentId:[0-9]+}")
+    @GetMapping("/api/store/inward-gate-pass-general/{id:[0-9]+}/attachments/{attachmentId:[0-9]+}")
     public ResponseEntity<byte[]> download(@PathVariable int id, @PathVariable int attachmentId) {
         SaleEngrAttachments.Download d = service.download(id, attachmentId);
         return ResponseEntity.ok()

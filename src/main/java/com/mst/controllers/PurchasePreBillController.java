@@ -29,7 +29,6 @@ import java.util.Map;
 @Controller
 public class PurchasePreBillController {
 
-    private static final String API = "/api/store/purchase-pre-bill";
 
     private final PurchasePreBillService service;
     public PurchasePreBillController(PurchasePreBillService service) { this.service = service; }
@@ -40,27 +39,27 @@ public class PurchasePreBillController {
         return "store/purchase_pre_bill";
     }
 
-    @GetMapping(API + "/lookups")
+    @GetMapping("/api/store/purchase-pre-bill/lookups")
     @ResponseBody
     public ResponseEntity<?> lookups() { return run(service::lookups); }
 
-    @GetMapping(API + "/numbers")
+    @GetMapping("/api/store/purchase-pre-bill/numbers")
     @ResponseBody
     public ResponseEntity<?> numbers() { return run(service::numbers); }
 
-    @GetMapping(API + "/refresh")
+    @GetMapping("/api/store/purchase-pre-bill/refresh")
     @ResponseBody
     public ResponseEntity<?> refresh() { return run(service::formRefresh); }
 
-    @GetMapping(API + "/history-refresh")
+    @GetMapping("/api/store/purchase-pre-bill/history-refresh")
     @ResponseBody
     public ResponseEntity<?> historyRefresh() { return run(service::historyRefresh); }
 
-    @GetMapping(API + "/loader/lookups")
+    @GetMapping("/api/store/purchase-pre-bill/loader/lookups")
     @ResponseBody
     public ResponseEntity<?> loaderLookups() { return run(service::loaderLookups); }
 
-    @GetMapping(API + "/loader/pending")
+    @GetMapping("/api/store/purchase-pre-bill/loader/pending")
     @ResponseBody
     public ResponseEntity<?> loaderPending(@RequestParam(required = false) String fromDate,
                                            @RequestParam(required = false) String toDate,
@@ -70,7 +69,7 @@ public class PurchasePreBillController {
         return run(() -> service.pendingDemands(fromDate, toDate, docNoFrom, docNoTo, itemId));
     }
 
-    @GetMapping(API + "/history")
+    @GetMapping("/api/store/purchase-pre-bill/history")
     @ResponseBody
     public ResponseEntity<?> history(@RequestParam(defaultValue = "doc") String dateType,
                                      @RequestParam(defaultValue = "true") boolean fromChecked,
@@ -85,7 +84,7 @@ public class PurchasePreBillController {
                 billToPartyId, itemId));
     }
 
-    @GetMapping(API + "/{id}")
+    @GetMapping("/api/store/purchase-pre-bill/{id}")
     @ResponseBody
     public ResponseEntity<?> load(@PathVariable int id, @RequestParam(defaultValue = "false") boolean edit) {
         try {
@@ -99,19 +98,19 @@ public class PurchasePreBillController {
         }
     }
 
-    @GetMapping(API + "/{id}/slip")
+    @GetMapping("/api/store/purchase-pre-bill/{id}/slip")
     @ResponseBody
     public ResponseEntity<?> slip(@PathVariable int id) { return run(() -> service.slip(id)); }
 
-    @GetMapping(API + "/{id}/slip-sub")
+    @GetMapping("/api/store/purchase-pre-bill/{id}/slip-sub")
     @ResponseBody
     public ResponseEntity<?> slipSub(@PathVariable int id) { return run(() -> service.slipSubReport(id)); }
 
-    @PostMapping(API + "/save")
+    @PostMapping("/api/store/purchase-pre-bill/save")
     @ResponseBody
     public ResponseEntity<?> save(@RequestBody PurchasePreBillDto dto) { return run(() -> service.save(dto)); }
 
-    @PostMapping(API + "/{id}/delete")
+    @PostMapping("/api/store/purchase-pre-bill/{id}/delete")
     @ResponseBody
     public ResponseEntity<?> delete(@PathVariable int id) { return run(() -> service.delete(id)); }
 

@@ -40,7 +40,6 @@ public class ProductionAgainstJobOrderController {
     @Autowired
     private ProductionConsumptionService consumption;
 
-    private static final String C = "/api/production/production-against-job-order/consumption";
     private static final String TH = "/api/production/production-against-job-order/transaction-history";
 
     // ------------------------------------------------- 280 Production Against (Job Order)
@@ -126,22 +125,22 @@ public class ProductionAgainstJobOrderController {
     // ============================================================ Consumption tab page (DocType 181)
 
     /** Decimal formats (GetDecimalConfiguration) and ActiveYr.Start_Period. */
-    @GetMapping(C + "/init")
+    @GetMapping("/api/production/production-against-job-order/consumption/init")
     @ResponseBody
     public ResponseEntity<?> consumptionInit() { return run(() -> consumption.init()); }
 
     /** GenerateDocConsumption:1300. */
-    @GetMapping(C + "/serial")
+    @GetMapping("/api/production/production-against-job-order/consumption/serial")
     @ResponseBody
     public ResponseEntity<?> consumptionSerial() { return run(() -> consumption.serial()); }
 
     /** ConsumptionDetailComboBind:1330 - USP_DropDownForConsumptionForm. */
-    @GetMapping(C + "/detail-combos")
+    @GetMapping("/api/production/production-against-job-order/consumption/detail-combos")
     @ResponseBody
     public ResponseEntity<?> consumptionDetailCombos() { return run(() -> consumption.detailCombos()); }
 
     /** GetAvailableStockForConsumption:2546. */
-    @GetMapping(C + "/stock")
+    @GetMapping("/api/production/production-against-job-order/consumption/stock")
     @ResponseBody
     public ResponseEntity<?> consumptionStock(@RequestParam(defaultValue = "0") int warehouseId,
                                               @RequestParam(defaultValue = "0") int itemId,
@@ -152,7 +151,7 @@ public class ProductionAgainstJobOrderController {
     }
 
     /** CommonServices.AvgRateOnlyForCGS. */
-    @GetMapping(C + "/cgs-rate")
+    @GetMapping("/api/production/production-against-job-order/consumption/cgs-rate")
     @ResponseBody
     public ResponseEntity<?> consumptionCgsRate(@RequestParam(defaultValue = "0") int itemId,
                                                 @RequestParam(defaultValue = "") String docDate,
@@ -167,7 +166,7 @@ public class ProductionAgainstJobOrderController {
     }
 
     /** CommonServices.GetAvgRateFromFIFOMethod. */
-    @GetMapping(C + "/fifo-rate")
+    @GetMapping("/api/production/production-against-job-order/consumption/fifo-rate")
     @ResponseBody
     public ResponseEntity<?> consumptionFifoRate(@RequestParam(defaultValue = "") String docDate,
                                                  @RequestParam(defaultValue = "0") int itemId,
@@ -185,31 +184,31 @@ public class ProductionAgainstJobOrderController {
     }
 
     /** ReadByIdConsumption:2341 / DatagridHistoryDetail:1130 - InvFoodProduction.GetByID. */
-    @GetMapping(C + "/{id}")
+    @GetMapping("/api/production/production-against-job-order/consumption/{id}")
     @ResponseBody
     public ResponseEntity<?> consumptionRead(@PathVariable int id) { return run(() -> consumption.readById(id)); }
 
     /** InsertConsumption:2174 - InvFoodProduction.Save. */
-    @PostMapping(C + "/save")
+    @PostMapping("/api/production/production-against-job-order/consumption/save")
     @ResponseBody
     public ResponseEntity<?> consumptionSave(@RequestBody Map<String, Object> body) {
         return run(() -> consumption.save(body));
     }
 
     /** btnPrintVoucherConsumption_Click:2426 - CommonServices.VoucherHeadIdGet(Id, 181). */
-    @GetMapping(C + "/voucher-head")
+    @GetMapping("/api/production/production-against-job-order/consumption/voucher-head")
     @ResponseBody
     public ResponseEntity<?> consumptionVoucherHead(@RequestParam(defaultValue = "0") int id) {
         return run(() -> consumption.voucherHeadId(id));
     }
 
     /** jobOrderConsumptionHCombobind:2858. */
-    @GetMapping(C + "/history/job-orders")
+    @GetMapping("/api/production/production-against-job-order/consumption/history/job-orders")
     @ResponseBody
     public ResponseEntity<?> consumptionHistoryJobOrders() { return run(() -> consumption.historyJobOrders()); }
 
     /** GrdHistoryConsumptionMain:2928. */
-    @GetMapping(C + "/history")
+    @GetMapping("/api/production/production-against-job-order/consumption/history")
     @ResponseBody
     public ResponseEntity<?> consumptionHistory(@RequestParam(defaultValue = "") String from,
                                                 @RequestParam(defaultValue = "") String to,
@@ -220,12 +219,12 @@ public class ProductionAgainstJobOrderController {
     }
 
     /** LoadConsumptionPendingforRates - JobOrderFill:113. */
-    @GetMapping(C + "/pending-rates/job-orders")
+    @GetMapping("/api/production/production-against-job-order/consumption/pending-rates/job-orders")
     @ResponseBody
     public ResponseEntity<?> pendingJobOrders() { return run(() -> consumption.pendingJobOrders()); }
 
     /** LoadConsumptionPendingforRates - OutputGridHistory:189. */
-    @GetMapping(C + "/pending-rates")
+    @GetMapping("/api/production/production-against-job-order/consumption/pending-rates")
     @ResponseBody
     public ResponseEntity<?> pendingForRates(@RequestParam(defaultValue = "") String from,
                                              @RequestParam(defaultValue = "") String to,
@@ -234,17 +233,17 @@ public class ProductionAgainstJobOrderController {
     }
 
     /** LoadavailableTransactionsForIssuanceOnConsumption_Load:520. */
-    @GetMapping(C + "/issuance-loader/init")
+    @GetMapping("/api/production/production-against-job-order/consumption/issuance-loader/init")
     @ResponseBody
     public ResponseEntity<?> issuanceLoaderInit() { return run(() -> consumption.loaderInit()); }
 
     /** The loader's Refresh (ConsumptionDetailComboBind). */
-    @GetMapping(C + "/issuance-loader/combos")
+    @GetMapping("/api/production/production-against-job-order/consumption/issuance-loader/combos")
     @ResponseBody
     public ResponseEntity<?> issuanceLoaderCombos() { return run(() -> consumption.loaderCombos()); }
 
     /** PendingInventoryTransactionsForIssuanceLoad:289. */
-    @GetMapping(C + "/issuance-loader/search")
+    @GetMapping("/api/production/production-against-job-order/consumption/issuance-loader/search")
     @ResponseBody
     public ResponseEntity<?> issuanceLoaderSearch(@RequestParam(defaultValue = "") String from,
                                                   @RequestParam(defaultValue = "") String to,
@@ -264,7 +263,7 @@ public class ProductionAgainstJobOrderController {
     // ===================================================================== Transaction History tab
 
     /** jobOrderTransactionHistoryCombobind:931. */
-    @GetMapping(TH + "/combos")
+    @GetMapping("/api/production/production-against-job-order/transaction-history/combos")
     @ResponseBody
     public ResponseEntity<?> transactionHistoryCombos() { return run(() -> consumption.transactionHistoryCombos()); }
 

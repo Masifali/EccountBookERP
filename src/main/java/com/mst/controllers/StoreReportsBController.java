@@ -48,11 +48,11 @@ public class StoreReportsBController {
         return "store/reports/stock_adjustment_register";
     }
 
-    @GetMapping(SA + "/lookups")
+    @GetMapping("/api/store/reports/stock-adjustment-register/lookups")
     @ResponseBody
     public ResponseEntity<?> saLookups() { return run(service::saLookups, "Could not load the filters."); }
 
-    @GetMapping(SA + "/refresh")
+    @GetMapping("/api/store/reports/stock-adjustment-register/refresh")
     @ResponseBody
     public ResponseEntity<?> saRefresh() { return run(service::saRefresh, "Could not refresh the filters."); }
 
@@ -69,7 +69,7 @@ public class StoreReportsBController {
                 "Report failed.");
     }
 
-    @GetMapping(SA + "/{id}/slip")
+    @GetMapping("/api/store/reports/stock-adjustment-register/{id}/slip")
     @ResponseBody
     public ResponseEntity<?> saSlip(@PathVariable int id) { return run(() -> service.saSlip(id), "Print failed."); }
 
@@ -81,11 +81,11 @@ public class StoreReportsBController {
         return "store/reports/department_request_history";
     }
 
-    @GetMapping(DR + "/lookups")
+    @GetMapping("/api/store/reports/department-request-history/lookups")
     @ResponseBody
     public ResponseEntity<?> drLookups() { return run(service::drLookups, "Could not load the filters."); }
 
-    @GetMapping(DR + "/refresh")
+    @GetMapping("/api/store/reports/department-request-history/refresh")
     @ResponseBody
     public ResponseEntity<?> drRefresh() { return run(service::drRefresh, "Could not refresh the filters."); }
 
@@ -100,7 +100,7 @@ public class StoreReportsBController {
         return run(() -> service.drShow(fromDate, toDate, departmentId, itemId, assetId, approved), "Report failed.");
     }
 
-    @GetMapping(DR + "/{id}/slip")
+    @GetMapping("/api/store/reports/department-request-history/{id}/slip")
     @ResponseBody
     public ResponseEntity<?> drSlip(@PathVariable int id) { return run(() -> service.drSlip(id), "Print failed."); }
 
@@ -112,17 +112,17 @@ public class StoreReportsBController {
         return "store/reports/stock_transfer_register";
     }
 
-    @GetMapping(ST + "/lookups")
+    @GetMapping("/api/store/reports/stock-transfer-register/lookups")
     @ResponseBody
     public ResponseEntity<?> stLookups() { return run(service::stLookups, "Could not load the filters."); }
 
-    @GetMapping(ST + "/combos")
+    @GetMapping("/api/store/reports/stock-transfer-register/combos")
     @ResponseBody
     public ResponseEntity<?> stCombos(@RequestParam(required = false) String branchIds) {
         return run(() -> service.stCombos(ids(branchIds)), "Could not load the filters.");
     }
 
-    @GetMapping(ST + "/document-types")
+    @GetMapping("/api/store/reports/stock-transfer-register/document-types")
     @ResponseBody
     public ResponseEntity<?> stDocumentTypes() { return run(service::stDocumentTypes, "Could not load the document types."); }
 

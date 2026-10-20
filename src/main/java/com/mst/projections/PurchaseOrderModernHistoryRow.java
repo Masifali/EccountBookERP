@@ -1,0 +1,57 @@
+package com.mst.projections;
+
+/** Row (result set 1 = header) of Sp_PurchaseOrder_GetAllMethod @Activity='PurchaseOrderModernHistory' (native). */
+public interface PurchaseOrderModernHistoryRow {
+    Long getRecordNo();
+    Integer getOrderId();
+    Integer getDocNo();
+    java.sql.Timestamp getDocDate();
+    String getOrderCategoryName();
+    Integer getCatagorySrNo();
+    String getSupplierRefNo();
+    Integer getRefrenenceParty();
+    String getPaymentTerm();
+    Integer getOrderDueDays();
+    java.sql.Timestamp getOrderDueDate();
+    String getSupplier_Customer_Name();
+    String getSupplier_Customer_Mobile();
+    String getSupplier_Customer_Email();
+    String getSupplier_Customer_Address();
+    java.sql.Date getOrderExpiryDate();
+    String getDeliveryTerm();
+    java.sql.Timestamp getDeliveryStartDate();
+    Integer getDeliveryDays();
+    String getDeliveryRemarks();
+    String getRemarksHeader();
+    Boolean getIsAproved();
+    String getOrderStatus();
+    String getExpiryStatus();
+    Integer getAttachmentsCount();
+    Integer getCommissionAgentId();
+    String getCommissionAgentName();
+    String getCommissionType();
+    Double getCommRate();
+    Integer getUomScheduleIdCmRate();
+    Double getCommAmount();
+    Integer getBrokerAgentId();
+    String getBrokerAgentName();
+    String getBrokeryType();
+    Double getBrokeryRate();
+    Double getBrokeryUom();
+    Double getBrokeryAmount();
+    String getEntryUserName();
+    Integer getEntryUser();
+    java.sql.Timestamp getEntryDate();
+    String getModifyUserName();
+    Integer getModifyUser();
+    java.sql.Timestamp getModifyDate();
+    String getApprovalUserName();
+    Integer getPostUser();
+    java.sql.Timestamp getPostDate();
+    String getEntryUserProfileImage();
+    String getModifyUserProfileImage();
+    String getApprovalUserProfileImage();
+    Integer getOrganizationId();
+    Integer getCompanyId();
+    Integer getFinancialYearId();
+}

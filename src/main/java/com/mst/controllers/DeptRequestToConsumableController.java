@@ -27,7 +27,6 @@ import java.util.Map;
 @Controller
 public class DeptRequestToConsumableController {
 
-    private static final String API = "/api/store/department-request-to-consumable";
 
     private final DeptRequestToConsumableService service;
     public DeptRequestToConsumableController(DeptRequestToConsumableService service) { this.service = service; }
@@ -38,50 +37,50 @@ public class DeptRequestToConsumableController {
         return "store/department_request_to_consumable";
     }
 
-    @GetMapping(API + "/lookups")
+    @GetMapping("/api/store/department-request-to-consumable/lookups")
     @ResponseBody
     public ResponseEntity<?> lookups() { return run(service::lookups, "Could not load the screen."); }
 
-    @GetMapping(API + "/lists")
+    @GetMapping("/api/store/department-request-to-consumable/lists")
     @ResponseBody
     public ResponseEntity<?> lists() { return run(service::lists, "Could not refresh the lists."); }
 
-    @GetMapping(API + "/doc-no")
+    @GetMapping("/api/store/department-request-to-consumable/doc-no")
     @ResponseBody
     public ResponseEntity<?> docNo() {
         return run(() -> Collections.singletonMap("docNo", service.docNo()), "Could not generate the Doc No.");
     }
 
-    @GetMapping(API + "/id-by-docno")
+    @GetMapping("/api/store/department-request-to-consumable/id-by-docno")
     @ResponseBody
     public ResponseEntity<?> idByDocNo(@RequestParam(defaultValue = "0") int docNo) {
         return run(() -> Collections.singletonMap("id", service.idByDocNo(docNo)), "Could not read the Doc No.");
     }
 
-    @GetMapping(API + "/uoms")
+    @GetMapping("/api/store/department-request-to-consumable/uoms")
     @ResponseBody
     public ResponseEntity<?> uoms(@RequestParam(defaultValue = "0") int itemId) {
         return run(() -> service.uoms(itemId), "Could not read the UOMs.");
     }
 
-    @GetMapping(API + "/stock")
+    @GetMapping("/api/store/department-request-to-consumable/stock")
     @ResponseBody
     public ResponseEntity<?> stock(@RequestParam(defaultValue = "0") int itemId,
                                    @RequestParam(required = false) String docDate) {
         return run(() -> service.stock(itemId, docDate), "Could not read the stock.");
     }
 
-    @GetMapping(API + "/barcode")
+    @GetMapping("/api/store/department-request-to-consumable/barcode")
     @ResponseBody
     public ResponseEntity<?> barcode(@RequestParam(required = false) String barcode) {
         return run(() -> Collections.singletonMap("itemId", service.itemIdByBarcode(barcode)), "Could not read the barcode.");
     }
 
-    @GetMapping(API + "/history")
+    @GetMapping("/api/store/department-request-to-consumable/history")
     @ResponseBody
     public ResponseEntity<?> history() { return run(service::history, "History failed."); }
 
-    @GetMapping(API + "/{id}")
+    @GetMapping("/api/store/department-request-to-consumable/{id}")
     @ResponseBody
     public ResponseEntity<?> load(@PathVariable int id) {
         try {
@@ -93,7 +92,7 @@ public class DeptRequestToConsumableController {
         }
     }
 
-    @GetMapping(API + "/{id}/slip")
+    @GetMapping("/api/store/department-request-to-consumable/{id}/slip")
     @ResponseBody
     public ResponseEntity<?> slip(@PathVariable int id) {
         try {
@@ -107,13 +106,13 @@ public class DeptRequestToConsumableController {
         }
     }
 
-    @PostMapping(API + "/save")
+    @PostMapping("/api/store/department-request-to-consumable/save")
     @ResponseBody
     public ResponseEntity<?> save(@RequestBody DeptRequestToConsumableDto dto) {
         return write(() -> service.save(dto), "Save failed.");
     }
 
-    @PostMapping(API + "/{id}/delete")
+    @PostMapping("/api/store/department-request-to-consumable/{id}/delete")
     @ResponseBody
     public ResponseEntity<?> delete(@PathVariable int id) {
         return write(() -> service.delete(id), "Delete failed.");

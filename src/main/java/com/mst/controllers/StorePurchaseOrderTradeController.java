@@ -27,7 +27,6 @@ import org.springframework.web.server.ResponseStatusException;
 @Controller
 public class StorePurchaseOrderTradeController {
 
-    private static final String API = "/api/store/purchase-order-store";
 
     private final StorePurchaseOrderTradeService service;
 
@@ -39,21 +38,21 @@ public class StorePurchaseOrderTradeController {
         return "store/purchase_order_trade";
     }
 
-    @GetMapping(API + "/lookups")
+    @GetMapping("/api/store/purchase-order-store/lookups")
     @ResponseBody
     public ResponseEntity<?> lookups() { return run(service::lookups, "Could not load the screen."); }
 
-    @GetMapping(API + "/numbers")
+    @GetMapping("/api/store/purchase-order-store/numbers")
     @ResponseBody
     public ResponseEntity<?> numbers() { return run(service::numbers, "Could not generate the Doc No."); }
 
-    @GetMapping(API + "/history-suppliers")
+    @GetMapping("/api/store/purchase-order-store/history-suppliers")
     @ResponseBody
     public ResponseEntity<?> historySuppliers(@RequestParam(defaultValue = "") String branchIds) {
         return run(() -> service.historySuppliers(ids(branchIds)), "Could not refresh the filters.");
     }
 
-    @GetMapping(API + "/history")
+    @GetMapping("/api/store/purchase-order-store/history")
     @ResponseBody
     public ResponseEntity<?> history(@RequestParam(defaultValue = "doc") String dateType,
                                      @RequestParam(required = false) String fromDate,
@@ -66,11 +65,11 @@ public class StorePurchaseOrderTradeController {
                 "Could not load the history.");
     }
 
-    @GetMapping(API + "/loader/demand/lookups")
+    @GetMapping("/api/store/purchase-order-store/loader/demand/lookups")
     @ResponseBody
     public ResponseEntity<?> demandLookups() { return run(service::demandLoaderLookups, "Could not load the loader."); }
 
-    @GetMapping(API + "/loader/demand")
+    @GetMapping("/api/store/purchase-order-store/loader/demand")
     @ResponseBody
     public ResponseEntity<?> demandPending(@RequestParam(required = false) String fromDate,
                                            @RequestParam(required = false) String toDate,
@@ -80,15 +79,15 @@ public class StorePurchaseOrderTradeController {
         return run(() -> service.pendingDemands(fromDate, toDate, fromDocNo, toDocNo, itemId), "Could not load pending demands.");
     }
 
-    @GetMapping(API + "/{id:[0-9]+}")
+    @GetMapping("/api/store/purchase-order-store/{id:[0-9]+}")
     @ResponseBody
     public ResponseEntity<?> record(@PathVariable int id) { return run(() -> service.record(id), "Could not load the order."); }
 
-    @GetMapping(API + "/{id:[0-9]+}/slip")
+    @GetMapping("/api/store/purchase-order-store/{id:[0-9]+}/slip")
     @ResponseBody
     public ResponseEntity<?> slip(@PathVariable int id) { return run(() -> service.slip(id), "Print failed."); }
 
-    @PostMapping(API + "/save")
+    @PostMapping("/api/store/purchase-order-store/save")
     @ResponseBody
     public ResponseEntity<?> save(@RequestBody Request request) { return run(() -> service.save(request), "Save failed."); }
 

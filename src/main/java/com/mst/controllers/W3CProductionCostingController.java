@@ -33,7 +33,6 @@ import static com.mst.services.W3CSupport.rowList;
 @Controller
 public class W3CProductionCostingController {
 
-    private static final String API = "/api/production/production-costing";
 
     @Autowired private W3CProductionCostingService service;
 
@@ -44,28 +43,28 @@ public class W3CProductionCostingController {
     }
 
     /** InitializeComponentMethod. */
-    @GetMapping(API + "/init")
+    @GetMapping("/api/production/production-costing/init")
     @ResponseBody
     public ResponseEntity<?> init() {
         try { return ResponseEntity.ok(service.init()); } catch (Exception e) { return error(e); }
     }
 
     /** btnRefresh_Click:1283. */
-    @GetMapping(API + "/refresh")
+    @GetMapping("/api/production/production-costing/refresh")
     @ResponseBody
     public ResponseEntity<?> refresh() {
         try { return ResponseEntity.ok(service.refresh()); } catch (Exception e) { return error(e); }
     }
 
     /** btnShow_Click:554. */
-    @GetMapping(API + "/show")
+    @GetMapping("/api/production/production-costing/show")
     @ResponseBody
     public ResponseEntity<?> show(@RequestParam(defaultValue = "0") int jobOrderId) {
         try { return ResponseEntity.ok(service.show(jobOrderId)); } catch (Exception e) { return error(e); }
     }
 
     /** CmbInvoiceNoDetail_Leave:455. */
-    @GetMapping(API + "/invoice-defaults")
+    @GetMapping("/api/production/production-costing/invoice-defaults")
     @ResponseBody
     public ResponseEntity<?> invoiceDefaults(@RequestParam(defaultValue = "0") int jobOrderId,
                                              @RequestParam(defaultValue = "0") int invoiceId) {
@@ -77,14 +76,14 @@ public class W3CProductionCostingController {
     }
 
     /** BtnByProductSettlementPopUp_Click:1830 - the rows of the pop-up. */
-    @GetMapping(API + "/by-product-item-wise")
+    @GetMapping("/api/production/production-costing/by-product-item-wise")
     @ResponseBody
     public ResponseEntity<?> byProductItemWise(@RequestParam(defaultValue = "0") int jobOrderId) {
         try { return ResponseEntity.ok(service.byProductItemWise(jobOrderId)); } catch (Exception e) { return error(e); }
     }
 
     /** BtnByProductSettlementPopUp_Click:1858 - ProductionByProductRateUpdateByJobOrderId. */
-    @PostMapping(API + "/by-product-item-wise")
+    @PostMapping("/api/production/production-costing/by-product-item-wise")
     @ResponseBody
     public ResponseEntity<?> byProductRates(@RequestBody Map<String, Object> body) {
         try {
@@ -96,14 +95,14 @@ public class W3CProductionCostingController {
     }
 
     /** Insert():957 - {result:true, id, updated} | 400 {message}. */
-    @PostMapping(API + "/save")
+    @PostMapping("/api/production/production-costing/save")
     @ResponseBody
     public ResponseEntity<?> save(@RequestBody Map<String, Object> body) {
         try { return ResponseEntity.ok(service.save(body)); } catch (Exception e) { return error(e); }
     }
 
     /** frmProductionCostingReport.btnshow_Click. */
-    @GetMapping(API + "/history")
+    @GetMapping("/api/production/production-costing/history")
     @ResponseBody
     public ResponseEntity<?> history(@RequestParam(required = false) String fromDate,
                                      @RequestParam(required = false) String toDate) {
@@ -111,7 +110,7 @@ public class W3CProductionCostingController {
     }
 
     /** OpenPrint:1538 - row count behind the 921 prints. */
-    @GetMapping(API + "/print-rows")
+    @GetMapping("/api/production/production-costing/print-rows")
     @ResponseBody
     public ResponseEntity<?> printRows(@RequestParam(defaultValue = "0") int jobOrderId) {
         try { return ResponseEntity.ok(service.printRows(jobOrderId)); } catch (Exception e) { return error(e); }

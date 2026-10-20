@@ -20,36 +20,35 @@ import java.util.Map;
 @Controller
 public class ExportPackingMaterialRequirementController {
 
-    private static final String API = "/api/export/packing-material-requirement";
 
     @Autowired private ExportPackingMaterialRequirementService svc;
 
     @GetMapping("/export/packing-material-requirement")
     public String page(Model model) { model.addAttribute("activeMenu", "export"); return "export/packing_material_requirement"; }
 
-    @GetMapping(API + "/setup") @ResponseBody
+    @GetMapping("/api/export/packing-material-requirement/setup") @ResponseBody
     public ResponseEntity<?> setup() { return call(svc::setup, "Error occurred during database call."); }
 
-    @GetMapping(API + "/sales-contracts") @ResponseBody
+    @GetMapping("/api/export/packing-material-requirement/sales-contracts") @ResponseBody
     public ResponseEntity<?> contracts(@RequestParam(value = "supplierCustomerId", defaultValue = "0") int supplierCustomerId) {
         return call(() -> svc.salesContracts(supplierCustomerId), "Load failed.");
     }
 
-    @GetMapping(API + "/contract-items") @ResponseBody
+    @GetMapping("/api/export/packing-material-requirement/contract-items") @ResponseBody
     public ResponseEntity<?> items(@RequestParam(value = "contractId", defaultValue = "0") int contractId) {
         return call(() -> svc.contractItems(contractId), "Load failed.");
     }
 
-    @GetMapping(API + "/uoms") @ResponseBody
+    @GetMapping("/api/export/packing-material-requirement/uoms") @ResponseBody
     public ResponseEntity<?> uoms(@RequestParam(value = "itemId", defaultValue = "0") int itemId) { return call(() -> svc.uoms(itemId), "Load failed."); }
 
-    @GetMapping(API + "/history") @ResponseBody
+    @GetMapping("/api/export/packing-material-requirement/history") @ResponseBody
     public ResponseEntity<?> history() { return call(svc::history, "Load failed."); }
 
-    @GetMapping(API + "/by-id") @ResponseBody
+    @GetMapping("/api/export/packing-material-requirement/by-id") @ResponseBody
     public ResponseEntity<?> byId(@RequestParam("id") int id) { return call(() -> svc.readById(id), "Load failed."); }
 
-    @PostMapping(API + "/save") @ResponseBody
+    @PostMapping("/api/export/packing-material-requirement/save") @ResponseBody
     public ResponseEntity<?> save(@RequestBody Map<String, Object> body) { return call(() -> svc.save(body), "Save failed."); }
 
     private interface Call { Object run() throws Exception; }

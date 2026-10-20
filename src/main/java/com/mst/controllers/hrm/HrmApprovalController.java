@@ -34,13 +34,13 @@ public class HrmApprovalController {
     @GetMapping("/hrm/loan-approval")
     public String loanApprovalPage(Model model) { model.addAttribute("activeMenu", "apps"); return "hrm/approval/loan-approval"; }
 
-    @GetMapping(API + "/loan-approval/setup") @ResponseBody
+    @GetMapping("/api/hrm/approval/loan-approval/setup") @ResponseBody
     public ResponseEntity<?> loanSetup() { return HrmApi.run(() -> service.loanSetup()); }
 
-    @GetMapping(API + "/loan-approval/list") @ResponseBody
+    @GetMapping("/api/hrm/approval/loan-approval/list") @ResponseBody
     public ResponseEntity<?> loanList() { return HrmApi.run(() -> service.pendingLoans()); }
 
-    @PostMapping(API + "/loan-approval/save") @ResponseBody
+    @PostMapping("/api/hrm/approval/loan-approval/save") @ResponseBody
     public ResponseEntity<?> loanSave(@RequestBody HrmLoanApprovalDto body) { return HrmApi.run(() -> service.saveLoanApproval(body)); }
 
     // ------------------------------------------------------------------ 668 Leave Approval
@@ -48,34 +48,34 @@ public class HrmApprovalController {
     @GetMapping("/hrm/leave-approval")
     public String leaveApprovalPage(Model model) { model.addAttribute("activeMenu", "apps"); return "hrm/approval/leave-approval"; }
 
-    @GetMapping(API + "/leave-approval/setup") @ResponseBody
+    @GetMapping("/api/hrm/approval/leave-approval/setup") @ResponseBody
     public ResponseEntity<?> leaveSetup() { return HrmApi.run(() -> service.leaveSetup()); }
 
-    @GetMapping(API + "/leave-approval/list") @ResponseBody
+    @GetMapping("/api/hrm/approval/leave-approval/list") @ResponseBody
     public ResponseEntity<?> leaveList(@RequestParam(value = "employeeId", defaultValue = "0") int employeeId,
                                        @RequestParam(value = "departmentId", defaultValue = "0") int departmentId,
                                        @RequestParam(value = "designationId", defaultValue = "0") int designationId) {
         return HrmApi.run(() -> service.leaves(employeeId, departmentId, designationId));
     }
 
-    @GetMapping(API + "/leave-approval/employees") @ResponseBody
+    @GetMapping("/api/hrm/approval/leave-approval/employees") @ResponseBody
     public ResponseEntity<?> leaveEmployees(@RequestParam(value = "departmentId", defaultValue = "0") int departmentId,
                                             @RequestParam(value = "designationId", defaultValue = "0") int designationId) {
         return HrmApi.run(() -> service.filteredEmployees(HrmApprovalService.SCREEN_LEAVE_APPROVAL, departmentId, designationId));
     }
 
-    @PostMapping(API + "/leave-approval/approve") @ResponseBody
+    @PostMapping("/api/hrm/approval/leave-approval/approve") @ResponseBody
     public ResponseEntity<?> leaveApprove(@RequestBody HrmLeaveApprovalDto body) { return HrmApi.run(() -> service.approveLeaves(body)); }
 
-    @GetMapping(API + "/leave-approval/details") @ResponseBody
+    @GetMapping("/api/hrm/approval/leave-approval/details") @ResponseBody
     public ResponseEntity<?> leaveDetails(@RequestParam("employeeId") int employeeId, @RequestParam("leaveTypeProfileId") int leaveTypeProfileId) {
         return HrmApi.run(() -> service.leaveDetails(employeeId, leaveTypeProfileId));
     }
 
-    @PostMapping(API + "/leave-approval/detail-approve") @ResponseBody
+    @PostMapping("/api/hrm/approval/leave-approval/detail-approve") @ResponseBody
     public ResponseEntity<?> leaveDetailApprove(@RequestBody HrmLeaveApprovalDto body) { return HrmApi.run(() -> service.leaveDetailAction(body, true)); }
 
-    @PostMapping(API + "/leave-approval/detail-reject") @ResponseBody
+    @PostMapping("/api/hrm/approval/leave-approval/detail-reject") @ResponseBody
     public ResponseEntity<?> leaveDetailReject(@RequestBody HrmLeaveApprovalDto body) { return HrmApi.run(() -> service.leaveDetailAction(body, false)); }
 
     // ------------------------------------------------------------------ 669 Advance Approval
@@ -83,22 +83,22 @@ public class HrmApprovalController {
     @GetMapping("/hrm/advance-approval")
     public String advanceApprovalPage(Model model) { model.addAttribute("activeMenu", "apps"); return "hrm/approval/advance-approval"; }
 
-    @GetMapping(API + "/advance-approval/setup") @ResponseBody
+    @GetMapping("/api/hrm/approval/advance-approval/setup") @ResponseBody
     public ResponseEntity<?> advanceSetup() { return HrmApi.run(() -> service.advanceSetup()); }
 
-    @GetMapping(API + "/advance-approval/list") @ResponseBody
+    @GetMapping("/api/hrm/approval/advance-approval/list") @ResponseBody
     public ResponseEntity<?> advanceList(@RequestParam(value = "employeeId", defaultValue = "0") int employeeId,
                                          @RequestParam(value = "departmentId", defaultValue = "0") int departmentId,
                                          @RequestParam(value = "designationId", defaultValue = "0") int designationId) {
         return HrmApi.run(() -> service.advances(employeeId, departmentId, designationId));
     }
 
-    @GetMapping(API + "/advance-approval/employees") @ResponseBody
+    @GetMapping("/api/hrm/approval/advance-approval/employees") @ResponseBody
     public ResponseEntity<?> advanceEmployees(@RequestParam(value = "departmentId", defaultValue = "0") int departmentId,
                                               @RequestParam(value = "designationId", defaultValue = "0") int designationId) {
         return HrmApi.run(() -> service.filteredEmployees(HrmApprovalService.SCREEN_ADVANCE_APPROVAL, departmentId, designationId));
     }
 
-    @PostMapping(API + "/advance-approval/approve") @ResponseBody
+    @PostMapping("/api/hrm/approval/advance-approval/approve") @ResponseBody
     public ResponseEntity<?> advanceApprove(@RequestBody HrmAdvanceApprovalDto body) { return HrmApi.run(() -> service.approveAdvance(body)); }
 }

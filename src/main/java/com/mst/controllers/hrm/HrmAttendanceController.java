@@ -30,22 +30,22 @@ public class HrmAttendanceController {
     @GetMapping("/hrm/daily-attendance")
     public String dailyAttendancePage(Model model) { model.addAttribute("activeMenu", "apps"); return "hrm/attendance/daily-attendance"; }
 
-    @GetMapping(API + "/daily-attendance/setup") @ResponseBody
+    @GetMapping("/api/hrm/attendance/daily-attendance/setup") @ResponseBody
     public ResponseEntity<?> dailySetup() { return HrmApi.run(() -> service.dailySetup()); }
 
-    @PostMapping(API + "/daily-attendance/combos") @ResponseBody
+    @PostMapping("/api/hrm/attendance/daily-attendance/combos") @ResponseBody
     public ResponseEntity<?> dailyCombos(@RequestBody AttendanceFilterDto f) { return HrmApi.run(() -> service.dailyCombos(f)); }
 
-    @PostMapping(API + "/daily-attendance/employees") @ResponseBody
+    @PostMapping("/api/hrm/attendance/daily-attendance/employees") @ResponseBody
     public ResponseEntity<?> dailyEmployees(@RequestBody AttendanceFilterDto f) { return HrmApi.run(() -> service.dailyEmployees(f)); }
 
-    @PostMapping(API + "/daily-attendance/load") @ResponseBody
+    @PostMapping("/api/hrm/attendance/daily-attendance/load") @ResponseBody
     public ResponseEntity<?> dailyLoad(@RequestBody AttendanceFilterDto f) { return HrmApi.run(() -> service.dailyLoad(f)); }
 
-    @PostMapping(API + "/daily-attendance/save") @ResponseBody
+    @PostMapping("/api/hrm/attendance/daily-attendance/save") @ResponseBody
     public ResponseEntity<?> dailySave(@RequestBody AttendanceSaveDto b) { return HrmApi.run(() -> service.dailySave(b)); }
 
-    @PostMapping(API + "/daily-attendance/print-check") @ResponseBody
+    @PostMapping("/api/hrm/attendance/daily-attendance/print-check") @ResponseBody
     public ResponseEntity<?> dailyPrintCheck(@RequestBody AttendanceFilterDto f) { return HrmApi.run(() -> service.dailyPrintCheck(f)); }
 
     // ------------------------------------------------------------------ 659 Manual Attendance
@@ -53,18 +53,18 @@ public class HrmAttendanceController {
     @GetMapping("/hrm/manual-attendance")
     public String manualAttendancePage(Model model) { model.addAttribute("activeMenu", "apps"); return "hrm/attendance/manual-attendance"; }
 
-    @GetMapping(API + "/manual-attendance/setup") @ResponseBody
+    @GetMapping("/api/hrm/attendance/manual-attendance/setup") @ResponseBody
     public ResponseEntity<?> manualSetup() { return HrmApi.run(() -> service.manualSetup()); }
 
-    @PostMapping(API + "/manual-attendance/combos") @ResponseBody
+    @PostMapping("/api/hrm/attendance/manual-attendance/combos") @ResponseBody
     public ResponseEntity<?> manualCombos(@RequestBody AttendanceFilterDto f) { return HrmApi.run(() -> service.manualCombos(f)); }
 
-    @PostMapping(API + "/manual-attendance/employees") @ResponseBody
+    @PostMapping("/api/hrm/attendance/manual-attendance/employees") @ResponseBody
     public ResponseEntity<?> manualEmployees(@RequestBody AttendanceFilterDto f) { return HrmApi.run(() -> service.manualEmployees(f)); }
 
-    @PostMapping(API + "/manual-attendance/load") @ResponseBody
+    @PostMapping("/api/hrm/attendance/manual-attendance/load") @ResponseBody
     public ResponseEntity<?> manualLoad(@RequestBody AttendanceFilterDto f) { return HrmApi.run(() -> service.manualLoad(f)); }
 
-    @PostMapping(API + "/manual-attendance/update") @ResponseBody
+    @PostMapping("/api/hrm/attendance/manual-attendance/update") @ResponseBody
     public ResponseEntity<?> manualUpdate(@RequestBody AttendanceSaveDto b) { return HrmApi.run(() -> service.manualUpdate(b)); }
 }

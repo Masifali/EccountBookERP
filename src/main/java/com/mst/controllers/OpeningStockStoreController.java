@@ -30,7 +30,6 @@ import java.util.Map;
 @Controller
 public class OpeningStockStoreController {
 
-    private static final String API = "/api/store/opening-stock-store";
 
     private final OpeningStockStoreService service;
     private final OpeningStockStoreUploadService upload;
@@ -40,13 +39,13 @@ public class OpeningStockStoreController {
     }
 
     /** btnAttachment — the opened document's attachments. */
-    @GetMapping(API + "/{id:[0-9]+}/attachments")
+    @GetMapping("/api/store/opening-stock-store/{id:[0-9]+}/attachments")
     @ResponseBody
     public ResponseEntity<?> attachments(@PathVariable int id) {
         return run(() -> service.attachments(id), "Could not load the attachments.");
     }
 
-    @GetMapping(API + "/{id:[0-9]+}/attachments/{attachment:[0-9]+}")
+    @GetMapping("/api/store/opening-stock-store/{id:[0-9]+}/attachments/{attachment:[0-9]+}")
     @ResponseBody
     public ResponseEntity<?> download(@PathVariable int id, @PathVariable int attachment) {
         try {
@@ -62,7 +61,7 @@ public class OpeningStockStoreController {
     }
 
     /** Upload Opening → frmItemDefineExcelSheetUpload btnUpload (read the "Items" sheet). */
-    @PostMapping(value = API + "/upload-opening/preview", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/api/store/opening-stock-store/upload-opening/preview", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseBody
     public ResponseEntity<?> uploadPreview(@RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
         try (java.io.InputStream in = file.getInputStream()) {
@@ -75,7 +74,7 @@ public class OpeningStockStoreController {
     }
 
     /** Upload Opening → frmItemDefineExcelSheetUpload btnSave (the grid rows). */
-    @PostMapping(API + "/upload-opening/save")
+    @PostMapping("/api/store/opening-stock-store/upload-opening/save")
     @ResponseBody
     public ResponseEntity<?> uploadSave(@RequestBody Map<String, List<Map<String, String>>> body) {
         try {
@@ -96,28 +95,28 @@ public class OpeningStockStoreController {
     }
 
     /** Form_Load + InitializeComponentMethod. */
-    @GetMapping(API + "/lookups")
+    @GetMapping("/api/store/opening-stock-store/lookups")
     @ResponseBody
     public ResponseEntity<?> lookups() { return run(service::lookups, "Could not load the screen."); }
 
     /** btnRefresh_Click — the global lists again. */
-    @GetMapping(API + "/globals")
+    @GetMapping("/api/store/opening-stock-store/globals")
     @ResponseBody
     public ResponseEntity<?> globals() { return run(service::globals, "Refresh failed."); }
 
     /** FormReset — DocumentNoDbCall. */
-    @GetMapping(API + "/next-doc-no")
+    @GetMapping("/api/store/opening-stock-store/next-doc-no")
     @ResponseBody
     public ResponseEntity<?> nextDocNo() {
         return run(() -> Collections.singletonMap("docNo", service.nextDocNo()), "Could not generate the document number.");
     }
 
     /** BtnRefreshHistory_Click — HistoryComboBind(HistoryComboDbCall()). */
-    @GetMapping(API + "/history-combos")
+    @GetMapping("/api/store/opening-stock-store/history-combos")
     @ResponseBody
     public ResponseEntity<?> historyCombos() { return run(service::historyCombos, "Could not load the history filters."); }
 
-    @GetMapping(API + "/history")
+    @GetMapping("/api/store/opening-stock-store/history")
     @ResponseBody
     public ResponseEntity<?> history(@RequestParam(required = false) String fromDate,
                                      @RequestParam(required = false) String toDate,
@@ -130,7 +129,7 @@ public class OpeningStockStoreController {
                 "History failed.");
     }
 
-    @GetMapping(API + "/{id:[0-9]+}")
+    @GetMapping("/api/store/opening-stock-store/{id:[0-9]+}")
     @ResponseBody
     public ResponseEntity<?> load(@PathVariable int id) {
         try {
@@ -143,7 +142,7 @@ public class OpeningStockStoreController {
     }
 
     /** 416-Print — the register procedure's rows (the Crystal layout is not ported). */
-    @GetMapping(API + "/{id:[0-9]+}/slip")
+    @GetMapping("/api/store/opening-stock-store/{id:[0-9]+}/slip")
     @ResponseBody
     public ResponseEntity<?> slip(@PathVariable int id) {
         try {
@@ -159,7 +158,7 @@ public class OpeningStockStoreController {
         }
     }
 
-    @PostMapping(API + "/save")
+    @PostMapping("/api/store/opening-stock-store/save")
     @ResponseBody
     public ResponseEntity<?> save(@RequestBody OpeningStockStoreDto dto) {
         try {

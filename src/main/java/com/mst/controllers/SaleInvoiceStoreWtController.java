@@ -19,7 +19,6 @@ import java.util.NoSuchElementException;
 @Controller
 public class SaleInvoiceStoreWtController {
 
-    private static final String API = "/store/api/sale-invoice-without-tax";
 
     private final SaleInvoiceStoreWtService service;
     public SaleInvoiceStoreWtController(SaleInvoiceStoreWtService service) { this.service = service; }
@@ -30,45 +29,45 @@ public class SaleInvoiceStoreWtController {
         return "store/sale_invoice_store_wt";
     }
 
-    @GetMapping(API + "/lookups") @ResponseBody
+    @GetMapping("/store/api/sale-invoice-without-tax/lookups") @ResponseBody
     public ResponseEntity<?> lookups() { return run(service::lookups, "Could not load the screen."); }
 
-    @GetMapping(API + "/numbers") @ResponseBody
+    @GetMapping("/store/api/sale-invoice-without-tax/numbers") @ResponseBody
     public ResponseEntity<?> numbers() { return run(service::numbers, "Could not number the document."); }
 
-    @GetMapping(API + "/tax-options") @ResponseBody
+    @GetMapping("/store/api/sale-invoice-without-tax/tax-options") @ResponseBody
     public ResponseEntity<?> taxOptions(@RequestParam(defaultValue = "0") int itemId, @RequestParam(required = false) String docDate) {
         return run(() -> service.taxOptions(itemId, docDate), "Could not read the tax schedule.");
     }
 
-    @GetMapping(API + "/tax-by-items") @ResponseBody
+    @GetMapping("/store/api/sale-invoice-without-tax/tax-by-items") @ResponseBody
     public ResponseEntity<?> taxByItems(@RequestParam(required = false) String itemIds, @RequestParam(required = false) String docDate) {
         return run(() -> service.taxByItems(itemIds, docDate), "Could not read the tax schedule.");
     }
 
-    @GetMapping(API + "/stock") @ResponseBody
+    @GetMapping("/store/api/sale-invoice-without-tax/stock") @ResponseBody
     public ResponseEntity<?> stock(@RequestParam(defaultValue = "0") int itemId, @RequestParam(required = false) String docDate,
                                    @RequestParam(defaultValue = "0") int conditionId, @RequestParam(defaultValue = "0") int warehouseId,
                                    @RequestParam(defaultValue = "0") int rackId) {
         return run(() -> service.stock(itemId, docDate, conditionId, warehouseId, rackId), "Could not read the stock.");
     }
 
-    @GetMapping(API + "/gdn-branches") @ResponseBody
+    @GetMapping("/store/api/sale-invoice-without-tax/gdn-branches") @ResponseBody
     public ResponseEntity<?> gdnBranches() { return run(service::gdnBranches, "Could not load branches."); }
 
-    @GetMapping(API + "/gdn-pending") @ResponseBody
+    @GetMapping("/store/api/sale-invoice-without-tax/gdn-pending") @ResponseBody
     public ResponseEntity<?> gdnPending(@RequestParam(required = false) String fromDate, @RequestParam(required = false) String toDate,
                                         @RequestParam(required = false) String branchIds) {
         return write(() -> service.pendingGdns(fromDate, toDate, branchIds), "Could not load GDNs.");
     }
 
-    @GetMapping(API + "/gdn/{gdnId}") @ResponseBody
+    @GetMapping("/store/api/sale-invoice-without-tax/gdn/{gdnId}") @ResponseBody
     public ResponseEntity<?> gdn(@PathVariable int gdnId) { return write(() -> service.loadGdn(gdnId), "Could not load the GDN."); }
 
-    @GetMapping(API + "/history-customers") @ResponseBody
+    @GetMapping("/store/api/sale-invoice-without-tax/history-customers") @ResponseBody
     public ResponseEntity<?> historyCustomers() { return run(service::historyCustomers, "Could not load customers."); }
 
-    @GetMapping(API + "/history") @ResponseBody
+    @GetMapping("/store/api/sale-invoice-without-tax/history") @ResponseBody
     public ResponseEntity<?> history(@RequestParam(defaultValue = "doc") String dateType,
                                      @RequestParam(required = false) String fromDate, @RequestParam(required = false) String toDate,
                                      @RequestParam(defaultValue = "0") int fromDocNo, @RequestParam(defaultValue = "0") int toDocNo,
@@ -76,7 +75,7 @@ public class SaleInvoiceStoreWtController {
         return run(() -> service.history(dateType, fromDate, toDate, fromDocNo, toDocNo, customerId), "History failed.");
     }
 
-    @GetMapping(API + "/{id}") @ResponseBody
+    @GetMapping("/store/api/sale-invoice-without-tax/{id}") @ResponseBody
     public ResponseEntity<?> load(@PathVariable int id) {
         try {
             return ResponseEntity.ok(service.read(id));
@@ -87,10 +86,10 @@ public class SaleInvoiceStoreWtController {
         }
     }
 
-    @PostMapping(API + "/save") @ResponseBody
+    @PostMapping("/store/api/sale-invoice-without-tax/save") @ResponseBody
     public ResponseEntity<?> save(@RequestBody Map<String, Object> req) { return write(() -> service.save(req), "Save failed."); }
 
-    @PostMapping(API + "/{id}/delete") @ResponseBody
+    @PostMapping("/store/api/sale-invoice-without-tax/{id}/delete") @ResponseBody
     public ResponseEntity<?> delete(@PathVariable int id) { return write(() -> service.delete(id), "Delete failed."); }
 
     // --------------------------------------------------------------------------- helpers

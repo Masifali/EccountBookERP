@@ -1,0 +1,62 @@
+package com.mst.projections;
+
+import java.math.BigDecimal;
+import java.sql.Timestamp;
+
+/** Row of USP_InvGrn_DataForSpecialApproval (native EXEC; final SELECT column order) */
+public interface GrnSpecialApprovalDataRow {
+    Integer getId();
+    Integer getDocumentTypeId();
+    Timestamp getGrnDate();
+    Integer getGrnNo();
+    String getDeliveryTerm();
+    Integer getSupplierCustomerId();
+    String getSupplierName();
+    String getWhatsAppNo();
+    String getMobilePersonal();
+    Integer getTransporterId();
+    String getTranspoterName();
+    Integer getInwardGatePassId();
+    Integer getGpNo();
+    Timestamp getGpDate();
+    String getVehicleNo();
+    BigDecimal getFactoryWeight();
+    BigDecimal getPartyWeight();
+    String getOrderType();
+    Timestamp getEntryDate();
+    String getEnteryUserName();
+    Timestamp getModifyDate();
+    String getModifyUserName();
+    Boolean getIsApproved();
+    Timestamp getApprovedDate();
+    String getApprovedUserName();
+    String getBranchName();
+    BigDecimal getRateCut();
+    String getRateCutRemarks();
+    BigDecimal getAccessWeight();
+    BigDecimal getDifferenceWeight();
+    Integer getPurchaseOrderId();
+    Timestamp getOrderDate();
+    Integer getOrderNo();
+    Integer getItemId();
+    String getItemName();
+    Integer getPurchaseGLAC();
+    BigDecimal getItemQty();
+    BigDecimal getGrossWeight();
+    BigDecimal getEBWPerUnit();
+    BigDecimal getEBWTotal();
+    BigDecimal getWtCutPerUnit();
+    BigDecimal getWtCutTotal();
+    BigDecimal getAdLsWeight();
+    BigDecimal getNetBillWeight();
+    BigDecimal getNetStockWeight();
+    BigDecimal getExcessBillWeight();
+    String getAreaCity();
+    Double getOrderQty();
+    Double getOrderWeight();
+    Double getOrderBalWeight();
+    Integer getNoOfAttachments();
+    Integer getAttachmentsCount();
+    String getEmptyBagTerm();
+    String getReasonRemarks();
+}

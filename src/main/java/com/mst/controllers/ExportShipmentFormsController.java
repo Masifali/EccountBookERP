@@ -36,11 +36,6 @@ import java.util.Map;
 @Controller
 public class ExportShipmentFormsController {
 
-    private static final String GR = "/api/export/goods-receipts-at-port";
-    private static final String PM = "/api/export/pm-issuance-for-shipment";
-    private static final String FI = "/api/export/fi-utilized-against-shipment";
-    private static final String IA = "/api/export/invoice-against-forwarding";
-    private static final String DH = "/api/export/dhl-tracking";
 
     @Autowired private ExportGoodsReceiptsAtPortService gr;
     @Autowired private ExportPmIssuanceForShipmentService pm;
@@ -67,45 +62,45 @@ public class ExportShipmentFormsController {
 
     // ------------------------------------------------------------------ Goods Receipts At Port
 
-    @GetMapping(GR + "/setup") @ResponseBody
+    @GetMapping("/api/export/goods-receipts-at-port/setup") @ResponseBody
     public ResponseEntity<?> grSetup() { return call(() -> gr.setup(), "Load failed."); }
 
-    @GetMapping(GR + "/history") @ResponseBody
+    @GetMapping("/api/export/goods-receipts-at-port/history") @ResponseBody
     public ResponseEntity<?> grHistory() { return call(() -> gr.history(), "Load failed."); }
 
-    @GetMapping(GR + "/loader/combos") @ResponseBody
+    @GetMapping("/api/export/goods-receipts-at-port/loader/combos") @ResponseBody
     public ResponseEntity<?> grLoaderCombos() { return call(() -> gr.loaderCombos(), "Load failed."); }
 
-    @GetMapping(GR + "/loader") @ResponseBody
+    @GetMapping("/api/export/goods-receipts-at-port/loader") @ResponseBody
     public ResponseEntity<?> grLoader(@RequestParam(value = "partyId", defaultValue = "0") int partyId,
                                       @RequestParam(value = "itemId", defaultValue = "0") int itemId,
                                       @RequestParam(value = "currencyId", defaultValue = "0") int currencyId) {
         return call(() -> gr.loaderRows(partyId, itemId, currencyId), "Load failed.");
     }
 
-    @PostMapping(GR + "/save") @ResponseBody
+    @PostMapping("/api/export/goods-receipts-at-port/save") @ResponseBody
     public ResponseEntity<?> grSave(@RequestBody Map<String, Object> body) { return call(() -> gr.save(body), "Save failed."); }
 
     // ------------------------------------------------------------------ Packing Material Issuance For Shipment
 
-    @GetMapping(PM + "/setup") @ResponseBody
+    @GetMapping("/api/export/pm-issuance-for-shipment/setup") @ResponseBody
     public ResponseEntity<?> pmSetup() { return call(() -> pm.setup(), "Load failed."); }
 
-    @GetMapping(PM + "/refresh") @ResponseBody
+    @GetMapping("/api/export/pm-issuance-for-shipment/refresh") @ResponseBody
     public ResponseEntity<?> pmRefresh(@RequestParam(value = "recId", defaultValue = "0") int recId) { return call(() -> pm.refresh(recId), "Load failed."); }
 
-    @GetMapping(PM + "/doc-no") @ResponseBody
+    @GetMapping("/api/export/pm-issuance-for-shipment/doc-no") @ResponseBody
     public ResponseEntity<?> pmDocNo() { return call(() -> pm.docNo(), "Load failed."); }
 
-    @GetMapping(PM + "/invoices") @ResponseBody
+    @GetMapping("/api/export/pm-issuance-for-shipment/invoices") @ResponseBody
     public ResponseEntity<?> pmInvoices(@RequestParam(value = "recId", defaultValue = "0") int recId) { return call(() -> pm.invoices(recId), "Load failed."); }
 
-    @GetMapping(PM + "/invoice-info") @ResponseBody
+    @GetMapping("/api/export/pm-issuance-for-shipment/invoice-info") @ResponseBody
     public ResponseEntity<?> pmInvoiceInfo(@RequestParam(value = "invoiceId", defaultValue = "0") int invoiceId) {
         return call(() -> pm.invoiceInfo(invoiceId), "Load failed.");
     }
 
-    @GetMapping(PM + "/stock") @ResponseBody
+    @GetMapping("/api/export/pm-issuance-for-shipment/stock") @ResponseBody
     public ResponseEntity<?> pmStock(@RequestParam(value = "recId", defaultValue = "0") int recId,
                                      @RequestParam(value = "itemId", defaultValue = "0") int itemId,
                                      @RequestParam(value = "docDate", required = false) String docDate,
@@ -115,10 +110,10 @@ public class ExportShipmentFormsController {
         return call(() -> pm.stock(recId, itemId, docDate, itemConditionId, warehouseId, rackId), "Load failed.");
     }
 
-    @PostMapping(PM + "/rates-on-date") @ResponseBody
+    @PostMapping("/api/export/pm-issuance-for-shipment/rates-on-date") @ResponseBody
     public ResponseEntity<?> pmRatesOnDate(@RequestBody Map<String, Object> body) { return call(() -> pm.ratesOnDate(body), "Load failed."); }
 
-    @GetMapping(PM + "/history") @ResponseBody
+    @GetMapping("/api/export/pm-issuance-for-shipment/history") @ResponseBody
     public ResponseEntity<?> pmHistory(@RequestParam(value = "fromDate", required = false) String fromDate,
                                        @RequestParam(value = "toDate", required = false) String toDate,
                                        @RequestParam(value = "fromDocNo", defaultValue = "0") int fromDocNo,
@@ -126,103 +121,103 @@ public class ExportShipmentFormsController {
         return call(() -> pm.history(fromDate, toDate, fromDocNo, toDocNo), "Load failed.");
     }
 
-    @GetMapping(PM + "/by-id") @ResponseBody
+    @GetMapping("/api/export/pm-issuance-for-shipment/by-id") @ResponseBody
     public ResponseEntity<?> pmById(@RequestParam("id") int id) { return call(() -> pm.readById(id), "Load failed."); }
 
-    @GetMapping(PM + "/print-check") @ResponseBody
+    @GetMapping("/api/export/pm-issuance-for-shipment/print-check") @ResponseBody
     public ResponseEntity<?> pmPrintCheck(@RequestParam(value = "id", defaultValue = "0") int id) { return call(() -> pm.printCheck(id), "Print failed."); }
 
-    @PostMapping(PM + "/save") @ResponseBody
+    @PostMapping("/api/export/pm-issuance-for-shipment/save") @ResponseBody
     public ResponseEntity<?> pmSave(@RequestBody Map<String, Object> body) { return call(() -> pm.save(body), "Save failed."); }
 
     // ------------------------------------------------------------------ Financial Instruments Utilized Against Shipment
 
-    @GetMapping(FI + "/setup") @ResponseBody
+    @GetMapping("/api/export/fi-utilized-against-shipment/setup") @ResponseBody
     public ResponseEntity<?> fiSetup() { return call(() -> fi.setup(), "Load failed."); }
 
-    @GetMapping(FI + "/refresh") @ResponseBody
+    @GetMapping("/api/export/fi-utilized-against-shipment/refresh") @ResponseBody
     public ResponseEntity<?> fiRefresh(@RequestParam(value = "recId", defaultValue = "0") int recId) { return call(() -> fi.refresh(recId), "Load failed."); }
 
-    @GetMapping(FI + "/invoices") @ResponseBody
+    @GetMapping("/api/export/fi-utilized-against-shipment/invoices") @ResponseBody
     public ResponseEntity<?> fiInvoices(@RequestParam(value = "recId", defaultValue = "0") int recId) { return call(() -> fi.invoices(recId), "Load failed."); }
 
-    @GetMapping(FI + "/fi-balance") @ResponseBody
+    @GetMapping("/api/export/fi-utilized-against-shipment/fi-balance") @ResponseBody
     public ResponseEntity<?> fiBalance(@RequestParam(value = "documentTypeId", defaultValue = "0") int documentTypeId,
                                        @RequestParam(value = "id", defaultValue = "0") int id) {
         return call(() -> fi.fiBalance(documentTypeId, id), "Load failed.");
     }
 
-    @GetMapping(FI + "/history-combos") @ResponseBody
+    @GetMapping("/api/export/fi-utilized-against-shipment/history-combos") @ResponseBody
     public ResponseEntity<?> fiHistoryCombos() { return call(() -> fi.historyCombos(), "Load failed."); }
 
-    @GetMapping(FI + "/history") @ResponseBody
+    @GetMapping("/api/export/fi-utilized-against-shipment/history") @ResponseBody
     public ResponseEntity<?> fiHistory(@RequestParam(value = "invoiceId", defaultValue = "0") int invoiceId,
                                        @RequestParam(value = "eFormRegistrationId", defaultValue = "0") int eFormRegistrationId,
                                        @RequestParam(value = "documentTypeId", defaultValue = "0") int documentTypeId) {
         return call(() -> fi.history(invoiceId, eFormRegistrationId, documentTypeId), "Load failed.");
     }
 
-    @GetMapping(FI + "/by-id") @ResponseBody
+    @GetMapping("/api/export/fi-utilized-against-shipment/by-id") @ResponseBody
     public ResponseEntity<?> fiById(@RequestParam("id") int id) { return call(() -> fi.readById(id), "Load failed."); }
 
-    @PostMapping(FI + "/save") @ResponseBody
+    @PostMapping("/api/export/fi-utilized-against-shipment/save") @ResponseBody
     public ResponseEntity<?> fiSave(@RequestBody Map<String, Object> body) { return call(() -> fi.save(body), "Save failed."); }
 
     // ------------------------------------------------------------------ Export Invoice Against Forwarding
 
-    @GetMapping(IA + "/setup") @ResponseBody
+    @GetMapping("/api/export/invoice-against-forwarding/setup") @ResponseBody
     public ResponseEntity<?> iaSetup() { return call(() -> ia.setup(), "Load failed."); }
 
-    @GetMapping(IA + "/customers") @ResponseBody
+    @GetMapping("/api/export/invoice-against-forwarding/customers") @ResponseBody
     public ResponseEntity<?> iaCustomers() { return call(() -> ia.customers(), "Load failed."); }
 
-    @GetMapping(IA + "/loader/combos") @ResponseBody
+    @GetMapping("/api/export/invoice-against-forwarding/loader/combos") @ResponseBody
     public ResponseEntity<?> iaLoaderCombos() { return call(() -> ia.loaderCombos(), "Load failed."); }
 
-    @GetMapping(IA + "/loader") @ResponseBody
+    @GetMapping("/api/export/invoice-against-forwarding/loader") @ResponseBody
     public ResponseEntity<?> iaLoader(@RequestParam(value = "partyId", defaultValue = "0") int partyId,
                                       @RequestParam(value = "fromDate", required = false) String fromDate,
                                       @RequestParam(value = "toDate", required = false) String toDate) {
         return call(() -> ia.loaderRows(partyId, fromDate, toDate), "Load failed.");
     }
 
-    @GetMapping(IA + "/forwarding-rows") @ResponseBody
+    @GetMapping("/api/export/invoice-against-forwarding/forwarding-rows") @ResponseBody
     public ResponseEntity<?> iaForwardingRows(@RequestParam(value = "ids", defaultValue = "") String ids) {
         return call(() -> ia.forwardingRows(ids), "Load failed.");
     }
 
-    @GetMapping(IA + "/history") @ResponseBody
+    @GetMapping("/api/export/invoice-against-forwarding/history") @ResponseBody
     public ResponseEntity<?> iaHistory(@RequestParam(value = "noOfRecords", defaultValue = "0") int noOfRecords) {
         return call(() -> ia.history(noOfRecords), "Load failed.");
     }
 
-    @GetMapping(IA + "/by-id") @ResponseBody
+    @GetMapping("/api/export/invoice-against-forwarding/by-id") @ResponseBody
     public ResponseEntity<?> iaById(@RequestParam("id") int id) { return call(() -> ia.readById(id), "Load failed."); }
 
-    @GetMapping(IA + "/print-check") @ResponseBody
+    @GetMapping("/api/export/invoice-against-forwarding/print-check") @ResponseBody
     public ResponseEntity<?> iaPrintCheck() { return call(() -> ia.printCheck(), "Print failed."); }
 
-    @PostMapping(IA + "/save") @ResponseBody
+    @PostMapping("/api/export/invoice-against-forwarding/save") @ResponseBody
     public ResponseEntity<?> iaSave(@RequestBody Map<String, Object> body) { return call(() -> ia.save(body), "Save failed."); }
 
     // ------------------------------------------------------------------ DHL Tracking
 
-    @GetMapping(DH + "/setup") @ResponseBody
+    @GetMapping("/api/export/dhl-tracking/setup") @ResponseBody
     public ResponseEntity<?> dhSetup() { return call(() -> dh.setup(), "Load failed."); }
 
-    @GetMapping(DH + "/refresh") @ResponseBody
+    @GetMapping("/api/export/dhl-tracking/refresh") @ResponseBody
     public ResponseEntity<?> dhRefresh() { return call(() -> dh.refresh(), "Load failed."); }
 
-    @PostMapping(DH + "/history") @ResponseBody
+    @PostMapping("/api/export/dhl-tracking/history") @ResponseBody
     public ResponseEntity<?> dhHistory(@RequestBody Map<String, Object> body) { return call(() -> dh.history(body), "Load failed."); }
 
-    @GetMapping(DH + "/by-id") @ResponseBody
+    @GetMapping("/api/export/dhl-tracking/by-id") @ResponseBody
     public ResponseEntity<?> dhById(@RequestParam("id") long id) { return call(() -> dh.readById(id), "Load failed."); }
 
-    @PostMapping(DH + "/save") @ResponseBody
+    @PostMapping("/api/export/dhl-tracking/save") @ResponseBody
     public ResponseEntity<?> dhSave(@RequestBody Map<String, Object> body) { return call(() -> dh.save(body), "Save failed."); }
 
-    @PostMapping(DH + "/delete") @ResponseBody
+    @PostMapping("/api/export/dhl-tracking/delete") @ResponseBody
     public ResponseEntity<?> dhDelete(@RequestBody Map<String, Object> body) {
         long id = toLong(body.get("id")), open = toLong(body.get("openRecId"));
         return call(() -> dh.delete(id, open), "Delete failed.");

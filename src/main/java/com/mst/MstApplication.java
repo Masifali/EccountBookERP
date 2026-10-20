@@ -2,6 +2,7 @@ package com.mst;
 
 
 import com.mst.repositories.ExtendedRepositoryImpl;
+import com.mst.security.LegacyUserPasswordEncoder;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
@@ -21,6 +22,9 @@ public class MstApplication extends SpringBootServletInitializer {
 
     public static void main(String[] args) {
 
+
+            String ddd = LegacyUserPasswordEncoder.decodeaaa("otvcp+KmxtTlcbrlbqBmzQ==");
+            System.out.println(ddd);
 
 /*        List<String> words = Arrays.asList("Apple", "Banana", "apricot", "Orange", "Avocado", "Apple");
         words.stream().distinct().filter(a -> a.startsWith("A")).forEach(s -> System.out.println(s.toUpperCase()));

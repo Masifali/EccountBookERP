@@ -27,7 +27,6 @@ import java.util.function.Supplier;
 @Controller
 public class CapitalOwnerEquityController {
     private static final int SCREEN_ID = 13;
-    private static final String API = "/api/accounts/capital-owner-equity";
 
     @Autowired private CapitalOwnerEquityService service;
     @Autowired private CurrentUserContext context;
@@ -46,10 +45,10 @@ public class CapitalOwnerEquityController {
         return "accounts/reports/capital_owner_equity";
     }
 
-    @GetMapping(API + "/load") @ResponseBody
+    @GetMapping("/api/accounts/capital-owner-equity/load") @ResponseBody
     public ResponseEntity<?> load() { return run(() -> { gate(); return service.load(); }); }
 
-    @PostMapping(API + "/show") @ResponseBody
+    @PostMapping("/api/accounts/capital-owner-equity/show") @ResponseBody
     public ResponseEntity<?> show(@RequestBody Map<String, Object> r) {
         return run(() -> {
             gate();

@@ -30,42 +30,42 @@ public class HrmEmployeeController {
     public String employeeRegistrationPage(Model model) { model.addAttribute("activeMenu", "apps"); return "hrm/employee/employee_registration"; }
 
     /** frmEmployeeRegistration_Load. */
-    @GetMapping(API + "/setup") @ResponseBody
+    @GetMapping("/api/hrm/employee/employee-registration/setup") @ResponseBody
     public ResponseEntity<?> setup() { return HrmApi.run(() -> service.setup()); }
 
     /** btnRefresh_Click (combos). */
-    @GetMapping(API + "/refresh") @ResponseBody
+    @GetMapping("/api/hrm/employee/employee-registration/refresh") @ResponseBody
     public ResponseEntity<?> refresh() { return HrmApi.run(() -> service.refresh()); }
 
     /** btnnew_Click (employee no, benefits, week days). */
-    @GetMapping(API + "/reset") @ResponseBody
+    @GetMapping("/api/hrm/employee/employee-registration/reset") @ResponseBody
     public ResponseEntity<?> reset() { return HrmApi.run(() -> service.reset()); }
 
     /** cmbLocation_ValueChanged -> GridBindEmployeeSalary. */
-    @GetMapping(API + "/salary-breakup") @ResponseBody
+    @GetMapping("/api/hrm/employee/employee-registration/salary-breakup") @ResponseBody
     public ResponseEntity<?> salaryBreakup(@RequestParam("locationId") int locationId) { return HrmApi.run(() -> service.salaryBreakup(locationId)); }
 
     /** cmbDepartment_Leave -> GetCaoByDepartmentId. */
-    @GetMapping(API + "/department-accounts") @ResponseBody
+    @GetMapping("/api/hrm/employee/employee-registration/department-accounts") @ResponseBody
     public ResponseEntity<?> departmentAccounts(@RequestParam("departmentId") int departmentId) { return HrmApi.run(() -> service.departmentAccounts(departmentId)); }
 
     /** RetrivedDataEmployeeRegistration(Id). */
-    @GetMapping(API + "/by-id") @ResponseBody
+    @GetMapping("/api/hrm/employee/employee-registration/by-id") @ResponseBody
     public ResponseEntity<?> byId(@RequestParam("id") int id) { return HrmApi.run(() -> service.employee(id)); }
 
     /** txtEmployeeNoForUpdate_Leave -> GetEmployeeIdByEmployeeNo. */
-    @GetMapping(API + "/by-no") @ResponseBody
+    @GetMapping("/api/hrm/employee/employee-registration/by-no") @ResponseBody
     public ResponseEntity<?> byNo(@RequestParam("employeeNo") String employeeNo) { return HrmApi.run(() -> service.idByEmployeeNo(employeeNo)); }
 
     /** tabPage2 History -> GridBindEmployeeRegistration. */
-    @GetMapping(API + "/history") @ResponseBody
+    @GetMapping("/api/hrm/employee/employee-registration/history") @ResponseBody
     public ResponseEntity<?> history() { return HrmApi.run(() -> service.history()); }
 
     /** btnPrint / grid Print / btnPrintRegister: rows of Sp_genEmployee_SlipandRegister before the viewer opens. */
-    @GetMapping(API + "/print-check") @ResponseBody
+    @GetMapping("/api/hrm/employee/employee-registration/print-check") @ResponseBody
     public ResponseEntity<?> printCheck(@RequestParam(value = "employeeId", defaultValue = "0") int employeeId) { return HrmApi.run(() -> service.printCheck(employeeId)); }
 
     /** btnsave_Click / btnupdate_Click. */
-    @PostMapping(API + "/save") @ResponseBody
+    @PostMapping("/api/hrm/employee/employee-registration/save") @ResponseBody
     public ResponseEntity<?> save(@RequestBody EmployeeRegistrationDto body) { return HrmApi.run(() -> service.saveEmployee(body)); }
 }

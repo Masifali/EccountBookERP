@@ -18,7 +18,6 @@ import java.util.Map;
 @Controller
 public class PpBGdnSaleController {
 
-    private static final String API = "/api/party-processing/gdn-sale";
 
     @Autowired private PpBGdnSaleService service;
 
@@ -29,36 +28,36 @@ public class PpBGdnSaleController {
         return "partyprocessing/gdn-sale";
     }
 
-    @GetMapping(API + "/setup") @ResponseBody
+    @GetMapping("/api/party-processing/gdn-sale/setup") @ResponseBody
     public ResponseEntity<?> setup() { return HrmApi.run(service::setup); }
 
-    @GetMapping(API + "/refresh") @ResponseBody
+    @GetMapping("/api/party-processing/gdn-sale/refresh") @ResponseBody
     public ResponseEntity<?> refresh(@RequestParam(value = "recId", defaultValue = "0") int recId) { return HrmApi.run(() -> service.refresh(recId)); }
 
-    @GetMapping(API + "/code") @ResponseBody
+    @GetMapping("/api/party-processing/gdn-sale/code") @ResponseBody
     public ResponseEntity<?> code() { return HrmApi.run(service::code); }
 
-    @GetMapping(API + "/uoms") @ResponseBody
+    @GetMapping("/api/party-processing/gdn-sale/uoms") @ResponseBody
     public ResponseEntity<?> uoms(@RequestParam("itemId") int itemId) { return HrmApi.run(() -> service.uoms(itemId)); }
 
-    @PostMapping(API + "/stock") @ResponseBody
+    @PostMapping("/api/party-processing/gdn-sale/stock") @ResponseBody
     public ResponseEntity<?> stock(@RequestBody Map<String, Object> body) { return HrmApi.run(() -> service.stock(body)); }
 
-    @GetMapping(API + "/history-customers") @ResponseBody
+    @GetMapping("/api/party-processing/gdn-sale/history-customers") @ResponseBody
     public ResponseEntity<?> historyCustomers() { return HrmApi.run(service::historyCustomers); }
 
-    @PostMapping(API + "/history") @ResponseBody
+    @PostMapping("/api/party-processing/gdn-sale/history") @ResponseBody
     public ResponseEntity<?> history(@RequestBody Map<String, Object> body) { return HrmApi.run(() -> service.history(body)); }
 
-    @GetMapping(API + "/by-id") @ResponseBody
+    @GetMapping("/api/party-processing/gdn-sale/by-id") @ResponseBody
     public ResponseEntity<?> byId(@RequestParam("id") int id) { return HrmApi.run(() -> service.byId(id)); }
 
-    @PostMapping(API + "/save") @ResponseBody
+    @PostMapping("/api/party-processing/gdn-sale/save") @ResponseBody
     public ResponseEntity<?> save(@RequestBody Map<String, Object> body) { return HrmApi.run(() -> service.save(body)); }
 
-    @PostMapping(API + "/delete") @ResponseBody
+    @PostMapping("/api/party-processing/gdn-sale/delete") @ResponseBody
     public ResponseEntity<?> delete(@RequestParam("id") int id) { return HrmApi.run(() -> service.delete(id)); }
 
-    @GetMapping(API + "/slip") @ResponseBody
+    @GetMapping("/api/party-processing/gdn-sale/slip") @ResponseBody
     public ResponseEntity<?> slip(@RequestParam("id") int id) { return HrmApi.run(() -> service.slip(id)); }
 }

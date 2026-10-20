@@ -30,6 +30,8 @@ import lombok.Data;
  * ProductType here is the desktop's own free-text column on Item (NOT a link to
  * this project's ProductType master table - the real schema doesn't join them).
  */
+/* A1_item_core: extended for Sp_Item_Insert / Sp_Item_Update / Sp_Item_GetAllMethod (added itemCategoryId, itemTypeId,
+ * rackId read-only mirrors and UserLogId). Id is app-assigned: Sp_Item_Insert computes ISNULL(MAX(Id),0)+1. */
 @Entity
 @Table(name = "Item")
 @Data
@@ -332,6 +334,24 @@ public class Item {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "RackId")
 	private Rack rack;
+
+	// ---- A1_item_core additions (Sp_Item_Insert / Sp_Item_Update column list) ----
+
+	/** Read-only scalar mirror of the ItemCategoryId FK so JPQL can use i.itemCategoryId (the relation above stays the writable mapping). */
+	@Column(name = "ItemCategoryId", insertable = false, updatable = false)
+	private Integer itemCategoryId;
+
+	/** Read-only scalar mirror of the ItemTypeId FK (see itemType). */
+	@Column(name = "ItemTypeId", insertable = false, updatable = false)
+	private Integer itemTypeId;
+
+	/** Read-only scalar mirror of the RackId FK (see rack). */
+	@Column(name = "RackId", insertable = false, updatable = false)
+	private Integer rackId;
+
+	/** Sp_Item_Insert/_Update: @UserLogId BIGINT, defaulted from UserAccount.LastUserLogId of the entry/modify user. */
+	@Column(name = "UserLogId")
+	private Long userLogId;
 
 	// Explicit Getters and Setters for relations
 	public Integer getId() { return id; }

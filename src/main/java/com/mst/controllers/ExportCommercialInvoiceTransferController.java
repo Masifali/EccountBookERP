@@ -23,7 +23,6 @@ import static com.mst.controllers.ExportPerformaInvoiceController.call;
 @Controller
 public class ExportCommercialInvoiceTransferController {
 
-    private static final String API = "/api/export/commercial-invoice-transfer";
 
     @Autowired private ExportCommercialInvoiceTransferService svc;
 
@@ -33,50 +32,50 @@ public class ExportCommercialInvoiceTransferController {
         return "export/commercial_invoice_transfer";
     }
 
-    @GetMapping(API + "/setup") @ResponseBody
+    @GetMapping("/api/export/commercial-invoice-transfer/setup") @ResponseBody
     public ResponseEntity<?> setup() { return call(() -> svc.setup(), "Error occurred during database call."); }
 
-    @GetMapping(API + "/refresh") @ResponseBody
+    @GetMapping("/api/export/commercial-invoice-transfer/refresh") @ResponseBody
     public ResponseEntity<?> refresh() { return call(() -> svc.refresh(), "Load failed."); }
 
-    @GetMapping(API + "/new-code") @ResponseBody
+    @GetMapping("/api/export/commercial-invoice-transfer/new-code") @ResponseBody
     public ResponseEntity<?> newCode() { return call(() -> svc.newCode(), "Load failed."); }
 
-    @GetMapping(API + "/invoice-nos") @ResponseBody
+    @GetMapping("/api/export/commercial-invoice-transfer/invoice-nos") @ResponseBody
     public ResponseEntity<?> invoiceNos(@RequestParam(value = "invoiceNo", required = false) String invoiceNo) {
         return call(() -> svc.finalInvoiceNos(invoiceNo), "Load failed.");
     }
 
-    @GetMapping(API + "/customer-leave") @ResponseBody
+    @GetMapping("/api/export/commercial-invoice-transfer/customer-leave") @ResponseBody
     public ResponseEntity<?> customerLeave(@RequestParam(value = "customerId", defaultValue = "0") int customerId,
                                            @RequestParam(value = "preInvoiceId", defaultValue = "0") int preInvoiceId) {
         return call(() -> svc.customerLeave(customerId, preInvoiceId), "Load failed.");
     }
 
-    @GetMapping(API + "/fis") @ResponseBody
+    @GetMapping("/api/export/commercial-invoice-transfer/fis") @ResponseBody
     public ResponseEntity<?> fis() { return call(() -> svc.fis(), "Load failed."); }
 
-    @GetMapping(API + "/uoms") @ResponseBody
+    @GetMapping("/api/export/commercial-invoice-transfer/uoms") @ResponseBody
     public ResponseEntity<?> uoms(@RequestParam(value = "itemId", defaultValue = "0") int itemId) { return call(() -> svc.uoms(itemId), "Load failed."); }
 
-    @GetMapping(API + "/loader/setup") @ResponseBody
+    @GetMapping("/api/export/commercial-invoice-transfer/loader/setup") @ResponseBody
     public ResponseEntity<?> loaderSetup() { return call(() -> svc.loaderSetup(), "Error occurred during database call."); }
 
-    @PostMapping(API + "/loader/search") @ResponseBody
+    @PostMapping("/api/export/commercial-invoice-transfer/loader/search") @ResponseBody
     public ResponseEntity<?> loaderSearch(@RequestBody Map<String, Object> body) { return call(() -> svc.loaderSearch(body), "Load failed."); }
 
-    @GetMapping(API + "/by-id") @ResponseBody
+    @GetMapping("/api/export/commercial-invoice-transfer/by-id") @ResponseBody
     public ResponseEntity<?> byId(@RequestParam("id") int id) { return call(() -> svc.readById(id), "Load failed."); }
 
-    @PostMapping(API + "/history") @ResponseBody
+    @PostMapping("/api/export/commercial-invoice-transfer/history") @ResponseBody
     public ResponseEntity<?> history(@RequestBody Map<String, Object> body) { return call(() -> svc.history(body), "Load failed."); }
 
-    @GetMapping(API + "/history-detail") @ResponseBody
+    @GetMapping("/api/export/commercial-invoice-transfer/history-detail") @ResponseBody
     public ResponseEntity<?> historyDetail(@RequestParam("id") int id) { return call(() -> svc.historyDetail(id), "Load failed."); }
 
-    @GetMapping(API + "/history-combos") @ResponseBody
+    @GetMapping("/api/export/commercial-invoice-transfer/history-combos") @ResponseBody
     public ResponseEntity<?> historyCombos() { return call(() -> svc.historyCombos(), "Load failed."); }
 
-    @PostMapping(API + "/save") @ResponseBody
+    @PostMapping("/api/export/commercial-invoice-transfer/save") @ResponseBody
     public ResponseEntity<?> save(@RequestBody Map<String, Object> body) { return call(() -> svc.save(body), "Save failed."); }
 }

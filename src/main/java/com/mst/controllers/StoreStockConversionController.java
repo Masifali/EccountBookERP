@@ -25,7 +25,6 @@ import java.util.Map;
 @Controller
 public class StoreStockConversionController {
 
-    private static final String API = "/api/packing-material/store-stock-conversion";
 
     private final StoreStockConversionService service;
     public StoreStockConversionController(StoreStockConversionService service) { this.service = service; }
@@ -36,19 +35,19 @@ public class StoreStockConversionController {
         return "packing_material/store_stock_conversion";
     }
 
-    @GetMapping(API + "/lookups")
+    @GetMapping("/api/packing-material/store-stock-conversion/lookups")
     @ResponseBody
     public ResponseEntity<?> lookups() { return run(service::lookups, "Could not load the screen."); }
 
-    @GetMapping(API + "/refresh")
+    @GetMapping("/api/packing-material/store-stock-conversion/refresh")
     @ResponseBody
     public ResponseEntity<?> refresh() { return run(service::refresh, "Could not refresh."); }
 
-    @GetMapping(API + "/doc-no")
+    @GetMapping("/api/packing-material/store-stock-conversion/doc-no")
     @ResponseBody
     public ResponseEntity<?> docNo() { return run(() -> Collections.singletonMap("docNo", service.docNo()), "Could not number the document."); }
 
-    @GetMapping(API + "/stock")
+    @GetMapping("/api/packing-material/store-stock-conversion/stock")
     @ResponseBody
     public ResponseEntity<?> stock(@RequestParam(defaultValue = "0") int recId, @RequestParam(defaultValue = "0") int itemId,
                                    @RequestParam(defaultValue = "0") int conditionId, @RequestParam(defaultValue = "0") int warehouseId,
@@ -57,14 +56,14 @@ public class StoreStockConversionController {
     }
 
     @SuppressWarnings("unchecked")
-    @PostMapping(API + "/rates")
+    @PostMapping("/api/packing-material/store-stock-conversion/rates")
     @ResponseBody
     public ResponseEntity<?> rates(@RequestBody Map<String, Object> body) {
         return run(() -> service.rates(body.get("recId") instanceof Number ? ((Number) body.get("recId")).intValue() : 0,
                 (String) body.get("docDate"), (List<Map<String, Object>>) body.get("rows")), "Could not read the rates.");
     }
 
-    @GetMapping(API + "/history")
+    @GetMapping("/api/packing-material/store-stock-conversion/history")
     @ResponseBody
     public ResponseEntity<?> history(@RequestParam(defaultValue = "doc") String dateType,
                                      @RequestParam(required = false) String fromDate, @RequestParam(required = false) String toDate,
@@ -72,11 +71,11 @@ public class StoreStockConversionController {
         return run(() -> service.history(dateType, fromDate, toDate, fromDocNo, toDocNo), "History failed.");
     }
 
-    @GetMapping(API + "/loader/lookups")
+    @GetMapping("/api/packing-material/store-stock-conversion/loader/lookups")
     @ResponseBody
     public ResponseEntity<?> loaderLookups() { return run(service::loaderLookups, "Could not load the loader."); }
 
-    @GetMapping(API + "/loader/search")
+    @GetMapping("/api/packing-material/store-stock-conversion/loader/search")
     @ResponseBody
     public ResponseEntity<?> loaderSearch(@RequestParam(required = false) String fromDate, @RequestParam(required = false) String toDate,
                                           @RequestParam(defaultValue = "0") int parentCategoryId, @RequestParam(defaultValue = "0") int itemCategoryId,
@@ -86,7 +85,7 @@ public class StoreStockConversionController {
                 "Could not load the stock.");
     }
 
-    @GetMapping(API + "/{id}")
+    @GetMapping("/api/packing-material/store-stock-conversion/{id}")
     @ResponseBody
     public ResponseEntity<?> load(@PathVariable int id) {
         try {
@@ -98,7 +97,7 @@ public class StoreStockConversionController {
         }
     }
 
-    @PostMapping(API + "/save")
+    @PostMapping("/api/packing-material/store-stock-conversion/save")
     @ResponseBody
     public ResponseEntity<?> save(@RequestBody Map<String, Object> body) { return write(() -> service.save(body), "Save failed."); }
 

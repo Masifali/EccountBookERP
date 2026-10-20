@@ -32,7 +32,6 @@ import java.util.concurrent.Callable;
 @Controller
 public class WeighBridgeManualController {
 
-    private static final String API = "/api/weighbridge-manual";
 
     @Autowired
     private WeighBridgeManualService service;
@@ -43,19 +42,19 @@ public class WeighBridgeManualController {
         return "weighbridge/weightbridge_mannual";
     }
 
-    @GetMapping(API + "/lookups")
+    @GetMapping("/api/weighbridge-manual/lookups")
     @ResponseBody
     public ResponseEntity<?> lookups() { return run(service::lookups, "Could not load the screen."); }
 
-    @GetMapping(API + "/refresh-lists")
+    @GetMapping("/api/weighbridge-manual/refresh-lists")
     @ResponseBody
     public ResponseEntity<?> refreshLists() { return run(service::refreshLists, "Refresh failed."); }
 
-    @GetMapping(API + "/refresh-history-lists")
+    @GetMapping("/api/weighbridge-manual/refresh-history-lists")
     @ResponseBody
     public ResponseEntity<?> refreshHistoryLists() { return run(service::refreshHistoryLists, "Refresh failed."); }
 
-    @GetMapping(API + "/ticket-no")
+    @GetMapping("/api/weighbridge-manual/ticket-no")
     @ResponseBody
     public ResponseEntity<?> ticketNo() {
         return run(() -> { Map<String, Object> m = new LinkedHashMap<>(); m.put("ticketNo", service.nextTicketNo()); return m; },
@@ -63,7 +62,7 @@ public class WeighBridgeManualController {
     }
 
     /** GatePassBending():1183. mode = outward | steel | lab | engr | general | party. */
-    @GetMapping(API + "/ref-docs")
+    @GetMapping("/api/weighbridge-manual/ref-docs")
     @ResponseBody
     public ResponseEntity<?> refDocs(@RequestParam String mode,
                                      @RequestParam(required = false, defaultValue = "0") int documentTypeId,
@@ -72,7 +71,7 @@ public class WeighBridgeManualController {
     }
 
     /** BindingAgainstGatePass():1305. */
-    @GetMapping(API + "/gate-pass")
+    @GetMapping("/api/weighbridge-manual/gate-pass")
     @ResponseBody
     public ResponseEntity<?> gatePass(@RequestParam String kind,
                                       @RequestParam(required = false, defaultValue = "0") int documentTypeId,
@@ -81,19 +80,19 @@ public class WeighBridgeManualController {
         return run(() -> service.gatePass(kind, documentTypeId, id, gpSrNo), "Could not read the gate pass.");
     }
 
-    @GetMapping(API + "/saved-vehicles")
+    @GetMapping("/api/weighbridge-manual/saved-vehicles")
     @ResponseBody
     public ResponseEntity<?> savedVehicles() { return run(service::savedVehicles, "Could not read the saved vehicles."); }
 
-    @GetMapping(API + "/pending-first")
+    @GetMapping("/api/weighbridge-manual/pending-first")
     @ResponseBody
     public ResponseEntity<?> pendingFirst() { return run(service::pendingFirst, "Could not load the pending gate passes."); }
 
-    @GetMapping(API + "/pending-second")
+    @GetMapping("/api/weighbridge-manual/pending-second")
     @ResponseBody
     public ResponseEntity<?> pendingSecond() { return run(service::pendingSecond, "Could not load the pending tickets."); }
 
-    @GetMapping(API + "/history")
+    @GetMapping("/api/weighbridge-manual/history")
     @ResponseBody
     public ResponseEntity<?> history(@RequestParam(required = false, defaultValue = "doc") String dateMode,
                                      @RequestParam(required = false) String fromDate,
@@ -111,11 +110,11 @@ public class WeighBridgeManualController {
                    "Could not load the history.");
     }
 
-    @GetMapping(API + "/slip/{id}")
+    @GetMapping("/api/weighbridge-manual/slip/{id}")
     @ResponseBody
     public ResponseEntity<?> slip(@PathVariable int id) { return run(() -> service.slip(id), "Could not read the slip."); }
 
-    @GetMapping(API + "/{id}")
+    @GetMapping("/api/weighbridge-manual/{id}")
     @ResponseBody
     public ResponseEntity<?> load(@PathVariable int id) {
         try {
@@ -127,13 +126,13 @@ public class WeighBridgeManualController {
         }
     }
 
-    @PostMapping(API + "/save")
+    @PostMapping("/api/weighbridge-manual/save")
     @ResponseBody
     public ResponseEntity<?> save(@RequestBody WeighBridgeManualService.Request request) {
         return write(() -> service.save(request), "Save failed.");
     }
 
-    @PostMapping(API + "/update")
+    @PostMapping("/api/weighbridge-manual/update")
     @ResponseBody
     public ResponseEntity<?> update(@RequestBody WeighBridgeManualService.Request request) {
         return write(() -> service.update(request), "Update failed.");

@@ -37,16 +37,16 @@ public class AdmOrganizationController {
         return "adm_panel/define_organization";
     }
 
-    @GetMapping(API + "/templates") @ResponseBody
+    @GetMapping("/api/adm-org/templates") @ResponseBody
     public ResponseEntity<?> templates() { return run(service::templates, "Load failed."); }
 
-    @GetMapping(API + "/history") @ResponseBody
+    @GetMapping("/api/adm-org/history") @ResponseBody
     public ResponseEntity<?> history() { return run(service::history, "Load failed."); }
 
-    @GetMapping(API + "/read") @ResponseBody
+    @GetMapping("/api/adm-org/read") @ResponseBody
     public ResponseEntity<?> read(@RequestParam("id") int id) { return run(() -> service.read(id), "Load failed."); }
 
-    @PostMapping(API + "/save") @ResponseBody
+    @PostMapping("/api/adm-org/save") @ResponseBody
     public ResponseEntity<?> save(@RequestBody Map<String, Object> body) { return run(() -> service.save(body), "Save failed."); }
 
     private static ResponseEntity<?> run(Supplier<Object> call, String fallback) {

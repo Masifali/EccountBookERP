@@ -42,7 +42,6 @@ import java.util.function.Supplier;
 public class DesktopVoucherScreensController {
 
     private static final Logger LOG = LoggerFactory.getLogger(DesktopVoucherScreensController.class);
-    private static final String API = "/accounts/api/desktop-vouchers";
 
     @Autowired private PartyVoucherService party;
     @Autowired private PrematureReceiptsService premature;
@@ -87,14 +86,14 @@ public class DesktopVoucherScreensController {
     // ============================================================================ shared APIs
 
     /** VoucherHead.ReadByCurrentBalanceByDateAndAccountId - the balance labels. */
-    @GetMapping(API + "/balance")
+    @GetMapping("/accounts/api/desktop-vouchers/balance")
     @ResponseBody
     public ResponseEntity<?> balance(@RequestParam("accountId") int accountId, @RequestParam("date") String date) {
         return run(() -> support.currentBalance(date, accountId));
     }
 
     /** CheqBookHeader.OutstandingCheqNo - Party Payment's CheqNoFill(). */
-    @GetMapping(API + "/cheques")
+    @GetMapping("/accounts/api/desktop-vouchers/cheques")
     @ResponseBody
     public ResponseEntity<?> cheques(@RequestParam("bankId") int bankId,
                                      @RequestParam(value = "recId", defaultValue = "0") int recId) {
@@ -111,39 +110,39 @@ public class DesktopVoucherScreensController {
 
     // ======================================================================= party (16, 17)
 
-    @GetMapping(API + "/party/{docType}/lookups")
+    @GetMapping("/accounts/api/desktop-vouchers/party/{docType}/lookups")
     @ResponseBody
     public ResponseEntity<?> partyLookups(@PathVariable("docType") int docType) { return run(() -> party.lookups(docType)); }
 
-    @GetMapping(API + "/party/{docType}/next-code")
+    @GetMapping("/accounts/api/desktop-vouchers/party/{docType}/next-code")
     @ResponseBody
     public ResponseEntity<?> partyNextCode(@PathVariable("docType") int docType) {
         return run(() -> one("voucherCode", party.nextCode(docType)));
     }
 
-    @GetMapping(API + "/party/{docType}/history-accounts")
+    @GetMapping("/accounts/api/desktop-vouchers/party/{docType}/history-accounts")
     @ResponseBody
     public ResponseEntity<?> partyHistoryAccounts(@PathVariable("docType") int docType) { return run(() -> party.historyAccounts(docType)); }
 
-    @PostMapping(API + "/party/{docType}/save")
+    @PostMapping("/accounts/api/desktop-vouchers/party/{docType}/save")
     @ResponseBody
     public ResponseEntity<?> partySave(@PathVariable("docType") int docType, @RequestBody Map<String, Object> body) {
         return run(() -> party.save(docType, body));
     }
 
-    @GetMapping(API + "/party/{docType}/load/{id}")
+    @GetMapping("/accounts/api/desktop-vouchers/party/{docType}/load/{id}")
     @ResponseBody
     public ResponseEntity<?> partyLoad(@PathVariable("docType") int docType, @PathVariable("id") int id) {
         return runOr404(() -> party.load(docType, id));
     }
 
-    @GetMapping(API + "/party/{docType}/history")
+    @GetMapping("/accounts/api/desktop-vouchers/party/{docType}/history")
     @ResponseBody
     public ResponseEntity<?> partyHistory(@PathVariable("docType") int docType, @RequestParam Map<String, String> q) {
         return run(() -> party.history(docType, q));
     }
 
-    @GetMapping(API + "/party/{docType}/history-detail/{id}")
+    @GetMapping("/accounts/api/desktop-vouchers/party/{docType}/history-detail/{id}")
     @ResponseBody
     public ResponseEntity<?> partyHistoryDetail(@PathVariable("docType") int docType, @PathVariable("id") int id) {
         return run(() -> party.historyDetail(docType, id));
@@ -151,41 +150,41 @@ public class DesktopVoucherScreensController {
 
     // ============================================================================ premature (25)
 
-    @GetMapping(API + "/premature/lookups")
+    @GetMapping("/accounts/api/desktop-vouchers/premature/lookups")
     @ResponseBody
     public ResponseEntity<?> prLookups() { return run(() -> premature.lookups()); }
 
-    @GetMapping(API + "/premature/senders")
+    @GetMapping("/accounts/api/desktop-vouchers/premature/senders")
     @ResponseBody
     public ResponseEntity<?> prSenders(@RequestParam(value = "costCenterId", defaultValue = "0") int cc) {
         return run(() -> premature.senders(cc));
     }
 
-    @GetMapping(API + "/premature/receivers")
+    @GetMapping("/accounts/api/desktop-vouchers/premature/receivers")
     @ResponseBody
     public ResponseEntity<?> prReceivers(@RequestParam("voucherTypeId") int vt) { return run(() -> premature.receivers(vt)); }
 
-    @GetMapping(API + "/premature/doc-no")
+    @GetMapping("/accounts/api/desktop-vouchers/premature/doc-no")
     @ResponseBody
     public ResponseEntity<?> prDocNo() { return run(() -> one("docNo", premature.generateCode())); }
 
-    @GetMapping(API + "/premature/pending")
+    @GetMapping("/accounts/api/desktop-vouchers/premature/pending")
     @ResponseBody
     public ResponseEntity<?> prPending(@RequestParam(value = "costCenterId", defaultValue = "0") int cc) {
         return run(() -> premature.pending(cc));
     }
 
-    @GetMapping(API + "/premature/history-combos")
+    @GetMapping("/accounts/api/desktop-vouchers/premature/history-combos")
     @ResponseBody
     public ResponseEntity<?> prHistoryCombos(@RequestParam(value = "costCenterId", defaultValue = "0") int cc) {
         return run(() -> premature.historyCombos(cc));
     }
 
-    @GetMapping(API + "/premature/history")
+    @GetMapping("/accounts/api/desktop-vouchers/premature/history")
     @ResponseBody
     public ResponseEntity<?> prHistory(@RequestParam Map<String, String> q) { return run(() -> premature.history(q)); }
 
-    @PostMapping(API + "/premature/read")
+    @PostMapping("/accounts/api/desktop-vouchers/premature/read")
     @ResponseBody
     public ResponseEntity<?> prRead(@RequestBody Map<String, Object> q) {
         return run(() -> {
@@ -195,7 +194,7 @@ public class DesktopVoucherScreensController {
         });
     }
 
-    @PostMapping(API + "/premature/save")
+    @PostMapping("/accounts/api/desktop-vouchers/premature/save")
     @ResponseBody
     public ResponseEntity<?> prSave(@RequestBody Map<String, Object> body) { return run(() -> premature.save(body)); }
 
@@ -205,7 +204,7 @@ public class DesktopVoucherScreensController {
      * UpdateRecord call - its own transaction - exactly as the desktop loops them; a failure
      * stops the loop with the rows before it already committed.
      */
-    @PostMapping(API + "/premature/status")
+    @PostMapping("/accounts/api/desktop-vouchers/premature/status")
     @ResponseBody
     public ResponseEntity<?> prStatus(@RequestBody Map<String, Object> body) {
         return run(() -> {
@@ -231,55 +230,55 @@ public class DesktopVoucherScreensController {
 
     // ============================================================================ bills (38, 39)
 
-    @GetMapping(API + "/bills/{docType}/lookups")
+    @GetMapping("/accounts/api/desktop-vouchers/bills/{docType}/lookups")
     @ResponseBody
     public ResponseEntity<?> billsLookups(@PathVariable("docType") int docType) { return run(() -> bills.lookups(docType)); }
 
-    @GetMapping(API + "/bills/{docType}/next-code")
+    @GetMapping("/accounts/api/desktop-vouchers/bills/{docType}/next-code")
     @ResponseBody
     public ResponseEntity<?> billsNextCode(@PathVariable("docType") int docType) { return run(() -> one("voucherCode", bills.nextCode(docType))); }
 
-    @GetMapping(API + "/bills/{docType}/history-accounts")
+    @GetMapping("/accounts/api/desktop-vouchers/bills/{docType}/history-accounts")
     @ResponseBody
     public ResponseEntity<?> billsHistoryAccounts(@PathVariable("docType") int docType) { return run(() -> bills.historyAccounts(docType)); }
 
-    @GetMapping(API + "/bills/custom-accounts")
+    @GetMapping("/accounts/api/desktop-vouchers/bills/custom-accounts")
     @ResponseBody
     public ResponseEntity<?> billsCustomAccounts(@RequestParam("customGroupId") int groupId) {
         return run(() -> bills.customAccounts(groupId));
     }
 
-    @GetMapping(API + "/bills/{docType}/last-rate")
+    @GetMapping("/accounts/api/desktop-vouchers/bills/{docType}/last-rate")
     @ResponseBody
     public ResponseEntity<?> billsLastRate(@PathVariable("docType") int docType, @RequestParam("currencyId") int currencyId) {
         return run(() -> bills.lastExchangeRate(docType, currencyId));
     }
 
-    @GetMapping(API + "/bills/tax-schedule")
+    @GetMapping("/accounts/api/desktop-vouchers/bills/tax-schedule")
     @ResponseBody
     public ResponseEntity<?> billsTaxSchedule(@RequestParam("taxTypeId") int taxTypeId, @RequestParam("date") String date) {
         return run(() -> bills.taxSchedule(taxTypeId, date));
     }
 
-    @PostMapping(API + "/bills/{docType}/save")
+    @PostMapping("/accounts/api/desktop-vouchers/bills/{docType}/save")
     @ResponseBody
     public ResponseEntity<?> billsSave(@PathVariable("docType") int docType, @RequestBody Map<String, Object> body) {
         return run(() -> bills.save(docType, body));
     }
 
-    @GetMapping(API + "/bills/{docType}/load/{id}")
+    @GetMapping("/accounts/api/desktop-vouchers/bills/{docType}/load/{id}")
     @ResponseBody
     public ResponseEntity<?> billsLoad(@PathVariable("docType") int docType, @PathVariable("id") int id) {
         return runOr404(() -> bills.load(docType, id));
     }
 
-    @GetMapping(API + "/bills/{docType}/history")
+    @GetMapping("/accounts/api/desktop-vouchers/bills/{docType}/history")
     @ResponseBody
     public ResponseEntity<?> billsHistory(@PathVariable("docType") int docType, @RequestParam Map<String, String> q) {
         return run(() -> bills.history(docType, q));
     }
 
-    @GetMapping(API + "/bills/{docType}/history-detail/{id}")
+    @GetMapping("/accounts/api/desktop-vouchers/bills/{docType}/history-detail/{id}")
     @ResponseBody
     public ResponseEntity<?> billsHistoryDetail(@PathVariable("docType") int docType, @PathVariable("id") int id) {
         return run(() -> bills.historyDetail(docType, id));

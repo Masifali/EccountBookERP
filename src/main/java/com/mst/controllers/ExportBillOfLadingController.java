@@ -30,25 +30,25 @@ public class ExportBillOfLadingController {
         return "export/bill_of_lading";
     }
 
-    @GetMapping(API + "/setup") @ResponseBody
+    @GetMapping("/api/export/bill-of-lading/setup") @ResponseBody
     public ResponseEntity<?> setup() { return call(() -> svc.setup(), "Error occurred during database call."); }
 
-    @GetMapping(API + "/refresh") @ResponseBody
+    @GetMapping("/api/export/bill-of-lading/refresh") @ResponseBody
     public ResponseEntity<?> refresh() { return call(() -> svc.refresh(), "Load failed."); }
 
-    @GetMapping(API + "/history-invoices") @ResponseBody
+    @GetMapping("/api/export/bill-of-lading/history-invoices") @ResponseBody
     public ResponseEntity<?> historyInvoices() { return call(() -> svc.historyInvoices(), "Load failed."); }
 
-    @GetMapping(API + "/invoice-leave") @ResponseBody
+    @GetMapping("/api/export/bill-of-lading/invoice-leave") @ResponseBody
     public ResponseEntity<?> invoiceLeave(@RequestParam("invoiceId") int invoiceId) { return call(() -> svc.invoiceLeave(invoiceId), "Load failed."); }
 
-    @GetMapping(API + "/by-id") @ResponseBody
+    @GetMapping("/api/export/bill-of-lading/by-id") @ResponseBody
     public ResponseEntity<?> byId(@RequestParam("id") int id) { return call(() -> svc.readById(id), "Load failed."); }
 
-    @PostMapping(API + "/history") @ResponseBody
+    @PostMapping("/api/export/bill-of-lading/history") @ResponseBody
     public ResponseEntity<?> history(@RequestBody Map<String, Object> body) { return call(() -> svc.history(body), "Load failed."); }
 
-    @PostMapping(API + "/save") @ResponseBody
+    @PostMapping("/api/export/bill-of-lading/save") @ResponseBody
     public ResponseEntity<?> save(@RequestBody Map<String, Object> body) { return call(() -> svc.save(body), "Save failed."); }
 
     private interface Call { Object run() throws Exception; }

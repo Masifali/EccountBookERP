@@ -69,6 +69,23 @@ public class ItemType {
 	@Column(name = "IsMother")
 	private Boolean isMother = false;
 
+	// ---- Added by batch A2_item_masters (columns listed in registry.json for ItemType).
+	// None of the A2 procedures reads or writes them; verify they exist in the live schema.
+	@Column(name = "ItemId")
+	private Integer itemId;
+
+	@Column(name = "WarehouseId")
+	private Integer warehouseId;
+
+	@Column(name = "OrderLastGrnDate")
+	private LocalDateTime orderLastGrnDate;
+
+	@Column(name = "OrderId")
+	private Integer orderId;
+
+	@Column(name = "RNo")
+	private Integer rNo;
+
 	// Explicit Getters and Setters
 	public Integer getId() { return id; }
 	public void setId(Integer id) { this.id = id; }

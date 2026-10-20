@@ -27,8 +27,6 @@ import java.util.Map;
 @Controller
 public class StoreReportsCController {
 
-    private static final String API_458 = "/api/store/reports/store-issuance-history";
-    private static final String API_460 = "/api/store/reports/general-gate-pass";
 
     private final StoreReportsCService service;
 
@@ -42,20 +40,20 @@ public class StoreReportsCController {
         return "store/reports/store_issuance_history";
     }
 
-    @GetMapping(API_458 + "/lookups")
+    @GetMapping("/api/store/reports/store-issuance-history/lookups")
     @ResponseBody
     public ResponseEntity<?> issuanceLookups() {
         return run(service::issuanceLookups, "Could not load the screen.");
     }
 
     /** btnRefresh — FillAllDropDowns again. */
-    @GetMapping(API_458 + "/refresh")
+    @GetMapping("/api/store/reports/store-issuance-history/refresh")
     @ResponseBody
     public ResponseEntity<?> issuanceRefresh() {
         return run(service::issuanceRefresh, "Could not refresh the lists.");
     }
 
-    @GetMapping(API_458 + "/search")
+    @GetMapping("/api/store/reports/store-issuance-history/search")
     @ResponseBody
     public ResponseEntity<?> issuanceSearch(@RequestParam(required = false) String fromDate,
                                             @RequestParam(required = false) String toDate,
@@ -71,13 +69,13 @@ public class StoreReportsCController {
                 accountId, itemConditionId, fromDocNo, toDocNo), "Search failed.");
     }
 
-    @GetMapping(API_458 + "/slip")
+    @GetMapping("/api/store/reports/store-issuance-history/slip")
     @ResponseBody
     public ResponseEntity<?> issuanceSlip(@RequestParam(defaultValue = "0") int id) {
         return run(() -> service.issuanceSlip(id), "Print failed.");
     }
 
-    @GetMapping(API_458 + "/voucher")
+    @GetMapping("/api/store/reports/store-issuance-history/voucher")
     @ResponseBody
     public ResponseEntity<?> issuanceVoucher(@RequestParam(defaultValue = "0") int voucherHeadId,
                                              @RequestParam(defaultValue = "0") int documentTypeId) {
@@ -92,13 +90,13 @@ public class StoreReportsCController {
         return "store/reports/general_gate_pass";
     }
 
-    @GetMapping(API_460 + "/lookups")
+    @GetMapping("/api/store/reports/general-gate-pass/lookups")
     @ResponseBody
     public ResponseEntity<?> gatePassLookups() {
         return run(service::gatePassLookups, "Could not load the screen.");
     }
 
-    @GetMapping(API_460 + "/search")
+    @GetMapping("/api/store/reports/general-gate-pass/search")
     @ResponseBody
     public ResponseEntity<?> gatePassSearch(@RequestParam(required = false) String fromDate,
                                             @RequestParam(required = false) String toDate,
@@ -112,14 +110,14 @@ public class StoreReportsCController {
                 weightStatus, onlyPending), "Search failed.");
     }
 
-    @GetMapping(API_460 + "/slip-254")
+    @GetMapping("/api/store/reports/general-gate-pass/slip-254")
     @ResponseBody
     public ResponseEntity<?> gatePassSlip254(@RequestParam(defaultValue = "0") int id,
                                              @RequestParam(defaultValue = "0") int documentTypeId) {
         return run(() -> service.gatePassSlip254(id, documentTypeId), "Print failed.");
     }
 
-    @GetMapping(API_460 + "/slip-290")
+    @GetMapping("/api/store/reports/general-gate-pass/slip-290")
     @ResponseBody
     public ResponseEntity<?> gatePassSlip290(@RequestParam(defaultValue = "0") int id) {
         return run(() -> service.gatePassSlip290(id), "Print failed.");

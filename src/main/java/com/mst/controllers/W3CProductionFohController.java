@@ -25,7 +25,6 @@ import java.util.Map;
 @Controller
 public class W3CProductionFohController {
 
-    private static final String API = "/api/production/production-foh";
 
     @Autowired private W3CProductionFohService service;
 
@@ -35,48 +34,48 @@ public class W3CProductionFohController {
         return "production/w3c_production_foh";
     }
 
-    @GetMapping(API + "/init")
+    @GetMapping("/api/production/production-foh/init")
     @ResponseBody
     public ResponseEntity<?> init() {
         try { return ResponseEntity.ok(service.init()); } catch (Exception e) { return error(e); }
     }
 
-    @GetMapping(API + "/refresh")
+    @GetMapping("/api/production/production-foh/refresh")
     @ResponseBody
     public ResponseEntity<?> refresh() {
         try { return ResponseEntity.ok(service.refresh()); } catch (Exception e) { return error(e); }
     }
 
     /** BindGrid:339. */
-    @GetMapping(API + "/allocation")
+    @GetMapping("/api/production/production-foh/allocation")
     @ResponseBody
     public ResponseEntity<?> allocation(@RequestParam String monthDate) {
         try { return ResponseEntity.ok(service.allocation(monthDate)); } catch (Exception e) { return error(e); }
     }
 
     /** btnPrint_Click:480 - rows behind the 666_01 print. */
-    @GetMapping(API + "/allocation-print-rows")
+    @GetMapping("/api/production/production-foh/allocation-print-rows")
     @ResponseBody
     public ResponseEntity<?> allocationPrintRows(@RequestParam String monthDate) {
         try { return ResponseEntity.ok(service.allocationPrintRows(monthDate)); } catch (Exception e) { return error(e); }
     }
 
     /** AccountsBindByMonthDateDbCall:516. */
-    @GetMapping(API + "/accounts")
+    @GetMapping("/api/production/production-foh/accounts")
     @ResponseBody
     public ResponseEntity<?> accounts(@RequestParam String month) {
         try { return ResponseEntity.ok(service.accounts(month)); } catch (Exception e) { return error(e); }
     }
 
     /** FillForFohExpenseData:663. */
-    @GetMapping(API + "/expense-hours")
+    @GetMapping("/api/production/production-foh/expense-hours")
     @ResponseBody
     public ResponseEntity<?> expenseHours(@RequestParam String month) {
         try { return ResponseEntity.ok(service.expenseHours(month)); } catch (Exception e) { return error(e); }
     }
 
     /** ReadByIdFohExpense:1044 (withAccounts) / GetDetailGrdByHeadId:1367 (without). */
-    @GetMapping(API + "/read")
+    @GetMapping("/api/production/production-foh/read")
     @ResponseBody
     public ResponseEntity<?> read(@RequestParam(defaultValue = "0") int id,
                                   @RequestParam(defaultValue = "true") boolean withAccounts) {
@@ -84,7 +83,7 @@ public class W3CProductionFohController {
     }
 
     /** HistoryFill:1188. */
-    @GetMapping(API + "/history")
+    @GetMapping("/api/production/production-foh/history")
     @ResponseBody
     public ResponseEntity<?> history(@RequestParam(defaultValue = "entry") String basis,
                                      @RequestParam(required = false) String fromDate,
@@ -94,21 +93,21 @@ public class W3CProductionFohController {
     }
 
     /** ProdcutionFohAllocateToJobOrderPrint922 - rows behind the 922 print. */
-    @GetMapping(API + "/print-rows")
+    @GetMapping("/api/production/production-foh/print-rows")
     @ResponseBody
     public ResponseEntity<?> printRows(@RequestParam(defaultValue = "0") int id) {
         try { return ResponseEntity.ok(service.printRows922(id)); } catch (Exception e) { return error(e); }
     }
 
     /** InsertFohExpense:860 - {result:true, id, updated} | 400 {message}. */
-    @PostMapping(API + "/save")
+    @PostMapping("/api/production/production-foh/save")
     @ResponseBody
     public ResponseEntity<?> save(@RequestBody Map<String, Object> body) {
         try { return ResponseEntity.ok(service.save(body)); } catch (Exception e) { return error(e); }
     }
 
     /** BtnDeleteFohExpense_Click:1011. */
-    @PostMapping(API + "/delete")
+    @PostMapping("/api/production/production-foh/delete")
     @ResponseBody
     public ResponseEntity<?> delete(@RequestParam(defaultValue = "0") int id) {
         try { return ResponseEntity.ok(service.delete(id)); } catch (Exception e) { return error(e); }

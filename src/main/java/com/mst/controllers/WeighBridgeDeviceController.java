@@ -25,25 +25,24 @@ import java.util.concurrent.Callable;
 @RestController
 public class WeighBridgeDeviceController {
 
-    private static final String API = "/api/weighbridge/device";
 
     @Autowired
     private WeighBridgeDeviceService devices;
 
     /** ReadWeightFromWeightBridge() — F5 / "Read" on screen 411. */
-    @PostMapping(API + "/read-weight")
+    @PostMapping("/api/weighbridge/device/read-weight")
     public ResponseEntity<?> readWeight(@RequestBody WeighBridgeDeviceService.ReadRequest r) {
         return run(() -> devices.readWeight(r), "Could not read the weighbridge indicator.");
     }
 
     /** LoadCamera() — log the three cameras in; second = the second-weight set (Camera 04..06). */
-    @GetMapping(API + "/cameras")
+    @GetMapping("/api/weighbridge/device/cameras")
     public ResponseEntity<?> cameras(@RequestParam(defaultValue = "false") boolean second) {
         return run(() -> devices.initCameras(second), "Could not reach the cameras.");
     }
 
     /** One live-view frame from camera 1..3. */
-    @GetMapping(API + "/camera/{n}/snapshot")
+    @GetMapping("/api/weighbridge/device/camera/{n}/snapshot")
     public ResponseEntity<?> snapshot(@PathVariable int n) {
         try {
             return jpeg(devices.snapshot(n));
@@ -55,7 +54,7 @@ public class WeighBridgeDeviceController {
     }
 
     /** A stored picture of a saved ticket (FirstWtPicReading … SecondWtFrontPic). */
-    @GetMapping(API + "/ticket/{id}/picture/{field}")
+    @GetMapping("/api/weighbridge/device/ticket/{id}/picture/{field}")
     public ResponseEntity<?> ticketPicture(@PathVariable int id, @PathVariable String field) {
         try {
             byte[] b = devices.ticketPicture(id, field);
@@ -68,7 +67,7 @@ public class WeighBridgeDeviceController {
     }
 
     /** A picture F5 took in this session, before the ticket is saved. */
-    @GetMapping(API + "/captured/{name:.+}")
+    @GetMapping("/api/weighbridge/device/captured/{name:.+}")
     public ResponseEntity<?> captured(@PathVariable String name) {
         try {
             byte[] b = devices.capturedPicture(name);

@@ -35,50 +35,50 @@ public class PpBGatePassController {
         return "partyprocessing/gate-pass";
     }
 
-    @GetMapping(API + "/setup") @ResponseBody
+    @GetMapping("/api/party-processing/gate-pass/setup") @ResponseBody
     public ResponseEntity<?> setup(@RequestParam("mode") String mode) { return HrmApi.run(() -> service.setup(mode)); }
 
-    @GetMapping(API + "/refresh") @ResponseBody
+    @GetMapping("/api/party-processing/gate-pass/refresh") @ResponseBody
     public ResponseEntity<?> refresh(@RequestParam("mode") String mode) { return HrmApi.run(() -> service.refresh(mode)); }
 
-    @GetMapping(API + "/code") @ResponseBody
+    @GetMapping("/api/party-processing/gate-pass/code") @ResponseBody
     public ResponseEntity<?> code(@RequestParam("mode") String mode) { return HrmApi.run(() -> service.code(mode)); }
 
-    @GetMapping(API + "/items") @ResponseBody
+    @GetMapping("/api/party-processing/gate-pass/items") @ResponseBody
     public ResponseEntity<?> items(@RequestParam("mode") String mode, @RequestParam(value = "gpType", required = false) String gpType) {
         return HrmApi.run(() -> service.itemsForType(mode, gpType));
     }
 
-    @GetMapping(API + "/advance-dos") @ResponseBody
+    @GetMapping("/api/party-processing/gate-pass/advance-dos") @ResponseBody
     public ResponseEntity<?> advanceDos(@RequestParam("mode") String mode, @RequestParam(value = "recId", defaultValue = "0") int recId) {
         return HrmApi.run(() -> service.advanceDos(mode, recId));
     }
 
-    @GetMapping(API + "/ado-data") @ResponseBody
+    @GetMapping("/api/party-processing/gate-pass/ado-data") @ResponseBody
     public ResponseEntity<?> adoData(@RequestParam("mode") String mode, @RequestParam("id") int id) { return HrmApi.run(() -> service.adoData(mode, id)); }
 
-    @GetMapping(API + "/open") @ResponseBody
+    @GetMapping("/api/party-processing/gate-pass/open") @ResponseBody
     public ResponseEntity<?> open(@RequestParam("mode") String mode) { return HrmApi.run(() -> service.open(mode)); }
 
-    @GetMapping(API + "/history-parties") @ResponseBody
+    @GetMapping("/api/party-processing/gate-pass/history-parties") @ResponseBody
     public ResponseEntity<?> historyParties(@RequestParam("mode") String mode) { return HrmApi.run(() -> service.historyParties(mode)); }
 
-    @PostMapping(API + "/history") @ResponseBody
+    @PostMapping("/api/party-processing/gate-pass/history") @ResponseBody
     public ResponseEntity<?> history(@RequestParam("mode") String mode, @RequestBody Map<String, Object> body) {
         return HrmApi.run(() -> service.history(mode, body));
     }
 
-    @GetMapping(API + "/by-id") @ResponseBody
+    @GetMapping("/api/party-processing/gate-pass/by-id") @ResponseBody
     public ResponseEntity<?> byId(@RequestParam("mode") String mode, @RequestParam("id") int id) { return HrmApi.run(() -> service.byId(mode, id)); }
 
-    @PostMapping(API + "/save") @ResponseBody
+    @PostMapping("/api/party-processing/gate-pass/save") @ResponseBody
     public ResponseEntity<?> save(@RequestParam("mode") String mode, @RequestBody Map<String, Object> body) {
         return HrmApi.run(() -> service.save(mode, body));
     }
 
-    @PostMapping(API + "/delete") @ResponseBody
+    @PostMapping("/api/party-processing/gate-pass/delete") @ResponseBody
     public ResponseEntity<?> delete(@RequestParam("mode") String mode, @RequestParam("id") int id) { return HrmApi.run(() -> service.delete(mode, id)); }
 
-    @GetMapping(API + "/slip") @ResponseBody
+    @GetMapping("/api/party-processing/gate-pass/slip") @ResponseBody
     public ResponseEntity<?> slip(@RequestParam("mode") String mode, @RequestParam("id") int id) { return HrmApi.run(() -> service.slip(mode, id)); }
 }

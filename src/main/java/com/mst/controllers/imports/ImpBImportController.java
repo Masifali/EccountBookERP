@@ -38,10 +38,6 @@ import java.util.concurrent.Callable;
 @Controller
 public class ImpBImportController {
 
-    private static final String SB = "/api/import/shipment-booking";
-    private static final String PD = "/api/import/invoice-packing-detail";
-    private static final String PI = "/api/import/proforma-invoice";
-    private static final String II = "/api/import/import-invoice";
 
     @Autowired private ImpBShipmentBookingService booking;
     @Autowired private ImpBPackingDetailService packing;
@@ -76,155 +72,155 @@ public class ImpBImportController {
 
     // ------------------------------------------------------------------ 785 Shipment Booking
 
-    @GetMapping(SB + "/setup") @ResponseBody
+    @GetMapping("/api/import/shipment-booking/setup") @ResponseBody
     public ResponseEntity<?> sbSetup() { return HrmApi.run(() -> booking.setup()); }
 
-    @GetMapping(SB + "/refresh") @ResponseBody
+    @GetMapping("/api/import/shipment-booking/refresh") @ResponseBody
     public ResponseEntity<?> sbRefresh(@RequestParam(value = "recId", defaultValue = "0") long recId) { return HrmApi.run(() -> booking.refresh(recId)); }
 
-    @GetMapping(SB + "/invoices") @ResponseBody
+    @GetMapping("/api/import/shipment-booking/invoices") @ResponseBody
     public ResponseEntity<?> sbInvoices(@RequestParam(value = "recId", defaultValue = "0") long recId) { return HrmApi.run(() -> booking.invoiceList(recId)); }
 
-    @GetMapping(SB + "/by-id") @ResponseBody
+    @GetMapping("/api/import/shipment-booking/by-id") @ResponseBody
     public ResponseEntity<?> sbById(@RequestParam("id") long id) { return HrmApi.run(() -> booking.byId(id)); }
 
-    @PostMapping(SB + "/history") @ResponseBody
+    @PostMapping("/api/import/shipment-booking/history") @ResponseBody
     public ResponseEntity<?> sbHistory(@RequestBody Map<String, Object> f) { return HrmApi.run(() -> booking.history(f)); }
 
-    @PostMapping(SB + "/save") @ResponseBody
+    @PostMapping("/api/import/shipment-booking/save") @ResponseBody
     public ResponseEntity<?> sbSave(@RequestBody Map<String, Object> b) { return HrmApi.run(() -> booking.save(b)); }
 
-    @GetMapping(SB + "/print") @ResponseBody
+    @GetMapping("/api/import/shipment-booking/print") @ResponseBody
     public ResponseEntity<?> sbPrint(@RequestParam(value = "id", defaultValue = "0") long id) { return HrmApi.run(() -> booking.print(id)); }
 
-    @GetMapping(SB + "/attachments") @ResponseBody
+    @GetMapping("/api/import/shipment-booking/attachments") @ResponseBody
     public ResponseEntity<?> sbAttachments(@RequestParam("id") long id) { return HrmApi.run(() -> booking.attachments(id)); }
 
-    @GetMapping(SB + "/attachment-file")
+    @GetMapping("/api/import/shipment-booking/attachment-file")
     public ResponseEntity<?> sbAttachmentFile(@RequestParam("id") long id, @RequestParam("attachmentId") int a) { return file(() -> booking.attachmentFile(id, a)); }
 
     // ------------------------------------------------------------------ 784 Invoice Packing Detail
 
-    @GetMapping(PD + "/setup") @ResponseBody
+    @GetMapping("/api/import/invoice-packing-detail/setup") @ResponseBody
     public ResponseEntity<?> pdSetup() { return HrmApi.run(() -> packing.setup()); }
 
-    @GetMapping(PD + "/refresh") @ResponseBody
+    @GetMapping("/api/import/invoice-packing-detail/refresh") @ResponseBody
     public ResponseEntity<?> pdRefresh(@RequestParam(value = "recId", defaultValue = "0") long recId) { return HrmApi.run(() -> packing.refresh(recId)); }
 
-    @GetMapping(PD + "/history-combos") @ResponseBody
+    @GetMapping("/api/import/invoice-packing-detail/history-combos") @ResponseBody
     public ResponseEntity<?> pdHistoryCombos() { return HrmApi.run(() -> packing.historyCombos()); }
 
-    @GetMapping(PD + "/uoms") @ResponseBody
+    @GetMapping("/api/import/invoice-packing-detail/uoms") @ResponseBody
     public ResponseEntity<?> pdUoms(@RequestParam("itemId") int itemId) { return HrmApi.run(() -> packing.uoms(itemId)); }
 
-    @GetMapping(PD + "/by-invoice") @ResponseBody
+    @GetMapping("/api/import/invoice-packing-detail/by-invoice") @ResponseBody
     public ResponseEntity<?> pdByInvoice(@RequestParam("id") long id) { return HrmApi.run(() -> packing.byInvoice(id)); }
 
-    @PostMapping(PD + "/history") @ResponseBody
+    @PostMapping("/api/import/invoice-packing-detail/history") @ResponseBody
     public ResponseEntity<?> pdHistory(@RequestBody Map<String, Object> f) { return HrmApi.run(() -> packing.history(f)); }
 
-    @PostMapping(PD + "/save") @ResponseBody
+    @PostMapping("/api/import/invoice-packing-detail/save") @ResponseBody
     public ResponseEntity<?> pdSave(@RequestBody Map<String, Object> b) { return HrmApi.run(() -> packing.save(b)); }
 
     // ------------------------------------------------------------------ 782 Proforma Invoice
 
-    @GetMapping(PI + "/setup") @ResponseBody
+    @GetMapping("/api/import/proforma-invoice/setup") @ResponseBody
     public ResponseEntity<?> piSetup() { return HrmApi.run(() -> proforma.setup()); }
 
-    @GetMapping(PI + "/refresh") @ResponseBody
+    @GetMapping("/api/import/proforma-invoice/refresh") @ResponseBody
     public ResponseEntity<?> piRefresh(@RequestParam(value = "recId", defaultValue = "0") long recId) { return HrmApi.run(() -> proforma.refresh(recId)); }
 
-    @GetMapping(PI + "/reset") @ResponseBody
+    @GetMapping("/api/import/proforma-invoice/reset") @ResponseBody
     public ResponseEntity<?> piReset() { return HrmApi.run(() -> proforma.reset()); }
 
-    @GetMapping(PI + "/uoms") @ResponseBody
+    @GetMapping("/api/import/proforma-invoice/uoms") @ResponseBody
     public ResponseEntity<?> piUoms(@RequestParam("itemId") int itemId) { return HrmApi.run(() -> proforma.uoms(itemId)); }
 
-    @GetMapping(PI + "/by-id") @ResponseBody
+    @GetMapping("/api/import/proforma-invoice/by-id") @ResponseBody
     public ResponseEntity<?> piById(@RequestParam("id") long id) { return HrmApi.run(() -> proforma.byId(id)); }
 
-    @GetMapping(PI + "/history-combos") @ResponseBody
+    @GetMapping("/api/import/proforma-invoice/history-combos") @ResponseBody
     public ResponseEntity<?> piHistoryCombos() { return HrmApi.run(() -> proforma.historyCombos()); }
 
-    @PostMapping(PI + "/history") @ResponseBody
+    @PostMapping("/api/import/proforma-invoice/history") @ResponseBody
     public ResponseEntity<?> piHistory(@RequestBody Map<String, Object> f) { return HrmApi.run(() -> proforma.history(f)); }
 
-    @GetMapping(PI + "/history-detail") @ResponseBody
+    @GetMapping("/api/import/proforma-invoice/history-detail") @ResponseBody
     public ResponseEntity<?> piHistoryDetail(@RequestParam("id") long id) { return HrmApi.run(() -> proforma.historyDetail(id)); }
 
-    @PostMapping(PI + "/save") @ResponseBody
+    @PostMapping("/api/import/proforma-invoice/save") @ResponseBody
     public ResponseEntity<?> piSave(@RequestBody Map<String, Object> b) { return HrmApi.run(() -> proforma.save(b)); }
 
-    @GetMapping(PI + "/print") @ResponseBody
+    @GetMapping("/api/import/proforma-invoice/print") @ResponseBody
     public ResponseEntity<?> piPrint(@RequestParam(value = "id", defaultValue = "0") long id) { return HrmApi.run(() -> proforma.print(id)); }
 
-    @GetMapping(PI + "/attachments") @ResponseBody
+    @GetMapping("/api/import/proforma-invoice/attachments") @ResponseBody
     public ResponseEntity<?> piAttachments(@RequestParam("id") long id) { return HrmApi.run(() -> proforma.attachments(id)); }
 
-    @GetMapping(PI + "/attachment-file")
+    @GetMapping("/api/import/proforma-invoice/attachment-file")
     public ResponseEntity<?> piAttachmentFile(@RequestParam("id") long id, @RequestParam("attachmentId") int a) { return file(() -> proforma.attachmentFile(id, a)); }
 
-    @GetMapping(PI + "/proforma-serials") @ResponseBody
+    @GetMapping("/api/import/proforma-invoice/proforma-serials") @ResponseBody
     public ResponseEntity<?> piSerials() { return HrmApi.run(() -> serial.proformaSerials(ImpBProformaService.SCREEN)); }
 
-    @PostMapping(PI + "/proforma-serials/save") @ResponseBody
+    @PostMapping("/api/import/proforma-invoice/proforma-serials/save") @ResponseBody
     public ResponseEntity<?> piSerialSave(@RequestBody Map<String, Object> b) { return HrmApi.run(() -> serial.saveProformaSerial(ImpBProformaService.SCREEN, b)); }
 
     // ------------------------------------------------------------------ 783 Import Invoice
 
-    @GetMapping(II + "/setup") @ResponseBody
+    @GetMapping("/api/import/import-invoice/setup") @ResponseBody
     public ResponseEntity<?> iiSetup() { return HrmApi.run(() -> invoice.setup()); }
 
-    @GetMapping(II + "/refresh") @ResponseBody
+    @GetMapping("/api/import/import-invoice/refresh") @ResponseBody
     public ResponseEntity<?> iiRefresh(@RequestParam(value = "recId", defaultValue = "0") long recId) { return HrmApi.run(() -> invoice.refresh(recId)); }
 
-    @GetMapping(II + "/reset") @ResponseBody
+    @GetMapping("/api/import/import-invoice/reset") @ResponseBody
     public ResponseEntity<?> iiReset() { return HrmApi.run(() -> invoice.reset()); }
 
-    @GetMapping(II + "/uoms") @ResponseBody
+    @GetMapping("/api/import/import-invoice/uoms") @ResponseBody
     public ResponseEntity<?> iiUoms(@RequestParam("itemId") int itemId) { return HrmApi.run(() -> invoice.uoms(itemId)); }
 
-    @GetMapping(II + "/by-exporter") @ResponseBody
+    @GetMapping("/api/import/import-invoice/by-exporter") @ResponseBody
     public ResponseEntity<?> iiByExporter(@RequestParam("exporterId") int exporterId) { return HrmApi.run(() -> invoice.byExporter(exporterId)); }
 
-    @GetMapping(II + "/fi-balance") @ResponseBody
+    @GetMapping("/api/import/import-invoice/fi-balance") @ResponseBody
     public ResponseEntity<?> iiFiBalance(@RequestParam("documentTypeId") int documentTypeId, @RequestParam("id") int id) {
         return HrmApi.run(() -> invoice.fiBalance(documentTypeId, id));
     }
 
-    @GetMapping(II + "/by-id") @ResponseBody
+    @GetMapping("/api/import/import-invoice/by-id") @ResponseBody
     public ResponseEntity<?> iiById(@RequestParam("id") long id) { return HrmApi.run(() -> invoice.byId(id)); }
 
-    @GetMapping(II + "/history-combos") @ResponseBody
+    @GetMapping("/api/import/import-invoice/history-combos") @ResponseBody
     public ResponseEntity<?> iiHistoryCombos() { return HrmApi.run(() -> invoice.historyCombos()); }
 
-    @PostMapping(II + "/history") @ResponseBody
+    @PostMapping("/api/import/import-invoice/history") @ResponseBody
     public ResponseEntity<?> iiHistory(@RequestBody Map<String, Object> f) { return HrmApi.run(() -> invoice.history(f)); }
 
-    @GetMapping(II + "/history-detail") @ResponseBody
+    @GetMapping("/api/import/import-invoice/history-detail") @ResponseBody
     public ResponseEntity<?> iiHistoryDetail(@RequestParam("id") long id) { return HrmApi.run(() -> invoice.historyDetail(id)); }
 
-    @PostMapping(II + "/save") @ResponseBody
+    @PostMapping("/api/import/import-invoice/save") @ResponseBody
     public ResponseEntity<?> iiSave(@RequestBody Map<String, Object> b) { return HrmApi.run(() -> invoice.save(b)); }
 
-    @GetMapping(II + "/print") @ResponseBody
+    @GetMapping("/api/import/import-invoice/print") @ResponseBody
     public ResponseEntity<?> iiPrint(@RequestParam(value = "id", defaultValue = "0") long id) { return HrmApi.run(() -> invoice.print(id)); }
 
-    @GetMapping(II + "/attachments") @ResponseBody
+    @GetMapping("/api/import/import-invoice/attachments") @ResponseBody
     public ResponseEntity<?> iiAttachments(@RequestParam("id") long id) { return HrmApi.run(() -> invoice.attachments(id)); }
 
-    @GetMapping(II + "/attachment-file")
+    @GetMapping("/api/import/import-invoice/attachment-file")
     public ResponseEntity<?> iiAttachmentFile(@RequestParam("id") long id, @RequestParam("attachmentId") int a) { return file(() -> invoice.attachmentFile(id, a)); }
 
-    @GetMapping(II + "/proforma-serials") @ResponseBody
+    @GetMapping("/api/import/import-invoice/proforma-serials") @ResponseBody
     public ResponseEntity<?> iiProformaSerials() { return HrmApi.run(() -> serial.proformaSerials(ImpBImportInvoiceService.SCREEN)); }
 
-    @PostMapping(II + "/proforma-serials/save") @ResponseBody
+    @PostMapping("/api/import/import-invoice/proforma-serials/save") @ResponseBody
     public ResponseEntity<?> iiProformaSerialSave(@RequestBody Map<String, Object> b) { return HrmApi.run(() -> serial.saveProformaSerial(ImpBImportInvoiceService.SCREEN, b)); }
 
-    @GetMapping(II + "/master-serials") @ResponseBody
+    @GetMapping("/api/import/import-invoice/master-serials") @ResponseBody
     public ResponseEntity<?> iiMasterSerials() { return HrmApi.run(() -> serial.masterSerials(ImpBImportInvoiceService.SCREEN)); }
 
-    @PostMapping(II + "/master-serials/save") @ResponseBody
+    @PostMapping("/api/import/import-invoice/master-serials/save") @ResponseBody
     public ResponseEntity<?> iiMasterSerialSave(@RequestBody Map<String, Object> b) { return HrmApi.run(() -> serial.saveMasterSerial(ImpBImportInvoiceService.SCREEN, b)); }
 }

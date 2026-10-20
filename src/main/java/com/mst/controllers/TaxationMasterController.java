@@ -33,7 +33,6 @@ import java.util.Map;
 @Controller
 public class TaxationMasterController {
 
-    private static final String API = "/api/taxation";
 
     @Autowired private TaxationMasterService service;
 
@@ -65,58 +64,58 @@ public class TaxationMasterController {
 
     // ------------------------------------------------------------------ 178 Add Tax Type
 
-    @GetMapping(API + "/tax-type/setup") @ResponseBody
+    @GetMapping("/api/taxation/tax-type/setup") @ResponseBody
     public ResponseEntity<?> taxTypeSetup() { return call(() -> service.taxTypeSetup(), "Load failed."); }
 
-    @GetMapping(API + "/tax-type/list") @ResponseBody
+    @GetMapping("/api/taxation/tax-type/list") @ResponseBody
     public ResponseEntity<?> taxTypes() { return call(() -> service.taxTypes(), "Load failed."); }
 
-    @GetMapping(API + "/tax-type/by-id") @ResponseBody
+    @GetMapping("/api/taxation/tax-type/by-id") @ResponseBody
     public ResponseEntity<?> taxType(@RequestParam("id") int id) { return call(() -> service.taxType(id), "Load failed."); }
 
-    @PostMapping(API + "/tax-type/save") @ResponseBody
+    @PostMapping("/api/taxation/tax-type/save") @ResponseBody
     public ResponseEntity<?> saveTaxType(@RequestBody Map<String, Object> body) { return call(() -> service.saveTaxType(body), "Save failed."); }
 
     // ------------------------------------------------------------------ 177 Add Tax Schedule
 
-    @GetMapping(API + "/tax-schedule/setup") @ResponseBody
+    @GetMapping("/api/taxation/tax-schedule/setup") @ResponseBody
     public ResponseEntity<?> taxScheduleSetup() { return call(() -> service.taxScheduleSetup(), "Load failed."); }
 
-    @GetMapping(API + "/tax-schedule/list") @ResponseBody
+    @GetMapping("/api/taxation/tax-schedule/list") @ResponseBody
     public ResponseEntity<?> taxSchedules() { return call(() -> service.taxSchedules(), "Load failed."); }
 
-    @GetMapping(API + "/tax-schedule/by-id") @ResponseBody
+    @GetMapping("/api/taxation/tax-schedule/by-id") @ResponseBody
     public ResponseEntity<?> taxSchedule(@RequestParam("id") int id) { return call(() -> service.taxSchedule(id), "Load failed."); }
 
-    @PostMapping(API + "/tax-schedule/save") @ResponseBody
+    @PostMapping("/api/taxation/tax-schedule/save") @ResponseBody
     public ResponseEntity<?> saveTaxSchedule(@RequestBody Map<String, Object> body) { return call(() -> service.saveTaxSchedule(body), "Save failed."); }
 
     // ------------------------------------------------------------------ 172 Tax Notes and GL Maping
 
-    @GetMapping(API + "/gl-maping/setup") @ResponseBody
+    @GetMapping("/api/taxation/gl-maping/setup") @ResponseBody
     public ResponseEntity<?> glMapingSetup() { return call(() -> service.glMapingSetup(), "Load failed."); }
 
-    @GetMapping(API + "/gl-maping/list") @ResponseBody
+    @GetMapping("/api/taxation/gl-maping/list") @ResponseBody
     public ResponseEntity<?> glMapings() { return call(() -> service.glMapings(), "Load failed."); }
 
-    @GetMapping(API + "/gl-maping/by-id") @ResponseBody
+    @GetMapping("/api/taxation/gl-maping/by-id") @ResponseBody
     public ResponseEntity<?> glMaping(@RequestParam("id") int id) { return call(() -> service.glMaping(id), "Load failed."); }
 
-    @PostMapping(API + "/gl-maping/save") @ResponseBody
+    @PostMapping("/api/taxation/gl-maping/save") @ResponseBody
     public ResponseEntity<?> saveGlMaping(@RequestBody Map<String, Object> body) { return call(() -> service.saveGlMaping(body), "Save failed."); }
 
     // ------------------------------------------------------------------ 173 Supplier Customer Tax Exemption
 
-    @GetMapping(API + "/exemption/setup") @ResponseBody
+    @GetMapping("/api/taxation/exemption/setup") @ResponseBody
     public ResponseEntity<?> exemptionSetup() { return call(() -> service.exemptionSetup(), "Load failed."); }
 
-    @GetMapping(API + "/exemption/list") @ResponseBody
+    @GetMapping("/api/taxation/exemption/list") @ResponseBody
     public ResponseEntity<?> exemptions() { return call(() -> service.exemptions(), "Load failed."); }
 
-    @GetMapping(API + "/exemption/by-id") @ResponseBody
+    @GetMapping("/api/taxation/exemption/by-id") @ResponseBody
     public ResponseEntity<?> exemption(@RequestParam("id") int id) { return call(() -> service.exemption(id), "Load failed."); }
 
-    @PostMapping(API + "/exemption/save") @ResponseBody
+    @PostMapping("/api/taxation/exemption/save") @ResponseBody
     public ResponseEntity<?> saveExemption(@RequestBody Map<String, Object> body) { return call(() -> service.saveExemption(body), "Save failed."); }
 
     // ------------------------------------------------------------------ plumbing

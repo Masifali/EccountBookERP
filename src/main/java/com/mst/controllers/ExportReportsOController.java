@@ -33,13 +33,6 @@ import java.util.Map;
 @Controller
 public class ExportReportsOController {
 
-    private static final String CIH = "/api/export/commercial-invoice-history";
-    private static final String SSH = "/api/export/shipment-schedule-history";
-    private static final String SUM = "/api/export/report-summaries";
-    private static final String PIR = "/api/export/performa-invoice-register";
-    private static final String ISM = "/api/export/invoice-summary-by-month";
-    private static final String SRR = "/api/export/stock-reserved-register";
-    private static final String ECR = "/api/export/contract-reports";
 
     @Autowired private ExportReportsOService svc;
 
@@ -68,75 +61,75 @@ public class ExportReportsOController {
 
     // ------------------------------------------------------------------ ExImCommercialInvoiceHistory
 
-    @GetMapping(CIH + "/setup") @ResponseBody
+    @GetMapping("/api/export/commercial-invoice-history/setup") @ResponseBody
     public ResponseEntity<?> cihSetup() { return call(() -> svc.invoiceHistorySetup(), "Load failed."); }
 
-    @GetMapping(CIH + "/combos") @ResponseBody
+    @GetMapping("/api/export/commercial-invoice-history/combos") @ResponseBody
     public ResponseEntity<?> cihCombos(@RequestParam(value = "reportTypes", defaultValue = "false") boolean reportTypes) {
         return call(() -> svc.invoiceHistoryCombos(reportTypes), "Load failed.");
     }
 
-    @PostMapping(CIH + "/invoices") @ResponseBody
+    @PostMapping("/api/export/commercial-invoice-history/invoices") @ResponseBody
     public ResponseEntity<?> cihInvoices(@RequestBody Map<String, Object> body) { return call(() -> svc.invoiceHistoryInvoices(body), "Load failed."); }
 
-    @PostMapping(CIH + "/export-history") @ResponseBody
+    @PostMapping("/api/export/commercial-invoice-history/export-history") @ResponseBody
     public ResponseEntity<?> cihExport(@RequestBody Map<String, Object> body) { return call(() -> svc.invoiceHistoryExport(body), "Load failed."); }
 
     // ------------------------------------------------------------------ ExImShipmentScheduleHistory
 
-    @GetMapping(SSH + "/setup") @ResponseBody
+    @GetMapping("/api/export/shipment-schedule-history/setup") @ResponseBody
     public ResponseEntity<?> sshSetup() { return call(() -> svc.shipmentSetup(), "Load failed."); }
 
-    @GetMapping(SSH + "/combos") @ResponseBody
+    @GetMapping("/api/export/shipment-schedule-history/combos") @ResponseBody
     public ResponseEntity<?> sshCombos() { return call(() -> svc.shipmentCombos(), "Load failed."); }
 
-    @PostMapping(SSH + "/show") @ResponseBody
+    @PostMapping("/api/export/shipment-schedule-history/show") @ResponseBody
     public ResponseEntity<?> sshShow(@RequestBody Map<String, Object> body) { return call(() -> svc.shipmentShow(body), "Load failed."); }
 
     // ------------------------------------------------------------------ ExportReportSummaries
 
-    @GetMapping(SUM + "/setup") @ResponseBody
+    @GetMapping("/api/export/report-summaries/setup") @ResponseBody
     public ResponseEntity<?> sumSetup() { return call(() -> svc.summariesSetup(), "Load failed."); }
 
-    @PostMapping(SUM + "/show") @ResponseBody
+    @PostMapping("/api/export/report-summaries/show") @ResponseBody
     public ResponseEntity<?> sumShow(@RequestBody Map<String, Object> body) { return call(() -> svc.summariesShow(body), "Load failed."); }
 
     // ------------------------------------------------------------------ PerformaInvoiceRegister
 
-    @GetMapping(PIR + "/setup") @ResponseBody
+    @GetMapping("/api/export/performa-invoice-register/setup") @ResponseBody
     public ResponseEntity<?> pirSetup() { return call(() -> svc.performaSetup(), "Load failed."); }
 
-    @GetMapping(PIR + "/combos") @ResponseBody
+    @GetMapping("/api/export/performa-invoice-register/combos") @ResponseBody
     public ResponseEntity<?> pirCombos() { return call(() -> svc.performaCombos(), "Load failed."); }
 
-    @PostMapping(PIR + "/show") @ResponseBody
+    @PostMapping("/api/export/performa-invoice-register/show") @ResponseBody
     public ResponseEntity<?> pirShow(@RequestBody Map<String, Object> body) { return call(() -> svc.performaShow(body), "Load failed."); }
 
-    @GetMapping(PIR + "/attachments") @ResponseBody
+    @GetMapping("/api/export/performa-invoice-register/attachments") @ResponseBody
     public ResponseEntity<?> pirAttachments(@RequestParam("id") int id) { return call(() -> svc.performaAttachments(id), "Load failed."); }
 
     // ------------------------------------------------------------------ frmExportInvoiceSummaryByMonth
 
-    @GetMapping(ISM + "/setup") @ResponseBody
+    @GetMapping("/api/export/invoice-summary-by-month/setup") @ResponseBody
     public ResponseEntity<?> ismSetup() { return call(() -> svc.monthSetup(), "Load failed."); }
 
-    @PostMapping(ISM + "/show") @ResponseBody
+    @PostMapping("/api/export/invoice-summary-by-month/show") @ResponseBody
     public ResponseEntity<?> ismShow(@RequestBody Map<String, Object> body) { return call(() -> svc.monthShow(body), "Load failed."); }
 
     // ------------------------------------------------------------------ frmStockReservedRegister
 
-    @GetMapping(SRR + "/setup") @ResponseBody
+    @GetMapping("/api/export/stock-reserved-register/setup") @ResponseBody
     public ResponseEntity<?> srrSetup() { return call(() -> svc.stockSetup(), "Error occurred during database call."); }
 
-    @GetMapping(SRR + "/combos") @ResponseBody
+    @GetMapping("/api/export/stock-reserved-register/combos") @ResponseBody
     public ResponseEntity<?> srrCombos() { return call(() -> svc.stockCombos(), "Load failed."); }
 
-    @PostMapping(SRR + "/show") @ResponseBody
+    @PostMapping("/api/export/stock-reserved-register/show") @ResponseBody
     public ResponseEntity<?> srrShow(@RequestBody Map<String, Object> body) { return call(() -> svc.stockShow(body), "Load failed."); }
 
     // ------------------------------------------------------------------ ExportContractReports
 
-    @GetMapping(ECR + "/tabs") @ResponseBody
+    @GetMapping("/api/export/contract-reports/tabs") @ResponseBody
     public ResponseEntity<?> ecrTabs() { return call(() -> svc.contractReportTabs(), "Load failed."); }
 
     // ------------------------------------------------------------------ plumbing

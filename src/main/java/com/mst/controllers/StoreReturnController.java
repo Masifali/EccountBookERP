@@ -29,7 +29,6 @@ import java.util.Map;
 @Controller
 public class StoreReturnController {
 
-    private static final String API = "/api/store/store-return";
 
     private final StoreReturnService service;
     public StoreReturnController(StoreReturnService service) { this.service = service; }
@@ -41,11 +40,11 @@ public class StoreReturnController {
     }
 
 
-    @GetMapping(API + "/lookups")
+    @GetMapping("/api/store/store-return/lookups")
     @ResponseBody
     public ResponseEntity<?> lookups() { return run(service::lookups, "Could not load the screen."); }
 
-    @GetMapping(API + "/avg-rate")
+    @GetMapping("/api/store/store-return/avg-rate")
     @ResponseBody
     public ResponseEntity<?> avgRate(@RequestParam(defaultValue = "0") int recId, @RequestParam int itemId,
                                      @RequestParam(required = false) String docDate,
@@ -54,13 +53,13 @@ public class StoreReturnController {
                 "Could not read the rate.");
     }
 
-    @GetMapping(API + "/last-issuance-rate")
+    @GetMapping("/api/store/store-return/last-issuance-rate")
     @ResponseBody
     public ResponseEntity<?> lastIssuanceRate(@RequestParam int itemId) {
         return run(() -> Collections.singletonMap("itemRate", service.lastIssuanceRate(itemId)), "Could not read the rate.");
     }
 
-    @GetMapping(API + "/pending-issuances")
+    @GetMapping("/api/store/store-return/pending-issuances")
     @ResponseBody
     public ResponseEntity<?> pending(@RequestParam(required = false) String fromDate,
                                      @RequestParam(required = false) String toDate,
@@ -68,7 +67,7 @@ public class StoreReturnController {
         return run(() -> service.pendingIssuances(fromDate, toDate, issuanceId), "Could not load issuances.");
     }
 
-    @GetMapping(API + "/history")
+    @GetMapping("/api/store/store-return/history")
     @ResponseBody
     public ResponseEntity<?> history(@RequestParam(required = false) String fromDate,
                                      @RequestParam(required = false) String toDate,
@@ -83,7 +82,7 @@ public class StoreReturnController {
                 "History failed.");
     }
 
-    @GetMapping(API + "/{id}")
+    @GetMapping("/api/store/store-return/{id}")
     @ResponseBody
     public ResponseEntity<?> load(@PathVariable int id) {
         try {
@@ -95,7 +94,7 @@ public class StoreReturnController {
         }
     }
 
-    @GetMapping(API + "/{id}/slip")
+    @GetMapping("/api/store/store-return/{id}/slip")
     @ResponseBody
     public ResponseEntity<?> slip(@PathVariable int id) {
         try {
@@ -107,7 +106,7 @@ public class StoreReturnController {
         }
     }
 
-    @PostMapping(API + "/save")
+    @PostMapping("/api/store/store-return/save")
     @ResponseBody
     public ResponseEntity<?> save(@RequestBody StoreReturnDto dto) {
         try {

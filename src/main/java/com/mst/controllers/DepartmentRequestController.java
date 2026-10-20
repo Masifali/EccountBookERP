@@ -26,7 +26,6 @@ import java.util.Map;
 @Controller
 public class DepartmentRequestController {
 
-    private static final String API = "/api/store/department-request";
 
     private final DepartmentRequestService service;
     public DepartmentRequestController(DepartmentRequestService service) { this.service = service; }
@@ -37,17 +36,17 @@ public class DepartmentRequestController {
         return "store/department_request";
     }
 
-    @GetMapping(API + "/lookups")
+    @GetMapping("/api/store/department-request/lookups")
     @ResponseBody
     public ResponseEntity<?> lookups() { return run(service::lookups, "Could not load the screen."); }
 
-    @GetMapping(API + "/doc-no")
+    @GetMapping("/api/store/department-request/doc-no")
     @ResponseBody
     public ResponseEntity<?> docNo() {
         return run(() -> Collections.singletonMap("docNo", service.docNo()), "Could not generate the Doc No.");
     }
 
-    @GetMapping(API + "/stock")
+    @GetMapping("/api/store/department-request/stock")
     @ResponseBody
     public ResponseEntity<?> stock(@RequestParam(defaultValue = "0") int itemId,
                                    @RequestParam(defaultValue = "0") int itemConditionId,
@@ -55,13 +54,13 @@ public class DepartmentRequestController {
         return run(() -> service.stock(itemId, itemConditionId, docDate), "Could not read the stock.");
     }
 
-    @GetMapping(API + "/barcode")
+    @GetMapping("/api/store/department-request/barcode")
     @ResponseBody
     public ResponseEntity<?> barcode(@RequestParam(required = false) String barcode) {
         return run(() -> Collections.singletonMap("itemId", service.itemIdByBarcode(barcode)), "Could not read the barcode.");
     }
 
-    @GetMapping(API + "/history")
+    @GetMapping("/api/store/department-request/history")
     @ResponseBody
     public ResponseEntity<?> history(@RequestParam(defaultValue = "doc") String dateField,
                                      @RequestParam(required = false) String fromDate,
@@ -71,7 +70,7 @@ public class DepartmentRequestController {
         return run(() -> service.history(dateField, fromDate, toDate, docNoFrom, docNoTo), "History failed.");
     }
 
-    @GetMapping(API + "/{id}")
+    @GetMapping("/api/store/department-request/{id}")
     @ResponseBody
     public ResponseEntity<?> load(@PathVariable int id) {
         try {
@@ -83,7 +82,7 @@ public class DepartmentRequestController {
         }
     }
 
-    @GetMapping(API + "/{id}/slip")
+    @GetMapping("/api/store/department-request/{id}/slip")
     @ResponseBody
     public ResponseEntity<?> slip(@PathVariable int id) {
         try {
@@ -97,13 +96,13 @@ public class DepartmentRequestController {
         }
     }
 
-    @PostMapping(API + "/save")
+    @PostMapping("/api/store/department-request/save")
     @ResponseBody
     public ResponseEntity<?> save(@RequestBody DepartmentRequestDto dto) {
         return write(() -> service.save(dto), "Save failed.");
     }
 
-    @PostMapping(API + "/{id}/delete")
+    @PostMapping("/api/store/department-request/{id}/delete")
     @ResponseBody
     public ResponseEntity<?> delete(@PathVariable int id) {
         return write(() -> service.delete(id), "Delete failed.");

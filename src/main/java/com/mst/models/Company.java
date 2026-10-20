@@ -89,6 +89,63 @@ public class Company {
 	@Column(name = "ModifyDate")
 	private LocalDateTime modifyDate;
 
+	// ---- added by batch B_masters_geo_company (columns seen in Sp_Company_GetAllMethod) ----
+	@Column(name = "CompEmailB")
+	private String compEmailB;
+
+	@Column(name = "CompMobileB")
+	private String compMobileB;
+
+	@Column(name = "CompMobileC")
+	private String compMobileC;
+
+	@Column(name = "CompReportingTitle")
+	private String compReportingTitle;
+
+	@Column(name = "CompLogo")
+	private String compLogo;
+
+	/** varbinary logo (CompanyProfileRepository binds it as Types.VARBINARY). */
+	@Column(name = "CompLogoImage")
+	private byte[] compLogoImage;
+
+	/** FK to Organization.Id - the procedure's @OrgCompanyTypeId. */
+	@Column(name = "OrgCompanyTypeId")
+	private Integer orgCompanyTypeId;
+
+	@Column(name = "PictureURL")
+	private String pictureURL;
+
+	@Column(name = "CompanyTemplateId")
+	private Integer companyTemplateId;
+
+	@Column(name = "AllowedUserCount")
+	private Integer allowedUserCount;
+
+	@Column(name = "CompanyTypeId")
+	private Integer companyTypeId;
+
+	@Column(name = "CompanyNameOtherLanguage")
+	private String companyNameOtherLanguage;
+
+	@Column(name = "CompanyAddressOtherLanguage")
+	private String companyAddressOtherLanguage;
+
+	@Column(name = "CompanyWebsite")
+	private String companyWebsite;
+
+	@Column(name = "CompanyFaxNo")
+	private String companyFaxNo;
+
+	@Column(name = "CompanyNameOtherLing")
+	private String companyNameOtherLing;
+
+	@Column(name = "CompanyAddressOtherLing")
+	private String companyAddressOtherLing;
+
+	@Column(name = "CompanyId")
+	private Integer companyId;
+
 	// Explicit Getters and Setters
 	public Integer getId() { return id; }
 	public void setId(Integer id) { this.id = id; }
@@ -104,4 +161,40 @@ public class Company {
 	public void setCityName(String cityName) { this.cityName = cityName; }
 	public Boolean getIsHeadOffice() { return isHeadOffice; }
 	public void setIsHeadOffice(Boolean isHeadOffice) { this.isHeadOffice = isHeadOffice; }
+	public String getCompEmailB() { return compEmailB; }
+	public void setCompEmailB(String compEmailB) { this.compEmailB = compEmailB; }
+	public String getCompMobileB() { return compMobileB; }
+	public void setCompMobileB(String compMobileB) { this.compMobileB = compMobileB; }
+	public String getCompMobileC() { return compMobileC; }
+	public void setCompMobileC(String compMobileC) { this.compMobileC = compMobileC; }
+	public String getCompReportingTitle() { return compReportingTitle; }
+	public void setCompReportingTitle(String compReportingTitle) { this.compReportingTitle = compReportingTitle; }
+	public String getCompLogo() { return compLogo; }
+	public void setCompLogo(String compLogo) { this.compLogo = compLogo; }
+	public byte[] getCompLogoImage() { return compLogoImage; }
+	public void setCompLogoImage(byte[] compLogoImage) { this.compLogoImage = compLogoImage; }
+	public Integer getOrgCompanyTypeId() { return orgCompanyTypeId; }
+	public void setOrgCompanyTypeId(Integer orgCompanyTypeId) { this.orgCompanyTypeId = orgCompanyTypeId; }
+	public String getPictureURL() { return pictureURL; }
+	public void setPictureURL(String pictureURL) { this.pictureURL = pictureURL; }
+	public Integer getCompanyTemplateId() { return companyTemplateId; }
+	public void setCompanyTemplateId(Integer companyTemplateId) { this.companyTemplateId = companyTemplateId; }
+	public Integer getAllowedUserCount() { return allowedUserCount; }
+	public void setAllowedUserCount(Integer allowedUserCount) { this.allowedUserCount = allowedUserCount; }
+	public Integer getCompanyTypeId() { return companyTypeId; }
+	public void setCompanyTypeId(Integer companyTypeId) { this.companyTypeId = companyTypeId; }
+	public String getCompanyNameOtherLanguage() { return companyNameOtherLanguage; }
+	public void setCompanyNameOtherLanguage(String companyNameOtherLanguage) { this.companyNameOtherLanguage = companyNameOtherLanguage; }
+	public String getCompanyAddressOtherLanguage() { return companyAddressOtherLanguage; }
+	public void setCompanyAddressOtherLanguage(String companyAddressOtherLanguage) { this.companyAddressOtherLanguage = companyAddressOtherLanguage; }
+	public String getCompanyWebsite() { return companyWebsite; }
+	public void setCompanyWebsite(String companyWebsite) { this.companyWebsite = companyWebsite; }
+	public String getCompanyFaxNo() { return companyFaxNo; }
+	public void setCompanyFaxNo(String companyFaxNo) { this.companyFaxNo = companyFaxNo; }
+	public String getCompanyNameOtherLing() { return companyNameOtherLing; }
+	public void setCompanyNameOtherLing(String companyNameOtherLing) { this.companyNameOtherLing = companyNameOtherLing; }
+	public String getCompanyAddressOtherLing() { return companyAddressOtherLing; }
+	public void setCompanyAddressOtherLing(String companyAddressOtherLing) { this.companyAddressOtherLing = companyAddressOtherLing; }
+	public Integer getCompanyId() { return companyId; }
+	public void setCompanyId(Integer companyId) { this.companyId = companyId; }
 }

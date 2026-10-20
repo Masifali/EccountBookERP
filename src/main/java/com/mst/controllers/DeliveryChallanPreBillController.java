@@ -40,19 +40,19 @@ public class DeliveryChallanPreBillController {
         return "store/delivery_challan_prebill";
     }
 
-    @GetMapping(API + "/lookups")
+    @GetMapping("/api/store/delivery-challan-prebill/lookups")
     @ResponseBody
     public ResponseEntity<?> lookups() { return run(service::lookups, "Could not load the screen."); }
 
-    @GetMapping(API + "/doc-no")
+    @GetMapping("/api/store/delivery-challan-prebill/doc-no")
     @ResponseBody
     public ResponseEntity<?> docNo() { return run(() -> Collections.singletonMap("docNo", service.docNo()), "Could not read the Doc No."); }
 
-    @GetMapping(API + "/loader/combos")
+    @GetMapping("/api/store/delivery-challan-prebill/loader/combos")
     @ResponseBody
     public ResponseEntity<?> loaderCombos() { return run(service::loaderCombos, "Could not load the filters."); }
 
-    @GetMapping(API + "/loader")
+    @GetMapping("/api/store/delivery-challan-prebill/loader")
     @ResponseBody
     public ResponseEntity<?> loader(@RequestParam(required = false) String fromDate,
                                     @RequestParam(required = false) String toDate,
@@ -63,19 +63,19 @@ public class DeliveryChallanPreBillController {
         return run(() -> service.pending(fromDate, toDate, fromDocNo, toDocNo, itemId, billToPartyId), "Could not load pending Pre-Bills.");
     }
 
-    @GetMapping(API + "/loader/expenses")
+    @GetMapping("/api/store/delivery-challan-prebill/loader/expenses")
     @ResponseBody
     public ResponseEntity<?> loaderExpenses(@RequestParam(required = false) String headerIds) {
         return run(() -> service.loaderExpenses(headerIds), "Could not load the Pre-Bill expenses.");
     }
 
-    @GetMapping(API + "/prebill/{id}/slip")
+    @GetMapping("/api/store/delivery-challan-prebill/prebill/{id}/slip")
     @ResponseBody
     public ResponseEntity<?> preBillSlip(@PathVariable int id) {
         return run(() -> service.preBillSlip(id), "Print failed.");
     }
 
-    @GetMapping(API + "/history")
+    @GetMapping("/api/store/delivery-challan-prebill/history")
     @ResponseBody
     public ResponseEntity<?> history(@RequestParam(defaultValue = "doc") String dateType,
                                      @RequestParam(defaultValue = "false") boolean fromChecked,
@@ -90,7 +90,7 @@ public class DeliveryChallanPreBillController {
                 "History failed.");
     }
 
-    @GetMapping(API + "/{id}")
+    @GetMapping("/api/store/delivery-challan-prebill/{id}")
     @ResponseBody
     public ResponseEntity<?> load(@PathVariable int id) {
         try {
@@ -102,19 +102,19 @@ public class DeliveryChallanPreBillController {
         }
     }
 
-    @GetMapping(API + "/{id}/slip")
+    @GetMapping("/api/store/delivery-challan-prebill/{id}/slip")
     @ResponseBody
     public ResponseEntity<?> slip(@PathVariable int id) {
         return run(() -> service.slip(id), "Print failed.");
     }
 
-    @PostMapping(API + "/{id}/delete")
+    @PostMapping("/api/store/delivery-challan-prebill/{id}/delete")
     @ResponseBody
     public ResponseEntity<?> delete(@PathVariable int id) {
         return run(() -> service.delete(id), "Delete failed.");
     }
 
-    @PostMapping(API + "/save")
+    @PostMapping("/api/store/delivery-challan-prebill/save")
     @ResponseBody
     public ResponseEntity<?> save(@RequestBody DeliveryChallanPreBillDto dto) {
         return run(() -> service.save(dto), "Save failed.");

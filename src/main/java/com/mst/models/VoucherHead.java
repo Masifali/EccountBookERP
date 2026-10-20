@@ -1,5 +1,6 @@
 package com.mst.models;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -214,6 +215,53 @@ public class VoucherHead {
 
 	@Column(name = "FixedAssetEntryTypeId")
 	private Integer fixedAssetEntryTypeId;
+
+	// ---- Added by batch H_vouchers (Sp_VoucherHead_Insert / Sp_VoucherHead_Update + registry columns) ----
+
+	/** Read-only scalar shadow of the DocumentTypeId FK (the @ManyToOne documentType above owns the column). Use in JPQL as v.documentTypeId. */
+	@Column(name = "DocumentTypeId", insertable = false, updatable = false)
+	private Integer documentTypeId;
+
+	/** BIGINT in Sp_VoucherHead_Insert / _Update; proc falls back to UserAccount.LastUserLogId of EntryUser / ModifyUser when null or 0. */
+	@Column(name = "UserLogId")
+	private Long userLogId;
+
+	// Columns below are listed for VoucherHead in the batch registry (no type seen in any proc).
+	// Some look like result-set aliases of other procs rather than physical columns (DocNo, DocDate, RemarksHeader, ...);
+	// verify against the DB schema before relying on them - they are included because the registry lists them.
+
+	@Column(name = "DocNo")
+	private Integer docNo;
+
+	@Column(name = "DocDate")
+	private LocalDateTime docDate;
+
+	@Column(name = "RemarksHeader")
+	private String remarksHeader;
+
+	@Column(name = "SupplierCustomerId")
+	private Integer supplierCustomerId;
+
+	@Column(name = "AccountId")
+	private Integer accountId;
+
+	@Column(name = "PaymentTypeId")
+	private Integer paymentTypeId;
+
+	@Column(name = "CreditAmount")
+	private BigDecimal creditAmount;
+
+	@Column(name = "DebitAmount")
+	private BigDecimal debitAmount;
+
+	@Column(name = "OrderSupCustId")
+	private Integer orderSupCustId;
+
+	@Column(name = "SupplierInvoiceDate")
+	private LocalDateTime supplierInvoiceDate;
+
+	@Column(name = "PartyBillDate")
+	private LocalDateTime partyBillDate;
 
 	// Explicit Getters and Setters
 	public Integer getId() { return id; }

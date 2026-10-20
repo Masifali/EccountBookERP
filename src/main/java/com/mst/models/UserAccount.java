@@ -112,8 +112,8 @@ public class UserAccount {
 	@Column(name = "AppId")
 	private Integer appId;
 
-	@Column(name = "EmployeeId")
-	private Integer employeeId;
+/*	@Column(name = "EmployeeId")
+	private Integer employeeId;*/
 
 	@Column(name = "AuthenticationCode")
 	private Integer authenticationCode;
@@ -130,8 +130,8 @@ public class UserAccount {
 	@Column(name = "IsActive")
 	private Boolean isActive = true;
 
-	@Column(name = "DeviceDependency")
-	private Boolean deviceDependency = false;
+//	@Column(name = "DeviceDependency")
+//	private Boolean deviceDependency = false;
 
 	@Column(name = "EntryDate")
 	private LocalDateTime entryDate;
@@ -171,8 +171,8 @@ public class UserAccount {
 	public void setUserTypeId(Integer userTypeId) { this.userTypeId = userTypeId; }
 	public Integer getAppId() { return appId; }
 	public void setAppId(Integer appId) { this.appId = appId; }
-	public Integer getEmployeeId() { return employeeId; }
-	public void setEmployeeId(Integer employeeId) { this.employeeId = employeeId; }
+	/*public Integer getEmployeeId() { return employeeId; }
+	public void setEmployeeId(Integer employeeId) { this.employeeId = employeeId; }*/
 	public Integer getAuthenticationCode() { return authenticationCode; }
 	public void setAuthenticationCode(Integer authenticationCode) { this.authenticationCode = authenticationCode; }
 	public Integer getAuthenticationEnabled() { return authenticationEnabled; }
@@ -183,8 +183,8 @@ public class UserAccount {
 	public void setAppVersion(String appVersion) { this.appVersion = appVersion; }
 	public Boolean getIsActive() { return isActive; }
 	public void setIsActive(Boolean isActive) { this.isActive = isActive; }
-	public Boolean getDeviceDependency() { return deviceDependency; }
-	public void setDeviceDependency(Boolean deviceDependency) { this.deviceDependency = deviceDependency; }
+	/*public Boolean getDeviceDependency() { return deviceDependency; }
+	public void setDeviceDependency(Boolean deviceDependency) { this.deviceDependency = deviceDependency; }*/
 	public LocalDateTime getEntryDate() { return entryDate; }
 	public void setEntryDate(LocalDateTime entryDate) { this.entryDate = entryDate; }
 	public LocalDateTime getModifyDate() { return modifyDate; }

@@ -26,6 +26,8 @@ import lombok.Data;
  * no FK constraints on them either, and most are Fixed-Asset-module concerns not
  * yet ported.
  */
+/* A1_item_core: verified against Sp_ItemCategory_Insert / _Update / _GetAllMethod - every column of dbo.ItemCategory
+ * used by those procedures was already mapped; no fields added. */
 @Entity
 @Table(name = "ItemCategory")
 @Data
