@@ -79,6 +79,9 @@ import com.mst.serviceInterface.IConfigurationService;
  */
 @Service
 public class ConfigurationServiceImpl implements IConfigurationService {
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.mst.repositories.support.CountryQueries countryQueries;
+
 
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
@@ -186,8 +189,6 @@ public class ConfigurationServiceImpl implements IConfigurationService {
 	private static final int SERVICES_MASTER_ITEM_ID_TRANSPORTATION = 5;
 
 	/** @MethodType='GetAll' - verified this branch ignores @OrganizationId/@CompanyId entirely. */
-	private static final String SQL_COUNTRIES =
-			"EXEC SP_Country_ReadMethod @OrganizationId=?, @CompanyId=?, @MethodType=?";
 
 	// ---- Commission Agent tab (verified GoldenAceDb(0509)t.sql / DAL line numbers in each
 	// method's own javadoc on IConfigurationService) ----
@@ -601,7 +602,7 @@ public class ConfigurationServiceImpl implements IConfigurationService {
 	public List<Map<String, Object>> getCountries() {
 		int orgId = currentUserContext.currentOrganizationId();
 		int compId = currentUserContext.currentCompanyId();
-		List<Map<String, Object>> rows = jdbcTemplate.queryForList(SQL_COUNTRIES, orgId, compId, "GetAll");
+		List<Map<String, Object>> rows = countryQueries.rows("OrganizationId", orgId, "CompanyId", compId, "MethodType", "GetAll");
 		List<Map<String, Object>> result = new ArrayList<>();
 		for (Map<String, Object> row : rows) {
 			Map<String, Object> out = new LinkedHashMap<>();

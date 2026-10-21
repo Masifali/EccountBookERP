@@ -15,6 +15,9 @@ import java.util.Map;
  */
 @Repository
 public class PpBLookupRepository {
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.mst.repositories.support.CityQueries cityQueries;
+
 
     private final HrmProcRepository db;
 
@@ -166,7 +169,7 @@ public class PpBLookupRepository {
 
     /** CommonServices.CityGetAllService / City.GetAll (BLL 0060): SP_City_GetAllMethod @MethodType='GetAll'. */
     public List<Map<String, Object>> cities(UserAccount u) {
-        return db.rows("SP_City_GetAllMethod", "OrganizationId", org(u), "CompanyId", co(u), "MethodType", "GetAll");
+        return cityQueries.rows("OrganizationId", org(u), "CompanyId", co(u), "MethodType", "GetAll");
     }
 
     /** CommonServices.GetItemGlIdsandItemName (DAL 0205): Sp_Item_GetAllMethod 'GetItemGlIdsandItemName' (Id, ItemName). */

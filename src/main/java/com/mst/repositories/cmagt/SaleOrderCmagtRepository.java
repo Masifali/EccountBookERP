@@ -49,6 +49,9 @@ import java.util.Map;
  */
 @Repository
 public class SaleOrderCmagtRepository {
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.mst.repositories.support.CityQueries cityQueries;
+
 
     @Autowired
     private JdbcTemplate jdbc;
@@ -241,8 +244,6 @@ public class SaleOrderCmagtRepository {
             + "@CompanyId=?, @Activity=?";
 
     /** SP_City_GetAllMethod - the City dropdown. */
-    private static final String SQL_CITIES =
-            "EXEC SP_City_GetAllMethod @OrganizationId=?, @CompanyId=?, @MethodType=?";
 
     // =======================================================================
     // Writes
@@ -525,7 +526,7 @@ public class SaleOrderCmagtRepository {
     }
 
     public List<Map<String, Object>> cities(int orgId, int companyId) {
-        return safeQuery(SQL_CITIES, orgId, companyId, "GetAll");
+        return cityQueries.rows("OrganizationId", orgId, "CompanyId", companyId, "MethodType", "GetAll");
     }
 
     /** The grant grid for one user on one desktop screen. See SQL_USER_RIGHTS_FOR_SCREEN. */

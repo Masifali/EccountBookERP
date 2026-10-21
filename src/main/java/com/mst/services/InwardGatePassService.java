@@ -258,6 +258,7 @@ public class InwardGatePassService {
         int purchaseOrderId=whole(obj.getPurchaseOrderId());
         if (refType==105||refType==106||refType==204||refType==241||(!updating && (refType==98||refType==52))) purchaseOrderId=gpSrNo;
         else if (updating && refType==175) purchaseOrderId=rowInt(previous,"PurchaseOrderId");
+        Date savedAt=new Date();
         Map<String,Object> exact=new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
         exact.put("Id",updating?obj.getId():0);
         exact.put("BiltyNo",text(obj.getBiltyNo()));
@@ -292,9 +293,11 @@ public class InwardGatePassService {
         exact.put("WeighBridgeId",0); // Conversion.ToInt of the ",ticket,..." slip text, 0 when no weighbridge row
         exact.put("VarietyName",text(obj.getVarietyName())); exact.put("ItemId",whole(obj.getItemId()));
         exact.put("RefDocumentTypeId",refType); exact.put("PurchaseOrderId",purchaseOrderId);
-        exact.put("EntryUser",user);
-        exact.put("EntryDate",null);   // neither button sets EntryDate
-        exact.put("ModifyDate",null);  // nor ModifyDate (the update procedure writes @ModifyDate as sent)
+        // JDBC sends explicit NULLs; the insert procedure does not supply an EntryDate default.
+        // Creation details belong to the original record, while updates get a fresh audit timestamp.
+        exact.put("EntryUser",updating?rowInt(previous,"EntryUser"):user);
+        exact.put("EntryDate",updating?previous.get("EntryDate"):savedAt);
+        exact.put("ModifyDate",updating?savedAt:null);
         exact.put("ModifyUser",updating?user:0);
         exact.put("WeightDiffComments",updating?text(obj.getWeightDiffComments()):null);
         exact.put("WarehouseId",updating?rowInt(previous,"WarehouseId"):0);
@@ -348,7 +351,10 @@ public class InwardGatePassService {
         }
 
         obj.setOrganizationId(org); obj.setCompanyId(company); obj.setBranchesId(branch); obj.setFinancialYearId(year); obj.setDocumentTypeId(51);
-        obj.setEntryUser(user); obj.setEntryDate(null); obj.setModifyDate(null); obj.setPostDate((Date)exact.get("PostDate"));
+        // A newly registered driver uses the current user/time, even when editing an older gate pass.
+        // saveHeader uses the preserved creation details in exact for an existing gate pass.
+        obj.setEntryUser(user); obj.setEntryDate(savedAt); obj.setModifyDate((Date)exact.get("ModifyDate"));
+        obj.setModifyUser(updating?user:0); obj.setPostDate((Date)exact.get("PostDate"));
         try {
             if (whole(obj.getDriverBioDataId())==0) {
                 Integer bioId=repository.saveDriverBio(obj);

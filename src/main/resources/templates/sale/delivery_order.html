@@ -4,36 +4,63 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Delivery Order</title>
-    <link rel="stylesheet" th:href="@{/css/sale-delivery-order.css?v=20260926links2}">
+    <link rel="stylesheet" th:href="@{/css/sale-delivery-order.css?v=20261020a}">
     <link rel="stylesheet" th:href="@{/build/css/countx_desktop_combo.css?v=20260920a}"/>
     <link rel="stylesheet" th:href="@{/build/css/countx_grid_bar.css?v=20261013-sale-grid}"/>
 </head>
 <body>
 <div th:replace="~{fragments/erp_navigation :: navigation}"></div>
 <div id="requestLoader" class="request-loader" hidden><span></span><b>Loading...</b></div>
+<input type="hidden" id="documentTypeId" value="84">
 <main class="desktop-form">
     <nav class="tool-strip" aria-label="Delivery order actions">
         <button type="button" id="newButton">New</button>
+        <button type="button" id="refreshButton">Refresh</button>
+        <button type="button" id="attachmentButton">Attachment</button>
         <button type="button" id="saveButton">Save</button>
         <button type="button" id="updateButton" hidden>Update</button>
         <button type="button" id="deleteButton" hidden>Delete</button>
+        <button type="button" id="printButton" data-rpt="262-DeliveryOrderSlip.rpt">262-Print</button>
         <button type="button" id="loadOrderButton">Load_SO_MainDetail</button>
-        <button type="button" id="historyButton">History</button>
-        <button type="button" id="refreshButton">Refresh</button>
+        <button type="button" id="refPartiesButton">Reference Parties</button>
+        <button type="button" id="shortcutButton">ShortCut Keys</button>
         <a href="/sale/dashboard">Exit Module</a>
     </nav>
-    <header class="form-title">DELIVERY ORDER</header>
-    <section class="header-panel">
-        <label>Doc No<input id="docNo" readonly></label>
-        <label>Doc Date<input id="docDate" type="date"></label>
-        <label>Delivery Order Type<select id="deliveryOrderType" disabled><option value="Local">Local</option></select></label>
-        <label>Branch From<select id="branchFrom" disabled></select></label>
-        <label>Sale Type<select id="saleType"></select></label>
-        <label>Vehicle Type<input id="vehicleType" list="vehicleTypeList" autocomplete="off"><datalist id="vehicleTypeList"></datalist></label>
-        <label>Vehicle No<input id="vehicleNo" maxlength="50"></label>
-        <label class="remarks">Loading Instructions<textarea id="remarks" maxlength="500"></textarea></label>
-        <label class="check"><input id="stockReserved" type="checkbox"> Is Stock Reserved Per Party</label>
-    </section>
+    <div class="tabs"><button id="tabForm" class="on" type="button">Form</button><button id="tabHistory" type="button">History</button></div>
+    <div id="paneForm">
+    <div class="titlebar"><span class="ttl">Delivery Order</span><label class="rad"><input type="radio" name="openOnInsert" id="radNone" checked> None</label><label class="rad"><input type="radio" name="openOnInsert" id="radGp"> Outward Gate Pass</label><span class="sp"></span><label class="chk" id="stockReservedWrap" hidden><input id="stockReserved" type="checkbox"> Stock Reserved</label><label class="chk"><input type="checkbox" id="chkPrint" checked> Is Preview</label></div>
+    <fieldset class="box"><legend>Main</legend><div class="canvas" style="width:1146px;height:107px">
+<div class="fld " id="f_docNo" style="left:4px;top:19px;width:150px"><label for="docNo" style="top:3px">Doc No</label><div class="ctl" style="left:91px;width:59px"><input id="docNo" type="text" readonly></div></div>
+<div class="fld " id="f_docDate" style="left:157px;top:19px;width:130px"><div class="ctl" style="left:0px;width:130px"><input id="docDate" type="date"></div></div>
+<div class="fld " id="f_deliveryOrderType" style="left:4px;top:47px;width:283px"><label for="deliveryOrderType" style="top:3px">DO Type</label><div class="ctl" style="left:91px;width:192px"><select id="deliveryOrderType" data-dtcombo="single" data-dtcombo-caption="OrderType"></select></div></div>
+<div class="fld " id="f_branchFrom" style="left:4px;top:75px;width:283px"><label for="branchFrom" style="top:3px"><span id="branchFromLabel">Branch</span></label><div class="ctl" style="left:91px;width:192px"><select id="branchFrom" data-dtcombo="single" data-dtcombo-caption="Branch Name"><option value=""></option></select></div></div>
+<div class="fld " id="f_vehicleType" style="left:290px;top:19px;width:200px"><label for="vehicleType" style="top:-5px">Vehicle Type &amp; No</label><div class="ctl" style="left:70px;width:130px"><select id="vehicleType" data-dtcombo="single" data-dtcombo-caption="Vehicle Type"><option value=""></option></select></div></div>
+<div class="fld " id="f_vehicleNo" style="left:492px;top:19px;width:95px"><div class="ctl" style="left:0px;width:95px"><input id="vehicleNo" type="text" maxlength="50"></div></div>
+<div class="fld " id="f_saleType" style="left:290px;top:47px;width:297px"><label for="saleType" style="top:3px">Sale Type</label><div class="ctl" style="left:70px;width:227px"><select id="saleType" data-dtcombo="single" data-dtcombo-caption="Sale Type"></select></div></div>
+<div class="fld " id="f_branchTo" hidden style="left:290px;top:75px;width:297px"><label for="branchTo" style="top:3px">Branch To</label><div class="ctl" style="left:70px;width:227px"><select id="branchTo" data-dtcombo="single" data-dtcombo-caption="Branch Name"><option value=""></option></select></div></div>
+<div class="remhead" style="left:595px;top:17px;width:535px">Remarks</div>
+<div class="fld tallM" id="f_remarks" style="left:595px;top:48px;width:535px"><div class="ctl" style="left:0px;width:535px"><textarea id="remarks" maxlength="500"></textarea></div></div>
+</div></fieldset>
+    <fieldset class="box"><legend>Detail</legend><div class="canvas" style="width:1146px;height:118px">
+<div class="fld " id="f_dCustomer" style="left:9px;top:34px;width:222px"><label for="dCustomer" style="top:-19px">Customer Name</label><div class="ctl" style="left:0px;width:222px"><select id="dCustomer" data-dtcombo="single" data-dtcombo-caption="Customer Name"><option value=""></option></select></div></div>
+<div class="fld " id="f_dOrderNo" style="left:234px;top:34px;width:87px"><label for="dOrderNo" style="top:-19px">OrderNo</label><div class="ctl" style="left:0px;width:87px"><select id="dOrderNo" data-dtcombo="single" data-dtcombo-caption="SaleOrderNo"><option value=""></option></select></div></div>
+<div class="fld " id="f_dWarehouse" style="left:324px;top:34px;width:178px"><label for="dWarehouse" style="top:-19px">WareHouse</label><div class="ctl" style="left:0px;width:178px"><select id="dWarehouse" data-dtcombo="single" data-dtcombo-caption="WareHouse Name"><option value=""></option></select></div></div>
+<div class="fld " id="f_dItem" style="left:505px;top:34px;width:198px"><label for="dItem" style="top:-19px">Item</label><div class="ctl" style="left:0px;width:198px"><select id="dItem" data-dtcombo="single" data-dtcombo-caption="Item Name"><option value=""></option></select></div></div>
+<label class="rd" style="left:538px;top:14px"><input type="radio" name="itemSearch" id="rdName" checked> Name</label><label class="rd" style="left:597px;top:14px"><input type="radio" name="itemSearch" id="rdCode"> Code</label><span id="lblBalance" class="bal" style="left:660px;top:16px"></span>
+<div class="fld " id="f_dCrop" style="left:706px;top:34px;width:92px"><label for="dCrop" style="top:-19px">CropYear</label><div class="ctl" style="left:0px;width:92px"><select id="dCrop" data-dtcombo="single" data-dtcombo-caption="Crop Year"><option value=""></option></select></div></div>
+<div class="fld " id="f_dJobLot" style="left:800px;top:34px;width:148px"><label for="dJobLot" style="top:-19px">JobLot</label><div class="ctl" style="left:0px;width:148px"><select id="dJobLot" data-dtcombo="single" data-dtcombo-caption="JobLot"><option value=""></option></select></div></div>
+<div class="fld " id="f_dPackUom" style="left:951px;top:34px;width:74px"><label for="dPackUom" style="top:-19px">Pack UOM</label><div class="ctl" style="left:0px;width:74px"><select id="dPackUom" data-dtcombo="single" data-dtcombo-caption="Uom"><option value=""></option></select></div></div>
+<div class="fld " id="f_dPackingType" style="left:1027px;top:34px;width:113px"><label for="dPackingType" style="top:-19px">PackingType</label><div class="ctl" style="left:0px;width:113px"><select id="dPackingType" data-dtcombo="single" data-dtcombo-caption="Packing Type"><option value=""></option></select></div></div>
+<div class="fld " id="f_dQty" style="left:10px;top:88px;width:64px"><label for="dQty" style="top:-23px">Qty</label><div class="ctl" style="left:0px;width:64px"><input id="dQty" type="number" step="any"></div></div>
+<div class="fld " id="f_dWeight" style="left:75px;top:88px;width:79px"><label for="dWeight" style="top:-23px">Weight</label><div class="ctl" style="left:0px;width:79px"><input id="dWeight" type="number" step="any"></div></div>
+<div class="fld " id="f_dBalQty" style="left:156px;top:88px;width:75px"><label for="dBalQty" style="top:-22px">BalQty</label><div class="ctl" style="left:0px;width:75px"><input id="dBalQty" type="text" readonly></div></div>
+<div class="fld " id="f_dBalWeight" style="left:233px;top:88px;width:89px"><label for="dBalWeight" style="top:-20px">BalWeight</label><div class="ctl" style="left:0px;width:89px"><input id="dBalWeight" type="text" readonly></div></div>
+<div class="fld " id="f_dPackUnit" style="left:323px;top:88px;width:84px"><label for="dPackUnit" style="top:-21px">Packing Unit</label><div class="ctl" style="left:-1px;width:85px"><input id="dPackUnit" type="number" step="any"></div></div>
+<div class="fld " id="f_dPackWeight" style="left:403px;top:88px;width:87px"><label for="dPackWeight" style="top:-21px">Packing Weight</label><div class="ctl" style="left:5px;width:82px"><input id="dPackWeight" type="number" step="any"></div></div>
+<div class="fld " id="f_dGross" style="left:493px;top:88px;width:120px"><label for="dGross" style="top:-22px">GrossWeight</label><div class="ctl" style="left:-2px;width:122px"><input id="dGross" type="text" readonly></div></div>
+<div class="fld " id="f_dRemarks" style="left:615px;top:88px;width:340px"><label for="dRemarks" style="top:-21px">Comments</label><div class="ctl" style="left:0px;width:340px"><input id="dRemarks" type="text"></div></div>
+<button type="button" id="btnPlus" class="plus" style="left:962px;top:88px">+</button><button type="button" id="btnUpdateDetail" hidden style="left:1003px;top:88px;width:68px">Update</button><button type="button" id="btnCancelDetail" hidden style="left:1073px;top:88px;width:65px">Cancel</button>
+</div></fieldset>
     <section id="orderLoader" class="order-loader" hidden>
         <div class="section-title">Pending Sale Orders</div>
         <div class="order-picker">
@@ -42,25 +69,46 @@
             <button type="button" id="closeOrderLoader">Close</button>
         </div>
     </section>
-    <section class="grid-section">
-        <div class="section-title" id="saleGridHeading_detailTable">Delivery Order Detail</div>
+    <div class="dtabs"><button id="gtDetail" class="on" type="button">Do Detail</button><button id="gtExpense" type="button">Expense Grid</button></div>
+    <section class="grid-section" id="paneDetail">
+        <div class="section-title" id="saleGridHeading_detailTable">Detail</div>
         <div class="wide-grid"><table data-gridbar="DeliveryOrder:detailTable" id="detailTable" data-gridbar-heading="#saleGridHeading_detailTable" data-gridbar-reorder="false">
-            <thead><tr><th class="action-col">Edit</th><th class="action-col">Delete</th><th>Customer</th><th>Order No</th><th>Item Code</th><th>Item</th><th>Pack UOM</th><th>Crop</th><th>Packing Type</th><th>Warehouse</th><th>Job Lot</th><th>Qty</th><th>Weight</th><th>Packing Unit</th><th>Packing Weight</th><th>Gross Weight</th><th>Remarks</th></tr></thead>
+            <thead><tr><th class="action-col">Edit</th><th class="action-col">X</th><th>Customer Name</th><th>Reference Party</th><th>Order No</th><th>Item Code</th><th>Item</th><th>Item UOM</th><th>Crop Year</th><th>Packing Type</th><th>Warehouse</th><th>Job Lot</th><th>Load Qty</th><th>Load Weight</th><th>Packing Unit</th><th>Packing Weight</th><th>Gross Weight</th><th>Remarks</th></tr></thead>
             <tbody></tbody>
-            <tfoot><tr><td colspan="11">Totals</td><td id="totalQty">0</td><td id="totalWeight">0</td><td></td><td id="totalPacking">0</td><td id="totalGross">0</td><td></td></tr></tfoot>
+            <tfoot><tr><td colspan="12">Totals</td><td id="totalQty">0</td><td id="totalWeight">0</td><td></td><td id="totalPacking">0</td><td id="totalGross">0</td><td></td></tr></tfoot>
         </table></div>
     </section>
-    <section id="historyPanel" class="history-panel">
-        <div class="section-title" id="saleGridHeading_historyTable">Delivery Order History</div>
-        <div class="wide-grid history-grid"><table data-gridbar="DeliveryOrder:historyTable" id="historyTable" data-gridbar-heading="#saleGridHeading_historyTable" data-gridbar-reorder="false">
-            <thead><tr><th>Voucher Code</th><th>Date</th><th>Customer</th><th>Order No</th><th>Item Code</th><th>Item</th><th>UOM</th><th>Qty</th><th>Weight</th><th>Warehouse</th><th>Vehicle</th><th>Approved</th><th>Entry User</th></tr></thead><tbody></tbody>
+    <section class="grid-section" id="paneExpense" hidden>
+        <div class="section-title" id="saleGridHeading_expenseTable">Expense</div>
+        <div class="wide-grid"><table data-gridbar="DeliveryOrder:expenseTable" id="expenseTable" data-gridbar-heading="#saleGridHeading_expenseTable" data-gridbar-reorder="false">
+            <thead><tr><th class="action-col">+</th><th class="action-col">X</th><th>Sale Order</th><th>Item</th><th>Qty</th><th>Remarks</th></tr></thead><tbody></tbody>
+            <tfoot><tr><td colspan="4">Totals</td><td id="totalExpQty">0</td><td></td></tr></tfoot>
         </table></div>
     </section>
+    </div>
+    <div id="paneHistory" hidden>
+        <header class="form-title">Delivery Order History</header>
+        <fieldset class="box filters"><legend>Filters</legend>
+            <label>From Date<input id="hFrom" type="date"></label><label>To Date<input id="hTo" type="date"></label>
+            <label>From Doc No<input id="hFromNo" type="number"></label><label>To Doc No<input id="hToNo" type="number"></label>
+            <label>Customer<input id="hCustomer" list="hCustomerList" autocomplete="off"><datalist id="hCustomerList"></datalist></label>
+            <label class="rad"><input type="radio" name="hDate" value="DocDate" checked> Doc Date</label><label class="rad"><input type="radio" name="hDate" value="EntryDate"> Entry Date</label><label class="rad"><input type="radio" name="hDate" value="ModifyDate"> Modify Date</label><label class="rad"><input type="radio" name="hDate" value="ApprovedDate"> Approved Date</label>
+            <button type="button" id="hShow" class="teal">Show</button><button type="button" id="hReset">Reset</button>
+        </fieldset>
+        <section id="historyPanel" class="history-panel">
+            <div class="section-title" id="saleGridHeading_historyTable">Main</div>
+            <div class="wide-grid history-grid"><table data-gridbar="DeliveryOrder:historyTable" id="historyTable" data-gridbar-heading="#saleGridHeading_historyTable" data-gridbar-reorder="false">
+                <thead><tr><th>Voucher Code</th><th>Date</th><th>Customer</th><th>Order No</th><th>Item Code</th><th>Item</th><th>UOM</th><th>Qty</th><th>Weight</th><th>Warehouse</th><th>Vehicle</th><th>Approved</th><th>Entry User</th></tr></thead><tbody></tbody>
+            </table></div>
+            <div id="historyCount" class="count"></div>
+        </section>
+    </div>
     <div id="message" role="status"></div>
 </main>
-<script th:src="@{/js/sale-delivery-order.js?v=20260926links2}"></script>
+<script th:src="@{/js/sale-delivery-order.js?v=20261020a}"></script>
     <script th:src="@{/build/js/countx_desktop_combo.js?v=20260927b}"></script>
     <script th:src="@{/build/js/countx_input_guards.js?v=20260920a}"></script>
+<script src="/js/print-rpt.js?v=20261003erp"></script>
 <script th:src="@{/build/js/countx_purchase_page_chrome.js?v=20261013-sale-grid}"></script>
 <script th:src="@{/build/js/countx_grid_bar.js?v=20261013-sale-grid}"></script>
 </body>

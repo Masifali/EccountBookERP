@@ -36,6 +36,9 @@ import static com.mst.services.sale.engr.SaleEngrSupport.*;
  */
 @Service
 public class SaleOutwardGatePassStService {
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.mst.repositories.support.CityQueries cityQueries;
+
     public static final String SCREEN = "OutwardGatePass_St";
     public static final int DOC_TYPE = 1507;
     public static final int SO_DOC = 1505, DO_DOC = 1506;
@@ -61,7 +64,7 @@ public class SaleOutwardGatePassStService {
         m.put("customers", customers());                                               // CustomerFill
         m.put("vehicleTypes", sup.rows("Sp_VehicleType_GetAllMethod"));                // vehicleTypefill
         m.put("warehouses", warehouses());                                             // WarehouseFill
-        m.put("cities", sup.rows("SP_City_GetAllMethod", "OrganizationId", sup.org(), "CompanyId", sup.company(), "MethodType", "GetAll"));   // CityFill
+        m.put("cities", cityQueries.rows("OrganizationId", sup.org(), "CompanyId", sup.company(), "MethodType", "GetAll"));   // CityFill
         m.put("openRecords", openRecords());                                           // grdfrmfill
         m.put("doGrid", infoGrid(DO_DOC));                                             // DeliveryOrderGridFill
         m.put("soGrid", infoGrid(SO_DOC));                                             // SaleOrderGridFill
@@ -79,7 +82,7 @@ public class SaleOutwardGatePassStService {
         m.put("items", items());
         m.put("gatePassTypes", sup.rows("Sp_GatePassType_GetAllMethod", "OrganizationId", sup.org(), "CompanyId", sup.company(), "Activity", "Outward"));
         m.put("vehicleTypes", sup.rows("Sp_VehicleType_GetAllMethod"));
-        m.put("cities", sup.rows("SP_City_GetAllMethod", "OrganizationId", sup.org(), "CompanyId", sup.company(), "MethodType", "GetAll"));
+        m.put("cities", cityQueries.rows("OrganizationId", sup.org(), "CompanyId", sup.company(), "MethodType", "GetAll"));
         m.put("warehouses", warehouses());
         m.put("openRecords", openRecords());
         return m;

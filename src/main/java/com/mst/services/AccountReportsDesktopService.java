@@ -27,6 +27,9 @@ import java.util.*;
  */
 @Service
 public class AccountReportsDesktopService {
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.mst.repositories.support.CityQueries cityQueries;
+
 
     @Autowired
     private JdbcTemplate jdbc;
@@ -217,7 +220,7 @@ public class AccountReportsDesktopService {
 
     /** CommonServices.CityGetAllService -> City.GetAll -> SP_City_GetAllMethod @MethodType='GetAll'. Id / CityName. */
     public List<Map<String, Object>> cities() {
-        return rows("SP_City_GetAllMethod", p("OrganizationId", org(), "CompanyId", comp(), "MethodType", "GetAll"));
+        return cityQueries.rows(p("OrganizationId", org(), "CompanyId", comp(), "MethodType", "GetAll"));
     }
 
     /** CommonServices.SupplierCustomerGetforComboServiceBind -> SupplierCustomer.GetforComboBinding -> Sp_SupplierCustomer_GetAllMethod @Activity='ReadByOrganizationIdCompanyIdForBinding'. Id / CompanyName / GlAccountId. */

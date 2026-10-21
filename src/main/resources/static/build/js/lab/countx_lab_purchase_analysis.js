@@ -758,6 +758,9 @@
 
     /** Insert() (:1799) — btnSave_Click forces RecId 0 (:1968); btnUpdate_Click keeps it (:1977). */
     function insert(button, isUpdate) {
+        if (button && (button.disabled || button.classList.contains('btn-busy'))) return Promise.resolve();
+        // Ask while this page still has focus, before opening print previews.
+        if (!window.confirm(isUpdate ? 'Are you sure to Update?' : 'Are you sure to Save?')) return Promise.resolve();
         return act(button, async function () {
             // Reserve previews before the save request loses the browser's user activation.
             var preview653 = $('IsPrint').checked ? openPrintPreview() : null;
@@ -765,12 +768,8 @@
             try {
                 if (!isUpdate) st.recId = 0;
                 var body = collect(st.recId);
+                body.confirm = true; // The operator already answered Yes above.
                 var r = await apiRaw('POST', API + '/save', body);
-                if (r.status === 409 && r.data && r.data.confirm) {                         // "Are you sure to Save?" / "Are you sure to Update?"
-                    if (!window.confirm(r.data.message)) return;
-                    body.confirm = true;
-                    r = await apiRaw('POST', API + '/save', body);
-                }
                 if (!r.ok) {
                     var m = r.data && (r.data.message || r.data.error) || ('The request failed (' + r.status + ').');
                     alert(m);

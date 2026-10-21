@@ -41,6 +41,9 @@ import static com.mst.services.sale.engr.SaleEngrSupport.*;
  */
 @Service
 public class SaleInvoiceGdnMfgEngrService {
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.mst.repositories.support.CityQueries cityQueries;
+
     public static final String SCREEN = "frmSaleInvoiceEngr";
     public static final int DOC_TYPE = 1660;
     public static final int GDN_TYPE = 1659;
@@ -223,7 +226,7 @@ public class SaleInvoiceGdnMfgEngrService {
     /** CityDBCall: CommonServices.CityGetAllService = SP_City_GetAllMethod 'GetAll' (Id, CityName). */
     private List<Map<String, Object>> cities() {
         List<Map<String, Object>> out = new ArrayList<>();
-        for (Map<String, Object> r : sup.rows("SP_City_GetAllMethod", "OrganizationId", sup.org(), "CompanyId", sup.company(), "MethodType", "GetAll")) {
+        for (Map<String, Object> r : cityQueries.rows("OrganizationId", sup.org(), "CompanyId", sup.company(), "MethodType", "GetAll")) {
             Object name = ci(r, "CityName") != null ? ci(r, "CityName") : (ci(r, "Description") != null ? ci(r, "Description") : ci(r, "City"));
             out.add(row("Id", toInt(ci(r, "Id")), "CityName", str(name)));
         }

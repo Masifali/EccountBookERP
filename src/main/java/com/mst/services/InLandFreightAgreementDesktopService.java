@@ -48,6 +48,9 @@ import com.mst.security.CurrentUserContext;
  */
 @Service
 public class InLandFreightAgreementDesktopService {
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.mst.repositories.support.CityQueries cityQueries;
+
 
     public static final String SCREEN_NAME = "InLandFreightAgreement";
     public static final int DOCUMENT_TYPE_ID = 161;
@@ -99,7 +102,7 @@ public class InLandFreightAgreementDesktopService {
 
     public List<Map<String, Object>> cities() {
         List<Map<String, Object>> out = new ArrayList<>();
-        for (Map<String, Object> r : DesktopProc.rows(jdbc, "SP_City_GetAllMethod", DesktopProc.params(
+        for (Map<String, Object> r : cityQueries.rows(DesktopProc.params(
                 "OrganizationId", ctx.currentOrganizationId(), "CompanyId", ctx.currentCompanyId(), "MethodType", "GetAll"))) {
             Map<String, Object> o = new LinkedHashMap<>();
             o.put("Id", r.get("Id"));

@@ -24,6 +24,9 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public class AcRpt1Repository {
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.mst.repositories.support.CityQueries cityQueries;
+
     private final JdbcTemplate jdbc;
 
     public AcRpt1Repository(JdbcTemplate jdbc) { this.jdbc = jdbc; }
@@ -68,7 +71,7 @@ public class AcRpt1Repository {
 
     /** CommonServices.CityGetAllService: City.GetAll = SP_City_GetAllMethod 'GetAll'. */
     private List<Map<String, Object>> cities(UserAccount u) {
-        return norm(jdbc.queryForList("EXEC dbo.SP_City_GetAllMethod @OrganizationId=?, @CompanyId=?, @MethodType='GetAll'", u.getOrganizationId(), u.getCompanyId()));
+        return norm(cityQueries.rows("OrganizationId", u.getOrganizationId(), "CompanyId", u.getCompanyId(), "MethodType", "GetAll"));
     }
 
     /** CommonServices.MultiLanguagesGetAll: MultiLanguages.GetAll = Sp_MultiLanguages_GetAll 'ReadAll'. */

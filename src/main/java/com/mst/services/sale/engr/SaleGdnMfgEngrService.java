@@ -43,6 +43,9 @@ import static com.mst.services.sale.engr.SaleEngrSupport.*;
  */
 @Service
 public class SaleGdnMfgEngrService {
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.mst.repositories.support.CityQueries cityQueries;
+
     public static final String SCREEN = "frmGoodsDispatchNotesEngr";
     public static final String DO_SCREEN = "frmDeliveryOrderEngr";
     public static final int DOC_TYPE = 1659;
@@ -144,7 +147,7 @@ public class SaleGdnMfgEngrService {
         }
         m.put("castingTypes", cast);
         m.put("stages", stage);
-        m.put("cities", sup.rows("SP_City_GetAllMethod", "OrganizationId", sup.org(), "CompanyId", sup.company(), "MethodType", "GetAll"));
+        m.put("cities", cityQueries.rows("OrganizationId", sup.org(), "CompanyId", sup.company(), "MethodType", "GetAll"));
         return m;
     }
 

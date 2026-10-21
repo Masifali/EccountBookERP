@@ -30,6 +30,9 @@ import static com.mst.services.sale.engr.SaleEngrSupport.*;
  */
 @Service
 public class SaleOutwardGatePassEngrService {
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.mst.repositories.support.CityQueries cityQueries;
+
     public static final String SCREEN = "OutwardGatePassTrading";
     public static final int DOC_TYPE = 91;
 
@@ -49,7 +52,7 @@ public class SaleOutwardGatePassEngrService {
         m.put("orderTypes", sup.rows("USP_GetOrderTypeForOutwardGP_Engr", "OrganizationId", sup.org(), "CompanyId", sup.company()));   // GpBasedOn
         m.put("gatePassTypes", sup.rows("Sp_GatePassType_GetAllMethod", "OrganizationId", sup.org(), "CompanyId", sup.company(), "Activity", "Outward"));   // gatepasstype
         m.put("vehicleTypes", sup.rows("Sp_VehicleType_GetAllMethod"));                // VehicleType.GetAll()
-        m.put("cities", sup.rows("SP_City_GetAllMethod", "OrganizationId", sup.org(), "CompanyId", sup.company(), "MethodType", "GetAll"));   // City.GetAll
+        m.put("cities", cityQueries.rows("OrganizationId", sup.org(), "CompanyId", sup.company(), "MethodType", "GetAll"));   // City.GetAll
         m.put("customers", suppliers());                                               // SupplierFill
         m.put("historyCustomers", sup.rows("Usp_SupplierCustomerAgainstOutwarGP", "OrganizationId", sup.org(), "CompanyId", sup.company()));   // CustomerHistoryFill
         m.put("openRecords", openRecords());                                           // grdfrmfill

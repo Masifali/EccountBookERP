@@ -50,6 +50,9 @@ import java.util.function.Supplier;
  */
 @Repository
 public class ImpBRepository {
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.mst.repositories.support.CountryQueries countryQueries;
+
 
     public static final String IMEX = "[ImEx].";
 
@@ -112,7 +115,7 @@ public class ImpBRepository {
 
     /** country.GetAll(new Country{Org, Company}) - SP_Country_ReadMethod @MethodType GetAll. */
     public List<Map<String, Object>> countries(UserAccount u) {
-        return rows("SP_Country_ReadMethod", kv(tenancy(u), "MethodType", "GetAll"));
+        return countryQueries.rows(kv(tenancy(u), "MethodType", "GetAll"));
     }
 
     /** Bank.GetAll - Sp_Bank_GetAllMethod @Activity ReadAll. */

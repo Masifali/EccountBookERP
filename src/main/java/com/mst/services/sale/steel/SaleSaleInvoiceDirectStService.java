@@ -47,6 +47,9 @@ import static com.mst.services.sale.steel.SaleStInvoiceCalc.num;
  */
 @Service
 public class SaleSaleInvoiceDirectStService {
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.mst.repositories.support.CityQueries cityQueries;
+
     public static final String SCREEN = "SaleInvoiceDirect_St";
     public static final int DOC_TYPE = 1510;
     private static final String P_INV = "[ST].[USP_SaleInvoice_GetAllMethod]";
@@ -96,7 +99,7 @@ public class SaleSaleInvoiceDirectStService {
 
     /** CityFill :1190 - City.GetAll. */
     public List<Map<String, Object>> cities() {
-        return pick(sup.rows("SP_City_GetAllMethod", "OrganizationId", sup.org(), "CompanyId", sup.company(), "MethodType", "GetAll"), "Id", "CityName");
+        return pick(cityQueries.rows("OrganizationId", sup.org(), "CompanyId", sup.company(), "MethodType", "GetAll"), "Id", "CityName");
     }
 
     /** PackUOM :1126 - CommonServices.GetUomScheduleByItemId (Id, UOMCode, Equivalent). */

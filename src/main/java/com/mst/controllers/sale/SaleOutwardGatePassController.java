@@ -4,4 +4,9 @@ package com.mst.controllers.sale;import com.mst.models.dto.SaleOutwardGatePassRe
  @RequestParam(required=false) @DateTimeFormat(iso=DateTimeFormat.ISO.DATE) LocalDate toDate,
  @RequestParam(defaultValue="document") String dateType,
  @RequestParam(defaultValue="0") int fromNo,@RequestParam(defaultValue="0") int toNo,
- @RequestParam(defaultValue="0") int customerId){return s.history(new SaleOutwardGatePassHistoryFilter(fromDate,toDate,dateType,fromNo,toNo,customerId));}@GetMapping("/{id}")Object record(@PathVariable int id){return s.record(id);}@PostMapping Object save(@RequestBody SaleOutwardGatePassRequest r){return s.save(r);}}
+ @RequestParam(defaultValue="0") int customerId){return s.history(new SaleOutwardGatePassHistoryFilter(fromDate,toDate,dateType,fromNo,toNo,customerId));}@GetMapping("/customers")Object customers(@RequestParam String kind){return s.customers(kind);}
+ @GetMapping("/order-detail")Object orderDetail(@RequestParam String kind,
+ @RequestParam(required=false) @DateTimeFormat(iso=DateTimeFormat.ISO.DATE) LocalDate fromDate,
+ @RequestParam(required=false) @DateTimeFormat(iso=DateTimeFormat.ISO.DATE) LocalDate toDate,
+ @RequestParam(defaultValue="0") int fromNo,@RequestParam(defaultValue="0") int toNo,@RequestParam(defaultValue="0") int customerId){return s.orderDetail("so".equals(kind),fromDate,toDate,fromNo,toNo,customerId);}
+ @GetMapping("/{id}")Object record(@PathVariable int id){return s.record(id);}@PostMapping Object save(@RequestBody SaleOutwardGatePassRequest r){return s.save(r);}}

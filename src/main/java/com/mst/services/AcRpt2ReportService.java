@@ -37,6 +37,9 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class AcRpt2ReportService {
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.mst.repositories.support.CityQueries cityQueries;
+
     private static final Logger LOG = LoggerFactory.getLogger(AcRpt2ReportService.class);
 
     private final JdbcTemplate jdbc;
@@ -324,7 +327,7 @@ public class AcRpt2ReportService {
         }
         out.put("accounts", accounts);
         List<Map<String, Object>> cities = new ArrayList<>();
-        for (Map<String, Object> r : DesktopProc.rows(jdbc, "SP_City_GetAllMethod", DesktopProc.params(
+        for (Map<String, Object> r : cityQueries.rows(DesktopProc.params(
                 "OrganizationId", u.getOrganizationId(), "CompanyId", u.getCompanyId(), "MethodType", "GetAll"))) {
             Map<String, Object> o = new LinkedHashMap<>();
             o.put("Id", toInt(r.get("Id")));

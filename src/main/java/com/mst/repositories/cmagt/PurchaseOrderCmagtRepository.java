@@ -14,6 +14,12 @@ import java.util.*;
 
 @Repository
 public class PurchaseOrderCmagtRepository {
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.mst.repositories.support.CountryQueries countryQueries;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.mst.repositories.support.CityQueries cityQueries;
+
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -266,7 +272,7 @@ public class PurchaseOrderCmagtRepository {
         p.put("OrganizationId", 0);
         p.put("CompanyId", 0);
         p.put("MethodType", "GetAll");
-        return execProc("[dbo].[SP_Country_ReadMethod]", p);
+        return countryQueries.rows(p);
     }
 
     /** cmbcountry_Leave -> City.GetAll(org, company) with @MethodType='GetAll'. */
@@ -275,7 +281,7 @@ public class PurchaseOrderCmagtRepository {
         p.put("OrganizationId", orgId);
         p.put("CompanyId", companyId);
         p.put("MethodType", "GetAll");
-        return execProc("[dbo].[SP_City_GetAllMethod]", p);
+        return cityQueries.rows(p);
     }
 
     /** gridFill -> SupplierCustomerShipToAddress.FormHistory(org, company). */

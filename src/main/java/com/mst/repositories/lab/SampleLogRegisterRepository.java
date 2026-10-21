@@ -22,6 +22,9 @@ import java.util.Map;
  */
 @Repository
 public class SampleLogRegisterRepository {
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.mst.repositories.support.CityQueries cityQueries;
+
 
     private final JdbcTemplate jdbc;
 
@@ -77,9 +80,7 @@ public class SampleLogRegisterRepository {
      * value 'GetAll' (proc :52099). Value Id, display CityName.
      */
     public List<Map<String, Object>> cities(int organizationId, int companyId) {
-        return jdbc.queryForList(
-                "EXEC dbo.SP_City_GetAllMethod @OrganizationId=?, @CompanyId=?, @MethodType=?",
-                organizationId, companyId, "GetAll");
+        return cityQueries.rows("OrganizationId", organizationId, "CompanyId", companyId, "MethodType", "GetAll");
     }
 
     /**

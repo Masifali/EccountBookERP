@@ -22,6 +22,12 @@ import java.util.function.Supplier;
  */
 @Repository
 public class PpARepository {
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.mst.repositories.support.CountryQueries countryQueries;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.mst.repositories.support.CityQueries cityQueries;
+
 
     @Autowired private HrmProcRepository db;
 
@@ -212,12 +218,12 @@ public class PpARepository {
 
     /** country.GetAll: SP_Country_ReadMethod @OrganizationId, @CompanyId, @MethodType='GetAll'. */
     public List<Map<String, Object>> countries(UserAccount u) {
-        return db.rows("SP_Country_ReadMethod", oc(u, "MethodType", "GetAll"));
+        return countryQueries.rows(oc(u, "MethodType", "GetAll"));
     }
 
     /** City.GetAll: SP_City_GetAllMethod @OrganizationId, @CompanyId, @MethodType='GetAll'. */
     public List<Map<String, Object>> cities(UserAccount u) {
-        return db.rows("SP_City_GetAllMethod", oc(u, "MethodType", "GetAll"));
+        return cityQueries.rows(oc(u, "MethodType", "GetAll"));
     }
 
     /** SupplierCustomer.Getall: 'ReadByOrganizationCompanyId' (cmbglac_Leave scans it for the GL account). */

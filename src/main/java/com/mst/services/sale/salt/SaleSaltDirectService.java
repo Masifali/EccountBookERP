@@ -50,6 +50,9 @@ import static com.mst.services.sale.steel.SaleStInvoiceCalc.num;
  */
 @Service
 public class SaleSaltDirectService {
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.mst.repositories.support.CityQueries cityQueries;
+
     public static final String SCREEN = "frmSaleDirectInvoice";
     public static final int DOC_TYPE = 1809;
     private static final String P_INV = "Sp_InvSaleInvoice_GetAllMethod";
@@ -106,7 +109,7 @@ public class SaleSaltDirectService {
 
     /** BinCity :663 - CityGetAllService -> City.GetAll. */
     public List<Map<String, Object>> cities() {
-        return pick(sup.rows("SP_City_GetAllMethod", "OrganizationId", sup.org(), "CompanyId", sup.company(), "MethodType", "GetAll"), "Id", "CityName");
+        return pick(cityQueries.rows("OrganizationId", sup.org(), "CompanyId", sup.company(), "MethodType", "GetAll"), "Id", "CityName");
     }
 
     /** suppliercustomer :692 - SupplierCustomerGetAllServiceBind (Id, CompanyName; GlAccountId for txtSupplierGLId). */

@@ -36,6 +36,9 @@ import static com.mst.services.sale.engr.SaleEngrSupport.*;
  */
 @Service
 public class SaleSoMfgEngrService {
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.mst.repositories.support.CityQueries cityQueries;
+
     public static final String SCREEN = "frmSaleOrderEngr";
     public static final int DOC_TYPE = 1656;
 
@@ -142,7 +145,7 @@ public class SaleSoMfgEngrService {
 
     /** CommonServices.CityGetAllService -> City.GetAll -> SP_City_GetAllMethod @MethodType='GetAll'. */
     public List<Map<String, Object>> cities() {
-        return sup.rows("SP_City_GetAllMethod", "OrganizationId", sup.org(), "CompanyId", sup.company(), "MethodType", "GetAll");
+        return cityQueries.rows("OrganizationId", sup.org(), "CompanyId", sup.company(), "MethodType", "GetAll");
     }
 
     /** MultiCurrency.GetAll -> Sp_MultiCurrency_GetAllMethod 'ReadAll'. */

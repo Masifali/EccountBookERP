@@ -16,6 +16,9 @@ import static com.mst.services.sale.engr.SaleEngrSupport.*;
  */
 @Component
 public class SalePccLookups {
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.mst.repositories.support.CityQueries cityQueries;
+
     private final SaleEngrSupport sup;
     private final DesktopReportRights screenRights;
 
@@ -53,7 +56,7 @@ public class SalePccLookups {
 
     /** CommonServices.CityGetAllService = City.GetAll. */
     public List<Map<String, Object>> cities() {
-        return sup.rows("SP_City_GetAllMethod", "OrganizationId", sup.org(), "CompanyId", sup.company(), "MethodType", "GetAll");
+        return cityQueries.rows("OrganizationId", sup.org(), "CompanyId", sup.company(), "MethodType", "GetAll");
     }
 
     /** VehicleType.GetAll(). */

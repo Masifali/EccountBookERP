@@ -34,6 +34,12 @@ import static com.mst.repositories.support.DesktopProc.params;
  */
 @Repository
 public class AccountsDefinitionMasterRepository {
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.mst.repositories.support.CountryQueries countryQueries;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.mst.repositories.support.CityQueries cityQueries;
+
 
     private final JdbcTemplate jdbc;
 
@@ -179,14 +185,12 @@ public class AccountsDefinitionMasterRepository {
 
     /** CountryComboFill - country.GetAll with the session's ids (the GetAll branch ignores them). */
     public List<Map<String, Object>> countries(UserAccount u) {
-        return DesktopProc.rows(jdbc, "SP_Country_ReadMethod",
-                params("OrganizationId", u.getOrganizationId(), "CompanyId", u.getCompanyId(), "MethodType", "GetAll"));
+        return countryQueries.rows(params("OrganizationId", u.getOrganizationId(), "CompanyId", u.getCompanyId(), "MethodType", "GetAll"));
     }
 
     /** CityFill - City.GetAll 'GetAll' (CityName). */
     public List<Map<String, Object>> cities(UserAccount u) {
-        return DesktopProc.rows(jdbc, "SP_City_GetAllMethod",
-                params("OrganizationId", u.getOrganizationId(), "CompanyId", u.getCompanyId(), "MethodType", "GetAll"));
+        return cityQueries.rows(params("OrganizationId", u.getOrganizationId(), "CompanyId", u.getCompanyId(), "MethodType", "GetAll"));
     }
 
     /** ChequeTempleteFill - CommonServices.StaticColumnsService("ChequeTempletes") -> SpStaticColumnNames (Id, type). */

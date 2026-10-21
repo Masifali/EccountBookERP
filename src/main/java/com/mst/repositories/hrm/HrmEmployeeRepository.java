@@ -43,6 +43,12 @@ import java.util.Map;
  */
 @Repository
 public class HrmEmployeeRepository {
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.mst.repositories.support.CountryQueries countryQueries;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.mst.repositories.support.CityQueries cityQueries;
+
 
     private static final String EMP = "Sp_genEmployee_GetAllMethod";
 
@@ -98,12 +104,12 @@ public class HrmEmployeeRepository {
 
     /** CountryFill: country.GetAll(new Country()) - the form passes an EMPTY Country, so @OrganizationId = @CompanyId = 0, @MethodType 'GetAll'. */
     public List<Map<String, Object>> countries() {
-        return db.rows("SP_Country_ReadMethod", "OrganizationId", 0, "CompanyId", 0, "MethodType", "GetAll");
+        return countryQueries.rows("OrganizationId", 0, "CompanyId", 0, "MethodType", "GetAll");
     }
 
     /** CityFill: City.GetAll - @OrganizationId, @CompanyId, @MethodType 'GetAll'. */
     public List<Map<String, Object>> cities(UserAccount u) {
-        return db.rows("SP_City_GetAllMethod", "OrganizationId", u.getOrganizationId(), "CompanyId", u.getCompanyId(), "MethodType", "GetAll");
+        return cityQueries.rows("OrganizationId", u.getOrganizationId(), "CompanyId", u.getCompanyId(), "MethodType", "GetAll");
     }
 
     /** ProvinceFill: StateProvince.GetAll - @Activity 'ReadAll', @OrganizationId, @CompanyId (clsGlobalVariables.UserAccount). */

@@ -14,6 +14,9 @@ import java.util.*;
 
 @Service
 public class PurchaseOrderFullService {
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.mst.repositories.support.CityQueries cityQueries;
+
 
     private static final org.slf4j.Logger CHARGE_ACCT_LOG =
             org.slf4j.LoggerFactory.getLogger(PurchaseOrderFullService.class);
@@ -552,11 +555,7 @@ public class PurchaseOrderFullService {
      */
     public List<Map<String, Object>> searchCities(String query) {
         List<Map<String, Object>> out = new ArrayList<>();
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList(
-                "EXEC dbo.SP_City_GetAllMethod @OrganizationId=?, @CompanyId=?, @MethodType=?",
-                currentUserContext.currentOrganizationId(),
-                currentUserContext.currentCompanyId(),
-                "GetAll");
+        List<Map<String, Object>> rows = cityQueries.rows("OrganizationId", currentUserContext.currentOrganizationId(), "CompanyId", currentUserContext.currentCompanyId(), "MethodType", "GetAll");
         String q = query == null ? "" : query.trim().toLowerCase();
         for (Map<String, Object> r : rows) {
             Object id   = ci(r, "Id");

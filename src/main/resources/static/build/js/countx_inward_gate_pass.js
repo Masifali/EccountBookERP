@@ -814,8 +814,26 @@
 
     /* ---------------- printing: the same .rpt through the shared print runtime ---------------- */
     function igpPrint(rpt, args) {
-        if (window.printRpt) return window.printRpt(rpt, args);
-        alert('The print runtime is not loaded on this page.');
+        if (!(Number(args.id || args.history) > 0)) {
+            alert('Open or save a gate pass before printing.');
+            return;
+        }
+        if (!window.printRpt) { alert('The print runtime is not loaded on this page.'); return; }
+        // Reserve the preview during the click, before fetching report metadata.
+        const preview = window.open('about:blank', '_blank');
+        if (preview) return window.printRpt(rpt, args, null, preview);
+        // A blocked popup must not prevent printing a saved document.
+        return fetch('/reports/print/controls?rpt=' + encodeURIComponent(rpt), {credentials:'same-origin'})
+            .then(response => { if (!response.ok) throw new Error('Could not load the print action.'); return response.json(); })
+            .then(info => {
+                if (!info.pdf) throw new Error('No print action is registered for ' + rpt);
+                return fetch(info.pdf + '?' + new URLSearchParams(args), {credentials:'same-origin'});
+            })
+            .then(async response => {
+                if (!response.ok) throw new Error(await response.text() || 'Print failed.');
+                if (!(response.headers.get('Content-Type') || '').includes('application/pdf')) throw new Error('The print service did not return a PDF.');
+                window.location.assign(URL.createObjectURL(await response.blob()));
+            }).catch(error => alert(error.message));
     }
     /* grd / grdhistory "Print" column and ChkBox preview: CommonServices.GatePassInwardSlipAndRegisterReport(Id) */
     function printSlip251(id) { return igpPrint('251-InvRptInwardGatePassSlip.rpt', { id: Number(id) }); }

@@ -34,6 +34,9 @@ import static com.mst.services.sale.engr.SaleEngrSupport.*;
  */
 @Service
 public class SaleSaleOrderStService {
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.mst.repositories.support.CityQueries cityQueries;
+
     public static final String SCREEN = "SaleOrder_St";
     public static final int DOC_TYPE = 1505;
     private static final String P_SO = "[ST].[USP_SaleOrder_GetAllMethod]";
@@ -70,7 +73,7 @@ public class SaleSaleOrderStService {
         m.put("items", look.items());
         m.put("jobLots", look.jobLots());
         m.put("packingTypes", look.packingTypes());
-        m.put("cities", sup.rows("SP_City_GetAllMethod", "OrganizationId", sup.org(), "CompanyId", sup.company(), "MethodType", "GetAll"));
+        m.put("cities", cityQueries.rows("OrganizationId", sup.org(), "CompanyId", sup.company(), "MethodType", "GetAll"));
         return m;
     }
 

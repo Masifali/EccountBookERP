@@ -25,6 +25,9 @@ import com.mst.security.CurrentUserContext;
  */
 @Service
 public class ChartOfAccountDesktopService {
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.mst.repositories.support.CityQueries cityQueries;
+
 
     public static final String SCREEN_NAME = "AcfrmDefCoa";
 
@@ -75,7 +78,7 @@ public class ChartOfAccountDesktopService {
         out.put("customerGroups", DesktopProc.rows(jdbc, "Sp_CustomerGroup_GetAllMethod", DesktopProc.params(
                 "Activity", "ReadAll", "OrganizationId", org, "CompanyId", company)));
         /* cmbCityFill: City.GetAll */
-        out.put("cities", DesktopProc.rows(jdbc, "SP_City_GetAllMethod", DesktopProc.params(
+        out.put("cities", cityQueries.rows(DesktopProc.params(
                 "OrganizationId", org, "CompanyId", company, "MethodType", "GetAll")));
         /* BranchesBindInGrid: CommonServices.CompanyServiceBind -> Company.GetAlldt(OrgCompanyTypeId = org) */
         out.put("locations", DesktopProc.rows(jdbc, "Sp_Company_GetAllMethod", DesktopProc.params(

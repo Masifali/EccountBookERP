@@ -42,6 +42,9 @@ import com.mst.security.CurrentUserContext;
  */
 @Service
 public class SupplierDesktopService {
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.mst.repositories.support.CountryQueries countryQueries;
+
 
     public static final String SCREEN_NAME = "supfrmDefineSupplier";
 
@@ -68,7 +71,7 @@ public class SupplierDesktopService {
         out.put("partyGroups", DesktopProc.rows(jdbc, "Sp_CustomerGroup_GetAllMethod", DesktopProc.params(
                 "Activity", "ReadAll", "OrganizationId", org(), "CompanyId", company())));
         out.put("discountPolicies", discountPolicies());
-        out.put("countries", DesktopProc.rows(jdbc, "SP_Country_ReadMethod", DesktopProc.params(
+        out.put("countries", countryQueries.rows(DesktopProc.params(
                 "OrganizationId", org(), "CompanyId", company(), "MethodType", "GetAll")));
         out.put("cities", DesktopProc.rows(jdbc, "[dbo].[USP_City_GetAllWithCountryAndTehsil]", DesktopProc.params(
                 "OrganizationId", org(), "CompanyId", company())));

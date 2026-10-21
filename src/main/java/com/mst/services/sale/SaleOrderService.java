@@ -20,6 +20,9 @@ import java.util.*;
 
 @Service
 public class SaleOrderService {
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.mst.repositories.support.CityQueries cityQueries;
+
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -99,7 +102,6 @@ public class SaleOrderService {
     private static final String SQL_PACKING_TYPES = "EXEC Sp_InvPackingType_GetAllMethod @Activity=?";
 
     /** SP_City_GetAllMethod @MethodType='GetAll', matching City.GetAll(...). */
-    private static final String SQL_CITIES = "EXEC SP_City_GetAllMethod @OrganizationId=?, @CompanyId=?, @MethodType=?";
 
     /** USP_GetWarehousesAllocatedToBranch, matching WarehousesAllocationToBranch.GetWarehousesAllocatedToBranchByBranchId. @BranchId may be NULL (all branches). */
     private static final String SQL_WAREHOUSES = "EXEC USP_GetWarehousesAllocatedToBranch @OrganizationId=?, @CompanyId=?, @BranchId=?";
@@ -331,7 +333,7 @@ public class SaleOrderService {
 
         // City/Area - SP_City_GetAllMethod @MethodType='GetAll' (Id, Code, CityName, CityNameOtherLingo, ...)
         try {
-            map.put("cities", jdbcTemplate.queryForList(SQL_CITIES, orgId, compId, "GetAll"));
+            map.put("cities", cityQueries.rows("OrganizationId", orgId, "CompanyId", compId, "MethodType", "GetAll"));
         } catch (Exception e) {
             map.put("cities", Collections.emptyList());
         }
