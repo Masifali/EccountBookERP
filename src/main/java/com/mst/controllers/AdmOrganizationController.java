@@ -25,6 +25,8 @@ import java.util.function.Supplier;
 @Controller
 public class AdmOrganizationController {
 
+
+
     private static final String API = "/api/adm-org";
 
     @Autowired private AdmOrganizationService service;
