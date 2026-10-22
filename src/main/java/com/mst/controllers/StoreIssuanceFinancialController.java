@@ -19,7 +19,6 @@ import java.util.Map;
 @Controller
 public class StoreIssuanceFinancialController {
 
-    private static final String API = "/api/store/store-issuance-financial";
     private final StoreIssuanceFinancialService service;
     public StoreIssuanceFinancialController(StoreIssuanceFinancialService service) { this.service = service; }
 
@@ -30,18 +29,18 @@ public class StoreIssuanceFinancialController {
         return "store/store_issuance_financial";
     }
 
-    @GetMapping(API + "/setup") @ResponseBody
+    @GetMapping("/api/store/store-issuance-financial/setup") @ResponseBody
     public Map<String, Object> setup() { return service.setup(); }
 
-    @GetMapping(API + "/doc-no") @ResponseBody
+    @GetMapping("/api/store/store-issuance-financial/doc-no") @ResponseBody
     public Map<String, Object> docNo() { return service.docNo(); }
 
-    @GetMapping(API + "/history") @ResponseBody
+    @GetMapping("/api/store/store-issuance-financial/history") @ResponseBody
     public List<Map<String, Object>> history() { return service.history(); }
 
-    @GetMapping(API + "/load") @ResponseBody
+    @GetMapping("/api/store/store-issuance-financial/load") @ResponseBody
     public Map<String, Object> load(@RequestParam int id) { return service.load(id); }
 
-    @PostMapping(API + "/update") @ResponseBody
+    @PostMapping("/api/store/store-issuance-financial/update") @ResponseBody
     public Map<String, Object> update(@RequestBody Map<String, Object> body) { return service.update(body); }
 }

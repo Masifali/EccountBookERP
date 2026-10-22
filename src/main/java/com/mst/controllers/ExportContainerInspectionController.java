@@ -30,22 +30,22 @@ public class ExportContainerInspectionController {
         return "export/container_inspection";
     }
 
-    @GetMapping(API + "/setup") @ResponseBody
+    @GetMapping("/api/export/container-inspection/setup") @ResponseBody
     public ResponseEntity<?> setup() { return call(() -> svc.setup(), "Error occurred during database call."); }
 
-    @GetMapping(API + "/gate-passes") @ResponseBody
+    @GetMapping("/api/export/container-inspection/gate-passes") @ResponseBody
     public ResponseEntity<?> gatePasses(@RequestParam(value = "id", defaultValue = "0") int id) { return call(() -> svc.gatePasses(id), "Load failed."); }
 
-    @GetMapping(API + "/by-gate-pass") @ResponseBody
+    @GetMapping("/api/export/container-inspection/by-gate-pass") @ResponseBody
     public ResponseEntity<?> byGatePass(@RequestParam("gatePassId") int gatePassId) { return call(() -> svc.readByGatePass(gatePassId), "Load failed."); }
 
-    @GetMapping(API + "/history-detail") @ResponseBody
+    @GetMapping("/api/export/container-inspection/history-detail") @ResponseBody
     public ResponseEntity<?> historyDetail(@RequestParam("gatePassId") int gatePassId) { return call(() -> svc.historyDetail(gatePassId), "Load failed."); }
 
-    @PostMapping(API + "/history") @ResponseBody
+    @PostMapping("/api/export/container-inspection/history") @ResponseBody
     public ResponseEntity<?> history(@RequestBody Map<String, Object> body) { return call(() -> svc.history(body), "Load failed."); }
 
-    @PostMapping(API + "/save") @ResponseBody
+    @PostMapping("/api/export/container-inspection/save") @ResponseBody
     public ResponseEntity<?> save(@RequestBody Map<String, Object> body) { return call(() -> svc.save(body), "Save failed."); }
 
     private interface Call { Object run() throws Exception; }

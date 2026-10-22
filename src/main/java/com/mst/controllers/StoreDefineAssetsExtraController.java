@@ -26,70 +26,68 @@ import java.util.Map;
 @RestController
 public class StoreDefineAssetsExtraController {
 
-    private static final String CAT = "/api/store/define/asset-category";
-    private static final String FAI = "/api/store/define/fixed-asset-item";
 
     private final StoreDefineAssetsExtraService service;
     public StoreDefineAssetsExtraController(StoreDefineAssetsExtraService service) { this.service = service; }
 
     // ------------------------------------------------------------------ frmItemCatagoryStore (FormTypeId 3)
 
-    @GetMapping(CAT + "/lookups")
+    @GetMapping("/api/store/define/asset-category/lookups")
     public ResponseEntity<?> categoryLookups(@RequestParam(required = false) String host) {
         return run(() -> service.categoryLookups(host), "Could not load the screen.");
     }
 
-    @GetMapping(CAT + "/history")
+    @GetMapping("/api/store/define/asset-category/history")
     public ResponseEntity<?> categoryHistory(@RequestParam(required = false) String host) {
         return run(() -> service.categoryHistory(host), "History failed.");
     }
 
-    @GetMapping(CAT + "/attributes")
+    @GetMapping("/api/store/define/asset-category/attributes")
     public ResponseEntity<?> categoryAttributes(@RequestParam(defaultValue = "0") int categoryId,
                                                 @RequestParam(required = false) String host) {
         return run(() -> service.categoryAttributes(categoryId, host), "Could not load the attributes.");
     }
 
-    @GetMapping(CAT + "/{id}")
+    @GetMapping("/api/store/define/asset-category/{id}")
     public ResponseEntity<?> category(@PathVariable int id, @RequestParam(required = false) String host) {
         return run(() -> service.category(id, host), "Could not open the category.");
     }
 
-    @PostMapping(CAT + "/save")
+    @PostMapping("/api/store/define/asset-category/save")
     public ResponseEntity<?> categorySave(@RequestBody StoreDefineAssetsExtraDto.AssetCategory body) {
         return run(() -> service.saveCategory(body), "Save failed.");
     }
 
     // ------------------------------------------------------------------ frmDefineAssets
 
-    @GetMapping(FAI + "/lookups")
+    @GetMapping("/api/store/define/fixed-asset-item/lookups")
     public ResponseEntity<?> itemLookups(@RequestParam(required = false) String host) {
         return run(() -> service.assetItemLookups(host), "Could not load the screen.");
     }
 
-    @GetMapping(FAI + "/categories")
+    @GetMapping("/api/store/define/fixed-asset-item/categories")
     public ResponseEntity<?> itemCategories(@RequestParam(required = false) String host) {
         return run(() -> service.assetItemCategories(host), "Could not load the categories.");
     }
 
-    @GetMapping(FAI + "/category-leave")
+    @GetMapping("/api/store/define/fixed-asset-item/category-leave")
     public ResponseEntity<?> itemCategoryLeave(@RequestParam(defaultValue = "0") int categoryId,
                                                @RequestParam(required = false) String host) {
         return run(() -> service.assetItemCategoryLeave(categoryId, host), "Record Not Found");
     }
 
-    @GetMapping(FAI + "/history")
+    @GetMapping("/api/store/define/fixed-asset-item/history")
     public ResponseEntity<?> itemHistory(@RequestParam(defaultValue = "0") int noOfRecords,
                                          @RequestParam(required = false) String host) {
         return run(() -> service.assetItemHistory(noOfRecords, host), "History failed.");
     }
 
-    @GetMapping(FAI + "/{id}")
+    @GetMapping("/api/store/define/fixed-asset-item/{id}")
     public ResponseEntity<?> item(@PathVariable int id, @RequestParam(required = false) String host) {
         return run(() -> service.assetItem(id, host), "Could not open the asset item.");
     }
 
-    @PostMapping(FAI + "/save")
+    @PostMapping("/api/store/define/fixed-asset-item/save")
     public ResponseEntity<?> itemSave(@RequestBody StoreDefineAssetsExtraDto.FixedAssetItem body) {
         return run(() -> service.saveAssetItem(body), "Save failed.");
     }

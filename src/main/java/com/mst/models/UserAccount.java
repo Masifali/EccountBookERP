@@ -112,8 +112,8 @@ public class UserAccount {
 	@Column(name = "AppId")
 	private Integer appId;
 
-	@Column(name = "EmployeeId")
-	private Integer employeeId;
+/*	@Column(name = "EmployeeId")
+	private Integer employeeId;*/
 
 	@Column(name = "AuthenticationCode")
 	private Integer authenticationCode;
@@ -130,8 +130,8 @@ public class UserAccount {
 	@Column(name = "IsActive")
 	private Boolean isActive = true;
 
-	@Column(name = "DeviceDependency")
-	private Boolean deviceDependency = false;
+//	@Column(name = "DeviceDependency")
+//	private Boolean deviceDependency = false;
 
 	@Column(name = "EntryDate")
 	private LocalDateTime entryDate;

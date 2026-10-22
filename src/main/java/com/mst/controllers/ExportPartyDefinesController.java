@@ -33,47 +33,47 @@ public class ExportPartyDefinesController {
         return "export/parties_define";
     }
 
-    @GetMapping(API + "/setup") @ResponseBody
+    @GetMapping("/api/export/parties-define/setup") @ResponseBody
     public ResponseEntity<?> setup() { return call(() -> svc.setup(), "Error occurred during database call."); }
 
-    @GetMapping(API + "/refresh") @ResponseBody
+    @GetMapping("/api/export/parties-define/refresh") @ResponseBody
     public ResponseEntity<?> refresh() { return call(() -> svc.refresh(), "Load failed."); }
 
-    @GetMapping(API + "/gl-accounts") @ResponseBody
+    @GetMapping("/api/export/parties-define/gl-accounts") @ResponseBody
     public ResponseEntity<?> glAccounts(@RequestParam(value = "recId", defaultValue = "0") int recId) {
         return call(() -> svc.glAccounts(recId), "Load failed.");
     }
 
-    @GetMapping(API + "/by-id") @ResponseBody
+    @GetMapping("/api/export/parties-define/by-id") @ResponseBody
     public ResponseEntity<?> byId(@RequestParam("id") int id) { return call(() -> svc.readById(id), "Load failed."); }
 
-    @GetMapping(API + "/gl-leave") @ResponseBody
+    @GetMapping("/api/export/parties-define/gl-leave") @ResponseBody
     public ResponseEntity<?> glLeave(@RequestParam("glAccountId") int glAccountId) {
         return call(() -> svc.glAccountLeave(glAccountId), "Id Not Found");
     }
 
-    @PostMapping(API + "/save") @ResponseBody
+    @PostMapping("/api/export/parties-define/save") @ResponseBody
     public ResponseEntity<?> save(@RequestBody Map<String, Object> body) { return call(() -> svc.saveParty(body), "Save failed."); }
 
-    @PostMapping(API + "/update-row") @ResponseBody
+    @PostMapping("/api/export/parties-define/update-row") @ResponseBody
     public ResponseEntity<?> updateRow(@RequestBody Map<String, Object> body) { return call(() -> svc.updatePartyRow(body), "Update failed."); }
 
-    @PostMapping(API + "/update-rows") @ResponseBody
+    @PostMapping("/api/export/parties-define/update-rows") @ResponseBody
     public ResponseEntity<?> updateRows(@RequestBody Map<String, Object> body) { return call(() -> svc.updatePartyRows(body), "Update failed."); }
 
-    @GetMapping(API + "/consignee/by-id") @ResponseBody
+    @GetMapping("/api/export/parties-define/consignee/by-id") @ResponseBody
     public ResponseEntity<?> consigneeById(@RequestParam("id") int id,
                                            @RequestParam(value = "mainRecId", defaultValue = "0") int mainRecId) {
         return call(() -> svc.readConsigneeById(id, mainRecId), "Load failed.");
     }
 
-    @PostMapping(API + "/consignee/save") @ResponseBody
+    @PostMapping("/api/export/parties-define/consignee/save") @ResponseBody
     public ResponseEntity<?> consigneeSave(@RequestBody Map<String, Object> body) { return call(() -> svc.saveConsignee(body), "Save failed."); }
 
-    @PostMapping(API + "/consignee/update-row") @ResponseBody
+    @PostMapping("/api/export/parties-define/consignee/update-row") @ResponseBody
     public ResponseEntity<?> consigneeUpdateRow(@RequestBody Map<String, Object> body) { return call(() -> svc.updateConsigneeRow(body), "Update failed."); }
 
-    @PostMapping(API + "/consignee/update-rows") @ResponseBody
+    @PostMapping("/api/export/parties-define/consignee/update-rows") @ResponseBody
     public ResponseEntity<?> consigneeUpdateRows(@RequestBody Map<String, Object> body) { return call(() -> svc.updateConsigneeRows(body), "Update failed."); }
 
     // ------------------------------------------------------------------ plumbing

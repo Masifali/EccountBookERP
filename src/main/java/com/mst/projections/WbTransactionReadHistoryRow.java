@@ -1,0 +1,59 @@
+package com.mst.projections;
+
+import java.math.BigDecimal;
+import java.sql.Timestamp;
+
+/** Row of Sp_WbTransation_GetAllMethod @Activity='ReadHistory' (native) */
+public interface WbTransactionReadHistoryRow {
+    Integer getId();
+    Integer getDocTypeId();
+    Integer getEntryNo();
+    String getWeighBridgeType();
+    Timestamp getDocDate();
+    Integer getTicketNo();
+    Integer getReferenceDocTypeId();
+    String getDocumentTypeCode();
+    String getDocumentTypeDescription();
+    Integer getReferenceDocNoId();
+    String getVehicleNo();
+    String getBiltyNo();
+    Integer getSupplierCustomerId();
+    String getPartyName();
+    String getCompanyName();
+    String getSupCustCode();
+    String getItemDescription();
+    BigDecimal getItemQty();
+    BigDecimal getWbCharges();
+    BigDecimal getFirstWeight();
+    String getPackingType();
+    Timestamp getFirstDateTime();
+    String getFirstWtPicReading();
+    String getFirstWtUpperPic();
+    String getFirstWtFrontPic();
+    BigDecimal getSecondWeight();
+    Timestamp getSecondDateTime();
+    String getSecondPicReading();
+    String getSecondWtUpperPic();
+    String getSecondWtFrontPic();
+    String getWbRemarks();
+    Timestamp getEntryDate();
+    Integer getEntryUser();
+    Timestamp getModifyDate();
+    Integer getModifyUser();
+    Boolean getIsApproved();
+    Integer getApprovedUserId();
+    Timestamp getApprovedDateTime();
+    Integer getOrganizationId();
+    BigDecimal getNetWbWeight();
+    Integer getCompanyId();
+    String getDocType();
+    BigDecimal getLoadWeight();
+    BigDecimal getTearWeight();
+    BigDecimal getSupplierWbNetWeight();
+    String getFirstNameEusr();
+    String getFirstNameAusr();
+    String getContainerNo();
+    Integer getGpSrNo();
+    BigDecimal getSupplierWeight();
+    String getOrderNo();
+}

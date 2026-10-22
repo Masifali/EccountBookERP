@@ -22,7 +22,6 @@ import org.springframework.web.server.ResponseStatusException;
 @Controller
 public class StoreSendReceiptController {
 
-    private static final String API = "/api/packing-material/store-send-receipt";
 
     private final StoreSendReceiptService service;
 
@@ -36,26 +35,26 @@ public class StoreSendReceiptController {
         return "packing_material/store_send_receipt";
     }
 
-    @GetMapping(API + "/lookups")
+    @GetMapping("/api/packing-material/store-send-receipt/lookups")
     @ResponseBody
     public ResponseEntity<?> lookups() { return run(service::lookups, "Could not load the screen."); }
 
-    @GetMapping(API + "/numbers")
+    @GetMapping("/api/packing-material/store-send-receipt/numbers")
     @ResponseBody
     public ResponseEntity<?> numbers() { return run(service::numbers, "DocNo Not Found"); }
 
-    @GetMapping(API + "/pending")
+    @GetMapping("/api/packing-material/store-send-receipt/pending")
     @ResponseBody
     public ResponseEntity<?> pending() { return run(service::pending, "Could not load the loader."); }
 
-    @GetMapping(API + "/avg-rate")
+    @GetMapping("/api/packing-material/store-send-receipt/avg-rate")
     @ResponseBody
     public ResponseEntity<?> avgRate(@RequestParam(defaultValue = "0") int itemId, @RequestParam(defaultValue = "0") int conditionId,
                                      @RequestParam String docDate, @RequestParam(defaultValue = "0") int recId) {
         return run(() -> service.avgRate(itemId, conditionId, docDate, recId), "Could not read the average rate.");
     }
 
-    @GetMapping(API + "/history")
+    @GetMapping("/api/packing-material/store-send-receipt/history")
     @ResponseBody
     public ResponseEntity<?> history(@RequestParam(required = false) String fromDate, @RequestParam(required = false) String toDate,
                                      @RequestParam(defaultValue = "0") int fromDocNo, @RequestParam(defaultValue = "0") int toDocNo,
@@ -63,15 +62,15 @@ public class StoreSendReceiptController {
         return run(() -> service.history(fromDate, toDate, fromDocNo, toDocNo, senderId, receiverId), "History failed.");
     }
 
-    @GetMapping(API + "/{id}")
+    @GetMapping("/api/packing-material/store-send-receipt/{id}")
     @ResponseBody
     public ResponseEntity<?> record(@PathVariable int id) { return run(() -> service.record(id), "Record Not Found"); }
 
-    @PostMapping(API + "/save")
+    @PostMapping("/api/packing-material/store-send-receipt/save")
     @ResponseBody
     public ResponseEntity<?> save(@RequestBody StoreSendReceiptRequest request) { return run(() -> service.save(request), "Save failed."); }
 
-    @GetMapping(API + "/{id}/attachments/{attachmentId}")
+    @GetMapping("/api/packing-material/store-send-receipt/{id}/attachments/{attachmentId}")
     public ResponseEntity<byte[]> attachment(@PathVariable int id, @PathVariable int attachmentId) {
         DesktopInventoryItemFileService.Download d = service.attachment(id, attachmentId);
         HttpHeaders h = new HttpHeaders();

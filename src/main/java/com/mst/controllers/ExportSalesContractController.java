@@ -34,54 +34,54 @@ public class ExportSalesContractController {
         return "export/sales_contract";
     }
 
-    @GetMapping(API + "/setup") @ResponseBody
+    @GetMapping("/api/export/sales-contract/setup") @ResponseBody
     public ResponseEntity<?> setup() { return call(() -> svc.setup(), "Error occurred during database call."); }
 
-    @GetMapping(API + "/refresh") @ResponseBody
+    @GetMapping("/api/export/sales-contract/refresh") @ResponseBody
     public ResponseEntity<?> refresh() { return call(() -> svc.refresh(), "Load failed."); }
 
-    @GetMapping(API + "/generate-code") @ResponseBody
+    @GetMapping("/api/export/sales-contract/generate-code") @ResponseBody
     public ResponseEntity<?> generateCode() { return call(() -> svc.generateCodeOnly(), "Load failed."); }
 
-    @GetMapping(API + "/custom-groups") @ResponseBody
+    @GetMapping("/api/export/sales-contract/custom-groups") @ResponseBody
     public ResponseEntity<?> customGroups(@RequestParam(value = "customerId", defaultValue = "0") int customerId) {
         return call(() -> svc.customGroupsApi(customerId), "Load failed.");
     }
 
-    @GetMapping(API + "/commodity-remarks") @ResponseBody
+    @GetMapping("/api/export/sales-contract/commodity-remarks") @ResponseBody
     public ResponseEntity<?> commodityRemarks(@RequestParam(value = "itemId", defaultValue = "0") int itemId,
                                               @RequestParam(value = "customerId", defaultValue = "0") int customerId) {
         return call(() -> svc.commodityRemarksApi(itemId, customerId), "Load failed.");
     }
 
-    @GetMapping(API + "/last-saved") @ResponseBody
+    @GetMapping("/api/export/sales-contract/last-saved") @ResponseBody
     public ResponseEntity<?> lastSaved() { return call(() -> svc.lastSavedApi(), "Load failed."); }
 
-    @GetMapping(API + "/history-combos") @ResponseBody
+    @GetMapping("/api/export/sales-contract/history-combos") @ResponseBody
     public ResponseEntity<?> historyCombos() { return call(() -> svc.historyCombos(), "Load failed."); }
 
-    @GetMapping(API + "/uom-for-export") @ResponseBody
+    @GetMapping("/api/export/sales-contract/uom-for-export") @ResponseBody
     public ResponseEntity<?> uomForExport(@RequestParam("itemId") int itemId) { return call(() -> svc.uomForExport(itemId), "Load failed."); }
 
-    @GetMapping(API + "/uom-by-item") @ResponseBody
+    @GetMapping("/api/export/sales-contract/uom-by-item") @ResponseBody
     public ResponseEntity<?> uomByItem(@RequestParam("itemId") int itemId) { return call(() -> svc.uomByItem(itemId), "Load failed."); }
 
-    @GetMapping(API + "/last-rate") @ResponseBody
+    @GetMapping("/api/export/sales-contract/last-rate") @ResponseBody
     public ResponseEntity<?> lastRate(@RequestParam("itemId") int itemId) { return call(() -> svc.lastRate(itemId), "Load failed."); }
 
-    @GetMapping(API + "/scheduling-policy") @ResponseBody
+    @GetMapping("/api/export/sales-contract/scheduling-policy") @ResponseBody
     public ResponseEntity<?> schedulingPolicy() { return call(() -> svc.schedulingPolicy(), "Load failed."); }
 
-    @GetMapping(API + "/id-by-doc-no") @ResponseBody
+    @GetMapping("/api/export/sales-contract/id-by-doc-no") @ResponseBody
     public ResponseEntity<?> idByDocNo(@RequestParam("docNo") String docNo) { return call(() -> svc.idByDocNo(docNo), "Load failed."); }
 
-    @GetMapping(API + "/read") @ResponseBody
+    @GetMapping("/api/export/sales-contract/read") @ResponseBody
     public ResponseEntity<?> read(@RequestParam("id") int id) { return call(() -> svc.readById(id), "Load failed."); }
 
-    @PostMapping(API + "/history") @ResponseBody
+    @PostMapping("/api/export/sales-contract/history") @ResponseBody
     public ResponseEntity<?> history(@RequestBody Map<String, Object> body) { return call(() -> svc.history(body), "Load failed."); }
 
-    @PostMapping(API + "/save") @ResponseBody
+    @PostMapping("/api/export/sales-contract/save") @ResponseBody
     public ResponseEntity<?> save(@RequestBody Map<String, Object> body) { return call(() -> svc.save(body), "Save failed."); }
 
     // ------------------------------------------------------------------ plumbing

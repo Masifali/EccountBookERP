@@ -37,24 +37,24 @@ public class SaleInvoiceForUploadController {
         return "sale/sale_invoice_for_upload";
     }
 
-    @GetMapping(API + "/init") @ResponseBody
+    @GetMapping("/sale/api/sale-invoice-for-upload/init") @ResponseBody
     public Map<String, Object> init() { return service.init(); }
 
-    @GetMapping(API + "/refresh") @ResponseBody
+    @GetMapping("/sale/api/sale-invoice-for-upload/refresh") @ResponseBody
     public Map<String, Object> refresh() { return service.refresh(); }
 
-    @PostMapping(API + "/rows") @ResponseBody
+    @PostMapping("/sale/api/sale-invoice-for-upload/rows") @ResponseBody
     public Map<String, Object> rows(@RequestBody Map<String, Object> body) { return service.rows(body); }
 
-    @PostMapping(API + "/upload") @ResponseBody
+    @PostMapping("/sale/api/sale-invoice-for-upload/upload") @ResponseBody
     public Map<String, Object> upload(@RequestBody Map<String, Object> body) { return service.upload(body); }
 
-    @GetMapping(API + "/attachments") @ResponseBody
+    @GetMapping("/sale/api/sale-invoice-for-upload/attachments") @ResponseBody
     public List<Map<String, Object>> attachments(@RequestParam int id, @RequestParam int documentTypeId) {
         return service.attachments(id, documentTypeId);
     }
 
-    @GetMapping(API + "/attachments/{attachmentId:[0-9]+}")
+    @GetMapping("/sale/api/sale-invoice-for-upload/attachments/{attachmentId:[0-9]+}")
     public ResponseEntity<byte[]> attachment(@PathVariable int attachmentId, @RequestParam int id, @RequestParam int documentTypeId) {
         var file = service.attachment(id, documentTypeId, attachmentId);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_OCTET_STREAM)

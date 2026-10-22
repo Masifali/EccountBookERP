@@ -1,0 +1,68 @@
+package com.mst.projections;
+
+import java.math.BigDecimal;
+import java.sql.Timestamp;
+
+/** Row of Sp_WbTransation_GetAllMethod @Activity='ReadById' (native) */
+public interface WbTransactionReadByIdRow {
+    Integer getId();
+    Integer getEntryNo();
+    Integer getReferenceDocTypeId();
+    Integer getReferenceDocNoId();
+    String getWeighBridgeType();
+    Integer getTicketNo();
+    String getVehicleNo();
+    String getVehicleType();
+    String getBiltyNo();
+    Integer getSupplierCustomerId();
+    String getPartyName();
+    String getItemDescription();
+    BigDecimal getItemQty();
+    BigDecimal getWbCharges();
+    String getWbRemarks();
+    Timestamp getEntryDate();
+    Integer getEntryUser();
+    Timestamp getModifyDate();
+    Integer getModifyUser();
+    Boolean getIsApproved();
+    Integer getApprovedUserId();
+    Timestamp getApprovedDateTime();
+    Integer getOrganizationId();
+    Integer getCompanyId();
+    String getDocumentTypeDescription();
+    Integer getDocTypeId();
+    Timestamp getDocDate();
+    BigDecimal getFirstWeight();
+    Timestamp getFirstDateTime();
+    String getFirstWtUpperPic();
+    String getFirstWtPicReading();
+    String getFirstWtFrontPic();
+    BigDecimal getSecondWeight();
+    Timestamp getSecondDateTime();
+    String getSecondPicReading();
+    String getSecondWtUpperPic();
+    String getSecondWtFrontPic();
+    String getContainerNo();
+    Integer getActionId();
+    String getWorkingReportNo();
+    String getWeightDiffComments();
+    BigDecimal getNetWbWeight();
+    BigDecimal getScaleKart();
+    Integer getItemId();
+    String getItemName();
+    Integer getGpSrNo();
+    Integer getRefDocumentTypeId();
+    String getPackingType();
+    Integer getFirstWtWbStatus();
+    Integer getSecondWtWbStatus();
+    Integer getInvoiceId();
+    BigDecimal getPackingUnitWeight();
+    BigDecimal getPackingTotalWeight();
+    BigDecimal getWeightAfterPackingWeight();
+    BigDecimal getLoadWeight();
+    BigDecimal getTearWeight();
+    BigDecimal getSupplierWbNetWeight();
+    String getGatepassType();
+    String getOtherSupCust();
+    Integer getOrderId();
+}

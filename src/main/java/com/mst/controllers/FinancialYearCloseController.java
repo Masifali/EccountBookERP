@@ -25,7 +25,6 @@ import java.util.function.Supplier;
 @Controller
 public class FinancialYearCloseController {
 
-    private static final String API = "/api/adm-panel/fyc";
 
     @Autowired private FinancialYearCloseService service;
     @Autowired private AdmPanelService adm;
@@ -37,19 +36,19 @@ public class FinancialYearCloseController {
         return "adm_panel/financial_year_close";
     }
 
-    @GetMapping(API + "/init") @ResponseBody
+    @GetMapping("/api/adm-panel/fyc/init") @ResponseBody
     public ResponseEntity<?> init() { return run(service::init, "Error occurred during database call."); }
 
-    @PostMapping(API + "/show") @ResponseBody
+    @PostMapping("/api/adm-panel/fyc/show") @ResponseBody
     public ResponseEntity<?> show(@RequestBody Map<String, Object> body) { return run(() -> service.show(body), "Show failed."); }
 
-    @PostMapping(API + "/save") @ResponseBody
+    @PostMapping("/api/adm-panel/fyc/save") @ResponseBody
     public ResponseEntity<?> save(@RequestBody Map<String, Object> body) { return run(() -> service.save(body), "Save failed."); }
 
-    @GetMapping(API + "/history") @ResponseBody
+    @GetMapping("/api/adm-panel/fyc/history") @ResponseBody
     public ResponseEntity<?> history() { return run(service::history, "History failed."); }
 
-    @GetMapping(API + "/get") @ResponseBody
+    @GetMapping("/api/adm-panel/fyc/get") @ResponseBody
     public ResponseEntity<?> get(@RequestParam("id") int id) { return run(() -> service.byId(id), "No Record Found"); }
 
     private static ResponseEntity<?> run(Supplier<Object> call, String fallback) {

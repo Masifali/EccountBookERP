@@ -29,8 +29,6 @@ import java.util.Map;
 @Controller
 public class LgsAServicesController {
 
-    private static final String SI = "/api/logistics/define-services-item";
-    private static final String SB = "/api/logistics/service-bill-direct";
 
     @Autowired private LgsAServicesItemService items;
     @Autowired private LgsAServiceBillService bills;
@@ -40,25 +38,25 @@ public class LgsAServicesController {
     @GetMapping("/logistics/define-services-item")
     public String servicesItemPage(Model model) { model.addAttribute("activeMenu", "apps"); return "logistics/define-services-item"; }
 
-    @GetMapping(SI + "/setup") @ResponseBody
+    @GetMapping("/api/logistics/define-services-item/setup") @ResponseBody
     public ResponseEntity<?> siSetup() { return HrmApi.run(() -> items.setup()); }
 
-    @GetMapping(SI + "/refresh") @ResponseBody
+    @GetMapping("/api/logistics/define-services-item/refresh") @ResponseBody
     public ResponseEntity<?> siRefresh() { return HrmApi.run(() -> items.refresh()); }
 
-    @GetMapping(SI + "/allocation") @ResponseBody
+    @GetMapping("/api/logistics/define-services-item/allocation") @ResponseBody
     public ResponseEntity<?> siAllocation() { return HrmApi.run(() -> items.allocation()); }
 
-    @GetMapping(SI + "/category") @ResponseBody
+    @GetMapping("/api/logistics/define-services-item/category") @ResponseBody
     public ResponseEntity<?> siCategory(@RequestParam("id") int id) { return HrmApi.run(() -> items.categoryLeave(id)); }
 
-    @GetMapping(SI + "/history") @ResponseBody
+    @GetMapping("/api/logistics/define-services-item/history") @ResponseBody
     public ResponseEntity<?> siHistory() { return HrmApi.run(() -> items.history()); }
 
-    @GetMapping(SI + "/by-id") @ResponseBody
+    @GetMapping("/api/logistics/define-services-item/by-id") @ResponseBody
     public ResponseEntity<?> siById(@RequestParam("id") int id) { return HrmApi.run(() -> items.read(id)); }
 
-    @PostMapping(SI + "/save") @ResponseBody
+    @PostMapping("/api/logistics/define-services-item/save") @ResponseBody
     public ResponseEntity<?> siSave(@RequestBody Map<String, Object> body) { return HrmApi.run(() -> items.save(body)); }
 
     // ------------------------------------------------------------------ 233 Service Bill Direct
@@ -66,22 +64,22 @@ public class LgsAServicesController {
     @GetMapping("/logistics/service-bill-direct")
     public String serviceBillPage(Model model) { model.addAttribute("activeMenu", "apps"); return "logistics/service-bill-direct"; }
 
-    @GetMapping(SB + "/setup") @ResponseBody
+    @GetMapping("/api/logistics/service-bill-direct/setup") @ResponseBody
     public ResponseEntity<?> sbSetup() { return HrmApi.run(() -> bills.setup()); }
 
-    @GetMapping(SB + "/refresh") @ResponseBody
+    @GetMapping("/api/logistics/service-bill-direct/refresh") @ResponseBody
     public ResponseEntity<?> sbRefresh() { return HrmApi.run(() -> bills.refresh()); }
 
-    @GetMapping(SB + "/doc-no") @ResponseBody
+    @GetMapping("/api/logistics/service-bill-direct/doc-no") @ResponseBody
     public ResponseEntity<?> sbDocNo() { return HrmApi.run(() -> bills.docNo()); }
 
-    @GetMapping(SB + "/uoms") @ResponseBody
+    @GetMapping("/api/logistics/service-bill-direct/uoms") @ResponseBody
     public ResponseEntity<?> sbUoms(@RequestParam("itemId") int itemId) { return HrmApi.run(() -> bills.uoms(itemId)); }
 
-    @GetMapping(SB + "/invoice") @ResponseBody
+    @GetMapping("/api/logistics/service-bill-direct/invoice") @ResponseBody
     public ResponseEntity<?> sbInvoice(@RequestParam("id") int id) { return HrmApi.run(() -> bills.invoiceData(id)); }
 
-    @GetMapping(SB + "/history") @ResponseBody
+    @GetMapping("/api/logistics/service-bill-direct/history") @ResponseBody
     public ResponseEntity<?> sbHistory(@RequestParam(value = "dateKind", required = false) String dateKind,
                                        @RequestParam(value = "fromDate", required = false) String fromDate,
                                        @RequestParam(value = "toDate", required = false) String toDate,
@@ -90,21 +88,21 @@ public class LgsAServicesController {
         return HrmApi.run(() -> bills.history(dateKind, fromDate, toDate, fromDocNo, toDocNo));
     }
 
-    @GetMapping(SB + "/history-detail") @ResponseBody
+    @GetMapping("/api/logistics/service-bill-direct/history-detail") @ResponseBody
     public ResponseEntity<?> sbHistoryDetail(@RequestParam("id") int id) { return HrmApi.run(() -> bills.historyDetail(id)); }
 
-    @GetMapping(SB + "/by-id") @ResponseBody
+    @GetMapping("/api/logistics/service-bill-direct/by-id") @ResponseBody
     public ResponseEntity<?> sbById(@RequestParam("id") int id) { return HrmApi.run(() -> bills.read(id)); }
 
-    @PostMapping(SB + "/save") @ResponseBody
+    @PostMapping("/api/logistics/service-bill-direct/save") @ResponseBody
     public ResponseEntity<?> sbSave(@RequestBody Map<String, Object> body) { return HrmApi.run(() -> bills.save(body)); }
 
-    @PostMapping(SB + "/delete") @ResponseBody
+    @PostMapping("/api/logistics/service-bill-direct/delete") @ResponseBody
     public ResponseEntity<?> sbDelete(@RequestParam("id") int id) { return HrmApi.run(() -> bills.delete(id)); }
 
-    @GetMapping(SB + "/slip-check") @ResponseBody
+    @GetMapping("/api/logistics/service-bill-direct/slip-check") @ResponseBody
     public ResponseEntity<?> sbSlipCheck(@RequestParam("id") int id) { return HrmApi.run(() -> bills.slipCheck(id)); }
 
-    @GetMapping(SB + "/voucher-id") @ResponseBody
+    @GetMapping("/api/logistics/service-bill-direct/voucher-id") @ResponseBody
     public ResponseEntity<?> sbVoucherId(@RequestParam("id") int id) { return HrmApi.run(() -> bills.voucherId(id)); }
 }

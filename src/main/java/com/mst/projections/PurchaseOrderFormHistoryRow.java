@@ -1,0 +1,56 @@
+package com.mst.projections;
+
+/** Row of Sp_PurchaseOrder_GetAllMethod @Activity='PurchaseOrderFormHistory' (native, temp-table pipeline rewritten as one statement). */
+public interface PurchaseOrderFormHistoryRow {
+    Long getRecordNo();
+    Integer getId();
+    Integer getDocNo();
+    java.sql.Timestamp getDocDate();
+    Integer getBranchSrNo();
+    String getBranchName();
+    Integer getBranchesId();
+    Double getOrderQty();
+    Boolean getIsAproved();
+    String getSupplierName();
+    String getCommissionAgentName();
+    String getCommissionType();
+    Double getCommRate();
+    Double getCommAmount();
+    String getCommissionRemarks();
+    Integer getEntryUser();
+    java.sql.Timestamp getEntryDate();
+    Integer getModifyUser();
+    java.sql.Timestamp getModifyDate();
+    String getBrokerAgentName();
+    String getBrokeryType();
+    Double getBrokeryRate();
+    Double getBrokeryAmount();
+    Double getBrokeryUom();
+    Integer getDueDays();
+    java.sql.Timestamp getDueDate();
+    java.sql.Date getOrderExpiryDate();
+    Integer getDeliveryTermId();
+    String getDeliveryTermDB();
+    String getDeliveryTerm();
+    Integer getDeliveryDays();
+    java.sql.Timestamp getDeliveryStartDate();
+    String getRemarksHeader();
+    String getOrderStatus();
+    String getTermsDescription();
+    String getModifyUserName();
+    String getUserName();
+    java.sql.Timestamp getPostDate();
+    String getApprovedUserName();
+    String getOrderCategoryDescription();
+    String getBillType();
+    String getPreBillNos();
+    String getPreBillVehicleNos();
+    Integer getNoOfAttachments();
+    Integer getRefrenenceParty();
+    String getReferencePartyName();
+    Integer getBookingPersonId();
+    String getBookingPerson();
+    Integer getAttachmentsCount();
+    Integer getLocationTypeId();
+    String getLocationType();
+}

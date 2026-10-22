@@ -30,7 +30,6 @@ import java.util.function.Supplier;
  */
 @Controller
 public class Inact1InvoiceAccountController {
-    private static final String API = "/api/accounts/invoice-account/{kind}";
 
     @Autowired private Inact1InvoiceAccountService service;
     @Autowired private CurrentUserContext context;
@@ -55,62 +54,62 @@ public class Inact1InvoiceAccountController {
         return "accounts/inact1_invoice_account";
     }
 
-    @GetMapping(API + "/load") @ResponseBody
+    @GetMapping("/api/accounts/invoice-account/{kind}/load") @ResponseBody
     public ResponseEntity<?> load(@PathVariable String kind) { Kind k = Kind.of(kind); return run(() -> { gate(k); return service.load(k); }); }
 
-    @GetMapping(API + "/refresh") @ResponseBody
+    @GetMapping("/api/accounts/invoice-account/{kind}/refresh") @ResponseBody
     public ResponseEntity<?> refresh(@PathVariable String kind) { Kind k = Kind.of(kind); return run(() -> { gate(k); return service.refresh(k); }); }
 
-    @GetMapping(API + "/generate-code") @ResponseBody
+    @GetMapping("/api/accounts/invoice-account/{kind}/generate-code") @ResponseBody
     public ResponseEntity<?> generateCode(@PathVariable String kind) { Kind k = Kind.of(kind); return run(() -> { gate(k); return service.generateCode(k); }); }
 
-    @GetMapping(API + "/balance") @ResponseBody
+    @GetMapping("/api/accounts/invoice-account/{kind}/balance") @ResponseBody
     public ResponseEntity<?> balance(@PathVariable String kind, @RequestParam int accountId) {
         Kind k = Kind.of(kind); return run(() -> { gate(k); return service.balance(accountId); });
     }
 
-    @GetMapping(API + "/invoices") @ResponseBody
+    @GetMapping("/api/accounts/invoice-account/{kind}/invoices") @ResponseBody
     public ResponseEntity<?> invoices(@PathVariable String kind, @RequestParam int supplierId) {
         Kind k = Kind.of(kind); return run(() -> { gate(k); return service.invoices(supplierId); });
     }
 
-    @GetMapping(API + "/tax-schedule") @ResponseBody
+    @GetMapping("/api/accounts/invoice-account/{kind}/tax-schedule") @ResponseBody
     public ResponseEntity<?> taxSchedule(@PathVariable String kind, @RequestParam int taxTypeId, @RequestParam(required = false) String date) {
         Kind k = Kind.of(kind); return run(() -> { gate(k); return service.taxSchedule(taxTypeId, date); });
     }
 
-    @GetMapping(API + "/cheques") @ResponseBody
+    @GetMapping("/api/accounts/invoice-account/{kind}/cheques") @ResponseBody
     public ResponseEntity<?> cheques(@PathVariable String kind, @RequestParam int bankId) {
         Kind k = Kind.of(kind); return run(() -> { gate(k); return service.cheques(bankId); });
     }
 
-    @GetMapping(API + "/pdc") @ResponseBody
+    @GetMapping("/api/accounts/invoice-account/{kind}/pdc") @ResponseBody
     public ResponseEntity<?> pdc(@PathVariable String kind, @RequestParam int accountId, @RequestParam(defaultValue = "0") int cheqId) {
         Kind k = Kind.of(kind); return run(() -> { gate(k); return service.pdc(accountId, cheqId); });
     }
 
-    @GetMapping(API + "/advance-balance") @ResponseBody
+    @GetMapping("/api/accounts/invoice-account/{kind}/advance-balance") @ResponseBody
     public ResponseEntity<?> advanceBalance(@PathVariable String kind, @RequestParam int accountId) {
         Kind k = Kind.of(kind); return run(() -> { gate(k); return service.advanceBalance(k, accountId); });
     }
 
-    @GetMapping(API + "/by-doc-no") @ResponseBody
+    @GetMapping("/api/accounts/invoice-account/{kind}/by-doc-no") @ResponseBody
     public ResponseEntity<?> byDocNo(@PathVariable String kind, @RequestParam int docNo) {
         Kind k = Kind.of(kind);
         return run(() -> { gate(k); int id = service.idByDocNo(k, docNo); return id > 0 ? service.read(k, id) : null; });
     }
 
-    @PostMapping(API + "/history") @ResponseBody
+    @PostMapping("/api/accounts/invoice-account/{kind}/history") @ResponseBody
     public ResponseEntity<?> history(@PathVariable String kind, @RequestBody Map<String, Object> body) {
         Kind k = Kind.of(kind); return run(() -> { gate(k); return service.history(k, body); });
     }
 
-    @PostMapping(API + "/save") @ResponseBody
+    @PostMapping("/api/accounts/invoice-account/{kind}/save") @ResponseBody
     public ResponseEntity<?> save(@PathVariable String kind, @RequestBody Map<String, Object> body) {
         Kind k = Kind.of(kind); return run(() -> { gate(k); return service.save(k, body); });
     }
 
-    @GetMapping(API + "/print-target") @ResponseBody
+    @GetMapping("/api/accounts/invoice-account/{kind}/print-target") @ResponseBody
     public ResponseEntity<?> printTarget(@PathVariable String kind, @RequestParam int id) {
         Kind k = Kind.of(kind); return run(() -> { gate(k); return service.printTarget(k, id); });
     }

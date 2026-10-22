@@ -25,8 +25,6 @@ import java.util.Map;
 @Controller
 public class ExportEformRegistrationController {
 
-    private static final String EF = "/api/export/eform-registration";
-    private static final String FI = "/api/export/financial-instrument";
 
     @Autowired private ExportEformRegistrationService svc;
 
@@ -37,39 +35,39 @@ public class ExportEformRegistrationController {
     public String fiPage(Model model) { model.addAttribute("activeMenu", "export"); return "export/financial_instrument"; }
 
     // ---------------------------------------------------------------- 217
-    @GetMapping(EF + "/setup") @ResponseBody
+    @GetMapping("/api/export/eform-registration/setup") @ResponseBody
     public ResponseEntity<?> efSetup() { return call(() -> svc.setup(false), "Error occurred during database call."); }
-    @GetMapping(EF + "/combos") @ResponseBody
+    @GetMapping("/api/export/eform-registration/combos") @ResponseBody
     public ResponseEntity<?> efCombos() { return call(() -> svc.combos(false), "Load failed."); }
-    @GetMapping(EF + "/receipts-by-customer") @ResponseBody
+    @GetMapping("/api/export/eform-registration/receipts-by-customer") @ResponseBody
     public ResponseEntity<?> efReceipts(@RequestParam(value = "supplierCustomerId", defaultValue = "0") int supplierCustomerId) {
         return call(() -> svc.receiptsByCustomer(false, supplierCustomerId), "Load failed.");
     }
-    @GetMapping(EF + "/receipt-by-id") @ResponseBody
+    @GetMapping("/api/export/eform-registration/receipt-by-id") @ResponseBody
     public ResponseEntity<?> efReceipt(@RequestParam(value = "id", defaultValue = "0") int id) { return call(() -> svc.receiptById(false, id), "Load failed."); }
-    @GetMapping(EF + "/by-id") @ResponseBody
+    @GetMapping("/api/export/eform-registration/by-id") @ResponseBody
     public ResponseEntity<?> efById(@RequestParam("id") int id) { return call(() -> svc.readById(false, id), "Load failed."); }
-    @GetMapping(EF + "/history") @ResponseBody
+    @GetMapping("/api/export/eform-registration/history") @ResponseBody
     public ResponseEntity<?> efHistory() { return call(() -> svc.history(false), "Load failed."); }
-    @PostMapping(EF + "/save") @ResponseBody
+    @PostMapping("/api/export/eform-registration/save") @ResponseBody
     public ResponseEntity<?> efSave(@RequestBody Map<String, Object> body) { return call(() -> svc.save(false, body), "Save failed."); }
 
     // ---------------------------------------------------------------- 218
-    @GetMapping(FI + "/setup") @ResponseBody
+    @GetMapping("/api/export/financial-instrument/setup") @ResponseBody
     public ResponseEntity<?> fiSetup() { return call(() -> svc.setup(true), "Error occurred during database call."); }
-    @GetMapping(FI + "/combos") @ResponseBody
+    @GetMapping("/api/export/financial-instrument/combos") @ResponseBody
     public ResponseEntity<?> fiCombos() { return call(() -> svc.combos(true), "Load failed."); }
-    @GetMapping(FI + "/receipts-by-customer") @ResponseBody
+    @GetMapping("/api/export/financial-instrument/receipts-by-customer") @ResponseBody
     public ResponseEntity<?> fiReceipts(@RequestParam(value = "supplierCustomerId", defaultValue = "0") int supplierCustomerId) {
         return call(() -> svc.receiptsByCustomer(true, supplierCustomerId), "Load failed.");
     }
-    @GetMapping(FI + "/receipt-by-id") @ResponseBody
+    @GetMapping("/api/export/financial-instrument/receipt-by-id") @ResponseBody
     public ResponseEntity<?> fiReceipt(@RequestParam(value = "id", defaultValue = "0") int id) { return call(() -> svc.receiptById(true, id), "Load failed."); }
-    @GetMapping(FI + "/by-id") @ResponseBody
+    @GetMapping("/api/export/financial-instrument/by-id") @ResponseBody
     public ResponseEntity<?> fiById(@RequestParam("id") int id) { return call(() -> svc.readById(true, id), "Load failed."); }
-    @GetMapping(FI + "/history") @ResponseBody
+    @GetMapping("/api/export/financial-instrument/history") @ResponseBody
     public ResponseEntity<?> fiHistory() { return call(() -> svc.history(true), "Load failed."); }
-    @PostMapping(FI + "/save") @ResponseBody
+    @PostMapping("/api/export/financial-instrument/save") @ResponseBody
     public ResponseEntity<?> fiSave(@RequestBody Map<String, Object> body) { return call(() -> svc.save(true, body), "Save failed."); }
 
     // ---------------------------------------------------------------- plumbing (as ExportModuleController)

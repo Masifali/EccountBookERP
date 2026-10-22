@@ -30,7 +30,6 @@ import java.util.function.Supplier;
 @Controller
 public class CoaAllocationUpdateController {
     private static final int SCREEN_ID = 6;
-    private static final String API = "/api/accounts/coa-allocation";
 
     @Autowired private CoaAllocationUpdateService service;
     @Autowired private CurrentUserContext context;
@@ -49,18 +48,18 @@ public class CoaAllocationUpdateController {
         return "accounts/update_coa_allocation";
     }
 
-    @GetMapping(API + "/load") @ResponseBody
+    @GetMapping("/api/accounts/coa-allocation/load") @ResponseBody
     public ResponseEntity<?> load() { return run(() -> { gate(); return service.load(); }); }
 
-    @GetMapping(API + "/rows") @ResponseBody
+    @GetMapping("/api/accounts/coa-allocation/rows") @ResponseBody
     public ResponseEntity<?> rows(@RequestParam(required = false) String parentAccountCode) {
         return run(() -> { gate(); return service.rows(parentAccountCode); });
     }
 
-    @GetMapping(API + "/account/{id}") @ResponseBody
+    @GetMapping("/api/accounts/coa-allocation/account/{id}") @ResponseBody
     public ResponseEntity<?> account(@PathVariable int id) { return run(() -> { gate(); return service.pageNoAndStatus(id); }); }
 
-    @PostMapping(API + "/update-account") @ResponseBody
+    @PostMapping("/api/accounts/coa-allocation/update-account") @ResponseBody
     public ResponseEntity<?> updateAccount(@RequestBody Map<String, Object> r) {
         return run(() -> {
             gate();
@@ -69,7 +68,7 @@ public class CoaAllocationUpdateController {
         });
     }
 
-    @PostMapping(API + "/update-rows") @ResponseBody
+    @PostMapping("/api/accounts/coa-allocation/update-rows") @ResponseBody
     @SuppressWarnings("unchecked")
     public ResponseEntity<?> updateRows(@RequestBody Map<String, Object> r) {
         return run(() -> {

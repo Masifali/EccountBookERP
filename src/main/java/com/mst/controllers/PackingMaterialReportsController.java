@@ -14,7 +14,6 @@ import java.util.Map;
 @Controller
 public class PackingMaterialReportsController {
 
-    private static final String API = "/api/packing-material/reports";
 
     @Autowired private PackingMaterialReportsService service;
     @Autowired private com.mst.services.PackingMaterialReportExportService exports;
@@ -64,21 +63,21 @@ public class PackingMaterialReportsController {
         return "packing_material/reports/stock_with_supplier";
     }
 
-    @GetMapping(API + "/{report}/initial") @ResponseBody
+    @GetMapping("/api/packing-material/reports/{report}/initial") @ResponseBody
     public Object initial(@PathVariable("report") String report) { return service.initial(report); }
-    @GetMapping(API + "/{report}/lookups") @ResponseBody
+    @GetMapping("/api/packing-material/reports/{report}/lookups") @ResponseBody
     public Object lookups(@PathVariable("report") String report,@RequestParam(name="branches",defaultValue="") String branches) { return service.lookups(report,branches); }
-    @PostMapping(API + "/{report}/data") @ResponseBody
+    @PostMapping("/api/packing-material/reports/{report}/data") @ResponseBody
     public Object data(@PathVariable("report") String report,@RequestBody com.mst.models.PackingReportFilter filter) { return service.data(report,filter); }
-    @PostMapping(API + "/purchase-order-register/action") @ResponseBody
+    @PostMapping("/api/packing-material/reports/purchase-order-register/action") @ResponseBody
     public Object action(@RequestBody PackingMaterialReportsService.Action action) { return service.action(action); }
-    @PostMapping(API + "/purchase-order-register/approval-history") @ResponseBody
+    @PostMapping("/api/packing-material/reports/purchase-order-register/approval-history") @ResponseBody
     public Object approvals(@RequestBody PackingMaterialReportsService.Action action) { return service.approvalHistory(action); }
-    @PostMapping(API + "/stock-with-supplier/document") @ResponseBody
+    @PostMapping("/api/packing-material/reports/stock-with-supplier/document") @ResponseBody
     public Object document(@RequestBody PackingMaterialReportsService.Document request) { return service.document(request); }
-    @PostMapping(API + "/inventory-transaction-report/document") @ResponseBody
+    @PostMapping("/api/packing-material/reports/inventory-transaction-report/document") @ResponseBody
     public Object transactionDocument(@RequestBody PackingMaterialReportsService.TransactionDocument request) { return service.transactionDocuments(request); }
-    @PostMapping(API + "/{report}/export") @ResponseBody
+    @PostMapping("/api/packing-material/reports/{report}/export") @ResponseBody
     public ResponseEntity<byte[]> export(@PathVariable("report") String report,@RequestBody com.mst.services.PackingMaterialReportExportService.Request request) throws Exception {
         return ResponseEntity.ok().header("Content-Type","application/vnd.ms-excel").header("Content-Disposition","attachment; filename="+report+".xls").body(exports.export(report,request));
     }

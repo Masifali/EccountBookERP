@@ -41,79 +41,79 @@ public class FcyBankReceiptController {
         return "accounts/vouchers/fcy_bank_receipt";
     }
 
-    @GetMapping(API + "/setup") @ResponseBody
+    @GetMapping("/accounts/api/banking/fcy-bank-receipt/setup") @ResponseBody
     public ResponseEntity<?> setup() { return call(() -> svc().setup(), "Error occurred during database call."); }
 
-    @GetMapping(API + "/refresh") @ResponseBody
+    @GetMapping("/accounts/api/banking/fcy-bank-receipt/refresh") @ResponseBody
     public ResponseEntity<?> refresh() { return call(() -> svc().refresh(), "Load failed."); }
 
-    @GetMapping(API + "/document-no") @ResponseBody
+    @GetMapping("/accounts/api/banking/fcy-bank-receipt/document-no") @ResponseBody
     public ResponseEntity<?> documentNo() { return call(() -> svc().newDocumentNo(), "Load failed."); }
 
-    @GetMapping(API + "/customers") @ResponseBody
+    @GetMapping("/accounts/api/banking/fcy-bank-receipt/customers") @ResponseBody
     public ResponseEntity<?> customers(@RequestParam(value = "term", defaultValue = "") String term,
                                        @RequestParam(value = "termId", defaultValue = "0") int termId) {
         return call(() -> svc().customers(term, termId), "Load failed.");
     }
 
-    @GetMapping(API + "/invoices") @ResponseBody
+    @GetMapping("/accounts/api/banking/fcy-bank-receipt/invoices") @ResponseBody
     public ResponseEntity<?> invoices(@RequestParam(value = "customerId", defaultValue = "0") int customerId) {
         return call(() -> svc().invoices(customerId), "Load failed.");
     }
 
-    @GetMapping(API + "/lc-orders") @ResponseBody
+    @GetMapping("/accounts/api/banking/fcy-bank-receipt/lc-orders") @ResponseBody
     public ResponseEntity<?> lcOrders(@RequestParam(value = "customerId", defaultValue = "0") int customerId) {
         return call(() -> svc().lcOrders(customerId), "Load failed.");
     }
 
-    @GetMapping(API + "/breakup-invoices") @ResponseBody
+    @GetMapping("/accounts/api/banking/fcy-bank-receipt/breakup-invoices") @ResponseBody
     public ResponseEntity<?> breakupInvoices() { return call(() -> svc().breakupInvoices(), "Load failed."); }
 
-    @GetMapping(API + "/invoice-info") @ResponseBody
+    @GetMapping("/accounts/api/banking/fcy-bank-receipt/invoice-info") @ResponseBody
     public ResponseEntity<?> invoiceInfo(@RequestParam(value = "breakup", defaultValue = "false") boolean breakup,
                                          @RequestParam(value = "invoiceId", defaultValue = "0") int invoiceId,
                                          @RequestParam(value = "previousBalance", defaultValue = "0") double previousBalance) {
         return call(() -> svc().invoiceInfo(breakup, invoiceId, previousBalance), "Load failed.");
     }
 
-    @GetMapping(API + "/payment-terms") @ResponseBody
+    @GetMapping("/accounts/api/banking/fcy-bank-receipt/payment-terms") @ResponseBody
     public ResponseEntity<?> paymentTerms(@RequestParam("invoiceId") int invoiceId,
                                           @RequestParam(value = "recId", defaultValue = "0") int recId) {
         return call(() -> svc().paymentTerms(invoiceId, recId), "Load failed.");
     }
 
-    @GetMapping(API + "/contract-amount") @ResponseBody
+    @GetMapping("/accounts/api/banking/fcy-bank-receipt/contract-amount") @ResponseBody
     public ResponseEntity<?> contractAmount(@RequestParam(value = "contractId", defaultValue = "0") int contractId) {
         return call(() -> svc().contractAmount(contractId), "Load failed.");
     }
 
-    @GetMapping(API + "/gds") @ResponseBody
+    @GetMapping("/accounts/api/banking/fcy-bank-receipt/gds") @ResponseBody
     public ResponseEntity<?> gds(@RequestParam("invoiceId") int invoiceId,
                                  @RequestParam(value = "gdBreakUpId", defaultValue = "0") int gdBreakUpId,
                                  @RequestParam(value = "refDocumentTypeId", defaultValue = "0") int refDocumentTypeId) {
         return call(() -> svc().gds(invoiceId, gdBreakUpId, refDocumentTypeId), "Load failed.");
     }
 
-    @GetMapping(API + "/voucher-head") @ResponseBody
+    @GetMapping("/accounts/api/banking/fcy-bank-receipt/voucher-head") @ResponseBody
     public ResponseEntity<?> voucherHead(@RequestParam("id") int id) { return call(() -> svc().voucherHead(id), "Load failed."); }
 
-    @GetMapping(API + "/gain-loss") @ResponseBody
+    @GetMapping("/accounts/api/banking/fcy-bank-receipt/gain-loss") @ResponseBody
     public ResponseEntity<?> gainLoss(@RequestParam("id") int id) { return call(() -> svc().gainLossBreakup(id), "Load failed."); }
 
-    @GetMapping(API + "/by-id") @ResponseBody
+    @GetMapping("/accounts/api/banking/fcy-bank-receipt/by-id") @ResponseBody
     public ResponseEntity<?> byId(@RequestParam("id") int id) { return call(() -> svc().readById(id), "Load failed."); }
 
-    @GetMapping(API + "/history-combos") @ResponseBody
+    @GetMapping("/accounts/api/banking/fcy-bank-receipt/history-combos") @ResponseBody
     public ResponseEntity<?> historyCombos() { return call(() -> svc().historyComboRefresh(), "Load failed."); }
 
-    @GetMapping(API + "/print-check") @ResponseBody
+    @GetMapping("/accounts/api/banking/fcy-bank-receipt/print-check") @ResponseBody
     public ResponseEntity<?> printCheck(@RequestParam(value = "id", defaultValue = "0") int id) { return call(() -> svc().printCheck(id), "Print failed."); }
 
-    @PostMapping(API + "/history") @ResponseBody
+    @PostMapping("/accounts/api/banking/fcy-bank-receipt/history") @ResponseBody
     public ResponseEntity<?> history(@RequestBody Map<String, Object> body) { return call(() -> svc().history(body), "Load failed."); }
 
     /** btnsave_Click / btnUpdate_Click -> Insert() (recId 0 = Save right, recId > 0 = Update right). */
-    @PostMapping(API + "/save") @ResponseBody
+    @PostMapping("/accounts/api/banking/fcy-bank-receipt/save") @ResponseBody
     public ResponseEntity<?> save(@RequestBody Map<String, Object> body) { return call(() -> svc().save(body), "Save failed."); }
 
     // ------------------------------------------------------------------ plumbing

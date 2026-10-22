@@ -29,37 +29,37 @@ public class StoreGatePassGeneralOutwardController extends SaleEngrControllerBas
         return "store/gate_pass_general_outward";
     }
 
-    @GetMapping(API + "/initial") @ResponseBody
+    @GetMapping("/store/gate-pass-general-outward/api/initial") @ResponseBody
     public Map<String, Object> initial() { return service.initial(); }
 
-    @GetMapping(API + "/next-no") @ResponseBody
+    @GetMapping("/store/gate-pass-general-outward/api/next-no") @ResponseBody
     public Map<String, Object> nextNo() { return Map.of("nextNo", service.nextNo()); }
 
-    @GetMapping(API + "/warehouses") @ResponseBody
+    @GetMapping("/store/gate-pass-general-outward/api/warehouses") @ResponseBody
     public List<Map<String, Object>> warehouses() { return service.warehouses(); }
 
-    @GetMapping(API + "/vehicle-types") @ResponseBody
+    @GetMapping("/store/gate-pass-general-outward/api/vehicle-types") @ResponseBody
     public List<Map<String, Object>> vehicleTypes() { return service.vehicleTypes(); }
 
-    @GetMapping(API + "/lookups") @ResponseBody
+    @GetMapping("/store/gate-pass-general-outward/api/lookups") @ResponseBody
     public Map<String, Object> lookups() { return service.lookups(); }
 
-    @GetMapping(API + "/delivery-order") @ResponseBody
+    @GetMapping("/store/gate-pass-general-outward/api/delivery-order") @ResponseBody
     public Map<String, Object> deliveryOrder(@RequestParam(defaultValue = "0") int docNo) { return service.deliveryOrderLookup(docNo); }
 
-    @PostMapping(API + "/history") @ResponseBody
+    @PostMapping("/store/gate-pass-general-outward/api/history") @ResponseBody
     public List<Map<String, Object>> history(@RequestBody StoreGatePassGeneralOutwardService.HistoryFilter f) { return service.history(f); }
 
-    @GetMapping(API + "/{id}") @ResponseBody
+    @GetMapping("/store/gate-pass-general-outward/api/{id}") @ResponseBody
     public Map<String, Object> record(@PathVariable int id) { return service.record(id); }
 
     @PostMapping(API) @ResponseBody
     public Map<String, Object> save(@RequestBody StoreGatePassGeneralOutwardService.Request r) { return service.save(r); }
 
-    @GetMapping(API + "/{id}/attachments") @ResponseBody
+    @GetMapping("/store/gate-pass-general-outward/api/{id}/attachments") @ResponseBody
     public List<Map<String, Object>> attachments(@PathVariable int id) { return service.attachmentList(id); }
 
-    @GetMapping(API + "/{id}/attachments/{attachmentId}")
+    @GetMapping("/store/gate-pass-general-outward/api/{id}/attachments/{attachmentId}")
     public ResponseEntity<byte[]> download(@PathVariable int id, @PathVariable int attachmentId) {
         SaleEngrAttachments.Download d = service.download(id, attachmentId);
         return ResponseEntity.ok()

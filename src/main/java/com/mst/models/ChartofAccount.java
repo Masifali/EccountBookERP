@@ -162,6 +162,10 @@ public class ChartofAccount {
     @Column(name = "PostUser")
     private Integer postUser;
 
+    // ---- added by batch B_masters_geo_company (Proc_ChartofAccount_Insert writes UserLogId BIGINT) ----
+    @Column(name = "UserLogId")
+    private Long userLogId;
+
     // Explicit Getters and Setters
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
@@ -233,5 +237,7 @@ public class ChartofAccount {
     public void setModifyUser(Integer modifyUser) { this.modifyUser = modifyUser; }
     public Integer getPostUser() { return postUser; }
     public void setPostUser(Integer postUser) { this.postUser = postUser; }
+    public Long getUserLogId() { return userLogId; }
+    public void setUserLogId(Long userLogId) { this.userLogId = userLogId; }
 }
 

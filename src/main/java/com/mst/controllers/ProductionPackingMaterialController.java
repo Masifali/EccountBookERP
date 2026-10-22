@@ -28,7 +28,6 @@ import java.util.function.Supplier;
 @Controller
 public class ProductionPackingMaterialController {
 
-    private static final String API = "/api/production/production-against-job-order/packing-material";
 
     @Autowired
     private ProductionPackingMaterialService service;
@@ -40,33 +39,33 @@ public class ProductionPackingMaterialController {
     }
 
     /** frmFoodProduction_Load:272. */
-    @GetMapping(API + "/init")
+    @GetMapping("/api/production/production-against-job-order/packing-material/init")
     @ResponseBody
     public ResponseEntity<?> init() { return run(service::init); }
 
     /** btnRefreshPackingMaterial_Click:1000 (ScheduleNoDbCall uses RecpackingMaterial). */
-    @GetMapping(API + "/refresh")
+    @GetMapping("/api/production/production-against-job-order/packing-material/refresh")
     @ResponseBody
     public ResponseEntity<?> refresh(@RequestParam(defaultValue = "0") int recId) {
         return run(() -> service.refresh(recId));
     }
 
     /** GenerateCodeOfPackingMaterial:666. */
-    @GetMapping(API + "/next-code")
+    @GetMapping("/api/production/production-against-job-order/packing-material/next-code")
     @ResponseBody
     public ResponseEntity<?> nextCode() {
         return run(() -> one("docNo", service.nextCode()));
     }
 
     /** GetPlantFeeder:391. */
-    @GetMapping(API + "/plants")
+    @GetMapping("/api/production/production-against-job-order/packing-material/plants")
     @ResponseBody
     public ResponseEntity<?> plants(@RequestParam(defaultValue = "0") int jobOrderId) {
         return run(() -> service.plants(jobOrderId));
     }
 
     /** GetTotalInPutOutOnPM:834. */
-    @GetMapping(API + "/totals")
+    @GetMapping("/api/production/production-against-job-order/packing-material/totals")
     @ResponseBody
     public ResponseEntity<?> totals(@RequestParam(defaultValue = "0") int jobOrderId,
                                     @RequestParam(defaultValue = "0") int plantId) {
@@ -74,7 +73,7 @@ public class ProductionPackingMaterialController {
     }
 
     /** USP_GetBrandItemsForPackMaterialAgainstPmItem - three callers (:572, :622, :931). */
-    @GetMapping(API + "/brand-items")
+    @GetMapping("/api/production/production-against-job-order/packing-material/brand-items")
     @ResponseBody
     public ResponseEntity<?> brandItems(@RequestParam(defaultValue = "0") int jobOrderId,
                                         @RequestParam(defaultValue = "0") int itemId,
@@ -83,14 +82,14 @@ public class ProductionPackingMaterialController {
     }
 
     /** racksWithWarehouseAndItems for one item (:715, :749, :799). */
-    @GetMapping(API + "/racks")
+    @GetMapping("/api/production/production-against-job-order/packing-material/racks")
     @ResponseBody
     public ResponseEntity<?> racks(@RequestParam(defaultValue = "0") int itemId) {
         return run(() -> service.racks(itemId));
     }
 
     /** GetAvgRateQtyAndStockInHand (:1865, :2022). */
-    @GetMapping(API + "/avg-rate")
+    @GetMapping("/api/production/production-against-job-order/packing-material/avg-rate")
     @ResponseBody
     public ResponseEntity<?> avgRate(@RequestParam(defaultValue = "0") int itemId,
                                      @RequestParam(required = false) String docDate,
@@ -100,12 +99,12 @@ public class ProductionPackingMaterialController {
     }
 
     /** HistoryComboDBCall:2080 (btnRefreshHistory_Click:2139). */
-    @GetMapping(API + "/history-job-orders")
+    @GetMapping("/api/production/production-against-job-order/packing-material/history-job-orders")
     @ResponseBody
     public ResponseEntity<?> historyJobOrders() { return run(service::historyJobOrders); }
 
     /** BindHistoryPMGrid:1324. */
-    @GetMapping(API + "/history")
+    @GetMapping("/api/production/production-against-job-order/packing-material/history")
     @ResponseBody
     public ResponseEntity<?> history(@RequestParam(defaultValue = "false") boolean pendingForRates,
                                      @RequestParam(defaultValue = "doc") String dateMode,
@@ -118,21 +117,21 @@ public class ProductionPackingMaterialController {
     }
 
     /** btnPackingMaterialSlip_Click:1492 - row count before the viewer opens. */
-    @GetMapping(API + "/print-606-rows")
+    @GetMapping("/api/production/production-against-job-order/packing-material/print-606-rows")
     @ResponseBody
     public ResponseEntity<?> print606Rows(@RequestParam(defaultValue = "0") int jobOrderId) {
         return run(() -> one("rows", service.report606Rows(jobOrderId)));
     }
 
     /** ReadByIdPackingMaterial:1253 (+ GetVoucherHeadId(Rec, 111)). */
-    @GetMapping(API + "/{id}")
+    @GetMapping("/api/production/production-against-job-order/packing-material/{id}")
     @ResponseBody
     public ResponseEntity<?> readById(@PathVariable int id) {
         return run(() -> service.readById(id));
     }
 
     /** PackingMaterialInsert:1096 - Save and Update. */
-    @PostMapping(API + "/save")
+    @PostMapping("/api/production/production-against-job-order/packing-material/save")
     @ResponseBody
     public ResponseEntity<?> save(@RequestBody ProductionPackingMaterialService.SaveRequest req) {
         return run(() -> service.save(req));

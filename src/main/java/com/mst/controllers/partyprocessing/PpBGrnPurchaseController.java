@@ -18,7 +18,6 @@ import java.util.Map;
 @Controller
 public class PpBGrnPurchaseController {
 
-    private static final String API = "/api/party-processing/grn-purchase";
 
     @Autowired private PpBGrnPurchaseService service;
 
@@ -29,39 +28,39 @@ public class PpBGrnPurchaseController {
         return "partyprocessing/grn-purchase";
     }
 
-    @GetMapping(API + "/setup") @ResponseBody
+    @GetMapping("/api/party-processing/grn-purchase/setup") @ResponseBody
     public ResponseEntity<?> setup() { return HrmApi.run(service::setup); }
 
-    @GetMapping(API + "/refresh") @ResponseBody
+    @GetMapping("/api/party-processing/grn-purchase/refresh") @ResponseBody
     public ResponseEntity<?> refresh(@RequestParam(value = "recId", defaultValue = "0") int recId) { return HrmApi.run(() -> service.refresh(recId)); }
 
-    @GetMapping(API + "/code") @ResponseBody
+    @GetMapping("/api/party-processing/grn-purchase/code") @ResponseBody
     public ResponseEntity<?> code() { return HrmApi.run(service::code); }
 
-    @GetMapping(API + "/uoms") @ResponseBody
+    @GetMapping("/api/party-processing/grn-purchase/uoms") @ResponseBody
     public ResponseEntity<?> uoms(@RequestParam("itemId") int itemId) { return HrmApi.run(() -> service.uoms(itemId)); }
 
-    @GetMapping(API + "/loader-setup") @ResponseBody
+    @GetMapping("/api/party-processing/grn-purchase/loader-setup") @ResponseBody
     public ResponseEntity<?> loaderSetup() { return HrmApi.run(service::loaderSetup); }
 
-    @PostMapping(API + "/loader") @ResponseBody
+    @PostMapping("/api/party-processing/grn-purchase/loader") @ResponseBody
     public ResponseEntity<?> loader(@RequestBody Map<String, Object> body) { return HrmApi.run(() -> service.loader(body)); }
 
-    @GetMapping(API + "/history-suppliers") @ResponseBody
+    @GetMapping("/api/party-processing/grn-purchase/history-suppliers") @ResponseBody
     public ResponseEntity<?> historySuppliers() { return HrmApi.run(service::historySuppliers); }
 
-    @PostMapping(API + "/history") @ResponseBody
+    @PostMapping("/api/party-processing/grn-purchase/history") @ResponseBody
     public ResponseEntity<?> history(@RequestBody Map<String, Object> body) { return HrmApi.run(() -> service.history(body)); }
 
-    @GetMapping(API + "/by-id") @ResponseBody
+    @GetMapping("/api/party-processing/grn-purchase/by-id") @ResponseBody
     public ResponseEntity<?> byId(@RequestParam("id") int id) { return HrmApi.run(() -> service.byId(id)); }
 
-    @PostMapping(API + "/save") @ResponseBody
+    @PostMapping("/api/party-processing/grn-purchase/save") @ResponseBody
     public ResponseEntity<?> save(@RequestBody Map<String, Object> body) { return HrmApi.run(() -> service.save(body)); }
 
-    @PostMapping(API + "/delete") @ResponseBody
+    @PostMapping("/api/party-processing/grn-purchase/delete") @ResponseBody
     public ResponseEntity<?> delete(@RequestParam("id") int id) { return HrmApi.run(() -> service.delete(id)); }
 
-    @GetMapping(API + "/slip") @ResponseBody
+    @GetMapping("/api/party-processing/grn-purchase/slip") @ResponseBody
     public ResponseEntity<?> slip(@RequestParam("id") int id) { return HrmApi.run(() -> service.slip(id)); }
 }

@@ -26,7 +26,6 @@ import java.util.Map;
 @Controller
 public class DeliveryOrderTransferController {
 
-    private static final String API = "/api/store/delivery-order-transfer";
 
     private final DeliveryOrderTransferService service;
     public DeliveryOrderTransferController(DeliveryOrderTransferService service) { this.service = service; }
@@ -37,19 +36,19 @@ public class DeliveryOrderTransferController {
         return "store/delivery_order_transfer";
     }
 
-    @GetMapping(API + "/lookups")
+    @GetMapping("/api/store/delivery-order-transfer/lookups")
     @ResponseBody
     public ResponseEntity<?> lookups() { return run(service::lookups, "Could not load the screen."); }
 
-    @GetMapping(API + "/doc-no")
+    @GetMapping("/api/store/delivery-order-transfer/doc-no")
     @ResponseBody
     public ResponseEntity<?> docNo() { return run(service::docNo, "Could not generate the document number."); }
 
-    @GetMapping(API + "/history-customers")
+    @GetMapping("/api/store/delivery-order-transfer/history-customers")
     @ResponseBody
     public ResponseEntity<?> historyCustomers() { return run(service::historyCustomers, "Could not load the customers."); }
 
-    @GetMapping(API + "/available-stock")
+    @GetMapping("/api/store/delivery-order-transfer/available-stock")
     @ResponseBody
     public ResponseEntity<?> availableStock(@RequestParam(defaultValue = "0") int itemId,
                                             @RequestParam(defaultValue = "0") int warehouseId,
@@ -62,7 +61,7 @@ public class DeliveryOrderTransferController {
                 "Could not read the available stock.");
     }
 
-    @GetMapping(API + "/current-stock")
+    @GetMapping("/api/store/delivery-order-transfer/current-stock")
     @ResponseBody
     public ResponseEntity<?> currentStock(@RequestParam(defaultValue = "0") int itemId,
                                           @RequestParam(defaultValue = "0") int warehouseId,
@@ -75,7 +74,7 @@ public class DeliveryOrderTransferController {
                 "Could not read the current stock.");
     }
 
-    @GetMapping(API + "/history")
+    @GetMapping("/api/store/delivery-order-transfer/history")
     @ResponseBody
     public ResponseEntity<?> history(@RequestParam(defaultValue = "doc") String dateMode,
                                      @RequestParam(required = false) String fromDate,
@@ -86,7 +85,7 @@ public class DeliveryOrderTransferController {
         return run(() -> service.history(dateMode, fromDate, toDate, docNoFrom, docNoTo, supplierCustomerId), "History failed.");
     }
 
-    @GetMapping(API + "/{id}")
+    @GetMapping("/api/store/delivery-order-transfer/{id}")
     @ResponseBody
     public ResponseEntity<?> load(@PathVariable int id) {
         try {
@@ -98,11 +97,11 @@ public class DeliveryOrderTransferController {
         }
     }
 
-    @GetMapping(API + "/{id}/slip")
+    @GetMapping("/api/store/delivery-order-transfer/{id}/slip")
     @ResponseBody
     public ResponseEntity<?> slip(@PathVariable int id) { return slipOf(id, false); }
 
-    @GetMapping(API + "/{id}/slip264")
+    @GetMapping("/api/store/delivery-order-transfer/{id}/slip264")
     @ResponseBody
     public ResponseEntity<?> slip264(@PathVariable int id) { return slipOf(id, true); }
 
@@ -120,13 +119,13 @@ public class DeliveryOrderTransferController {
         }
     }
 
-    @PostMapping(API + "/save")
+    @PostMapping("/api/store/delivery-order-transfer/save")
     @ResponseBody
     public ResponseEntity<?> save(@RequestBody DeliveryOrderTransferDto dto) {
         return write(() -> service.save(dto), "Save failed.");
     }
 
-    @PostMapping(API + "/{id}/delete")
+    @PostMapping("/api/store/delivery-order-transfer/{id}/delete")
     @ResponseBody
     public ResponseEntity<?> delete(@PathVariable int id) {
         return write(() -> service.delete(id), "Delete failed.");

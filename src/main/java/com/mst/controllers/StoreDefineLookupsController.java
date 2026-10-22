@@ -25,20 +25,18 @@ import java.util.Map;
 @RestController
 public class StoreDefineLookupsController {
 
-    private static final String DEP = "/api/store/define/department";
-    private static final String AST = "/api/store/define/asset";
 
     private final StoreDefineLookupsService service;
     public StoreDefineLookupsController(StoreDefineLookupsService service) { this.service = service; }
 
     // ------------------------------------------------------------------ Define_Department
 
-    @GetMapping(DEP + "/list")
+    @GetMapping("/api/store/define/department/list")
     public ResponseEntity<?> departmentList(@RequestParam(required = false) String host) {
         return run(() -> service.departmentList(host), "Could not load the departments.");
     }
 
-    @GetMapping(DEP + "/{id}")
+    @GetMapping("/api/store/define/department/{id}")
     public ResponseEntity<?> department(@PathVariable int id, @RequestParam(required = false) String host) {
         try {
             Map<String, Object> m = service.department(id, host);
@@ -49,29 +47,29 @@ public class StoreDefineLookupsController {
         }
     }
 
-    @PostMapping(DEP + "/save")
+    @PostMapping("/api/store/define/department/save")
     public ResponseEntity<?> departmentSave(@RequestBody StoreDefineLookupsDto.Department body) {
         return run(() -> service.saveDepartment(body, false), "Save failed.");
     }
 
-    @PostMapping(DEP + "/update")
+    @PostMapping("/api/store/define/department/update")
     public ResponseEntity<?> departmentUpdate(@RequestBody StoreDefineLookupsDto.Department body) {
         return run(() -> service.saveDepartment(body, true), "Update failed.");
     }
 
     // ------------------------------------------------------------------ frmLookUpDefineAsset
 
-    @GetMapping(AST + "/lookups")
+    @GetMapping("/api/store/define/asset/lookups")
     public ResponseEntity<?> assetLookups(@RequestParam(required = false) String host) {
         return run(() -> service.assetLookups(host), "Could not load the screen.");
     }
 
-    @GetMapping(AST + "/departments")
+    @GetMapping("/api/store/define/asset/departments")
     public ResponseEntity<?> assetDepartments(@RequestParam(required = false) String host) {
         return run(() -> service.assetDepartments(host), "Could not load the departments.");
     }
 
-    @GetMapping(AST + "/history")
+    @GetMapping("/api/store/define/asset/history")
     public ResponseEntity<?> assetHistory(@RequestParam(required = false) String host,
                                           @RequestParam(defaultValue = "entry") String dateType,
                                           @RequestParam(required = false) String fromDate,
@@ -80,7 +78,7 @@ public class StoreDefineLookupsController {
         return run(() -> service.assetHistory(host, dateType, fromDate, toDate, categoryId), "History failed.");
     }
 
-    @GetMapping(AST + "/{id}")
+    @GetMapping("/api/store/define/asset/{id}")
     public ResponseEntity<?> asset(@PathVariable int id, @RequestParam(required = false) String host) {
         try {
             Map<String, Object> m = service.asset(id, host);
@@ -91,12 +89,12 @@ public class StoreDefineLookupsController {
         }
     }
 
-    @PostMapping(AST + "/save")
+    @PostMapping("/api/store/define/asset/save")
     public ResponseEntity<?> assetSave(@RequestBody StoreDefineLookupsDto.Asset body) {
         return run(() -> service.saveAsset(body, false), "Save failed.");
     }
 
-    @PostMapping(AST + "/update")
+    @PostMapping("/api/store/define/asset/update")
     public ResponseEntity<?> assetUpdate(@RequestBody StoreDefineLookupsDto.Asset body) {
         return run(() -> service.saveAsset(body, true), "Update failed.");
     }

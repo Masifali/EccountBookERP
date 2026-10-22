@@ -50,110 +50,110 @@ public class HrmLeaveController {
 
     // ------------------------------------------------------------------ 660 Leave Opening
 
-    @GetMapping(API + "/leave-opening/setup") @ResponseBody
+    @GetMapping("/api/hrm/leave/leave-opening/setup") @ResponseBody
     public ResponseEntity<?> openingSetup() { return HrmApi.run(() -> service.openingSetup()); }
 
-    @GetMapping(API + "/leave-opening/combos") @ResponseBody
+    @GetMapping("/api/hrm/leave/leave-opening/combos") @ResponseBody
     public ResponseEntity<?> openingCombos() { return HrmApi.run(() -> service.openingCombos()); }
 
-    @GetMapping(API + "/leave-opening/load") @ResponseBody
+    @GetMapping("/api/hrm/leave/leave-opening/load") @ResponseBody
     public ResponseEntity<?> openingLoad(@RequestParam(value = "leaveQuotaId", defaultValue = "0") int leaveQuotaId,
                                          @RequestParam(value = "leaveTypeProfileId", defaultValue = "0") int leaveTypeProfileId,
                                          @RequestParam(value = "employeeId", defaultValue = "0") long employeeId) {
         return HrmApi.run(() -> service.openingLoad(leaveQuotaId, leaveTypeProfileId, employeeId));
     }
 
-    @PostMapping(API + "/leave-opening/save") @ResponseBody
+    @PostMapping("/api/hrm/leave/leave-opening/save") @ResponseBody
     public ResponseEntity<?> openingSave(@RequestBody LeaveOpeningSaveDto body) { return HrmApi.run(() -> service.openingSave(body)); }
 
     // ------------------------------------------------------------------ 661 Employee Leave
 
-    @GetMapping(API + "/employee-leave/setup") @ResponseBody
+    @GetMapping("/api/hrm/leave/employee-leave/setup") @ResponseBody
     public ResponseEntity<?> leaveSetup() { return HrmApi.run(() -> service.leaveSetup()); }
 
-    @GetMapping(API + "/employee-leave/employee") @ResponseBody
+    @GetMapping("/api/hrm/leave/employee-leave/employee") @ResponseBody
     public ResponseEntity<?> leaveEmployee(@RequestParam(value = "employeeId", defaultValue = "0") long employeeId) {
         return HrmApi.run(() -> service.leaveEmployee(employeeId));
     }
 
-    @GetMapping(API + "/employee-leave/balance") @ResponseBody
+    @GetMapping("/api/hrm/leave/employee-leave/balance") @ResponseBody
     public ResponseEntity<?> leaveBalance(@RequestParam(value = "employeeId", defaultValue = "0") long employeeId,
                                           @RequestParam(value = "leaveQuotaId", defaultValue = "0") int leaveQuotaId,
                                           @RequestParam(value = "leaveTypeProfileId", defaultValue = "0") int leaveTypeProfileId) {
         return HrmApi.run(() -> service.leaveBalance(employeeId, leaveQuotaId, leaveTypeProfileId));
     }
 
-    @GetMapping(API + "/employee-leave/history") @ResponseBody
+    @GetMapping("/api/hrm/leave/employee-leave/history") @ResponseBody
     public ResponseEntity<?> leaveHistory() { return HrmApi.run(() -> service.leaveHistory()); }
 
-    @GetMapping(API + "/employee-leave/history-detail") @ResponseBody
+    @GetMapping("/api/hrm/leave/employee-leave/history-detail") @ResponseBody
     public ResponseEntity<?> leaveHistoryDetail(@RequestParam("id") long id) { return HrmApi.run(() -> service.leaveHistoryDetail(id)); }
 
-    @GetMapping(API + "/employee-leave/by-id") @ResponseBody
+    @GetMapping("/api/hrm/leave/employee-leave/by-id") @ResponseBody
     public ResponseEntity<?> leaveById(@RequestParam("id") long id) { return HrmApi.run(() -> service.leaveById(id)); }
 
-    @PostMapping(API + "/employee-leave/save") @ResponseBody
+    @PostMapping("/api/hrm/leave/employee-leave/save") @ResponseBody
     public ResponseEntity<?> leaveSave(@RequestBody LeaveRequestSaveDto body) { return HrmApi.run(() -> service.leaveSave(body)); }
 
     // ------------------------------------------------------------------ 662 / 463 CPL Leave Opening
 
-    @GetMapping(API + "/cpl-leave-opening/setup") @ResponseBody
+    @GetMapping("/api/hrm/leave/cpl-leave-opening/setup") @ResponseBody
     public ResponseEntity<?> cplOpeningSetup() { return HrmApi.run(() -> service.cplOpeningSetup()); }
 
-    @GetMapping(API + "/cpl-leave-opening/employees") @ResponseBody
+    @GetMapping("/api/hrm/leave/cpl-leave-opening/employees") @ResponseBody
     public ResponseEntity<?> cplOpeningEmployees() { return HrmApi.run(() -> service.cplOpeningEmployees()); }
 
-    @GetMapping(API + "/cpl-leave-opening/history") @ResponseBody
+    @GetMapping("/api/hrm/leave/cpl-leave-opening/history") @ResponseBody
     public ResponseEntity<?> cplOpeningHistory() { return HrmApi.run(() -> service.cplOpeningHistory()); }
 
-    @GetMapping(API + "/cpl-leave-opening/by-id") @ResponseBody
+    @GetMapping("/api/hrm/leave/cpl-leave-opening/by-id") @ResponseBody
     public ResponseEntity<?> cplOpeningById(@RequestParam("id") long id) { return HrmApi.run(() -> service.cplOpeningById(id)); }
 
-    @PostMapping(API + "/cpl-leave-opening/save") @ResponseBody
+    @PostMapping("/api/hrm/leave/cpl-leave-opening/save") @ResponseBody
     public ResponseEntity<?> cplOpeningSave(@RequestBody LeaveCplSaveDto body) { return HrmApi.run(() -> service.cplOpeningSave(body)); }
 
     // ------------------------------------------------------------------ 461 CPL Attendance
 
-    @GetMapping(API + "/cpl-attendance/setup") @ResponseBody
+    @GetMapping("/api/hrm/leave/cpl-attendance/setup") @ResponseBody
     public ResponseEntity<?> cplAttendanceSetup() { return HrmApi.run(() -> service.cplAttendanceSetup()); }
 
-    @GetMapping(API + "/cpl-attendance/load") @ResponseBody
+    @GetMapping("/api/hrm/leave/cpl-attendance/load") @ResponseBody
     public ResponseEntity<?> cplAttendanceLoad(@RequestParam(value = "employeeId", defaultValue = "0") long employeeId,
                                                @RequestParam(value = "month", defaultValue = "0") int month,
                                                @RequestParam(value = "year", defaultValue = "0") int year) {
         return HrmApi.run(() -> service.cplAttendanceLoad(employeeId, month, year));
     }
 
-    @GetMapping(API + "/cpl-attendance/history") @ResponseBody
+    @GetMapping("/api/hrm/leave/cpl-attendance/history") @ResponseBody
     public ResponseEntity<?> cplAttendanceHistory() { return HrmApi.run(() -> service.cplAttendanceHistory()); }
 
-    @GetMapping(API + "/cpl-attendance/by-id") @ResponseBody
+    @GetMapping("/api/hrm/leave/cpl-attendance/by-id") @ResponseBody
     public ResponseEntity<?> cplAttendanceById(@RequestParam("id") long id) { return HrmApi.run(() -> service.cplAttendanceById(id)); }
 
-    @PostMapping(API + "/cpl-attendance/save") @ResponseBody
+    @PostMapping("/api/hrm/leave/cpl-attendance/save") @ResponseBody
     public ResponseEntity<?> cplAttendanceSave(@RequestBody LeaveCplSaveDto body) { return HrmApi.run(() -> service.cplAttendanceSave(body)); }
 
     // ------------------------------------------------------------------ 462 CPL Request
 
-    @GetMapping(API + "/cpl-request/setup") @ResponseBody
+    @GetMapping("/api/hrm/leave/cpl-request/setup") @ResponseBody
     public ResponseEntity<?> cplRequestSetup() { return HrmApi.run(() -> service.cplRequestSetup()); }
 
-    @GetMapping(API + "/cpl-request/employee") @ResponseBody
+    @GetMapping("/api/hrm/leave/cpl-request/employee") @ResponseBody
     public ResponseEntity<?> cplRequestEmployee(@RequestParam(value = "employeeId", defaultValue = "0") long employeeId) {
         return HrmApi.run(() -> service.cplRequestEmployee(employeeId));
     }
 
-    @GetMapping(API + "/cpl-request/cpl") @ResponseBody
+    @GetMapping("/api/hrm/leave/cpl-request/cpl") @ResponseBody
     public ResponseEntity<?> cplRequestCpl(@RequestParam(value = "employeeId", defaultValue = "0") long employeeId) {
         return HrmApi.run(() -> service.cplRequestCpl(employeeId));
     }
 
-    @GetMapping(API + "/cpl-request/history") @ResponseBody
+    @GetMapping("/api/hrm/leave/cpl-request/history") @ResponseBody
     public ResponseEntity<?> cplRequestHistory() { return HrmApi.run(() -> service.cplRequestHistory()); }
 
-    @GetMapping(API + "/cpl-request/by-id") @ResponseBody
+    @GetMapping("/api/hrm/leave/cpl-request/by-id") @ResponseBody
     public ResponseEntity<?> cplRequestById(@RequestParam("id") long id) { return HrmApi.run(() -> service.cplRequestById(id)); }
 
-    @PostMapping(API + "/cpl-request/save") @ResponseBody
+    @PostMapping("/api/hrm/leave/cpl-request/save") @ResponseBody
     public ResponseEntity<?> cplRequestSave(@RequestBody LeaveCplRequestSaveDto body) { return HrmApi.run(() -> service.cplRequestSave(body)); }
 }

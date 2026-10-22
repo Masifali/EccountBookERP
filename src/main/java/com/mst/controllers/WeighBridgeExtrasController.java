@@ -34,7 +34,6 @@ import java.util.concurrent.Callable;
 @Controller
 public class WeighBridgeExtrasController {
 
-    private static final String API = "/api/weighbridge-extras";
 
     @Autowired private WeighBridgeLookupsService lookups;
     @Autowired private WeighBridgeReportsService reports;
@@ -56,11 +55,11 @@ public class WeighBridgeExtrasController {
 
     // ------------------------------------------------------------ WeighBridgeGeneralLookups
 
-    @GetMapping(API + "/general-lookups")
+    @GetMapping("/api/weighbridge-extras/general-lookups")
     @ResponseBody
     public ResponseEntity<?> generalLookups() { return run(lookups::generalLookups, "Could not load the lookups."); }
 
-    @PostMapping(API + "/general-lookups/save")
+    @PostMapping("/api/weighbridge-extras/general-lookups/save")
     @ResponseBody
     public ResponseEntity<?> saveGeneral(@RequestBody WeighBridgeLookupsService.GeneralRequest r) {
         return run(() -> lookups.saveGeneral(r), "Save failed.");
@@ -68,15 +67,15 @@ public class WeighBridgeExtrasController {
 
     // ------------------------------------------------------------------ VehicleWeightLookUp
 
-    @GetMapping(API + "/vehicle-weights")
+    @GetMapping("/api/weighbridge-extras/vehicle-weights")
     @ResponseBody
     public ResponseEntity<?> vehicleWeights() { return run(lookups::vehicleWeights, "Could not load the vehicle weights."); }
 
-    @GetMapping(API + "/vehicle-types")
+    @GetMapping("/api/weighbridge-extras/vehicle-types")
     @ResponseBody
     public ResponseEntity<?> vehicleTypes() { return run(lookups::vehicleTypes, "Could not load the vehicle types."); }
 
-    @PostMapping(API + "/vehicle-weights/save")
+    @PostMapping("/api/weighbridge-extras/vehicle-weights/save")
     @ResponseBody
     public ResponseEntity<?> saveVehicle(@RequestBody WeighBridgeLookupsService.VehicleRequest r) {
         return run(() -> lookups.saveVehicle(r), "Save failed.");
@@ -84,31 +83,31 @@ public class WeighBridgeExtrasController {
 
     // ------------------------------------------------------------------------------ 359
 
-    @GetMapping(API + "/rejected-ticket-nos")
+    @GetMapping("/api/weighbridge-extras/rejected-ticket-nos")
     @ResponseBody
     public ResponseEntity<?> rejectable() { return run(reports::rejectableTickets, "Could not load the tickets."); }
 
-    @PostMapping(API + "/rejected-ticket-nos/{id}/reject")
+    @PostMapping("/api/weighbridge-extras/rejected-ticket-nos/{id}/reject")
     @ResponseBody
     public ResponseEntity<?> reject(@PathVariable int id) { return run(() -> reports.reject(id), "Reject failed."); }
 
     // ------------------------------------------------------------------------------ 360
 
-    @GetMapping(API + "/history/lookups")
+    @GetMapping("/api/weighbridge-extras/history/lookups")
     @ResponseBody
     public ResponseEntity<?> historyLookups() { return run(reports::historyLookups, "Could not load the screen."); }
 
-    @GetMapping(API + "/history/refresh")
+    @GetMapping("/api/weighbridge-extras/history/refresh")
     @ResponseBody
     public ResponseEntity<?> historyRefresh() { return run(reports::historyRefresh, "Refresh failed."); }
 
-    @PostMapping(API + "/history")
+    @PostMapping("/api/weighbridge-extras/history")
     @ResponseBody
     public ResponseEntity<?> history(@RequestBody WeighBridgeReportsService.HistoryRequest r) {
         return run(() -> reports.history(r), "Could not load the history.");
     }
 
-    @GetMapping(API + "/history/slip/{id}")
+    @GetMapping("/api/weighbridge-extras/history/slip/{id}")
     @ResponseBody
     public ResponseEntity<?> slip(@PathVariable int id, @RequestParam(defaultValue = "0") int documentTypeId) {
         return run(() -> reports.slip(id, documentTypeId), "Could not read the slip.");
@@ -119,21 +118,21 @@ public class WeighBridgeExtrasController {
     @GetMapping("/weighbridge/weighbridge-weights-update")
     public String weightUpdatePage(Model model) { model.addAttribute("activeMenu", "apps"); return "weighbridge/weighbridge_weights_update"; }
 
-    @GetMapping(API + "/weight-update/lookups")
+    @GetMapping("/api/weighbridge-extras/weight-update/lookups")
     @ResponseBody
     public ResponseEntity<?> weightUpdateLookups() { return run(weightUpdate::lookups, "Could not load the screen."); }
 
-    @GetMapping(API + "/weight-update/branches")
+    @GetMapping("/api/weighbridge-extras/weight-update/branches")
     @ResponseBody
     public ResponseEntity<?> weightUpdateBranches() { return run(weightUpdate::branches, "Refresh failed."); }
 
-    @PostMapping(API + "/weight-update/search")
+    @PostMapping("/api/weighbridge-extras/weight-update/search")
     @ResponseBody
     public ResponseEntity<?> weightUpdateSearch(@RequestBody WeighBridgeWeightUpdateService.SearchRequest r) {
         return run(() -> weightUpdate.search(r), "Could not load the tickets.");
     }
 
-    @PostMapping(API + "/weight-update/update")
+    @PostMapping("/api/weighbridge-extras/weight-update/update")
     @ResponseBody
     public ResponseEntity<?> weightUpdateSave(@RequestBody WeighBridgeWeightUpdateService.UpdateRequest r) {
         return run(() -> weightUpdate.update(r), "Update failed.");

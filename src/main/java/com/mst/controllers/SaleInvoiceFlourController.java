@@ -39,27 +39,27 @@ public class SaleInvoiceFlourController {
     private static boolean bad(int doc) { return doc != 184 && doc != 186; }
     private static ResponseEntity<?> badDoc() { return ResponseEntity.badRequest().body(fail("Unknown document type.")); }
 
-    @GetMapping(API + "/lookups") @ResponseBody
+    @GetMapping("/sale/api/sale-invoice-flour/{doc}/lookups") @ResponseBody
     public ResponseEntity<?> lookups(@PathVariable int doc) { return bad(doc) ? badDoc() : run(() -> service.lookups(doc), "Could not load the screen."); }
 
-    @GetMapping(API + "/numbers") @ResponseBody
+    @GetMapping("/sale/api/sale-invoice-flour/{doc}/numbers") @ResponseBody
     public ResponseEntity<?> numbers(@PathVariable int doc) { return bad(doc) ? badDoc() : run(() -> service.numbers(doc), "Could not read the document number."); }
 
-    @GetMapping(API + "/uoms") @ResponseBody
+    @GetMapping("/sale/api/sale-invoice-flour/{doc}/uoms") @ResponseBody
     public ResponseEntity<?> uoms(@PathVariable int doc, @RequestParam int itemId) { return bad(doc) ? badDoc() : run(() -> service.uoms(itemId), "Could not load the units."); }
 
-    @GetMapping(API + "/rate-uoms") @ResponseBody
+    @GetMapping("/sale/api/sale-invoice-flour/{doc}/rate-uoms") @ResponseBody
     public ResponseEntity<?> rateUoms(@PathVariable int doc, @RequestParam int itemId, @RequestParam(required = false) String docDate) {
         return bad(doc) ? badDoc() : run(() -> service.rateUoms(itemId, docDate), "Could not load the rate units.");
     }
 
-    @GetMapping(API + "/rate") @ResponseBody
+    @GetMapping("/sale/api/sale-invoice-flour/{doc}/rate") @ResponseBody
     public ResponseEntity<?> rate(@PathVariable int doc, @RequestParam int itemId, @RequestParam(required = false) String docDate,
                                   @RequestParam(defaultValue = "0") int rateUomId) {
         return bad(doc) ? badDoc() : run(() -> service.rate(itemId, docDate, rateUomId), "Could not read the rate.");
     }
 
-    @GetMapping(API + "/stock") @ResponseBody
+    @GetMapping("/sale/api/sale-invoice-flour/{doc}/stock") @ResponseBody
     public ResponseEntity<?> stock(@PathVariable int doc, @RequestParam int itemId, @RequestParam(required = false) String docDate,
                                    @RequestParam(defaultValue = "0") int warehouseId, @RequestParam(defaultValue = "0") int jobLotId,
                                    @RequestParam(required = false) String cropYear, @RequestParam(defaultValue = "0") int packingTypeId,
@@ -67,20 +67,20 @@ public class SaleInvoiceFlourController {
         return bad(doc) ? badDoc() : run(() -> service.stock(itemId, docDate, warehouseId, jobLotId, cropYear, packingTypeId, stockUom), "Could not read the stock.");
     }
 
-    @GetMapping(API + "/history-customers") @ResponseBody
+    @GetMapping("/sale/api/sale-invoice-flour/{doc}/history-customers") @ResponseBody
     public ResponseEntity<?> historyCustomers(@PathVariable int doc) { return bad(doc) ? badDoc() : run(() -> service.historyCustomers(doc), "Could not load the customers."); }
 
-    @GetMapping(API + "/history") @ResponseBody
+    @GetMapping("/sale/api/sale-invoice-flour/{doc}/history") @ResponseBody
     public ResponseEntity<?> history(@PathVariable int doc, @RequestParam(required = false) String dateMode, @RequestParam(required = false) String from,
                                      @RequestParam(required = false) String to, @RequestParam(defaultValue = "0") int fromDocNo,
                                      @RequestParam(defaultValue = "0") int toDocNo, @RequestParam(defaultValue = "0") int customerId) {
         return bad(doc) ? badDoc() : run(() -> service.history(doc, dateMode, from, to, fromDocNo, toDocNo, customerId), "History failed.");
     }
 
-    @GetMapping(API + "/loader/setup") @ResponseBody
+    @GetMapping("/sale/api/sale-invoice-flour/{doc}/loader/setup") @ResponseBody
     public ResponseEntity<?> loaderSetup(@PathVariable int doc) { return bad(doc) ? badDoc() : run(service::loaderSetup, "Could not open the issuance loader."); }
 
-    @GetMapping(API + "/loader/search") @ResponseBody
+    @GetMapping("/sale/api/sale-invoice-flour/{doc}/loader/search") @ResponseBody
     public ResponseEntity<?> loaderSearch(@PathVariable int doc, @RequestParam(required = false) String fromDate, @RequestParam(required = false) String toDate,
                                           @RequestParam(defaultValue = "0") int parentCategoryId, @RequestParam(defaultValue = "0") int itemCategoryId,
                                           @RequestParam(defaultValue = "0") int itemTypeId, @RequestParam(defaultValue = "0") int jobLotId,
@@ -91,7 +91,7 @@ public class SaleInvoiceFlourController {
                 warehouseId, refDocumentTypeId, supplierCustomerId, itemId), "Could not search the issuances.");
     }
 
-    @GetMapping(API + "/{id:\\d+}") @ResponseBody
+    @GetMapping("/sale/api/sale-invoice-flour/{doc}/{id:\\d+}") @ResponseBody
     public ResponseEntity<?> load(@PathVariable int doc, @PathVariable int id) {
         if (bad(doc)) return badDoc();
         try {
@@ -103,10 +103,10 @@ public class SaleInvoiceFlourController {
         }
     }
 
-    @PostMapping(API + "/save") @ResponseBody
+    @PostMapping("/sale/api/sale-invoice-flour/{doc}/save") @ResponseBody
     public ResponseEntity<?> save(@PathVariable int doc, @RequestBody Map<String, Object> req) { return bad(doc) ? badDoc() : write(() -> service.save(doc, req), "Save failed."); }
 
-    @DeleteMapping(API + "/{id:\\d+}") @ResponseBody
+    @DeleteMapping("/sale/api/sale-invoice-flour/{doc}/{id:\\d+}") @ResponseBody
     public ResponseEntity<?> delete(@PathVariable int doc, @PathVariable int id) { return bad(doc) ? badDoc() : write(() -> service.delete(doc, id), "Delete failed."); }
 
     // --------------------------------------------------------------------------- helpers

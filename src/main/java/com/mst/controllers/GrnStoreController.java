@@ -30,7 +30,6 @@ import java.util.Map;
 @Controller
 public class GrnStoreController {
 
-    private static final String API = "/api/store/grn-store";
 
     private final GrnStoreService service;
     public GrnStoreController(GrnStoreService service) { this.service = service; }
@@ -41,22 +40,22 @@ public class GrnStoreController {
         return "store/grn_store";
     }
 
-    @GetMapping(API + "/lookups")
+    @GetMapping("/api/store/grn-store/lookups")
     @ResponseBody
     public ResponseEntity<?> lookups() { return run(service::lookups, "Could not load the screen."); }
 
-    @GetMapping(API + "/doc-no")
+    @GetMapping("/api/store/grn-store/doc-no")
     @ResponseBody
     public ResponseEntity<?> docNo() {
         return run(() -> Collections.singletonMap("docNo", service.nextDocNo()), "Could not generate the Doc No.");
     }
 
-    @GetMapping(API + "/history-filters")
+    @GetMapping("/api/store/grn-store/history-filters")
     @ResponseBody
     public ResponseEntity<?> historyFilters() { return run(service::historyFilters, "Could not refresh the filters."); }
 
     /** Body: {docDate, recId, rows:[{ItemId, ItemConditionId, WarehouseId, RackId}]} → [QtyInHand...]. */
-    @PostMapping(API + "/stock")
+    @PostMapping("/api/store/grn-store/stock")
     @ResponseBody
     @SuppressWarnings("unchecked")
     public ResponseEntity<?> stock(@RequestBody Map<String, Object> body) {
@@ -69,7 +68,7 @@ public class GrnStoreController {
         }, "Could not read the stock.");
     }
 
-    @GetMapping(API + "/history")
+    @GetMapping("/api/store/grn-store/history")
     @ResponseBody
     public ResponseEntity<?> history(@RequestParam(defaultValue = "doc") String dateType,
                                      @RequestParam(required = false) String fromDate,
@@ -80,7 +79,7 @@ public class GrnStoreController {
         return run(() -> service.history(dateType, fromDate, toDate, fromDocNo, toDocNo, supplierId), "History failed.");
     }
 
-    @GetMapping(API + "/register")
+    @GetMapping("/api/store/grn-store/register")
     @ResponseBody
     public ResponseEntity<?> register(@RequestParam(required = false) String fromDate,
                                       @RequestParam(required = false) String toDate,
@@ -94,7 +93,7 @@ public class GrnStoreController {
                 "Register failed.");
     }
 
-    @GetMapping(API + "/po-slip/{orderId}")
+    @GetMapping("/api/store/grn-store/po-slip/{orderId}")
     @ResponseBody
     public ResponseEntity<?> poSlip(@PathVariable int orderId) {
         try {
@@ -111,7 +110,7 @@ public class GrnStoreController {
     // ------------------------------------------------------------------------------ loaders
 
     /** Loader Doc No links: PO slip 201, Purchase Demand slip 454, Delivery Challan slip 148 (session org/company). */
-    @GetMapping(API + "/loader/{kind}/{id}/slip")
+    @GetMapping("/api/store/grn-store/loader/{kind}/{id}/slip")
     @ResponseBody
     public ResponseEntity<?> loaderSlip(@PathVariable String kind, @PathVariable int id) {
         try {
@@ -131,13 +130,13 @@ public class GrnStoreController {
         }
     }
 
-    @GetMapping(API + "/loader/po/lookups")
+    @GetMapping("/api/store/grn-store/loader/po/lookups")
     @ResponseBody
     public ResponseEntity<?> poLookups(@RequestParam(defaultValue = "false") boolean refresh) {
         return run(() -> service.purchaseOrderLoaderLookups(refresh), "Could not load the loader.");
     }
 
-    @GetMapping(API + "/loader/po")
+    @GetMapping("/api/store/grn-store/loader/po")
     @ResponseBody
     public ResponseEntity<?> poPending(@RequestParam(required = false) String fromDate,
                                        @RequestParam(required = false) String toDate,
@@ -147,11 +146,11 @@ public class GrnStoreController {
         return run(() -> service.pendingPurchaseOrders(fromDate, toDate, fromDocNo, toDocNo, supplierId), "Could not load pending orders.");
     }
 
-    @GetMapping(API + "/loader/demand/lookups")
+    @GetMapping("/api/store/grn-store/loader/demand/lookups")
     @ResponseBody
     public ResponseEntity<?> demandLookups() { return run(service::purchaseDemandLoaderLookups, "Could not load the loader."); }
 
-    @GetMapping(API + "/loader/demand")
+    @GetMapping("/api/store/grn-store/loader/demand")
     @ResponseBody
     public ResponseEntity<?> demandPending(@RequestParam(required = false) String fromDate,
                                            @RequestParam(required = false) String toDate,
@@ -161,11 +160,11 @@ public class GrnStoreController {
         return run(() -> service.pendingPurchaseDemands(fromDate, toDate, fromDocNo, toDocNo, itemId), "Could not load pending demands.");
     }
 
-    @GetMapping(API + "/loader/dc/lookups")
+    @GetMapping("/api/store/grn-store/loader/dc/lookups")
     @ResponseBody
     public ResponseEntity<?> dcLookups() { return run(service::deliveryChallanLoaderLookups, "Could not load the loader."); }
 
-    @GetMapping(API + "/loader/dc")
+    @GetMapping("/api/store/grn-store/loader/dc")
     @ResponseBody
     public ResponseEntity<?> dcPending(@RequestParam(required = false) String fromDate,
                                        @RequestParam(required = false) String toDate,
@@ -179,7 +178,7 @@ public class GrnStoreController {
 
     // ------------------------------------------------------------------------ one document
 
-    @GetMapping(API + "/{id}")
+    @GetMapping("/api/store/grn-store/{id}")
     @ResponseBody
     public ResponseEntity<?> load(@PathVariable int id) {
         try {
@@ -191,7 +190,7 @@ public class GrnStoreController {
         }
     }
 
-    @GetMapping(API + "/{id}/slip")
+    @GetMapping("/api/store/grn-store/{id}/slip")
     @ResponseBody
     public ResponseEntity<?> slip(@PathVariable int id) {
         try {
@@ -205,7 +204,7 @@ public class GrnStoreController {
         }
     }
 
-    @PostMapping(API + "/save")
+    @PostMapping("/api/store/grn-store/save")
     @ResponseBody
     public ResponseEntity<?> save(@RequestBody GrnStoreDto dto) {
         try {
@@ -219,7 +218,7 @@ public class GrnStoreController {
         }
     }
 
-    @PostMapping(API + "/{id}/delete")
+    @PostMapping("/api/store/grn-store/{id}/delete")
     @ResponseBody
     public ResponseEntity<?> delete(@PathVariable int id) {
         try {

@@ -48,7 +48,7 @@ public class MasterDataDefinitionController {
 
     // ------------------------------------------------------------------ setup / list / by-id
 
-    @GetMapping(API + "/{key:country|province|district|tehsil|city|currency|sea-ports|date-lock|other-items}/setup")
+    @GetMapping("/api/master-data/{key:country|province|district|tehsil|city|currency|sea-ports|date-lock|other-items}/setup")
     @ResponseBody
     public ResponseEntity<?> setup(@PathVariable("key") String key) {
         try {
@@ -67,7 +67,7 @@ public class MasterDataDefinitionController {
         } catch (Exception e) { return error(e, "Load failed."); }
     }
 
-    @GetMapping(API + "/{key:country|province|district|tehsil|city|currency|sea-ports|date-lock|other-items}/list")
+    @GetMapping("/api/master-data/{key:country|province|district|tehsil|city|currency|sea-ports|date-lock|other-items}/list")
     @ResponseBody
     public ResponseEntity<?> list(@PathVariable("key") String key) {
         try {
@@ -85,7 +85,7 @@ public class MasterDataDefinitionController {
         } catch (Exception e) { return error(e, "Load failed."); }
     }
 
-    @GetMapping(API + "/{key:country|province|district|tehsil|city|currency|sea-ports|date-lock|other-items}/by-id")
+    @GetMapping("/api/master-data/{key:country|province|district|tehsil|city|currency|sea-ports|date-lock|other-items}/by-id")
     @ResponseBody
     public ResponseEntity<?> byId(@PathVariable("key") String key, @RequestParam("id") int id) {
         try {
@@ -104,14 +104,14 @@ public class MasterDataDefinitionController {
     }
 
     /** DefineTehsil.btnRefresh_Click - DistrictBind. */
-    @GetMapping(API + "/tehsil/districts")
+    @GetMapping("/api/master-data/tehsil/districts")
     @ResponseBody
     public ResponseEntity<?> tehsilDistricts() {
         try { return ResponseEntity.ok(service.districtsForTehsil()); } catch (Exception e) { return error(e, "Load failed."); }
     }
 
     /** DefineCity.btnRefresh_Click - TehsilBind. */
-    @GetMapping(API + "/city/tehsils")
+    @GetMapping("/api/master-data/city/tehsils")
     @ResponseBody
     public ResponseEntity<?> cityTehsils() {
         try { return ResponseEntity.ok(service.tehsilsForCity()); } catch (Exception e) { return error(e, "Load failed."); }
@@ -119,7 +119,7 @@ public class MasterDataDefinitionController {
 
     // ------------------------------------------------------------------ save
 
-    @PostMapping(API + "/{key:country|province|district|tehsil|city|currency|sea-ports|date-lock|other-items}/save")
+    @PostMapping("/api/master-data/{key:country|province|district|tehsil|city|currency|sea-ports|date-lock|other-items}/save")
     @ResponseBody
     public ResponseEntity<?> save(@PathVariable("key") String key, @RequestBody Map<String, Object> body) {
         try {

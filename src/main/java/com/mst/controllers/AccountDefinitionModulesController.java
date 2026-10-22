@@ -9,13 +9,13 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.ModelAndView;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.mst.models.AcLookUp;
@@ -43,7 +43,6 @@ import com.mst.serviceInterface.ISupplierCustomerService;
 import com.mst.serviceInterface.IAccountCustomGroupService;
 import com.mst.security.CurrentUserContext;
 import com.mst.repositories.IChartofAccountRepository;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RequestBody;
 import java.util.Map;
 import java.util.HashMap;
@@ -57,8 +56,7 @@ import java.util.HashMap;
  * - Module 7: Account Opening Balance (/accounts/opening_balance)
  * - Module 8: Account Custom Group (/accounts/custom_group)
  */
-@Controller
-@RequestMapping("/accounts")
+@RestController
 public class AccountDefinitionModulesController {
 
 	@Autowired
@@ -103,41 +101,36 @@ public class AccountDefinitionModulesController {
 	@Autowired
 	private com.mst.services.SupplierDesktopService supplierDesktop;
 
-	@GetMapping({"/supplier", "/customer"})
-	public String viewSupplierCustomer(Model model) {
+	@GetMapping({"/accounts/supplier", "/accounts/customer"})
+	public ModelAndView viewSupplierCustomer(Model model) {
 		model.addAttribute("activeMenu", "accounts");
-		return "accounts/supplier_desktop";
+		return new ModelAndView("accounts/supplier_desktop");
 	}
 
-	@GetMapping("/supplier/lookups")
-	@ResponseBody
+	@GetMapping("/accounts/supplier/lookups")
 	public Map<String, Object> supplierLookups() {
 		return supplierDesktop.lookups();
 	}
 
-	@GetMapping("/supplier/discount-policies")
-	@ResponseBody
+	@GetMapping("/accounts/supplier/discount-policies")
 	public List<Map<String, Object>> supplierDiscountPolicies() {
 		return supplierDesktop.discountPolicies();
 	}
 
-	@GetMapping("/supplier/party-type/{partyTypeId}")
-	@ResponseBody
+	@GetMapping("/accounts/supplier/party-type/{partyTypeId}")
 	public Map<String, Object> supplierByPartyType(@PathVariable("partyTypeId") int partyTypeId,
 			@RequestParam(value = "glRecId", required = false, defaultValue = "0") int glRecId) {
 		return supplierDesktop.byPartyType(partyTypeId, glRecId);
 	}
 
-	@GetMapping("/supplier/read/{id}")
-	@ResponseBody
+	@GetMapping("/accounts/supplier/read/{id}")
 	public Map<String, Object> supplierReadById(@PathVariable("id") int id) {
 		Map<String, Object> res = new HashMap<>();
 		res.put("party", supplierDesktop.readById(id));
 		return res;
 	}
 
-	@PostMapping("/supplier/save")
-	@ResponseBody
+	@PostMapping("/accounts/supplier/save")
 	public Map<String, Object> saveSupplierCustomer(@RequestBody Map<String, Object> body) {
 		Map<String, Object> res = new HashMap<>();
 		try {
@@ -153,8 +146,7 @@ public class AccountDefinitionModulesController {
 	}
 
 	/* Profile Picture (browse_Click / SaveImageFile / ReadById picture box). */
-	@PostMapping("/supplier/picture")
-	@ResponseBody
+	@PostMapping("/accounts/supplier/picture")
 	public Map<String, Object> supplierStagePicture(@RequestBody Map<String, Object> body) {
 		Map<String, Object> res = new HashMap<>();
 		try {
@@ -167,8 +159,7 @@ public class AccountDefinitionModulesController {
 		return res;
 	}
 
-	@GetMapping("/supplier/picture/{id}")
-	@ResponseBody
+	@GetMapping("/accounts/supplier/picture/{id}")
 	public org.springframework.http.ResponseEntity<byte[]> supplierPicture(@PathVariable("id") int id) {
 		byte[] b = supplierDesktop.picture(id);
 		if (b == null) return org.springframework.http.ResponseEntity.notFound().build();
@@ -178,8 +169,7 @@ public class AccountDefinitionModulesController {
 				.header("Cache-Control", "no-store").body(b);
 	}
 
-	@GetMapping("/supplier/register")
-	@ResponseBody
+	@GetMapping("/accounts/supplier/register")
 	public List<Map<String, Object>> supplierRegister(
 			@RequestParam(value = "partyTypeId", required = false, defaultValue = "0") int partyTypeId,
 			@RequestParam(value = "glAccountId", required = false, defaultValue = "0") int glAccountId,
@@ -189,10 +179,10 @@ public class AccountDefinitionModulesController {
 	}
 
 	/** The desktop form has no delete; kept only so an old link does nothing. */
-	@GetMapping("/supplier/delete/{id}")
-	public String deleteSupplierCustomer(@PathVariable("id") int id) {
+	@GetMapping("/accounts/supplier/delete/{id}")
+	public ModelAndView deleteSupplierCustomer(@PathVariable("id") int id) {
 		supplierCustomerService.delete(id);
-		return "redirect:/accounts/supplier";
+		return new ModelAndView("redirect:/accounts/supplier");
 	}
 
 	// ==========================================
@@ -211,45 +201,39 @@ public class AccountDefinitionModulesController {
 	@Autowired
 	private com.mst.services.UserCoaManagementDesktopService userCoaDesktop;
 
-	@GetMapping("/user-coa-management")
-	public String viewUserCoaManagement(Model model) {
+	@GetMapping("/accounts/user-coa-management")
+	public ModelAndView viewUserCoaManagement(Model model) {
 		model.addAttribute("activeMenu", "accounts");
-		return "accounts/user_coa_management_desktop";
+		return new ModelAndView("accounts/user_coa_management_desktop");
 	}
 
-	@GetMapping("/user-coa-management/lookups")
-	@ResponseBody
+	@GetMapping("/accounts/user-coa-management/lookups")
 	public Map<String, Object> userCoaLookups() {
 		return userCoaDesktop.lookups();
 	}
 
-	@PostMapping("/user-coa-management/group/save")
-	@ResponseBody
+	@PostMapping("/accounts/user-coa-management/group/save")
 	public Map<String, Object> userCoaSaveGroup(@RequestBody Map<String, Object> body) {
 		return userCoaRun(() -> userCoaDesktop.saveGroup(intOf(body.get("recId")), body.get("groupName") == null ? "" : String.valueOf(body.get("groupName")),
 				Boolean.TRUE.equals(body.get("isActive"))));
 	}
 
-	@GetMapping("/user-coa-management/user-groups/{userId}")
-	@ResponseBody
+	@GetMapping("/accounts/user-coa-management/user-groups/{userId}")
 	public Map<String, Object> userCoaUserGroups(@PathVariable("userId") int userId) {
 		return userCoaDesktop.userGroups(userId);
 	}
 
-	@PostMapping("/user-coa-management/user-groups/{userId}/allocate")
-	@ResponseBody
+	@PostMapping("/accounts/user-coa-management/user-groups/{userId}/allocate")
 	public Map<String, Object> userCoaAllocateGroups(@PathVariable("userId") int userId, @RequestBody List<Integer> ids) {
 		return userCoaRun(() -> userCoaDesktop.allocateGroupsToUser(userId, ids));
 	}
 
-	@PostMapping("/user-coa-management/user-groups/{userId}/deallocate")
-	@ResponseBody
+	@PostMapping("/accounts/user-coa-management/user-groups/{userId}/deallocate")
 	public Map<String, Object> userCoaDeallocateGroups(@PathVariable("userId") int userId, @RequestBody List<Integer> ids) {
 		return userCoaRun(() -> userCoaDesktop.deallocateGroupsFromUser(userId, ids));
 	}
 
-	@GetMapping("/user-coa-management/coa")
-	@ResponseBody
+	@GetMapping("/accounts/user-coa-management/coa")
 	public Map<String, Object> userCoaShow(@RequestParam("customGroupId") int customGroupId,
 			@RequestParam(value = "thirdLevelAccountId", required = false, defaultValue = "0") int thirdLevelAccountId,
 			@RequestParam(value = "accountTypeId", required = false, defaultValue = "0") int accountTypeId,
@@ -257,26 +241,22 @@ public class AccountDefinitionModulesController {
 		return userCoaDesktop.coaShow(customGroupId, thirdLevelAccountId, accountTypeId, coaCustomGroupId);
 	}
 
-	@PostMapping("/user-coa-management/coa/{customGroupId}/allocate")
-	@ResponseBody
+	@PostMapping("/accounts/user-coa-management/coa/{customGroupId}/allocate")
 	public Map<String, Object> userCoaAllocateCoa(@PathVariable("customGroupId") int customGroupId, @RequestBody List<Integer> ids) {
 		return userCoaRun(() -> userCoaDesktop.allocateCoa(customGroupId, ids));
 	}
 
-	@PostMapping("/user-coa-management/coa/{customGroupId}/deallocate")
-	@ResponseBody
+	@PostMapping("/accounts/user-coa-management/coa/{customGroupId}/deallocate")
 	public Map<String, Object> userCoaDeallocateCoa(@PathVariable("customGroupId") int customGroupId, @RequestBody List<Integer> ids) {
 		return userCoaRun(() -> userCoaDesktop.deallocateCoa(customGroupId, ids));
 	}
 
-	@GetMapping("/user-coa-management/history")
-	@ResponseBody
+	@GetMapping("/accounts/user-coa-management/history")
 	public List<Map<String, Object>> userCoaHistory(@RequestParam(value = "userId", required = false, defaultValue = "0") int userId) {
 		return userCoaDesktop.history(userId);
 	}
 
-	@PostMapping("/user-coa-management/account-status")
-	@ResponseBody
+	@PostMapping("/accounts/user-coa-management/account-status")
 	public Map<String, Object> userCoaAccountStatus(@RequestBody List<Map<String, Object>> rows) {
 		return userCoaRun(() -> { userCoaDesktop.saveAccountStatus(rows); return null; });
 	}
@@ -308,15 +288,14 @@ public class AccountDefinitionModulesController {
 	@Autowired
 	private com.mst.services.AccountAllocationDesktopService allocationDesktop;
 
-	@GetMapping("/allocation")
-	public String viewAccountAllocation(Model model) {
+	@GetMapping("/accounts/allocation")
+	public ModelAndView viewAccountAllocation(Model model) {
 		model.addAttribute("activeMenu", "accounts");
-		return "accounts/account_allocation";
+		return new ModelAndView("accounts/account_allocation");
 	}
 
 	/** companytofill + AccountTypeFill */
-	@GetMapping("/allocation/lookups")
-	@ResponseBody
+	@GetMapping("/accounts/allocation/lookups")
 	public Map<String, Object> allocationLookups() {
 		Map<String, Object> res = new HashMap<>();
 		res.put("companies", allocationDesktop.companies());
@@ -326,8 +305,7 @@ public class AccountDefinitionModulesController {
 	}
 
 	/** cmbToCompany_Leave / btnShow_Click (financialYears only on Leave). */
-	@GetMapping("/allocation/show")
-	@ResponseBody
+	@GetMapping("/accounts/allocation/show")
 	public Map<String, Object> allocationShow(@RequestParam("companyId") int companyId,
 			@RequestParam(value = "accountTypeIds", required = false) String accountTypeIds,
 			@RequestParam(value = "withYears", required = false, defaultValue = "false") boolean withYears) {
@@ -348,8 +326,7 @@ public class AccountDefinitionModulesController {
 	/* Two handlers share /allocation/save: this JSON one (the desktop port) and the older HTML
 	   form post below. Splitting them by content type keeps both working and stops Spring's
 	   "Ambiguous mapping" failure at startup. */
-	@PostMapping(value = "/allocation/save", consumes = org.springframework.http.MediaType.APPLICATION_JSON_VALUE)
-	@ResponseBody
+	@PostMapping(value = "/accounts/allocation/save", consumes = org.springframework.http.MediaType.APPLICATION_JSON_VALUE)
 	public Map<String, Object> saveAccountAllocation(@RequestBody Map<String, Object> body) {
 		Map<String, Object> res = new HashMap<>();
 		try {
@@ -374,8 +351,7 @@ public class AccountDefinitionModulesController {
 		return res;
 	}
 
-	@PostMapping("/allocation/unallocate")
-	@ResponseBody
+	@PostMapping("/accounts/allocation/unallocate")
 	public Map<String, Object> unallocateAccounts(@RequestParam(value = "companyId", required = false, defaultValue = "0") int companyId,
 			@RequestBody List<Integer> chartOfAccountIds) {
 		Map<String, Object> res = new HashMap<>();
@@ -397,8 +373,8 @@ public class AccountDefinitionModulesController {
 
 	/* The older server-rendered page. It shared GET /allocation with the desktop port above,
 	   which made Spring refuse to start ("Ambiguous mapping"); kept under /allocation/legacy. */
-	@GetMapping("/allocation/legacy")
-	public String viewAccountAllocation(
+	@GetMapping("/accounts/allocation/legacy")
+	public ModelAndView viewAccountAllocation(
 			@RequestParam(value = "companyId", required = false, defaultValue = "0") Integer companyId,
 			Model model) {
 
@@ -422,11 +398,11 @@ public class AccountDefinitionModulesController {
 		model.addAttribute("allAccounts", allAccounts);
 		model.addAttribute("allocatedAccountIds", allocatedAccountIds);
 
-		return "accounts/account_allocation";
+		return new ModelAndView("accounts/account_allocation");
 	}
 
-	@PostMapping(value = "/allocation/save", consumes = org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-	public String saveAccountAllocation(
+	@PostMapping(value = "/accounts/allocation/save", consumes = org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+	public ModelAndView saveAccountAllocation(
 			@RequestParam("companyId") Integer companyId,
 			@RequestParam(value = "allocatedAccountIds", required = false) List<Integer> allocatedAccountIds) {
 
@@ -444,7 +420,7 @@ public class AccountDefinitionModulesController {
 			}
 		}
 
-		return "redirect:/accounts/allocation?companyId=" + companyId;
+		return new ModelAndView("redirect:/accounts/allocation?companyId=" + companyId);
 	}
 	private static int intOf(Object o) {
 		if (o instanceof Number) return ((Number) o).intValue();
@@ -469,8 +445,8 @@ public class AccountDefinitionModulesController {
 	@Autowired
 	private com.mst.services.OpeningBalanceDesktopService openingBalanceDesktop;
 
-	@GetMapping("/opening_balance")
-	public String viewOpeningBalance(Model model) {
+	@GetMapping("/accounts/opening_balance")
+	public ModelAndView viewOpeningBalance(Model model) {
 		OpeningBalanceForm form = new OpeningBalanceForm();
 		List<OpeningBalanceRow> rows = new ArrayList<>();
 		double totalDebit = 0.0;
@@ -534,12 +510,11 @@ public class AccountDefinitionModulesController {
 		model.addAttribute("form", form);
 		model.addAttribute("rights", openingBalanceDesktop.rights());
 		model.addAttribute("loadError", loadError);
-		return "accounts/opening_balance";
+		return new ModelAndView("accounts/opening_balance");
 	}
 
 	/** cmbAccountTitle_Leave / dgvOpeningBalance_DoubleClick: AccountsOpeningBalances.GetById. */
-	@GetMapping("/opening_balance/by-id/{id}")
-	@ResponseBody
+	@GetMapping("/accounts/opening_balance/by-id/{id}")
 	public Map<String, Object> openingBalanceById(@PathVariable("id") int id) {
 		Map<String, Object> res = new HashMap<>();
 		res.put("row", openingBalanceDesktop.getById(id));
@@ -547,8 +522,7 @@ public class AccountDefinitionModulesController {
 	}
 
 	/** BtnEdit "Update All" - body {comboText, rows:[{id, chartOfAccountId, origDebit, origCredit, debit, credit}]}. */
-	@PostMapping("/opening_balance/save")
-	@ResponseBody
+	@PostMapping("/accounts/opening_balance/save")
 	public Map<String, Object> saveOpeningBalance(@RequestBody Map<String, Object> body) {
 		Map<String, Object> res = new HashMap<>();
 		try {
@@ -571,8 +545,7 @@ public class AccountDefinitionModulesController {
 	}
 
 	/** button1 "Update Single" (SingleRecordUpdate). */
-	@PostMapping("/opening_balance/update-single")
-	@ResponseBody
+	@PostMapping("/accounts/opening_balance/update-single")
 	public java.util.Map<String, Object> updateSingleOpeningBalance(
 			@RequestParam(value = "comboValue", required = false, defaultValue = "0") Integer comboValue,
 			@RequestParam(value = "id", required = false, defaultValue = "0") Integer id,
@@ -605,15 +578,14 @@ public class AccountDefinitionModulesController {
 	@Autowired
 	private com.mst.services.AccountCustomGroupDesktopService customGroupDesktop;
 
-	@GetMapping("/custom_group")
-	public String viewCustomGroup(Model model) {
+	@GetMapping("/accounts/custom_group")
+	public ModelAndView viewCustomGroup(Model model) {
 		model.addAttribute("activeMenu", "accounts");
-		return "accounts/custom_group";
+		return new ModelAndView("accounts/custom_group");
 	}
 
 	/** Load / BtnRefresh: GridBind, LookUpBind, AccountTypeCombo, ThirdLevelAccountsDbCall. */
-	@GetMapping("/custom_group/lookups")
-	@ResponseBody
+	@GetMapping("/accounts/custom_group/lookups")
 	public Map<String, Object> customGroupLookups() {
 		Map<String, Object> res = new HashMap<>();
 		res.put("gridGroups", customGroupDesktop.gridGroups());
@@ -624,8 +596,7 @@ public class AccountDefinitionModulesController {
 	}
 
 	/** grdLookUp_DoubleClick: AcLookUps.GetById. */
-	@GetMapping("/custom_group/group/{id}")
-	@ResponseBody
+	@GetMapping("/accounts/custom_group/group/{id}")
 	public Map<String, Object> customGroupById(@PathVariable("id") int id) {
 		Map<String, Object> res = new HashMap<>();
 		try {
@@ -638,8 +609,7 @@ public class AccountDefinitionModulesController {
 		return res;
 	}
 
-	@PostMapping("/custom_group/save")
-	@ResponseBody
+	@PostMapping("/accounts/custom_group/save")
 	public Map<String, Object> saveCustomGroup(@RequestParam(value = "id", required = false) Integer id,
 	                                           @RequestParam(value = "acLookUpsDescription", required = false) String acLookUpsDescription) {
 		Map<String, Object> response = new HashMap<>();
@@ -655,8 +625,7 @@ public class AccountDefinitionModulesController {
 	}
 
 	/** The desktop form has no delete for a custom group (its only delete button un-allocates accounts). */
-	@PostMapping("/custom_group/delete-group/{id}")
-	@ResponseBody
+	@PostMapping("/accounts/custom_group/delete-group/{id}")
 	public Map<String, Object> deleteCustomGroup(@PathVariable("id") int id) {
 		Map<String, Object> response = new HashMap<>();
 		response.put("success", false);
@@ -664,8 +633,7 @@ public class AccountDefinitionModulesController {
 		return response;
 	}
 
-	@GetMapping("/custom_group/show")
-	@ResponseBody
+	@GetMapping("/accounts/custom_group/show")
 	public Map<String, Object> showCustomGroupData(
 			@RequestParam(value = "groupId", required = false, defaultValue = "0") int groupId,
 			@RequestParam(value = "accountTypeId", required = false, defaultValue = "0") int accountTypeId,
@@ -683,8 +651,7 @@ public class AccountDefinitionModulesController {
 		return result;
 	}
 
-	@PostMapping("/custom_group/allocate")
-	@ResponseBody
+	@PostMapping("/accounts/custom_group/allocate")
 	public Map<String, Object> allocateAccounts(
 			@RequestParam(value = "groupId", required = false, defaultValue = "0") int groupId,
 			@RequestBody List<Integer> chartOfAccountIds) {
@@ -701,8 +668,7 @@ public class AccountDefinitionModulesController {
 	}
 
 	/** Body: [{acLookUpsId, chartOfAccountId}] - each checked row's own hidden Id and ChartOfAccountId. */
-	@PostMapping("/custom_group/unallocate")
-	@ResponseBody
+	@PostMapping("/accounts/custom_group/unallocate")
 	public Map<String, Object> unallocateAccounts(@RequestBody List<Map<String, Object>> rows) {
 		Map<String, Object> response = new HashMap<>();
 		try {
@@ -716,8 +682,7 @@ public class AccountDefinitionModulesController {
 		return response;
 	}
 
-	@GetMapping("/custom_group/parent-accounts")
-	@ResponseBody
+	@GetMapping("/accounts/custom_group/parent-accounts")
 	public List<Map<String, Object>> getParentAccounts() {
 		return customGroupDesktop.thirdLevelAccounts();
 	}

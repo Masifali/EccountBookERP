@@ -1,5 +1,6 @@
 package com.mst.models;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import javax.persistence.Column;
@@ -66,6 +67,22 @@ public class Warehouse {
 	@Column(name = "WarehouseType", length = 50)
 	private String warehouseType;
 
+	// ---- Added by batch C1_joblot_warehouse (registry-listed columns for dbo.InvWareHouse). ----
+	// None of the four columns below is referenced by any procedure in this batch; they come from the
+	// registry's "columns seen" list. Verify they exist on dbo.InvWareHouse before relying on them.
+
+	@Column(name = "CropYear")
+	private String cropYear;
+
+	@Column(name = "DocumentTypeId")
+	private Integer documentTypeId;
+
+	@Column(name = "PackTypeDesc")
+	private String packTypeDesc;
+
+	@Column(name = "WBWeight")
+	private BigDecimal wbWeight;
+
 	public Integer getId() { return id; }
 	public void setId(Integer id) { this.id = id; }
 	public String getWareHouseCode() { return wareHouseCode; }
@@ -90,4 +107,12 @@ public class Warehouse {
 	public void setBranchesId(Integer branchesId) { this.branchesId = branchesId; }
 	public String getWarehouseType() { return warehouseType; }
 	public void setWarehouseType(String warehouseType) { this.warehouseType = warehouseType; }
+	public String getCropYear() { return cropYear; }
+	public void setCropYear(String cropYear) { this.cropYear = cropYear; }
+	public Integer getDocumentTypeId() { return documentTypeId; }
+	public void setDocumentTypeId(Integer documentTypeId) { this.documentTypeId = documentTypeId; }
+	public String getPackTypeDesc() { return packTypeDesc; }
+	public void setPackTypeDesc(String packTypeDesc) { this.packTypeDesc = packTypeDesc; }
+	public BigDecimal getWbWeight() { return wbWeight; }
+	public void setWbWeight(BigDecimal wbWeight) { this.wbWeight = wbWeight; }
 }

@@ -29,24 +29,24 @@ public class DmsFolderStructureController {
     @GetMapping("/upload-documents/folder-structure")
     public String page(Model model) { model.addAttribute("activeMenu", "apps"); return "upload_documents/folder-structure"; }
 
-    @GetMapping(API + "/setup") @ResponseBody
+    @GetMapping("/api/upload-documents/folder-structure/setup") @ResponseBody
     public ResponseEntity<?> setup() { return HrmApi.run(() -> service.setup()); }
 
-    @GetMapping(API + "/tree") @ResponseBody
+    @GetMapping("/api/upload-documents/folder-structure/tree") @ResponseBody
     public ResponseEntity<?> tree() { return HrmApi.run(() -> service.tree()); }
 
-    @GetMapping(API + "/documents") @ResponseBody
+    @GetMapping("/api/upload-documents/folder-structure/documents") @ResponseBody
     public ResponseEntity<?> documents(@RequestParam("folderId") long folderId) { return HrmApi.run(() -> service.documents(folderId)); }
 
-    @PostMapping(API + "/add-folder") @ResponseBody
+    @PostMapping("/api/upload-documents/folder-structure/add-folder") @ResponseBody
     public ResponseEntity<?> addFolder(@RequestBody Map<String, Object> b) {
         return HrmApi.run(() -> service.addSubFolder(num(b.get("parentId")), b.get("name") == null ? "" : String.valueOf(b.get("name"))));
     }
 
-    @PostMapping(API + "/delete-folder") @ResponseBody
+    @PostMapping("/api/upload-documents/folder-structure/delete-folder") @ResponseBody
     public ResponseEntity<?> deleteFolder(@RequestBody Map<String, Object> b) { return HrmApi.run(() -> service.deleteFolder(num(b.get("folderId")))); }
 
-    @PostMapping(API + "/delete-file") @ResponseBody
+    @PostMapping("/api/upload-documents/folder-structure/delete-file") @ResponseBody
     public ResponseEntity<?> deleteFile(@RequestBody Map<String, Object> b) {
         return HrmApi.run(() -> service.deleteFile(num(b.get("folderId")), (int) num(b.get("docFilePathId"))));
     }

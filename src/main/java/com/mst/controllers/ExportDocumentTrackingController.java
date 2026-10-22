@@ -40,13 +40,6 @@ import java.util.Map;
 @Controller
 public class ExportDocumentTrackingController {
 
-    private static final String CS = "/api/export/doc-due-color-schedule";
-    private static final String COD = "/api/export/define-chart-of-document";
-    private static final String CG = "/api/export/define-custom-group";
-    private static final String CCG = "/api/export/client-assign-to-group";
-    private static final String DOG = "/api/export/document-assign-to-group";
-    private static final String SDS = "/api/export/shipment-doc-schedule";
-    private static final String RPT = "/api/export/document-tracking-report";
 
     @Autowired private ExportDocDueColorScheduleService cs;
     @Autowired private ExportChartOfDocumentService cod;
@@ -81,140 +74,140 @@ public class ExportDocumentTrackingController {
 
     // ------------------------------------------------------------------ 619 DocDue Color Schedule
 
-    @GetMapping(CS + "/setup") @ResponseBody
+    @GetMapping("/api/export/doc-due-color-schedule/setup") @ResponseBody
     public ResponseEntity<?> csSetup() { return call(() -> cs.setup(), "Error occurred during database call."); }
 
-    @GetMapping(CS + "/refresh") @ResponseBody
+    @GetMapping("/api/export/doc-due-color-schedule/refresh") @ResponseBody
     public ResponseEntity<?> csRefresh() { return call(() -> cs.refresh(), "Load failed."); }
 
-    @GetMapping(CS + "/history-documents") @ResponseBody
+    @GetMapping("/api/export/doc-due-color-schedule/history-documents") @ResponseBody
     public ResponseEntity<?> csHistoryDocuments() { return call(() -> cs.historyDocuments(), "Load failed."); }
 
-    @PostMapping(CS + "/history") @ResponseBody
+    @PostMapping("/api/export/doc-due-color-schedule/history") @ResponseBody
     public ResponseEntity<?> csHistory(@RequestBody Map<String, Object> body) { return call(() -> cs.history(body), "Load failed."); }
 
-    @PostMapping(CS + "/save") @ResponseBody
+    @PostMapping("/api/export/doc-due-color-schedule/save") @ResponseBody
     public ResponseEntity<?> csSave(@RequestBody Map<String, Object> body) { return call(() -> cs.save(body), "Save failed."); }
 
     // ------------------------------------------------------------------ 620 Define Chart Of Document
 
-    @GetMapping(COD + "/setup") @ResponseBody
+    @GetMapping("/api/export/define-chart-of-document/setup") @ResponseBody
     public ResponseEntity<?> codSetup() { return call(() -> cod.setup(), "Error occurred during database call."); }
 
-    @GetMapping(COD + "/combos") @ResponseBody
+    @GetMapping("/api/export/define-chart-of-document/combos") @ResponseBody
     public ResponseEntity<?> codCombos() { return call(() -> cod.combos(), "Load failed."); }
 
-    @GetMapping(COD + "/history") @ResponseBody
+    @GetMapping("/api/export/define-chart-of-document/history") @ResponseBody
     public ResponseEntity<?> codHistory() { return call(() -> cod.history(), "Load failed."); }
 
-    @GetMapping(COD + "/by-id") @ResponseBody
+    @GetMapping("/api/export/define-chart-of-document/by-id") @ResponseBody
     public ResponseEntity<?> codById(@RequestParam("id") int id) { return call(() -> cod.readById(id), "Load failed."); }
 
-    @PostMapping(COD + "/save") @ResponseBody
+    @PostMapping("/api/export/define-chart-of-document/save") @ResponseBody
     public ResponseEntity<?> codSave(@RequestBody Map<String, Object> body) { return call(() -> cod.save(body), "Save failed."); }
 
     // ------------------------------------------------------------------ 621 Define Custom Group
 
-    @GetMapping(CG + "/setup") @ResponseBody
+    @GetMapping("/api/export/define-custom-group/setup") @ResponseBody
     public ResponseEntity<?> cgSetup() { return call(() -> cg.setup(), "Error occurred during database call."); }
 
-    @GetMapping(CG + "/history") @ResponseBody
+    @GetMapping("/api/export/define-custom-group/history") @ResponseBody
     public ResponseEntity<?> cgHistory() { return call(() -> cg.history(), "Load failed."); }
 
-    @GetMapping(CG + "/by-id") @ResponseBody
+    @GetMapping("/api/export/define-custom-group/by-id") @ResponseBody
     public ResponseEntity<?> cgById(@RequestParam("id") int id) { return call(() -> cg.readById(id), "Load failed."); }
 
-    @PostMapping(CG + "/save") @ResponseBody
+    @PostMapping("/api/export/define-custom-group/save") @ResponseBody
     public ResponseEntity<?> cgSave(@RequestBody Map<String, Object> body) { return call(() -> cg.save(body), "Save failed."); }
 
     // ------------------------------------------------------------------ 622 Client Assign To Group
 
-    @GetMapping(CCG + "/setup") @ResponseBody
+    @GetMapping("/api/export/client-assign-to-group/setup") @ResponseBody
     public ResponseEntity<?> ccgSetup() { return call(() -> ccg.setup(), "Error occurred during database call."); }
 
-    @GetMapping(CCG + "/custom-groups") @ResponseBody
+    @GetMapping("/api/export/client-assign-to-group/custom-groups") @ResponseBody
     public ResponseEntity<?> ccgCustomGroups() { return call(() -> ccg.customGroups(), "Load failed."); }
 
-    @GetMapping(CCG + "/show") @ResponseBody
+    @GetMapping("/api/export/client-assign-to-group/show") @ResponseBody
     public ResponseEntity<?> ccgShow(@RequestParam("customGroupId") int customGroupId) { return call(() -> ccg.show(customGroupId), "Load failed."); }
 
-    @PostMapping(CCG + "/allocate") @ResponseBody
+    @PostMapping("/api/export/client-assign-to-group/allocate") @ResponseBody
     public ResponseEntity<?> ccgAllocate(@RequestBody Map<String, Object> body) { return call(() -> ccg.allocate(body, true), "Save failed."); }
 
-    @PostMapping(CCG + "/unallocate") @ResponseBody
+    @PostMapping("/api/export/client-assign-to-group/unallocate") @ResponseBody
     public ResponseEntity<?> ccgUnallocate(@RequestBody Map<String, Object> body) { return call(() -> ccg.allocate(body, false), "Save failed."); }
 
     // ------------------------------------------------------------------ 623 Document Assign To Group
 
-    @GetMapping(DOG + "/setup") @ResponseBody
+    @GetMapping("/api/export/document-assign-to-group/setup") @ResponseBody
     public ResponseEntity<?> dogSetup() { return call(() -> dog.setup(), "Error occurred during database call."); }
 
-    @GetMapping(DOG + "/refresh") @ResponseBody
+    @GetMapping("/api/export/document-assign-to-group/refresh") @ResponseBody
     public ResponseEntity<?> dogRefresh() { return call(() -> dog.refresh(), "Load failed."); }
 
-    @GetMapping(DOG + "/history-combos") @ResponseBody
+    @GetMapping("/api/export/document-assign-to-group/history-combos") @ResponseBody
     public ResponseEntity<?> dogHistoryCombos() { return call(() -> dog.historyCombos(), "Load failed."); }
 
-    @GetMapping(DOG + "/show") @ResponseBody
+    @GetMapping("/api/export/document-assign-to-group/show") @ResponseBody
     public ResponseEntity<?> dogShow(@RequestParam("customGroupId") int customGroupId,
                                      @RequestParam(value = "withLast", defaultValue = "true") boolean withLast) {
         return call(() -> dog.show(customGroupId, withLast), "Load failed.");
     }
 
-    @PostMapping(DOG + "/save") @ResponseBody
+    @PostMapping("/api/export/document-assign-to-group/save") @ResponseBody
     public ResponseEntity<?> dogSave(@RequestBody Map<String, Object> body) { return call(() -> dog.save(body), "Save failed."); }
 
-    @PostMapping(DOG + "/history") @ResponseBody
+    @PostMapping("/api/export/document-assign-to-group/history") @ResponseBody
     public ResponseEntity<?> dogHistory(@RequestBody Map<String, Object> body) { return call(() -> dog.history(body), "Load failed."); }
 
     // ------------------------------------------------------------------ 624 Shipment Doc Schedule
 
-    @GetMapping(SDS + "/setup") @ResponseBody
+    @GetMapping("/api/export/shipment-doc-schedule/setup") @ResponseBody
     public ResponseEntity<?> sdsSetup() { return call(() -> sds.setup(), "Error occurred during database call."); }
 
-    @GetMapping(SDS + "/schedules") @ResponseBody
+    @GetMapping("/api/export/shipment-doc-schedule/schedules") @ResponseBody
     public ResponseEntity<?> sdsSchedules(@RequestParam(value = "supplierCustomerId", defaultValue = "0") int supplierCustomerId,
                                           @RequestParam(value = "salesPersonId", defaultValue = "0") int salesPersonId,
                                           @RequestParam(value = "referedInSDS", defaultValue = "true") boolean referedInSDS) {
         return call(() -> sds.schedules(supplierCustomerId, salesPersonId, referedInSDS), "Load failed.");
     }
 
-    @GetMapping(SDS + "/statuses") @ResponseBody
+    @GetMapping("/api/export/shipment-doc-schedule/statuses") @ResponseBody
     public ResponseEntity<?> sdsStatuses() { return call(() -> sds.statuses(), "Load failed."); }
 
-    @GetMapping(SDS + "/custom-groups") @ResponseBody
+    @GetMapping("/api/export/shipment-doc-schedule/custom-groups") @ResponseBody
     public ResponseEntity<?> sdsCustomGroups(@RequestParam("supplierCustomerId") int supplierCustomerId) {
         return call(() -> sds.customGroups(supplierCustomerId), "Load failed.");
     }
 
-    @GetMapping(SDS + "/show") @ResponseBody
+    @GetMapping("/api/export/shipment-doc-schedule/show") @ResponseBody
     public ResponseEntity<?> sdsShow(@RequestParam("refDocId") int refDocId,
                                      @RequestParam("refDocumentTypeId") int refDocumentTypeId,
                                      @RequestParam("customGroupId") int customGroupId) {
         return call(() -> sds.show(refDocId, refDocumentTypeId, customGroupId), "Load failed.");
     }
 
-    @PostMapping(SDS + "/allocate") @ResponseBody
+    @PostMapping("/api/export/shipment-doc-schedule/allocate") @ResponseBody
     public ResponseEntity<?> sdsAllocate(@RequestBody Map<String, Object> body) { return call(() -> sds.allocate(body), "Save failed."); }
 
-    @PostMapping(SDS + "/save") @ResponseBody
+    @PostMapping("/api/export/shipment-doc-schedule/save") @ResponseBody
     public ResponseEntity<?> sdsSave(@RequestBody Map<String, Object> body) { return call(() -> sds.save(body), "Save failed."); }
 
-    @PostMapping(SDS + "/unallocate") @ResponseBody
+    @PostMapping("/api/export/shipment-doc-schedule/unallocate") @ResponseBody
     public ResponseEntity<?> sdsUnallocate(@RequestBody Map<String, Object> body) { return call(() -> sds.unallocate(body), "Delete failed."); }
 
     // ------------------------------------------------------------------ 625 Export Document Tracking Report
 
-    @GetMapping(RPT + "/setup") @ResponseBody
+    @GetMapping("/api/export/document-tracking-report/setup") @ResponseBody
     public ResponseEntity<?> rptSetup() { return call(() -> rpt.setup(), "Error occurred during database call."); }
 
-    @GetMapping(RPT + "/refresh") @ResponseBody
+    @GetMapping("/api/export/document-tracking-report/refresh") @ResponseBody
     public ResponseEntity<?> rptRefresh() { return call(() -> rpt.refresh(), "Load failed."); }
 
-    @PostMapping(RPT + "/show") @ResponseBody
+    @PostMapping("/api/export/document-tracking-report/show") @ResponseBody
     public ResponseEntity<?> rptShow(@RequestBody Map<String, Object> body) { return call(() -> rpt.show(body), "Load failed."); }
 
-    @PostMapping(RPT + "/update") @ResponseBody
+    @PostMapping("/api/export/document-tracking-report/update") @ResponseBody
     public ResponseEntity<?> rptUpdate(@RequestBody Map<String, Object> body) { return call(() -> rpt.update(body), "Update failed."); }
 
     // ------------------------------------------------------------------ plumbing

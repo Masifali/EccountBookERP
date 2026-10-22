@@ -26,7 +26,6 @@ import java.util.Map;
 @Controller
 public class ExportReturnController {
 
-    private static final String RI = "/api/export/return-invoice";
     private static final String GRN = "/api/export/return-grn";
 
     @Autowired private ExportReturnInvoiceService ri;
@@ -48,95 +47,95 @@ public class ExportReturnController {
 
     // ------------------------------------------------------------------ 191 Export Return Invoice
 
-    @GetMapping(RI + "/setup") @ResponseBody
+    @GetMapping("/api/export/return-invoice/setup") @ResponseBody
     public ResponseEntity<?> riSetup() { return call(() -> ri.setup(), "Error occurred during database call."); }
 
-    @GetMapping(RI + "/refresh") @ResponseBody
+    @GetMapping("/api/export/return-invoice/refresh") @ResponseBody
     public ResponseEntity<?> riRefresh() { return call(() -> ri.refresh(), "Load failed."); }
 
-    @GetMapping(RI + "/reset") @ResponseBody
+    @GetMapping("/api/export/return-invoice/reset") @ResponseBody
     public ResponseEntity<?> riReset() { return call(() -> ri.reset(), "Load failed."); }
 
-    @GetMapping(RI + "/payment-terms") @ResponseBody
+    @GetMapping("/api/export/return-invoice/payment-terms") @ResponseBody
     public ResponseEntity<?> riPaymentTerms(@RequestParam("invoiceId") int invoiceId) { return call(() -> ri.invoicePaymentTerms(invoiceId), "Load failed."); }
 
-    @GetMapping(RI + "/by-id") @ResponseBody
+    @GetMapping("/api/export/return-invoice/by-id") @ResponseBody
     public ResponseEntity<?> riById(@RequestParam("id") int id, @RequestParam(value = "edit", defaultValue = "false") boolean edit) {
         return call(() -> ri.byId(id, edit), "Load failed.");
     }
 
-    @GetMapping(RI + "/history-combos") @ResponseBody
+    @GetMapping("/api/export/return-invoice/history-combos") @ResponseBody
     public ResponseEntity<?> riHistoryCombos() { return call(() -> ri.historyCombos(), "Load failed."); }
 
-    @PostMapping(RI + "/history") @ResponseBody
+    @PostMapping("/api/export/return-invoice/history") @ResponseBody
     public ResponseEntity<?> riHistory(@RequestBody Map<String, Object> body) { return call(() -> ri.history(body), "Load failed."); }
 
-    @GetMapping(RI + "/voucher-head") @ResponseBody
+    @GetMapping("/api/export/return-invoice/voucher-head") @ResponseBody
     public ResponseEntity<?> riVoucherHead(@RequestParam("id") int id) { return call(() -> ri.voucherHead(id), "Load failed."); }
 
-    @PostMapping(RI + "/save") @ResponseBody
+    @PostMapping("/api/export/return-invoice/save") @ResponseBody
     public ResponseEntity<?> riSave(@RequestBody Map<String, Object> body) { return call(() -> ri.save(body), "Save failed."); }
 
-    @PostMapping(RI + "/delete") @ResponseBody
+    @PostMapping("/api/export/return-invoice/delete") @ResponseBody
     public ResponseEntity<?> riDelete(@RequestBody Map<String, Object> body) { return call(() -> ri.delete(intOf(body.get("recId"))), "Delete failed."); }
 
-    @GetMapping(RI + "/loader/setup") @ResponseBody
+    @GetMapping("/api/export/return-invoice/loader/setup") @ResponseBody
     public ResponseEntity<?> riLoaderSetup() { return call(() -> ri.loaderSetup(), "Error occurred during database call."); }
 
-    @PostMapping(RI + "/loader/rows") @ResponseBody
+    @PostMapping("/api/export/return-invoice/loader/rows") @ResponseBody
     public ResponseEntity<?> riLoaderRows(@RequestBody Map<String, Object> body) { return call(() -> ri.loaderRows(body), "Load failed."); }
 
     // ------------------------------------------------------------------ 190 Export Return GRN
 
-    @GetMapping(GRN + "/setup") @ResponseBody
+    @GetMapping("/api/export/return-grn/setup") @ResponseBody
     public ResponseEntity<?> grnSetup() { return call(() -> grn.setup(), "Error occurred during database call."); }
 
-    @GetMapping(GRN + "/refresh") @ResponseBody
+    @GetMapping("/api/export/return-grn/refresh") @ResponseBody
     public ResponseEntity<?> grnRefresh(@RequestParam(value = "recId", defaultValue = "0") int recId) { return call(() -> grn.refresh(recId), "Load failed."); }
 
-    @GetMapping(GRN + "/reset") @ResponseBody
+    @GetMapping("/api/export/return-grn/reset") @ResponseBody
     public ResponseEntity<?> grnReset() { return call(() -> grn.reset(), "Load failed."); }
 
-    @GetMapping(GRN + "/gate-pass") @ResponseBody
+    @GetMapping("/api/export/return-grn/gate-pass") @ResponseBody
     public ResponseEntity<?> grnGatePass(@RequestParam("gpId") int gpId, @RequestParam(value = "recId", defaultValue = "0") int recId) {
         return call(() -> grn.gatePass(gpId, recId), "Load failed.");
     }
 
-    @GetMapping(GRN + "/forwarding") @ResponseBody
+    @GetMapping("/api/export/return-grn/forwarding") @ResponseBody
     public ResponseEntity<?> grnForwarding(@RequestParam("id") int id) { return call(() -> grn.forwarding(id), "Load failed."); }
 
-    @GetMapping(GRN + "/item-uoms") @ResponseBody
+    @GetMapping("/api/export/return-grn/item-uoms") @ResponseBody
     public ResponseEntity<?> grnItemUoms(@RequestParam("itemId") int itemId) { return call(() -> grn.itemUoms(itemId), "Load failed."); }
 
-    @GetMapping(GRN + "/forwarding-data") @ResponseBody
+    @GetMapping("/api/export/return-grn/forwarding-data") @ResponseBody
     public ResponseEntity<?> grnForwardingData(@RequestParam("invoiceId") int invoiceId) { return call(() -> grn.forwardingData(invoiceId), "Load failed."); }
 
-    @GetMapping(GRN + "/by-id") @ResponseBody
+    @GetMapping("/api/export/return-grn/by-id") @ResponseBody
     public ResponseEntity<?> grnById(@RequestParam("id") int id) { return call(() -> grn.byId(id), "Load failed."); }
 
-    @GetMapping(GRN + "/edit-data") @ResponseBody
+    @GetMapping("/api/export/return-grn/edit-data") @ResponseBody
     public ResponseEntity<?> grnEditData(@RequestParam("id") int id,
                                          @RequestParam(value = "forwardingId", defaultValue = "0") int forwardingId,
                                          @RequestParam(value = "invoiceId", defaultValue = "0") int invoiceId) {
         return call(() -> grn.editData(id, forwardingId, invoiceId), "Load failed.");
     }
 
-    @GetMapping(GRN + "/history-combos") @ResponseBody
+    @GetMapping("/api/export/return-grn/history-combos") @ResponseBody
     public ResponseEntity<?> grnHistoryCombos() { return call(() -> grn.historyCombos(), "Load failed."); }
 
-    @PostMapping(GRN + "/history") @ResponseBody
+    @PostMapping("/api/export/return-grn/history") @ResponseBody
     public ResponseEntity<?> grnHistory(@RequestBody Map<String, Object> body) { return call(() -> grn.history(body), "Load failed."); }
 
-    @PostMapping(GRN + "/save") @ResponseBody
+    @PostMapping("/api/export/return-grn/save") @ResponseBody
     public ResponseEntity<?> grnSave(@RequestBody Map<String, Object> body) { return call(() -> grn.save(body), "Save failed."); }
 
-    @PostMapping(GRN + "/delete") @ResponseBody
+    @PostMapping("/api/export/return-grn/delete") @ResponseBody
     public ResponseEntity<?> grnDelete(@RequestBody Map<String, Object> body) { return call(() -> grn.delete(intOf(body.get("recId"))), "Delete failed."); }
 
-    @GetMapping(GRN + "/loader/setup") @ResponseBody
+    @GetMapping("/api/export/return-grn/loader/setup") @ResponseBody
     public ResponseEntity<?> grnLoaderSetup() { return call(() -> grn.loaderSetup(), "Error occurred during database call."); }
 
-    @PostMapping(GRN + "/loader/rows") @ResponseBody
+    @PostMapping("/api/export/return-grn/loader/rows") @ResponseBody
     public ResponseEntity<?> grnLoaderRows(@RequestBody Map<String, Object> body) { return call(() -> grn.loaderRows(body), "Load failed."); }
 
     // ------------------------------------------------------------------ plumbing

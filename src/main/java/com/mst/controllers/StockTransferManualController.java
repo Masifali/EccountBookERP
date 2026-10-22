@@ -26,7 +26,6 @@ import java.util.Map;
 @Controller
 public class StockTransferManualController {
 
-    private static final String API = "/api/store/stock-transfer-manual";
 
     private final StockTransferManualService service;
     public StockTransferManualController(StockTransferManualService service) { this.service = service; }
@@ -37,29 +36,29 @@ public class StockTransferManualController {
         return "store/stock_transfer_manual";
     }
 
-    @GetMapping(API + "/lookups")
+    @GetMapping("/api/store/stock-transfer-manual/lookups")
     @ResponseBody
     public ResponseEntity<?> lookups() { return run(service::lookups, "Could not load the screen."); }
 
-    @GetMapping(API + "/refresh")
+    @GetMapping("/api/store/stock-transfer-manual/refresh")
     @ResponseBody
     public ResponseEntity<?> refresh() { return run(service::combos, "Refresh failed."); }
 
-    @GetMapping(API + "/doc-no")
+    @GetMapping("/api/store/stock-transfer-manual/doc-no")
     @ResponseBody
     public ResponseEntity<?> docNo() { return run(() -> Collections.singletonMap("docNo", service.docNo()), "Could not number the document."); }
 
-    @GetMapping(API + "/history-transfer-types")
+    @GetMapping("/api/store/stock-transfer-manual/history-transfer-types")
     @ResponseBody
     public ResponseEntity<?> historyTransferTypes() { return run(service::historyTransferTypes, "Could not load transfer types."); }
 
-    @GetMapping(API + "/uoms")
+    @GetMapping("/api/store/stock-transfer-manual/uoms")
     @ResponseBody
     public ResponseEntity<?> uoms(@RequestParam(defaultValue = "0") int itemId) {
         return run(() -> service.uoms(itemId), "Could not load units.");
     }
 
-    @GetMapping(API + "/available-stock")
+    @GetMapping("/api/store/stock-transfer-manual/available-stock")
     @ResponseBody
     public ResponseEntity<?> availableStock(@RequestParam(defaultValue = "0") int recId, @RequestParam(defaultValue = "0") int itemId,
                                             @RequestParam(defaultValue = "0") int warehouseId, @RequestParam(defaultValue = "0") int jobLotId,
@@ -68,7 +67,7 @@ public class StockTransferManualController {
                 service.availableStock(recId, itemId, warehouseId, jobLotId, cropYear, docDate)), "Could not read the stock.");
     }
 
-    @GetMapping(API + "/avg-rate")
+    @GetMapping("/api/store/stock-transfer-manual/avg-rate")
     @ResponseBody
     public ResponseEntity<?> avgRate(@RequestParam(defaultValue = "0") int recId, @RequestParam(defaultValue = "0") int itemId,
                                      @RequestParam(required = false) String docDate, @RequestParam(defaultValue = "0") int jobLotId,
@@ -78,11 +77,11 @@ public class StockTransferManualController {
                 service.avgRate(recId, itemId, docDate, jobLotId, cropYearId, cropYear, warehouseId)), "Could not read the rate.");
     }
 
-    @GetMapping(API + "/loader/lookups")
+    @GetMapping("/api/store/stock-transfer-manual/loader/lookups")
     @ResponseBody
     public ResponseEntity<?> loaderLookups() { return run(service::loaderLookups, "Could not open the loader."); }
 
-    @GetMapping(API + "/loader/search")
+    @GetMapping("/api/store/stock-transfer-manual/loader/search")
     @ResponseBody
     public ResponseEntity<?> loaderSearch(@RequestParam(required = false) String fromDate, @RequestParam(required = false) String toDate,
                                           @RequestParam(defaultValue = "0") int parentCategoryId, @RequestParam(defaultValue = "0") int itemCategoryId,
@@ -94,7 +93,7 @@ public class StockTransferManualController {
                 cropYear, warehouseId, refDocumentTypeId, supplierId, itemId), "Search failed.");
     }
 
-    @GetMapping(API + "/history")
+    @GetMapping("/api/store/stock-transfer-manual/history")
     @ResponseBody
     public ResponseEntity<?> history(@RequestParam(defaultValue = "doc") String dateType,
                                      @RequestParam(required = false) String fromDate, @RequestParam(required = false) String toDate,
@@ -103,7 +102,7 @@ public class StockTransferManualController {
         return run(() -> service.history(dateType, fromDate, toDate, fromDocNo, toDocNo, transferType), "History failed.");
     }
 
-    @GetMapping(API + "/{id}/history-detail")
+    @GetMapping("/api/store/stock-transfer-manual/{id}/history-detail")
     @ResponseBody
     public ResponseEntity<?> historyDetail(@PathVariable int id) {
         return run(() -> {
@@ -112,7 +111,7 @@ public class StockTransferManualController {
         }, "Could not read the detail.");
     }
 
-    @GetMapping(API + "/{id}")
+    @GetMapping("/api/store/stock-transfer-manual/{id}")
     @ResponseBody
     public ResponseEntity<?> load(@PathVariable int id) {
         try {
@@ -124,7 +123,7 @@ public class StockTransferManualController {
         }
     }
 
-    @GetMapping(API + "/{id}/slip")
+    @GetMapping("/api/store/stock-transfer-manual/{id}/slip")
     @ResponseBody
     public ResponseEntity<?> slip(@PathVariable int id) {
         try {
@@ -136,11 +135,11 @@ public class StockTransferManualController {
         }
     }
 
-    @PostMapping(API + "/save")
+    @PostMapping("/api/store/stock-transfer-manual/save")
     @ResponseBody
     public ResponseEntity<?> save(@RequestBody StockTransferManualDto dto) { return write(() -> service.save(dto), "Save failed."); }
 
-    @PostMapping(API + "/{id}/delete")
+    @PostMapping("/api/store/stock-transfer-manual/{id}/delete")
     @ResponseBody
     public ResponseEntity<?> delete(@PathVariable int id) { return write(() -> service.delete(id), "Delete failed."); }
 

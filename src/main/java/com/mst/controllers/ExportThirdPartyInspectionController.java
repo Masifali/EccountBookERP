@@ -52,78 +52,78 @@ public class ExportThirdPartyInspectionController {
 
     private static final String API = "/api/export/{seg:third-party-inspection|lab-against-third-party-inspection}";
 
-    @GetMapping(API + "/setup") @ResponseBody
+    @GetMapping("/api/export/{seg:third-party-inspection|lab-against-third-party-inspection}/setup") @ResponseBody
     public ResponseEntity<?> setup(@PathVariable("seg") String seg) { return call(() -> svc.setup(screen(seg)), "Error occurred during database call."); }
 
-    @GetMapping(API + "/refresh") @ResponseBody
+    @GetMapping("/api/export/{seg:third-party-inspection|lab-against-third-party-inspection}/refresh") @ResponseBody
     public ResponseEntity<?> refresh(@PathVariable("seg") String seg) { return call(() -> svc.refresh(screen(seg)), "Load failed."); }
 
-    @GetMapping(API + "/tracking-nos") @ResponseBody
+    @GetMapping("/api/export/{seg:third-party-inspection|lab-against-third-party-inspection}/tracking-nos") @ResponseBody
     public ResponseEntity<?> trackingNos(@PathVariable("seg") String seg, @RequestParam(value = "status", defaultValue = "not") String status) {
         return call(() -> svc.trackingNos(screen(seg), status), "Load failed.");
     }
 
-    @GetMapping(API + "/history-combos") @ResponseBody
+    @GetMapping("/api/export/{seg:third-party-inspection|lab-against-third-party-inspection}/history-combos") @ResponseBody
     public ResponseEntity<?> historyCombos(@PathVariable("seg") String seg) { return call(() -> svc.historyComboRefresh(screen(seg)), "Load failed."); }
 
-    @GetMapping(API + "/contracts") @ResponseBody
+    @GetMapping("/api/export/{seg:third-party-inspection|lab-against-third-party-inspection}/contracts") @ResponseBody
     public ResponseEntity<?> contracts(@PathVariable("seg") String seg, @RequestParam("customerId") int customerId,
                                        @RequestParam(value = "recId", defaultValue = "0") int recId) {
         return call(() -> svc.contracts(screen(seg), customerId, recId), "Load failed.");
     }
 
-    @GetMapping(API + "/invoices") @ResponseBody
+    @GetMapping("/api/export/{seg:third-party-inspection|lab-against-third-party-inspection}/invoices") @ResponseBody
     public ResponseEntity<?> invoices(@PathVariable("seg") String seg, @RequestParam("contractId") int contractId) {
         return call(() -> svc.invoices(screen(seg), contractId), "Load failed.");
     }
 
-    @GetMapping(API + "/schedules") @ResponseBody
+    @GetMapping("/api/export/{seg:third-party-inspection|lab-against-third-party-inspection}/schedules") @ResponseBody
     public ResponseEntity<?> schedules(@PathVariable("seg") String seg, @RequestParam("contractId") int contractId,
                                        @RequestParam("customerId") int customerId) {
         return call(() -> svc.schedules(screen(seg), contractId, customerId), "Load failed.");
     }
 
-    @GetMapping(API + "/contract-info") @ResponseBody
+    @GetMapping("/api/export/{seg:third-party-inspection|lab-against-third-party-inspection}/contract-info") @ResponseBody
     public ResponseEntity<?> contractInfo(@PathVariable("seg") String seg, @RequestParam(value = "ids", defaultValue = "") String ids) {
         return call(() -> svc.contractInfo(screen(seg), ids), "Load failed.");
     }
 
-    @GetMapping(API + "/group-parameters") @ResponseBody
+    @GetMapping("/api/export/{seg:third-party-inspection|lab-against-third-party-inspection}/group-parameters") @ResponseBody
     public ResponseEntity<?> groupParameters(@PathVariable("seg") String seg, @RequestParam("groupId") int groupId) {
         return call(() -> svc.groupParameters(screen(seg), groupId), "Load failed.");
     }
 
-    @GetMapping(API + "/third-party-types") @ResponseBody
+    @GetMapping("/api/export/{seg:third-party-inspection|lab-against-third-party-inspection}/third-party-types") @ResponseBody
     public ResponseEntity<?> thirdPartyTypes(@PathVariable("seg") String seg, @RequestParam(value = "activeOnly", defaultValue = "false") boolean activeOnly) {
         return call(() -> svc.thirdPartyTypes(screen(seg), activeOnly), "Load failed.");
     }
 
-    @GetMapping(API + "/by-id") @ResponseBody
+    @GetMapping("/api/export/{seg:third-party-inspection|lab-against-third-party-inspection}/by-id") @ResponseBody
     public ResponseEntity<?> byId(@PathVariable("seg") String seg, @RequestParam("id") int id) {
         return call(() -> svc.readById(screen(seg), id), "Load failed.");
     }
 
-    @GetMapping(API + "/history-detail") @ResponseBody
+    @GetMapping("/api/export/{seg:third-party-inspection|lab-against-third-party-inspection}/history-detail") @ResponseBody
     public ResponseEntity<?> historyDetail(@PathVariable("seg") String seg, @RequestParam("id") int id) {
         return call(() -> svc.historyDetail(screen(seg), id), "Load failed.");
     }
 
-    @GetMapping(API + "/attachments") @ResponseBody
+    @GetMapping("/api/export/{seg:third-party-inspection|lab-against-third-party-inspection}/attachments") @ResponseBody
     public ResponseEntity<?> attachments(@PathVariable("seg") String seg, @RequestParam("id") int id) {
         return call(() -> svc.attachments(screen(seg), id), "Load failed.");
     }
 
-    @GetMapping(API + "/print-check") @ResponseBody
+    @GetMapping("/api/export/{seg:third-party-inspection|lab-against-third-party-inspection}/print-check") @ResponseBody
     public ResponseEntity<?> printCheck(@PathVariable("seg") String seg, @RequestParam("id") int id) {
         return call(() -> svc.printCheck(screen(seg), id), "No Record Found");
     }
 
-    @PostMapping(API + "/history") @ResponseBody
+    @PostMapping("/api/export/{seg:third-party-inspection|lab-against-third-party-inspection}/history") @ResponseBody
     public ResponseEntity<?> history(@PathVariable("seg") String seg, @RequestBody Map<String, Object> body) {
         return call(() -> svc.history(screen(seg), body), "Load failed.");
     }
 
-    @PostMapping(API + "/save") @ResponseBody
+    @PostMapping("/api/export/{seg:third-party-inspection|lab-against-third-party-inspection}/save") @ResponseBody
     public ResponseEntity<?> save(@PathVariable("seg") String seg, @RequestBody Map<String, Object> body) {
         return call(() -> svc.save(screen(seg), body), "Save failed.");
     }

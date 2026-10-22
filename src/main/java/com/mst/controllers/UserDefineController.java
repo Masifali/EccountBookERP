@@ -50,16 +50,16 @@ public class UserDefineController {
 
     // ------------------------------------------------------------------ Define User / User History
 
-    @GetMapping(API + "/setup") @ResponseBody
+    @GetMapping("/api/user-define/setup") @ResponseBody
     public ResponseEntity<?> setup() { return run(service::setup, "Load failed."); }
 
-    @GetMapping(API + "/users") @ResponseBody
+    @GetMapping("/api/user-define/users") @ResponseBody
     public ResponseEntity<?> users() { return run(service::users, "Load failed."); }
 
-    @GetMapping(API + "/by-id") @ResponseBody
+    @GetMapping("/api/user-define/by-id") @ResponseBody
     public ResponseEntity<?> byId(@RequestParam("id") int id) { return run(() -> service.user(id), "Load failed."); }
 
-    @GetMapping(API + "/profile-image")
+    @GetMapping("/api/user-define/profile-image")
     public ResponseEntity<?> profileImage(@RequestParam("id") int id) {
         try {
             byte[] bytes = service.profileImage(id);
@@ -74,37 +74,37 @@ public class UserDefineController {
         }
     }
 
-    @PostMapping(API + "/save") @ResponseBody
+    @PostMapping("/api/user-define/save") @ResponseBody
     public ResponseEntity<?> save(@RequestBody Map<String, Object> body) { return run(() -> service.save(body), "Save failed."); }
 
     // ------------------------------------------------------------------ ApplicationsAllocateToUser tab
 
-    @GetMapping(API + "/apps/users") @ResponseBody
+    @GetMapping("/api/user-define/apps/users") @ResponseBody
     public ResponseEntity<?> appUsers() { return run(service::appUsers, "Load failed."); }
 
-    @GetMapping(API + "/apps/companies") @ResponseBody
+    @GetMapping("/api/user-define/apps/companies") @ResponseBody
     public ResponseEntity<?> appCompanies(@RequestParam("userId") int userId) { return run(() -> service.appCompanies(userId), "Load failed."); }
 
-    @GetMapping(API + "/apps/grids") @ResponseBody
+    @GetMapping("/api/user-define/apps/grids") @ResponseBody
     public ResponseEntity<?> appGrids(@RequestParam("userId") int userId, @RequestParam("companyId") int companyId) {
         return run(() -> service.appGrids(userId, companyId), "Load failed.");
     }
 
-    @PostMapping(API + "/apps/save") @ResponseBody
+    @PostMapping("/api/user-define/apps/save") @ResponseBody
     public ResponseEntity<?> appSave(@RequestBody Map<String, Object> body) { return run(() -> service.saveApps(body), "Save failed."); }
 
     // ------------------------------------------------------------------ frmBranchesAllocationToUser
 
-    @GetMapping(API + "/branches/users") @ResponseBody
+    @GetMapping("/api/user-define/branches/users") @ResponseBody
     public ResponseEntity<?> branchUsers() { return run(service::branchUsers, "Load failed."); }
 
-    @GetMapping(API + "/branches/grids") @ResponseBody
+    @GetMapping("/api/user-define/branches/grids") @ResponseBody
     public ResponseEntity<?> branchGrids(@RequestParam("userId") int userId) { return run(() -> service.branchGrids(userId), "Load failed."); }
 
-    @PostMapping(API + "/branches/allocate") @ResponseBody
+    @PostMapping("/api/user-define/branches/allocate") @ResponseBody
     public ResponseEntity<?> branchAllocate(@RequestBody Map<String, Object> body) { return run(() -> service.allocateBranches(body), "Save failed."); }
 
-    @PostMapping(API + "/branches/deallocate") @ResponseBody
+    @PostMapping("/api/user-define/branches/deallocate") @ResponseBody
     public ResponseEntity<?> branchDeallocate(@RequestBody Map<String, Object> body) { return run(() -> service.deallocateBranches(body), "Save failed."); }
 
     // ------------------------------------------------------------------ plumbing

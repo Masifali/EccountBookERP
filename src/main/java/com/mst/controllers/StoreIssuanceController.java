@@ -34,7 +34,6 @@ import java.util.Map;
 @Controller
 public class StoreIssuanceController {
 
-    private static final String API = "/api/store/issuance/{screen}";
 
     private final StoreIssuanceService service;
     public StoreIssuanceController(StoreIssuanceService service) { this.service = service; }
@@ -58,13 +57,13 @@ public class StoreIssuanceController {
 
     // ------------------------------------------------------------------------------- api
 
-    @GetMapping(API + "/lookups")
+    @GetMapping("/api/store/issuance/{screen}/lookups")
     @ResponseBody
     public ResponseEntity<?> lookups(@PathVariable String screen) {
         return run(() -> service.lookups(screen(screen)), "Could not load the screen.");
     }
 
-    @GetMapping(API + "/stock")
+    @GetMapping("/api/store/issuance/{screen}/stock")
     @ResponseBody
     public ResponseEntity<?> stock(@PathVariable String screen,
                                    @RequestParam(defaultValue = "0") int recId,
@@ -77,7 +76,7 @@ public class StoreIssuanceController {
                 "Could not read stock.");
     }
 
-    @GetMapping(API + "/last-rates")
+    @GetMapping("/api/store/issuance/{screen}/last-rates")
     @ResponseBody
     public ResponseEntity<?> lastRates(@PathVariable String screen, @RequestParam int itemId,
                                        @RequestParam(defaultValue = "0") int itemConditionId) {
@@ -86,7 +85,7 @@ public class StoreIssuanceController {
     }
 
     /** 321 only — txtBarcodeReader. */
-    @GetMapping(API + "/barcode")
+    @GetMapping("/api/store/issuance/{screen}/barcode")
     @ResponseBody
     public ResponseEntity<?> barcode(@PathVariable String screen, @RequestParam String barcode) {
         if (screen(screen) != Screen.DIRECT) return ResponseEntity.notFound().build();
@@ -94,7 +93,7 @@ public class StoreIssuanceController {
     }
 
     /** 322 only — PendingDoPmForIssuance. */
-    @GetMapping(API + "/pending-delivery-orders")
+    @GetMapping("/api/store/issuance/{screen}/pending-delivery-orders")
     @ResponseBody
     public ResponseEntity<?> pendingDeliveryOrders(@PathVariable String screen,
                                                    @RequestParam(required = false) String fromDate,
@@ -107,7 +106,7 @@ public class StoreIssuanceController {
     }
 
     /** 322 only — LoadDepRequestToConsumableStore pickers. */
-    @GetMapping(API + "/department-request-lookups")
+    @GetMapping("/api/store/issuance/{screen}/department-request-lookups")
     @ResponseBody
     public ResponseEntity<?> departmentRequestLookups(@PathVariable String screen) {
         if (screen(screen) != Screen.ISSUANCE) return ResponseEntity.notFound().build();
@@ -115,7 +114,7 @@ public class StoreIssuanceController {
     }
 
     /** 322 only — LoadDepRequestToConsumableStore grid. */
-    @GetMapping(API + "/pending-department-requests")
+    @GetMapping("/api/store/issuance/{screen}/pending-department-requests")
     @ResponseBody
     public ResponseEntity<?> pendingDepartmentRequests(@PathVariable String screen,
                                                        @RequestParam(required = false) String fromDate,
@@ -130,7 +129,7 @@ public class StoreIssuanceController {
                 itemId, departmentFromId, departmentToId), "Could not load pending department requests.");
     }
 
-    @GetMapping(API + "/history")
+    @GetMapping("/api/store/issuance/{screen}/history")
     @ResponseBody
     public ResponseEntity<?> history(@PathVariable String screen,
                                      @RequestParam(required = false) String fromDate,
@@ -140,7 +139,7 @@ public class StoreIssuanceController {
         return run(() -> service.history(screen(screen), fromDate, toDate, fromDocNo, toDocNo), "History failed.");
     }
 
-    @GetMapping(API + "/{id}")
+    @GetMapping("/api/store/issuance/{screen}/{id}")
     @ResponseBody
     public ResponseEntity<?> load(@PathVariable String screen, @PathVariable int id) {
         try {
@@ -152,7 +151,7 @@ public class StoreIssuanceController {
         }
     }
 
-    @GetMapping(API + "/{id}/slip")
+    @GetMapping("/api/store/issuance/{screen}/{id}/slip")
     @ResponseBody
     public ResponseEntity<?> slip(@PathVariable String screen, @PathVariable int id) {
         try {
@@ -164,13 +163,13 @@ public class StoreIssuanceController {
         }
     }
 
-    @PostMapping(API + "/save")
+    @PostMapping("/api/store/issuance/{screen}/save")
     @ResponseBody
     public ResponseEntity<?> save(@PathVariable String screen, @RequestBody StoreIssuanceDto dto) {
         return write(() -> service.save(screen(screen), dto), "Save failed.");
     }
 
-    @PostMapping(API + "/{id}/delete")
+    @PostMapping("/api/store/issuance/{screen}/{id}/delete")
     @ResponseBody
     public ResponseEntity<?> delete(@PathVariable String screen, @PathVariable int id) {
         return write(() -> service.delete(screen(screen), id), "Delete failed.");

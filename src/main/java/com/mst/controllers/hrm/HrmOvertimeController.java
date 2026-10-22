@@ -25,8 +25,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 public class HrmOvertimeController {
 
     private static final String API = "/api/hrm/overtime";
-    private static final String REQ = API + "/over-time-request";
-    private static final String EMP = API + "/employee-over-time";
 
     @Autowired private HrmOvertimeService service;
 
@@ -35,19 +33,19 @@ public class HrmOvertimeController {
     @GetMapping("/hrm/over-time-request")
     public String overTimeRequestPage(Model model) { model.addAttribute("activeMenu", "apps"); return "hrm/overtime/over-time-request"; }
 
-    @GetMapping(REQ + "/setup") @ResponseBody
+    @GetMapping("/api/hrm/overtime/over-time-request/setup") @ResponseBody
     public ResponseEntity<?> requestSetup() { return HrmApi.run(() -> service.requestSetup()); }
 
-    @GetMapping(REQ + "/combos") @ResponseBody
+    @GetMapping("/api/hrm/overtime/over-time-request/combos") @ResponseBody
     public ResponseEntity<?> requestCombos() { return HrmApi.run(() -> service.requestCombos()); }
 
-    @GetMapping(REQ + "/by-id") @ResponseBody
+    @GetMapping("/api/hrm/overtime/over-time-request/by-id") @ResponseBody
     public ResponseEntity<?> requestById(@RequestParam("id") long id) { return HrmApi.run(() -> service.request(id)); }
 
-    @PostMapping(REQ + "/save") @ResponseBody
+    @PostMapping("/api/hrm/overtime/over-time-request/save") @ResponseBody
     public ResponseEntity<?> requestSave(@RequestBody OvertimeRequestDto body) { return HrmApi.run(() -> service.saveRequest(body)); }
 
-    @GetMapping(REQ + "/history") @ResponseBody
+    @GetMapping("/api/hrm/overtime/over-time-request/history") @ResponseBody
     public ResponseEntity<?> requestHistory(@RequestParam(value = "mode", required = false) String mode,
                                             @RequestParam(value = "from", required = false) String from,
                                             @RequestParam(value = "to", required = false) String to,
@@ -57,18 +55,18 @@ public class HrmOvertimeController {
         return HrmApi.run(() -> service.requestHistory(mode, from, to, sectionId, departmentId, requestedById));
     }
 
-    @GetMapping(REQ + "/history-detail") @ResponseBody
+    @GetMapping("/api/hrm/overtime/over-time-request/history-detail") @ResponseBody
     public ResponseEntity<?> requestHistoryDetail(@RequestParam("id") long id) { return HrmApi.run(() -> service.requestHistoryDetail(id)); }
 
-    @GetMapping(REQ + "/slip-check") @ResponseBody
+    @GetMapping("/api/hrm/overtime/over-time-request/slip-check") @ResponseBody
     public ResponseEntity<?> requestSlipCheck(@RequestParam(value = "id", defaultValue = "0") long id) { return HrmApi.run(() -> service.requestSlipCheck(id)); }
 
-    @GetMapping(REQ + "/loader-setup") @ResponseBody
+    @GetMapping("/api/hrm/overtime/over-time-request/loader-setup") @ResponseBody
     public ResponseEntity<?> loaderSetup(@RequestParam(value = "departmentId", defaultValue = "0") int departmentId) {
         return HrmApi.run(() -> service.loaderSetup(departmentId));
     }
 
-    @GetMapping(REQ + "/loader-show") @ResponseBody
+    @GetMapping("/api/hrm/overtime/over-time-request/loader-show") @ResponseBody
     public ResponseEntity<?> loaderShow(@RequestParam(value = "fromDate", required = false) String fromDate,
                                         @RequestParam(value = "toDate", required = false) String toDate,
                                         @RequestParam(value = "employeeId", defaultValue = "0") long employeeId,
@@ -81,36 +79,36 @@ public class HrmOvertimeController {
     @GetMapping("/hrm/employee-over-time")
     public String employeeOverTimePage(Model model) { model.addAttribute("activeMenu", "apps"); return "hrm/overtime/employee-over-time"; }
 
-    @GetMapping(EMP + "/setup") @ResponseBody
+    @GetMapping("/api/hrm/overtime/employee-over-time/setup") @ResponseBody
     public ResponseEntity<?> employeeSetup() { return HrmApi.run(() -> service.employeeSetup()); }
 
-    @GetMapping(EMP + "/history-combos") @ResponseBody
+    @GetMapping("/api/hrm/overtime/employee-over-time/history-combos") @ResponseBody
     public ResponseEntity<?> employeeHistoryCombos() { return HrmApi.run(() -> service.employeeHistoryDropDowns()); }
 
-    @GetMapping(EMP + "/employees") @ResponseBody
+    @GetMapping("/api/hrm/overtime/employee-over-time/employees") @ResponseBody
     public ResponseEntity<?> employees(@RequestParam(value = "month", defaultValue = "0") int month,
                                        @RequestParam(value = "year", defaultValue = "0") int year) {
         return HrmApi.run(() -> service.otEmployees(month, year));
     }
 
-    @GetMapping(EMP + "/detail") @ResponseBody
+    @GetMapping("/api/hrm/overtime/employee-over-time/detail") @ResponseBody
     public ResponseEntity<?> employeeDetail(@RequestParam("employeeId") long employeeId,
                                             @RequestParam(value = "month", defaultValue = "0") int month,
                                             @RequestParam(value = "year", defaultValue = "0") int year) {
         return HrmApi.run(() -> service.employeeDetail(employeeId, month, year));
     }
 
-    @PostMapping(EMP + "/save") @ResponseBody
+    @PostMapping("/api/hrm/overtime/employee-over-time/save") @ResponseBody
     public ResponseEntity<?> employeeSave(@RequestBody OvertimeEmployeeDto body) { return HrmApi.run(() -> service.saveEmployeeOverTime(body)); }
 
-    @GetMapping(EMP + "/history") @ResponseBody
+    @GetMapping("/api/hrm/overtime/employee-over-time/history") @ResponseBody
     public ResponseEntity<?> employeeHistory(@RequestParam(value = "month", defaultValue = "0") int month,
                                              @RequestParam(value = "year", defaultValue = "0") int year,
                                              @RequestParam(value = "employeeId", defaultValue = "0") long employeeId) {
         return HrmApi.run(() -> service.employeeHistory(month, year, employeeId));
     }
 
-    @GetMapping(EMP + "/slip-check") @ResponseBody
+    @GetMapping("/api/hrm/overtime/employee-over-time/slip-check") @ResponseBody
     public ResponseEntity<?> employeeSlipCheck(@RequestParam(value = "month", defaultValue = "0") int month,
                                                @RequestParam(value = "year", defaultValue = "0") int year) {
         return HrmApi.run(() -> service.employeeSlipCheck(month, year));

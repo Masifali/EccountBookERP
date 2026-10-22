@@ -34,28 +34,28 @@ public class ExportContractPmDetailController {
         return "export/packing_detail_by_contract";
     }
 
-    @GetMapping(API + "/setup") @ResponseBody
+    @GetMapping("/api/export/packing-detail-by-contract/setup") @ResponseBody
     public ResponseEntity<?> setup() { return call(() -> svc.setup(), "Error occurred during database call."); }
 
-    @GetMapping(API + "/refresh") @ResponseBody
+    @GetMapping("/api/export/packing-detail-by-contract/refresh") @ResponseBody
     public ResponseEntity<?> refresh() { return call(() -> svc.refresh(), "Load failed."); }
 
-    @GetMapping(API + "/history-combos") @ResponseBody
+    @GetMapping("/api/export/packing-detail-by-contract/history-combos") @ResponseBody
     public ResponseEntity<?> historyCombos() { return call(() -> svc.historyCombos(), "Load failed."); }
 
-    @GetMapping(API + "/pm-uoms") @ResponseBody
+    @GetMapping("/api/export/packing-detail-by-contract/pm-uoms") @ResponseBody
     public ResponseEntity<?> pmUoms(@RequestParam("itemId") int itemId) { return call(() -> svc.pmUoms(itemId), "Load failed."); }
 
-    @GetMapping(API + "/read") @ResponseBody
+    @GetMapping("/api/export/packing-detail-by-contract/read") @ResponseBody
     public ResponseEntity<?> read(@RequestParam("id") int id) { return call(() -> svc.readById(id), "Load failed."); }
 
-    @GetMapping(API + "/history-detail") @ResponseBody
+    @GetMapping("/api/export/packing-detail-by-contract/history-detail") @ResponseBody
     public ResponseEntity<?> historyDetail(@RequestParam("id") int id) { return call(() -> svc.historyDetail(id), "Load failed."); }
 
-    @PostMapping(API + "/history") @ResponseBody
+    @PostMapping("/api/export/packing-detail-by-contract/history") @ResponseBody
     public ResponseEntity<?> history(@RequestBody Map<String, Object> body) { return call(() -> svc.history(body), "Load failed."); }
 
-    @PostMapping(API + "/save") @ResponseBody
+    @PostMapping("/api/export/packing-detail-by-contract/save") @ResponseBody
     public ResponseEntity<?> save(@RequestBody Map<String, Object> body) { return call(() -> svc.save(body), "Save failed."); }
 
     // ------------------------------------------------------------------ plumbing

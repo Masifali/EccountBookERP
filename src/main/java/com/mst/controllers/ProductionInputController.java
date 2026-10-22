@@ -31,7 +31,6 @@ import java.util.function.Supplier;
 public class ProductionInputController {
 
     private static final Logger LOG = LoggerFactory.getLogger(ProductionInputController.class);
-    private static final String API = "/api/production/production-against-job-order/input";
 
     @Autowired
     private ProductionInputService service;
@@ -43,38 +42,38 @@ public class ProductionInputController {
     }
 
     /** frmFoodProduction_Load:351 - switches, rights, doc number and every picker. */
-    @GetMapping(API + "/state")
+    @GetMapping("/api/production/production-against-job-order/input/state")
     @ResponseBody
     public ResponseEntity<?> state() { return run(service::state); }
 
     /** btnRefresh_Click:1735 */
-    @GetMapping(API + "/refresh")
+    @GetMapping("/api/production/production-against-job-order/input/refresh")
     @ResponseBody
     public ResponseEntity<?> refresh() { return run(service::refresh); }
 
     /** GenerateDocNumberInput:1045 (called again by reset()). */
-    @GetMapping(API + "/serial")
+    @GetMapping("/api/production/production-against-job-order/input/serial")
     @ResponseBody
     public ResponseEntity<?> serial() {
         return run(() -> { Map<String, Object> m = new LinkedHashMap<>(); m.put("docNumber", service.serial()); return m; });
     }
 
     /** CmbJobOrderNo_Leave:1130 */
-    @GetMapping(API + "/job-order")
+    @GetMapping("/api/production/production-against-job-order/input/job-order")
     @ResponseBody
     public ResponseEntity<?> jobOrder(@RequestParam(defaultValue = "0") int jobOrderId) {
         return run(() -> service.jobOrder(jobOrderId));
     }
 
     /** cmbWareHouseInput_ValueChanged:1165 -> GetItemByWareHouseId */
-    @GetMapping(API + "/items")
+    @GetMapping("/api/production/production-against-job-order/input/items")
     @ResponseBody
     public ResponseEntity<?> items(@RequestParam(defaultValue = "0") int warehouseId) {
         return run(() -> service.itemsByWarehouse(warehouseId));
     }
 
     /** GetAvailableStockForInput:899 */
-    @GetMapping(API + "/stock")
+    @GetMapping("/api/production/production-against-job-order/input/stock")
     @ResponseBody
     public ResponseEntity<?> stock(@RequestParam(defaultValue = "0") int warehouseId,
                                    @RequestParam(defaultValue = "0") int itemId,
@@ -85,7 +84,7 @@ public class ProductionInputController {
     }
 
     /** GetAvgRateByItemAndJoblot:1194 */
-    @GetMapping(API + "/avg-rate")
+    @GetMapping("/api/production/production-against-job-order/input/avg-rate")
     @ResponseBody
     public ResponseEntity<?> avgRate(@RequestParam(defaultValue = "0") int itemId,
                                      @RequestParam(required = false) String docDate,
@@ -103,7 +102,7 @@ public class ProductionInputController {
     }
 
     /** grdStockConversionProductionDetail_CellUpdated FIFO branch (:1810 / :1844) */
-    @GetMapping(API + "/fifo-rate")
+    @GetMapping("/api/production/production-against-job-order/input/fifo-rate")
     @ResponseBody
     public ResponseEntity<?> fifoRate(@RequestParam(required = false) String docDate,
                                       @RequestParam(defaultValue = "0") int warehouseId,
@@ -117,7 +116,7 @@ public class ProductionInputController {
     }
 
     /** BtnGenerateRates_Click -> AvgRateUpdateOnDocDateChange:2836 (one grid row per call) */
-    @GetMapping(API + "/generate-rate")
+    @GetMapping("/api/production/production-against-job-order/input/generate-rate")
     @ResponseBody
     public ResponseEntity<?> generateRate(@RequestParam(required = false) String docDate,
                                           @RequestParam(defaultValue = "0") int recId,
@@ -134,7 +133,7 @@ public class ProductionInputController {
     }
 
     /** ReadByIdInput:1575 / InputDetailByHeaderId:2609 */
-    @GetMapping(API + "/{id}")
+    @GetMapping("/api/production/production-against-job-order/input/{id}")
     @ResponseBody
     public ResponseEntity<?> read(@PathVariable int id) {
         try {
@@ -147,7 +146,7 @@ public class ProductionInputController {
     }
 
     /** InputGridHistory:2301 */
-    @GetMapping(API + "/history")
+    @GetMapping("/api/production/production-against-job-order/input/history")
     @ResponseBody
     public ResponseEntity<?> history(@RequestParam(required = false) String fromDate,
                                      @RequestParam(required = false) String toDate,
@@ -158,19 +157,19 @@ public class ProductionInputController {
     }
 
     /** BtnRefereshInputHistory_Click -> jobOrderInputHCombobind:2180 */
-    @GetMapping(API + "/history-job-orders")
+    @GetMapping("/api/production/production-against-job-order/input/history-job-orders")
     @ResponseBody
     public ResponseEntity<?> historyJobOrders() { return run(service::historyJobOrders); }
 
     /** GetVoucherHeadId(RecId, 80) - used by 118-Voucher. */
-    @GetMapping(API + "/voucher-head")
+    @GetMapping("/api/production/production-against-job-order/input/voucher-head")
     @ResponseBody
     public ResponseEntity<?> voucherHead(@RequestParam(defaultValue = "0") int id) {
         return run(() -> { Map<String, Object> m = new LinkedHashMap<>(); m.put("voucherHeadId", service.voucherHeadId(id)); return m; });
     }
 
     /** btnsave_Click / btnUpdate_Click -> InsertInput:1385 */
-    @PostMapping(API + "/save")
+    @PostMapping("/api/production/production-against-job-order/input/save")
     @ResponseBody
     public ResponseEntity<?> save(@RequestBody Map<String, Object> body) {
         try {
@@ -188,11 +187,11 @@ public class ProductionInputController {
 
     // ------------------------------------------------------- LoadavailableTransactionsForIssuance
 
-    @GetMapping(API + "/loader/lookups")
+    @GetMapping("/api/production/production-against-job-order/input/loader/lookups")
     @ResponseBody
     public ResponseEntity<?> loaderLookups() { return run(() -> service.loaderLookups(null)); }
 
-    @GetMapping(API + "/loader/search")
+    @GetMapping("/api/production/production-against-job-order/input/loader/search")
     @ResponseBody
     public ResponseEntity<?> loaderSearch(@RequestParam(required = false) String fromDate,
                                           @RequestParam(required = false) String toDate,
@@ -212,11 +211,11 @@ public class ProductionInputController {
 
     // ------------------------------------------------------------ LoadOutPutPendingforRates ("Issue")
 
-    @GetMapping(API + "/pending-rates/job-orders")
+    @GetMapping("/api/production/production-against-job-order/input/pending-rates/job-orders")
     @ResponseBody
     public ResponseEntity<?> pendingRateJobOrders() { return run(service::pendingRateJobOrders); }
 
-    @GetMapping(API + "/pending-rates")
+    @GetMapping("/api/production/production-against-job-order/input/pending-rates")
     @ResponseBody
     public ResponseEntity<?> pendingRates(@RequestParam(required = false) String fromDate,
                                           @RequestParam(required = false) String toDate,
@@ -227,7 +226,7 @@ public class ProductionInputController {
 
     // ------------------------------------------------------------ frmPendingMoveOrderDocuments
 
-    @GetMapping(API + "/move-orders")
+    @GetMapping("/api/production/production-against-job-order/input/move-orders")
     @ResponseBody
     public ResponseEntity<?> moveOrders(@RequestParam(required = false) String fromDate,
                                         @RequestParam(required = false) String toDate,

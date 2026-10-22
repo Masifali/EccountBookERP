@@ -20,34 +20,33 @@ import java.util.Map;
 @Controller
 public class ExportLcOrderController {
 
-    private static final String API = "/api/export/lc-order";
 
     @Autowired private ExportLcOrderService svc;
 
     @GetMapping("/export/lc-order")
     public String page(Model model) { model.addAttribute("activeMenu", "export"); return "export/lc_order"; }
 
-    @GetMapping(API + "/setup") @ResponseBody
+    @GetMapping("/api/export/lc-order/setup") @ResponseBody
     public ResponseEntity<?> setup() { return call(svc::setup, "Error occurred during database call."); }
 
-    @GetMapping(API + "/refresh") @ResponseBody
+    @GetMapping("/api/export/lc-order/refresh") @ResponseBody
     public ResponseEntity<?> refresh() { return call(svc::refresh, "Load failed."); }
 
-    @GetMapping(API + "/uoms") @ResponseBody
+    @GetMapping("/api/export/lc-order/uoms") @ResponseBody
     public ResponseEntity<?> uoms(@RequestParam(value = "itemId", defaultValue = "0") int itemId) { return call(() -> svc.uoms(itemId), "Load failed."); }
 
-    @GetMapping(API + "/proforma-invoices") @ResponseBody
+    @GetMapping("/api/export/lc-order/proforma-invoices") @ResponseBody
     public ResponseEntity<?> proforma(@RequestParam(value = "customerId", defaultValue = "0") int customerId) {
         return call(() -> svc.proformaInvoices(customerId), "Load failed.");
     }
 
-    @GetMapping(API + "/history") @ResponseBody
+    @GetMapping("/api/export/lc-order/history") @ResponseBody
     public ResponseEntity<?> history() { return call(svc::history, "Load failed."); }
 
-    @GetMapping(API + "/by-id") @ResponseBody
+    @GetMapping("/api/export/lc-order/by-id") @ResponseBody
     public ResponseEntity<?> byId(@RequestParam("id") int id) { return call(() -> svc.readById(id), "Load failed."); }
 
-    @PostMapping(API + "/save") @ResponseBody
+    @PostMapping("/api/export/lc-order/save") @ResponseBody
     public ResponseEntity<?> save(@RequestBody Map<String, Object> body) { return call(() -> svc.save(body), "Save failed."); }
 
     private interface Call { Object run() throws Exception; }

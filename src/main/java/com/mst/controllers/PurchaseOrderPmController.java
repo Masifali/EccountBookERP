@@ -42,15 +42,15 @@ public class PurchaseOrderPmController {
         return "packing_material/purchase_order_pm";
     }
 
-    @GetMapping({API + "/lookups", API1001 + "/lookups"})
+    @GetMapping({"/api/packing-material/purchase-order/lookups", "/api/packing-material/purchase-order-1001/lookups"})
     @ResponseBody
     public ResponseEntity<?> lookups() { return run(service::lookups, "Could not load the screen."); }
 
-    @GetMapping({API + "/numbers", API1001 + "/numbers"})
+    @GetMapping({"/api/packing-material/purchase-order/numbers", "/api/packing-material/purchase-order-1001/numbers"})
     @ResponseBody
     public ResponseEntity<?> numbers() { return run(service::numbers, "Could not generate the document number."); }
 
-    @GetMapping({API + "/item-defaults", API1001 + "/item-defaults"})
+    @GetMapping({"/api/packing-material/purchase-order/item-defaults", "/api/packing-material/purchase-order-1001/item-defaults"})
     @ResponseBody
     public ResponseEntity<?> itemDefaults(@RequestParam(defaultValue = "0") int itemId,
                                           @RequestParam(defaultValue = "0") int supplierId,
@@ -58,20 +58,20 @@ public class PurchaseOrderPmController {
         return run(() -> service.itemDefaults(itemId, supplierId, docDate), "Record Not Found");
     }
 
-    @GetMapping({API + "/ref-docs", API1001 + "/ref-docs"})
+    @GetMapping({"/api/packing-material/purchase-order/ref-docs", "/api/packing-material/purchase-order-1001/ref-docs"})
     @ResponseBody
     public ResponseEntity<?> refDocs(@RequestParam(defaultValue = "0") int refDocumentTypeId,
                                      @RequestParam(defaultValue = "0") int recId) {
         return run(() -> service.refDocs(refDocumentTypeId, recId), "Could not load reference documents.");
     }
 
-    @GetMapping({API + "/exchange-rate", API1001 + "/exchange-rate"})
+    @GetMapping({"/api/packing-material/purchase-order/exchange-rate", "/api/packing-material/purchase-order-1001/exchange-rate"})
     @ResponseBody
     public ResponseEntity<?> exchangeRate(@RequestParam(defaultValue = "0") int currencyId) {
         return run(() -> service.exchangeRate(currencyId), "Could not read the exchange rate.");
     }
 
-    @GetMapping({API + "/history", API1001 + "/history"})
+    @GetMapping({"/api/packing-material/purchase-order/history", "/api/packing-material/purchase-order-1001/history"})
     @ResponseBody
     public ResponseEntity<?> history(@RequestParam(defaultValue = "doc") String dateMode,
                                      @RequestParam(required = false) String fromDate,
@@ -83,15 +83,15 @@ public class PurchaseOrderPmController {
         return run(() -> service.history(dateMode, fromDate, toDate, fromDocNo, toDocNo, supplierId, branchIds), "History failed.");
     }
 
-    @GetMapping({API + "/{id}", API1001 + "/{id}"})
+    @GetMapping({"/api/packing-material/purchase-order/{id}", "/api/packing-material/purchase-order-1001/{id}"})
     @ResponseBody
     public ResponseEntity<?> record(@PathVariable int id) { return run(() -> service.record(id), "Could not open that order."); }
 
-    @PostMapping({API + "/save", API1001 + "/save"})
+    @PostMapping({"/api/packing-material/purchase-order/save", "/api/packing-material/purchase-order-1001/save"})
     @ResponseBody
     public ResponseEntity<?> save(@RequestBody PurchaseOrderPmRequest request) { return run(() -> service.save(request), "Save failed."); }
 
-    @GetMapping({API + "/{id}/attachments/{attachmentId}", API1001 + "/{id}/attachments/{attachmentId}"})
+    @GetMapping({"/api/packing-material/purchase-order/{id}/attachments/{attachmentId}", "/api/packing-material/purchase-order-1001/{id}/attachments/{attachmentId}"})
     public ResponseEntity<byte[]> attachment(@PathVariable int id, @PathVariable int attachmentId) {
         DesktopInventoryItemFileService.Download d = service.attachment(id, attachmentId);
         HttpHeaders h = new HttpHeaders();

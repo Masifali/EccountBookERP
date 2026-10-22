@@ -36,35 +36,35 @@ public class StockAdjustmentController {
         return "store/stock_adjustment";
     }
 
-    @GetMapping(API + "/lookups")
+    @GetMapping("/api/store/stock-adjustment/lookups")
     @ResponseBody
     public ResponseEntity<?> lookups() { return run(service::lookups, "Could not load the screen."); }
 
-    @GetMapping(API + "/doc-no")
+    @GetMapping("/api/store/stock-adjustment/doc-no")
     @ResponseBody
     public ResponseEntity<?> docNo() { return run(() -> java.util.Collections.singletonMap("docNo", service.docNo()), "Could not read the doc no."); }
 
-    @GetMapping(API + "/refresh")
+    @GetMapping("/api/store/stock-adjustment/refresh")
     @ResponseBody
     public ResponseEntity<?> refresh() { return run(service::refresh, "Refresh failed."); }
 
-    @GetMapping(API + "/history-types")
+    @GetMapping("/api/store/stock-adjustment/history-types")
     @ResponseBody
     public ResponseEntity<?> historyTypes() { return run(service::historyTypes, "Could not load the types."); }
 
-    @GetMapping(API + "/uoms")
+    @GetMapping("/api/store/stock-adjustment/uoms")
     @ResponseBody
     public ResponseEntity<?> uoms(@RequestParam(defaultValue = "0") int itemId) {
         return run(() -> service.uoms(itemId), "Could not load the units.");
     }
 
-    @GetMapping(API + "/accounts")
+    @GetMapping("/api/store/stock-adjustment/accounts")
     @ResponseBody
     public ResponseEntity<?> accounts(@RequestParam(defaultValue = "0") int entryTypeId) {
         return run(() -> service.accounts(entryTypeId), "Could not load the accounts.");
     }
 
-    @GetMapping(API + "/stock-balance")
+    @GetMapping("/api/store/stock-adjustment/stock-balance")
     @ResponseBody
     public ResponseEntity<?> stockBalance(@RequestParam(defaultValue = "0") int recId,
                                           @RequestParam(defaultValue = "0") int itemId,
@@ -75,7 +75,7 @@ public class StockAdjustmentController {
         return run(() -> service.stockBalance(recId, itemId, docDate, jobLotId, warehouseId, cropYear), "Could not read the stock.");
     }
 
-    @GetMapping(API + "/rate")
+    @GetMapping("/api/store/stock-adjustment/rate")
     @ResponseBody
     public ResponseEntity<?> rate(@RequestParam(defaultValue = "entry") String mode,
                                   @RequestParam(defaultValue = "0") int recId,
@@ -92,7 +92,7 @@ public class StockAdjustmentController {
                 cropYearId, qty, weight), "Could not read the rate.");
     }
 
-    @GetMapping(API + "/history")
+    @GetMapping("/api/store/stock-adjustment/history")
     @ResponseBody
     public ResponseEntity<?> history(@RequestParam(required = false) String fromDate,
                                      @RequestParam(required = false) String toDate,
@@ -102,11 +102,11 @@ public class StockAdjustmentController {
         return run(() -> service.history(fromDate, toDate, docNoFrom, docNoTo, adjustmentTypeId), "History failed.");
     }
 
-    @GetMapping(API + "/loader/lookups")
+    @GetMapping("/api/store/stock-adjustment/loader/lookups")
     @ResponseBody
     public ResponseEntity<?> loaderLookups() { return run(service::loaderLookups, "Could not open the loader."); }
 
-    @GetMapping(API + "/loader/search")
+    @GetMapping("/api/store/stock-adjustment/loader/search")
     @ResponseBody
     public ResponseEntity<?> loaderSearch(@RequestParam(required = false) String fromDate,
                                           @RequestParam(required = false) String toDate,
@@ -123,7 +123,7 @@ public class StockAdjustmentController {
                 cropYear, warehouseId, refDocumentTypeId, supplierCustomerId, itemId), "Search failed.");
     }
 
-    @GetMapping(API + "/voucher/{voucherHeadId}/slip")
+    @GetMapping("/api/store/stock-adjustment/voucher/{voucherHeadId}/slip")
     @ResponseBody
     public ResponseEntity<?> voucherSlip(@PathVariable int voucherHeadId) {
         try {
@@ -137,7 +137,7 @@ public class StockAdjustmentController {
         }
     }
 
-    @GetMapping(API + "/{id}")
+    @GetMapping("/api/store/stock-adjustment/{id}")
     @ResponseBody
     public ResponseEntity<?> load(@PathVariable int id) {
         try {
@@ -149,7 +149,7 @@ public class StockAdjustmentController {
         }
     }
 
-    @GetMapping(API + "/{id}/slip")
+    @GetMapping("/api/store/stock-adjustment/{id}/slip")
     @ResponseBody
     public ResponseEntity<?> slip(@PathVariable int id) {
         try {
@@ -163,7 +163,7 @@ public class StockAdjustmentController {
         }
     }
 
-    @PostMapping(API + "/save")
+    @PostMapping("/api/store/stock-adjustment/save")
     @ResponseBody
     public ResponseEntity<?> save(@RequestBody StockAdjustmentDto dto) {
         try {

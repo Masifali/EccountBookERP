@@ -30,7 +30,6 @@ import java.util.function.Supplier;
 @Controller
 public class AdvanceAdjustmentController {
     private static final int SCREEN_ID = 4;
-    private static final String API = "/api/accounts/advance-adjustment";
 
     @Autowired private AdvanceAdjustmentService service;
     @Autowired private CurrentUserContext context;
@@ -49,16 +48,16 @@ public class AdvanceAdjustmentController {
         return "accounts/vouchers/advance_adjustment_desktop";
     }
 
-    @GetMapping(API + "/load") @ResponseBody
+    @GetMapping("/api/accounts/advance-adjustment/load") @ResponseBody
     public ResponseEntity<?> load() { return run(() -> { gate(); return service.load(); }); }
 
-    @GetMapping(API + "/doc-no") @ResponseBody
+    @GetMapping("/api/accounts/advance-adjustment/doc-no") @ResponseBody
     public ResponseEntity<?> docNo() { return run(() -> { gate(); return service.generateDocNo(); }); }
 
-    @GetMapping(API + "/supplier/{id}") @ResponseBody
+    @GetMapping("/api/accounts/advance-adjustment/supplier/{id}") @ResponseBody
     public ResponseEntity<?> supplier(@PathVariable int id) { return run(() -> { gate(); return service.supplierGrids(id); }); }
 
-    @PostMapping(API + "/save") @ResponseBody
+    @PostMapping("/api/accounts/advance-adjustment/save") @ResponseBody
     @SuppressWarnings("unchecked")
     public ResponseEntity<?> save(@RequestBody Map<String, Object> r) {
         return run(() -> {

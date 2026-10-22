@@ -29,7 +29,6 @@ import java.util.Map;
 @Controller
 public class PurchaseInvoiceStoreMgmtController {
 
-    private static final String API = "/api/store/purchase-invoice-store-management";
 
     private final PurchaseInvoiceStoreMgmtService service;
     public PurchaseInvoiceStoreMgmtController(PurchaseInvoiceStoreMgmtService service) { this.service = service; }
@@ -40,23 +39,23 @@ public class PurchaseInvoiceStoreMgmtController {
         return "store/purchase_invoice_store_management";
     }
 
-    @GetMapping(API + "/lookups")
+    @GetMapping("/api/store/purchase-invoice-store-management/lookups")
     @ResponseBody
     public ResponseEntity<?> lookups() { return run(service::lookups); }
 
-    @GetMapping(API + "/numbers")
+    @GetMapping("/api/store/purchase-invoice-store-management/numbers")
     @ResponseBody
     public ResponseEntity<?> numbers() { return run(service::numbers); }
 
-    @GetMapping(API + "/refresh")
+    @GetMapping("/api/store/purchase-invoice-store-management/refresh")
     @ResponseBody
     public ResponseEntity<?> refresh() { return run(service::formRefresh); }
 
-    @GetMapping(API + "/history-refresh")
+    @GetMapping("/api/store/purchase-invoice-store-management/history-refresh")
     @ResponseBody
     public ResponseEntity<?> historyRefresh() { return run(service::historyRefresh); }
 
-    @GetMapping(API + "/tax-schedule")
+    @GetMapping("/api/store/purchase-invoice-store-management/tax-schedule")
     @ResponseBody
     public ResponseEntity<?> taxSchedule(@RequestParam(required = false) String itemIds,
                                          @RequestParam(required = false) String docDate,
@@ -64,17 +63,17 @@ public class PurchaseInvoiceStoreMgmtController {
         return run(() -> service.taxSchedule(itemIds, docDate, recId));
     }
 
-    @GetMapping(API + "/loader/lookups")
+    @GetMapping("/api/store/purchase-invoice-store-management/loader/lookups")
     @ResponseBody
     public ResponseEntity<?> loaderLookups() { return run(service::loaderLookups); }
 
-    @GetMapping(API + "/loader/combos")
+    @GetMapping("/api/store/purchase-invoice-store-management/loader/combos")
     @ResponseBody
     public ResponseEntity<?> loaderCombos(@RequestParam(required = false) String branchIds) {
         return run(() -> service.loaderCombos(branchIds));
     }
 
-    @GetMapping(API + "/loader/pending")
+    @GetMapping("/api/store/purchase-invoice-store-management/loader/pending")
     @ResponseBody
     public ResponseEntity<?> loaderPending(@RequestParam(required = false) String branchIds,
                                            @RequestParam(required = false) String fromDate,
@@ -86,14 +85,14 @@ public class PurchaseInvoiceStoreMgmtController {
         return run(() -> service.pendingGrns(branchIds, fromDate, toDate, docNoFrom, docNoTo, itemId, billToPartyId));
     }
 
-    @GetMapping(API + "/loader/extras")
+    @GetMapping("/api/store/purchase-invoice-store-management/loader/extras")
     @ResponseBody
     public ResponseEntity<?> loaderExtras(@RequestParam(required = false) String grnIds,
                                           @RequestParam(required = false) String challanIds) {
         return run(() -> service.grnExtras(grnIds, challanIds));
     }
 
-    @GetMapping(API + "/history")
+    @GetMapping("/api/store/purchase-invoice-store-management/history")
     @ResponseBody
     public ResponseEntity<?> history(@RequestParam(defaultValue = "false") boolean branchChosen,
                                      @RequestParam(required = false) String branchIds,
@@ -109,13 +108,13 @@ public class PurchaseInvoiceStoreMgmtController {
                 fromDocNo, toDocNo, supplierId));
     }
 
-    @GetMapping(API + "/voucher-slip")
+    @GetMapping("/api/store/purchase-invoice-store-management/voucher-slip")
     @ResponseBody
     public ResponseEntity<?> voucherSlip(@RequestParam(defaultValue = "0") int id) {
         return run(() -> service.voucherSlip(id));
     }
 
-    @GetMapping(API + "/{id}")
+    @GetMapping("/api/store/purchase-invoice-store-management/{id}")
     @ResponseBody
     public ResponseEntity<?> load(@PathVariable int id) {
         try {
@@ -127,25 +126,25 @@ public class PurchaseInvoiceStoreMgmtController {
         }
     }
 
-    @GetMapping(API + "/{id}/slip")
+    @GetMapping("/api/store/purchase-invoice-store-management/{id}/slip")
     @ResponseBody
     public ResponseEntity<?> slip(@PathVariable int id, @RequestParam(defaultValue = "64") int documentTypeId) {
         return run(() -> service.slip(id, documentTypeId));
     }
 
-    @GetMapping(API + "/{id}/slip-sub")
+    @GetMapping("/api/store/purchase-invoice-store-management/{id}/slip-sub")
     @ResponseBody
     public ResponseEntity<?> slipSub(@PathVariable int id) {
         return run(() -> service.slipSubReport(id));
     }
 
-    @PostMapping(API + "/save")
+    @PostMapping("/api/store/purchase-invoice-store-management/save")
     @ResponseBody
     public ResponseEntity<?> save(@RequestBody PurchaseInvoiceStoreMgmtDto dto) {
         return run(() -> service.save(dto));
     }
 
-    @PostMapping(API + "/{id}/delete")
+    @PostMapping("/api/store/purchase-invoice-store-management/{id}/delete")
     @ResponseBody
     public ResponseEntity<?> delete(@PathVariable int id) {
         return run(() -> service.delete(id));

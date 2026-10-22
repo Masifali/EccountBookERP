@@ -1,5 +1,6 @@
 package com.mst.models;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -318,6 +319,140 @@ public class VoucherDetail {
 
 	@Column(name = "RefDocNoDetailId")
 	private Integer refDocNoDetailId;
+
+	// ---- Added by batch H_vouchers (Sp_VoucherDetail_Insert + registry columns) ----
+
+	/** Read-only scalar shadow of the VoucherHeadId FK (the @ManyToOne voucherHead above owns the column). Use in JPQL as d.voucherHeadId. */
+	@Column(name = "VoucherHeadId", insertable = false, updatable = false)
+	private Integer voucherHeadId;
+
+	/** Read-only scalar shadow of the AccountId FK (the @ManyToOne account above owns the column). Use in JPQL as d.accountId. */
+	@Column(name = "AccountId", insertable = false, updatable = false)
+	private Integer accountId;
+
+	@Column(name = "InventoryId")
+	private Integer inventoryId;
+
+	// Columns below are listed for VoucherDetail in the batch registry (no type seen in any proc).
+	// Several look like report/result-set aliases rather than physical columns (DAYS_30, Opening, Closing, ...);
+	// verify against the DB schema before relying on them - they are included because the registry lists them.
+
+	@Column(name = "Opening")
+	private String opening;
+
+	@Column(name = "Debit")
+	private BigDecimal debit;
+
+	@Column(name = "Credit")
+	private BigDecimal credit;
+
+	@Column(name = "Closing")
+	private String closing;
+
+	@Column(name = "SubsidiaryAccountTitle")
+	private String subsidiaryAccountTitle;
+
+	@Column(name = "OrganizationId")
+	private Integer organizationId;
+
+	@Column(name = "CompanyId")
+	private Integer companyId;
+
+	@Column(name = "VoucherDate")
+	private LocalDateTime voucherDate;
+
+	@Column(name = "DocumentTypeId")
+	private Integer documentTypeId;
+
+	@Column(name = "DueBalance")
+	private BigDecimal dueBalance;
+
+	@Column(name = "DAYS_30")
+	private String days_30;
+
+	@Column(name = "RNo")
+	private Integer rNo;
+
+	@Column(name = "DAYS_60")
+	private String days_60;
+
+	@Column(name = "DAYS_90")
+	private String days_90;
+
+	@Column(name = "DocumentTypeCode")
+	private String documentTypeCode;
+
+	@Column(name = "VoucherCode")
+	private String voucherCode;
+
+	@Column(name = "DueDate")
+	private LocalDateTime dueDate;
+
+	@Column(name = "Amount")
+	private BigDecimal amount;
+
+	@Column(name = "Remarks")
+	private String remarks;
+
+	@Column(name = "InvoiceQty")
+	private BigDecimal invoiceQty;
+
+	@Column(name = "InvoiceWeight")
+	private BigDecimal invoiceWeight;
+
+	@Column(name = "PurchaseAmount")
+	private BigDecimal purchaseAmount;
+
+	@Column(name = "InvPurchaseInvoiceId")
+	private Integer invPurchaseInvoiceId;
+
+	@Column(name = "OrderItemQty")
+	private BigDecimal orderItemQty;
+
+	@Column(name = "NetWeight")
+	private BigDecimal netWeight;
+
+	@Column(name = "PurchaseOrderId")
+	private Integer purchaseOrderId;
+
+	@Column(name = "ItemQty")
+	private BigDecimal itemQty;
+
+	@Column(name = "NetBillWeight")
+	private BigDecimal netBillWeight;
+
+	@Column(name = "InvGrnId")
+	private Integer invGrnId;
+
+	@Column(name = "PurchaseOrderDetailId")
+	private Integer purchaseOrderDetailId;
+
+	@Column(name = "SaleAmount")
+	private BigDecimal saleAmount;
+
+	@Column(name = "InvSaleInvoiceId")
+	private Integer invSaleInvoiceId;
+
+	@Column(name = "SaleOrderId")
+	private Integer saleOrderId;
+
+	@Column(name = "ActionTypeId")
+	private Integer actionTypeId;
+
+	@Column(name = "isCanceled")
+	private Boolean isCanceled;
+
+	@Column(name = "InvGdnId")
+	private Integer invGdnId;
+
+	@Column(name = "SaleOrderDetailId")
+	private Integer saleOrderDetailId;
+
+	@Column(name = "ManualNo")
+	private Integer manualNo;
+
+	@Column(name = "PartyBillDate")
+	private LocalDateTime partyBillDate;
 
 	// Explicit Getters and Setters
 	public Integer getId() { return id; }

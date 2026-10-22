@@ -34,30 +34,30 @@ public class ExportPackingDetailController {
         return "export/packing_detail";
     }
 
-    @GetMapping(API + "/setup") @ResponseBody
+    @GetMapping("/api/export/packing-detail/setup") @ResponseBody
     public ResponseEntity<?> setup() { return call(() -> svc.setup(), "Error occurred during database call."); }
 
-    @GetMapping(API + "/refresh") @ResponseBody
+    @GetMapping("/api/export/packing-detail/refresh") @ResponseBody
     public ResponseEntity<?> refresh() { return call(() -> svc.refresh(), "Load failed."); }
 
-    @GetMapping(API + "/invoice") @ResponseBody
+    @GetMapping("/api/export/packing-detail/invoice") @ResponseBody
     public ResponseEntity<?> invoice(@RequestParam("id") int id) { return call(() -> svc.invoiceData(id), "Load failed."); }
 
-    @GetMapping(API + "/by-id") @ResponseBody
+    @GetMapping("/api/export/packing-detail/by-id") @ResponseBody
     public ResponseEntity<?> byId(@RequestParam("id") int id) { return call(() -> svc.readById(id), "Load failed."); }
 
-    @GetMapping(API + "/history") @ResponseBody
+    @GetMapping("/api/export/packing-detail/history") @ResponseBody
     public ResponseEntity<?> history(@RequestParam(value = "noOfRecords", defaultValue = "0") int noOfRecords) {
         return call(() -> svc.history(noOfRecords), "Load failed.");
     }
 
-    @GetMapping(API + "/history-detail") @ResponseBody
+    @GetMapping("/api/export/packing-detail/history-detail") @ResponseBody
     public ResponseEntity<?> historyDetail(@RequestParam("id") int id) { return call(() -> svc.historyDetail(id), "Load failed."); }
 
-    @PostMapping(API + "/save") @ResponseBody
+    @PostMapping("/api/export/packing-detail/save") @ResponseBody
     public ResponseEntity<?> save(@RequestBody Map<String, Object> body) { return call(() -> svc.save(body), "Save failed."); }
 
-    @PostMapping(API + "/delete") @ResponseBody
+    @PostMapping("/api/export/packing-detail/delete") @ResponseBody
     public ResponseEntity<?> delete(@RequestBody Map<String, Object> body) {
         Object v = body.get("recId");
         int id;

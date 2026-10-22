@@ -29,7 +29,6 @@ import java.util.Map;
 @Controller
 public class TaxationScreensController {
 
-    private static final String API = "/api/taxation";
 
     @Autowired private TaxationScreensService service;
 
@@ -55,51 +54,51 @@ public class TaxationScreensController {
 
     // ------------------------------------------------------------------ 179
 
-    @GetMapping(API + "/allocation/setup") @ResponseBody
+    @GetMapping("/api/taxation/allocation/setup") @ResponseBody
     public ResponseEntity<?> allocationSetup() { return call(() -> service.allocationSetup(), "Load failed."); }
 
-    @GetMapping(API + "/allocation/lists") @ResponseBody
+    @GetMapping("/api/taxation/allocation/lists") @ResponseBody
     public ResponseEntity<?> allocationLists(@RequestParam("taxItemId") int taxItemId,
                                              @RequestParam(value = "categoryId", defaultValue = "0") int categoryId,
                                              @RequestParam(value = "typeId", defaultValue = "0") int typeId) {
         return call(() -> service.allocationLists(taxItemId, categoryId, typeId), "Load failed.");
     }
 
-    @PostMapping(API + "/allocation/allocate") @ResponseBody
+    @PostMapping("/api/taxation/allocation/allocate") @ResponseBody
     public ResponseEntity<?> allocate(@RequestBody Map<String, Object> body) { return call(() -> service.allocate(body), "Save failed."); }
 
-    @PostMapping(API + "/allocation/deallocate") @ResponseBody
+    @PostMapping("/api/taxation/allocation/deallocate") @ResponseBody
     public ResponseEntity<?> deallocate(@RequestBody Map<String, Object> body) { return call(() -> service.deallocate(body), "Save failed."); }
 
     // ------------------------------------------------------------------ 175
 
-    @GetMapping(API + "/sale-tax-summary") @ResponseBody
+    @GetMapping("/api/taxation/sale-tax-summary") @ResponseBody
     public ResponseEntity<?> saleTaxSummary(@RequestParam("from") String from, @RequestParam("to") String to) {
         return call(() -> service.saleTaxSummary(from, to), "Load failed.");
     }
 
     // ------------------------------------------------------------------ 174
 
-    @GetMapping(API + "/wht-challan/setup") @ResponseBody
+    @GetMapping("/api/taxation/wht-challan/setup") @ResponseBody
     public ResponseEntity<?> whtChallanSetup() { return call(() -> service.whtChallanSetup(), "Load failed."); }
 
-    @GetMapping(API + "/wht-challan/doc-no") @ResponseBody
+    @GetMapping("/api/taxation/wht-challan/doc-no") @ResponseBody
     public ResponseEntity<?> whtChallanDocNo() { return call(() -> service.whtChallanDocNo(), "Load failed."); }
 
-    @GetMapping(API + "/wht-challan/pending") @ResponseBody
+    @GetMapping("/api/taxation/wht-challan/pending") @ResponseBody
     public ResponseEntity<?> whtChallanPending(@RequestParam("partyAccountId") int partyAccountId,
                                                @RequestParam(value = "branchId", defaultValue = "0") int branchId,
                                                @RequestParam(value = "projectId", defaultValue = "0") int projectId) {
         return call(() -> service.whtChallanPending(partyAccountId, branchId, projectId), "Load failed.");
     }
 
-    @GetMapping(API + "/wht-challan/history") @ResponseBody
+    @GetMapping("/api/taxation/wht-challan/history") @ResponseBody
     public ResponseEntity<?> whtChallanHistory() { return call(() -> service.whtChallanHistory(), "Load failed."); }
 
-    @GetMapping(API + "/wht-challan/voucher") @ResponseBody
+    @GetMapping("/api/taxation/wht-challan/voucher") @ResponseBody
     public ResponseEntity<?> whtChallanVoucher(@RequestParam("id") int id) { return call(() -> service.whtChallanVoucher(id), "Load failed."); }
 
-    @PostMapping(API + "/wht-challan/save") @ResponseBody
+    @PostMapping("/api/taxation/wht-challan/save") @ResponseBody
     public ResponseEntity<?> saveWhtChallan(@RequestBody Map<String, Object> body) { return call(() -> service.saveWhtChallan(body), "Save failed."); }
 
     // ------------------------------------------------------------------ plumbing

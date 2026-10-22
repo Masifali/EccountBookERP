@@ -29,7 +29,6 @@ import java.util.Map;
 @Controller
 public class ProductionDailyPlantHoursController {
 
-    private static final String API = "/api/production/daily-plant-consumed-hours";
 
     @Autowired private ProductionDailyPlantHoursService service;
 
@@ -40,35 +39,35 @@ public class ProductionDailyPlantHoursController {
     }
 
     /** InitializeComponentMethod:159 - job orders + downtime reasons. */
-    @GetMapping(API + "/load")
+    @GetMapping("/api/production/daily-plant-consumed-hours/load")
     @ResponseBody
     public ResponseEntity<?> load() {
         try { return ResponseEntity.ok(service.load()); } catch (Exception e) { return error(e); }
     }
 
     /** JobOrderNoDbCall (Refresh). */
-    @GetMapping(API + "/job-orders")
+    @GetMapping("/api/production/daily-plant-consumed-hours/job-orders")
     @ResponseBody
     public ResponseEntity<?> jobOrders() {
         try { return ResponseEntity.ok(service.jobOrders()); } catch (Exception e) { return error(e); }
     }
 
     /** DownTimeReasonDbCall (Refresh). */
-    @GetMapping(API + "/reasons")
+    @GetMapping("/api/production/daily-plant-consumed-hours/reasons")
     @ResponseBody
     public ResponseEntity<?> reasons() {
         try { return ResponseEntity.ok(service.reasons()); } catch (Exception e) { return error(e); }
     }
 
     /** PlantBindByJobOrderId (CmbJobOrder_Leave). */
-    @GetMapping(API + "/plants")
+    @GetMapping("/api/production/daily-plant-consumed-hours/plants")
     @ResponseBody
     public ResponseEntity<?> plants(@RequestParam(defaultValue = "0") int jobOrderId) {
         try { return ResponseEntity.ok(service.plants(jobOrderId)); } catch (Exception e) { return error(e); }
     }
 
     /** Insert():304 - {result:true, updated} | 400 {message}. */
-    @PostMapping(API + "/save")
+    @PostMapping("/api/production/daily-plant-consumed-hours/save")
     @ResponseBody
     public ResponseEntity<?> save(@RequestBody Map<String, Object> body) {
         try {
@@ -81,7 +80,7 @@ public class ProductionDailyPlantHoursController {
     }
 
     /** BindGrid:435. */
-    @GetMapping(API + "/history")
+    @GetMapping("/api/production/daily-plant-consumed-hours/history")
     @ResponseBody
     public ResponseEntity<?> history(@RequestParam(defaultValue = "doc") String dateType,
                                      @RequestParam(required = false) String fromDate,

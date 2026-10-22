@@ -66,105 +66,105 @@ public class HrmReportsController {
 
     // ------------------------------------------------------------------ 371
 
-    @GetMapping(API + "/employee-register/setup") @ResponseBody
+    @GetMapping("/api/hrm/reports/employee-register/setup") @ResponseBody
     public ResponseEntity<?> employeeRegisterSetup() { return HrmApi.run(() -> service.employeeRegisterSetup()); }
 
-    @PostMapping(API + "/employee-register/show") @ResponseBody
+    @PostMapping("/api/hrm/reports/employee-register/show") @ResponseBody
     public ResponseEntity<?> employeeRegisterShow(@RequestBody HrmReportsFilterDto f) { return HrmApi.run(() -> service.employeeRegisterShow(f)); }
 
     // ------------------------------------------------------------------ 372
 
-    @GetMapping(API + "/employee-monthly-register/setup") @ResponseBody
+    @GetMapping("/api/hrm/reports/employee-monthly-register/setup") @ResponseBody
     public ResponseEntity<?> monthlyRegisterSetup() { return HrmApi.run(() -> service.monthlyRegisterSetup()); }
 
-    @PostMapping(API + "/employee-monthly-register/employees") @ResponseBody
+    @PostMapping("/api/hrm/reports/employee-monthly-register/employees") @ResponseBody
     public ResponseEntity<?> monthlyRegisterEmployees(@RequestBody HrmReportsFilterDto f) { return HrmApi.run(() -> service.monthlyRegisterEmployees(f)); }
 
-    @GetMapping(API + "/employee-monthly-register/sections") @ResponseBody
+    @GetMapping("/api/hrm/reports/employee-monthly-register/sections") @ResponseBody
     public ResponseEntity<?> monthlyRegisterSections(@RequestParam(value = "departmentId", defaultValue = "0") int departmentId) {
         return HrmApi.run(() -> service.monthlyRegisterSections(departmentId));
     }
 
-    @PostMapping(API + "/employee-monthly-register/show") @ResponseBody
+    @PostMapping("/api/hrm/reports/employee-monthly-register/show") @ResponseBody
     public ResponseEntity<?> monthlyRegisterShow(@RequestBody HrmReportsFilterDto f) { return HrmApi.run(() -> service.monthlyRegisterShow(f)); }
 
-    @PostMapping(API + "/employee-monthly-register/show-register") @ResponseBody
+    @PostMapping("/api/hrm/reports/employee-monthly-register/show-register") @ResponseBody
     public ResponseEntity<?> monthlyRegisterShowRegister(@RequestBody HrmReportsFilterDto f) { return HrmApi.run(() -> service.monthlyRegisterShowRegister(f)); }
 
-    @PostMapping(API + "/employee-monthly-register/print-1002-check") @ResponseBody
+    @PostMapping("/api/hrm/reports/employee-monthly-register/print-1002-check") @ResponseBody
     public ResponseEntity<?> monthlyRegisterPrint1002(@RequestBody HrmReportsFilterDto f) { return HrmApi.run(() -> service.monthlyRegisterPrint1002Check(f)); }
 
     // ------------------------------------------------------------------ 373
 
-    @GetMapping(API + "/daily-attendance/setup") @ResponseBody
+    @GetMapping("/api/hrm/reports/daily-attendance/setup") @ResponseBody
     public ResponseEntity<?> dailyAttendanceSetup() { return HrmApi.run(() -> service.dailyAttendanceSetup()); }
 
-    @GetMapping(API + "/daily-attendance/employees") @ResponseBody
+    @GetMapping("/api/hrm/reports/daily-attendance/employees") @ResponseBody
     public ResponseEntity<?> dailyAttendanceEmployees(@RequestParam(value = "departmentId", defaultValue = "0") int departmentId) {
         return HrmApi.run(() -> service.employeesOfDepartment(SCREEN_DAILY_ATTENDANCE, departmentId));
     }
 
-    @PostMapping(API + "/daily-attendance/show") @ResponseBody
+    @PostMapping("/api/hrm/reports/daily-attendance/show") @ResponseBody
     public ResponseEntity<?> dailyAttendanceShow(@RequestBody HrmReportsFilterDto f) { return HrmApi.run(() -> service.dailyAttendanceShow(f)); }
 
     // ------------------------------------------------------------------ 374
 
-    @GetMapping(API + "/daily-late-and-early-departure/setup") @ResponseBody
+    @GetMapping("/api/hrm/reports/daily-late-and-early-departure/setup") @ResponseBody
     public ResponseEntity<?> dailyLateEarlySetup() { return HrmApi.run(() -> service.dailyLateEarlySetup()); }
 
-    @PostMapping(API + "/daily-late-and-early-departure/show") @ResponseBody
+    @PostMapping("/api/hrm/reports/daily-late-and-early-departure/show") @ResponseBody
     public ResponseEntity<?> dailyLateEarlyShow(@RequestBody HrmReportsFilterDto f) { return HrmApi.run(() -> service.dailyLateEarlyShow(f)); }
 
     // ------------------------------------------------------------------ 375
 
-    @GetMapping(API + "/duty-roster-employee-wise/setup") @ResponseBody
+    @GetMapping("/api/hrm/reports/duty-roster-employee-wise/setup") @ResponseBody
     public ResponseEntity<?> dutyRosterSetup() { return HrmApi.run(() -> service.dutyRosterSetup()); }
 
-    @PostMapping(API + "/duty-roster-employee-wise/show") @ResponseBody
+    @PostMapping("/api/hrm/reports/duty-roster-employee-wise/show") @ResponseBody
     public ResponseEntity<?> dutyRosterShow(@RequestBody HrmReportsFilterDto f) { return HrmApi.run(() -> service.dutyRosterShow(f)); }
 
     // ------------------------------------------------------------------ 376
 
-    @GetMapping(API + "/employee-attendence/setup") @ResponseBody
+    @GetMapping("/api/hrm/reports/employee-attendence/setup") @ResponseBody
     public ResponseEntity<?> employeeAttendenceSetup() { return HrmApi.run(() -> service.employeeAttendenceSetup()); }
 
-    @GetMapping(API + "/employee-attendence/employees") @ResponseBody
+    @GetMapping("/api/hrm/reports/employee-attendence/employees") @ResponseBody
     public ResponseEntity<?> employeeAttendenceEmployees(@RequestParam(value = "departmentId", defaultValue = "0") int departmentId) {
         return HrmApi.run(() -> service.employeesOfDepartment(SCREEN_EMPLOYEE_ATTENDENCE, departmentId));
     }
 
-    @PostMapping(API + "/employee-attendence/show") @ResponseBody
+    @PostMapping("/api/hrm/reports/employee-attendence/show") @ResponseBody
     public ResponseEntity<?> employeeAttendenceShow(@RequestBody HrmReportsFilterDto f) { return HrmApi.run(() -> service.employeeAttendenceShow(f)); }
 
     // ------------------------------------------------------------------ 377
 
-    @GetMapping(API + "/monthly-attendance-summary/setup") @ResponseBody
+    @GetMapping("/api/hrm/reports/monthly-attendance-summary/setup") @ResponseBody
     public ResponseEntity<?> monthlySummarySetup() { return HrmApi.run(() -> service.monthlySummarySetup()); }
 
-    @GetMapping(API + "/monthly-attendance-summary/employees") @ResponseBody
+    @GetMapping("/api/hrm/reports/monthly-attendance-summary/employees") @ResponseBody
     public ResponseEntity<?> monthlySummaryEmployees(@RequestParam(value = "departmentId", defaultValue = "0") int departmentId) {
         return HrmApi.run(() -> service.employeesOfDepartment(SCREEN_MONTHLY_SUMMARY, departmentId));
     }
 
-    @PostMapping(API + "/monthly-attendance-summary/show") @ResponseBody
+    @PostMapping("/api/hrm/reports/monthly-attendance-summary/show") @ResponseBody
     public ResponseEntity<?> monthlySummaryShow(@RequestBody HrmReportsFilterDto f) { return HrmApi.run(() -> service.monthlySummaryShow(f)); }
 
-    @PostMapping(API + "/monthly-attendance-summary/print-1005-check") @ResponseBody
+    @PostMapping("/api/hrm/reports/monthly-attendance-summary/print-1005-check") @ResponseBody
     public ResponseEntity<?> monthlySummaryPrint1005(@RequestBody HrmReportsFilterDto f) { return HrmApi.run(() -> service.monthlySummaryPrint1005Check(f)); }
 
     // ------------------------------------------------------------------ 378
 
-    @GetMapping(API + "/salary-sheet/setup") @ResponseBody
+    @GetMapping("/api/hrm/reports/salary-sheet/setup") @ResponseBody
     public ResponseEntity<?> salarySheetSetup() { return HrmApi.run(() -> service.salarySheetSetup()); }
 
-    @GetMapping(API + "/salary-sheet/department") @ResponseBody
+    @GetMapping("/api/hrm/reports/salary-sheet/department") @ResponseBody
     public ResponseEntity<?> salarySheetDepartment(@RequestParam(value = "departmentId", defaultValue = "0") int departmentId) {
         return HrmApi.run(() -> service.salarySheetDepartment(departmentId));
     }
 
-    @PostMapping(API + "/salary-sheet/show") @ResponseBody
+    @PostMapping("/api/hrm/reports/salary-sheet/show") @ResponseBody
     public ResponseEntity<?> salarySheetShow(@RequestBody HrmReportsFilterDto f) { return HrmApi.run(() -> service.salarySheetShow(f)); }
 
-    @PostMapping(API + "/salary-sheet/slip-check") @ResponseBody
+    @PostMapping("/api/hrm/reports/salary-sheet/slip-check") @ResponseBody
     public ResponseEntity<?> salarySheetSlipCheck(@RequestBody HrmReportsFilterDto f) { return HrmApi.run(() -> service.salarySlipCheck(f)); }
 }

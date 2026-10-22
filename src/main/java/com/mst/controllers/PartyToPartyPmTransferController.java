@@ -30,7 +30,6 @@ import java.util.Map;
 @Controller
 public class PartyToPartyPmTransferController {
 
-    private static final String API = "/api/store/party-to-party-pm-transfer";
 
     private final PartyToPartyPmTransferService service;
     public PartyToPartyPmTransferController(PartyToPartyPmTransferService service) { this.service = service; }
@@ -42,24 +41,24 @@ public class PartyToPartyPmTransferController {
     }
 
     /** Form_Load:222. */
-    @GetMapping(API + "/lookups")
+    @GetMapping("/api/store/party-to-party-pm-transfer/lookups")
     @ResponseBody
     public ResponseEntity<?> lookups() { return run(service::lookups, "Could not load the screen."); }
 
     /** btnRefresh_Click:829 — the global lists again. */
-    @GetMapping(API + "/globals")
+    @GetMapping("/api/store/party-to-party-pm-transfer/globals")
     @ResponseBody
     public ResponseEntity<?> globals() { return run(service::globals, "Refresh failed."); }
 
     /** Reset:802 — GenerateCode. */
-    @GetMapping(API + "/next-doc-no")
+    @GetMapping("/api/store/party-to-party-pm-transfer/next-doc-no")
     @ResponseBody
     public ResponseEntity<?> nextDocNo() {
         return run(() -> Collections.singletonMap("docNo", service.nextDocNo()), "Could not generate the document number.");
     }
 
     /** btnshow_Click:928 → FormHistorybind:653. */
-    @GetMapping(API + "/history")
+    @GetMapping("/api/store/party-to-party-pm-transfer/history")
     @ResponseBody
     public ResponseEntity<?> history(@RequestParam(defaultValue = "doc") String mode,
                                      @RequestParam(required = false) String fromDate,
@@ -70,7 +69,7 @@ public class PartyToPartyPmTransferController {
     }
 
     /** ReadById:858 / BindHistoryDetailGrid:1005 — GetByID. */
-    @GetMapping(API + "/{id:[0-9]+}")
+    @GetMapping("/api/store/party-to-party-pm-transfer/{id:[0-9]+}")
     @ResponseBody
     public ResponseEntity<?> load(@PathVariable int id) {
         try {
@@ -83,7 +82,7 @@ public class PartyToPartyPmTransferController {
     }
 
     /** 219-Print / history Print / Print Preview → P2PPMSlip419 (the Crystal layout is not ported). */
-    @GetMapping(API + "/{id:[0-9]+}/slip")
+    @GetMapping("/api/store/party-to-party-pm-transfer/{id:[0-9]+}/slip")
     @ResponseBody
     public ResponseEntity<?> slip(@PathVariable int id) {
         try {
@@ -99,7 +98,7 @@ public class PartyToPartyPmTransferController {
     }
 
     /** btnSave_Click:628 / btnUpdate_Click:641 → Insert():546. */
-    @PostMapping(API + "/save")
+    @PostMapping("/api/store/party-to-party-pm-transfer/save")
     @ResponseBody
     public ResponseEntity<?> save(@RequestBody PartyToPartyPmTransferDto dto) {
         try {

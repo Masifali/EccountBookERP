@@ -23,7 +23,6 @@ import java.util.Map;
 @Controller
 public class ItemTypeStoreController {
 
-    private static final String API = "/api/store/item-type-store";
 
     private final ItemTypeStoreService service;
 
@@ -35,21 +34,21 @@ public class ItemTypeStoreController {
         return "store/item_type_store";
     }
 
-    @GetMapping(API + "/lookups")
+    @GetMapping("/api/store/item-type-store/lookups")
     @ResponseBody
     public ResponseEntity<?> lookups() { return run(service::lookups, "Could not load the screen."); }
 
-    @GetMapping(API + "/code")
+    @GetMapping("/api/store/item-type-store/code")
     @ResponseBody
     public ResponseEntity<?> code() {
         return run(service::generateCode, "Could not generate the code.");
     }
 
-    @GetMapping(API + "/history")
+    @GetMapping("/api/store/item-type-store/history")
     @ResponseBody
     public ResponseEntity<?> history() { return run(service::history, "History failed."); }
 
-    @GetMapping(API + "/{id}")
+    @GetMapping("/api/store/item-type-store/{id}")
     @ResponseBody
     public ResponseEntity<?> load(@PathVariable int id) {
         try {
@@ -61,7 +60,7 @@ public class ItemTypeStoreController {
         }
     }
 
-    @PostMapping(API + "/save")
+    @PostMapping("/api/store/item-type-store/save")
     @ResponseBody
     public ResponseEntity<?> save(@RequestBody ItemTypeStoreDto dto) {
         try {

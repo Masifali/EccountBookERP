@@ -30,7 +30,6 @@ import java.util.function.Supplier;
 @Controller
 public class Inact1AccountsReconciliationController {
     private static final int SCREEN_ID = 32;
-    private static final String API = "/api/accounts/accounts-reconciliation";
 
     @Autowired private Inact1AccountsReconciliationService service;
     @Autowired private CurrentUserContext context;
@@ -49,25 +48,25 @@ public class Inact1AccountsReconciliationController {
         return "accounts/inact1_accounts_reconciliation";
     }
 
-    @GetMapping(API + "/load") @ResponseBody
+    @GetMapping("/api/accounts/accounts-reconciliation/load") @ResponseBody
     public ResponseEntity<?> load() { return run(() -> { gate(); return service.load(); }); }
 
-    @GetMapping(API + "/generate-code") @ResponseBody
+    @GetMapping("/api/accounts/accounts-reconciliation/generate-code") @ResponseBody
     public ResponseEntity<?> generateCode() { return run(() -> { gate(); return service.generateCode(); }); }
 
-    @GetMapping(API + "/balances") @ResponseBody
+    @GetMapping("/api/accounts/accounts-reconciliation/balances") @ResponseBody
     public ResponseEntity<?> balances(@RequestParam(required = false) String docDate, @RequestParam(required = false) String groupAccountId,
                                       @RequestParam(required = false) String id) {
         return run(() -> { gate(); return service.balances(docDate, groupAccountId, id); });
     }
 
-    @GetMapping(API + "/by-doc-no") @ResponseBody
+    @GetMapping("/api/accounts/accounts-reconciliation/by-doc-no") @ResponseBody
     public ResponseEntity<?> byDocNo(@RequestParam(required = false) String docNo) { return run(() -> { gate(); return service.idByDocNo(docNo); }); }
 
-    @GetMapping(API + "/by-id") @ResponseBody
+    @GetMapping("/api/accounts/accounts-reconciliation/by-id") @ResponseBody
     public ResponseEntity<?> byId(@RequestParam int id) { return run(() -> { gate(); return service.readById(id); }); }
 
-    @PostMapping(API + "/save") @ResponseBody
+    @PostMapping("/api/accounts/accounts-reconciliation/save") @ResponseBody
     public ResponseEntity<?> save(@RequestBody Map<String, Object> body) { return run(() -> { gate(); return service.save(body); }); }
 
     private ResponseEntity<?> run(Supplier<Object> work) {

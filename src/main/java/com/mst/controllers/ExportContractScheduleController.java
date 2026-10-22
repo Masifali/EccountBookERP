@@ -35,65 +35,65 @@ public class ExportContractScheduleController {
         return "export/contract_schedule";
     }
 
-    @GetMapping(API + "/setup") @ResponseBody
+    @GetMapping("/api/export/contract-schedule/setup") @ResponseBody
     public ResponseEntity<?> setup() { return call(() -> svc.setup(), "Error occurred during database call."); }
 
-    @GetMapping(API + "/refresh-main") @ResponseBody
+    @GetMapping("/api/export/contract-schedule/refresh-main") @ResponseBody
     public ResponseEntity<?> refreshMain() { return call(() -> svc.refreshMain(), "Load failed."); }
 
-    @GetMapping(API + "/pending") @ResponseBody
+    @GetMapping("/api/export/contract-schedule/pending") @ResponseBody
     public ResponseEntity<?> pending(@RequestParam(value = "actionId", defaultValue = "1") int actionId,
                                      @RequestParam(value = "noOfRecords", defaultValue = "0") int noOfRecords) {
         return call(() -> svc.pendingApi(actionId, noOfRecords), "Load failed.");
     }
 
-    @GetMapping(API + "/history-combos") @ResponseBody
+    @GetMapping("/api/export/contract-schedule/history-combos") @ResponseBody
     public ResponseEntity<?> historyCombos() { return call(() -> svc.historyCombosApi(), "Load failed."); }
 
-    @GetMapping(API + "/contract") @ResponseBody
+    @GetMapping("/api/export/contract-schedule/contract") @ResponseBody
     public ResponseEntity<?> contract(@RequestParam("contractId") int contractId) { return call(() -> svc.contract(contractId), "Load failed."); }
 
-    @GetMapping(API + "/load-dates") @ResponseBody
+    @GetMapping("/api/export/contract-schedule/load-dates") @ResponseBody
     public ResponseEntity<?> loadDates(@RequestParam("contractId") int contractId,
                                        @RequestParam(value = "detailRecIds", required = false) String detailRecIds) {
         return call(() -> svc.loadDatesApi(contractId, detailRecIds), "Load failed.");
     }
 
-    @GetMapping(API + "/items") @ResponseBody
+    @GetMapping("/api/export/contract-schedule/items") @ResponseBody
     public ResponseEntity<?> items(@RequestParam("contractId") int contractId) { return call(() -> svc.itemsApi(contractId), "Load failed."); }
 
-    @GetMapping(API + "/uom") @ResponseBody
+    @GetMapping("/api/export/contract-schedule/uom") @ResponseBody
     public ResponseEntity<?> uom(@RequestParam("itemId") int itemId) { return call(() -> svc.uom(itemId), "Load failed."); }
 
-    @GetMapping(API + "/schedule-mton") @ResponseBody
+    @GetMapping("/api/export/contract-schedule/schedule-mton") @ResponseBody
     public ResponseEntity<?> scheduleMton(@RequestParam("contractId") int contractId, @RequestParam("scheduleId") int scheduleId) {
         return call(() -> svc.scheduleMton(contractId, scheduleId), "Load failed.");
     }
 
-    @GetMapping(API + "/custom-groups") @ResponseBody
+    @GetMapping("/api/export/contract-schedule/custom-groups") @ResponseBody
     public ResponseEntity<?> customGroups(@RequestParam(value = "supplierCustomerId", defaultValue = "0") int supplierCustomerId) {
         return call(() -> svc.customGroupsApi(supplierCustomerId), "Load failed.");
     }
 
-    @GetMapping(API + "/plants") @ResponseBody
+    @GetMapping("/api/export/contract-schedule/plants") @ResponseBody
     public ResponseEntity<?> plants() { return call(() -> svc.plants(), "Load failed."); }
 
-    @PostMapping(API + "/save-main") @ResponseBody
+    @PostMapping("/api/export/contract-schedule/save-main") @ResponseBody
     public ResponseEntity<?> saveMain(@RequestBody Map<String, Object> body) { return call(() -> svc.saveMain(body), "Save failed."); }
 
-    @PostMapping(API + "/save-detail") @ResponseBody
+    @PostMapping("/api/export/contract-schedule/save-detail") @ResponseBody
     public ResponseEntity<?> saveDetail(@RequestBody Map<String, Object> body) { return call(() -> svc.saveDetail(body), "Save failed."); }
 
-    @PostMapping(API + "/custom-group-save") @ResponseBody
+    @PostMapping("/api/export/contract-schedule/custom-group-save") @ResponseBody
     public ResponseEntity<?> customGroupSave(@RequestBody Map<String, Object> body) { return call(() -> svc.customGroupSave(body), "Save failed."); }
 
-    @PostMapping(API + "/history") @ResponseBody
+    @PostMapping("/api/export/contract-schedule/history") @ResponseBody
     public ResponseEntity<?> history(@RequestBody Map<String, Object> body) { return call(() -> svc.history(body), "Load failed."); }
 
-    @PostMapping(API + "/department") @ResponseBody
+    @PostMapping("/api/export/contract-schedule/department") @ResponseBody
     public ResponseEntity<?> department(@RequestBody Map<String, Object> body) { return call(() -> svc.department(body), "Load failed."); }
 
-    @PostMapping(API + "/save-department") @ResponseBody
+    @PostMapping("/api/export/contract-schedule/save-department") @ResponseBody
     public ResponseEntity<?> saveDepartment(@RequestBody Map<String, Object> body) { return call(() -> svc.saveDepartment(body), "Save failed."); }
 
     // ------------------------------------------------------------------ plumbing

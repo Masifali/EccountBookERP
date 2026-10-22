@@ -30,33 +30,33 @@ public class ExportAdvanceUtilizeInvoiceController {
         return "export/advance_utilize_against_invoice";
     }
 
-    @GetMapping(API + "/setup") @ResponseBody
+    @GetMapping("/api/export/advance-utilize-against-invoice/setup") @ResponseBody
     public ResponseEntity<?> setup() { return call(() -> svc.setup(), "Error occurred during database call."); }
 
-    @GetMapping(API + "/refresh") @ResponseBody
+    @GetMapping("/api/export/advance-utilize-against-invoice/refresh") @ResponseBody
     public ResponseEntity<?> refresh(@RequestParam(value = "recId", defaultValue = "0") int recId) { return call(() -> svc.refresh(recId), "Load failed."); }
 
-    @GetMapping(API + "/history-combos") @ResponseBody
+    @GetMapping("/api/export/advance-utilize-against-invoice/history-combos") @ResponseBody
     public ResponseEntity<?> historyCombos() { return call(() -> svc.historyCombos(), "Load failed."); }
 
-    @GetMapping(API + "/invoice-leave") @ResponseBody
+    @GetMapping("/api/export/advance-utilize-against-invoice/invoice-leave") @ResponseBody
     public ResponseEntity<?> invoiceLeave(@RequestParam("invoiceId") int invoiceId,
                                           @RequestParam(value = "supplierCustomerId", defaultValue = "0") int supplierCustomerId) {
         return call(() -> svc.invoiceLeave(invoiceId, supplierCustomerId), "Load failed.");
     }
 
-    @GetMapping(API + "/fi-balance") @ResponseBody
+    @GetMapping("/api/export/advance-utilize-against-invoice/fi-balance") @ResponseBody
     public ResponseEntity<?> fiBalance(@RequestParam("documentTypeId") int documentTypeId, @RequestParam("id") int id) {
         return call(() -> svc.fiBalance(documentTypeId, id), "Load failed.");
     }
 
-    @GetMapping(API + "/by-id") @ResponseBody
+    @GetMapping("/api/export/advance-utilize-against-invoice/by-id") @ResponseBody
     public ResponseEntity<?> byId(@RequestParam("id") int id) { return call(() -> svc.readById(id), "Load failed."); }
 
-    @PostMapping(API + "/history") @ResponseBody
+    @PostMapping("/api/export/advance-utilize-against-invoice/history") @ResponseBody
     public ResponseEntity<?> history(@RequestBody Map<String, Object> body) { return call(() -> svc.history(body), "Load failed."); }
 
-    @PostMapping(API + "/save") @ResponseBody
+    @PostMapping("/api/export/advance-utilize-against-invoice/save") @ResponseBody
     public ResponseEntity<?> save(@RequestBody Map<String, Object> body) { return call(() -> svc.save(body), "Save failed."); }
 
     private interface Call { Object run() throws Exception; }

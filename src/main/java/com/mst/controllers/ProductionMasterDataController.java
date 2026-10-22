@@ -31,7 +31,6 @@ import java.util.Map;
 @Controller
 public class ProductionMasterDataController {
 
-    private static final String API = "/api/production/master-data";
 
     @Autowired private ProductionMasterDataService service;
 
@@ -57,13 +56,13 @@ public class ProductionMasterDataController {
 
     // ------------------------------------------------------------------ Production Type
 
-    @GetMapping(API + "/production-type/list")
+    @GetMapping("/api/production/master-data/production-type/list")
     @ResponseBody
     public ResponseEntity<?> productionTypes() {
         try { return ResponseEntity.ok(service.productionTypes()); } catch (Exception e) { return error(e, "Load failed."); }
     }
 
-    @GetMapping(API + "/production-type/by-id")
+    @GetMapping("/api/production/master-data/production-type/by-id")
     @ResponseBody
     public ResponseEntity<?> productionType(@RequestParam("id") int id) {
         try { return ResponseEntity.ok(service.productionType(id)); }
@@ -71,7 +70,7 @@ public class ProductionMasterDataController {
         catch (Exception e) { return error(e, "Load failed."); }
     }
 
-    @PostMapping(API + "/production-type/save")
+    @PostMapping("/api/production/master-data/production-type/save")
     @ResponseBody
     public ResponseEntity<?> saveProductionType(@RequestBody Map<String, Object> body) {
         try { return ResponseEntity.ok(service.saveProductionType(body)); }
@@ -81,13 +80,13 @@ public class ProductionMasterDataController {
 
     // ------------------------------------------------------------------ Plan Type
 
-    @GetMapping(API + "/plan-type/list")
+    @GetMapping("/api/production/master-data/plan-type/list")
     @ResponseBody
     public ResponseEntity<?> planTypes() {
         try { return ResponseEntity.ok(service.planTypes()); } catch (Exception e) { return error(e, "Load failed."); }
     }
 
-    @GetMapping(API + "/plan-type/by-id")
+    @GetMapping("/api/production/master-data/plan-type/by-id")
     @ResponseBody
     public ResponseEntity<?> planType(@RequestParam("id") int id) {
         try { return ResponseEntity.ok(service.planType(id)); }
@@ -95,7 +94,7 @@ public class ProductionMasterDataController {
         catch (Exception e) { return error(e, "Load failed."); }
     }
 
-    @PostMapping(API + "/plan-type/save")
+    @PostMapping("/api/production/master-data/plan-type/save")
     @ResponseBody
     public ResponseEntity<?> savePlanType(@RequestBody Map<String, Object> body) {
         try { return ResponseEntity.ok(service.savePlanType(body)); }
@@ -106,19 +105,19 @@ public class ProductionMasterDataController {
     // ------------------------------------------------------------------ Plant
 
     /** DefineCountry_Load - the plant list and the branch combo in one call. */
-    @GetMapping(API + "/plant/setup")
+    @GetMapping("/api/production/master-data/plant/setup")
     @ResponseBody
     public ResponseEntity<?> plantSetup() {
         try { return ResponseEntity.ok(service.plantSetup()); } catch (Exception e) { return error(e, "Load failed."); }
     }
 
-    @GetMapping(API + "/plant/list")
+    @GetMapping("/api/production/master-data/plant/list")
     @ResponseBody
     public ResponseEntity<?> plants() {
         try { return ResponseEntity.ok(service.plants()); } catch (Exception e) { return error(e, "Load failed."); }
     }
 
-    @GetMapping(API + "/plant/by-id")
+    @GetMapping("/api/production/master-data/plant/by-id")
     @ResponseBody
     public ResponseEntity<?> plant(@RequestParam("id") int id) {
         try { return ResponseEntity.ok(service.plant(id)); }
@@ -126,7 +125,7 @@ public class ProductionMasterDataController {
         catch (Exception e) { return error(e, "Load failed."); }
     }
 
-    @PostMapping(API + "/plant/save")
+    @PostMapping("/api/production/master-data/plant/save")
     @ResponseBody
     public ResponseEntity<?> savePlant(@RequestBody Map<String, Object> body) {
         try { return ResponseEntity.ok(service.savePlant(body)); }
@@ -135,7 +134,7 @@ public class ProductionMasterDataController {
     }
 
     /** btnWarehouseAllocation_Click - the rights check for frmWarehousesAllocationToPlant. */
-    @GetMapping(API + "/plant/warehouse-allocation-right")
+    @GetMapping("/api/production/master-data/plant/warehouse-allocation-right")
     @ResponseBody
     public ResponseEntity<?> warehouseAllocationRight() {
         try { return ResponseEntity.ok(service.warehouseAllocationRight()); } catch (Exception e) { return error(e, "Rights check failed."); }

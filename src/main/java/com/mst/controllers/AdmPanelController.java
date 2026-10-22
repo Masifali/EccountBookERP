@@ -69,100 +69,100 @@ public class AdmPanelController {
 
     // ------------------------------------------------------------------ shared
 
-    @GetMapping(API + "/templates") @ResponseBody
+    @GetMapping("/api/adm-panel/templates") @ResponseBody
     public ResponseEntity<?> templates() { return run(service::templates, "Load failed."); }
 
     // ------------------------------------------------------------------ 318 UserRightsEditing
 
-    @GetMapping(API + "/ur/setup") @ResponseBody
+    @GetMapping("/api/adm-panel/ur/setup") @ResponseBody
     public ResponseEntity<?> urSetup() { return run(service::urSetup, "Load failed."); }
 
-    @GetMapping(API + "/ur/companies") @ResponseBody
+    @GetMapping("/api/adm-panel/ur/companies") @ResponseBody
     public ResponseEntity<?> urCompanies(@RequestParam("userId") int userId) { return run(() -> service.urCompanies(userId), "Load failed."); }
 
-    @GetMapping(API + "/ur/rights") @ResponseBody
+    @GetMapping("/api/adm-panel/ur/rights") @ResponseBody
     public ResponseEntity<?> urRights(@RequestParam("userId") int userId, @RequestParam("companyId") int companyId) {
         return run(() -> service.urRights(userId, companyId), "Load failed.");
     }
 
-    @PostMapping(API + "/ur/save") @ResponseBody
+    @PostMapping("/api/adm-panel/ur/save") @ResponseBody
     public ResponseEntity<?> urSave(@RequestBody Map<String, Object> body) { return run(() -> service.urSave(body), "Save failed."); }
 
     // ------------------------------------------------------------------ 319 frmUserModuleAdmin
 
-    @GetMapping(API + "/uma/users") @ResponseBody
+    @GetMapping("/api/adm-panel/uma/users") @ResponseBody
     public ResponseEntity<?> umaUsers() { return run(service::umaUsersGrid, "Load failed."); }
 
-    @GetMapping(API + "/uma/grids") @ResponseBody
+    @GetMapping("/api/adm-panel/uma/grids") @ResponseBody
     public ResponseEntity<?> umaGrids(@RequestParam("userId") int userId) { return run(() -> service.umaGrids(userId), "Load failed."); }
 
-    @PostMapping(API + "/uma/save") @ResponseBody
+    @PostMapping("/api/adm-panel/uma/save") @ResponseBody
     public ResponseEntity<?> umaSave(@RequestBody Map<String, Object> body) { return run(() -> service.umaSave(body), "Save failed."); }
 
     // ------------------------------------------------------------------ 315 frmModuleAllocateToOrganizationTemplates
 
-    @GetMapping(API + "/mat/modules") @ResponseBody
+    @GetMapping("/api/adm-panel/mat/modules") @ResponseBody
     public ResponseEntity<?> matModules(@RequestParam("templateId") int templateId) { return run(() -> service.matModules(templateId), "Load failed."); }
 
-    @GetMapping(API + "/mat/screens") @ResponseBody
+    @GetMapping("/api/adm-panel/mat/screens") @ResponseBody
     public ResponseEntity<?> matScreens(@RequestParam("templateId") int templateId, @RequestParam(value = "moduleId", defaultValue = "0") int moduleId) {
         return run(() -> service.matScreens(templateId, moduleId), "Load failed.");
     }
 
-    @PostMapping(API + "/mat/save-modules") @ResponseBody
+    @PostMapping("/api/adm-panel/mat/save-modules") @ResponseBody
     public ResponseEntity<?> matSaveModules(@RequestBody Map<String, Object> body) { return run(() -> service.matSaveModules(body), "Save failed."); }
 
-    @PostMapping(API + "/mat/save-screens") @ResponseBody
+    @PostMapping("/api/adm-panel/mat/save-screens") @ResponseBody
     public ResponseEntity<?> matSaveScreens(@RequestBody Map<String, Object> body) { return run(() -> service.matSaveScreens(body), "Save failed."); }
 
     // ------------------------------------------------------------------ 316 frmScreensAllocateToCompany
 
-    @GetMapping(API + "/sac/companies") @ResponseBody
+    @GetMapping("/api/adm-panel/sac/companies") @ResponseBody
     public ResponseEntity<?> sacCompanies(@RequestParam("templateId") int templateId) { return run(() -> service.sacCompanies(templateId), "Load failed."); }
 
-    @GetMapping(API + "/sac/modules") @ResponseBody
+    @GetMapping("/api/adm-panel/sac/modules") @ResponseBody
     public ResponseEntity<?> sacModules(@RequestParam("templateId") int templateId) { return run(() -> service.sacModules(templateId), "Load failed."); }
 
-    @GetMapping(API + "/sac/screens") @ResponseBody
+    @GetMapping("/api/adm-panel/sac/screens") @ResponseBody
     public ResponseEntity<?> sacScreens(@RequestParam("templateId") int templateId, @RequestParam("companyId") int companyId,
                                         @RequestParam("moduleId") int moduleId) {
         return run(() -> service.sacScreens(templateId, companyId, moduleId), "Load failed.");
     }
 
-    @PostMapping(API + "/sac/save") @ResponseBody
+    @PostMapping("/api/adm-panel/sac/save") @ResponseBody
     public ResponseEntity<?> sacSave(@RequestBody Map<String, Object> body) { return run(() -> service.sacSave(body), "Save failed."); }
 
     // ------------------------------------------------------------------ 314 AllocationOrganizationTemplateRights
 
-    @GetMapping(API + "/tr/setup") @ResponseBody
+    @GetMapping("/api/adm-panel/tr/setup") @ResponseBody
     public ResponseEntity<?> trSetup() { return run(service::trSetup, "Load failed."); }
 
-    @GetMapping(API + "/tr/screens") @ResponseBody
+    @GetMapping("/api/adm-panel/tr/screens") @ResponseBody
     public ResponseEntity<?> trScreens(@RequestParam("templateId") int templateId, @RequestParam(value = "moduleId", defaultValue = "0") int moduleId) {
         return run(() -> service.trScreens(templateId, moduleId), "Load failed.");
     }
 
-    @PostMapping(API + "/tr/allocate") @ResponseBody
+    @PostMapping("/api/adm-panel/tr/allocate") @ResponseBody
     public ResponseEntity<?> trAllocate(@RequestBody Map<String, Object> body) { return run(() -> service.trAllocate(body), "Save failed."); }
 
-    @PostMapping(API + "/tr/deallocate") @ResponseBody
+    @PostMapping("/api/adm-panel/tr/deallocate") @ResponseBody
     public ResponseEntity<?> trDeallocate(@RequestBody Map<String, Object> body) { return run(() -> service.trDeallocate(body), "Save failed."); }
 
     // ------------------------------------------------------------------ 312 DefineCompany
 
-    @GetMapping(API + "/dc/setup") @ResponseBody
+    @GetMapping("/api/adm-panel/dc/setup") @ResponseBody
     public ResponseEntity<?> dcSetup() { return run(service::dcSetup, "Load failed."); }
 
-    @GetMapping(API + "/dc/history") @ResponseBody
+    @GetMapping("/api/adm-panel/dc/history") @ResponseBody
     public ResponseEntity<?> dcHistory() { return run(service::dcHistory, "Load failed."); }
 
-    @GetMapping(API + "/dc/organization") @ResponseBody
+    @GetMapping("/api/adm-panel/dc/organization") @ResponseBody
     public ResponseEntity<?> dcOrganization(@RequestParam("id") int id) { return run(() -> service.dcOrganization(id), "Load failed."); }
 
-    @GetMapping(API + "/dc/company") @ResponseBody
+    @GetMapping("/api/adm-panel/dc/company") @ResponseBody
     public ResponseEntity<?> dcCompany(@RequestParam("id") int id) { return run(() -> service.dcCompany(id), "Load failed."); }
 
-    @GetMapping(API + "/dc/logo")
+    @GetMapping("/api/adm-panel/dc/logo")
     public ResponseEntity<?> dcLogo(@RequestParam("id") int id) {
         try {
             byte[] bytes = service.dcLogo(id);
@@ -178,39 +178,39 @@ public class AdmPanelController {
         }
     }
 
-    @PostMapping(API + "/dc/save") @ResponseBody
+    @PostMapping("/api/adm-panel/dc/save") @ResponseBody
     public ResponseEntity<?> dcSave(@RequestBody Map<String, Object> body) { return run(() -> service.dcSave(body), "Save failed."); }
 
-    @PostMapping(API + "/dc/update") @ResponseBody
+    @PostMapping("/api/adm-panel/dc/update") @ResponseBody
     public ResponseEntity<?> dcUpdate(@RequestBody Map<String, Object> body) { return run(() -> service.dcUpdate(body), "Update failed."); }
 
     // ------------------------------------------------------------------ 791 frmScreenDefinetion
 
-    @GetMapping(API + "/sd/setup") @ResponseBody
+    @GetMapping("/api/adm-panel/sd/setup") @ResponseBody
     public ResponseEntity<?> sdSetup() { return run(service::sdSetup, "Load failed."); }
 
-    @GetMapping(API + "/sd/screens") @ResponseBody
+    @GetMapping("/api/adm-panel/sd/screens") @ResponseBody
     public ResponseEntity<?> sdScreens() { return run(service::sdScreens, "Load failed."); }
 
-    @GetMapping(API + "/sd/by-id") @ResponseBody
+    @GetMapping("/api/adm-panel/sd/by-id") @ResponseBody
     public ResponseEntity<?> sdById(@RequestParam("id") int id) { return run(() -> service.sdById(id), "Load failed."); }
 
-    @PostMapping(API + "/sd/save") @ResponseBody
+    @PostMapping("/api/adm-panel/sd/save") @ResponseBody
     public ResponseEntity<?> sdSave(@RequestBody Map<String, Object> body) { return run(() -> service.sdSave(body), "Save failed."); }
 
-    @PostMapping(API + "/sd/sorting") @ResponseBody
+    @PostMapping("/api/adm-panel/sd/sorting") @ResponseBody
     public ResponseEntity<?> sdSorting(@RequestBody Map<String, Object> body) { return run(() -> service.sdSorting(body), "Update failed."); }
 
-    @GetMapping(API + "/sd/document-types") @ResponseBody
+    @GetMapping("/api/adm-panel/sd/document-types") @ResponseBody
     public ResponseEntity<?> sdDocumentTypes() { return run(service::sdDocumentTypes, "Load failed."); }
 
-    @PostMapping(API + "/sd/document-type") @ResponseBody
+    @PostMapping("/api/adm-panel/sd/document-type") @ResponseBody
     public ResponseEntity<?> sdSaveDocType(@RequestBody Map<String, Object> body) { return run(() -> service.sdSaveDocType(body), "Save failed."); }
 
-    @GetMapping(API + "/sd/methods") @ResponseBody
+    @GetMapping("/api/adm-panel/sd/methods") @ResponseBody
     public ResponseEntity<?> sdMethods() { return run(service::sdMethods, "Load failed."); }
 
-    @PostMapping(API + "/sd/method") @ResponseBody
+    @PostMapping("/api/adm-panel/sd/method") @ResponseBody
     public ResponseEntity<?> sdSaveMethod(@RequestBody Map<String, Object> body) { return run(() -> service.sdSaveMethod(body), "Save failed."); }
 
     // ------------------------------------------------------------------ plumbing

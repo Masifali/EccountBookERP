@@ -29,27 +29,27 @@ public class HrmDeviceController {
     @GetMapping("/hrm/device-configuration")
     public String deviceConfigurationPage(Model model) { model.addAttribute("activeMenu", "apps"); return "hrm/device/device-configuration"; }
 
-    @GetMapping(API + "/device-configuration/setup") @ResponseBody
+    @GetMapping("/api/hrm/device/device-configuration/setup") @ResponseBody
     public ResponseEntity<?> deviceSetup() { return HrmApi.run(() -> service.deviceSetup()); }
 
-    @GetMapping(API + "/device-configuration/list") @ResponseBody
+    @GetMapping("/api/hrm/device/device-configuration/list") @ResponseBody
     public ResponseEntity<?> deviceList() { return HrmApi.run(() -> service.devices()); }
 
-    @GetMapping(API + "/device-configuration/by-id") @ResponseBody
+    @GetMapping("/api/hrm/device/device-configuration/by-id") @ResponseBody
     public ResponseEntity<?> deviceById(@RequestParam("id") int id) { return HrmApi.run(() -> service.device(id)); }
 
-    @PostMapping(API + "/device-configuration/save") @ResponseBody
+    @PostMapping("/api/hrm/device/device-configuration/save") @ResponseBody
     public ResponseEntity<?> deviceSave(@RequestBody DeviceSaveDto body) { return HrmApi.run(() -> service.saveDevice(body)); }
 
     @GetMapping("/hrm/pull-attendance-by-machine")
     public String pullAttendancePage(Model model) { model.addAttribute("activeMenu", "apps"); return "hrm/device/pull-attendance-by-machine"; }
 
-    @GetMapping(API + "/pull-attendance-by-machine/setup") @ResponseBody
+    @GetMapping("/api/hrm/device/pull-attendance-by-machine/setup") @ResponseBody
     public ResponseEntity<?> pullSetup() { return HrmApi.run(() -> service.pullSetup()); }
 
-    @GetMapping(API + "/pull-attendance-by-machine/reload") @ResponseBody
+    @GetMapping("/api/hrm/device/pull-attendance-by-machine/reload") @ResponseBody
     public ResponseEntity<?> pullReload() { return HrmApi.run(() -> service.pullReload()); }
 
-    @PostMapping(API + "/pull-attendance-by-machine/job") @ResponseBody
+    @PostMapping("/api/hrm/device/pull-attendance-by-machine/job") @ResponseBody
     public ResponseEntity<?> pullJob(@RequestBody DevicePullJobDto body) { return HrmApi.run(() -> service.queueJob(body)); }
 }

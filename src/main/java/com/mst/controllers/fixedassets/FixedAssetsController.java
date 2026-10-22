@@ -29,8 +29,6 @@ import java.util.Map;
 @Controller
 public class FixedAssetsController {
 
-    private static final String REG = "/api/fixed-assets/assets-register";
-    private static final String PUR = "/api/fixed-assets/fixed-asset-purchase";
 
     @Autowired private FaAssetsRegisterService register;
     @Autowired private FaPurchaseService purchase;
@@ -48,67 +46,67 @@ public class FixedAssetsController {
 
     // ------------------------------------------------------------------ 353 Assets Register
 
-    @GetMapping(REG + "/setup") @ResponseBody
+    @GetMapping("/api/fixed-assets/assets-register/setup") @ResponseBody
     public ResponseEntity<?> regSetup() { return HrmApi.run(() -> register.setup()); }
 
-    @GetMapping(REG + "/items") @ResponseBody
+    @GetMapping("/api/fixed-assets/assets-register/items") @ResponseBody
     public ResponseEntity<?> regItems(@RequestParam("categoryId") int categoryId) { return HrmApi.run(() -> register.items(categoryId)); }
 
-    @GetMapping(REG + "/serial-no") @ResponseBody
+    @GetMapping("/api/fixed-assets/assets-register/serial-no") @ResponseBody
     public ResponseEntity<?> regSerial(@RequestParam("categoryId") int categoryId) { return HrmApi.run(() -> register.serialNo(categoryId)); }
 
-    @GetMapping(REG + "/history") @ResponseBody
+    @GetMapping("/api/fixed-assets/assets-register/history") @ResponseBody
     public ResponseEntity<?> regHistory(@RequestParam(value = "dateType", required = false) String dateType,
                                         @RequestParam(value = "fromDate", required = false) String fromDate,
                                         @RequestParam(value = "toDate", required = false) String toDate) {
         return HrmApi.run(() -> register.history(dateType, fromDate, toDate));
     }
 
-    @GetMapping(REG + "/by-id") @ResponseBody
+    @GetMapping("/api/fixed-assets/assets-register/by-id") @ResponseBody
     public ResponseEntity<?> regById(@RequestParam("id") long id) { return HrmApi.run(() -> register.asset(id)); }
 
-    @PostMapping(REG + "/save") @ResponseBody
+    @PostMapping("/api/fixed-assets/assets-register/save") @ResponseBody
     public ResponseEntity<?> regSave(@RequestBody Map<String, Object> body) { return HrmApi.run(() -> register.save(body)); }
 
     // ------------------------------------------------------------------ 918 Fixed Asset Purchase
 
-    @GetMapping(PUR + "/setup") @ResponseBody
+    @GetMapping("/api/fixed-assets/fixed-asset-purchase/setup") @ResponseBody
     public ResponseEntity<?> purSetup() { return HrmApi.run(() -> purchase.setup()); }
 
-    @GetMapping(PUR + "/next-code") @ResponseBody
+    @GetMapping("/api/fixed-assets/fixed-asset-purchase/next-code") @ResponseBody
     public ResponseEntity<?> purNextCode() { return HrmApi.run(() -> purchase.nextCode()); }
 
-    @GetMapping(PUR + "/history-accounts") @ResponseBody
+    @GetMapping("/api/fixed-assets/fixed-asset-purchase/history-accounts") @ResponseBody
     public ResponseEntity<?> purHistoryAccounts() { return HrmApi.run(() -> purchase.historyAccounts()); }
 
-    @GetMapping(PUR + "/custom-accounts") @ResponseBody
+    @GetMapping("/api/fixed-assets/fixed-asset-purchase/custom-accounts") @ResponseBody
     public ResponseEntity<?> purCustomAccounts(@RequestParam("customGroupId") int groupId) { return HrmApi.run(() -> purchase.customAccounts(groupId)); }
 
-    @GetMapping(PUR + "/last-rate") @ResponseBody
+    @GetMapping("/api/fixed-assets/fixed-asset-purchase/last-rate") @ResponseBody
     public ResponseEntity<?> purLastRate(@RequestParam("currencyId") int currencyId) { return HrmApi.run(() -> purchase.lastRate(currencyId)); }
 
-    @GetMapping(PUR + "/tax-schedule") @ResponseBody
+    @GetMapping("/api/fixed-assets/fixed-asset-purchase/tax-schedule") @ResponseBody
     public ResponseEntity<?> purTaxSchedule(@RequestParam("taxTypeId") int taxTypeId, @RequestParam(value = "date", required = false) String date) {
         return HrmApi.run(() -> purchase.taxSchedule(taxTypeId, date));
     }
 
-    @GetMapping(PUR + "/balance") @ResponseBody
+    @GetMapping("/api/fixed-assets/fixed-asset-purchase/balance") @ResponseBody
     public ResponseEntity<?> purBalance(@RequestParam("accountId") int accountId, @RequestParam(value = "date", required = false) String date) {
         return HrmApi.run(() -> purchase.balance(accountId, date));
     }
 
-    @PostMapping(PUR + "/save") @ResponseBody
+    @PostMapping("/api/fixed-assets/fixed-asset-purchase/save") @ResponseBody
     public ResponseEntity<?> purSave(@RequestBody Map<String, Object> body) { return HrmApi.run(() -> purchase.save(body)); }
 
-    @GetMapping(PUR + "/by-id") @ResponseBody
+    @GetMapping("/api/fixed-assets/fixed-asset-purchase/by-id") @ResponseBody
     public ResponseEntity<?> purById(@RequestParam("id") int id) { return HrmApi.run(() -> purchase.load(id)); }
 
-    @GetMapping(PUR + "/history") @ResponseBody
+    @GetMapping("/api/fixed-assets/fixed-asset-purchase/history") @ResponseBody
     public ResponseEntity<?> purHistory(@RequestParam Map<String, String> q) { return HrmApi.run(() -> purchase.history(q)); }
 
-    @GetMapping(PUR + "/history-detail") @ResponseBody
+    @GetMapping("/api/fixed-assets/fixed-asset-purchase/history-detail") @ResponseBody
     public ResponseEntity<?> purHistoryDetail(@RequestParam("id") int id) { return HrmApi.run(() -> purchase.historyDetail(id)); }
 
-    @GetMapping(PUR + "/print-check") @ResponseBody
+    @GetMapping("/api/fixed-assets/fixed-asset-purchase/print-check") @ResponseBody
     public ResponseEntity<?> purPrintCheck(@RequestParam("id") int id) { return HrmApi.run(() -> purchase.printCheck(id)); }
 }

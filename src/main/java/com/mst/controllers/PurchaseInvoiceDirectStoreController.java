@@ -25,7 +25,6 @@ import java.util.Map;
 @Controller
 public class PurchaseInvoiceDirectStoreController {
 
-    private static final String API = "/api/store/purchase-invoice-direct-store";
 
     private final PurchaseInvoiceDirectStoreService service;
     public PurchaseInvoiceDirectStoreController(PurchaseInvoiceDirectStoreService service) { this.service = service; }
@@ -36,19 +35,19 @@ public class PurchaseInvoiceDirectStoreController {
         return "store/purchase_invoice_direct_store";
     }
 
-    @GetMapping(API + "/lookups")
+    @GetMapping("/api/store/purchase-invoice-direct-store/lookups")
     @ResponseBody
     public ResponseEntity<?> lookups() { return run(service::lookups, "Could not load the screen."); }
 
-    @GetMapping(API + "/numbers")
+    @GetMapping("/api/store/purchase-invoice-direct-store/numbers")
     @ResponseBody
     public ResponseEntity<?> numbers() { return run(service::numbers, "Could not generate the Doc No."); }
 
-    @GetMapping(API + "/history-branches")
+    @GetMapping("/api/store/purchase-invoice-direct-store/history-branches")
     @ResponseBody
     public ResponseEntity<?> historyBranches() { return run(service::historyBranchList, "Could not load branches."); }
 
-    @GetMapping(API + "/stock")
+    @GetMapping("/api/store/purchase-invoice-direct-store/stock")
     @ResponseBody
     public ResponseEntity<?> stock(@RequestParam(defaultValue = "0") int itemId,
                                    @RequestParam(required = false) String docDate,
@@ -58,14 +57,14 @@ public class PurchaseInvoiceDirectStoreController {
         return run(() -> service.stock(itemId, docDate, itemConditionId, warehouseId, rackId), "Could not read the stock.");
     }
 
-    @GetMapping(API + "/history-suppliers")
+    @GetMapping("/api/store/purchase-invoice-direct-store/history-suppliers")
     @ResponseBody
     public ResponseEntity<?> historySuppliers(@RequestParam(required = false) String branchIds,
                                               @RequestParam(defaultValue = "false") boolean validate) {
         return run(() -> service.historySuppliers(branchIds, validate), "Could not load suppliers.");
     }
 
-    @GetMapping(API + "/history")
+    @GetMapping("/api/store/purchase-invoice-direct-store/history")
     @ResponseBody
     public ResponseEntity<?> history(@RequestParam(defaultValue = "doc") String dateType,
                                      @RequestParam(required = false) String fromDate,
@@ -78,7 +77,7 @@ public class PurchaseInvoiceDirectStoreController {
                 "History failed.");
     }
 
-    @GetMapping(API + "/{id}")
+    @GetMapping("/api/store/purchase-invoice-direct-store/{id}")
     @ResponseBody
     public ResponseEntity<?> load(@PathVariable int id) {
         try {
@@ -90,27 +89,27 @@ public class PurchaseInvoiceDirectStoreController {
         }
     }
 
-    @GetMapping(API + "/{id}/slip")
+    @GetMapping("/api/store/purchase-invoice-direct-store/{id}/slip")
     @ResponseBody
     public ResponseEntity<?> slip(@PathVariable int id) { return report(() -> service.slip(id)); }
 
-    @GetMapping(API + "/{id}/voucher")
+    @GetMapping("/api/store/purchase-invoice-direct-store/{id}/voucher")
     @ResponseBody
     public ResponseEntity<?> voucher(@PathVariable int id) { return report(() -> service.voucher118(id)); }
 
-    @GetMapping(API + "/{id}/voucher-slip")
+    @GetMapping("/api/store/purchase-invoice-direct-store/{id}/voucher-slip")
     @ResponseBody
     public ResponseEntity<?> voucherSlip(@PathVariable int id) { return report(() -> service.voucher103(id)); }
 
-    @PostMapping(API + "/save")
+    @PostMapping("/api/store/purchase-invoice-direct-store/save")
     @ResponseBody
     public ResponseEntity<?> save(@RequestBody PurchaseInvoiceDirectStoreDto dto) { return write(() -> service.save(dto)); }
 
-    @PostMapping(API + "/{id}/delete")
+    @PostMapping("/api/store/purchase-invoice-direct-store/{id}/delete")
     @ResponseBody
     public ResponseEntity<?> delete(@PathVariable int id) { return write(() -> service.delete(id)); }
 
-    @PostMapping(API + "/{id}/detail/{detailId}/check-delete")
+    @PostMapping("/api/store/purchase-invoice-direct-store/{id}/detail/{detailId}/check-delete")
     @ResponseBody
     public ResponseEntity<?> checkDetailDelete(@PathVariable int id, @PathVariable int detailId) {
         return write(() -> service.checkDetailDelete(id, detailId));

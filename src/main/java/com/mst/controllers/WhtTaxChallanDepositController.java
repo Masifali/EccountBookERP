@@ -36,26 +36,26 @@ public class WhtTaxChallanDepositController {
         return "accounts/wht_tax_challan_deposit";
     }
 
-    @GetMapping(API + "/setup") @ResponseBody
+    @GetMapping("/api/accounts/wht-tax-challan-deposit/setup") @ResponseBody
     public ResponseEntity<?> setup() { return call(() -> service.whtChallanSetup(), "Load failed."); }
 
-    @GetMapping(API + "/doc-no") @ResponseBody
+    @GetMapping("/api/accounts/wht-tax-challan-deposit/doc-no") @ResponseBody
     public ResponseEntity<?> docNo() { return call(() -> service.whtChallanDocNo(), "Load failed."); }
 
-    @GetMapping(API + "/pending") @ResponseBody
+    @GetMapping("/api/accounts/wht-tax-challan-deposit/pending") @ResponseBody
     public ResponseEntity<?> pending(@RequestParam("partyAccountId") int partyAccountId,
                                      @RequestParam(value = "branchId", defaultValue = "0") int branchId,
                                      @RequestParam(value = "projectId", defaultValue = "0") int projectId) {
         return call(() -> service.whtChallanPending(partyAccountId, branchId, projectId), "Load failed.");
     }
 
-    @GetMapping(API + "/history") @ResponseBody
+    @GetMapping("/api/accounts/wht-tax-challan-deposit/history") @ResponseBody
     public ResponseEntity<?> history() { return call(() -> service.whtChallanHistory(), "Load failed."); }
 
-    @GetMapping(API + "/voucher") @ResponseBody
+    @GetMapping("/api/accounts/wht-tax-challan-deposit/voucher") @ResponseBody
     public ResponseEntity<?> voucher(@RequestParam("id") int id) { return call(() -> service.whtChallanVoucher(id), "Load failed."); }
 
-    @PostMapping(API + "/save") @ResponseBody
+    @PostMapping("/api/accounts/wht-tax-challan-deposit/save") @ResponseBody
     public ResponseEntity<?> save(@RequestBody Map<String, Object> body) { return call(() -> service.saveWhtChallan(body), "Save failed."); }
 
     private interface Call { Object run() throws Exception; }

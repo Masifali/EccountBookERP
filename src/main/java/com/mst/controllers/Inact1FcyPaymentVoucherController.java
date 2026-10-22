@@ -26,7 +26,6 @@ import java.util.function.Supplier;
  */
 @Controller
 public class Inact1FcyPaymentVoucherController {
-    private static final String API = "/api/accounts/fcy-payment-voucher";
 
     @Autowired private Inact1FcyPaymentVoucherService service;
     @Autowired private CurrentUserContext context;
@@ -45,42 +44,42 @@ public class Inact1FcyPaymentVoucherController {
         return "accounts/inact1_fcy_payment_voucher";
     }
 
-    @GetMapping(API + "/load") @ResponseBody
+    @GetMapping("/api/accounts/fcy-payment-voucher/load") @ResponseBody
     public ResponseEntity<?> load() { return run(() -> { gate(); return service.load(); }); }
 
-    @GetMapping(API + "/refresh") @ResponseBody
+    @GetMapping("/api/accounts/fcy-payment-voucher/refresh") @ResponseBody
     public ResponseEntity<?> refresh() { return run(() -> { gate(); return service.refresh(); }); }
 
-    @GetMapping(API + "/doc-no") @ResponseBody
+    @GetMapping("/api/accounts/fcy-payment-voucher/doc-no") @ResponseBody
     public ResponseEntity<?> docNo() { return run(() -> { gate(); return service.generateCode(); }); }
 
-    @GetMapping(API + "/suppliers") @ResponseBody
+    @GetMapping("/api/accounts/fcy-payment-voucher/suppliers") @ResponseBody
     public ResponseEntity<?> suppliers(@RequestParam String term) { return run(() -> { gate(); return service.suppliers(term); }); }
 
-    @GetMapping(API + "/lc-orders") @ResponseBody
+    @GetMapping("/api/accounts/fcy-payment-voucher/lc-orders") @ResponseBody
     public ResponseEntity<?> lcOrders(@RequestParam int supplierId) { return run(() -> { gate(); return service.lcOrders(supplierId); }); }
 
-    @GetMapping(API + "/invoices") @ResponseBody
+    @GetMapping("/api/accounts/fcy-payment-voucher/invoices") @ResponseBody
     public ResponseEntity<?> invoices(@RequestParam int supplierId) { return run(() -> { gate(); return service.invoices(supplierId); }); }
 
-    @GetMapping(API + "/invoice-amount") @ResponseBody
+    @GetMapping("/api/accounts/fcy-payment-voucher/invoice-amount") @ResponseBody
     public ResponseEntity<?> invoiceAmount(@RequestParam int invoiceId) { return run(() -> { gate(); return service.invoiceAmount(invoiceId); }); }
 
-    @GetMapping(API + "/invoice-rate") @ResponseBody
+    @GetMapping("/api/accounts/fcy-payment-voucher/invoice-rate") @ResponseBody
     public ResponseEntity<?> invoiceRate(@RequestParam int invoiceId) { return run(() -> { gate(); return service.invoiceRate(invoiceId); }); }
 
-    @GetMapping(API + "/read") @ResponseBody
+    @GetMapping("/api/accounts/fcy-payment-voucher/read") @ResponseBody
     public ResponseEntity<?> read(@RequestParam int id) { return run(() -> { gate(); return service.read(id); }); }
 
-    @PostMapping(API + "/history") @ResponseBody
+    @PostMapping("/api/accounts/fcy-payment-voucher/history") @ResponseBody
     public ResponseEntity<?> history(@RequestBody Map<String, Object> body) {
         return run(() -> { gate(); return service.history(Boolean.TRUE.equals(body.get("all"))); });
     }
 
-    @PostMapping(API + "/save") @ResponseBody
+    @PostMapping("/api/accounts/fcy-payment-voucher/save") @ResponseBody
     public ResponseEntity<?> save(@RequestBody Map<String, Object> body) { return run(() -> { gate(); return service.save(body); }); }
 
-    @GetMapping(API + "/print-target") @ResponseBody
+    @GetMapping("/api/accounts/fcy-payment-voucher/print-target") @ResponseBody
     public ResponseEntity<?> printTarget(@RequestParam int id) { return run(() -> { gate(); return service.printTarget(id); }); }
 
     private ResponseEntity<?> run(Supplier<Object> work) {

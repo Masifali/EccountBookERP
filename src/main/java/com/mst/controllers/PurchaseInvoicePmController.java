@@ -22,7 +22,6 @@ import org.springframework.web.server.ResponseStatusException;
 @Controller
 public class PurchaseInvoicePmController {
 
-    private static final String API = "/api/packing-material/purchase-invoice";
 
     private final PurchaseInvoicePmService service;
 
@@ -36,33 +35,33 @@ public class PurchaseInvoicePmController {
         return "packing_material/purchase_invoice_pm";
     }
 
-    @GetMapping(API + "/lookups")
+    @GetMapping("/api/packing-material/purchase-invoice/lookups")
     @ResponseBody
     public ResponseEntity<?> lookups() { return run(service::lookups, "Could not load the screen."); }
 
-    @GetMapping(API + "/numbers")
+    @GetMapping("/api/packing-material/purchase-invoice/numbers")
     @ResponseBody
     public ResponseEntity<?> numbers() { return run(service::numbers, "Could not generate the document number."); }
 
-    @GetMapping(API + "/pending-grns")
+    @GetMapping("/api/packing-material/purchase-invoice/pending-grns")
     @ResponseBody
     public ResponseEntity<?> pendingGrns(@RequestParam(required = false) String fromDate, @RequestParam(required = false) String toDate) {
         return run(() -> service.pendingGrns(fromDate, toDate), "Could not load GRNs.");
     }
 
-    @PostMapping(API + "/load-grns")
+    @PostMapping("/api/packing-material/purchase-invoice/load-grns")
     @ResponseBody
     public ResponseEntity<?> loadGrns(@RequestBody List<Integer> grnIds) {
         return run(() -> service.loadGrns(grnIds), "Could not load GRNs.");
     }
 
-    @GetMapping(API + "/tax-options")
+    @GetMapping("/api/packing-material/purchase-invoice/tax-options")
     @ResponseBody
     public ResponseEntity<?> taxOptions(@RequestParam(defaultValue = "0") int itemId, @RequestParam String docDate) {
         return run(() -> service.taxOptions(itemId, docDate), "Could not read the tax schedule.");
     }
 
-    @GetMapping(API + "/history")
+    @GetMapping("/api/packing-material/purchase-invoice/history")
     @ResponseBody
     public ResponseEntity<?> history(@RequestParam(required = false) String fromDate, @RequestParam(required = false) String toDate,
                                      @RequestParam(defaultValue = "0") int fromDocNo, @RequestParam(defaultValue = "0") int toDocNo,
@@ -70,29 +69,29 @@ public class PurchaseInvoicePmController {
         return run(() -> service.history(fromDate, toDate, fromDocNo, toDocNo, supplierId, branchIds), "History failed.");
     }
 
-    @GetMapping(API + "/history-suppliers")
+    @GetMapping("/api/packing-material/purchase-invoice/history-suppliers")
     @ResponseBody
     public ResponseEntity<?> historySuppliers(@RequestParam(required = false) String branchIds) {
         return run(() -> service.historySuppliers(branchIds), "Could not refresh.");
     }
 
-    @GetMapping(API + "/{id}")
+    @GetMapping("/api/packing-material/purchase-invoice/{id}")
     @ResponseBody
     public ResponseEntity<?> record(@PathVariable int id) { return run(() -> service.record(id), "Record Not Found"); }
 
-    @GetMapping(API + "/{id}/voucher")
+    @GetMapping("/api/packing-material/purchase-invoice/{id}/voucher")
     @ResponseBody
     public ResponseEntity<?> voucher(@PathVariable int id) { return run(() -> service.voucherHead(id), "Record Not Found"); }
 
-    @PostMapping(API + "/save")
+    @PostMapping("/api/packing-material/purchase-invoice/save")
     @ResponseBody
     public ResponseEntity<?> save(@RequestBody PurchaseInvoicePmRequest request) { return run(() -> service.save(request), "Save failed."); }
 
-    @PostMapping(API + "/{id}/delete")
+    @PostMapping("/api/packing-material/purchase-invoice/{id}/delete")
     @ResponseBody
     public ResponseEntity<?> delete(@PathVariable int id) { return run(() -> service.delete(id), "Delete failed."); }
 
-    @GetMapping(API + "/{id}/attachments/{attachmentId}")
+    @GetMapping("/api/packing-material/purchase-invoice/{id}/attachments/{attachmentId}")
     public ResponseEntity<byte[]> attachment(@PathVariable int id, @PathVariable int attachmentId) {
         DesktopInventoryItemFileService.Download d = service.attachment(id, attachmentId);
         HttpHeaders h = new HttpHeaders();

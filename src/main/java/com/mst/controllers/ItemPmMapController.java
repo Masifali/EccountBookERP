@@ -16,7 +16,6 @@ import java.util.Map;
 @Controller
 public class ItemPmMapController {
 
-    private static final String API = "/api/packing-material/item-pm-map";
 
     @Autowired private ItemPmMapService service;
 
@@ -26,19 +25,19 @@ public class ItemPmMapController {
         return "packing_material/item_pm_map";
     }
 
-    @GetMapping(value = API + "/lookups", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/api/packing-material/item-pm-map/lookups", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public ResponseEntity<?> lookups() {
         return run(service::lookups, "Could not load lookups.");
     }
 
-    @GetMapping(value = API + "/uoms", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/api/packing-material/item-pm-map/uoms", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public ResponseEntity<?> uomsForItem(@RequestParam(name = "itemId", defaultValue = "0") int itemId) {
         return run(() -> service.uomsForItem(itemId), "Could not load UOMs.");
     }
 
-    @GetMapping(value = API + "/history", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/api/packing-material/item-pm-map/history", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public ResponseEntity<?> history(@RequestParam(name = "fromDate", required = false) String fromDate,
                                      @RequestParam(name = "toDate", required = false) String toDate,
@@ -46,20 +45,20 @@ public class ItemPmMapController {
         return run(() -> service.history(fromDate, toDate, itemId), "Could not load history.");
     }
 
-    @GetMapping(value = API + "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/api/packing-material/item-pm-map/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public ResponseEntity<?> getById(@PathVariable("id") int id) {
         return run(() -> service.getById(id), "Could not load record.");
     }
 
-    @PostMapping(value = API + "/save", consumes = MediaType.APPLICATION_JSON_VALUE,
+    @PostMapping(value = "/api/packing-material/item-pm-map/save", consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public ResponseEntity<?> save(@RequestBody ItemPmMapDto dto) {
         return write(() -> service.save(dto), "Save failed.");
     }
 
-    @DeleteMapping(value = API + "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @DeleteMapping(value = "/api/packing-material/item-pm-map/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public ResponseEntity<?> delete(@PathVariable("id") int id) {
         return run(() -> service.delete(id), "Delete failed.");

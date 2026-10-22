@@ -33,7 +33,6 @@ import java.util.Map;
 @Controller
 public class ProductionOutputAllocationController {
 
-    private static final String API = "/api/production/output-allocation-export-invoice";
 
     @Autowired private ProductionOutputAllocationService service;
 
@@ -44,35 +43,35 @@ public class ProductionOutputAllocationController {
     }
 
     /** InitializeComponentMethod:158. */
-    @GetMapping(API + "/load")
+    @GetMapping("/api/production/output-allocation-export-invoice/load")
     @ResponseBody
     public ResponseEntity<?> load() {
         try { return ResponseEntity.ok(service.load()); } catch (Exception e) { return error(e); }
     }
 
     /** btnRefreshHistory_Click:993 - bindHistoryCombo(GetHistoryComboData()). */
-    @GetMapping(API + "/history-job-orders")
+    @GetMapping("/api/production/output-allocation-export-invoice/history-job-orders")
     @ResponseBody
     public ResponseEntity<?> historyJobOrders() {
         try { return ResponseEntity.ok(service.historyJobOrders()); } catch (Exception e) { return error(e); }
     }
 
     /** CmbJobOrder_Leave:622 -> GetDataAgainstJobOrderFromProduction. */
-    @GetMapping(API + "/output-items")
+    @GetMapping("/api/production/output-allocation-export-invoice/output-items")
     @ResponseBody
     public ResponseEntity<?> outputItems(@RequestParam(defaultValue = "0") int jobOrderId) {
         try { return ResponseEntity.ok(service.outputItems(jobOrderId)); } catch (Exception e) { return error(e); }
     }
 
     /** ReadById:948 (history Edit button / Ctrl+Enter). */
-    @GetMapping(API + "/read-by-id")
+    @GetMapping("/api/production/output-allocation-export-invoice/read-by-id")
     @ResponseBody
     public ResponseEntity<?> readById(@RequestParam(defaultValue = "0") int jobOrderId, HttpSession session) {
         try { return ResponseEntity.ok(service.readById(jobOrderId, session)); } catch (Exception e) { return error(e); }
     }
 
     /** Insert():304 - {result:true, updated} | 400 {message}. */
-    @PostMapping(API + "/save")
+    @PostMapping("/api/production/output-allocation-export-invoice/save")
     @ResponseBody
     public ResponseEntity<?> save(@RequestBody Map<String, Object> body, HttpSession session) {
         try {
@@ -86,7 +85,7 @@ public class ProductionOutputAllocationController {
     }
 
     /** GetHistoryData:768. */
-    @GetMapping(API + "/history")
+    @GetMapping("/api/production/output-allocation-export-invoice/history")
     @ResponseBody
     public ResponseEntity<?> history(@RequestParam(required = false) String fromDate,
                                      @RequestParam(required = false) String toDate,
@@ -95,7 +94,7 @@ public class ProductionOutputAllocationController {
     }
 
     /** Slip:1018 - row count behind Print-627. */
-    @GetMapping(API + "/print-rows")
+    @GetMapping("/api/production/output-allocation-export-invoice/print-rows")
     @ResponseBody
     public ResponseEntity<?> printRows(@RequestParam(defaultValue = "0") int jobOrderId) {
         try {

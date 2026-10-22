@@ -30,25 +30,25 @@ public class ExportShippingBookingController {
         return "export/shipping_booking_info";
     }
 
-    @GetMapping(API + "/setup") @ResponseBody
+    @GetMapping("/api/export/shipping-booking-info/setup") @ResponseBody
     public ResponseEntity<?> setup() { return call(() -> svc.setup(), "Error occurred during database call."); }
 
-    @GetMapping(API + "/refresh") @ResponseBody
+    @GetMapping("/api/export/shipping-booking-info/refresh") @ResponseBody
     public ResponseEntity<?> refresh() { return call(() -> svc.refresh(), "Load failed."); }
 
-    @GetMapping(API + "/history-combos") @ResponseBody
+    @GetMapping("/api/export/shipping-booking-info/history-combos") @ResponseBody
     public ResponseEntity<?> historyCombos() { return call(() -> svc.historyCombos(), "Load failed."); }
 
-    @GetMapping(API + "/invoice-leave") @ResponseBody
+    @GetMapping("/api/export/shipping-booking-info/invoice-leave") @ResponseBody
     public ResponseEntity<?> invoiceLeave(@RequestParam("invoiceId") int invoiceId) { return call(() -> svc.invoiceLeave(invoiceId), "Load failed."); }
 
-    @GetMapping(API + "/by-id") @ResponseBody
+    @GetMapping("/api/export/shipping-booking-info/by-id") @ResponseBody
     public ResponseEntity<?> byId(@RequestParam("id") int id) { return call(() -> svc.readById(id), "Load failed."); }
 
-    @PostMapping(API + "/history") @ResponseBody
+    @PostMapping("/api/export/shipping-booking-info/history") @ResponseBody
     public ResponseEntity<?> history(@RequestBody Map<String, Object> body) { return call(() -> svc.history(body), "Load failed."); }
 
-    @PostMapping(API + "/save") @ResponseBody
+    @PostMapping("/api/export/shipping-booking-info/save") @ResponseBody
     public ResponseEntity<?> save(@RequestBody Map<String, Object> body) { return call(() -> svc.save(body), "Save failed."); }
 
     private interface Call { Object run() throws Exception; }

@@ -31,7 +31,6 @@ import java.util.function.Supplier;
 @Controller
 public class ProductionOverheadController {
 
-    private static final String API = "/api/production/production-against-job-order/overhead";
 
     @Autowired
     private ProductionOverheadService service;
@@ -43,12 +42,12 @@ public class ProductionOverheadController {
     }
 
     /** frmFoodProduction_Load:216 - rights, doc no, and the four lists Load binds. */
-    @GetMapping(API + "/state")
+    @GetMapping("/api/production/production-against-job-order/overhead/state")
     @ResponseBody
     public ResponseEntity<?> state() { return run(service::state); }
 
     /** GenerateCodeofOverHead:536. */
-    @GetMapping(API + "/next-code")
+    @GetMapping("/api/production/production-against-job-order/overhead/next-code")
     @ResponseBody
     public ResponseEntity<?> nextCode() {
         return run(() -> {
@@ -59,7 +58,7 @@ public class ProductionOverheadController {
     }
 
     /** btnRefreshOverHead_Click:1011 - UOM, charges type, job orders, chart of accounts again. */
-    @GetMapping(API + "/lookups")
+    @GetMapping("/api/production/production-against-job-order/overhead/lookups")
     @ResponseBody
     public ResponseEntity<?> lookups() {
         return run(() -> {
@@ -73,14 +72,14 @@ public class ProductionOverheadController {
     }
 
     /** GetPlantFeeder:385. */
-    @GetMapping(API + "/plants")
+    @GetMapping("/api/production/production-against-job-order/overhead/plants")
     @ResponseBody
     public ResponseEntity<?> plants(@RequestParam(defaultValue = "0") int jobOrderId) {
         return run(() -> service.plants(jobOrderId));
     }
 
     /** GetBrandItemsForPackingAndOverHeads:281 - documentTypeId 80 (Input) or 112 (Output). */
-    @GetMapping(API + "/brand-items")
+    @GetMapping("/api/production/production-against-job-order/overhead/brand-items")
     @ResponseBody
     public ResponseEntity<?> brandItems(@RequestParam(defaultValue = "0") int jobOrderId,
                                         @RequestParam(defaultValue = "0") int documentTypeId) {
@@ -88,7 +87,7 @@ public class ProductionOverheadController {
     }
 
     /** GetItemUomByItemIdFromFinishGoods:311. */
-    @GetMapping(API + "/brand-uoms")
+    @GetMapping("/api/production/production-against-job-order/overhead/brand-uoms")
     @ResponseBody
     public ResponseEntity<?> brandUoms(@RequestParam(defaultValue = "0") int jobOrderId,
                                        @RequestParam(defaultValue = "0") int itemId) {
@@ -96,14 +95,14 @@ public class ProductionOverheadController {
     }
 
     /** GetTotlInPutOut:658. */
-    @GetMapping(API + "/totals")
+    @GetMapping("/api/production/production-against-job-order/overhead/totals")
     @ResponseBody
     public ResponseEntity<?> totals(@RequestParam(defaultValue = "0") int jobOrderId) {
         return run(() -> service.inputOutputTotals(jobOrderId));
     }
 
     /** GetOutPutQtyByJobOrderandItemIdOverHeads:736. */
-    @GetMapping(API + "/output-qty")
+    @GetMapping("/api/production/production-against-job-order/overhead/output-qty")
     @ResponseBody
     public ResponseEntity<?> outputQty(@RequestParam(defaultValue = "0") int jobOrderId,
                                        @RequestParam(defaultValue = "0") int brandId,
@@ -113,7 +112,7 @@ public class ProductionOverheadController {
     }
 
     /** BtnLoadFohOverHeads_Click:1754 - the rows for the GrdPopUpToReturndt dialog. */
-    @GetMapping(API + "/foh-expenses")
+    @GetMapping("/api/production/production-against-job-order/overhead/foh-expenses")
     @ResponseBody
     public ResponseEntity<?> fohExpenses(@RequestParam(defaultValue = "0") int jobOrderId,
                                          @RequestParam(defaultValue = "0") int plantId,
@@ -122,26 +121,26 @@ public class ProductionOverheadController {
     }
 
     /** ReadByIdOverHeadJobOrderWise:944 - also what P280ReadById loads. */
-    @GetMapping(API + "/by-job-order/{jobOrderId}")
+    @GetMapping("/api/production/production-against-job-order/overhead/by-job-order/{jobOrderId}")
     @ResponseBody
     public ResponseEntity<?> byJobOrder(@PathVariable int jobOrderId) {
         return run(() -> service.byJobOrder(jobOrderId));
     }
 
     /** BindGridHistoryOverHead:1326. */
-    @GetMapping(API + "/history")
+    @GetMapping("/api/production/production-against-job-order/overhead/history")
     @ResponseBody
     public ResponseEntity<?> history() { return run(service::history); }
 
     /** grdOverHeadHistory_SelectionChanged:1468. */
-    @GetMapping(API + "/history-detail")
+    @GetMapping("/api/production/production-against-job-order/overhead/history-detail")
     @ResponseBody
     public ResponseEntity<?> historyDetail(@RequestParam(defaultValue = "0") int jobOrderId) {
         return run(() -> service.historyDetail(jobOrderId));
     }
 
     /** btnPrintOverHead_Click:1583 - how many rows 606 would print. */
-    @GetMapping(API + "/print-606-rows")
+    @GetMapping("/api/production/production-against-job-order/overhead/print-606-rows")
     @ResponseBody
     public ResponseEntity<?> print606Rows(@RequestParam(defaultValue = "0") int jobOrderId) {
         return run(() -> {
@@ -152,7 +151,7 @@ public class ProductionOverheadController {
     }
 
     /** btnSaveOverHead_Click:919 / btnUpdateOverHead_Click:932 -> OverHeadInsert:779. */
-    @PostMapping(API + "/save")
+    @PostMapping("/api/production/production-against-job-order/overhead/save")
     @ResponseBody
     public ResponseEntity<?> save(@RequestBody Map<String, Object> body) {
         Map<String, Object> r = new LinkedHashMap<>();

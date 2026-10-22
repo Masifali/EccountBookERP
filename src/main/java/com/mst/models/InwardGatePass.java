@@ -204,6 +204,64 @@ public class InwardGatePass {
     @Column(name = "PostUser")
     private Integer postUser;
 
+    // ---- Columns added by batch D1_gatepass_core (source: Sp_GatePassInward_Insert / _Update / _GetAllMethod 'ReadById') ----
+
+    @Column(name = "GpQRCode")
+    private byte[] gpQRCode;
+
+    @Column(name = "DestrictId")
+    private Integer destrictId;
+
+    @Column(name = "TehsilId")
+    private Integer tehsilId;
+
+    @Column(name = "SupplierCNICNO")
+    private String supplierCNICNO;
+
+    @Column(name = "SupplierMobileNo")
+    private String supplierMobileNo;
+
+    @Column(name = "TransporterName")
+    private String transporterName;
+
+    @Column(name = "SystemErrorMessage")
+    private String systemErrorMessage;
+
+    @Column(name = "GhallaMandiId")
+    private Integer ghallaMandiId;
+
+    @Column(name = "LoadingContractorId")
+    private Integer loadingContractorId;
+
+    @Column(name = "CarriageContractorId")
+    private Integer carriageContractorId;
+
+    @Column(name = "WorkingReportNo")
+    private Integer workingReportNo;
+
+    @Column(name = "RateCut")
+    private Double rateCut;
+
+    @Column(name = "RateCutRemarks")
+    private String rateCutRemarks;
+
+    @Column(name = "SpecialApprovalUserId")
+    private Integer specialApprovalUserId;
+
+    @Column(name = "SpecialApprovalDate")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date specialApprovalDate;
+
+    @Column(name = "IsStockReserved")
+    private Boolean isStockReserved;
+
+    @Column(name = "UserLogId")
+    private Long userLogId;
+
+    // NOTE: DocAttachment is a real column of dbo.GatePassInward (inserted / updated / selected by the procs) but the
+    // existing entity maps it @Transient; left untouched per conventions (never retype existing fields).
+    // The JPQL/native update in InwardGatePassJpaRepository therefore sets DocAttachment natively.
+
     // Sent to the existing desktop procedure; no schema generation for this field.
     @Transient
     private String docAttachment;
@@ -370,4 +428,40 @@ public class InwardGatePass {
     public void setFatherCnicNo(String fatherCnicNo) { this.fatherCnicNo = fatherCnicNo; }
     public Date getPostDate() { return postDate; }
     public void setPostDate(Date postDate) { this.postDate = postDate; }
+
+    // Getters / setters for the columns added by D1_gatepass_core
+    public byte[] getGpQRCode() { return gpQRCode; }
+    public void setGpQRCode(byte[] gpQRCode) { this.gpQRCode = gpQRCode; }
+    public Integer getDestrictId() { return destrictId; }
+    public void setDestrictId(Integer destrictId) { this.destrictId = destrictId; }
+    public Integer getTehsilId() { return tehsilId; }
+    public void setTehsilId(Integer tehsilId) { this.tehsilId = tehsilId; }
+    public String getSupplierCNICNO() { return supplierCNICNO; }
+    public void setSupplierCNICNO(String supplierCNICNO) { this.supplierCNICNO = supplierCNICNO; }
+    public String getSupplierMobileNo() { return supplierMobileNo; }
+    public void setSupplierMobileNo(String supplierMobileNo) { this.supplierMobileNo = supplierMobileNo; }
+    public String getTransporterName() { return transporterName; }
+    public void setTransporterName(String transporterName) { this.transporterName = transporterName; }
+    public String getSystemErrorMessage() { return systemErrorMessage; }
+    public void setSystemErrorMessage(String systemErrorMessage) { this.systemErrorMessage = systemErrorMessage; }
+    public Integer getGhallaMandiId() { return ghallaMandiId; }
+    public void setGhallaMandiId(Integer ghallaMandiId) { this.ghallaMandiId = ghallaMandiId; }
+    public Integer getLoadingContractorId() { return loadingContractorId; }
+    public void setLoadingContractorId(Integer loadingContractorId) { this.loadingContractorId = loadingContractorId; }
+    public Integer getCarriageContractorId() { return carriageContractorId; }
+    public void setCarriageContractorId(Integer carriageContractorId) { this.carriageContractorId = carriageContractorId; }
+    public Integer getWorkingReportNo() { return workingReportNo; }
+    public void setWorkingReportNo(Integer workingReportNo) { this.workingReportNo = workingReportNo; }
+    public Double getRateCut() { return rateCut; }
+    public void setRateCut(Double rateCut) { this.rateCut = rateCut; }
+    public String getRateCutRemarks() { return rateCutRemarks; }
+    public void setRateCutRemarks(String rateCutRemarks) { this.rateCutRemarks = rateCutRemarks; }
+    public Integer getSpecialApprovalUserId() { return specialApprovalUserId; }
+    public void setSpecialApprovalUserId(Integer specialApprovalUserId) { this.specialApprovalUserId = specialApprovalUserId; }
+    public Date getSpecialApprovalDate() { return specialApprovalDate; }
+    public void setSpecialApprovalDate(Date specialApprovalDate) { this.specialApprovalDate = specialApprovalDate; }
+    public Boolean getIsStockReserved() { return isStockReserved; }
+    public void setIsStockReserved(Boolean isStockReserved) { this.isStockReserved = isStockReserved; }
+    public Long getUserLogId() { return userLogId; }
+    public void setUserLogId(Long userLogId) { this.userLogId = userLogId; }
 }

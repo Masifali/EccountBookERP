@@ -30,7 +30,6 @@ import java.util.function.Supplier;
 @Controller
 public class AccountMovementController {
 
-    private static final String API = "/api/admin/account-movement";
 
     @Autowired private AccountMovementService service;
 
@@ -41,16 +40,16 @@ public class AccountMovementController {
         return "admin/account_movement";
     }
 
-    @GetMapping(API + "/load") @ResponseBody
+    @GetMapping("/api/admin/account-movement/load") @ResponseBody
     public ResponseEntity<?> load() { return run(service::load, "Load failed."); }
 
-    @GetMapping(API + "/accounts") @ResponseBody
+    @GetMapping("/api/admin/account-movement/accounts") @ResponseBody
     public ResponseEntity<?> accounts() { return run(service::accounts, "Load failed."); }
 
-    @GetMapping(API + "/third-level") @ResponseBody
+    @GetMapping("/api/admin/account-movement/third-level") @ResponseBody
     public ResponseEntity<?> thirdLevel() { return run(service::thirdLevelAccounts, "Load failed."); }
 
-    @PostMapping(API + "/update") @ResponseBody
+    @PostMapping("/api/admin/account-movement/update") @ResponseBody
     public ResponseEntity<?> update(@RequestBody Map<String, Object> body) { return run(() -> service.update(body), "Update failed."); }
 
     // ------------------------------------------------------------------ plumbing

@@ -23,7 +23,6 @@ import org.springframework.web.server.ResponseStatusException;
 @Controller
 public class GrnPmController {
 
-    private static final String API = "/api/packing-material/grn";
 
     private final GrnPmService service;
 
@@ -37,24 +36,24 @@ public class GrnPmController {
         return "packing_material/grn_pm";
     }
 
-    @GetMapping(API + "/lookups")
+    @GetMapping("/api/packing-material/grn/lookups")
     @ResponseBody
     public ResponseEntity<?> lookups() { return run(service::lookups, "Error occurred during database call."); }
 
-    @GetMapping(API + "/fresh")
+    @GetMapping("/api/packing-material/grn/fresh")
     @ResponseBody
     public ResponseEntity<?> fresh(@RequestParam(defaultValue = "0") int recId) {
         return run(() -> service.fresh(recId), "Could not reset the form.");
     }
 
-    @GetMapping(API + "/order-lines")
+    @GetMapping("/api/packing-material/grn/order-lines")
     @ResponseBody
     public ResponseEntity<?> orderLines(@RequestParam(defaultValue = "0") int orderId,
                                         @RequestParam(defaultValue = "0") int gpId) {
         return run(() -> service.orderLines(orderId, gpId), "Could not load the order.");
     }
 
-    @GetMapping(API + "/order-loader")
+    @GetMapping("/api/packing-material/grn/order-loader")
     @ResponseBody
     public ResponseEntity<?> orderLoader(@RequestParam(defaultValue = "0") int supplierId,
                                          @RequestParam(required = false) String fromDate,
@@ -62,7 +61,7 @@ public class GrnPmController {
         return run(() -> service.orderLoader(supplierId, fromDate, toDate), "Could not load purchase orders.");
     }
 
-    @GetMapping(API + "/history")
+    @GetMapping("/api/packing-material/grn/history")
     @ResponseBody
     public ResponseEntity<?> history(@RequestParam(defaultValue = "doc") String dateMode,
                                      @RequestParam(required = false) String fromDate,
@@ -74,19 +73,19 @@ public class GrnPmController {
         return run(() -> service.history(dateMode, fromDate, toDate, fromDocNo, toDocNo, supplierId, referred), "History failed.");
     }
 
-    @GetMapping(API + "/{id}")
+    @GetMapping("/api/packing-material/grn/{id}")
     @ResponseBody
     public ResponseEntity<?> record(@PathVariable int id) { return run(() -> service.record(id), "Record Not Found"); }
 
-    @PostMapping(API + "/save")
+    @PostMapping("/api/packing-material/grn/save")
     @ResponseBody
     public ResponseEntity<?> save(@RequestBody GrnPmRequest request) { return run(() -> service.save(request), "Save failed."); }
 
-    @PostMapping(API + "/{id}/delete")
+    @PostMapping("/api/packing-material/grn/{id}/delete")
     @ResponseBody
     public ResponseEntity<?> delete(@PathVariable int id) { return run(() -> service.delete(id), "Delete failed."); }
 
-    @GetMapping(API + "/{id}/attachments/{attachmentId}")
+    @GetMapping("/api/packing-material/grn/{id}/attachments/{attachmentId}")
     public ResponseEntity<byte[]> attachment(@PathVariable int id, @PathVariable int attachmentId) {
         DesktopInventoryItemFileService.Download d = service.attachment(id, attachmentId);
         HttpHeaders h = new HttpHeaders();

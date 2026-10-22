@@ -29,37 +29,37 @@ public class StoreGoodsDispatchNotesController extends SaleEngrControllerBase {
         return "store/goods_dispatch_notes_store";
     }
 
-    @GetMapping(API + "/initial") @ResponseBody
+    @GetMapping("/store/goods-dispatch-notes-store/api/initial") @ResponseBody
     public Map<String, Object> initial() { return service.initial(); }
 
-    @GetMapping(API + "/refresh") @ResponseBody
+    @GetMapping("/store/goods-dispatch-notes-store/api/refresh") @ResponseBody
     public Map<String, Object> refresh() { return service.refresh(); }
 
-    @GetMapping(API + "/reset-data") @ResponseBody
+    @GetMapping("/store/goods-dispatch-notes-store/api/reset-data") @ResponseBody
     public Map<String, Object> resetData() { return service.resetData(); }
 
-    @GetMapping(API + "/items") @ResponseBody
+    @GetMapping("/store/goods-dispatch-notes-store/api/items") @ResponseBody
     public List<Map<String, Object>> items(@RequestParam(defaultValue = "0") int customerId) { return service.items(customerId); }
 
-    @GetMapping(API + "/history-combos") @ResponseBody
+    @GetMapping("/store/goods-dispatch-notes-store/api/history-combos") @ResponseBody
     public List<Map<String, Object>> historyCombos() { return service.historyCombos(); }
 
-    @PostMapping(API + "/history") @ResponseBody
+    @PostMapping("/store/goods-dispatch-notes-store/api/history") @ResponseBody
     public List<Map<String, Object>> history(@RequestBody StoreGoodsDispatchNotesService.HistoryFilter f) { return service.history(f); }
 
-    @GetMapping(API + "/{id}") @ResponseBody
+    @GetMapping("/store/goods-dispatch-notes-store/api/{id}") @ResponseBody
     public Map<String, Object> record(@PathVariable int id) { return service.record(id); }
 
-    @GetMapping(API + "/{id}/details") @ResponseBody
+    @GetMapping("/store/goods-dispatch-notes-store/api/{id}/details") @ResponseBody
     public List<Map<String, Object>> details(@PathVariable int id) { return service.detailOf(id); }
 
     @PostMapping(API) @ResponseBody
     public Map<String, Object> save(@RequestBody StoreGoodsDispatchNotesService.Request r) { return service.save(r); }
 
-    @GetMapping(API + "/{id}/attachments") @ResponseBody
+    @GetMapping("/store/goods-dispatch-notes-store/api/{id}/attachments") @ResponseBody
     public List<Map<String, Object>> attachments(@PathVariable int id) { return service.attachmentList(id); }
 
-    @GetMapping(API + "/{id}/attachments/{attachmentId}")
+    @GetMapping("/store/goods-dispatch-notes-store/api/{id}/attachments/{attachmentId}")
     public ResponseEntity<byte[]> download(@PathVariable int id, @PathVariable int attachmentId) {
         SaleEngrAttachments.Download d = service.download(id, attachmentId);
         return ResponseEntity.ok()

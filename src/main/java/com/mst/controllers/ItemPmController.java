@@ -27,7 +27,6 @@ import org.springframework.web.server.ResponseStatusException;
 @Controller
 public class ItemPmController {
 
-    private static final String API = "/api/packing-material/item-pm";
 
     private final ItemPmService service;
 
@@ -41,14 +40,14 @@ public class ItemPmController {
         return "packing_material/item_pm";
     }
 
-    @GetMapping(API + "/lookups")
+    @GetMapping("/api/packing-material/item-pm/lookups")
     @ResponseBody
     public ResponseEntity<?> lookups() {
         return run(service::lookups, "Could not load the screen.");
     }
 
     /** cmbItemCategory_Leave / cmbItemType_Leave. */
-    @GetMapping(API + "/defaults")
+    @GetMapping("/api/packing-material/item-pm/defaults")
     @ResponseBody
     public ResponseEntity<?> defaults(@RequestParam(defaultValue = "0") int categoryId,
                                       @RequestParam(defaultValue = "0") int typeId,
@@ -56,7 +55,7 @@ public class ItemPmController {
         return run(() -> service.defaults(categoryId, typeId, withAccounts), "Record Not Found");
     }
 
-    @GetMapping(API + "/history")
+    @GetMapping("/api/packing-material/item-pm/history")
     @ResponseBody
     public ResponseEntity<?> history(@RequestParam(defaultValue = "0") int categoryId,
                                      @RequestParam(defaultValue = "0") int typeId,
@@ -64,30 +63,30 @@ public class ItemPmController {
         return run(() -> service.history(categoryId, typeId, masterItemId), "History failed.");
     }
 
-    @GetMapping(API + "/{id}")
+    @GetMapping("/api/packing-material/item-pm/{id}")
     @ResponseBody
     public ResponseEntity<?> record(@PathVariable int id) {
         return run(() -> service.record(id), "Could not open that item.");
     }
 
-    @PostMapping(API + "/save")
+    @PostMapping("/api/packing-material/item-pm/save")
     @ResponseBody
     public ResponseEntity<?> save(@RequestBody ItemPmRequest request) {
         return run(() -> service.save(request), "Save failed.");
     }
 
-    @PostMapping(API + "/master-items")
+    @PostMapping("/api/packing-material/item-pm/master-items")
     @ResponseBody
     public ResponseEntity<?> masterItems(@RequestBody List<ItemPmRequest.MasterItemRow> rows) {
         return run(() -> service.updateMasterItems(rows), "Update failed.");
     }
 
-    @GetMapping(API + "/{id}/images/{imageId}")
+    @GetMapping("/api/packing-material/item-pm/{id}/images/{imageId}")
     public ResponseEntity<byte[]> image(@PathVariable int id, @PathVariable int imageId) {
         return file(service.image(id, imageId), true);
     }
 
-    @GetMapping(API + "/{id}/attachments/{attachmentId}")
+    @GetMapping("/api/packing-material/item-pm/{id}/attachments/{attachmentId}")
     public ResponseEntity<byte[]> attachment(@PathVariable int id, @PathVariable int attachmentId) {
         return file(service.attachment(id, attachmentId), false);
     }

@@ -35,8 +35,6 @@ import java.util.Map;
 @Controller
 public class ExportModuleController {
 
-    private static final String GD = "/api/export/gd-break-up";
-    private static final String PL = "/api/export/packing-list";
 
     @Autowired private ExportGdBreakUpService gd;
     @Autowired private ExportInvoicePackingListService pl;
@@ -57,85 +55,85 @@ public class ExportModuleController {
 
     // ------------------------------------------------------------------ 881 Gd Break Up By Invoice
 
-    @GetMapping(GD + "/setup") @ResponseBody
+    @GetMapping("/api/export/gd-break-up/setup") @ResponseBody
     public ResponseEntity<?> gdSetup() { return call(() -> gd.setup(), "Error occurred during database call."); }
 
-    @GetMapping(GD + "/refresh") @ResponseBody
+    @GetMapping("/api/export/gd-break-up/refresh") @ResponseBody
     public ResponseEntity<?> gdRefresh(@RequestParam(value = "recId", defaultValue = "0") int recId) {
         return call(() -> gd.refreshGdBreakUp(recId), "Load failed.");
     }
 
-    @GetMapping(GD + "/invoices") @ResponseBody
+    @GetMapping("/api/export/gd-break-up/invoices") @ResponseBody
     public ResponseEntity<?> gdInvoices(@RequestParam(value = "recId", defaultValue = "0") int recId) {
         return call(() -> gd.invoices(recId), "Load failed.");
     }
 
-    @GetMapping(GD + "/by-invoice") @ResponseBody
+    @GetMapping("/api/export/gd-break-up/by-invoice") @ResponseBody
     public ResponseEntity<?> gdByInvoice(@RequestParam("invoiceId") int invoiceId) {
         return call(() -> gd.byInvoice(invoiceId), "Load failed.");
     }
 
-    @GetMapping(GD + "/history") @ResponseBody
+    @GetMapping("/api/export/gd-break-up/history") @ResponseBody
     public ResponseEntity<?> gdHistory(@RequestParam(value = "fromDate", required = false) String fromDate,
                                        @RequestParam(value = "toDate", required = false) String toDate,
                                        @RequestParam(value = "bankId", defaultValue = "0") int bankId) {
         return call(() -> gd.gdHistory(fromDate, toDate, bankId), "Load failed.");
     }
 
-    @GetMapping(GD + "/history-banks") @ResponseBody
+    @GetMapping("/api/export/gd-break-up/history-banks") @ResponseBody
     public ResponseEntity<?> gdHistoryBanks() { return call(() -> gd.historyBanks(), "Load failed."); }
 
-    @PostMapping(GD + "/save") @ResponseBody
+    @PostMapping("/api/export/gd-break-up/save") @ResponseBody
     public ResponseEntity<?> gdSave(@RequestBody Map<String, Object> body) { return call(() -> gd.saveGdBreakUp(body), "Save failed."); }
 
-    @GetMapping(GD + "/advance/setup") @ResponseBody
+    @GetMapping("/api/export/gd-break-up/advance/setup") @ResponseBody
     public ResponseEntity<?> advSetup() { return call(() -> gd.advanceSetup(), "Load failed."); }
 
-    @GetMapping(GD + "/advance/by-invoice") @ResponseBody
+    @GetMapping("/api/export/gd-break-up/advance/by-invoice") @ResponseBody
     public ResponseEntity<?> advByInvoice(@RequestParam("invoiceId") int invoiceId,
                                           @RequestParam(value = "documentTypeId", defaultValue = "0") int documentTypeId) {
         return call(() -> gd.advanceByInvoice(invoiceId, documentTypeId), "Load failed.");
     }
 
-    @GetMapping(GD + "/advance/history") @ResponseBody
+    @GetMapping("/api/export/gd-break-up/advance/history") @ResponseBody
     public ResponseEntity<?> advHistory() { return call(() -> gd.advanceHistory(), "Load failed."); }
 
-    @PostMapping(GD + "/advance/save") @ResponseBody
+    @PostMapping("/api/export/gd-break-up/advance/save") @ResponseBody
     public ResponseEntity<?> advSave(@RequestBody Map<String, Object> body) { return call(() -> gd.saveAdvanceUtilize(body), "Save failed."); }
 
     // ------------------------------------------------------------------ 882 Export Invoice Packing List
 
-    @GetMapping(PL + "/setup") @ResponseBody
+    @GetMapping("/api/export/packing-list/setup") @ResponseBody
     public ResponseEntity<?> plSetup() { return call(() -> pl.setup(), "Error occurred during database call."); }
 
-    @GetMapping(PL + "/refresh") @ResponseBody
+    @GetMapping("/api/export/packing-list/refresh") @ResponseBody
     public ResponseEntity<?> plRefresh() { return call(() -> pl.refresh(), "Load failed."); }
 
-    @GetMapping(PL + "/history-combos") @ResponseBody
+    @GetMapping("/api/export/packing-list/history-combos") @ResponseBody
     public ResponseEntity<?> plHistoryCombos() { return call(() -> pl.historyComboRefresh(), "Load failed."); }
 
-    @GetMapping(PL + "/by-id") @ResponseBody
+    @GetMapping("/api/export/packing-list/by-id") @ResponseBody
     public ResponseEntity<?> plById(@RequestParam("id") int id,
                                     @RequestParam(value = "history", defaultValue = "false") boolean history) {
         return call(() -> pl.readById(id, history), "Load failed.");
     }
 
-    @GetMapping(PL + "/detail") @ResponseBody
+    @GetMapping("/api/export/packing-list/detail") @ResponseBody
     public ResponseEntity<?> plDetail(@RequestParam("id") int id) { return call(() -> pl.packingListDetail(id), "Load failed."); }
 
-    @GetMapping(PL + "/commodity-remarks") @ResponseBody
+    @GetMapping("/api/export/packing-list/commodity-remarks") @ResponseBody
     public ResponseEntity<?> plRemarks(@RequestParam("itemId") int itemId,
                                        @RequestParam("detailTypeId") int detailTypeId) {
         return call(() -> pl.commodityRemarks(itemId, detailTypeId), "Load failed.");
     }
 
-    @PostMapping(PL + "/history") @ResponseBody
+    @PostMapping("/api/export/packing-list/history") @ResponseBody
     public ResponseEntity<?> plHistory(@RequestBody Map<String, Object> body) { return call(() -> pl.history(body), "Load failed."); }
 
-    @PostMapping(PL + "/save") @ResponseBody
+    @PostMapping("/api/export/packing-list/save") @ResponseBody
     public ResponseEntity<?> plSave(@RequestBody Map<String, Object> body) { return call(() -> pl.save(body), "Save failed."); }
 
-    @PostMapping(PL + "/delete") @ResponseBody
+    @PostMapping("/api/export/packing-list/delete") @ResponseBody
     public ResponseEntity<?> plDelete(@RequestBody Map<String, Object> body) {
         Object v = body.get("recId");
         int recId;

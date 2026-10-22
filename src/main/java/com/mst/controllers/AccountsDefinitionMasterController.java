@@ -40,7 +40,7 @@ public class AccountsDefinitionMasterController {
         return "master_data/" + page.replace('-', '_');
     }
 
-    @GetMapping(API + "/{key:pdc-bank|document-group|shipment-documents|tax-lookup|bank}/setup")
+    @GetMapping("/api/master-data/{key:pdc-bank|document-group|shipment-documents|tax-lookup|bank}/setup")
     @ResponseBody
     public ResponseEntity<?> setup(@PathVariable("key") String key) {
         try {
@@ -55,7 +55,7 @@ public class AccountsDefinitionMasterController {
         } catch (Exception e) { return error(e, "Load failed."); }
     }
 
-    @GetMapping(API + "/{key:pdc-bank|document-group|shipment-documents|tax-lookup|bank}/list")
+    @GetMapping("/api/master-data/{key:pdc-bank|document-group|shipment-documents|tax-lookup|bank}/list")
     @ResponseBody
     public ResponseEntity<?> list(@PathVariable("key") String key) {
         try {
@@ -70,7 +70,7 @@ public class AccountsDefinitionMasterController {
         } catch (Exception e) { return error(e, "Load failed."); }
     }
 
-    @GetMapping(API + "/{key:pdc-bank|document-group|shipment-documents|tax-lookup|bank}/by-id")
+    @GetMapping("/api/master-data/{key:pdc-bank|document-group|shipment-documents|tax-lookup|bank}/by-id")
     @ResponseBody
     public ResponseEntity<?> byId(@PathVariable("key") String key, @RequestParam("id") int id) {
         try {
@@ -87,7 +87,7 @@ public class AccountsDefinitionMasterController {
         } catch (Exception e) { return error(e, "Load failed."); }
     }
 
-    @PostMapping(API + "/{key:pdc-bank|document-group|shipment-documents|tax-lookup|bank}/save")
+    @PostMapping("/api/master-data/{key:pdc-bank|document-group|shipment-documents|tax-lookup|bank}/save")
     @ResponseBody
     public ResponseEntity<?> save(@PathVariable("key") String key, @RequestBody Map<String, Object> body) {
         try {
@@ -105,14 +105,14 @@ public class AccountsDefinitionMasterController {
     }
 
     /** TaxLookup.cmbProfileName_Leave - the generated code for a lookup type. */
-    @GetMapping(API + "/tax-lookup/code")
+    @GetMapping("/api/master-data/tax-lookup/code")
     @ResponseBody
     public ResponseEntity<?> taxLookupCode(@RequestParam("typeId") int typeId) {
         try { return ResponseEntity.ok(service.taxLookupCode(typeId)); } catch (Exception e) { return error(e, "Code failed."); }
     }
 
     /** AcfrmDefineBank.btnRefresh_Click - the four combos. */
-    @GetMapping(API + "/bank/combos")
+    @GetMapping("/api/master-data/bank/combos")
     @ResponseBody
     public ResponseEntity<?> bankCombos() {
         try { return ResponseEntity.ok(service.bankCombos()); } catch (Exception e) { return error(e, "Load failed."); }
@@ -121,7 +121,7 @@ public class AccountsDefinitionMasterController {
     // ------------------------------------------------------------------ 414 BS & PL Setting
 
     /** GridLoad - req = PL | BS, accountClassId 2 Assets / 3 Liabilities for BS. */
-    @GetMapping(API + "/bs-pl-setting/load")
+    @GetMapping("/api/master-data/bs-pl-setting/load")
     @ResponseBody
     public ResponseEntity<?> bsPlLoad(@RequestParam("req") String req,
                                       @RequestParam(value = "accountClassId", required = false, defaultValue = "0") int accountClassId) {
@@ -131,7 +131,7 @@ public class AccountsDefinitionMasterController {
     }
 
     /** btnUpdate_Click - the changed rows. */
-    @PostMapping(API + "/bs-pl-setting/update")
+    @PostMapping("/api/master-data/bs-pl-setting/update")
     @ResponseBody
     public ResponseEntity<?> bsPlUpdate(@RequestBody Map<String, Object> body) {
         try { return ResponseEntity.ok(service.bsPlUpdate(body)); }
@@ -140,14 +140,14 @@ public class AccountsDefinitionMasterController {
     }
 
     /** GridNoteTitleFill - note = "" | PL | BS. */
-    @GetMapping(API + "/bs-pl-setting/notes")
+    @GetMapping("/api/master-data/bs-pl-setting/notes")
     @ResponseBody
     public ResponseEntity<?> bsPlNotes(@RequestParam(value = "note", required = false, defaultValue = "") String note) {
         try { return ResponseEntity.ok(service.bsPlNotes(note)); } catch (Exception e) { return error(e, "Load failed."); }
     }
 
     /** btnUpdateNote_Click - the retitled rows. */
-    @PostMapping(API + "/bs-pl-setting/update-notes")
+    @PostMapping("/api/master-data/bs-pl-setting/update-notes")
     @ResponseBody
     public ResponseEntity<?> bsPlUpdateNotes(@RequestBody Map<String, Object> body) {
         try { return ResponseEntity.ok(service.bsPlUpdateNotes(body)); } catch (Exception e) { return error(e, "Update failed."); }

@@ -35,10 +35,6 @@ import java.util.Map;
 @Controller
 public class ImpAController {
 
-    private static final String LC = "/api/import/lc-order";
-    private static final String SC = "/api/import/lc-order-schedule";
-    private static final String CI = "/api/import/commercial-invoice";
-    private static final String RG = "/api/import/reports";
 
     @Autowired private ImpALcOrderService lc;
     @Autowired private ImpALcOrderScheduleService sc;
@@ -85,64 +81,64 @@ public class ImpAController {
 
     // ------------------------------------------------------------------ 525 Lc Order
 
-    @GetMapping(LC + "/setup") @ResponseBody
+    @GetMapping("/api/import/lc-order/setup") @ResponseBody
     public ResponseEntity<?> lcSetup() { return HrmApi.run(() -> lc.setup()); }
 
-    @GetMapping(LC + "/refresh") @ResponseBody
+    @GetMapping("/api/import/lc-order/refresh") @ResponseBody
     public ResponseEntity<?> lcRefresh() { return HrmApi.run(() -> lc.refresh()); }
 
-    @GetMapping(LC + "/doc-no") @ResponseBody
+    @GetMapping("/api/import/lc-order/doc-no") @ResponseBody
     public ResponseEntity<?> lcDocNo() { return HrmApi.run(() -> lc.newDocNo()); }
 
-    @GetMapping(LC + "/uoms") @ResponseBody
+    @GetMapping("/api/import/lc-order/uoms") @ResponseBody
     public ResponseEntity<?> lcUoms(@RequestParam("itemId") int itemId) { return HrmApi.run(() -> lc.uoms(itemId)); }
 
-    @GetMapping(LC + "/history") @ResponseBody
+    @GetMapping("/api/import/lc-order/history") @ResponseBody
     public ResponseEntity<?> lcHistory(@RequestParam(value = "all", defaultValue = "false") boolean all) { return HrmApi.run(() -> lc.history(all)); }
 
-    @GetMapping(LC + "/history-detail") @ResponseBody
+    @GetMapping("/api/import/lc-order/history-detail") @ResponseBody
     public ResponseEntity<?> lcHistoryDetail(@RequestParam("id") int id) { return HrmApi.run(() -> lc.historyDetail(id)); }
 
-    @GetMapping(LC + "/by-id") @ResponseBody
+    @GetMapping("/api/import/lc-order/by-id") @ResponseBody
     public ResponseEntity<?> lcById(@RequestParam("id") int id) { return HrmApi.run(() -> lc.byId(id)); }
 
-    @PostMapping(LC + "/save") @ResponseBody
+    @PostMapping("/api/import/lc-order/save") @ResponseBody
     public ResponseEntity<?> lcSave(@RequestBody ImpADtos.LcOrder body) { return HrmApi.run(() -> lc.save(body)); }
 
-    @PostMapping(LC + "/delete") @ResponseBody
+    @PostMapping("/api/import/lc-order/delete") @ResponseBody
     public ResponseEntity<?> lcDelete(@RequestBody Map<String, Object> body) {
         return HrmApi.run(() -> lc.delete(com.mst.services.hrm.HrmSupport.toInt(body == null ? null : body.get("id"))));
     }
 
-    @GetMapping(LC + "/print-check") @ResponseBody
+    @GetMapping("/api/import/lc-order/print-check") @ResponseBody
     public ResponseEntity<?> lcPrintCheck(@RequestParam(value = "id", defaultValue = "0") int id) { return HrmApi.run(() -> lc.printCheck(id)); }
 
     // ------------------------------------------------------------------ 526 Lc Order Schedule
 
-    @GetMapping(SC + "/setup") @ResponseBody
+    @GetMapping("/api/import/lc-order-schedule/setup") @ResponseBody
     public ResponseEntity<?> scSetup() { return HrmApi.run(() -> sc.setup()); }
 
-    @GetMapping(SC + "/contracts") @ResponseBody
+    @GetMapping("/api/import/lc-order-schedule/contracts") @ResponseBody
     public ResponseEntity<?> scContracts(@RequestParam(value = "all", defaultValue = "false") boolean all) { return HrmApi.run(() -> sc.contracts(all)); }
 
-    @GetMapping(SC + "/load") @ResponseBody
+    @GetMapping("/api/import/lc-order-schedule/load") @ResponseBody
     public ResponseEntity<?> scLoad(@RequestParam("contractId") int contractId) { return HrmApi.run(() -> sc.load(contractId)); }
 
-    @GetMapping(SC + "/schedule-mton") @ResponseBody
+    @GetMapping("/api/import/lc-order-schedule/schedule-mton") @ResponseBody
     public ResponseEntity<?> scMton(@RequestParam("contractId") int contractId, @RequestParam("scheduleId") int scheduleId) {
         return HrmApi.run(() -> sc.scheduleMTon(contractId, scheduleId));
     }
 
-    @GetMapping(SC + "/uoms") @ResponseBody
+    @GetMapping("/api/import/lc-order-schedule/uoms") @ResponseBody
     public ResponseEntity<?> scUoms(@RequestParam("itemId") int itemId) { return HrmApi.run(() -> sc.uoms(itemId)); }
 
-    @PostMapping(SC + "/save-main") @ResponseBody
+    @PostMapping("/api/import/lc-order-schedule/save-main") @ResponseBody
     public ResponseEntity<?> scSaveMain(@RequestBody ImpADtos.ScheduleMain body) { return HrmApi.run(() -> sc.saveMain(body)); }
 
-    @PostMapping(SC + "/save-detail") @ResponseBody
+    @PostMapping("/api/import/lc-order-schedule/save-detail") @ResponseBody
     public ResponseEntity<?> scSaveDetail(@RequestBody ImpADtos.SchedulePacking body) { return HrmApi.run(() -> sc.saveDetail(body)); }
 
-    @GetMapping(SC + "/history") @ResponseBody
+    @GetMapping("/api/import/lc-order-schedule/history") @ResponseBody
     public ResponseEntity<?> scHistory(@RequestParam(value = "from", required = false) String from, @RequestParam(value = "to", required = false) String to,
                                        @RequestParam(value = "portId", defaultValue = "0") int portId,
                                        @RequestParam(value = "supplierId", defaultValue = "0") int supplierId,
@@ -151,48 +147,48 @@ public class ImpAController {
         return HrmApi.run(() -> sc.history(from, to, portId, supplierId, itemId, all));
     }
 
-    @GetMapping(SC + "/history-combos") @ResponseBody
+    @GetMapping("/api/import/lc-order-schedule/history-combos") @ResponseBody
     public ResponseEntity<?> scHistoryCombos() { return HrmApi.run(() -> sc.historyCombos()); }
 
-    @GetMapping(SC + "/print-check") @ResponseBody
+    @GetMapping("/api/import/lc-order-schedule/print-check") @ResponseBody
     public ResponseEntity<?> scPrintCheck() { return HrmApi.run(() -> sc.printCheck()); }
 
     // ------------------------------------------------------------------ 221 Commercial Invoice
 
-    @GetMapping(CI + "/setup") @ResponseBody
+    @GetMapping("/api/import/commercial-invoice/setup") @ResponseBody
     public ResponseEntity<?> ciSetup(@RequestParam(value = "mode", required = false) Integer mode) { return HrmApi.run(() -> ci.setup(mode)); }
 
-    @GetMapping(CI + "/doc-no") @ResponseBody
+    @GetMapping("/api/import/commercial-invoice/doc-no") @ResponseBody
     public ResponseEntity<?> ciDocNo() { return HrmApi.run(() -> ci.docNo()); }
 
-    @GetMapping(CI + "/orders") @ResponseBody
+    @GetMapping("/api/import/commercial-invoice/orders") @ResponseBody
     public ResponseEntity<?> ciOrders(@RequestParam(value = "mode", required = false) Integer mode, @RequestParam("supplierId") int supplierId) {
         return HrmApi.run(() -> ci.orders(mode, supplierId));
     }
 
-    @GetMapping(CI + "/order") @ResponseBody
+    @GetMapping("/api/import/commercial-invoice/order") @ResponseBody
     public ResponseEntity<?> ciOrder(@RequestParam(value = "mode", required = false) Integer mode, @RequestParam("supplierId") int supplierId,
                                      @RequestParam("orderId") int orderId) {
         return HrmApi.run(() -> ci.order(mode, supplierId, orderId));
     }
 
-    @PostMapping(CI + "/save") @ResponseBody
+    @PostMapping("/api/import/commercial-invoice/save") @ResponseBody
     public ResponseEntity<?> ciSave(@RequestParam(value = "mode", required = false) Integer mode, @RequestBody ImpADtos.Invoice body) {
         return HrmApi.run(() -> ci.save(body, mode));
     }
 
-    @GetMapping(CI + "/history") @ResponseBody
+    @GetMapping("/api/import/commercial-invoice/history") @ResponseBody
     public ResponseEntity<?> ciHistory() { return HrmApi.run(() -> ci.history()); }
 
-    @GetMapping(CI + "/print-check") @ResponseBody
+    @GetMapping("/api/import/commercial-invoice/print-check") @ResponseBody
     public ResponseEntity<?> ciPrintCheck(@RequestParam(value = "id", defaultValue = "0") int id) { return HrmApi.run(() -> ci.printCheck(id)); }
 
     // ------------------------------------------------------------------ 392-395 registers
 
-    @GetMapping(RG + "/{kind}/setup") @ResponseBody
+    @GetMapping("/api/import/reports/{kind}/setup") @ResponseBody
     public ResponseEntity<?> rgSetup(@PathVariable("kind") String kind) { return HrmApi.run(() -> rg.setup(kind)); }
 
-    @GetMapping(RG + "/{kind}/show") @ResponseBody
+    @GetMapping("/api/import/reports/{kind}/show") @ResponseBody
     public ResponseEntity<?> rgShow(@PathVariable("kind") String kind, @RequestParam(value = "from", required = false) String from,
                                     @RequestParam(value = "to", required = false) String to,
                                     @RequestParam(value = "supplierId", defaultValue = "0") int supplierId,
@@ -200,6 +196,6 @@ public class ImpAController {
         return HrmApi.run(() -> rg.show(kind, from, to, supplierId, itemId));
     }
 
-    @GetMapping(RG + "/{kind}/print-check") @ResponseBody
+    @GetMapping("/api/import/reports/{kind}/print-check") @ResponseBody
     public ResponseEntity<?> rgPrintCheck(@PathVariable("kind") String kind) { return HrmApi.run(() -> rg.printCheck(kind)); }
 }

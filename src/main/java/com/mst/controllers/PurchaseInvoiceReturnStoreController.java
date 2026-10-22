@@ -27,7 +27,6 @@ import java.util.Map;
 @Controller
 public class PurchaseInvoiceReturnStoreController {
 
-    private static final String API = "/api/store/purchase-invoice-return-store";
 
     private final PurchaseInvoiceReturnStoreService service;
     public PurchaseInvoiceReturnStoreController(PurchaseInvoiceReturnStoreService service) { this.service = service; }
@@ -38,27 +37,27 @@ public class PurchaseInvoiceReturnStoreController {
         return "store/purchase_invoice_return_store";
     }
 
-    @GetMapping(API + "/lookups")
+    @GetMapping("/api/store/purchase-invoice-return-store/lookups")
     @ResponseBody
     public ResponseEntity<?> lookups() { return run(service::lookups, "Could not load the screen."); }
 
-    @GetMapping(API + "/doc-no")
+    @GetMapping("/api/store/purchase-invoice-return-store/doc-no")
     @ResponseBody
     public ResponseEntity<?> docNo() { return run(service::nextDocNo, "Could not generate the document number."); }
 
-    @GetMapping(API + "/refresh")
+    @GetMapping("/api/store/purchase-invoice-return-store/refresh")
     @ResponseBody
     public ResponseEntity<?> refresh() { return run(service::refresh, "Refresh failed."); }
 
-    @GetMapping(API + "/reasons")
+    @GetMapping("/api/store/purchase-invoice-return-store/reasons")
     @ResponseBody
     public ResponseEntity<?> reasons() { return run(service::reasons, "Could not read the reasons."); }
 
-    @GetMapping(API + "/history-customers")
+    @GetMapping("/api/store/purchase-invoice-return-store/history-customers")
     @ResponseBody
     public ResponseEntity<?> historyCustomers() { return run(service::historyCustomers, "Could not read the customers."); }
 
-    @GetMapping(API + "/stock")
+    @GetMapping("/api/store/purchase-invoice-return-store/stock")
     @ResponseBody
     public ResponseEntity<?> stock(@RequestParam(defaultValue = "0") int recId,
                                    @RequestParam(required = false) String docDate,
@@ -69,17 +68,17 @@ public class PurchaseInvoiceReturnStoreController {
         return run(() -> service.stock(recId, docDate, itemId, warehouseId, jobLotId, uomId), "Could not read the stock.");
     }
 
-    @GetMapping(API + "/last-exchange-rate")
+    @GetMapping("/api/store/purchase-invoice-return-store/last-exchange-rate")
     @ResponseBody
     public ResponseEntity<?> lastExchangeRate(@RequestParam int currencyId) {
         return run(() -> service.lastExchangeRate(currencyId), "Could not read the exchange rate.");
     }
 
-    @GetMapping(API + "/loader")
+    @GetMapping("/api/store/purchase-invoice-return-store/loader")
     @ResponseBody
     public ResponseEntity<?> loaderInit() { return run(service::loaderInit, "Could not open the loader."); }
 
-    @GetMapping(API + "/pending-invoices")
+    @GetMapping("/api/store/purchase-invoice-return-store/pending-invoices")
     @ResponseBody
     public ResponseEntity<?> pending(@RequestParam(required = false) String fromDate,
                                      @RequestParam(required = false) String toDate,
@@ -100,7 +99,7 @@ public class PurchaseInvoiceReturnStoreController {
         }
     }
 
-    @GetMapping(API + "/history")
+    @GetMapping("/api/store/purchase-invoice-return-store/history")
     @ResponseBody
     public ResponseEntity<?> history(@RequestParam(defaultValue = "doc") String dateMode,
                                      @RequestParam(required = false) String fromDate,
@@ -111,7 +110,7 @@ public class PurchaseInvoiceReturnStoreController {
         return run(() -> service.history(dateMode, fromDate, toDate, fromDocNo, toDocNo, supplierCustomerId), "History failed.");
     }
 
-    @GetMapping(API + "/{id}")
+    @GetMapping("/api/store/purchase-invoice-return-store/{id}")
     @ResponseBody
     public ResponseEntity<?> load(@PathVariable int id) {
         try {
@@ -124,32 +123,32 @@ public class PurchaseInvoiceReturnStoreController {
     }
 
     /** 145-Print and 145A-Print (both read the same procedure). */
-    @GetMapping(API + "/{id}/slip")
+    @GetMapping("/api/store/purchase-invoice-return-store/{id}/slip")
     @ResponseBody
     public ResponseEntity<?> slip(@PathVariable int id) {
         return rows(() -> service.slip(id));
     }
 
-    @GetMapping(API + "/{id}/slip-subreport")
+    @GetMapping("/api/store/purchase-invoice-return-store/{id}/slip-subreport")
     @ResponseBody
     public ResponseEntity<?> slipSubReport(@PathVariable int id) {
         return rows(() -> service.slipSubReport(id));
     }
 
     /** 103-Voucher. */
-    @GetMapping(API + "/voucher-slip/{voucherHeadId}")
+    @GetMapping("/api/store/purchase-invoice-return-store/voucher-slip/{voucherHeadId}")
     @ResponseBody
     public ResponseEntity<?> voucherSlip(@PathVariable int voucherHeadId) {
         return rows(() -> service.voucherSlip(voucherHeadId));
     }
 
-    @PostMapping(API + "/save")
+    @PostMapping("/api/store/purchase-invoice-return-store/save")
     @ResponseBody
     public ResponseEntity<?> save(@RequestBody PurchaseInvoiceReturnStoreDto dto) {
         return write(() -> service.save(dto), "Save failed.");
     }
 
-    @PostMapping(API + "/{id}/delete")
+    @PostMapping("/api/store/purchase-invoice-return-store/{id}/delete")
     @ResponseBody
     public ResponseEntity<?> delete(@PathVariable int id) {
         return write(() -> service.delete(id), "Delete failed.");
@@ -157,15 +156,15 @@ public class PurchaseInvoiceReturnStoreController {
 
     // ------------------------------------------------------------------ frmDefineReasons
 
-    @GetMapping(API + "/define-reasons")
+    @GetMapping("/api/store/purchase-invoice-return-store/define-reasons")
     @ResponseBody
     public ResponseEntity<?> reasonsDialog() { return run(service::reasonsDialog, "Could not open Define Reasons."); }
 
-    @GetMapping(API + "/define-reasons/history")
+    @GetMapping("/api/store/purchase-invoice-return-store/define-reasons/history")
     @ResponseBody
     public ResponseEntity<?> reasonsHistory() { return run(service::reasonsHistory, "Could not read the reasons."); }
 
-    @GetMapping(API + "/define-reasons/{id}")
+    @GetMapping("/api/store/purchase-invoice-return-store/define-reasons/{id}")
     @ResponseBody
     public ResponseEntity<?> reason(@PathVariable int id) {
         try {
@@ -177,7 +176,7 @@ public class PurchaseInvoiceReturnStoreController {
         }
     }
 
-    @PostMapping(API + "/define-reasons/save")
+    @PostMapping("/api/store/purchase-invoice-return-store/define-reasons/save")
     @ResponseBody
     public ResponseEntity<?> saveReason(@RequestBody PurchaseInvoiceReturnStoreDto.Reason dto) {
         return write(() -> service.saveReason(dto), "Save failed.");

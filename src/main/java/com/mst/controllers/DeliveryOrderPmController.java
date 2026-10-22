@@ -25,7 +25,6 @@ import java.util.Map;
 @Controller
 public class DeliveryOrderPmController {
 
-    private static final String API = "/api/packing-material/delivery-order";
 
     private final DeliveryOrderPmService service;
     public DeliveryOrderPmController(DeliveryOrderPmService service) { this.service = service; }
@@ -36,34 +35,34 @@ public class DeliveryOrderPmController {
         return "packing_material/delivery_order_pm";
     }
 
-    @GetMapping(API + "/lookups")
+    @GetMapping("/api/packing-material/delivery-order/lookups")
     @ResponseBody
     public ResponseEntity<?> lookups() { return run(service::lookups, "Could not load the screen."); }
 
-    @GetMapping(API + "/doc-no")
+    @GetMapping("/api/packing-material/delivery-order/doc-no")
     @ResponseBody
     public ResponseEntity<?> docNo() { return run(() -> Collections.singletonMap("docNo", service.docNo()), "Could not number the document."); }
 
-    @GetMapping(API + "/id-by-doc-no")
+    @GetMapping("/api/packing-material/delivery-order/id-by-doc-no")
     @ResponseBody
     public ResponseEntity<?> idByDocNo(@RequestParam(defaultValue = "0") int docNo) { return run(() -> Collections.singletonMap("id", service.idByDocNo(docNo)), "Could not find the document."); }
 
-    @GetMapping(API + "/orders")
+    @GetMapping("/api/packing-material/delivery-order/orders")
     @ResponseBody
     public ResponseEntity<?> orders(@RequestParam(defaultValue = "0") int customerId) { return run(() -> service.orders(customerId), "Could not load orders."); }
 
-    @GetMapping(API + "/balances")
+    @GetMapping("/api/packing-material/delivery-order/balances")
     @ResponseBody
     public ResponseEntity<?> balances(@RequestParam(defaultValue = "0") int bagTypeId, @RequestParam(defaultValue = "0") int customerId,
                                       @RequestParam(defaultValue = "0") int itemId, @RequestParam(required = false) String docDate) {
         return run(() -> service.balances(bagTypeId, customerId, itemId, docDate), "Could not read the balances.");
     }
 
-    @GetMapping(API + "/history-customers")
+    @GetMapping("/api/packing-material/delivery-order/history-customers")
     @ResponseBody
     public ResponseEntity<?> historyCustomers() { return run(service::historyCustomers, "Could not load customers."); }
 
-    @GetMapping(API + "/history")
+    @GetMapping("/api/packing-material/delivery-order/history")
     @ResponseBody
     public ResponseEntity<?> history(@RequestParam(defaultValue = "doc") String dateType,
                                      @RequestParam(required = false) String fromDate, @RequestParam(required = false) String toDate,
@@ -72,7 +71,7 @@ public class DeliveryOrderPmController {
         return run(() -> service.history(dateType, fromDate, toDate, fromDocNo, toDocNo, customerId), "History failed.");
     }
 
-    @GetMapping(API + "/{id}")
+    @GetMapping("/api/packing-material/delivery-order/{id}")
     @ResponseBody
     public ResponseEntity<?> load(@PathVariable int id) {
         try {
@@ -84,7 +83,7 @@ public class DeliveryOrderPmController {
         }
     }
 
-    @PostMapping(API + "/save")
+    @PostMapping("/api/packing-material/delivery-order/save")
     @ResponseBody
     public ResponseEntity<?> save(@RequestBody DeliveryOrderPmDto dto) { return write(() -> service.save(dto), "Save failed."); }
 

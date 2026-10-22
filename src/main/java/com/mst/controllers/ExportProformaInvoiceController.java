@@ -33,31 +33,31 @@ public class ExportProformaInvoiceController {
         return "export/proforma_invoice";
     }
 
-    @GetMapping(API + "/setup") @ResponseBody
+    @GetMapping("/api/export/proforma-invoice/setup") @ResponseBody
     public ResponseEntity<?> setup() { return call(() -> svc.setup(), "Error occurred during database call."); }
 
-    @GetMapping(API + "/new-code") @ResponseBody
+    @GetMapping("/api/export/proforma-invoice/new-code") @ResponseBody
     public ResponseEntity<?> newCode() { return call(() -> svc.newCode(), "Load failed."); }
 
-    @GetMapping(API + "/refresh") @ResponseBody
+    @GetMapping("/api/export/proforma-invoice/refresh") @ResponseBody
     public ResponseEntity<?> refresh() { return call(() -> svc.refresh(), "Load failed."); }
 
-    @GetMapping(API + "/history-combos") @ResponseBody
+    @GetMapping("/api/export/proforma-invoice/history-combos") @ResponseBody
     public ResponseEntity<?> historyCombos() { return call(() -> svc.historyCombos(), "Load failed."); }
 
-    @GetMapping(API + "/uoms") @ResponseBody
+    @GetMapping("/api/export/proforma-invoice/uoms") @ResponseBody
     public ResponseEntity<?> uoms(@RequestParam(value = "itemId", defaultValue = "0") int itemId) { return call(() -> svc.uoms(itemId), "Load failed."); }
 
-    @GetMapping(API + "/by-id") @ResponseBody
+    @GetMapping("/api/export/proforma-invoice/by-id") @ResponseBody
     public ResponseEntity<?> byId(@RequestParam("id") int id) { return call(() -> svc.readById(id), "Load failed."); }
 
-    @GetMapping(API + "/history-detail") @ResponseBody
+    @GetMapping("/api/export/proforma-invoice/history-detail") @ResponseBody
     public ResponseEntity<?> historyDetail(@RequestParam("id") int id) { return call(() -> svc.historyDetail(id), "Load failed."); }
 
-    @PostMapping(API + "/history") @ResponseBody
+    @PostMapping("/api/export/proforma-invoice/history") @ResponseBody
     public ResponseEntity<?> history(@RequestBody Map<String, Object> body) { return call(() -> svc.history(body), "Load failed."); }
 
-    @PostMapping(API + "/save") @ResponseBody
+    @PostMapping("/api/export/proforma-invoice/save") @ResponseBody
     public ResponseEntity<?> save(@RequestBody Map<String, Object> body) { return call(() -> svc.save(body), "Save failed."); }
 
     private interface Call { Object run() throws Exception; }

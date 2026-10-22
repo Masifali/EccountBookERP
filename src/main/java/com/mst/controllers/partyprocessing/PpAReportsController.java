@@ -36,16 +36,16 @@ public class PpAReportsController {
     @GetMapping("/party-processing/reports/grn-info")
     public String grnInfoPage(Model model) { return page(model, "partyprocessing/reports/grn-info"); }
 
-    @GetMapping(API + "/grn-info/setup") @ResponseBody
+    @GetMapping("/api/party-processing/reports/grn-info/setup") @ResponseBody
     public ResponseEntity<?> grnInfoSetup() { return HrmApi.run(() -> service.grnInfoSetup()); }
 
-    @GetMapping(API + "/grn-info/combos") @ResponseBody
+    @GetMapping("/api/party-processing/reports/grn-info/combos") @ResponseBody
     public ResponseEntity<?> grnInfoCombos() { return HrmApi.run(() -> service.grnInfoCombos()); }
 
-    @PostMapping(API + "/grn-info/search") @ResponseBody
+    @PostMapping("/api/party-processing/reports/grn-info/search") @ResponseBody
     public ResponseEntity<?> grnInfo(@RequestBody Map<String, Object> f) { return HrmApi.run(() -> service.grnInfo(f)); }
 
-    @GetMapping(API + "/grn-info/slip-check") @ResponseBody
+    @GetMapping("/api/party-processing/reports/grn-info/slip-check") @ResponseBody
     public ResponseEntity<?> grnSlipCheck(@RequestParam("id") int id) { return HrmApi.run(() -> service.grnSlipCheck(id)); }
 
     // ------------------------------------------------------------------ 691 Gate Pass
@@ -53,13 +53,13 @@ public class PpAReportsController {
     @GetMapping("/party-processing/reports/gate-pass")
     public String gatePassPage(Model model) { return page(model, "partyprocessing/reports/gate-pass"); }
 
-    @GetMapping(API + "/gate-pass/setup") @ResponseBody
+    @GetMapping("/api/party-processing/reports/gate-pass/setup") @ResponseBody
     public ResponseEntity<?> gatePassSetup() { return HrmApi.run(() -> service.gatePassSetup()); }
 
-    @GetMapping(API + "/gate-pass/combos") @ResponseBody
+    @GetMapping("/api/party-processing/reports/gate-pass/combos") @ResponseBody
     public ResponseEntity<?> gatePassCombos() { return HrmApi.run(() -> service.gatePassCombos()); }
 
-    @PostMapping(API + "/gate-pass/search") @ResponseBody
+    @PostMapping("/api/party-processing/reports/gate-pass/search") @ResponseBody
     public ResponseEntity<?> gatePass(@RequestBody Map<String, Object> f) { return HrmApi.run(() -> service.gatePass(f)); }
 
     // ------------------------------------------------------------------ 692 / 693 GRN / GDN register
@@ -70,13 +70,13 @@ public class PpAReportsController {
         return page(model, "partyprocessing/reports/grn-register");
     }
 
-    @GetMapping(API + "/grn-register/setup") @ResponseBody
+    @GetMapping("/api/party-processing/reports/grn-register/setup") @ResponseBody
     public ResponseEntity<?> grnGdnSetup(@RequestParam(value = "mode", defaultValue = "grn") String mode) { return HrmApi.run(() -> service.grnGdnSetup(mode)); }
 
-    @GetMapping(API + "/grn-register/combos") @ResponseBody
+    @GetMapping("/api/party-processing/reports/grn-register/combos") @ResponseBody
     public ResponseEntity<?> grnGdnCombos(@RequestParam(value = "mode", defaultValue = "grn") String mode) { return HrmApi.run(() -> service.grnGdnCombos(mode)); }
 
-    @PostMapping(API + "/grn-register/search") @ResponseBody
+    @PostMapping("/api/party-processing/reports/grn-register/search") @ResponseBody
     public ResponseEntity<?> grnGdn(@RequestParam(value = "mode", defaultValue = "grn") String mode, @RequestBody Map<String, Object> f) {
         return HrmApi.run(() -> service.grnGdn(mode, f));
     }
@@ -86,12 +86,12 @@ public class PpAReportsController {
     @GetMapping("/party-processing/reports/stock-report")
     public String stockPage(Model model) { return page(model, "partyprocessing/reports/stock-report"); }
 
-    @GetMapping(API + "/stock-report/setup") @ResponseBody
+    @GetMapping("/api/party-processing/reports/stock-report/setup") @ResponseBody
     public ResponseEntity<?> stockSetup() { return HrmApi.run(() -> service.stockSetup()); }
 
-    @GetMapping(API + "/stock-report/combos") @ResponseBody
+    @GetMapping("/api/party-processing/reports/stock-report/combos") @ResponseBody
     public ResponseEntity<?> stockCombos() { return HrmApi.run(() -> service.stockCombos()); }
 
-    @PostMapping(API + "/stock-report/search") @ResponseBody
+    @PostMapping("/api/party-processing/reports/stock-report/search") @ResponseBody
     public ResponseEntity<?> stock(@RequestBody Map<String, Object> f) { return HrmApi.run(() -> service.stock(f)); }
 }

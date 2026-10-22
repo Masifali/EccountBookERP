@@ -30,28 +30,28 @@ public class ExportMultiInvoicesAllocateController {
         return "export/multi_invoices_allocate_to_gdn";
     }
 
-    @GetMapping(API + "/setup") @ResponseBody
+    @GetMapping("/api/export/multi-invoices-allocate-to-gdn/setup") @ResponseBody
     public ResponseEntity<?> setup() { return call(() -> svc.setup(), "Error occurred during database call."); }
 
-    @GetMapping(API + "/refresh") @ResponseBody
+    @GetMapping("/api/export/multi-invoices-allocate-to-gdn/refresh") @ResponseBody
     public ResponseEntity<?> refresh(@RequestParam(value = "recId", defaultValue = "0") int recId) { return call(() -> svc.refresh(recId), "Load failed."); }
 
-    @GetMapping(API + "/invoices") @ResponseBody
+    @GetMapping("/api/export/multi-invoices-allocate-to-gdn/invoices") @ResponseBody
     public ResponseEntity<?> invoices(@RequestParam(value = "recId", defaultValue = "0") int recId) { return call(() -> svc.invoices(recId), "Load failed."); }
 
-    @GetMapping(API + "/history-banks") @ResponseBody
+    @GetMapping("/api/export/multi-invoices-allocate-to-gdn/history-banks") @ResponseBody
     public ResponseEntity<?> historyBanks() { return call(() -> svc.historyBanks(), "Load failed."); }
 
-    @GetMapping(API + "/by-id") @ResponseBody
+    @GetMapping("/api/export/multi-invoices-allocate-to-gdn/by-id") @ResponseBody
     public ResponseEntity<?> byId(@RequestParam("id") int id) { return call(() -> svc.readById(id), "Load failed."); }
 
-    @GetMapping(API + "/details") @ResponseBody
+    @GetMapping("/api/export/multi-invoices-allocate-to-gdn/details") @ResponseBody
     public ResponseEntity<?> details(@RequestParam("id") int id) { return call(() -> svc.detailsOf(id), "Load failed."); }
 
-    @PostMapping(API + "/history") @ResponseBody
+    @PostMapping("/api/export/multi-invoices-allocate-to-gdn/history") @ResponseBody
     public ResponseEntity<?> history(@RequestBody Map<String, Object> body) { return call(() -> svc.history(body), "Load failed."); }
 
-    @PostMapping(API + "/save") @ResponseBody
+    @PostMapping("/api/export/multi-invoices-allocate-to-gdn/save") @ResponseBody
     public ResponseEntity<?> save(@RequestBody Map<String, Object> body) { return call(() -> svc.save(body), "Save failed."); }
 
     private interface Call { Object run() throws Exception; }

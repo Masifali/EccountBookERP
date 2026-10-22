@@ -36,13 +36,6 @@ import java.util.Map;
 @Controller
 public class ExportPopupDefinesController {
 
-    private static final String DOC = "/api/export/define-documents";
-    private static final String CHG = "/api/export/define-export-charges";
-    private static final String TPT = "/api/export/define-third-party-type";
-    private static final String GEN = "/api/export/generate-contract-nos";
-    private static final String GDC = "/api/export/gd-container-break-up";
-    private static final String SRV = "/api/export/stock-reserved-against-tpi";
-    private static final String FIO = "/api/export/fi-opening";
 
     @Autowired private ExportDefinesService defines;
     @Autowired private ExportGdFiPopupsService gdfi;
@@ -78,112 +71,112 @@ public class ExportPopupDefinesController {
 
     // ------------------------------------------------------------------ 207 Define Documents
 
-    @GetMapping(DOC + "/setup") @ResponseBody
+    @GetMapping("/api/export/define-documents/setup") @ResponseBody
     public ResponseEntity<?> docSetup() { return call(() -> defines.documentsSetup(), "Load failed."); }
 
-    @GetMapping(DOC + "/documents") @ResponseBody
+    @GetMapping("/api/export/define-documents/documents") @ResponseBody
     public ResponseEntity<?> docDocuments() { return call(() -> defines.documentsList(), "Load failed."); }
 
-    @GetMapping(DOC + "/groups") @ResponseBody
+    @GetMapping("/api/export/define-documents/groups") @ResponseBody
     public ResponseEntity<?> docGroups() { return call(() -> defines.groupsList(), "Load failed."); }
 
-    @GetMapping(DOC + "/assign") @ResponseBody
+    @GetMapping("/api/export/define-documents/assign") @ResponseBody
     public ResponseEntity<?> docAssign() { return call(() -> defines.assignList(), "Load failed."); }
 
-    @GetMapping(DOC + "/document") @ResponseBody
+    @GetMapping("/api/export/define-documents/document") @ResponseBody
     public ResponseEntity<?> docRead(@RequestParam("id") int id) { return call(() -> defines.readDocument(id), "Load failed."); }
 
-    @GetMapping(DOC + "/group") @ResponseBody
+    @GetMapping("/api/export/define-documents/group") @ResponseBody
     public ResponseEntity<?> docGroupRead(@RequestParam("id") int id) { return call(() -> defines.readGroup(id), "Load failed."); }
 
-    @GetMapping(DOC + "/schedule") @ResponseBody
+    @GetMapping("/api/export/define-documents/schedule") @ResponseBody
     public ResponseEntity<?> docScheduleRead(@RequestParam("id") int id) { return call(() -> defines.readSchedule(id), "Load failed."); }
 
-    @PostMapping(DOC + "/save-document") @ResponseBody
+    @PostMapping("/api/export/define-documents/save-document") @ResponseBody
     public ResponseEntity<?> docSave(@RequestBody Map<String, Object> body) { return call(() -> defines.saveDocument(body), "Save failed."); }
 
-    @PostMapping(DOC + "/save-group") @ResponseBody
+    @PostMapping("/api/export/define-documents/save-group") @ResponseBody
     public ResponseEntity<?> docGroupSave(@RequestBody Map<String, Object> body) { return call(() -> defines.saveGroup(body), "Save failed."); }
 
-    @PostMapping(DOC + "/save-schedule") @ResponseBody
+    @PostMapping("/api/export/define-documents/save-schedule") @ResponseBody
     public ResponseEntity<?> docScheduleSave(@RequestBody Map<String, Object> body) { return call(() -> defines.saveSchedule(body), "Save failed."); }
 
     // ------------------------------------------------------------------ Define Export Charges
 
-    @GetMapping(CHG + "/setup") @ResponseBody
+    @GetMapping("/api/export/define-export-charges/setup") @ResponseBody
     public ResponseEntity<?> chgSetup() { return call(() -> defines.chargesSetup(), "Error occurred during database call."); }
 
-    @GetMapping(CHG + "/history") @ResponseBody
+    @GetMapping("/api/export/define-export-charges/history") @ResponseBody
     public ResponseEntity<?> chgHistory() { return call(() -> defines.chargesHistory(), "Load failed."); }
 
-    @GetMapping(CHG + "/accounts") @ResponseBody
+    @GetMapping("/api/export/define-export-charges/accounts") @ResponseBody
     public ResponseEntity<?> chgAccounts() { return call(() -> defines.chargesAccounts(), "Load failed."); }
 
-    @PostMapping(CHG + "/save") @ResponseBody
+    @PostMapping("/api/export/define-export-charges/save") @ResponseBody
     public ResponseEntity<?> chgSave(@RequestBody Map<String, Object> body) { return call(() -> defines.saveCharges(body), "Save failed."); }
 
     // ------------------------------------------------------------------ Define Third Party Type
 
-    @GetMapping(TPT + "/setup") @ResponseBody
+    @GetMapping("/api/export/define-third-party-type/setup") @ResponseBody
     public ResponseEntity<?> tptSetup() { return call(() -> defines.thirdPartyTypeSetup(), "Error occurred during database call."); }
 
-    @PostMapping(TPT + "/save") @ResponseBody
+    @PostMapping("/api/export/define-third-party-type/save") @ResponseBody
     public ResponseEntity<?> tptSave(@RequestBody Map<String, Object> body) { return call(() -> defines.saveThirdPartyType(body), "Save failed."); }
 
     // ------------------------------------------------------------------ Generate Export Contract Nos
 
-    @GetMapping(GEN + "/setup") @ResponseBody
+    @GetMapping("/api/export/generate-contract-nos/setup") @ResponseBody
     public ResponseEntity<?> genSetup() { return call(() -> defines.contractNosSetup(), "Load failed."); }
 
-    @GetMapping(GEN + "/history") @ResponseBody
+    @GetMapping("/api/export/generate-contract-nos/history") @ResponseBody
     public ResponseEntity<?> genHistory() { return call(() -> defines.contractNosHistory(), "Load failed."); }
 
-    @PostMapping(GEN + "/save") @ResponseBody
+    @PostMapping("/api/export/generate-contract-nos/save") @ResponseBody
     public ResponseEntity<?> genSave(@RequestBody Map<String, Object> body) { return call(() -> defines.saveContractNos(body), "Save failed."); }
 
-    @GetMapping(GEN + "/prefix-types") @ResponseBody
+    @GetMapping("/api/export/generate-contract-nos/prefix-types") @ResponseBody
     public ResponseEntity<?> genPrefixTypes() { return call(() -> defines.prefixTypes(), "Load failed."); }
 
-    @PostMapping(GEN + "/save-prefix-type") @ResponseBody
+    @PostMapping("/api/export/generate-contract-nos/save-prefix-type") @ResponseBody
     public ResponseEntity<?> genSavePrefix(@RequestBody Map<String, Object> body) { return call(() -> defines.savePrefixType(body), "Save failed."); }
 
     // ------------------------------------------------------------------ GD Container Break Up
 
-    @GetMapping(GDC + "/gds") @ResponseBody
+    @GetMapping("/api/export/gd-container-break-up/gds") @ResponseBody
     public ResponseEntity<?> gdcGds(@RequestParam(value = "gdId", defaultValue = "0") int gdId) { return call(() -> gdfi.gds(gdId), "Load failed."); }
 
-    @GetMapping(GDC + "/rows") @ResponseBody
+    @GetMapping("/api/export/gd-container-break-up/rows") @ResponseBody
     public ResponseEntity<?> gdcRows(@RequestParam(value = "gdId", defaultValue = "0") int gdId) { return call(() -> gdfi.containerRows(gdId), "Load failed."); }
 
-    @PostMapping(GDC + "/save") @ResponseBody
+    @PostMapping("/api/export/gd-container-break-up/save") @ResponseBody
     public ResponseEntity<?> gdcSave(@RequestBody Map<String, Object> body) { return call(() -> gdfi.saveContainers(body), "Save failed."); }
 
     // ------------------------------------------------------------------ FI Opening
 
-    @GetMapping(FIO + "/setup") @ResponseBody
+    @GetMapping("/api/export/fi-opening/setup") @ResponseBody
     public ResponseEntity<?> fioSetup() { return call(() -> gdfi.fiSetup(), "Error occurred during database call."); }
 
-    @GetMapping(FIO + "/combos") @ResponseBody
+    @GetMapping("/api/export/fi-opening/combos") @ResponseBody
     public ResponseEntity<?> fioCombos() { return call(() -> gdfi.fiCombos(), "Load failed."); }
 
-    @GetMapping(FIO + "/history") @ResponseBody
+    @GetMapping("/api/export/fi-opening/history") @ResponseBody
     public ResponseEntity<?> fioHistory() { return call(() -> gdfi.fiHistory(), "Load failed."); }
 
-    @PostMapping(FIO + "/save") @ResponseBody
+    @PostMapping("/api/export/fi-opening/save") @ResponseBody
     public ResponseEntity<?> fioSave(@RequestBody Map<String, Object> body) { return call(() -> gdfi.saveFi(body), "Save failed."); }
 
     // ------------------------------------------------------------------ Stock Reserved Against TPI
 
-    @GetMapping(SRV + "/setup") @ResponseBody
+    @GetMapping("/api/export/stock-reserved-against-tpi/setup") @ResponseBody
     public ResponseEntity<?> srvSetup() { return call(() -> reserved.setup(), "Error occurred during database call."); }
 
-    @GetMapping(SRV + "/refresh") @ResponseBody
+    @GetMapping("/api/export/stock-reserved-against-tpi/refresh") @ResponseBody
     public ResponseEntity<?> srvRefresh() { return call(() -> reserved.refresh(), "Load failed."); }
 
-    @PostMapping(SRV + "/search") @ResponseBody
+    @PostMapping("/api/export/stock-reserved-against-tpi/search") @ResponseBody
     public ResponseEntity<?> srvSearch(@RequestBody Map<String, Object> body) { return call(() -> reserved.search(body), "Load failed."); }
 
-    @PostMapping(SRV + "/save") @ResponseBody
+    @PostMapping("/api/export/stock-reserved-against-tpi/save") @ResponseBody
     public ResponseEntity<?> srvSave(@RequestBody Map<String, Object> body) { return call(() -> reserved.save(body), "Save failed."); }
 
     // ------------------------------------------------------------------ plumbing

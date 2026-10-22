@@ -26,8 +26,6 @@ import java.util.Map;
 @Controller
 public class ExportForwardingController {
 
-    private static final String FW = "/api/export/forwarding";
-    private static final String FN = "/api/export/forwarding-new";
 
     @Autowired private ExportForwardingService fw;
     @Autowired private ExportForwardingNewService fn;
@@ -46,93 +44,93 @@ public class ExportForwardingController {
 
     // ------------------------------------------------------------------ 212
 
-    @GetMapping(FW + "/setup") @ResponseBody
+    @GetMapping("/api/export/forwarding/setup") @ResponseBody
     public ResponseEntity<?> fwSetup() { return call(() -> fw.setup(), "Error occurred during database call."); }
 
-    @GetMapping(FW + "/refresh") @ResponseBody
+    @GetMapping("/api/export/forwarding/refresh") @ResponseBody
     public ResponseEntity<?> fwRefresh() { return call(() -> fw.refresh(), "Load failed."); }
 
-    @GetMapping(FW + "/reset") @ResponseBody
+    @GetMapping("/api/export/forwarding/reset") @ResponseBody
     public ResponseEntity<?> fwReset() { return call(() -> fw.reset(), "Load failed."); }
 
-    @GetMapping(FW + "/gate-pass") @ResponseBody
+    @GetMapping("/api/export/forwarding/gate-pass") @ResponseBody
     public ResponseEntity<?> fwGatePass(@RequestParam("gpId") int gpId, @RequestParam(value = "invoiceId", defaultValue = "0") int invoiceId) {
         return call(() -> fw.gatePass(gpId, invoiceId), "Load failed.");
     }
 
-    @GetMapping(FW + "/invoice") @ResponseBody
+    @GetMapping("/api/export/forwarding/invoice") @ResponseBody
     public ResponseEntity<?> fwInvoice(@RequestParam("gpId") int gpId, @RequestParam("invoiceId") int invoiceId) {
         return call(() -> fw.invoice(gpId, invoiceId), "Load failed.");
     }
 
-    @GetMapping(FW + "/uoms") @ResponseBody
+    @GetMapping("/api/export/forwarding/uoms") @ResponseBody
     public ResponseEntity<?> fwUoms(@RequestParam("itemId") int itemId) { return call(() -> fw.uoms(itemId), "Load failed."); }
 
-    @GetMapping(FW + "/by-id") @ResponseBody
+    @GetMapping("/api/export/forwarding/by-id") @ResponseBody
     public ResponseEntity<?> fwById(@RequestParam("id") int id) { return call(() -> fw.readById(id), "Load failed."); }
 
-    @PostMapping(FW + "/history") @ResponseBody
+    @PostMapping("/api/export/forwarding/history") @ResponseBody
     public ResponseEntity<?> fwHistory(@RequestBody Map<String, Object> body) { return call(() -> fw.history(body), "Load failed."); }
 
-    @GetMapping(FW + "/history-detail") @ResponseBody
+    @GetMapping("/api/export/forwarding/history-detail") @ResponseBody
     public ResponseEntity<?> fwHistoryDetail(@RequestParam("id") int id) { return call(() -> fw.historyDetail(id), "Load failed."); }
 
-    @GetMapping(FW + "/history-combos") @ResponseBody
+    @GetMapping("/api/export/forwarding/history-combos") @ResponseBody
     public ResponseEntity<?> fwHistoryCombos() { return call(() -> fw.historyCombosRefresh(), "Load failed."); }
 
-    @PostMapping(FW + "/save") @ResponseBody
+    @PostMapping("/api/export/forwarding/save") @ResponseBody
     public ResponseEntity<?> fwSave(@RequestBody Map<String, Object> body) { return call(() -> fw.save(body), "Save failed."); }
 
-    @PostMapping(FW + "/delete") @ResponseBody
+    @PostMapping("/api/export/forwarding/delete") @ResponseBody
     public ResponseEntity<?> fwDelete(@RequestBody Map<String, Object> body) { return call(() -> fw.delete(body), "Delete failed."); }
 
-    @GetMapping(FW + "/auto-update-ids") @ResponseBody
+    @GetMapping("/api/export/forwarding/auto-update-ids") @ResponseBody
     public ResponseEntity<?> fwAutoIds() { return call(() -> fw.autoUpdateIds(), "Load failed."); }
 
-    @PostMapping(FW + "/available-stock") @ResponseBody
+    @PostMapping("/api/export/forwarding/available-stock") @ResponseBody
     public ResponseEntity<?> fwStock(@RequestBody Map<String, Object> body) { return call(() -> fw.availableStock(body), "Load failed."); }
 
     // ------------------------------------------------------------------ 793
 
-    @GetMapping(FN + "/setup") @ResponseBody
+    @GetMapping("/api/export/forwarding-new/setup") @ResponseBody
     public ResponseEntity<?> fnSetup() { return call(() -> fn.setup(), "Error occurred during database call."); }
 
-    @GetMapping(FN + "/refresh") @ResponseBody
+    @GetMapping("/api/export/forwarding-new/refresh") @ResponseBody
     public ResponseEntity<?> fnRefresh() { return call(() -> fn.refresh(), "Load failed."); }
 
-    @GetMapping(FN + "/reset") @ResponseBody
+    @GetMapping("/api/export/forwarding-new/reset") @ResponseBody
     public ResponseEntity<?> fnReset() { return call(() -> fn.reset(), "Load failed."); }
 
-    @GetMapping(FN + "/gate-pass") @ResponseBody
+    @GetMapping("/api/export/forwarding-new/gate-pass") @ResponseBody
     public ResponseEntity<?> fnGatePass(@RequestParam("gpId") int gpId) { return call(() -> fn.gatePass(gpId), "Load failed."); }
 
-    @GetMapping(FN + "/invoice") @ResponseBody
+    @GetMapping("/api/export/forwarding-new/invoice") @ResponseBody
     public ResponseEntity<?> fnInvoice(@RequestParam("gpId") int gpId, @RequestParam("invoiceId") int invoiceId) {
         return call(() -> fn.invoice(gpId, invoiceId), "Load failed.");
     }
 
-    @GetMapping(FN + "/uoms") @ResponseBody
+    @GetMapping("/api/export/forwarding-new/uoms") @ResponseBody
     public ResponseEntity<?> fnUoms(@RequestParam("itemId") int itemId) { return call(() -> fn.uoms(itemId), "Load failed."); }
 
-    @GetMapping(FN + "/by-id") @ResponseBody
+    @GetMapping("/api/export/forwarding-new/by-id") @ResponseBody
     public ResponseEntity<?> fnById(@RequestParam("id") int id) { return call(() -> fn.readById(id), "Load failed."); }
 
-    @PostMapping(FN + "/history") @ResponseBody
+    @PostMapping("/api/export/forwarding-new/history") @ResponseBody
     public ResponseEntity<?> fnHistory(@RequestBody Map<String, Object> body) { return call(() -> fn.history(body), "Load failed."); }
 
-    @GetMapping(FN + "/history-detail") @ResponseBody
+    @GetMapping("/api/export/forwarding-new/history-detail") @ResponseBody
     public ResponseEntity<?> fnHistoryDetail(@RequestParam("id") int id) { return call(() -> fn.historyDetail(id), "Load failed."); }
 
-    @GetMapping(FN + "/history-combos") @ResponseBody
+    @GetMapping("/api/export/forwarding-new/history-combos") @ResponseBody
     public ResponseEntity<?> fnHistoryCombos() { return call(() -> fn.historyCombosRefresh(), "Load failed."); }
 
-    @PostMapping(FN + "/save") @ResponseBody
+    @PostMapping("/api/export/forwarding-new/save") @ResponseBody
     public ResponseEntity<?> fnSave(@RequestBody Map<String, Object> body) { return call(() -> fn.save(body), "Save failed."); }
 
-    @PostMapping(FN + "/delete") @ResponseBody
+    @PostMapping("/api/export/forwarding-new/delete") @ResponseBody
     public ResponseEntity<?> fnDelete(@RequestBody Map<String, Object> body) { return call(() -> fn.delete(body), "Delete failed."); }
 
-    @GetMapping(FN + "/auto-update-ids") @ResponseBody
+    @GetMapping("/api/export/forwarding-new/auto-update-ids") @ResponseBody
     public ResponseEntity<?> fnAutoIds() { return call(() -> fn.autoUpdateIds(), "Load failed."); }
 
     // ------------------------------------------------------------------ plumbing

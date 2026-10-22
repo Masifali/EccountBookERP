@@ -36,55 +36,55 @@ public class PpBGrnGdnController {
         return "partyprocessing/grn-gdn";
     }
 
-    @GetMapping(API + "/setup") @ResponseBody
+    @GetMapping("/api/party-processing/grn-gdn/setup") @ResponseBody
     public ResponseEntity<?> setup(@RequestParam("mode") String mode) { return HrmApi.run(() -> service.setup(mode)); }
 
-    @GetMapping(API + "/refresh") @ResponseBody
+    @GetMapping("/api/party-processing/grn-gdn/refresh") @ResponseBody
     public ResponseEntity<?> refresh(@RequestParam("mode") String mode) { return HrmApi.run(() -> service.refresh(mode)); }
 
-    @GetMapping(API + "/code") @ResponseBody
+    @GetMapping("/api/party-processing/grn-gdn/code") @ResponseBody
     public ResponseEntity<?> code(@RequestParam("mode") String mode) { return HrmApi.run(() -> service.code(mode)); }
 
-    @GetMapping(API + "/uoms") @ResponseBody
+    @GetMapping("/api/party-processing/grn-gdn/uoms") @ResponseBody
     public ResponseEntity<?> uoms(@RequestParam("mode") String mode, @RequestParam("itemId") int itemId) { return HrmApi.run(() -> service.uoms(mode, itemId)); }
 
-    @GetMapping(API + "/pending") @ResponseBody
+    @GetMapping("/api/party-processing/grn-gdn/pending") @ResponseBody
     public ResponseEntity<?> pending(@RequestParam("mode") String mode) { return HrmApi.run(() -> service.pending(mode)); }
 
-    @GetMapping(API + "/gate-pass") @ResponseBody
+    @GetMapping("/api/party-processing/grn-gdn/gate-pass") @ResponseBody
     public ResponseEntity<?> gatePass(@RequestParam("mode") String mode, @RequestParam("gpNo") int gpNo,
                                       @RequestParam(value = "gpId", defaultValue = "0") int gpId,
                                       @RequestParam(value = "stockPartyId", defaultValue = "0") int stockPartyId) {
         return HrmApi.run(() -> service.gatePass(mode, gpNo, gpId, stockPartyId));
     }
 
-    @GetMapping(API + "/loader-setup") @ResponseBody
+    @GetMapping("/api/party-processing/grn-gdn/loader-setup") @ResponseBody
     public ResponseEntity<?> loaderSetup(@RequestParam("mode") String mode) { return HrmApi.run(() -> service.loaderSetup(mode)); }
 
-    @PostMapping(API + "/loader") @ResponseBody
+    @PostMapping("/api/party-processing/grn-gdn/loader") @ResponseBody
     public ResponseEntity<?> loader(@RequestParam("mode") String mode, @RequestBody Map<String, Object> body) {
         return HrmApi.run(() -> service.loader(mode, body));
     }
 
-    @GetMapping(API + "/history-combos") @ResponseBody
+    @GetMapping("/api/party-processing/grn-gdn/history-combos") @ResponseBody
     public ResponseEntity<?> historyCombos(@RequestParam("mode") String mode) { return HrmApi.run(() -> service.historyCombos(mode)); }
 
-    @PostMapping(API + "/history") @ResponseBody
+    @PostMapping("/api/party-processing/grn-gdn/history") @ResponseBody
     public ResponseEntity<?> history(@RequestParam("mode") String mode, @RequestBody Map<String, Object> body) {
         return HrmApi.run(() -> service.history(mode, body));
     }
 
-    @GetMapping(API + "/by-id") @ResponseBody
+    @GetMapping("/api/party-processing/grn-gdn/by-id") @ResponseBody
     public ResponseEntity<?> byId(@RequestParam("mode") String mode, @RequestParam("id") int id) { return HrmApi.run(() -> service.byId(mode, id)); }
 
-    @PostMapping(API + "/save") @ResponseBody
+    @PostMapping("/api/party-processing/grn-gdn/save") @ResponseBody
     public ResponseEntity<?> save(@RequestParam("mode") String mode, @RequestBody Map<String, Object> body) {
         return HrmApi.run(() -> service.save(mode, body));
     }
 
-    @PostMapping(API + "/delete") @ResponseBody
+    @PostMapping("/api/party-processing/grn-gdn/delete") @ResponseBody
     public ResponseEntity<?> delete(@RequestParam("mode") String mode, @RequestParam("id") int id) { return HrmApi.run(() -> service.delete(mode, id)); }
 
-    @GetMapping(API + "/slip") @ResponseBody
+    @GetMapping("/api/party-processing/grn-gdn/slip") @ResponseBody
     public ResponseEntity<?> slip(@RequestParam("mode") String mode, @RequestParam("id") int id) { return HrmApi.run(() -> service.slip(mode, id)); }
 }

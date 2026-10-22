@@ -29,7 +29,6 @@ import java.util.function.Supplier;
 @Controller
 public class AuditLogReportController {
 
-    private static final String API = "/api/admin/audit-log-report";
 
     @Autowired private AuditLogReportService service;
 
@@ -40,20 +39,20 @@ public class AuditLogReportController {
         return "admin/audit_log_report";
     }
 
-    @GetMapping(API + "/load") @ResponseBody
+    @GetMapping("/api/admin/audit-log-report/load") @ResponseBody
     public ResponseEntity<?> load() { return run(service::load, "Load failed."); }
 
-    @GetMapping(API + "/refresh") @ResponseBody
+    @GetMapping("/api/admin/audit-log-report/refresh") @ResponseBody
     public ResponseEntity<?> refresh() { return run(service::refresh, "Refresh failed."); }
 
-    @GetMapping(API + "/show") @ResponseBody
+    @GetMapping("/api/admin/audit-log-report/show") @ResponseBody
     public ResponseEntity<?> show(@RequestParam(required = false) String fromDate,
                                   @RequestParam(required = false) String toDate,
                                   @RequestParam(required = false) Integer userId) {
         return run(() -> service.show(fromDate, toDate, userId), "Show failed.");
     }
 
-    @GetMapping(API + "/report-methods") @ResponseBody
+    @GetMapping("/api/admin/audit-log-report/report-methods") @ResponseBody
     public ResponseEntity<?> reportMethods() { return run(service::reportMethods, "Load failed."); }
 
     // ------------------------------------------------------------------ plumbing
