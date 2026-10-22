@@ -338,7 +338,7 @@
             $id('txtDateTo').value = SC.today();
             if (q.get('fromDate') && q.get('toDate')) { $id('txtDateFrom').value = q.get('fromDate'); $id('txtDateTo').value = q.get('toDate'); }
             else $id('txtDateFrom').value = d.fyStart;
-            if (d.asOnDate) $id('txtDateFrom').value = d.asOnDate;
+            if (d.asOnDate && !q.get('fromDate')) $id('txtDateFrom').value = d.asOnDate;
             $id('txtDateFrom').focus();
             BranchesFill(); ParentCategoryComboFill(); OtherComboByParentCategoryFill(); UOMFill(); ReportTypeFill(); AccountFill3rdLevel(d.groupAccounts);
             $id('cmbReportType').value = '0';   // Rows[0].Activate() = "Item Stock Summary"
@@ -349,6 +349,8 @@
                 var pc = (q.get('parentCategoryIds') || '').split(',').filter(Boolean).map(num);
                 if (pc.length) { $id('cmbMainTypeList').querySelectorAll('input[data-id]').forEach(function (i) { i.checked = pc.indexOf(num(i.getAttribute('data-id'))) >= 0; }); syncText('cmbMainTypeList', 'cmbMainTypeText'); }
             }
+            if (q.has('parentCategoryIds')) OtherComboByParentCategoryFill();
+            if (q.has('itemClassGroupId')) $id('CmbClassGroup').value = String(num(q.get('itemClassGroupId')));
             PrintButtonManage();
         }).catch(function (e) { alert(e.message); });
     }

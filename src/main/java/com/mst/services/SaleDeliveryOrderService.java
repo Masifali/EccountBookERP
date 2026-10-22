@@ -23,6 +23,8 @@ public class SaleDeliveryOrderService {
         this.context = context;
     }
 
+    public List<Map<String,Object>> pendingOrderDetails(String ids) { return repository.pendingOrderDetails(context.requireAccountingUser(),ids); }
+
     public Map<String,Object> initial() {
         UserAccount user = context.requireAccountingUser();
         int year = context.currentFinancialYearId();
@@ -30,6 +32,7 @@ public class SaleDeliveryOrderService {
         m.put("documentTypeId", SaleDeliveryOrderRepository.DOCUMENT_TYPE_ID);
         m.put("nextDocNo", repository.nextCode(user, year));
         m.put("pendingOrders", repository.pendingOrders(user, year));
+        m.put("loaderFromDate", repository.loaderFromDate(user, year));
         m.put("branches", repository.branches(user));
         m.put("vehicleTypes", repository.vehicleTypes(user));
         m.put("saleTypes", List.of(Map.of("Id",1,"Name","Weigh Bridge Based Billing"), Map.of("Id",2,"Name","Pack Size Based Billing")));

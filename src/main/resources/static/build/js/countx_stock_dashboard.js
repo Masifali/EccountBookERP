@@ -164,18 +164,19 @@ function render() {
  *
  * Each heading opens frmStockReportWithValues with its own pair fixed - cmbMainType and
  * ParentCategoryIds take the panel's parent category, CmbClassGroup its class group - plus the
- * two dates and, when the branch feature is on, the chosen branch list. That screen is not
- * ported, so the link reports exactly which report it would open rather than opening something
- * unrelated.
+ * two dates and, when the branch feature is on, the chosen branch list. The report receives the same filters through its query parameters.
  */
 window.sdOpenReport = function (i) {
     var p = S.panels[i];
     if (!p) return;
-    msg('"' + txt(p.title) + '" opens Stock Report With Values on the desktop for '
-      + val('fromDate') + ' to ' + val('toDate')
-      + ', Class Group ' + num(p.classGroupId)
-      + ' and Parent Category ' + num(p.parentCategoryId)
-      + '. That screen is not ported yet, so nothing was opened.', false);
+    var q = new URLSearchParams({
+        fromDate: val('fromDate'), toDate: val('toDate'),
+        branchesIds: S.branchFeature ? pickedIds('branches') : '',
+        parentCategoryIds: String(num(p.parentCategoryId)),
+        itemClassGroupId: String(num(p.classGroupId))
+    });
+    clearMsg();
+    window.location.assign('/inventory/stock-report-with-values?' + q.toString());
 };
 
 /* ---------------------------------------------------------------- toolbar */

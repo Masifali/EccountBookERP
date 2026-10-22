@@ -13,6 +13,9 @@ public class SaleDeliveryOrderController {
 
     public SaleDeliveryOrderController(SaleDeliveryOrderService service) { this.service = service; }
 
+    @GetMapping("/pending-order-details")
+    public Object pendingOrderDetails(@RequestParam String ids) { return service.pendingOrderDetails(ids); }
+
     @GetMapping("/initial")
     public Map<String,Object> initial() { return service.initial(); }
 

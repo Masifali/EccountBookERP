@@ -256,17 +256,47 @@
   }
 
   /* ---- Load_SO_MainDetail (btnLoadSaleOrder_Click :3192) ---- */
+  let loaderDetailRows=[];
+  $('loaderOrders').addEventListener('change',()=>run(async()=>{try{if($('loaderOrders').querySelector('input:checked'))await showOrderDetails();else{$('loaderDetails').tBodies[0].innerHTML='';loaderDetailRows=[]}}catch(e){$('loaderMessage').textContent=e.message}}));
+  function renderLoaderOrders(){
+    const selected=new Set([...$('loaderOrders').querySelectorAll('input:checked')].map(x=>+x.value));
+    const query=$('saleOrderSearch').value.trim().toLowerCase(),from=$('loaderFrom').value,to=$('loaderTo').value,customer=$('loaderCustomer').value,branch=$('loaderBranch').value;
+    const pending=(initial.pendingOrders||[]).filter(r=>{const date=dateOnly(text(r,'DocDate'));return (!from||date>=from)&&(!to||date<=to)&&(!customer||text(r,'PartyName')===customer)&&(!branch||String(num(r,'BranchesId','BranchId'))===branch||!num(r,'BranchesId','BranchId'))&&(!query||(text(r,'DocNo')+' '+text(r,'PartyName')).toLowerCase().includes(query))});
+    $('loaderOrders').tBodies[0].innerHTML=pending.map(r=>`<tr><td><input type="checkbox" value="${num(r,'Id')}" ${selected.has(num(r,'Id'))?'checked':''}></td>${['DocumentType','BranchName','PartyName','DocDate','OrderExpiryDate','DocNo','OrderQty','OrderWeight','DispatchedWeight','BalWeight'].map(k=>`<td>${html(k==='DocDate'||k==='OrderExpiryDate'?dateOnly(text(r,k)):text(r,k))}</td>`).join('')}</tr>`).join('');
+    $('loaderMessage').textContent=pending.length+' pending sale orders';
+  }
+  function openOrderLoader(){
+    const now=new Date();
+    if(!$('loaderFrom').value)$('loaderFrom').value=initial.loaderFromDate||'';
+    if(!$('loaderTo').value)$('loaderTo').value=[now.getFullYear(),String(now.getMonth()+1).padStart(2,'0'),String(now.getDate()).padStart(2,'0')].join('-');
+    const customers=[...new Set((initial.pendingOrders||[]).map(r=>text(r,'PartyName')).filter(Boolean))];
+    $('loaderCustomer').innerHTML='<option value="">All customers</option>'+customers.map(n=>`<option value="${html(n)}">${html(n)}</option>`).join('');
+    $('loaderBranch').innerHTML='<option value="">All branches</option>'+(initial.branches||[]).map(r=>`<option value="${num(r,'Id')}">${html(text(r,'BranchName'))}</option>`).join('');
+    $('loaderItem').innerHTML='<option value="">All items</option>'+(initial.items||[]).map(r=>`<option value="${num(r,'Id')}">${html(text(r,'ItemName'))}</option>`).join('');
+    loaderDetailRows=[];$('loaderOrders').tBodies[0].innerHTML='';$('loaderDetails').tBodies[0].innerHTML='';renderLoaderOrders();$('orderLoader').hidden=false;$('saleOrderSearch').focus();
+  }
+  async function showOrderDetails(){
+    let ids=[...$('loaderOrders').querySelectorAll('input:checked')].map(x=>+x.value);
+    if(!ids.length){const typed=$('saleOrderSearch').value.trim();const match=(initial.pendingOrders||[]).find(r=>String(text(r,'Id'))===typed||typed.startsWith(`${text(r,'DocNo')} —`));if(match)ids=[num(match,'Id')];}
+    if(!ids.length)throw Error('Select sale orders first');
+    const selected=new Set([...$('loaderDetails').querySelectorAll('input:checked')].map(x=>+x.value));
+    loaderDetailRows=await request(`${api}/pending-order-details?ids=${ids.join(',')}`);
+    if($('loaderItem').value)loaderDetailRows=loaderDetailRows.filter(r=>num(r,'ItemId')===Number($('loaderItem').value));
+    const existing=new Set(rows.map(r=>r.saleOrderDetailId));
+    $('loaderDetails').tBodies[0].innerHTML=loaderDetailRows.map(r=>{const id=num(r,'OrderDetailId');return `<tr><td><input type="checkbox" value="${id}" ${existing.has(id)?'disabled':selected.has(id)?'checked':''}></td>${['DocNo','ItemName','PackUom','OrderQTY','DispatchQty','BalQty','BalWeight'].map(k=>`<td>${html(text(r,k))}</td>`).join('')}</tr>`}).join('');
+    $('loaderMessage').textContent=loaderDetailRows.length+' pending detail rows. Already loaded rows cannot be selected again.';
+  }
   async function loadOrder() {
-    if (!isLocal()) throw new Error('Please Select Other DeliveryOrderType');
-    if (!$('saleType').value) throw new Error('Please Select Sale Type First');
-    const typed=$('saleOrderSearch').value.trim();
-    const match=(initial.pendingOrders||[]).find(row=>String(text(row,'Id'))===typed || typed.startsWith(`${text(row,'DocNo')} —`));
-    if(!match)throw new Error('Select a pending sale order from the searchable list');
-    const loaded=await request(`${api}/sale-order/${text(match,'Id')}/lines?saleTypeId=${sel('saleType')}`);
-    const existing=new Set(rows.map(row=>row.saleOrderDetailId));
-    const added=loaded.map(fromOrderLine).filter(row=>!existing.has(row.saleOrderDetailId)); added.forEach(row=>rows.push(row));
-    if (added.length) await mergeExpenses(added.map(r => r.saleOrderDetailId));
-    lockType(true); renderRows(); $('orderLoader').hidden=true;
+    if(!isLocal())throw Error('Please Select Other DeliveryOrderType');
+    if(!$('saleType').value)throw Error('Please Select Sale Type First');
+    const ids=new Set([...$('loaderDetails').querySelectorAll('input:checked:not(:disabled)')].map(x=>+x.value));
+    if(!ids.size)throw Error('No Row is Selected');
+    const orderIds=[...new Set(loaderDetailRows.filter(r=>ids.has(num(r,'OrderDetailId'))).map(r=>num(r,'Id')))];
+    const added=[],existing=new Set(rows.map(r=>r.saleOrderDetailId));
+    for(const id of orderIds){const loaded=await request(`${api}/sale-order/${id}/lines?saleTypeId=${sel('saleType')}`);for(const line of loaded){const r=fromOrderLine(line);if(ids.has(r.saleOrderDetailId)&&!existing.has(r.saleOrderDetailId)){added.push(r);existing.add(r.saleOrderDetailId)}}}
+    if(added.length!==ids.size)throw Error('Some selected rows are no longer available. Show Details again.');
+    if(added.length)await mergeExpenses(added.map(r=>r.saleOrderDetailId));
+    rows.push(...added);lockType(true);renderRows();$('orderLoader').hidden=true;
   }
 
   /* ---- save / record ---- */
@@ -398,10 +428,11 @@
   on('saveButton', 'click', () => run(save)); on('updateButton', 'click', () => run(save)); on('deleteButton', 'click', () => run(remove));
   on('printButton', 'click', event => { if (!currentId) { event.stopPropagation(); message('PrintId not found...'); } });
   on('attachmentButton', 'click', () => message('Save or load the delivery order before managing attachments.'));
-  on('refPartiesButton', 'click', () => message('Define Reference Parties is not available on the web yet.'));
+  on('refPartiesButton', 'click', () => { const opened=window.open('/party-processing/reference-parties','_blank');if(!opened)message('Allow pop-ups to open Reference Parties.'); });
   on('shortcutButton', 'click', () => alert('Ctrl+N New | Ctrl+S Save | Ctrl+Delete Delete | Ctrl+T Form/History'));
-  on('loadOrderButton', 'click', () => { if (!isLocal()) { message('Please Select Other DeliveryOrderType'); return; } if (!$('saleType').value) { message('Please Select Sale Type First'); return; } $('orderLoader').hidden = false; $('saleOrderSearch').focus(); });
-  on('closeOrderLoader', 'click', () => { $('orderLoader').hidden = true; }); on('loadSelectedOrder', 'click', () => run(loadOrder));
+  on('loadOrderButton', 'click', () => { if (!isLocal()) { message('Please Select Other DeliveryOrderType'); return; } if (!$('saleType').value) { message('Please Select Sale Type First'); return; } openOrderLoader(); });
+  on('showOrderDetails','click',()=>run(async()=>{try{renderLoaderOrders();if($('loaderOrders').querySelector('input:checked'))await showOrderDetails();else{$('loaderDetails').tBodies[0].innerHTML='';loaderDetailRows=[]}}catch(e){$('loaderMessage').textContent=e.message;throw e}}));
+  on('closeOrderLoader', 'click', () => { $('orderLoader').hidden = true; }); on('loadSelectedOrder', 'click', () => run(async()=>{try{await loadOrder()}catch(e){$('loaderMessage').textContent=e.message;throw e}}));
   on('tabForm', 'click', () => setPane('Form')); on('tabHistory', 'click', () => setPane('History'));
   on('gtDetail', 'click', () => setGridTab('Detail')); on('gtExpense', 'click', () => setGridTab('Expense'));
   on('hShow', 'click', renderHistory); on('hReset', 'click', resetHistory);

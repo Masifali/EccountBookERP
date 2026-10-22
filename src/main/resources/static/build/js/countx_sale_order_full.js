@@ -35,10 +35,10 @@ $(document).ajaxStart(function () { setSaleOrderBusy(true); });
 $(document).ajaxStop(function () { setSaleOrderBusy(false); });
 
 $(document).ready(function () {
-    var today = new Date().toISOString().split('T')[0];
+    var now = new Date();
+    var today = [now.getFullYear(), String(now.getMonth() + 1).padStart(2, '0'), String(now.getDate()).padStart(2, '0')].join('-');
     $('#txtDocDate').val(today);
-    /* desktop duedate is Enabled=false and only ever set from Due Days (SaleOrder.cs :749,
-       :1643-1655); a blank form leaves it empty, so nothing is defaulted here. */
+    $('#txtDueDate').val(today); // New orders default to the local current date; record loading restores the saved date.
     $('#txtDeliveryStartDate').val(today);
     $('#histFromDate').val(today);
     $('#histToDate').val(today);
@@ -827,29 +827,9 @@ function setupEventListeners() {
         $('#txtOtherCommAmount').prop('disabled', !parseInt($(this).val() || '0', 10));
     });
 
-    // Due Days -> Due Date Calculation
-    $('#txtDueDays').on('input', function () {
-        var days = parseInt($(this).val()) || 0;
-        var docDateVal = $('#txtDocDate').val();
-        if (docDateVal) {
-            var d = new Date(docDateVal);
-            d.setDate(d.getDate() + days);
-            $('#txtDueDate').val(d.toISOString().split('T')[0]);
-        }
-    });
-
-    // Delivery Days -> Delivery Start Date Calculation
-    $('#txtDeliveryDays').on('input', function () {
-        var days = parseInt($(this).val()) || 0;
-        var dDateVal = $('#txtDocDate').val();
-        if (dDateVal) {
-            var d = new Date(dDateVal);
-            d.setDate(d.getDate() + days);
-            $('#txtDeliveryStartDate').val(d.toISOString().split('T')[0]);
-        }
-    });
-
-
+    // Due Days -> Due Date / Delivery Days -> Delivery S.Date (delegated + timezone-safe so it
+    // fires on typing, spinner and paste, and still works if an earlier binding threw).
+    bindDayDateCalcs();
 }
 
 // Detail tab order total (desktop: GridEX_Helper.GetColumnSum(grd, "Amount")) - the base that
@@ -2053,4 +2033,24 @@ function removePaymentSchedule(index) {currentPaymentSchedules.splice(index,1);r
 
 function refreshEditedGrid(tr,row) {
     tr.find('input[aria-label]').each(function(){var key=this.getAttribute('aria-label');if(Object.prototype.hasOwnProperty.call(row,key)) this.value=row[key];});
+}
+
+
+function addDaysIso(isoDate, days) {
+    var p = String(isoDate || '').split('-');
+    if (p.length !== 3) return '';
+    var d = new Date(Date.UTC(+p[0], +p[1] - 1, +p[2] + days));
+    return d.toISOString().slice(0, 10);
+}
+function bindDayDateCalcs() {
+    function calc(daysSel, targetSel) {
+        var raw = $(daysSel).val();
+        var iso = addDaysIso($('#txtDocDate').val(), parseInt(raw, 10) || 0);
+        if (iso) $(targetSel).val(iso);
+    }
+    $(document).off('.dayCalc')
+        .on('input.dayCalc change.dayCalc keyup.dayCalc', '#txtDueDays', function () { calc('#txtDueDays', '#txtDueDate'); })
+        .on('change.dayCalc', '#txtDocDate', function () {
+            if ($('#txtDueDays').val() !== '') calc('#txtDueDays', '#txtDueDate');
+        });
 }

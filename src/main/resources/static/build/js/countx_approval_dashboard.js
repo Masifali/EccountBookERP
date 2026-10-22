@@ -181,6 +181,10 @@ function orderApprovalUrl(id) {
     } else if (id === 28 || id === 54 || id === 90) {
         path = '/dashboard/sale-order-for-approval';
         q.set('documentTypeId', id === 28 ? '81' : id === 54 ? '127' : '90');
+    } else if (id === 301) {
+        path = '/dashboard/purchase-cut-approval';
+    } else if (id === 37) {
+        path = '/dashboard/delivery-order-for-approval';
     } else return null;
     if (id !== 1100) {
         q.set('branchId', String(num(val('branch')) || 0));

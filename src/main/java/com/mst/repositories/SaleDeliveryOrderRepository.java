@@ -18,6 +18,25 @@ public class SaleDeliveryOrderRepository {
 
     public SaleDeliveryOrderRepository(JdbcTemplate jdbc) { this.jdbc = jdbc; }
 
+    /** frmLoadSaleOrder.GridDetailBind -> SaleOrder.GetPendingSaleOrderDetailForDeliveryOrder. */
+    public List<Map<String,Object>> pendingOrderDetails(UserAccount user, String ids) {
+        if(ids==null||!ids.matches("[1-9][0-9]*(,[1-9][0-9]*)*"))throw new IllegalArgumentException("Select sale orders first");
+        var selected=Arrays.stream(ids.split(",")).map(Integer::valueOf).distinct().toList();
+        for(int id:selected){
+            Integer count=jdbc.queryForObject("SELECT COUNT(*) FROM dbo.SaleOrder WHERE Id=? AND OrganizationId=? AND CompanyId=?",Integer.class,id,user.getOrganizationId(),user.getCompanyId());
+            if(count==null||count!=1)throw new IllegalArgumentException("Sale order not found in this company");
+        }
+        return jdbc.queryForList("EXEC dbo.USP_GetPendingSaleOrderDetailForDeliveryOrder @OrganizationId=?,@CompanyId=?,@Ids=?",user.getOrganizationId(),user.getCompanyId(),ids);
+    }
+
+    /** frmLoadSaleOrder_Load: FromDate = ActiveYr.Start_Period. */
+    public String loaderFromDate(UserAccount u, int financialYearId) {
+        var years=jdbc.queryForList("EXEC dbo.Proc_FinancialYear_ReadActiveByOrganizationIdNCompanyId @OrganizationId=?,@CompanyId=?",u.getOrganizationId(),u.getCompanyId());
+        for(var year:years)if(number(year.get("Id"))==financialYearId&&year.get("Start_Period")!=null)
+            return year.get("Start_Period").toString().substring(0,10);
+        throw new IllegalArgumentException("Active financial year start date is unavailable");
+    }
+
     public int nextCode(UserAccount u, int financialYearId) {
         String sql="EXEC dbo.Sp_InvDeliveryOrder_GetAllMethod @OrganizationId=?,@CompanyId=?,@DocumentTypeId=?,@Activity='GenerateCode'";
         List<Object> args=new ArrayList<>(Arrays.asList(u.getOrganizationId(),u.getCompanyId(),DOCUMENT_TYPE_ID));
@@ -32,6 +51,43 @@ public class SaleDeliveryOrderRepository {
                 u.getOrganizationId(), u.getCompanyId(), financialYearId, String.valueOf(u.getBranchesId()));
     }
 
+    /** GetConfigurationByOrgCompandConfigDescription / GlobalVariables_Helper.GetConfigValueFromGlobal. */
+    public String config(UserAccount u,String description){
+        var rows=jdbc.queryForList("EXEC dbo.Sp_ConfigrationsAllocation_GetAllMethod @OrganizationId=?,@CompanyId=?,@ConfigDescription=?,@DefinitionIds=?,@Activity=?",
+                u.getOrganizationId(),u.getCompanyId(),description,null,"GetConfigurationByOrgCompandConfigDescription");
+        Object v=rows.isEmpty()?null:rows.get(0).get("ConfigKey");
+        return v==null?"":String.valueOf(v).trim();
+    }
+    /** SaleOrderBind (DeliveryOrder.cs:3333): SaleOrder.SaleOrderIdandNoGetForSupplierCustomerId (DocumentTypeId never set = 0; @RecId only when editing). */
+    public List<Map<String,Object>> ordersOfCustomer(UserAccount u,int customerId,int recId){
+        String sql="EXEC dbo.Sp_SaleOrder_GetAllMethod @OrganizationId=?,@CompanyId=?,@OrderSupCustId=?,@DocumentTypeId=0";
+        List<Object> a=new ArrayList<>(Arrays.asList(u.getOrganizationId(),u.getCompanyId(),customerId));
+        if(recId!=0){sql+=",@RecId=?";a.add(recId);}
+        return jdbc.queryForList(sql+",@Activity='SaleOrderIdandNoGetForSupplierCustomerId'",a.toArray());
+    }
+    /** ItemBindbyOrderIdDbCall (:3377): Sp_SaleOrder_GetAllMethod 'ReadBySaleOrderIDNOrderItemId'. */
+    public List<Map<String,Object>> orderItems(int orderId){
+        return jdbc.queryForList("EXEC dbo.Sp_SaleOrder_GetAllMethod @SaleOrderId=?,@Activity='ReadBySaleOrderIDNOrderItemId'",orderId);
+    }
+    /** CalculateOrderBalanceQtyandWeight (:2751): Sp_InvDeliveryOrder_GetAllMethod 'GetDoBalWeightByOrder' -> BalWeight. */
+    public double orderBalanceWeight(UserAccount u,int orderId,int detailId,int itemId){
+        var rows=jdbc.queryForList("EXEC dbo.Sp_InvDeliveryOrder_GetAllMethod @OrganizationId=?,@CompanyId=?,@Id=?,@SaleOrderDetailId=?,@ItemId=?,@Activity='GetDoBalWeightByOrder'",
+                u.getOrganizationId(),u.getCompanyId(),orderId,detailId,itemId);
+        return rows.isEmpty()?0:decimal(rows.get(0).get("BalWeight"));
+    }
+    /** LoadInGridExpense (:3030): Sp_SaleOrder_GetAllMethod 'SaleOrderCustomerExpensesByOrderIds'. */
+    public List<Map<String,Object>> orderExpenses(String orderDetailIds){
+        return jdbc.queryForList("EXEC dbo.Sp_SaleOrder_GetAllMethod @OrderIds=?,@Activity='SaleOrderCustomerExpensesByOrderIds'",orderDetailIds);
+    }
+    public List<Map<String,Object>> orderLines(UserAccount u, int orderId, int saleTypeId) {
+        List<Map<String,Object>> lines=orderLines(u,orderId);
+        /* LoadInGridDetail (:2965): Pack Size Based Billing (2) recomputes Weight/LoadWeight/GrossWeight from the ORDER qty x pack equivalent. */
+        if(saleTypeId==2)for(var l:lines){
+            double w=decimal(l.get("QTY"))*decimal(l.get("PUomEquivalent"));
+            l.put("Weight",w);l.put("LoadWeight",w);l.put("GrossWeight",w+decimal(l.get("PackingWeight")));
+        }
+        return lines;
+    }
     public List<Map<String,Object>> orderLines(UserAccount u, int orderId) {
         Integer count = jdbc.queryForObject("SELECT COUNT(*) FROM dbo.SaleOrder WHERE Id=? AND OrganizationId=? AND CompanyId=?", Integer.class,
                 orderId, u.getOrganizationId(), u.getCompanyId());
